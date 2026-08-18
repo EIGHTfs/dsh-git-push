@@ -1,12 +1,12 @@
 # dsh-git-push
 
-DSH（DeepSeek Harness）git 自动提交推送插件 v1.1.0。把"扫描仓库 → **审计** → 一键 commit + push"固化为 agent 工具与 HTTP API，**执行零 token 消耗、确定性输出**（相比每次让 AI 手敲 git 命令）。
+DSH（DeepSeek Harness）git 自动提交推送插件 v1.2.0。把"扫描仓库 → **审计** → 一键 commit + push"固化为 agent 工具与 HTTP API，**执行零 token 消耗、确定性输出**（相比每次让 AI 手敲 git 命令）。
 
 ## 功能
 
 - **git_scan**：扫描 DSH workspace 下全部 git 仓库，返回分支 / remote / 未提交变更数 / 最近活动
 - **git_commit_push**：对指定仓库一键 `git add -A → commit → push`，自动处理：
-  - **推送前代码审计**（v1.1.0 内置，默认开）：L0 静态检查（语法 / JSON / YAML / 敏感信息硬编码 / 凭据入库 / 二进制大文件 / debugger 残留），发现严重问题**拦截提交**
+  - **推送前代码审计**（v1.1.0 内置，默认开）：L0 静态检查（语法 / JSON / YAML / 敏感信息硬编码 / 凭据入库 / npm 包文件入库 / 二进制大文件 / debugger 残留），发现严重问题**拦截提交**
   - 可选 **L1 LLM 深度审查**（默认关，省 token）：diff 喂便宜模型（如 agnes-2.5-flash / deepseek-chat）找逻辑/安全问题，实测可精准检出越界、空值、除零等 bug
   - 自动识别当前分支（master / main 不硬编码）
   - push 前 `fetch` + `rev-list` 检查 ahead/behind，**远端领先时不推**
@@ -78,11 +78,11 @@ curl -s -X POST http://127.0.0.1:3083/api/git-push/commit -H 'Content-Type: appl
 ```bash
 node --check lib/core.js && node --check lib/index.js   # 语法
 node test-core.mjs    # 核心逻辑 13 项（真实 git 临时仓库）
-node test-audit.mjs   # 审计规则 13 项（L0 静态）
+node test-audit.mjs   # 审计规则 21 项（L0 静态，含 npm 包文件检测）
 node test-apply.mjs   # apply mock 16 项（路由 + 工具 + 审计门禁端到端）
 ```
 
-真机验证：测试实例 3083 加载 v1.1.0，`status/scan/audit/commit` 全通；LLM 审计（agnes-2.5-flash）真实检出越界/空值/除零等逻辑 bug；commit 对含密钥文件审计拦截。
+真机验证：测试实例 3083 加载 v1.2.0，`status/scan/audit/commit` 全通；LLM 审计（agnes-2.5-flash）真实检出越界/空值/除零等逻辑 bug；commit 对含密钥文件/npm lock 文件审计拦截。
 
 ## 已知边界
 
@@ -95,6 +95,7 @@ node test-apply.mjs   # apply mock 16 项（路由 + 工具 + 审计门禁端到
 
 | 版本 | 内容 |
 |---|---|
+| 1.2.0 | **npm 包文件入库拦截**：`package-lock.json` / `yarn.lock` / `pnpm-lock.yaml` / `bun.lock` / `node_modules/` 内容入库时触发 blocker，阻止提交推送；防 CI/CD 误推 node_modules |
 | 1.1.0 | 内置代码审计门禁（L0 静态 + L1 LLM 可选）：`git_commit_push` 推送前审计拦截、`code_audit` 工具、`/api/git-push/audit` 端点 |
 | 1.0.0 | git 扫描 / 一键提交推送 / HTTP API |
 

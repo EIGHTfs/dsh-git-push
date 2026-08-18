@@ -16,7 +16,11 @@ writeFileSync(join(repo, 'base.js'), 'export const base = 1;\n');
 execSync('git add -A && git -c user.email=t@t -c user.name=t commit -m init', { cwd: repo, stdio: 'ignore' });
 
 function audit(files, opts = {}) {
-  for (const f of files) writeFileSync(join(repo, f.path), f.content);
+  for (const f of files) {
+    const dir = join(repo, f.path).replace(/[^/]+$/, '');
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(repo, f.path), f.content);
+  }
   return auditRepo(repo, { ...opts, files: files.map((f) => ({ path: f.path, addedLines: f.addedLines ?? f.content.split('\n'), isBinary: false })) });
 }
 
@@ -57,6 +61,29 @@ try {
 
   const r13 = auditRepo(repo, { files: [] });
   ok(r13.passed === true && r13.note === '无变更', '无变更直接通过');
+
+  // npm 包文件拦截（blocker）
+  const r14a = audit([{ path: 'node_modules/lodash/index.js', content: 'module.exports={}\n' }]);
+  ok(r14a.findings.some((f) => f.rule === 'npm-package-file'), 'node_modules/ 文件检出 blocker');
+  ok(r14a.blocked === true, 'node_modules/ 文件触发拦截');
+
+  const r14b = audit([{ path: 'package-lock.json', content: '{"name":"test","lockfileVersion":3}\n' }]);
+  ok(r14b.findings.some((f) => f.rule === 'npm-package-file'), 'package-lock.json 检出 blocker');
+
+  const r14c = audit([{ path: 'yarn.lock', content: '# yarn lockfile v1\n' }]);
+  ok(r14c.findings.some((f) => f.rule === 'npm-package-file'), 'yarn.lock 检出 blocker');
+
+  const r14d = audit([{ path: 'pnpm-lock.yaml', content: 'lockfileVersion: "6.0"\n' }]);
+  ok(r14d.findings.some((f) => f.rule === 'npm-package-file'), 'pnpm-lock.yaml 检出 blocker');
+
+  const r14e = audit([{ path: 'bun.lockb', content: '\x00\x00bun lock\n' }]);
+  ok(r14e.findings.some((f) => f.rule === 'npm-package-file'), 'bun.lock 检出 blocker');
+
+  const r14f = audit([{ path: 'src/main.js', content: 'export default 1;\n' }]);
+  ok(!r14f.findings.some((f) => f.rule === 'npm-package-file'), '普通 JS 文件不误报 npm-package-file');
+
+  const r14g = audit([{ path: 'node_modules/.cache/foo.js', content: 'cache\n' }]);
+  ok(r14g.findings.some((f) => f.rule === 'npm-package-file'), 'node_modules/.cache/ 也检出');
 } finally {
   rmSync(root, { recursive: true, force: true });
 }
