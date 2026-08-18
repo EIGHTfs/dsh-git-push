@@ -1,6 +1,6 @@
 {
   "name": "dsh-git-push",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "git 自动提交推送插件：扫描 workspace 全部 git 仓库，一键 commit+push（自动识别分支、push 前检查 ahead/behind）。提供 git_scan / git_commit_push 工具与 HTTP API。",
   "type": "module",
   "main": "lib/index.js",
