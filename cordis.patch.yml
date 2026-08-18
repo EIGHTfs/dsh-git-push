@@ -1,0 +1,4 @@
+- id: git-push
+  name: dsh-git-push
+  config:
+    enabled: true
