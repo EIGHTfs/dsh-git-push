@@ -79,7 +79,7 @@ curl -s http://127.0.0.1:3083/api/git-push/status      # 加载验证
 | 空提交 | 无变更自动跳过（`committed:false, reason:无变更`） |
 | 插件报 404 | 未注册/未重启：检查 patch insert + file: 依赖 + 软链 + 重启 |
 | code-audit 独立插件 | 已停用并入本插件（v1.1.0），测试实例不再加载；不要再 install dsh-code-audit |
-| git_scan 报 `userRender is not a function` | 插件 scan 输出渲染 bug（2026-08-19 实测），等待修复；先用 git 命令或 status API 绕过 |
+| git_scan 等工具报 `userRender is not a function` | **已修复（v1.4.1）**：3 个工具缺 `output.render`（dsh-tools rc.6 起契约必填）导致结果无法回显，已补 render 返回内容块数组；未部署的旧实例仍报错时先用 git 命令或 status API 绕过 |
 | 文档被 docs-conversation 拦下 | 改写为客观表述（只写做了什么）；沟通/需求/移交/待办类文档移入 `data/沟通文档`。注意：描述本规则时用「对话类措辞」等概括表述，避免字面写出禁用措辞被自身规则自命中 |
 | 规则类文档本体入库被拦 | release-docs-rule 等规则文档自身含禁用措辞示例，新规则部署后整文件重入库会被 docs-conversation 拦下：私有归档仓库可用 `audit:false` 放行，或改写示例为概括表述 |
 

@@ -18,6 +18,13 @@ release-docs-rule 已有「文档只写做了什么」约定，但只有约定�
 3. `package.json` / `README.md`：版本 1.3.0 → 1.4.0，功能条目、版本表、测试数量同步。
 4. `skills/dsh-git-push.md`：补规则说明与坑速查（含 git_scan 渲染 bug 记录）。
 
+### v1.4.1 追加：修复工具结果无法回显 bug（严重）
+
+5. `lib/index.js`：3 个 agent 工具（git_scan / git_commit_push / code_audit）补 `output.render`——
+   dsh-tools（rc.6）契约要求 render 必填，缺省时 defineTool 包装函数调用 undefined 抛
+   `userRender is not a function`（工具执行正常但结果回不来，实测复现）。按 dsh-session-manager
+   同款写法返回内容块数组 `[{type:'text', text:String(value)}]`；status API 硬编码版本号同步 1.4.1。
+
 ## 验证
 
 - `node test-audit.mjs`：27 通过 / 0 失败
@@ -34,5 +41,4 @@ release-docs-rule 已有「文档只写做了什么」约定，但只有约定�
 
 ## 遗留
 
-- 主环境（3081）插件副本未同步（本次只改源码），新规则在下次部署/重启后生效。
-- git_scan 工具输出渲染报 `userRender is not a function`（插件 bug，待修复）。
+- 主环境（3081）插件副本未同步（本次只改源码），v1.4.0 新审计规则与 v1.4.1 渲染修复均在下次部署/重启后生效。
