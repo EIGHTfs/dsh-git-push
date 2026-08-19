@@ -1,7 +1,7 @@
 {
   "name": "dsh-git-push",
-  "version": "1.2.0",
-  "description": "git 自动提交推送插件：扫描 workspace 全部 git 仓库，一键 commit+push（自动识别分支、push 前检查 ahead/behind）。提供 git_scan / git_commit_push 工具与 HTTP API。",
+  "version": "1.3.0",
+  "description": "git 自动提交推送插件：扫描 workspace 全部 git 仓库，一键 commit+push（自动识别分支、push 前检查 ahead/behind、内置审计门禁）。提供 git_scan / git_commit_push / code_audit 工具与 HTTP API；推送成功后自动维护 dsh-repo-index 源码索引 skill。",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
@@ -10,11 +10,16 @@
   },
   "files": [
     "lib",
+    "skills",
     "cordis.patch.yml"
   ],
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
-    }
+    },
+    "skills": [
+      "./skills/dsh-git-push.md",
+      "./skills/dsh-repo-index.md"
+    ]
   }
 }
