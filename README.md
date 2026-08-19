@@ -1,6 +1,6 @@
 # dsh-git-push
 
-DSH（DeepSeek Harness）git 自动提交推送插件 v1.5.0。把"扫描仓库 → **审计** → 一键 commit + push → **自动维护 dsh-repo-index 源码索引**"固化为 agent 工具与 HTTP API，**执行零 token 消耗、确定性输出**（相比每次让 AI 手敲 git 命令）。
+DSH（DeepSeek Harness）git 自动提交推送插件 v1.5.1。把"扫描仓库 → **审计** → 一键 commit + push → **自动维护 dsh-repo-index 源码索引**"固化为 agent 工具与 HTTP API，**执行零 token 消耗、确定性输出**（相比每次让 AI 手敲 git 命令）。
 
 ## 功能
 
@@ -79,7 +79,7 @@ curl -s -X POST http://127.0.0.1:3083/api/git-push/commit -H 'Content-Type: appl
 {
   "ok": true,
   "plugin": "dsh-git-push",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "audit": { "auditEnabled": true, "blockOn": "blocker", "llmAudit": false },
   "repoIndex": { "enabled": true }
 }
@@ -134,6 +134,7 @@ node test-repo-index.mjs  # repo-index 维护 20 项（frontmatter/skills 收集
 
 | 版本 | 内容 |
 |---|---|
+| 1.5.1 | **修复 v1.5.0 两处实现缺陷**：①`auditRepoPath` 未把 `exemptRepos` 传入审计，豁免白名单**实际不生效**——已接线；②status API 硬编码版本号未同步（仍显示 1.4.1）——已升 1.5.1；status 新增 `audit.exemptRepos` 字段便于确认自定义白名单 |
 | 1.5.0 | **审计豁免类型**：①说明类——示例凭据不报敏感信息（假值 假/fake/示例/占位符 自动识别 + 「例如/举例/示例」示例词上下文整行豁免）；②备份类——`exemptRepos` 白名单仓库跳过敏感内容规则（secret/凭据文件/对话措辞），结果标注 `exempted`；单测 36 项 |
 | 1.4.1 | **修复工具结果无法回显 bug（严重）**：git_scan / git_commit_push / code_audit 三个 agent 工具缺 `output.render`（dsh-tools rc.6 起契约必填），触发 `userRender is not a function`——工具执行正常但结果回不来；补齐 render 返回内容块数组（对齐 dsh-session-manager 写法）；status API 版本号同步 |
 | 1.4.0 | **文档对话类措辞拦截**：L0 审计对文档文件（md/markdown/mdx/txt）新增行检查「AI 与用户沟通过程」类措辞（会话引用 / 用户决策来源 / AI 许可表述 / 商量转述等），命中即 blocker，防沟通/需求/移交/待办类文档入库；配套约定见 release-docs-rule |
