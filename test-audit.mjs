@@ -101,6 +101,33 @@ try {
 
   const r15e = audit([{ path: 'README.md', content: '# 项目\n\n用户可在设置页开关该功能。\n' }]);
   ok(!r15e.findings.some((f) => f.rule === 'docs-conversation'), '正常描述用户操作不误报');
+
+  // 豁免类型 v1.5.0：说明类（示例凭据）不报 secret
+  const r16a = audit([{ path: 'README.md', content: '# 项目\n\n例如 password: "fake-pass"（仅演示格式，非真实凭据）\n' }]);
+  ok(!r16a.findings.some((f) => f.rule === 'secret'), '示例词上下文整行豁免（举例凭据不报）');
+
+  const r16b = audit([{ path: 'config.example.js', content: 'const cfg = { password: "fakepass", apiKey: "your-api-key" };\n' }]);
+  ok(!r16b.findings.some((f) => f.rule === 'secret'), '假凭据值/占位符不报');
+
+  const r16c = audit([{ path: 'README.md', content: '# 项目\n\npassword: "P@ssw0rd123!"\n' }]);
+  ok(r16c.findings.some((f) => f.rule === 'secret'), '真实凭据仍拦截（无示例标记）');
+
+  // 备份类豁免：exemptRepos 命中的仓库跳过敏感内容规则（secret/凭据文件/对话措辞）
+  const r17a = audit([{ path: '.env', content: 'API_KEY=real\n' }], { exemptRepos: ['repo'] });
+  ok(!r17a.findings.some((f) => f.rule === 'credential-file' || f.rule === 'secret'), '豁免仓库 .env 不报');
+  ok(r17a.exempted === true, '结果标注 exempted=true');
+
+  const r17b = audit([{ path: '.env', content: 'API_KEY=real\n' }]);
+  ok(r17b.findings.some((f) => f.rule === 'credential-file'), '非豁免仓库 .env 仍拦截');
+
+  const r17d = audit([{ path: 'handover.md', content: '按用户约定实现，本会话完成。\n' }], { exemptRepos: ['repo'] });
+  ok(!r17d.findings.some((f) => f.rule === 'docs-conversation'), '豁免仓库对话措辞不报');
+
+  const r17e = audit([{ path: 'handover.md', content: '按用户约定实现，本会话完成。\n' }]);
+  ok(r17e.findings.some((f) => f.rule === 'docs-conversation'), '非豁免仓库对话措辞仍拦截');
+
+  const r17f = audit([{ path: 'a.js', content: 'function ( {\n' }], { exemptRepos: ['repo'] });
+  ok(r17f.findings.some((f) => f.rule === 'syntax'), '豁免仓库语法检查仍生效（只豁免敏感内容规则）');
 } finally {
   rmSync(root, { recursive: true, force: true });
 }

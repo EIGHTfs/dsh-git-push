@@ -1,6 +1,6 @@
 # dsh-git-push
 
-DSH（DeepSeek Harness）git 自动提交推送插件 v1.4.1。把"扫描仓库 → **审计** → 一键 commit + push → **自动维护 dsh-repo-index 源码索引**"固化为 agent 工具与 HTTP API，**执行零 token 消耗、确定性输出**（相比每次让 AI 手敲 git 命令）。
+DSH（DeepSeek Harness）git 自动提交推送插件 v1.5.0。把"扫描仓库 → **审计** → 一键 commit + push → **自动维护 dsh-repo-index 源码索引**"固化为 agent 工具与 HTTP API，**执行零 token 消耗、确定性输出**（相比每次让 AI 手敲 git 命令）。
 
 ## 功能
 
@@ -21,6 +21,7 @@ DSH（DeepSeek Harness）git 自动提交推送插件 v1.4.1。把"扫描仓库 
   - 权威源 = 插件项目 `skills/dsh-repo-index.md`（随 git 版本管理），同步副本 = 运行实例用户级 skills 目录
 - **code_audit**：手动审计指定仓库（`llm=true` 追加深度审查）
 - **文档对话类措辞拦截**（v1.4.0 新增）：L0 审计对文档文件（md/markdown/mdx/txt）的**新增行**检查「AI 与用户沟通过程」类措辞（会话引用 / 用户决策来源 / AI 许可表述 / 商量转述等），命中即 blocker——公开仓库只提交「做了什么」，沟通/需求/移交/待办类文档统一放 `data/沟通文档`
+- **审计豁免类型**（v1.5.0 新增）：①**说明类**——文档/示例代码里用于举例的**假凭据**不报敏感信息（值含 假/fake/示例/演示/占位符 your- 等，或行内含「例如/举例/示例」等示例词）；②**备份类**——配置 `exemptRepos` 白名单（私有/备份仓库）跳过敏感内容规则（secret / 凭据文件 / 对话措辞），其余规则（语法/JSON/YAML/大文件）照常，结果标注 `exempted:true`
 - **HTTP API**：`status` / `scan` / `audit` / `commit`，curl 即可调用，便于外部脚本/定时任务接入
 
 ## 安装
@@ -78,7 +79,7 @@ curl -s -X POST http://127.0.0.1:3083/api/git-push/commit -H 'Content-Type: appl
 {
   "ok": true,
   "plugin": "dsh-git-push",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "audit": { "auditEnabled": true, "blockOn": "blocker", "llmAudit": false },
   "repoIndex": { "enabled": true }
 }
@@ -106,13 +107,14 @@ curl -s -X POST http://127.0.0.1:3083/api/git-push/commit -H 'Content-Type: appl
 | `repoIndexTokenPath` | `''` | GitHub token 文件路径（可见性查询；不配则标「未知」/用手工标注） |
 | `repoIndexSyncTarget` | `探测` | 索引同步副本路径（默认 `DSH_HOME/skills/dsh-repo-index.md`） |
 | `repoIndexLocalOnly` | `[]` | 额外纳入「本地 only」清单的目录名 |
+| `exemptRepos` | `[]` | **备份类豁免**：私有/备份仓库清单（绝对路径或目录名），命中的仓库跳过敏感内容规则（secret / 凭据文件 / 对话措辞），其余规则照常 |
 
 ## 开发与测试
 
 ```bash
 node --check lib/core.js && node --check lib/index.js   # 语法
 node test-core.mjs    # 核心逻辑 13 项（真实 git 临时仓库）
-node test-audit.mjs   # 审计规则 27 项（L0 静态，含 npm 包文件检测 + 文档措辞检查）
+node test-audit.mjs   # 审计规则 36 项（L0 静态，含 npm 包文件检测 + 文档措辞检查 + 豁免类型）
 node test-apply.mjs   # apply mock 16 项（路由 + 工具 + 审计门禁端到端）
 node test-repo-index.mjs  # repo-index 维护 20 项（frontmatter/skills 收集/可见性/生成/同步）
 ```
@@ -132,6 +134,7 @@ node test-repo-index.mjs  # repo-index 维护 20 项（frontmatter/skills 收集
 
 | 版本 | 内容 |
 |---|---|
+| 1.5.0 | **审计豁免类型**：①说明类——示例凭据不报敏感信息（假值 假/fake/示例/占位符 自动识别 + 「例如/举例/示例」示例词上下文整行豁免）；②备份类——`exemptRepos` 白名单仓库跳过敏感内容规则（secret/凭据文件/对话措辞），结果标注 `exempted`；单测 36 项 |
 | 1.4.1 | **修复工具结果无法回显 bug（严重）**：git_scan / git_commit_push / code_audit 三个 agent 工具缺 `output.render`（dsh-tools rc.6 起契约必填），触发 `userRender is not a function`——工具执行正常但结果回不来；补齐 render 返回内容块数组（对齐 dsh-session-manager 写法）；status API 版本号同步 |
 | 1.4.0 | **文档对话类措辞拦截**：L0 审计对文档文件（md/markdown/mdx/txt）新增行检查「AI 与用户沟通过程」类措辞（会话引用 / 用户决策来源 / AI 许可表述 / 商量转述等），命中即 blocker，防沟通/需求/移交/待办类文档入库；配套约定见 release-docs-rule |
 | 1.3.0 | **dsh-repo-index 自动维护**：推送成功后自动生成/同步唯一权威源码索引 skill（仓库清单 + 对应 skill 列 + GitHub API 可见性 + 本地 only）；索引权威源移入本插件 `skills/dsh-repo-index.md` |

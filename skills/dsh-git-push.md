@@ -28,14 +28,14 @@ generatedBy: deepseek-official/deepseek-v4-flash
 - 审计范围 = 工作区相对 HEAD 变更（**含 untracked 新文件**，LLM 也看得到）
 - 拦截时 commit 返回 `{ok:false, error:{code:'AUDIT'}, findings}`，不产生提交
 
-### 豁免类型（约定，防误伤；机器闸门随 v1.5.0 落地）
+### 豁免类型（v1.5.0 已实现为机器闸门，防误伤）
 
 | 豁免类型 | 说明 | 示例 |
 |---|---|---|
-| **说明类（示例凭据）** | 文档/README/示例代码中**用于举例的假凭据**不报敏感信息——值含 假/fake/示例/演示/sample/demo 或占位符（your- 前缀、xxx、example 等），或行内含「例如/举例/示例」等示例词 | 「用户名: 假用户 / 密码: 假密码」（中文假值）或 `user: your-username / password: your-password`（占位符） |
-| **备份类（私有库）** | **备份到私有仓库**时敏感信息（密钥/凭据文件）可上传——私有库就是敏感信息的指定存放处，不受「禁止凭据入库」约束 | ai-work-archive（私有）可存 token 归档、会话总结等 |
+| **说明类（示例凭据）** | 文档/README/示例代码中**用于举例的假凭据**不报敏感信息——值含 假/fake/示例/演示/sample/demo 或占位符（your- 前缀、xxx、example 等），或行内含「例如/举例/示例」等示例词整行豁免 | 「用户名: 假用户 / 密码: 假密码」（中文假值）或 `user: your-username / password: your-password`（占位符） |
+| **备份类（私有库）** | 配置 `exemptRepos` 白名单（仓库绝对路径或目录名）后，命中的**私有/备份仓库**跳过敏感内容规则（secret / 凭据文件 / 对话措辞），其余规则照常；审计结果标注 `exempted:true` | `exemptRepos: ['ai-work-archive']`（私有归档可存 token/会话总结） |
 
-**判定原则**：公开仓库只提交「做了什么」，示例凭据必须是**假的**（真实凭据哪怕一行也禁止）；私有备份仓库的敏感信息上传**以代码闸门实现为准**（当前按约定执行，必要时 `audit:false` 放行）。
+**判定原则**：公开仓库只提交「做了什么」，示例凭据必须是**假的**（真实凭据哪怕一行也禁止）；私有备份仓库的敏感信息上传通过 `exemptRepos` 白名单放行（语法/JSON/YAML/大文件检查仍生效）。
 
 ## 三、HTTP API
 
@@ -63,6 +63,7 @@ generatedBy: deepseek-official/deepseek-v4-flash
         llmAuditProvider: 'free'    # LLM 审查用便宜模型
         llmAuditModel: 'agnes-2.5-flash'   # 如 agnes / deepseek-chat
         maxDiffBytes: 6000          # LLM 审查 diff 截断
+        exemptRepos: ['ai-work-archive']   # v1.5.0 备份类豁免：私有/备份仓库（跳过敏感内容规则）
 ```
 
 ## 五、验证与测试
