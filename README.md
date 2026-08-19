@@ -4,6 +4,8 @@ DSH（DeepSeek Harness）git 自动提交推送插件 v1.3.0。把"扫描仓库 
 
 ## 功能
 
+![架构图](docs/screenshots/architecture.svg)
+
 - **git_scan**：扫描 DSH workspace 下全部 git 仓库，返回分支 / remote / 未提交变更数 / 最近活动
 - **git_commit_push**：对指定仓库一键 `git add -A → commit → push`，自动处理：
   - **推送前代码审计**（v1.1.0 内置，默认开）：L0 静态检查（语法 / JSON / YAML / 敏感信息硬编码 / 凭据入库 / npm 包文件入库 / 二进制大文件 / debugger 残留），发现严重问题**拦截提交**
