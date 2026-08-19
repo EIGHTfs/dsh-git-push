@@ -1,6 +1,6 @@
 ---
 name: dsh-git-push
-description: dsh-git-push 插件（git 自动提交推送 v1.1.0，内置代码审计门禁）的使用手册：git_scan / git_commit_push / code_audit 工具与 /api/git-push API 的调用方法、配置（审计 blockOn/llmAudit）、验证与坑速查。处理"提交推送代码""扫描仓库状态""审计代码""推送前拦截 bug""敏感信息检测"类请求时加载；插件不可用/报错排查时必加载（正常情况优先用插件，见 plugin-priority）。
+description: dsh-git-push 插件（git 自动提交推送 v1.4.0，内置代码审计门禁）的使用手册：git_scan / git_commit_push / code_audit 工具与 /api/git-push API 的调用方法、配置（审计 blockOn/llmAudit）、验证与坑速查。处理"提交推送代码""扫描仓库状态""审计代码""推送前拦截 bug""敏感信息检测""文档被审计拦截"类请求时加载；插件不可用/报错排查时必加载（正常情况优先用插件，见 plugin-priority）。
 whenToUse: 需要用插件做 git 提交推送/代码审计但不确定参数/报错排查/插件未装需手做时。
 generatedBy: deepseek-official/deepseek-v4-flash
 ---
@@ -22,6 +22,7 @@ generatedBy: deepseek-official/deepseek-v4-flash
 ## 二、审计（v1.1.0 内置，重点）
 
 - **L0 静态检查（零 token，默认开）**：JS 语法（node --check）/ JSON / YAML / 敏感信息硬编码（GitHub PAT、sk- key、密钥键值对）/ 凭据文件入库（.env/.credentials）/ 二进制大文件（>1MB）/ debugger 残留 / console.log≥5 / TODO/FIXME
+- **文档措辞拦截 docs-conversation（v1.4.0，blocker）**：对文档文件（md/markdown/mdx/txt）的**新增行**检查「AI 与用户沟通过程」类措辞（会话引用 / 用户决策来源 / AI 许可表述 / 商量转述等），命中即拦截——公开仓库只提交「做了什么」，沟通/需求/移交/待办类文档统一放 `data/沟通文档`（清单见 release-docs-rule）
 - **L1 LLM 深度审查（默认关，省钱）**：diff 喂便宜模型找逻辑/安全问题，实测 agnes-2.5-flash 精准检出越界/空值/除零/fetch 未检查 res.ok 等 bug
 - **拦截策略 blockOn**：`blocker`（默认，仅严重问题拦截）/ `any`（任何问题拦截）
 - 审计范围 = 工作区相对 HEAD 变更（**含 untracked 新文件**，LLM 也看得到）
@@ -60,7 +61,7 @@ generatedBy: deepseek-official/deepseek-v4-flash
 ```bash
 node --check lib/core.js && node --check lib/index.js  # 语法
 node test-core.mjs    # 核心 13 项（真实 git 临时仓库）
-node test-audit.mjs   # 审计规则 13 项（L0 静态）
+node test-audit.mjs   # 审计规则 27 项（L0 静态，含文档措辞拦截）
 node test-apply.mjs   # apply mock 16 项（含审计门禁端到端）
 curl -s http://127.0.0.1:3083/api/git-push/status      # 加载验证
 ```
@@ -78,6 +79,9 @@ curl -s http://127.0.0.1:3083/api/git-push/status      # 加载验证
 | 空提交 | 无变更自动跳过（`committed:false, reason:无变更`） |
 | 插件报 404 | 未注册/未重启：检查 patch insert + file: 依赖 + 软链 + 重启 |
 | code-audit 独立插件 | 已停用并入本插件（v1.1.0），测试实例不再加载；不要再 install dsh-code-audit |
+| git_scan 报 `userRender is not a function` | 插件 scan 输出渲染 bug（2026-08-19 实测），等待修复；先用 git 命令或 status API 绕过 |
+| 文档被 docs-conversation 拦下 | 改写为客观表述（只写做了什么）；沟通/需求/移交/待办类文档移入 `data/沟通文档`。注意：描述本规则时用「对话类措辞」等概括表述，避免字面写出禁用措辞被自身规则自命中 |
+| 规则类文档本体入库被拦 | release-docs-rule 等规则文档自身含禁用措辞示例，新规则部署后整文件重入库会被 docs-conversation 拦下：私有归档仓库可用 `audit:false` 放行，或改写示例为概括表述 |
 
 ## 七、边界
 

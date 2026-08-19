@@ -1,6 +1,6 @@
 # dsh-git-push
 
-DSH（DeepSeek Harness）git 自动提交推送插件 v1.3.0。把"扫描仓库 → **审计** → 一键 commit + push → **自动维护 dsh-repo-index 源码索引**"固化为 agent 工具与 HTTP API，**执行零 token 消耗、确定性输出**（相比每次让 AI 手敲 git 命令）。
+DSH（DeepSeek Harness）git 自动提交推送插件 v1.4.0。把"扫描仓库 → **审计** → 一键 commit + push → **自动维护 dsh-repo-index 源码索引**"固化为 agent 工具与 HTTP API，**执行零 token 消耗、确定性输出**（相比每次让 AI 手敲 git 命令）。
 
 ## 功能
 
@@ -8,7 +8,7 @@ DSH（DeepSeek Harness）git 自动提交推送插件 v1.3.0。把"扫描仓库 
 
 - **git_scan**：扫描 DSH workspace 下全部 git 仓库，返回分支 / remote / 未提交变更数 / 最近活动
 - **git_commit_push**：对指定仓库一键 `git add -A → commit → push`，自动处理：
-  - **推送前代码审计**（v1.1.0 内置，默认开）：L0 静态检查（语法 / JSON / YAML / 敏感信息硬编码 / 凭据入库 / npm 包文件入库 / 二进制大文件 / debugger 残留），发现严重问题**拦截提交**
+  - **推送前代码审计**（v1.1.0 内置，默认开）：L0 静态检查（语法 / JSON / YAML / 敏感信息硬编码 / 凭据入库 / npm 包文件入库 / 二进制大文件 / debugger 残留 / 文档对话类措辞），发现严重问题**拦截提交**
   - 可选 **L1 LLM 深度审查**（默认关，省 token）：diff 喂便宜模型（如 agnes-2.5-flash / deepseek-chat）找逻辑/安全问题，实测可精准检出越界、空值、除零等 bug
   - 自动识别当前分支（master / main 不硬编码）
   - push 前 `fetch` + `rev-list` 检查 ahead/behind，**远端领先时不推**
@@ -20,6 +20,7 @@ DSH（DeepSeek Harness）git 自动提交推送插件 v1.3.0。把"扫描仓库 
   - 可见性（公开/私有）用 GitHub API（token）查询，查不到回退手工标注/标「未知」
   - 权威源 = 插件项目 `skills/dsh-repo-index.md`（随 git 版本管理），同步副本 = 运行实例用户级 skills 目录
 - **code_audit**：手动审计指定仓库（`llm=true` 追加深度审查）
+- **文档对话类措辞拦截**（v1.4.0 新增）：L0 审计对文档文件（md/markdown/mdx/txt）的**新增行**检查「AI 与用户沟通过程」类措辞（会话引用 / 用户决策来源 / AI 许可表述 / 商量转述等），命中即 blocker——公开仓库只提交「做了什么」，沟通/需求/移交/待办类文档统一放 `data/沟通文档`
 - **HTTP API**：`status` / `scan` / `audit` / `commit`，curl 即可调用，便于外部脚本/定时任务接入
 
 ## 安装
@@ -54,13 +55,33 @@ DSH（DeepSeek Harness）git 自动提交推送插件 v1.3.0。把"扫描仓库 
 | `POST /api/git-push/commit` | `{repo, message, push?, dryRun?, audit?, llmAudit?}` 审计通过后一键提交推送（推送成功自动维护 dsh-repo-index） |
 
 ```bash
+# 查看插件状态
+curl -s http://127.0.0.1:3083/api/git-push/status
+
+# 扫描全部仓库
+curl -s http://127.0.0.1:3083/api/git-push/scan
+
 # 审计一个仓库（L0 静态）
 curl -s 'http://127.0.0.1:3083/api/git-push/audit?repo=/vol1/@appshare/DeepSeekHarness/workspace/ai-work-archive'
+
 # 追加 LLM 深度审查
-curl -s 'http://127.0.0.1:3083/api/git-push/audit?repo=...&llm=true'
+curl -s 'http://127.0.0.1:3083/api/git-push/audit?repo=/vol1/@appshare/DeepSeekHarness/workspace/ai-work-archive&llm=true'
+
 # 提交（默认先审计，发现严重问题拦截返回 findings）
 curl -s -X POST http://127.0.0.1:3083/api/git-push/commit -H 'Content-Type: application/json' \
   -d '{"repo":"/vol1/@appshare/DeepSeekHarness/workspace/ai-work-archive","message":"feat: xxx","audit":true}'
+```
+
+预期输出（status）：
+
+```json
+{
+  "ok": true,
+  "plugin": "dsh-git-push",
+  "version": "1.4.0",
+  "audit": { "auditEnabled": true, "blockOn": "blocker", "llmAudit": false },
+  "repoIndex": { "enabled": true }
+}
 ```
 
 ## 工具（agent 会话内直接调用）
@@ -91,7 +112,7 @@ curl -s -X POST http://127.0.0.1:3083/api/git-push/commit -H 'Content-Type: appl
 ```bash
 node --check lib/core.js && node --check lib/index.js   # 语法
 node test-core.mjs    # 核心逻辑 13 项（真实 git 临时仓库）
-node test-audit.mjs   # 审计规则 21 项（L0 静态，含 npm 包文件检测）
+node test-audit.mjs   # 审计规则 27 项（L0 静态，含 npm 包文件检测 + 文档措辞检查）
 node test-apply.mjs   # apply mock 16 项（路由 + 工具 + 审计门禁端到端）
 node test-repo-index.mjs  # repo-index 维护 20 项（frontmatter/skills 收集/可见性/生成/同步）
 ```
@@ -105,11 +126,13 @@ node test-repo-index.mjs  # repo-index 维护 20 项（frontmatter/skills 收集
 - L1 LLM 审查依赖 DSH llm 服务可用且已配置 `llmAuditProvider/Model`；不可用时自动跳过（不阻断），L0 不受影响
 - dsh-repo-index 可见性查询需 GitHub token（`repoIndexTokenPath`）；无 token/网络失败时标「未知」或保留手工标注
 - 只做"管道"：commit message 等判断留给 LLM
+- docs-conversation 规则只扫描文档类文件（md/markdown/mdx/txt）的**新增行**，代码/配置不查；文档里描述本规则时用「对话类措辞」等概括表述，避免字面写出禁用措辞被自身规则拦下
 
 ## 版本记录
 
 | 版本 | 内容 |
 |---|---|
+| 1.4.0 | **文档对话类措辞拦截**：L0 审计对文档文件（md/markdown/mdx/txt）新增行检查「AI 与用户沟通过程」类措辞（会话引用 / 用户决策来源 / AI 许可表述 / 商量转述等），命中即 blocker，防沟通/需求/移交/待办类文档入库；配套约定见 release-docs-rule |
 | 1.3.0 | **dsh-repo-index 自动维护**：推送成功后自动生成/同步唯一权威源码索引 skill（仓库清单 + 对应 skill 列 + GitHub API 可见性 + 本地 only）；索引权威源移入本插件 `skills/dsh-repo-index.md` |
 | 1.2.0 | **npm 包文件入库拦截**：`package-lock.json` / `yarn.lock` / `pnpm-lock.yaml` / `bun.lock` / `node_modules/` 内容入库时触发 blocker，阻止提交推送；防 CI/CD 误推 node_modules |
 | 1.1.0 | 内置代码审计门禁（L0 静态 + L1 LLM 可选）：`git_commit_push` 推送前审计拦截、`code_audit` 工具、`/api/git-push/audit` 端点 |

@@ -84,6 +84,23 @@ try {
 
   const r14g = audit([{ path: 'node_modules/.cache/foo.js', content: 'cache\n' }]);
   ok(r14g.findings.some((f) => f.rule === 'npm-package-file'), 'node_modules/.cache/ 也检出');
+
+  // docs-conversation 规则（v1.4.0）：文档含「AI 与用户沟通记录」措辞 → blocker
+  const r15a = audit([{ path: 'README.md', content: '# 项目\n\n按用户约定实现该功能（本会话完成）。\n' }]);
+  ok(r15a.findings.some((f) => f.rule === 'docs-conversation' && f.level === 'blocker'), 'md 含沟通记录措辞 → blocker');
+  ok(r15a.blocked === true, 'md 沟通记录触发拦截');
+
+  const r15b = audit([{ path: 'README.md', content: '# 项目\n\n功能说明：支持批量导出、定时同步。\n' }]);
+  ok(r15b.passed === true && !r15b.findings.some((f) => f.rule === 'docs-conversation'), '正常功能文档不误报');
+
+  const r15c = audit([{ path: 'src/main.js', content: '// 本会话上下文\nconst a = 1;\n' }]);
+  ok(!r15c.findings.some((f) => f.rule === 'docs-conversation'), '代码文件不误报 docs-conversation');
+
+  const r15d = audit([{ path: 'docs/plan.md', content: '用户确认了方案，我同意后开工。\n' }]);
+  ok(r15d.findings.some((f) => f.rule === 'docs-conversation'), '多种措辞命中均检出');
+
+  const r15e = audit([{ path: 'README.md', content: '# 项目\n\n用户可在设置页开关该功能。\n' }]);
+  ok(!r15e.findings.some((f) => f.rule === 'docs-conversation'), '正常描述用户操作不误报');
 } finally {
   rmSync(root, { recursive: true, force: true });
 }
