@@ -21,6 +21,7 @@ generatedBy: deepseek-official/deepseek-v4-flash
 
 ## 二、审计（v1.1.0 内置，重点）
 
+- **npm 下载产物屏蔽（v1.6.0，add 前自动）**：每次 commitAndPush 先调用 `ensureNpmIgnored()`——确保仓库 .gitignore 幂等覆盖 `node_modules/` + 常见 lock 文件（package-lock/yarn.lock/pnpm-lock.yaml/bun.lock）+ npm 缓存/日志（.npm/、.pnpm-store/、npm-debug.log*）。不覆盖已有 .gitignore 内容，只追加缺失条目。效果：「上传推送检查屏蔽下载的一堆 npm 包」——npm 产物不进变更、不进审计、不进 git。**单测 + 端到端（真实 git 仓库 + node_modules + lock）均通过**。
 - **L0 静态检查（零 token，默认开）**：JS 语法（node --check）/ JSON / YAML / 敏感信息硬编码（GitHub PAT、sk- key、密钥键值对）/ 凭据文件入库（.env/.credentials）/ 二进制大文件（>1MB）/ debugger 残留 / console.log≥5 / TODO/FIXME
 - **文档措辞拦截 docs-conversation（v1.4.0，blocker）**：对文档文件（md/markdown/mdx/txt）的**新增行**检查「AI 与用户沟通过程」类措辞（会话引用 / 用户决策来源 / AI 许可表述 / 商量转述等），命中即拦截——公开仓库只提交「做了什么」，沟通/需求/移交/待办类文档统一放 `data/沟通文档`（清单见 release-docs-rule）
 - **L1 LLM 深度审查（默认关，省钱）**：diff 喂便宜模型找逻辑/安全问题，实测 agnes-2.5-flash 精准检出越界/空值/除零/fetch 未检查 res.ok 等 bug
