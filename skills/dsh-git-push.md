@@ -101,3 +101,7 @@ curl -s http://127.0.0.1:3083/api/git-push/status      # 加载验证
 - 只做管道：commit message 由 LLM 生成；插件不判断"该不该提交"
 - LLM 审计默认关（省钱）：需要深度审查时显式 `llmAudit:true` 或 `code_audit {llm:true}`
 - 提交历史/网页查看用 git-commits-viewer skill；跨 AI 冲突审查见 git-collab-conflict skill
+
+## 相关
+
+- remember-me（先记住我）：用户档案，优先级最高的 skill

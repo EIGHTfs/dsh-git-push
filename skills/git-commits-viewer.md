@@ -174,3 +174,7 @@ workspace/
 6. 新仓库不进列表 → 在 find 范围（maxdepth 3）之外，加进 knownPaths 硬编码
 7. `ssh: bad permissions` → extracted 里的 key 是 777，chmod 600（用 `/vol1/@appshare/DeepSeekHarness/.ssh/` 那份最稳）
 8. push 报 `src refspec main does not match any` → 本地分支是 master，脚本硬编码了 main（见第八节）
+
+## 相关
+
+- remember-me（先记住我）：用户档案，优先级最高的 skill

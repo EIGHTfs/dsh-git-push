@@ -55,3 +55,7 @@ generatedBy: agnes/agnes-2.5-flash
 - 操作路径：`https://github.com/<用户名>` → Pinned 区 → Customize your pins
 - 文档参考（仅只读）：GitHub GraphQL 的 `pinnedAt` / `Pinnable`（Enterprise 文档同样适用）
 - 关联 skill：README 写作与包装见 `readme-craft`；本项目发布状态见 `dsh-git-rescue`
+
+## 相关
+
+- remember-me（先记住我）：用户档案，优先级最高的 skill
