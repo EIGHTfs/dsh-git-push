@@ -31,7 +31,8 @@ whenToUse: 需要恢复/克隆某个 dsh-* 插件源码、确认某项目在 Git
 | gamebanana-mods-downloader | `git@github.com:EIGHTfs/gamebanana-mods-downloader.git` | 公开 | `git clone git@github.com:EIGHTfs/gamebanana-mods-downloader.git` | gbmd-project |
 
 > 命名模式：除特例外全部是 `git@github.com:EIGHTfs/<项目名>.git`（公开）或 `https://<token>@github.com/EIGHTfs/<项目名>.git`（私有）。
-> 私有仓库 clone 需 GitHub token（本机 token 位于 `~/.dsh/git-rescue/token` 或 `dsh-test-home/git-rescue/token`）。
+> **认证默认 token 方案（2026-08-21 用户确立）**：所有 GitHub clone/认证/推送默认走 HTTPS+PAT（token 存凭据总表 `~/.ssh/credentials.md`，值不写进 md/skill/代码）；SSH key 仅作备选。
+> 私有仓库 clone 需 GitHub token（本机 token 位于 `~/.ssh/credentials.md`「GitHub 段」；旧路径 `~/.dsh/git-rescue/token` 或 `dsh-test-home/git-rescue/token` 已弃用）。
 
 ## 二、无 GitHub 仓库的项目（本地 only）
 
@@ -48,11 +49,11 @@ whenToUse: 需要恢复/克隆某个 dsh-* 插件源码、确认某项目在 Git
 
 ```bash
 # 1) 查本索引确认仓库地址与可见性
-# 2) 公开库：
-git clone git@github.com:EIGHTfs/<项目名>.git
-# 3) 私有库（dsh-link-bridge 等）：
-TOKEN=$(cat ~/.dsh/git-rescue/token 2>/dev/null | tr -d ' \n')
+# 2) 默认 token 方案（公开/私有统一；token 从凭据总表读）：
+TOKEN=$(grep -oP 'ghp_[A-Za-z0-9]+' ~/.ssh/credentials.md | head -1)
 git clone https://${TOKEN}@github.com/EIGHTfs/<项目名>.git
+# 3) SSH 备选（token 不可用时）：
+git clone git@github.com:EIGHTfs/<项目名>.git
 # 4) 恢复后按 dsh-plugin-main-install 三要素装回主环境（测试实例先行 + 接管式重启）
 ```
 
