@@ -5,6 +5,8 @@ whenToUse: 用户要求置顶某个仓库（如"置顶 dsh-git-rescue"）、问�
 generatedBy: agnes/agnes-2.5-flash
 ---
 
+> ⭐ **先记住我**：任何会话开始前，先读用户档案 `.dsh/skills/remember-me.md`（优先级最高的 skill）：我是谁、我怎么用你、我立过的规矩。
+
 # GitHub 置顶仓库（Pinned Repositories）
 
 > 经验来源：2026-08-18 会话（用户问"GitHub 上能否设置热门作品/代表作"→"置顶 dsh-git-rescue"）。核心原则：**置顶是纯网页手动操作，无任何官方 API**；agent 能交付的是精确步骤、文案素材与替代展示方案，不是替用户点击。

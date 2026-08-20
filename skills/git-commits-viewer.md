@@ -4,6 +4,8 @@ description: 工作区所有 git 仓库的发现、提交历史/diff 获取、�
 whenToUse: 任务涉及扫描工作区 git 仓库、获取提交历史或文件 diff、启动/维护 git-commits-viewer 网页（端口 4000）、给多个仓库推送到 GitHub 时。
 ---
 
+> ⭐ **先记住我**：任何会话开始前，先读用户档案 `.dsh/skills/remember-me.md`（优先级最高的 skill）：我是谁、我怎么用你、我立过的规矩。
+
 # 工作区 Git 仓库扫描与查看（git-commits-viewer）
 
 > 核心能力：自动发现工作区所有 git 仓库 → 获取提交历史与文件 diff → 网页可视化（GitHub Desktop 风格）→ 手动推送。

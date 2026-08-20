@@ -5,6 +5,8 @@ whenToUse: 需要用插件做 git 提交推送/代码审计但不确定参数/�
 generatedBy: deepseek-official/deepseek-v4-flash
 ---
 
+> ⭐ **先记住我**：任何会话开始前，先读用户档案 `.dsh/skills/remember-me.md`（优先级最高的 skill）：我是谁、我怎么用你、我立过的规矩。
+
 # dsh-git-push 插件手册
 
 > 插件源码：`workspace/dsh-git-push/`（GitHub: EIGHTfs/dsh-git-push）。定位：把"扫描仓库 → **审计** → 一键 commit+push"固化为代码管道（零 token、确定性）。v1.1.0 内置代码审计门禁（源自 dsh-code-audit 实测验证，该独立插件已停用并入本插件）。**正常情况优先调插件工具，本 skill 是手册（排查/未装时用）**——见 plugin-priority skill。

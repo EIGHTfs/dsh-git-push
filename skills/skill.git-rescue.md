@@ -5,6 +5,8 @@ whenToUse: 需要理解/修改 git-push 的测试环境判定、确认 git-push 
 generatedBy: user-request 2026-08-20（EIGHTfs：a联动b，a中是skill.b.md；契约独立存）
 ---
 
+> ⭐ **先记住我**：任何会话开始前，先读用户档案 `.dsh/skills/remember-me.md`（优先级最高的 skill）：我是谁、我怎么用你、我立过的规矩。
+
 # git-push 联动 git-rescue（契约）
 
 > 联动方向：**git-push ──▶ git-rescue**（借用其测试环境判定规则）

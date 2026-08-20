@@ -5,6 +5,8 @@ whenToUse: 在测试环境会话收到 git-push 门禁拦截、需要生成交�
 generatedBy: user-request 2026-08-20（EIGHTfs：a联动b，a中是skill.b.md；契约独立存）
 ---
 
+> ⭐ **先记住我**：任何会话开始前，先读用户档案 `.dsh/skills/remember-me.md`（优先级最高的 skill）：我是谁、我怎么用你、我立过的规矩。
+
 # git-push 联动 dsh-tasklist（契约）
 
 > 联动方向：**git-push ──▶ dsh-tasklist**（门禁拦截后的交接清单由任务清单插件管理）
