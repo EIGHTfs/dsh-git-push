@@ -1,6 +1,6 @@
 {
   "name": "dsh-git-push",
-  "version": "1.6.0",
+  "version": "1.12.1",
   "description": "git 自动提交推送 + 代码审计门禁：推送前自动屏蔽 npm 下载产物(node_modules/lock), 审计拦截语法/敏感信息/凭据/大文件。",
   "type": "module",
   "main": "lib/index.js",
@@ -19,7 +19,8 @@
     },
     "skills": [
       "./skills/dsh-git-push.md",
-      "./skills/dsh-repo-index.md"
-    ]
+      "./User/EIGHTfs/dsh-repo-index.md"
+    ],
+    "description": " User/ 内容备份在私有库 dsh-git-push-User（git clone 到插件 User/ 目录可恢复）。"
   }
 }

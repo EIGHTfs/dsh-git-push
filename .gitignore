@@ -9,3 +9,7 @@ bun.lock
 npm-debug.log*
 .npm/
 .pnpm-store/
+
+# 用户特殊要求文件夹（git-push 插件 User/，按用户 git 忽略，不入库）
+User/
+User/**

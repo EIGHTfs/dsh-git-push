@@ -21,7 +21,29 @@ generatedBy: deepseek-official/deepseek-v4-flash
 
 用法示例：`git_scan` 看改动 → 先 `code_audit {repo:"...", llm:true}` 自查 → `git_commit_push {repo:"...", message:"feat: xxx", push:true}`（审计通过才推）。
 
-## 二、审计（v1.1.0 内置，重点）
+## 二、开发者特殊要求门禁（v1.10.0）
+
+- 插件内 `User/<GitHub用户名>/`（如 `User/EIGHTfs/requirements.md`）放开发者特殊要求清单（git 忽略不入库）
+- `git_commit_push` 提交前自动读取并逐条核对：未核对（不带 `requirementsConfirmed:true`）直接拦截返回清单；AI 逐条确认达标后重新调用
+- 多用户支持：按仓库 remote owner 自动匹配对应 User 子目录
+
+### 推送通道（v1.12.0：默认 api.github.com）
+
+- **默认通道 = api.github.com Git Data API**（pushViaApi：blob→tree→commit→ref，复用远端已有 blob sha）——github.com 直连被网络阻断时仍可推送（本机 2026-09-02 实测：github.com 超时、api.github.com 正常）
+- API 无 token / 失败时回退 `git push origin`（SSH origin 且有 token 时经 HTTPS+token，GIT_ASKPASS 注入 token 不进命令行）
+- token 多源探测 resolveGitToken：项目 `.git-push-token` → workspaceRoot data/sensitive → HOME/DSH_HOME 会话目录
+- 本机无 SSH 私钥只有 GitHub token：clone/push 走 **HTTPS + token** 或 **api.github.com**，不用 SSH 443
+
+### User/ 目录备份与恢复（dsh-git-push-User 私有库）
+
+- User/（开发者特殊要求 requirements.md + 各用户 git 相关 skill）**本机专用、git 忽略不入主库**，独立备份在私有库 **`EIGHTfs/dsh-git-push-User`**（private，内容 = 插件 User/<用户名>/ 目录）
+- 恢复：`git clone` 该私有库到插件目录即可，如
+  ```bash
+  git clone https://github.com/EIGHTfs/dsh-git-push-User.git <插件目录>/User
+  ```
+- 注意：本机无 SSH 私钥只有 GitHub token，clone/push 走 **HTTPS + token**（GIT_ASKPASS 注入），不用 SSH 443
+
+## 三、审计（v1.1.0 内置，重点）
 
 - **npm 下载产物屏蔽（v1.6.0，add 前自动）**：每次 commitAndPush 先调用 `ensureNpmIgnored()`——确保仓库 .gitignore 幂等覆盖 `node_modules/` + 常见 lock 文件（package-lock/yarn.lock/pnpm-lock.yaml/bun.lock）+ npm 缓存/日志（.npm/、.pnpm-store/、npm-debug.log*）。不覆盖已有 .gitignore 内容，只追加缺失条目。效果：「上传推送检查屏蔽下载的一堆 npm 包」——npm 产物不进变更、不进审计、不进 git。**单测 + 端到端（真实 git 仓库 + node_modules + lock）均通过**。
 - **L0 静态检查（零 token，默认开）**：JS 语法（node --check）/ JSON / YAML / 敏感信息硬编码（GitHub PAT、sk- key、密钥键值对）/ 凭据文件入库（.env/.credentials）/ 二进制大文件（>1MB）/ debugger 残留 / console.log≥5 / TODO/FIXME
@@ -100,7 +122,7 @@ curl -s http://127.0.0.1:3083/api/git-push/status      # 加载验证
 
 - 只做管道：commit message 由 LLM 生成；插件不判断"该不该提交"
 - LLM 审计默认关（省钱）：需要深度审查时显式 `llmAudit:true` 或 `code_audit {llm:true}`
-- 提交历史/网页查看用 git-commits-viewer skill；跨 AI 冲突审查见 git-collab-conflict skill
+- git 相关操作/冲突审查/版本号等约定已移入本插件 User/EIGHTfs/（本机专用，git 忽略不入库）：git-commits-viewer（提交历史/网页查看）、git-collab-conflict（跨 AI 冲突审查）、versioning-rule（版本号）、dsh-repo-index（源码索引）等
 
 ## 相关
 
