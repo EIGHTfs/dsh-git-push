@@ -62,6 +62,7 @@ node test-core.mjs && node test-audit.mjs && node test-apply.mjs  # 单测
 
 | 版本 | 内容 |
 |---|---|
+| 1.12.2 | **分支免疫**：自动探测远端默认分支（GitHub 可能是 master 或 main）——请求分支在远端不存在且与默认分支不同名时自动改用默认分支（返回 branchAdjusted），杜绝误建错名新分支 |
 | 1.12.1 | **修复 gitRaw maxBuffer（默认 1MB→128MB）**——超过 1MB 的二进制 blob（如 session .zstd 日志）读取出错致 API 推送失败 |
 | 1.12.0 | **推送默认走 api.github.com**（Git Data API：blob→tree→commit→ref，复用远端 blob sha；github.com 直连被网络阻断仍可推）；API 失败/无 token 回退 git push origin；新增 pushViaApi / parseGithubOwnerRepo / gitRaw |
 | 1.11.0 | **SSH origin + 本机只有 token 时 HTTPS+token 回退推送**（GIT_ASKPASS 注入，token 不进命令行；无 SSH 私钥也能 push） |
@@ -81,6 +82,7 @@ node test-core.mjs && node test-audit.mjs && node test-apply.mjs  # 单测
 ## 注意事项
 
 - **推送通道**：v1.12.0 默认走 api.github.com（需 token，resolveGitToken 多源探测：项目 .git-push-token → workspaceRoot data/sensitive → HOME/DSH_HOME 会话目录）；API 无 token 或失败才回退 git push origin
+- **分支免疫（v1.12.2）**：不硬编码 main/master——自动读远端 default_branch，请求分支不存在且不同名时自动改用远端默认分支，防误建新分支
 - **SSH 443 / HTTPS**：本机无 SSH 私钥只有 GitHub token 时，git push 走 HTTPS+token（GIT_ASKPASS 注入 token 不进命令行）；github.com 直连被网络阻断时 API 通道是唯一可用推送方式
 - **远端领先**：拒绝推送（防覆盖），需先 pull 同步
 - **CIFS 卷**：每次 git 命令带 `-c safe.directory=<cwd>`（/vol02 只读卷 doubtful ownership）；CIFS 下 `git init`/`git remote add` 写 config.lock 会 chmod EPERM——建库用 /tmp 中转复制 .git，origin 用 node 直写 config
