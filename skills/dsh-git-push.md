@@ -29,6 +29,7 @@ generatedBy: deepseek-official/deepseek-v4-flash
 
 ### 推送通道（v1.12.0：默认 api.github.com）
 
+- **clone（v1.13.0）**：`git_clone` 工具走 api.github.com tarball 通道（target=owner/repo 或 URL；自动探测默认分支 master/main；/tmp 中转建仓整拷回 dest 兼容 CIFS；dest 非空拒绝）
 - **默认通道 = api.github.com Git Data API**（pushViaApi：blob→tree→commit→ref，复用远端已有 blob sha）——github.com 直连被网络阻断时仍可推送（本机 2026-09-02 实测：github.com 超时、api.github.com 正常）
 - API 无 token / 失败时回退 `git push origin`（SSH origin 且有 token 时经 HTTPS+token，GIT_ASKPASS 注入 token 不进命令行）
 - token 多源探测 resolveGitToken：项目 `.git-push-token` → workspaceRoot data/sensitive → HOME/DSH_HOME 会话目录
