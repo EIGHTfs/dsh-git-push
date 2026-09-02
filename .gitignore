@@ -13,3 +13,6 @@ npm-debug.log*
 # 用户特殊要求文件夹（git-push 插件 User/，按用户 git 忽略，不入库）
 User/
 User/**
+
+# clone 通道元数据（本机专用，不入库）
+.clone-meta.json

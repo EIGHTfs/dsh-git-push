@@ -1,6 +1,6 @@
 ---
 name: dsh-git-push
-description: dsh-git-push 插件（git 自动提交推送 v1.4.0，内置代码审计门禁）的使用手册：git_scan / git_commit_push / code_audit 工具与 /api/git-push API 的调用方法、配置（审计 blockOn/llmAudit）、验证与坑速查。处理"提交推送代码""扫描仓库状态""审计代码""推送前拦截 bug""敏感信息检测""文档被审计拦截"类请求时加载；插件不可用/报错排查时必加载（正常情况优先用插件，见 plugin-priority）。
+description: dsh-git-push 插件（git 自动提交推送 v1.17.0，内置代码审计门禁，所有 GitHub 操作走 api.github.com）的使用手册：git_scan / git_commit_push / git_clone / git_remote_create / code_audit 工具与 /api/git-push API 的调用方法、配置（审计 blockOn/llmAudit）、验证与坑速查。处理"提交推送代码""扫描仓库状态""审计代码""推送前拦截 bug""敏感信息检测""文档被审计拦截"类请求时加载；插件不可用/报错排查时必加载（正常情况优先用插件，见 plugin-priority）。
 whenToUse: 需要用插件做 git 提交推送/代码审计但不确定参数/报错排查/插件未装需手做时。
 generatedBy: deepseek-official/deepseek-v4-flash
 ---
@@ -27,22 +27,22 @@ generatedBy: deepseek-official/deepseek-v4-flash
 - `git_commit_push` 提交前自动读取并逐条核对：未核对（不带 `requirementsConfirmed:true`）直接拦截返回清单；AI 逐条确认达标后重新调用
 - 多用户支持：按仓库 remote owner 自动匹配对应 User 子目录
 
-### 推送通道（v1.12.0：默认 api.github.com）
+### 推送通道（v1.17.0：所有功能只走 api.github.com）
 
-- **clone（v1.13.0）**：`git_clone` 工具走 api.github.com tarball 通道（target=owner/repo 或 URL；自动探测默认分支 master/main；/tmp 中转建仓整拷回 dest 兼容 CIFS；dest 非空拒绝）
-- **默认通道 = api.github.com Git Data API**（pushViaApi：blob→tree→commit→ref，复用远端已有 blob sha）——github.com 直连被网络阻断时仍可推送（本机 2026-09-02 实测：github.com 超时、api.github.com 正常）
-- API 无 token / 失败时回退 `git push origin`（SSH origin 且有 token 时经 HTTPS+token，GIT_ASKPASS 注入 token 不进命令行）
-- token 多源探测 resolveGitToken：项目 `.git-push-token` → workspaceRoot data/sensitive → HOME/DSH_HOME 会话目录
-- 本机无 SSH 私钥只有 GitHub token：clone/push 走 **HTTPS + token** 或 **api.github.com**，不用 SSH 443
+- **clone（v1.17.0）**：`git_clone` 走 api.github.com Git Data API（git/trees + git/blobs，不下 tarball；target=owner/repo 或 URL 只解析不访问；自动探测默认分支 master/main；/tmp 中转建仓整拷回 dest 兼容 CIFS；dest 非空拒绝；origin 写成 `https://api.github.com/repos/o/r`）
+- **默认通道 = api.github.com Git Data API**（pushViaApi：blob→tree→commit→ref，复用远端已有 blob sha）——统一 `githubFetch`（hostname 硬闸 + 拒绝跟随 302）
+- API 无 token / 失败时**不再回退** `git push origin`（避免直连 github.com）
+- token 多源探测 resolveGitToken：插件 `User/<用户名>/github-token` → 项目 `.git-push-token` → workspaceRoot data/sensitive → HOME/DSH_HOME 会话目录
+- 本机无 SSH 私钥只有 GitHub token：clone/push **只走 api.github.com**，不用 SSH 443 / HTTPS github.com
 
 ### User/ 目录备份与恢复（dsh-git-push-User 私有库）
 
 - User/（开发者特殊要求 requirements.md + 各用户 git 相关 skill）**本机专用、git 忽略不入主库**，独立备份在私有库 **`EIGHTfs/dsh-git-push-User`**（private，内容 = 插件 User/<用户名>/ 目录）
-- 恢复：`git clone` 该私有库到插件目录即可，如
-  ```bash
-  git clone https://github.com/EIGHTfs/dsh-git-push-User.git <插件目录>/User
+- 恢复：`git_clone` 该私有库到插件目录即可，如
   ```
-- 注意：本机无 SSH 私钥只有 GitHub token，clone/push 走 **HTTPS + token**（GIT_ASKPASS 注入），不用 SSH 443
+  git_clone { target: "EIGHTfs/dsh-git-push-User", dest: "<插件目录>/User" }
+  ```
+- 注意：clone/push 只走 **api.github.com**，不用 SSH 443 / github.com HTTPS
 
 ## 三、审计（v1.1.0 内置，重点）
 
@@ -109,7 +109,7 @@ curl -s http://127.0.0.1:3083/api/git-push/status      # 加载验证
 
 | 坑 | 处理 |
 |---|---|
-| HTTPS remote push 失败 | 本机 git 缺 `remote-https`，必须 SSH remote（全局 core.sshCommand 已配） |
+| HTTPS remote push 失败 | 已废弃 github.com HTTPS 回退；推送只走 api.github.com（需 token）。无 token 会返回明确错误，不再 git push origin |
 | `src refspec main does not match` | 本地分支是 master，插件已自动取 `branch --show-current` |
 | 远端领先不推 | 插件 push 前 `fetch` + `rev-list`，远端领先返回 reason，需先 pull |
 | `/vol02` 只读卷 doubtful ownership | 插件每次命令带 `-c safe.directory=` |

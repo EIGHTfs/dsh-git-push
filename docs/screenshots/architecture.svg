@@ -54,9 +54,9 @@
   
   <!-- Push Target -->
   <rect x="250" y="280" width="300" height="50" fill="#1e293b" stroke="#ef4444" stroke-width="2" rx="8"/>
-  <text x="400" y="300" text-anchor="middle" fill="#ef4444" font-size="12" font-weight="bold" font-family="system-ui,sans-serif">GitHub Remote (SSH)</text>
-  <text x="400" y="316" text-anchor="middle" fill="#f8fafc" font-size="10" font-family="system-ui,sans-serif">push origin &lt;branch&gt; (fetch + ahead/behind)</text>
-  <text x="400" y="328" text-anchor="middle" fill="#64748b" font-size="9" font-family="system-ui,sans-serif">ssh.github.com:443 · 远端领先不推</text>
+  <text x="400" y="300" text-anchor="middle" fill="#ef4444" font-size="12" font-weight="bold" font-family="system-ui,sans-serif">api.github.com Git Data API</text>
+  <text x="400" y="316" text-anchor="middle" fill="#f8fafc" font-size="10" font-family="system-ui,sans-serif">blob → tree → commit → ref（不直连 github.com）</text>
+  <text x="400" y="328" text-anchor="middle" fill="#64748b" font-size="9" font-family="system-ui,sans-serif">clone / push / create / tag 同一通道</text>
   
   <!-- Arrows -->
   <line x1="220" y1="110" x2="260" y2="110" stroke="#6b8c4a" stroke-width="2" marker-end="url(#arrow)"/>

@@ -36,8 +36,8 @@ const mockCtx = {
 await apply(mockCtx, { workspaceRoot: tmpRoot, auditEnabled: true, blockOn: 'blocker' });
 ok(name === 'dsh-git-push', '插件名正确');
 ok(routes.length === 1 && routes[0].kind === 'prefix' && routes[0].path === '/api/git-push', '注册了 prefix 路由 /api/git-push');
-ok(tools.length === 3, `注册了 ${tools.length} 个工具`);
-ok(tools.map((t) => t.name).sort().join(',') === 'code_audit,git_commit_push,git_scan', '工具名正确（含 code_audit）');
+const toolNames = tools.map((t) => t.name).sort();
+ok(toolNames.includes('git_scan') && toolNames.includes('git_commit_push') && toolNames.includes('code_audit') && toolNames.includes('git_clone'), `注册了 ${tools.length} 个工具（含 git_clone）`);
 
 const scan = await tools.find((t) => t.name === 'git_scan').execute({});
 const parsed = JSON.parse(scan);

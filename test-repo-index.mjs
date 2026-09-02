@@ -48,15 +48,17 @@ const vm = parseManualVisibility(existing);
 ok(vm['dsh-link-bridge'] === '私有', '手工可见性解析：私有');
 ok(vm['dsh-git-rescue'] === '公开', '手工可见性解析：公开');
 
-// ---------- 4. remoteToRepoInfo ----------
+// ---------- 4. remoteToRepoInfo（v1.17.0：归一化为 api.github.com + git_clone） ----------
 const pub = remoteToRepoInfo('git@github.com:EIGHTfs/dsh-git-rescue.git', '公开');
-ok(pub.repoUrl === 'git@github.com:EIGHTfs/dsh-git-rescue.git', 'EIGHTfs ssh remote 归一化');
-ok(pub.cloneCmd === 'git clone git@github.com:EIGHTfs/dsh-git-rescue.git', '公开 clone 命令');
+ok(pub.repoUrl === 'https://api.github.com/repos/EIGHTfs/dsh-git-rescue', 'EIGHTfs ssh remote 归一化为 api.github.com');
+ok(pub.cloneCmd.includes('git_clone') && pub.cloneCmd.includes('EIGHTfs/dsh-git-rescue'), '公开 clone 走 git_clone');
 const priv = remoteToRepoInfo('https://github.com/EIGHTfs/dsh-link-bridge.git', '私有');
-ok(priv.cloneCmd.includes('<token>'), '私有 clone 带 token 占位');
-ok(priv.repoUrl === 'git@github.com:EIGHTfs/dsh-link-bridge.git', 'https remote 归一化为 ssh');
+ok(priv.cloneCmd.includes('git_clone') && priv.cloneCmd.includes('私有'), '私有 clone 走 git_clone 并标注私有');
+ok(priv.repoUrl === 'https://api.github.com/repos/EIGHTfs/dsh-link-bridge', 'https remote 归一化为 api.github.com');
 const other = remoteToRepoInfo('git@github.com:other/repo.git', '公开');
-ok(other.repoUrl === 'git@github.com:other/repo.git', '非 EIGHTfs remote 原样保留');
+ok(other.repoUrl === 'https://api.github.com/repos/other/repo', '非 EIGHTfs remote 也写成 api.github.com');
+const apiOrigin = remoteToRepoInfo('https://api.github.com/repos/EIGHTfs/dsh-git-push', '公开');
+ok(apiOrigin.repoUrl === 'https://api.github.com/repos/EIGHTfs/dsh-git-push', 'api.github.com origin 原样解析');
 
 // ---------- 5. buildRepoIndex 端到端 ----------
 const wsRoot = join(root, 'workspace');

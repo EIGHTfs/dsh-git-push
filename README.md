@@ -1,6 +1,6 @@
 # dsh-git-push
 
-DSH（DeepSeek Harness）git 自动提交推送插件。把「扫描仓库 → **审计** → 一键 commit + push → **自动维护 dsh-repo-index 源码索引** → **敏感字段文件自动 .gitignore**」固化为 agent 工具与 HTTP API，**执行零 token 消耗、确定性输出**（相比每次让 AI 手敲 git 命令）。默认推送通道走 **api.github.com**（Git Data API），github.com 直连被网络阻断时仍可推送。
+DSH（DeepSeek Harness）git 自动提交推送插件。把「扫描仓库 → **审计** → 一键 commit + push → **自动维护 dsh-repo-index 源码索引** → **敏感字段文件自动 .gitignore**」固化为 agent 工具与 HTTP API，**执行零 token 消耗、确定性输出**（相比每次让 AI 手敲 git 命令）。**所有 GitHub 操作默认且仅走 api.github.com**（clone / push / 建仓 / 可见性 / 打 tag），不直连 github.com、ssh.github.com、codeload.github.com。
 
 ## 目录
 
@@ -16,7 +16,7 @@ DSH（DeepSeek Harness）git 自动提交推送插件。把「扫描仓库 → *
 
 - **分层**：`lib/core.js` 纯函数核心（不依赖 ctx，可独立单测）+ `lib/index.js` 插件装配（工具注册 + HTTP API + 审计门禁接线 + repo-index 维护）
 - **门禁链**：`commitWithAudit` = README 预览 → L0 静态审计（可选 L1 LLM）→ 拦截判断 → `commitAndPush`（npm 屏蔽 → 敏感字段扫描 .gitignore → add → commit → push → repo-index 更新）
-- **推送双通道（v1.12.0）**：默认走 **api.github.com Git Data API**（blob → tree → commit → ref，逐 blob 复用远端已有 sha，避免重复上传）；API 无 token/失败时回退 `git push origin`（SSH origin 且有 token 时经 HTTPS+token，GIT_ASKPASS 注入 token 不进命令行）
+- **推送单通道（v1.17.0）**：只走 **api.github.com Git Data API**（blob → tree → commit → ref，逐 blob 复用远端已有 sha）；无 token / API 失败即返回错误，**不再回退** `git push origin`（避免打到 github.com）
 - **审计体系**：L0 静态（语法/JSON/YAML/敏感信息/凭据/大文件/debugger/文档对话类措辞）+ L1 LLM 深度审查（可选，diff 喂便宜模型）；豁免类型 = 说明类（示例假凭据）+ 备份类（exemptRepos 白名单）
 - **用户门禁**：插件 `User/<owner>/requirements.md` 开发者特殊要求，提交前逐条核对，未核对拦截（requirementsConfirmed 机制）
 
@@ -53,9 +53,9 @@ node test-core.mjs && node test-audit.mjs && node test-apply.mjs  # 单测
 | `/api/git-push/sensitive?repo=<路径>` | GET | 手动扫描仓库含敏感字段的文件 |
 | `/api/git-push/commit` | POST | `{repo, message, push?, dryRun?, audit?, llmAudit?}` 审计通过后一键提交推送 |
 | `/api/git-push/remote-create` | POST/GET | 按项目文件夹创建远程仓库（私有/公开 + 设置 origin） |
-| `git_clone`（agent 工具） | — | 远端 clone 默认走 api.github.com（tarball + /tmp 中转建仓，兼容 CIFS；自动探测默认分支） |
+| `git_clone`（agent 工具） | — | 远端 clone 只走 api.github.com Git Data API（git/trees + git/blobs，不下 tarball；/tmp 中转建仓，兼容 CIFS；自动探测默认分支） |
 
-**agent 工具**：`git_scan` / `git_commit_push`（含 requirementsConfirmed 参数）/ `code_audit` / `git_gen_readme` / `git_rebuild_history` / `git_remote_create` / `git_clone`（远端 clone 默认走 api.github.com tarball）
+**agent 工具**：`git_scan` / `git_commit_push`（含 requirementsConfirmed 参数）/ `code_audit` / `git_gen_readme` / `git_rebuild_history` / `git_remote_create` / `git_set_visibility` / `git_clone`（远端 clone 只走 api.github.com Git Data API）
 
 **配置键**（cordis.patch.yml insert config）：`workspaceRoot` / `extraRepos` / `depth` / `auditEnabled` / `blockOn` / `llmAudit` / `llmAuditProvider` / `llmAuditModel` / `maxDiffBytes` / `repoIndexEnabled` / `repoIndexTokenPath` / `repoIndexSyncTarget` / `repoIndexLocalOnly` / `exemptRepos`
 
@@ -63,6 +63,7 @@ node test-core.mjs && node test-audit.mjs && node test-apply.mjs  # 单测
 
 | 版本 | 内容 |
 |---|---|
+| 1.17.0 | **所有功能默认且仅走 api.github.com**：①统一 `githubFetch`（hostname 硬闸 + 拒绝跟随 302，防 tarball 跳到 codeload）；②`git_clone` 改 Git Data API（git/trees + git/blobs base64，不再下 tarball）；③push 去掉 `git push origin` / HTTPS+token 回退；④`git_remote_create` / clone 后 origin 写成 `https://api.github.com/repos/{owner}/{repo}`；⑤repo-index 恢复命令改为 `git_clone` |
 | 1.16.0 | **凭据迁移 User/ 目录 + 自动打 tag + 可见性切换**：①token/SSH 凭据自动从插件 `User/<用户名>/` 目录探测（不硬编码用户名/路径，git 忽略本机专用，替代 data/sensitive）；②`git_set_visibility` 工具——一键切换仓库公开/私有（PATCH /repos，改公开有风险提示）；③自动打 tag——dsh- 前缀项目 push 成功后自动打 `v<package.json version>` tag（Git Data API 建 ref，幂等，已存在跳过）便于官方发现 |
 | 1.15.0 | git_scan 扫描路径自由配置：extraReposFile 配置文件（每行一个仓库路径，实时读取）+ 工具 root/paths 参数 + API 查询参数 |
 | 1.14.0 | **敏感扫描豁免 + 根因修复**：①私有库豁免——GitHub 可见性=private 时跳过敏感字段自动 .gitignore（只扫描报告不写入）；②注释豁免——文件头/行内含 `dsh-skip-sensitive` 即跳过敏感扫描（审计 + 自动 gitignore 两处同认）；③根因修复——敏感字段值必须是「字符串字面量」（`password: "xxx"`），表达式/变量引用/文案拼接（`password: fn().value`、`"Cookie: " + x`）不再误报；④移除测试环境提交门禁（checkTestEnvCommitGate/isTestEnvHome） |
@@ -86,22 +87,21 @@ node test-core.mjs && node test-audit.mjs && node test-apply.mjs  # 单测
 
 ## 注意事项
 
-- **推送通道**：v1.12.0 默认走 api.github.com（需 token，resolveGitToken 多源探测：项目 .git-push-token → workspaceRoot data/sensitive → HOME/DSH_HOME 会话目录）；API 无 token 或失败才回退 git push origin
+- **推送通道（v1.17.0）**：只走 api.github.com Git Data API（需 token，resolveGitToken 多源探测：插件 User/<用户名>/github-token → 项目 .git-push-token → workspaceRoot data/sensitive）；无 token 或 API 失败**不再**回退 git push origin
 - **分支免疫（v1.12.2）**：不硬编码 main/master——自动读远端 default_branch，请求分支不存在且不同名时自动改用远端默认分支，防误建新分支
-- **clone（v1.13.0）**：git_clone 走 api.github.com tarball 通道（github.com 直连被阻断仍可拉取）；/tmp 中转建仓后整拷回 dest（绕开 CIFS git init EPERM）；dest 非空拒绝防覆盖；clone 后 origin 设置为 https://github.com/o/r.git，可直接走 pushViaApi 推送
-- **SSH 443 / HTTPS**：本机无 SSH 私钥只有 GitHub token 时，git push 走 HTTPS+token（GIT_ASKPASS 注入 token 不进命令行）；github.com 直连被网络阻断时 API 通道是唯一可用推送方式
+- **clone（v1.17.0）**：git_clone 走 api.github.com Git Data API（git/trees + git/blobs，不跟随 tarball 302）；/tmp 中转建仓后整拷回 dest（绕开 CIFS git init EPERM）；dest 非空拒绝防覆盖；clone 后 origin 设置为 `https://api.github.com/repos/o/r`
+- **禁止直连 github.com**：网络请求 hostname 必须是 api.github.com；历史 github.com / SSH origin 只作字符串解析，不发起 git 协议
 - **远端领先**：拒绝推送（防覆盖），需先 pull 同步
 - **CIFS 卷**：每次 git 命令带 `-c safe.directory=<cwd>`（/vol02 只读卷 doubtful ownership）；CIFS 下 `git init`/`git remote add` 写 config.lock 会 chmod EPERM——建库用 /tmp 中转复制 .git，origin 用 node 直写 config
 - **敏感扫描豁免（v1.14.0）**：①私有库——GitHub 可见性=private 自动豁免（API 探测失败/无 origin 保守不豁免）；②注释豁免——文件头前 3 行或行内注释带 `dsh-skip-sensitive` 即跳过（审计 secret/凭据文件/对话措辞 + 自动 gitignore 两处同认）；③只认字符串字面量值（表达式/拼接/变量引用不误报）
 - **测试环境门禁（v1.14.0 移除）**：原 checkTestEnvCommitGate（DSH_HOME 含 dsh-test-* 禁提交）已删除——commitAndPush/rebuildHistory 不再有测试环境拦截
 - **git_scan 自由配置（v1.15.0）**：①配置 `extraReposFile` 指向文本文件（每行一个仓库绝对路径，`#` 注释），**运行时实时读取，改文件即时生效无需重启**；②工具 `git_scan` 支持 `root`（覆盖扫描根）/ `paths`（逗号分隔临时追加仓库）；③API `/api/git-push/scan` 支持同名查询参数
 - **审计**：L1 LLM 依赖 DSH llm 服务已配置，不可用自动跳过；docs-conversation 只查文档类文件新增行；说明类示例假凭据豁免
-- **User/ 目录**：git 忽略不入主库，独立备份私有库 `EIGHTfs/dsh-git-push-User`（恢复：`git clone https://github.com/EIGHTfs/dsh-git-push-User.git <插件目录>/User`）
+- **User/ 目录**：git 忽略不入主库，独立备份私有库 `EIGHTfs/dsh-git-push-User`（恢复：`git_clone { target: "EIGHTfs/dsh-git-push-User", dest: "<插件目录>/User" }`）
 - **API 推送限制**：Git Data API 单仓库 blob 数/请求有 GitHub 限额，超大仓库（千级文件）逐 blob 上传较慢；复用远端已有 sha 已减少重复上传
 
 ## 开发计划 / 疑难杂症
 
-- [ ] `ensureRemoteRepo` 的 CIFS remote add 静默失败——补 node 直写 config 回退（当前需手动补 origin）
 - [ ] API 推送对空仓库/无 parent 首次推送的孤儿 commit 校验（当前 POST ref 已存在→改 PATCH 已处理，但仍需端到端覆盖测试）
-- [ ] pushViaApi 支持大仓库（百+文件）上传进度与失败续传
-- [ ] `git_remote_create` 建库后 origin 设置与 API 推送通道的衔接测试
+- [ ] pushViaApi / cloneViaApi 支持大仓库（百+文件）进度与失败续传
+- [x] `git_remote_create` / `git_clone` origin 写成 api.github.com/repos/o/r，与 API 推送通道衔接
