@@ -60,8 +60,10 @@ generatedBy: deepseek-official/deepseek-v4-flash
 |---|---|---|
 | **说明类（示例凭据）** | 文档/README/示例代码中**用于举例的假凭据**不报敏感信息——值含 假/fake/示例/演示/sample/demo 或占位符（your- 前缀、xxx、example 等），或行内含「例如/举例/示例」等示例词整行豁免 | 「用户名: 假用户 / 密码: 假密码」（中文假值）或 `user: your-username / password: your-password`（占位符） |
 | **备份类（私有库）** | 配置 `exemptRepos` 白名单（仓库绝对路径或目录名）后，命中的**私有/备份仓库**跳过敏感内容规则（secret / 凭据文件 / 对话措辞），其余规则照常；审计结果标注 `exempted:true` | `exemptRepos: ['ai-work-archive']`（私有归档可存 token/会话总结） |
+| **私有库自动豁免（v1.14.0）** | commitAndPush 自动探测 GitHub 仓库可见性（GET /repos/{o}/{r} 读 private 字段，复用 resolveGitToken）：**private → 敏感字段自动 .gitignore 只扫描报告不写入**（`sensitiveExempted` 标注），审计同步跳过敏感内容规则；探测失败/无 origin/无 token → 保守不豁免 | `EIGHTfs/dsh-git-push`（private）提交含密码字段的源码不再被自动 gitignore |
+| **注释豁免（v1.14.0）** | 敏感信息可通过注释申请豁免：**文件头前 3 行**或**行内注释**带 `dsh-skip-sensitive` 即跳过敏感扫描（自动 gitignore + 审计 secret/凭据/对话措辞两处同认） | `// dsh-skip-sensitive` 放文件头 → 整文件豁免；`password = "x" // dsh-skip-sensitive` → 仅该行豁免 |
 
-**判定原则**：公开仓库只提交「做了什么」，示例凭据必须是**假的**（真实凭据哪怕一行也禁止）；私有备份仓库的敏感信息上传通过 `exemptRepos` 白名单放行（语法/JSON/YAML/大文件检查仍生效）。
+**判定原则**：公开仓库只提交「做了什么」，示例凭据必须是**假的**（真实凭据哪怕一行也禁止）；私有备份仓库的敏感信息上传通过 `exemptRepos` 白名单放行（语法/JSON/YAML/大文件检查仍生效）；v1.14.0 起私有库可见性=private 自动豁免敏感自动 gitignore，源码文件如需入库可加 `dsh-skip-sensitive` 注释声明（或依赖只认字符串字面量的根因修复）。
 
 ## 三、HTTP API
 
