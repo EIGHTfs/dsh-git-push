@@ -85,6 +85,7 @@ generatedBy: deepseek-official/deepseek-v4-flash
       config:
         workspaceRoot: '/vol1/@appshare/DeepSeekHarness/workspace'   # 扫描根
         extraRepos: ['/vol02/1000-0-1789e550/gamebanana-mods-downloader']
+        extraReposFile: '/vol1/@appdata/deepseek-harness-NAS/0.1.1-rc.2/.dsh/git-extra-repos.txt'   # 自由配置：每行一个仓库绝对路径，实时读取
         auditEnabled: true          # L0 静态审计开关
         blockOn: 'blocker'          # 'blocker'=仅严重拦截 | 'any'=严格
         llmAudit: false             # L1 LLM 审查（默认关省钱）
