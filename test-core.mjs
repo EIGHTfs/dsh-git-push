@@ -1,6 +1,6 @@
 /** dsh-git-push 核心逻辑单测：扫描 + 提交推送（真实 git 操作，临时目录） */
-import { scanRepos, commitAndPush, readRepoStatus, findGitDirs, parseGithubOwnerRepo, httpsUrlOf, apiOriginOf, sshOriginOf, isBadCredentials, githubFetch, resolveUserDir, userRepoCandidates, USER_REPO_NAME, loadUserRequirements } from './lib/core.js';
-import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
+import { scanRepos, commitAndPush, readRepoStatus, findGitDirs, parseGithubOwnerRepo, httpsUrlOf, apiOriginOf, sshOriginOf, isBadCredentials, githubFetch, resolveUserDir, userRepoCandidates, USER_REPO_NAME, loadUserRequirements, gitCFlags, ensureGlobalFilemodeFalse, runGit } from './lib/core.js';
+import { mkdtempSync, writeFileSync, mkdirSync, rmSync, chmodSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execSync } from 'node:child_process';
@@ -32,6 +32,11 @@ try {
   ok(httpsUrlOf('git@github.com:EIGHTfs/x.git') === 'https://api.github.com/repos/EIGHTfs/x', 'httpsUrlOf 产出 api.github.com');
   ok(apiOriginOf('EIGHTfs', 'x') === 'https://api.github.com/repos/EIGHTfs/x', 'apiOriginOf');
   ok(sshOriginOf('EIGHTfs', 'x') === 'ssh://git@ssh.github.com:443/EIGHTfs/x.git', 'sshOriginOf 走 ssh.github.com:443');
+  const cflags = gitCFlags('/tmp/repo-x');
+  ok(cflags.includes('core.filemode=false') && cflags.includes('safe.directory=/tmp/repo-x'), 'gitCFlags 含 filemode=false 与 safe.directory');
+  const fm = ensureGlobalFilemodeFalse();
+  ok(typeof fm.ok === 'boolean' && typeof fm.status === 'number', `ensureGlobalFilemodeFalse 返回 ok=${fm.ok} status=${fm.status}`);
+
   ok(isBadCredentials('上传 blob 失败 .gitignore: Bad credentials') === true, 'isBadCredentials 认 Bad credentials');
   ok(isBadCredentials('无新提交可推送') === false, 'isBadCredentials 不误伤普通失败');
   const denied = await githubFetch('https://github.com/EIGHTfs/x', {});
@@ -63,6 +68,11 @@ try {
   writeFileSync(join(repoA, 'a.txt'), 'hello world\n');
   const stA = readRepoStatus(repoA);
   ok(stA.changes === 1, `改动后 changes=${stA.changes}`);
+
+  // v1.18.4：只改可执行位不应进 status（core.filemode=false）
+  chmodSync(join(repoB, 'b.txt'), 0o755);
+  const stMode = runGit(['status', '--porcelain'], repoB).stdout;
+  ok(stMode === '', `只改可执行位时 porcelain 为空（got ${JSON.stringify(stMode)}）`);
 
   // commitAndPush 无 remote → push 报错但提交成功
   const r1 = await commitAndPush({ repoPath: repoA, message: 'feat: 测试提交', requirementsConfirmed: true });

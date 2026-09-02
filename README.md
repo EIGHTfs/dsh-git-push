@@ -17,6 +17,7 @@ DSH（DeepSeek Harness）git 自动提交推送插件。把「扫描仓库 → *
 - **分层**：`lib/core.js` 纯函数核心（不依赖 ctx，可独立单测）+ `lib/index.js` 插件装配（工具注册 + HTTP API + 审计门禁接线 + repo-index 维护）
 - **门禁链**：`commitWithAudit` = README 预览 → L0 静态审计（可选 L1 LLM）→ 拦截判断 → `commitAndPush`（npm 屏蔽 → 敏感字段扫描 .gitignore → add → commit → push → repo-index 更新）
 - **推送通道（v1.18.3）**：默认 **api.github.com Git Data API**（blob → tree → commit → ref）；无 token / 401 Bad credentials 时回退 **ssh.github.com:443**（User 仓 `id_ed25519`）。禁止 `git push github.com` / HTTPS
+- **可执行位（v1.18.4）**：启动写 `git config --global core.filemode false`；每次 git 带 `-c core.filemode=false`，CIFS 权限噪声不进提交
 - **审计体系**：L0 静态（语法/JSON/YAML/敏感信息/凭据/大文件/debugger/文档对话类措辞）+ L1 LLM 深度审查（可选，diff 喂便宜模型）；豁免类型 = 说明类（示例假凭据）+ 备份类（exemptRepos 白名单）
 - **用户门禁**：同级仓 `dsh-git-push-User/requirements.md` 开发者特殊要求，提交前逐条核对，未核对拦截（requirementsConfirmed 机制）
 
@@ -63,6 +64,7 @@ node test-core.mjs && node test-audit.mjs && node test-apply.mjs  # 单测
 
 | 版本 | 内容 |
 |---|---|
+| 1.18.4 | **忽略可执行位**：启动时 `git config --global core.filemode false`；每次 git 命令带 `-c core.filemode=false`。CIFS/trimafs 上 100644↔100755 不再进 status/commit |
 | 1.18.3 | **token 无效回退 SSH**：push 默认仍走 api.github.com；无 token 或 401 Bad credentials 时改走 `ssh.github.com:443`（User 仓私钥），禁止 github.com HTTPS |
 | 1.18.2 | 工作区干净但本地领先时继续 pushViaApi；userRepoCandidates 从 DSH_HOME 推导同级仓；tokenInfo 提到 push 块级作用域 |
 | 1.18.0 | **User 仓离开插件目录**：开发者要求/凭据改到同级私有仓 `dsh-git-push-User`（与 `dsh-git-push` 并列）；启动时若缺失则 `git_clone`（api.github.com）拉到工作区同一层级；安装拷贝不再覆盖这份仓 |
@@ -96,6 +98,7 @@ node test-core.mjs && node test-audit.mjs && node test-apply.mjs  # 单测
 - **禁止直连 github.com**：REST/Git Data 的 hostname 必须是 api.github.com；token 失效时只允许 ssh.github.com:443，不打 github.com
 - **远端领先**：拒绝推送（防覆盖），需先 pull 同步
 - **CIFS 卷**：每次 git 命令带 `-c safe.directory=<cwd>`（/vol02 只读卷 doubtful ownership）；CIFS 下 `git init`/`git remote add` 写 config.lock 会 chmod EPERM——建库用 /tmp 中转复制 .git，origin 用 node 直写 config
+- **可执行位噪声（v1.18.4）**：CIFS/trimafs 上 chmod 不持久，git 会把 100644↔100755 当成变更。插件启动时执行 `git config --global core.filemode false`；`runGit` / `gitRaw` 每次再带 `-c core.filemode=false`（HOME 只读写不了全局时仍生效）
 - **敏感扫描豁免（v1.14.0）**：①私有库——GitHub 可见性=private 自动豁免（API 探测失败/无 origin 保守不豁免）；②注释豁免——文件头前 3 行或行内注释带 `dsh-skip-sensitive` 即跳过（审计 secret/凭据文件/对话措辞 + 自动 gitignore 两处同认）；③只认字符串字面量值（表达式/拼接/变量引用不误报）
 - **测试环境门禁（v1.14.0 移除）**：原 checkTestEnvCommitGate（DSH_HOME 含 dsh-test-* 禁提交）已删除——commitAndPush/rebuildHistory 不再有测试环境拦截
 - **git_scan 自由配置（v1.15.0）**：①配置 `extraReposFile` 指向文本文件（每行一个仓库绝对路径，`#` 注释），**运行时实时读取，改文件即时生效无需重启**；②工具 `git_scan` 支持 `root`（覆盖扫描根）/ `paths`（逗号分隔临时追加仓库）；③API `/api/git-push/scan` 支持同名查询参数

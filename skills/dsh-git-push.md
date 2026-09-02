@@ -1,6 +1,6 @@
 ---
 name: dsh-git-push
-description: dsh-git-push 插件（git 自动提交推送 v1.18.3，内置代码审计门禁，默认走 api.github.com，token 无效回退 ssh.github.com:443）的使用手册：git_scan / git_commit_push / git_clone / git_remote_create / code_audit 工具与 /api/git-push API 的调用方法、配置（审计 blockOn/llmAudit）、验证与坑速查。处理"提交推送代码""扫描仓库状态""审计代码""推送前拦截 bug""敏感信息检测""文档被审计拦截"类请求时加载；插件不可用/报错排查时必加载（正常情况优先用插件，见 plugin-priority）。
+description: dsh-git-push 插件（git 自动提交推送 v1.18.4，内置代码审计门禁，默认走 api.github.com，token 无效回退 ssh.github.com:443；启动时 git config --global core.filemode false）的使用手册：git_scan / git_commit_push / git_clone / git_remote_create / code_audit 工具与 /api/git-push API 的调用方法、配置（审计 blockOn/llmAudit）、验证与坑速查。处理"提交推送代码""扫描仓库状态""审计代码""推送前拦截 bug""敏感信息检测""文档被审计拦截"类请求时加载；插件不可用/报错排查时必加载（正常情况优先用插件，见 plugin-priority）。
 whenToUse: 需要用插件做 git 提交推送/代码审计但不确定参数/报错排查/插件未装需手做时。
 generatedBy: deepseek-official/deepseek-v4-flash
 ---
@@ -26,6 +26,7 @@ generatedBy: deepseek-official/deepseek-v4-flash
 - 同级仓 `dsh-git-push-User/requirements.md` 放开发者特殊要求清单（独立私有库，不进插件目录）
 - `git_commit_push` 提交前自动读取并逐条核对：未核对（不带 `requirementsConfirmed:true`）直接拦截返回清单；AI 逐条确认达标后重新调用
 - 启动时若同级仓缺失，插件用 `git_clone`（api.github.com）拉到工作区与 `dsh-git-push` 同一层级
+- **可执行位（v1.18.4）**：启动时 `git config --global core.filemode false`；`runGit`/`gitRaw` 每次带 `-c core.filemode=false`。CIFS 上 100644↔100755 不再进 status/commit
 
 ### 推送通道（v1.18.3：默认 api.github.com，token 无效回退 SSH）
 
@@ -113,6 +114,7 @@ curl -s http://127.0.0.1:3083/api/git-push/status      # 加载验证
 | `src refspec main does not match` | 本地分支是 master，插件已自动取 `branch --show-current` |
 | 远端领先不推 | 插件 push 前 `fetch` + `rev-list`，远端领先返回 reason，需先 pull |
 | `/vol02` 只读卷 doubtful ownership | 插件每次命令带 `-c safe.directory=` |
+| CIFS 上 status 全是 `mode change 100644 => 100755` | 启动时 `git config --global core.filemode false`；每次 git 带 `-c core.filemode=false`（v1.18.4） |
 | commit 被 AUDIT 拦截 | 看返回 `findings` 修掉问题重推；确认误报可 `audit:false`（不推荐）或调 blockOn |
 | LLM 审查没跑 | 检查 `llmAudit` 开关 + `llmAuditProvider/Model` 配置 + DSH llm 服务可用（.credentials.yaml 有 key）；不可用自动跳过不阻断 |
 | 空提交 | 无变更自动跳过（`committed:false, reason:无变更`） |
