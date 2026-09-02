@@ -1,7 +1,7 @@
 {
   "name": "dsh-git-push",
-  "version": "1.18.0",
-  "description": "git 自动提交推送 + 代码审计门禁：所有 GitHub 操作默认且仅走 api.github.com（clone/push/create/可见性），不直连 github.com。",
+  "version": "1.18.3",
+  "description": "git 自动提交推送 + 代码审计门禁：默认走 api.github.com；token 无效时回退 ssh.github.com:443，不直连 github.com。",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
