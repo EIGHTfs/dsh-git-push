@@ -10,7 +10,7 @@ npm-debug.log*
 .npm/
 .pnpm-store/
 
-# 用户特殊要求文件夹（git-push 插件 User/，按用户 git 忽略，不入库）
+# 历史：User/ 曾嵌在插件目录（v1.18.0 起改同级仓 dsh-git-push-User，安装会清空插件内残留）
 User/
 User/**
 

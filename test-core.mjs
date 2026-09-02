@@ -1,5 +1,5 @@
 /** dsh-git-push 核心逻辑单测：扫描 + 提交推送（真实 git 操作，临时目录） */
-import { scanRepos, commitAndPush, readRepoStatus, findGitDirs, parseGithubOwnerRepo, httpsUrlOf, apiOriginOf, githubFetch } from './lib/core.js';
+import { scanRepos, commitAndPush, readRepoStatus, findGitDirs, parseGithubOwnerRepo, httpsUrlOf, apiOriginOf, githubFetch, resolveUserDir, userRepoCandidates, USER_REPO_NAME, loadUserRequirements } from './lib/core.js';
 import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -33,6 +33,21 @@ try {
   ok(apiOriginOf('EIGHTfs', 'x') === 'https://api.github.com/repos/EIGHTfs/x', 'apiOriginOf');
   const denied = await githubFetch('https://github.com/EIGHTfs/x', {});
   ok(denied.status === 0 && /拒绝非 api.github.com/.test(denied.error || ''), 'githubFetch 拒绝 github.com');
+
+  // v1.18.0：User 仓在插件同级，不在插件目录内
+  ok(USER_REPO_NAME === 'dsh-git-push-User', 'USER_REPO_NAME');
+  const cands = userRepoCandidates({ workspaceRoot: '/tmp/ws-x' });
+  ok(cands.some((p) => p.endsWith('/dsh-git-push-User')), 'userRepoCandidates 含同级仓名');
+  ok(!cands.some((p) => /\/dsh-git-push\/User$/.test(p)) || cands.some((p) => p.endsWith('/dsh-git-push-User')), '候选优先同级仓');
+  const tmpWs = mkdtempSync(join(tmpdir(), 'git-push-user-'));
+  const sib = join(tmpWs, 'dsh-git-push-User');
+  mkdirSync(sib, { recursive: true });
+  writeFileSync(join(sib, 'requirements.md'), '1. 测试条目\n');
+  const ud = resolveUserDir({ workspaceRoot: tmpWs });
+  ok(ud.dir === sib, `resolveUserDir 命中同级仓 dir=${ud.dir}`);
+  const reqs = loadUserRequirements({ workspaceRoot: tmpWs });
+  ok(reqs.found && reqs.files.some((f) => f.items.includes('测试条目')), 'loadUserRequirements 读同级仓');
+  rmSync(tmpWs, { recursive: true, force: true });
 
   ok(findGitDirs(root, 2).length === 2, `findGitDirs 找到 ${findGitDirs(root, 2).length} 个仓库`);
 

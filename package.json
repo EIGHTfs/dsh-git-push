@@ -1,6 +1,6 @@
 {
   "name": "dsh-git-push",
-  "version": "1.17.0",
+  "version": "1.18.0",
   "description": "git 自动提交推送 + 代码审计门禁：所有 GitHub 操作默认且仅走 api.github.com（clone/push/create/可见性），不直连 github.com。",
   "type": "module",
   "main": "lib/index.js",
@@ -18,9 +18,8 @@
       "patch": "./cordis.patch.yml"
     },
     "skills": [
-      "./skills/dsh-git-push.md",
-      "./User/EIGHTfs/dsh-repo-index.md"
+      "./skills/dsh-git-push.md"
     ],
-    "description": " User/ 内容备份在私有库 dsh-git-push-User（git clone 到插件 User/ 目录可恢复）。"
+    "description": "开发者要求与本机凭据在同级私有仓 dsh-git-push-User（api.github.com clone 到工作区同一层级，不进插件目录）。"
   }
 }

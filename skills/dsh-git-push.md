@@ -23,24 +23,24 @@ generatedBy: deepseek-official/deepseek-v4-flash
 
 ## 二、开发者特殊要求门禁（v1.10.0）
 
-- 插件内 `User/<GitHub用户名>/`（如 `User/EIGHTfs/requirements.md`）放开发者特殊要求清单（git 忽略不入库）
+- 同级仓 `dsh-git-push-User/requirements.md` 放开发者特殊要求清单（独立私有库，不进插件目录）
 - `git_commit_push` 提交前自动读取并逐条核对：未核对（不带 `requirementsConfirmed:true`）直接拦截返回清单；AI 逐条确认达标后重新调用
-- 多用户支持：按仓库 remote owner 自动匹配对应 User 子目录
+- 启动时若同级仓缺失，插件用 `git_clone`（api.github.com）拉到工作区与 `dsh-git-push` 同一层级
 
 ### 推送通道（v1.17.0：所有功能只走 api.github.com）
 
 - **clone（v1.17.0）**：`git_clone` 走 api.github.com Git Data API（git/trees + git/blobs，不下 tarball；target=owner/repo 或 URL 只解析不访问；自动探测默认分支 master/main；/tmp 中转建仓整拷回 dest 兼容 CIFS；dest 非空拒绝；origin 写成 `https://api.github.com/repos/o/r`）
 - **默认通道 = api.github.com Git Data API**（pushViaApi：blob→tree→commit→ref，复用远端已有 blob sha）——统一 `githubFetch`（hostname 硬闸 + 拒绝跟随 302）
 - API 无 token / 失败时**不再回退** `git push origin`（避免直连 github.com）
-- token 多源探测 resolveGitToken：插件 `User/<用户名>/github-token` → 项目 `.git-push-token` → workspaceRoot data/sensitive → HOME/DSH_HOME 会话目录
+- token 多源探测 resolveGitToken：同级仓 `dsh-git-push-User/github-token` → 项目 `.git-push-token` → workspaceRoot data/sensitive → HOME/DSH_HOME 会话目录
 - 本机无 SSH 私钥只有 GitHub token：clone/push **只走 api.github.com**，不用 SSH 443 / HTTPS github.com
 
-### User/ 目录备份与恢复（dsh-git-push-User 私有库）
+### 同级仓 dsh-git-push-User（v1.18.0，不再进插件目录）
 
-- User/（开发者特殊要求 requirements.md + 各用户 git 相关 skill）**本机专用、git 忽略不入主库**，独立备份在私有库 **`EIGHTfs/dsh-git-push-User`**（private，内容 = 插件 User/<用户名>/ 目录）
-- 恢复：`git_clone` 该私有库到插件目录即可，如
+- 开发者特殊要求 + git skill + 本机凭据（token/SSH）在独立私有库 **`EIGHTfs/dsh-git-push-User`**
+- **不要**再 clone 进插件 `User/`：安装拷贝会清空插件目录。恢复到与插件同一层级：
   ```
-  git_clone { target: "EIGHTfs/dsh-git-push-User", dest: "<插件目录>/User" }
+  git_clone { target: "EIGHTfs/dsh-git-push-User", dest: "<工作区>/dsh-git-push-User" }
   ```
 - 注意：clone/push 只走 **api.github.com**，不用 SSH 443 / github.com HTTPS
 
@@ -126,7 +126,7 @@ curl -s http://127.0.0.1:3083/api/git-push/status      # 加载验证
 
 - 只做管道：commit message 由 LLM 生成；插件不判断"该不该提交"
 - LLM 审计默认关（省钱）：需要深度审查时显式 `llmAudit:true` 或 `code_audit {llm:true}`
-- git 相关操作/冲突审查/版本号等约定已移入本插件 User/EIGHTfs/（本机专用，git 忽略不入库）：git-commits-viewer（提交历史/网页查看）、git-collab-conflict（跨 AI 冲突审查）、versioning-rule（版本号）、dsh-repo-index（源码索引）等
+- git 相关操作/冲突审查/版本号等约定在同级仓 `dsh-git-push-User`（独立私有库）：git-commits-viewer、git-collab-conflict、versioning-rule、dsh-repo-index 等
 
 ## 相关
 
