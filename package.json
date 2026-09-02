@@ -1,6 +1,6 @@
 {
   "name": "dsh-git-push",
-  "version": "1.16.0",
+  "version": "1.16.1",
   "description": "git 自动提交推送 + 代码审计门禁：推送前自动屏蔽 npm 下载产物(node_modules/lock), 审计拦截语法/敏感信息/凭据/大文件。",
   "type": "module",
   "main": "lib/index.js",
