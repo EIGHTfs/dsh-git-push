@@ -1,5 +1,5 @@
 /** dsh-skip-sensitive dsh-git-push 核心逻辑单测：扫描 + 提交推送（真实 git 操作，临时目录） */
-import { scanRepos, commitAndPush, readRepoStatus, findGitDirs, parseGithubOwnerRepo, httpsUrlOf, apiOriginOf, sshOriginOf, isBadCredentials, githubFetch, resolveUserDir, userRepoCandidates, USER_REPO_NAME, loadUserRequirements, gitCFlags, ensureGlobalFilemodeFalse, runGit, extractRemoteHeads, formatRemoteHeadsTable, persistGithubToken, githubTokenStatus, formatGithubAccountBlock, collectRepoSkillDocs, formatRepoSkillInjection } from './lib/core.js';
+import { scanRepos, commitAndPush, readRepoStatus, findGitDirs, parseGithubOwnerRepo, httpsUrlOf, apiOriginOf, sshOriginOf, isBadCredentials, githubFetch, resolveUserDir, userRepoCandidates, USER_REPO_NAME, loadUserRequirements, gitCFlags, ensureGlobalFilemodeFalse, runGit, extractRemoteHeads, formatRemoteHeadsTable, persistGithubToken, githubTokenStatus, formatGithubAccountBlock, collectRepoSkillDocs, formatRepoSkillInjection, resolveReadmeTemplate, genReadme } from './lib/core.js';
 import { mkdtempSync, writeFileSync, mkdirSync, rmSync, chmodSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -65,6 +65,23 @@ try {
   ok(docs.some((d) => d.path === 'dsh-git-push/skills/handbook.md') && docs.some((d) => d.path === 'dsh-git-push-User/requirements.md'), 'collectRepoSkillDocs 收两仓 md');
   ok(inj.includes('# handbook') && inj.includes('# req') && !inj.includes('ghp_SECRET'), '注入正文含 skill、不含 token');
   rmSync(skillRoot, { recursive: true, force: true });
+
+  const tplRoot = mkdtempSync(join(tmpdir(), 'git-push-tpl-'));
+  mkdirSync(join(tplRoot, 'dsh-git-push-User', '.git'), { recursive: true });
+  writeFileSync(join(tplRoot, 'dsh-git-push-User', 'readme-template.md'), '# {{name}}\n\n{{description}}\n\n## 我的习惯章节\n\nhello\n');
+  const resolved = resolveReadmeTemplate({ workspaceRoot: tplRoot });
+  ok(resolved.source.includes('readme-template.md') && resolved.template.includes('我的习惯章节'), 'README 模板优先 User 仓');
+  const emptyUser = mkdtempSync(join(tmpdir(), 'git-push-notpl-'));
+  mkdirSync(join(emptyUser, 'dsh-git-push-User', '.git'), { recursive: true });
+  const built = resolveReadmeTemplate({ workspaceRoot: emptyUser });
+  ok(built.source === 'builtin', '没有 User 模板时用内置');
+  rmSync(emptyUser, { recursive: true, force: true });
+  mkdirSync(join(tplRoot, 'proj'), { recursive: true });
+  writeFileSync(join(tplRoot, 'proj', 'package.json'), JSON.stringify({ name: 'demo', description: '简介', version: '1.0.0' }));
+  execSync('git init -b master', { cwd: join(tplRoot, 'proj'), stdio: 'ignore' });
+  const rd = genReadme({ repoPath: join(tplRoot, 'proj'), workspaceRoot: tplRoot });
+  ok(rd.ok && rd.content.includes('# demo') && rd.content.includes('我的习惯章节') && rd.templateSource.includes('readme-template.md'), 'genReadme 用 User 模板填项目名');
+  rmSync(tplRoot, { recursive: true, force: true });
 
   const tokRoot = mkdtempSync(join(tmpdir(), 'git-push-tok-'));
   mkdirSync(join(tokRoot, 'dsh-git-push-User', '.git'), { recursive: true });

@@ -1,6 +1,6 @@
 ---
 name: dsh-git-push
-description: dsh-git-push 插件（git 自动提交推送 v1.22.0，设置页检测 token/公钥并显示 GitHub 用户，推送后用表格回传远端最近 3 次）的使用手册：git_scan / git_commit_push / git_clone / git_remote_create / code_audit 工具与 /api/git-push API 的调用方法、配置（审计 blockOn/llmAudit）、验证与坑速查。处理"提交推送代码""扫描仓库状态""审计代码""推送前拦截 bug""敏感信息检测""文档被审计拦截"类请求时加载；插件不可用/报错排查时必加载（正常情况优先用插件，见 plugin-priority）。
+description: dsh-git-push 插件（git 自动提交推送 v1.23.0，README 模板在同级仓 dsh-git-push-User/readme-template.md）的使用手册：git_scan / git_commit_push / git_clone / git_remote_create / code_audit 工具与 /api/git-push API 的调用方法、配置（审计 blockOn/llmAudit）、验证与坑速查。处理"提交推送代码""扫描仓库状态""审计代码""推送前拦截 bug""敏感信息检测""文档被审计拦截"类请求时加载；插件不可用/报错排查时必加载（正常情况优先用插件，见 plugin-priority）。
 whenToUse: 需要用插件做 git 提交推送/代码审计但不确定参数/报错排查/插件未装需手做时。
 generatedBy: grok-4.6 · 2026-09-03
 ---
@@ -22,6 +22,7 @@ generatedBy: grok-4.6 · 2026-09-03
 ## 二、开发者特殊要求门禁（v1.10.0）
 
 - 启动时 `agent/pre-step` 注入本仓 `skills/` 与同级仓 `dsh-git-push-User` 全部 md（每个 agent 一次）
+- **README 模板（v1.23.0）**：`git_gen_readme` 读同级仓 `dsh-git-push-User/readme-template.md`（或 `User/<用户名>/readme-template.md`）；没有才用插件内置。占位符 `{{name}}` `{{description}}` `{{version}}` `{{toc}}` `{{versionTable}}`
 - 同级仓 `dsh-git-push-User/requirements.md` 放开发者特殊要求清单（独立私有库，不进插件目录）
 - `git_commit_push` 提交前自动读取并逐条核对：未核对（不带 `requirementsConfirmed:true`）直接拦截返回清单；AI 逐条确认达标后重新调用
 - 启动时若同级仓缺失，插件用 `git_clone`（api.github.com）拉到工作区与 `dsh-git-push` 同一层级

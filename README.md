@@ -66,6 +66,7 @@ node test-core.mjs && node test-audit.mjs && node test-apply.mjs  # 单测
 
 | 版本 | 内容 |
 |---|---|
+| 1.23.0 | **README 模板在 User 仓**：`git_gen_readme` 读 `dsh-git-push-User/readme-template.md`（每人习惯不同）；没有才用插件内置骨架 |
 | 1.22.0 | **强制读取两仓 skill**：`agent/pre-step` 注入 `dsh-git-push/skills` + `dsh-git-push-User` 全部 md（方案 A，不改框架） |
 | 1.21.1 | 插件 skill 只写用法手册（面向所有克隆者） |
 | 1.21.0 | **设置页检测可用**：对照 iwara/香蕉网，点「检测可用」调 `/user` 显示用户名/id/主页；SSH 公钥是否绑到该账号。**远端 3 次改表格**（# / SHA / 标题 / 时间） |
