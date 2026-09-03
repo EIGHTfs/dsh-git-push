@@ -16,3 +16,5 @@ User/**
 
 # clone 通道元数据（本机专用，不入库）
 .clone-meta.json
+# 敏感字段文件（dsh-git-push 自动追加，2026-09-01）
+test-core.mjs

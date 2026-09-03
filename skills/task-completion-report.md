@@ -55,16 +55,19 @@ generatedBy: grok-4.6 · EIGHTfs 2026-09-03（从通用 skill 抽出，作为 gi
 
 > 用户原话：「每次推送远端把远端库最新的3次推送heard，标题，推送时间也发给用户」
 
-`git_commit_push` 成功后结果里有 `remoteHeads.heads`（最多 3 条：`sha` / `title` / `time`）。收尾或推送汇报里必须原样列出，例如：
+`git_commit_push` 成功后结果里有 `remoteHeads.heads` 和 `remoteHeadsText`（Markdown 表格）。收尾或推送汇报里必须用**表格**发给用户（用户原话：「回复用表格形式」），优先原样贴 `remoteHeadsText`：
 
 ```
-远端最近 3 次：
-1. abcdef1  feat: xxx  2026-09-03T01:00:00Z
-2. bbbbbbb  fix: yyy   2026-09-02T01:00:00Z
-3. ccccccc  docs: zzz  2026-09-01T01:00:00Z
+**远端最近 3 次（owner/repo）**
+
+| # | SHA | 标题 | 时间 |
+|---|-----|------|------|
+| 1 | `abcdef1` | feat: xxx | 2026-09-03T01:00:00Z |
+| 2 | `bbbbbbb` | fix: yyy | 2026-09-02T01:00:00Z |
+| 3 | `ccccccc` | docs: zzz | 2026-09-01T01:00:00Z |
 ```
 
-拉不到时写明 `remoteHeads.error`，不要假装有。
+拉不到时写明 `remoteHeads.error`，不要假装有。禁止改成编号列表。
 
 ## 相关
 
