@@ -1,5 +1,5 @@
 /** dsh-skip-sensitive dsh-git-push 核心逻辑单测：扫描 + 提交推送（真实 git 操作，临时目录） */
-import { scanRepos, commitAndPush, readRepoStatus, findGitDirs, parseGithubOwnerRepo, httpsUrlOf, apiOriginOf, sshOriginOf, isBadCredentials, githubFetch, resolveUserDir, userRepoCandidates, USER_REPO_NAME, loadUserRequirements, gitCFlags, ensureGlobalFilemodeFalse, runGit, extractRemoteHeads, formatRemoteHeadsTable, persistGithubToken, githubTokenStatus, formatGithubAccountBlock } from './lib/core.js';
+import { scanRepos, commitAndPush, readRepoStatus, findGitDirs, parseGithubOwnerRepo, httpsUrlOf, apiOriginOf, sshOriginOf, isBadCredentials, githubFetch, resolveUserDir, userRepoCandidates, USER_REPO_NAME, loadUserRequirements, gitCFlags, ensureGlobalFilemodeFalse, runGit, extractRemoteHeads, formatRemoteHeadsTable, persistGithubToken, githubTokenStatus, formatGithubAccountBlock, collectRepoSkillDocs, formatRepoSkillInjection } from './lib/core.js';
 import { mkdtempSync, writeFileSync, mkdirSync, rmSync, chmodSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -54,6 +54,17 @@ try {
     cred: { hasToken: true, tokenMasked: 'ghp_…1234', hasSshPub: false },
   });
   ok(block.includes('✅ Token 可用') && block.includes('EIGHTfs') && !block.includes('ghp_TEST'), 'formatGithubAccountBlock 多行用户信息且无明文 token');
+  const skillRoot = mkdtempSync(join(tmpdir(), 'git-push-skills-'));
+  mkdirSync(join(skillRoot, 'plugin', 'skills'), { recursive: true });
+  mkdirSync(join(skillRoot, 'dsh-git-push-User', '.git'), { recursive: true });
+  writeFileSync(join(skillRoot, 'plugin', 'skills', 'handbook.md'), '# handbook\nuse git_scan');
+  writeFileSync(join(skillRoot, 'dsh-git-push-User', 'requirements.md'), '# req\n1. foo');
+  writeFileSync(join(skillRoot, 'dsh-git-push-User', 'github-token'), 'ghp_SECRET');
+  const docs = collectRepoSkillDocs({ workspaceRoot: skillRoot, pluginRoot: join(skillRoot, 'plugin') });
+  const inj = formatRepoSkillInjection(docs);
+  ok(docs.some((d) => d.path === 'dsh-git-push/skills/handbook.md') && docs.some((d) => d.path === 'dsh-git-push-User/requirements.md'), 'collectRepoSkillDocs 收两仓 md');
+  ok(inj.includes('# handbook') && inj.includes('# req') && !inj.includes('ghp_SECRET'), '注入正文含 skill、不含 token');
+  rmSync(skillRoot, { recursive: true, force: true });
 
   const tokRoot = mkdtempSync(join(tmpdir(), 'git-push-tok-'));
   mkdirSync(join(tokRoot, 'dsh-git-push-User', '.git'), { recursive: true });
