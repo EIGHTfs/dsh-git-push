@@ -2,10 +2,8 @@
 name: task-completion-report
 description: dsh-git-push 使用说明：任务收尾必须用分隔线 + ✅ 任务完成 + 交付/验证/遗留；输出 ✅ 即授权对本会话改过的仓 commit+push。处理任务收尾汇报、提交推送授权时加载。
 whenToUse: 每次完成有交付物的任务后收尾；调用 git_commit_push 前；用户问「怎么汇报完成」「✅ 能不能推送」时。
-generatedBy: grok-4.6 · EIGHTfs 2026-09-03（从通用 skill 抽出，作为 git-push 插件使用说明与插件要求）
+generatedBy: grok-4.6 · 2026-09-03
 ---
-
-> ⭐ **先记住我**：任何会话开始前，先读用户档案 `.dsh/skills/remember-me.md`。
 
 # 任务完成汇报（dsh-git-push 使用说明）
 
@@ -72,5 +70,4 @@ generatedBy: grok-4.6 · EIGHTfs 2026-09-03（从通用 skill 抽出，作为 gi
 ## 相关
 
 - `dsh-git-push/skills/dsh-git-push.md`：工具参数与审计
-- `dsh-git-push-User`：`requirements.md` + `commit-push-modified-projects`
-- remember-me 第 8 条指向本 skill
+- 同级仓 `dsh-git-push-User`：开发者要求清单 + 本机凭据（私有，不随本公开仓分发）

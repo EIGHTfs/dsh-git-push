@@ -1,11 +1,9 @@
 ---
 name: dsh-git-push
-description: dsh-git-push 插件（git 自动提交推送 v1.21.0，设置页检测 token/公钥并显示 GitHub 用户，推送后用表格回传远端最近 3 次）的使用手册：git_scan / git_commit_push / git_clone / git_remote_create / code_audit 工具与 /api/git-push API 的调用方法、配置（审计 blockOn/llmAudit）、验证与坑速查。处理"提交推送代码""扫描仓库状态""审计代码""推送前拦截 bug""敏感信息检测""文档被审计拦截"类请求时加载；插件不可用/报错排查时必加载（正常情况优先用插件，见 plugin-priority）。
+description: dsh-git-push 插件（git 自动提交推送 v1.21.1，设置页检测 token/公钥并显示 GitHub 用户，推送后用表格回传远端最近 3 次）的使用手册：git_scan / git_commit_push / git_clone / git_remote_create / code_audit 工具与 /api/git-push API 的调用方法、配置（审计 blockOn/llmAudit）、验证与坑速查。处理"提交推送代码""扫描仓库状态""审计代码""推送前拦截 bug""敏感信息检测""文档被审计拦截"类请求时加载；插件不可用/报错排查时必加载（正常情况优先用插件，见 plugin-priority）。
 whenToUse: 需要用插件做 git 提交推送/代码审计但不确定参数/报错排查/插件未装需手做时。
-generatedBy: deepseek-official/deepseek-v4-flash
+generatedBy: grok-4.6 · 2026-09-03
 ---
-
-> ⭐ **先记住我**：任何会话开始前，先读用户档案 `.dsh/skills/remember-me.md`（优先级最高的 skill）：我是谁、我怎么用你、我立过的规矩。
 
 # dsh-git-push 插件手册
 
@@ -135,4 +133,3 @@ curl -s http://127.0.0.1:3083/api/git-push/status      # 加载验证
 ## 相关
 
 - `skills/task-completion-report.md`：收尾模板（分隔线 + ✅ 任务完成 + 交付/验证/遗留）；✅ = 提交推送授权
-- remember-me（先记住我）：用户档案，优先级最高的 skill
