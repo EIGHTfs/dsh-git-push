@@ -1,5 +1,5 @@
 /** dsh-skip-sensitive dsh-git-push 核心逻辑单测：扫描 + 提交推送（真实 git 操作，临时目录） */
-import { scanRepos, commitAndPush, readRepoStatus, findGitDirs, parseGithubOwnerRepo, httpsUrlOf, apiOriginOf, sshOriginOf, isBadCredentials, githubFetch, resolveUserDir, userRepoCandidates, USER_REPO_NAME, loadUserRequirements, gitCFlags, ensureGlobalFilemodeFalse, runGit, extractRemoteHeads, formatRemoteHeadsTable, persistGithubToken, githubTokenStatus, formatGithubAccountBlock, collectRepoSkillDocs, formatRepoSkillInjection, resolveReadmeTemplate, genReadme } from './lib/core.js';
+import { scanRepos, commitAndPush, readRepoStatus, findGitDirs, parseGithubOwnerRepo, httpsUrlOf, apiOriginOf, sshOriginOf, isBadCredentials, githubFetch, resolveUserDir, userRepoCandidates, USER_REPO_NAME, loadUserRequirements, gitCFlags, ensureGlobalFilemodeFalse, runGit, extractRemoteHeads, formatRemoteHeadsTable, persistGithubToken, githubTokenStatus, formatGithubAccountBlock, collectRepoSkillDocs, formatRepoSkillInjection, resolveReadmeTemplate, genReadme, probeSshGithubAuth } from './lib/core.js';
 import { mkdtempSync, writeFileSync, mkdirSync, rmSync, chmodSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -54,6 +54,17 @@ try {
     cred: { hasToken: true, tokenMasked: 'ghp_…1234', hasSshPub: false },
   });
   ok(block.includes('✅ Token 可用') && block.includes('EIGHTfs') && !block.includes('ghp_TEST'), 'formatGithubAccountBlock 多行用户信息且无明文 token');
+  const boundBlock = formatGithubAccountBlock({
+    loggedIn: true, cookieSet: true, username: 'EIGHTfs', userId: 1, profileUrl: 'https://github.com/EIGHTfs',
+    cred: { hasToken: true, tokenMasked: 'ghp_…1234', hasSshPub: true, sshFingerprint: 'AAAAC3NzaC1l…BEdYT9y4', sshBound: true, sshBoundHow: 'ssh-auth' },
+  });
+  ok(boundBlock.includes('公钥已绑到该账号: ✅ 是') && boundBlock.includes('SSH 实测已认证'), 'formatGithubAccountBlock SSH 实测绑定显示 ✅');
+  const unboundBlock = formatGithubAccountBlock({
+    loggedIn: true, cookieSet: true, username: 'EIGHTfs', userId: 1,
+    cred: { hasToken: true, tokenMasked: 'ghp_…1234', hasSshPub: true, sshBound: false, sshBoundHow: '' },
+  });
+  ok(unboundBlock.includes('公钥已绑到该账号: ❌ 否') && !unboundBlock.includes('钥匙列表未匹配'), 'formatGithubAccountBlock 未绑定不再写钥匙列表未匹配');
+  ok(typeof probeSshGithubAuth === 'function', 'probeSshGithubAuth 已导出');
   const skillRoot = mkdtempSync(join(tmpdir(), 'git-push-skills-'));
   mkdirSync(join(skillRoot, 'plugin', 'skills'), { recursive: true });
   mkdirSync(join(skillRoot, 'dsh-git-push-User', '.git'), { recursive: true });

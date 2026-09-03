@@ -1,6 +1,6 @@
 ---
 name: dsh-git-push
-description: dsh-git-push 插件（git 自动提交推送 v1.23.0，README 模板在同级仓 dsh-git-push-User/readme-template.md）的使用手册：git_scan / git_commit_push / git_clone / git_remote_create / code_audit 工具与 /api/git-push API 的调用方法、配置（审计 blockOn/llmAudit）、验证与坑速查。处理"提交推送代码""扫描仓库状态""审计代码""推送前拦截 bug""敏感信息检测""文档被审计拦截"类请求时加载；插件不可用/报错排查时必加载（正常情况优先用插件，见 plugin-priority）。
+description: dsh-git-push 插件（git 自动提交推送 v1.23.1，README 模板在同级仓 dsh-git-push-User/readme-template.md）的使用手册：git_scan / git_commit_push / git_clone / git_remote_create / code_audit 工具与 /api/git-push API 的调用方法、配置（审计 blockOn/llmAudit）、验证与坑速查。处理"提交推送代码""扫描仓库状态""审计代码""推送前拦截 bug""敏感信息检测""文档被审计拦截"类请求时加载；插件不可用/报错排查时必加载（正常情况优先用插件，见 plugin-priority）。
 whenToUse: 需要用插件做 git 提交推送/代码审计但不确定参数/报错排查/插件未装需手做时。
 generatedBy: grok-4.6 · 2026-09-03
 ---
@@ -27,7 +27,7 @@ generatedBy: grok-4.6 · 2026-09-03
 - `git_commit_push` 提交前自动读取并逐条核对：未核对（不带 `requirementsConfirmed:true`）直接拦截返回清单；AI 逐条确认达标后重新调用
 - 启动时若同级仓缺失，插件用 `git_clone`（api.github.com）拉到工作区与 `dsh-git-push` 同一层级
 - **可执行位（v1.18.4）**：启动时 `git config --global core.filemode false`；`runGit`/`gitRaw` 每次带 `-c core.filemode=false`。CIFS 上 100644↔100755 不再进 status/commit
-- **设置页凭据（v1.20.0 / v1.21.0）**：入口 = 设置 → 插件 → 插件配置 →「Git 提交推送」。填 GitHub token；点「检测可用」走 `/api/git-push/account-check`（GET `/user`），多行块显示用户名 / id / 主页，对照 iwara、香蕉网设置页
+- **设置页凭据（v1.20.0 / v1.21.0 / v1.23.1）**：入口 = 设置 → 插件 → 插件配置 →「Git 提交推送」。填 GitHub token；点「检测可用」走 `/api/git-push/account-check`（GET `/user`），多行块显示用户名 / id / 主页。公钥是否已绑：先 GET `/user/keys`；token 无权读列表（常见只有 `repo` → 404）时改打 `ssh.github.com:443`，`Hi <login>!` 即已绑定
 - **推送后远端 3 条（v1.21.0 表格）**：`git_commit_push` 推送成功后带 `remoteHeads` + `remoteHeadsText`（Markdown 表格：# / SHA / 标题 / 时间）。AI 必须用表格发给用户，不得改成编号列表
 
 ### 推送通道（v1.18.3：默认 api.github.com，token 无效回退 SSH）
@@ -125,6 +125,7 @@ curl -s http://127.0.0.1:3083/api/git-push/status      # 加载验证
 | git_scan 等工具报 `userRender is not a function` | **已修复（v1.4.1）**：3 个工具缺 `output.render`（dsh-tools rc.6 起契约必填）导致结果无法回显，已补 render 返回内容块数组；未部署的旧实例仍报错时先用 git 命令或 status API 绕过 |
 | 文档被 docs-conversation 拦下 | 改写为客观表述（只写做了什么）；沟通/需求/移交/待办类文档移入 `data/沟通文档`。注意：描述本规则时用「对话类措辞」等概括表述，避免字面写出禁用措辞被自身规则自命中 |
 | 规则类文档本体入库被拦 | release-docs-rule 等规则文档自身含禁用措辞示例，新规则部署后整文件重入库会被 docs-conversation 拦下：私有归档仓库可用 `audit:false` 放行，或改写示例为概括表述 |
+| 检测可用显示公钥未绑定 | token 只有 `repo` 时 GET `/user/keys` 404，v1.23.1 改 SSH 实测；`Hi <login>!` 即已绑定 |
 
 ## 七、边界
 

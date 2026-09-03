@@ -20,7 +20,7 @@ DSH（DeepSeek Harness）git 自动提交推送插件。把「扫描仓库 → *
 - **可执行位（v1.18.4）**：启动写 `git config --global core.filemode false`；每次 git 带 `-c core.filemode=false`，CIFS 权限噪声不进提交
 - **审计体系**：L0 静态（语法/JSON/YAML/敏感信息/凭据/大文件/debugger/文档对话类措辞）+ L1 LLM 深度审查（可选，diff 喂便宜模型）；豁免类型 = 说明类（示例假凭据）+ 备份类（exemptRepos 白名单）
 - **用户门禁**：同级仓 `dsh-git-push-User/requirements.md` 开发者特殊要求，提交前逐条核对，未核对拦截（requirementsConfirmed 机制）
-- **设置页凭据（v1.20.0）**：设置 → 插件 → 插件配置 →「Git 提交推送」填 token；写入同级仓 `github-token`，secret 字段不进 settings.yaml 明文
+- **设置页凭据（v1.20.0 / v1.23.1）**：设置 → 插件 → 插件配置 →「Git 提交推送」填 token；写入同级仓 `github-token`，secret 字段不进 settings.yaml 明文。点「检测可用」时公钥绑定先读 `/user/keys`，无权则 SSH 实测 `ssh.github.com:443`
 
 ## 文件目录结构及作用
 
@@ -66,6 +66,7 @@ node test-core.mjs && node test-audit.mjs && node test-apply.mjs  # 单测
 
 | 版本 | 内容 |
 |---|---|
+| 1.23.1 | **SSH 绑定检测**：token 没有 `admin:public_key` 时 `/user/keys` 会 404，不再当成「未绑定」；改打 `ssh.github.com:443`，`Hi <login>!` 即视为已绑到该账号 |
 | 1.23.0 | **README 模板在 User 仓**：`git_gen_readme` 读 `dsh-git-push-User/readme-template.md`（每人习惯不同）；没有才用插件内置骨架 |
 | 1.22.0 | **强制读取两仓 skill**：`agent/pre-step` 注入 `dsh-git-push/skills` + `dsh-git-push-User` 全部 md（方案 A，不改框架） |
 | 1.21.1 | 插件 skill 只写用法手册（面向所有克隆者） |
