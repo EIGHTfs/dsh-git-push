@@ -51,6 +51,21 @@ generatedBy: grok-4.6 · EIGHTfs 2026-09-03（从通用 skill 抽出，作为 gi
 - 走插件工具 `git_commit_push`，不手敲 git；有 `dsh-git-push-User/requirements.md` 时逐条核对后带 `requirementsConfirmed:true`
 - **不在此授权内**：删远端仓库、force push、改生产配置、覆盖他人未拉取的历史、把凭据推进**公开**仓
 
+## 四、推送后必须把远端最近 3 次发给用户
+
+> 用户原话：「每次推送远端把远端库最新的3次推送heard，标题，推送时间也发给用户」
+
+`git_commit_push` 成功后结果里有 `remoteHeads.heads`（最多 3 条：`sha` / `title` / `time`）。收尾或推送汇报里必须原样列出，例如：
+
+```
+远端最近 3 次：
+1. abcdef1  feat: xxx  2026-09-03T01:00:00Z
+2. bbbbbbb  fix: yyy   2026-09-02T01:00:00Z
+3. ccccccc  docs: zzz  2026-09-01T01:00:00Z
+```
+
+拉不到时写明 `remoteHeads.error`，不要假装有。
+
 ## 相关
 
 - `dsh-git-push/skills/dsh-git-push.md`：工具参数与审计

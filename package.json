@@ -1,11 +1,12 @@
 {
   "name": "dsh-git-push",
-  "version": "1.19.0",
-  "description": "git 自动提交推送 + 代码审计门禁：默认走 api.github.com；token 无效时回退 ssh.github.com:443；启动时 git config --global core.filemode false。",
+  "version": "1.20.0",
+  "description": "git 自动提交推送 + 代码审计门禁：设置页填 GitHub token；推送后回传远端最近 3 次 SHA/标题/时间。",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
     ".": "./lib/index.js",
+    "./client": "./lib/client.js",
     "./package.json": "./package.json"
   },
   "files": [
@@ -16,6 +17,14 @@
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-settings-plugins",
+        "@deepseek-ai/dsh-client-ui-settings",
+        "@deepseek-ai/dsh-client-locale"
+      ]
     },
     "skills": [
       "./skills/dsh-git-push.md",

@@ -1,5 +1,5 @@
 /** dsh-git-push 核心逻辑单测：扫描 + 提交推送（真实 git 操作，临时目录） */
-import { scanRepos, commitAndPush, readRepoStatus, findGitDirs, parseGithubOwnerRepo, httpsUrlOf, apiOriginOf, sshOriginOf, isBadCredentials, githubFetch, resolveUserDir, userRepoCandidates, USER_REPO_NAME, loadUserRequirements, gitCFlags, ensureGlobalFilemodeFalse, runGit } from './lib/core.js';
+import { scanRepos, commitAndPush, readRepoStatus, findGitDirs, parseGithubOwnerRepo, httpsUrlOf, apiOriginOf, sshOriginOf, isBadCredentials, githubFetch, resolveUserDir, userRepoCandidates, USER_REPO_NAME, loadUserRequirements, gitCFlags, ensureGlobalFilemodeFalse, runGit, extractRemoteHeads, persistGithubToken, githubTokenStatus } from './lib/core.js';
 import { mkdtempSync, writeFileSync, mkdirSync, rmSync, chmodSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -38,6 +38,25 @@ try {
   ok(typeof fm.ok === 'boolean' && typeof fm.status === 'number', `ensureGlobalFilemodeFalse 返回 ok=${fm.ok} status=${fm.status}`);
 
   ok(isBadCredentials('上传 blob 失败 .gitignore: Bad credentials') === true, 'isBadCredentials 认 Bad credentials');
+
+  const heads = extractRemoteHeads([
+    { sha: 'abcdef1234567890', commit: { message: 'feat: one\n\nbody', committer: { date: '2026-09-03T01:00:00Z' } } },
+    { sha: 'bbbbbbbcccccccc', commit: { message: 'fix: two', author: { date: '2026-09-02T01:00:00Z' } } },
+    { sha: 'cccccccdddddddd', commit: { message: 'docs: three', committer: { date: '2026-09-01T01:00:00Z' } } },
+    { sha: 'dddddddeeeeeeee', commit: { message: 'chore: four', committer: { date: '2026-08-31T01:00:00Z' } } },
+  ]);
+  ok(heads.length === 3 && heads[0].sha === 'abcdef1' && heads[0].title === 'feat: one' && heads[0].time === '2026-09-03T01:00:00Z', 'extractRemoteHeads 取最新 3 条 sha/标题/时间');
+  ok(extractRemoteHeads(null).length === 0, 'extractRemoteHeads 非数组返回空');
+
+  const tokRoot = mkdtempSync(join(tmpdir(), 'git-push-tok-'));
+  mkdirSync(join(tokRoot, 'dsh-git-push-User', '.git'), { recursive: true });
+  const bad = persistGithubToken('not-a-token', { workspaceRoot: tokRoot });
+  ok(!bad.ok, '非法 token 拒绝写入');
+  const saved = persistGithubToken('ghp_TESTTOKEN1234567890', { workspaceRoot: tokRoot });
+  ok(saved.ok && saved.source.includes('github-token'), '合法 token 写入 User 仓');
+  const st = githubTokenStatus({ workspaceRoot: tokRoot });
+  ok(st.configured === true && !JSON.stringify(st).includes('ghp_TEST'), 'tokenStatus 只报配置了、不回传明文');
+  rmSync(tokRoot, { recursive: true, force: true });
   ok(isBadCredentials('无新提交可推送') === false, 'isBadCredentials 不误伤普通失败');
   const denied = await githubFetch('https://github.com/EIGHTfs/x', {});
   ok(denied.status === 0 && /拒绝非 api.github.com/.test(denied.error || ''), 'githubFetch 拒绝 github.com');

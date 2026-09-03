@@ -1,6 +1,6 @@
 ---
 name: dsh-git-push
-description: dsh-git-push 插件（git 自动提交推送 v1.19.0，内置代码审计门禁，默认走 api.github.com，token 无效回退 ssh.github.com:443；启动时 git config --global core.filemode false）的使用手册：git_scan / git_commit_push / git_clone / git_remote_create / code_audit 工具与 /api/git-push API 的调用方法、配置（审计 blockOn/llmAudit）、验证与坑速查。处理"提交推送代码""扫描仓库状态""审计代码""推送前拦截 bug""敏感信息检测""文档被审计拦截"类请求时加载；插件不可用/报错排查时必加载（正常情况优先用插件，见 plugin-priority）。
+description: dsh-git-push 插件（git 自动提交推送 v1.20.0，设置页填 GitHub token，推送后回传远端最近 3 次 SHA/标题/时间）的使用手册：git_scan / git_commit_push / git_clone / git_remote_create / code_audit 工具与 /api/git-push API 的调用方法、配置（审计 blockOn/llmAudit）、验证与坑速查。处理"提交推送代码""扫描仓库状态""审计代码""推送前拦截 bug""敏感信息检测""文档被审计拦截"类请求时加载；插件不可用/报错排查时必加载（正常情况优先用插件，见 plugin-priority）。
 whenToUse: 需要用插件做 git 提交推送/代码审计但不确定参数/报错排查/插件未装需手做时。
 generatedBy: deepseek-official/deepseek-v4-flash
 ---
@@ -16,7 +16,7 @@ generatedBy: deepseek-official/deepseek-v4-flash
 | 工具 | 参数 | 说明 |
 |---|---|---|
 | `git_scan` | 无 | 扫描 workspace 全部 git 仓库 → 分支/remote/未提交变更数/最近活动 |
-| `git_commit_push` | `repo`, `message`(必填), `push?`, `dryRun?`, `audit?`(默认true), `llmAudit?`(默认false) | **先审计** → add -A → commit → push（自动识别分支、ahead/behind 检查） |
+| `git_commit_push` | `repo`, `message`(必填), `push?`, `dryRun?`, `audit?`(默认true), `llmAudit?`(默认false) | **先审计** → add -A → commit → push；成功后回传远端最近 3 次 SHA/标题/时间 |
 | `code_audit` | `repo`, `llm?` | 手动审计仓库：L0 静态（默认）+ L1 LLM（llm=true） |
 
 用法示例：`git_scan` 看改动 → 先 `code_audit {repo:"...", llm:true}` 自查 → `git_commit_push {repo:"...", message:"feat: xxx", push:true}`（审计通过才推）。
@@ -27,6 +27,8 @@ generatedBy: deepseek-official/deepseek-v4-flash
 - `git_commit_push` 提交前自动读取并逐条核对：未核对（不带 `requirementsConfirmed:true`）直接拦截返回清单；AI 逐条确认达标后重新调用
 - 启动时若同级仓缺失，插件用 `git_clone`（api.github.com）拉到工作区与 `dsh-git-push` 同一层级
 - **可执行位（v1.18.4）**：启动时 `git config --global core.filemode false`；`runGit`/`gitRaw` 每次带 `-c core.filemode=false`。CIFS 上 100644↔100755 不再进 status/commit
+- **设置页凭据（v1.20.0）**：入口 = 设置 → 插件 → 插件配置 →「Git 提交推送」。填 GitHub token，保存后写入同级仓 `dsh-git-push-User/github-token`（secret，不进 settings.yaml 明文）
+- **推送后远端 3 条（v1.20.0）**：`git_commit_push` 推送成功后，结果带 `remoteHeads.heads`（短 SHA / 标题 / 时间，最多 3 条）。AI 必须把这 3 条原文发给用户，不得省略
 
 ### 推送通道（v1.18.3：默认 api.github.com，token 无效回退 SSH）
 
