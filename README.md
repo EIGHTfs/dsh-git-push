@@ -75,6 +75,7 @@ node test/test-core.mjs && node test/test-audit.mjs && node test/test-apply.mjs 
 
 | 版本 | 内容 |
 |---|---|
+| 1.27.1 | **推送凭据定位修复**：resolveGitToken 支持 `dsh-git-push-User/<owner>/github-token` 子目录布局（v1.27.0 起 token/凭据 json 在 `<owner>/` 子目录，旧代码只查仓根导致命中失效旧 token 推送失败） |
 | 1.27.0 | **设备/用户 json 脱敏注入 + 文档凭据引用审计警告 + repo-index 改 JSON**：①注入——`agent/pre-step` 追加「本机设备/用户信息」：读同级仓 `dsh-git-push-User/<owner>/devices/device-map.json`（设备地图）+ `user.json`（身份）全量注入；`devices/ssh-credentials.json`（设备 SSH 凭据）与 `websites/<站点>.json`（网站凭据按站点分文件）**只注入账号/站点清单，不注入密码明文**（明文注入会发给模型服务商+落会话日志），AI 需要真凭据时先告知用户再按需读文件；②审计——文档（md/txt）新增行出现旧凭据位置引用（`.ssh/credentials.md`/`data/sensitive/`/`sudo-key` 等）或凭据明文键值对 → `credential-ref` 警告，提示凭据统一存 `dsh-git-push-User` 内 json；③repo-index 权威源由 md 表格改 `dsh-repo-index.json`（owner 变量探测，兼容旧 md 解析），同步目标 `dsh-git-push-User/<owner>/dsh-repo-index.json |
 | 1.26.0 | **规则配置化 + 环境注入**：①comment-wording 规则可自定义——设置 commentWordingCustom（JSON 文本）/ commentWordingRulesFile（本地路径或 http(s) URL 在线导入）/ `git_push_rules` 工具（show/export/import）+ `/api/git-push/rules` API；②环境注入——`agent/pre-step` 追加注入「工作目录映射（当前 cwd / 项目实际目录 / 父子目录树）+ 工具安装路径（python3/node/git/ffmpeg 等）」，工具清单同步到 `dsh-git-push-User/tools-index.md`，`envInjectionEnabled` / `envInjectionTools` 可关/自定义 |
 | 1.25.0 | **查看器多语言 + 手动选择本地仓库**：①多语言配置化——全部 UI 文案抽到 `lib/viewer-locales.js`（zh/en 字典，键集合一致，页面注入后运行时切换 + localStorage 记忆），默认中文；②手动选择——侧边栏输入仓库路径或目录（支持 paths/root 两种只读扫描，复用 `/api/git-push/repos` 参数），手动仓库带「手动」徽标 |
