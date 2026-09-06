@@ -1,6 +1,6 @@
 /** dsh-skip-sensitive dsh-git-push 提交历史查看器数据层单测（v1.25.0，真实临时 git 仓库 + i18n） */
-import { getCommitHistory, getCommitDiff, parseDiffLines, resolveViewerRepo, renderViewerPage } from './lib/viewer.js';
-import { VIEWER_LOCALES, DEFAULT_LOCALE, localeOf } from './lib/viewer-locales.js';
+import { getCommitHistory, getCommitDiff, parseDiffLines, resolveViewerRepo, renderViewerPage } from '../lib/viewer.js';
+import { VIEWER_LOCALES, DEFAULT_LOCALE, localeOf } from '../lib/viewer-locales.js';
 import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';

@@ -7,7 +7,7 @@ generatedBy: grok-4.6 · 2026-09-03
 
 # dsh-git-push 插件手册
 
-> 插件源码：`workspace/dsh-git-push/`（GitHub: EIGHTfs/dsh-git-push）。定位：把"扫描仓库 → **审计** → 一键 commit+push"固化为代码管道（零 token、确定性）。v1.1.0 内置代码审计门禁（源自 dsh-code-audit 实测验证，该独立插件已停用并入本插件）。**正常情况优先调插件工具，本 skill 是手册（排查/未装时用）**——见 plugin-priority skill。
+> 插件源码：`workspace/dsh-git-push/`（GitHub: EIGHTfs/dsh-git-push）。定位：把"扫描仓库 → **审计** → 一键 commit+push"固化为代码管道（零 token、确定性）。v1.1.0 起内置代码审计门禁（代码审计独立插件已停用并入本插件）。**正常情况优先调插件工具，本 skill 是手册（排查/未装时用）**——见 plugin-priority skill。
 
 ## 一、工具（agent 会话内直接调用）
 
@@ -113,9 +113,9 @@ generatedBy: grok-4.6 · 2026-09-03
     - id: git-push
       name: dsh-git-push
       config:
-        workspaceRoot: '/vol1/@appshare/DeepSeekHarness/workspace'   # 扫描根
-        extraRepos: ['/vol02/1000-0-1789e550/gamebanana-mods-downloader']
-        extraReposFile: '/vol1/@appdata/deepseek-harness-NAS/0.1.1-rc.2/.dsh/git-extra-repos.txt'   # 自由配置：每行一个仓库绝对路径，实时读取
+        workspaceRoot: '<workspace_root>'   # 扫描根（本机 DSH 工作区绝对路径）
+        extraRepos: ['<另一项目绝对路径>']
+        extraReposFile: '<dsh-home>/git-extra-repos.txt'   # 自由配置：每行一个仓库绝对路径，实时读取
         auditEnabled: true          # L0 静态审计开关
         blockOn: 'blocker'          # 'blocker'=仅严重拦截 | 'any'=严格
         llmAudit: false             # L1 LLM 审查（默认关省钱）
@@ -155,7 +155,7 @@ curl -s http://127.0.0.1:3083/api/git-push/status      # 加载验证
 | LLM 审查没跑 | 检查 `llmAudit` 开关 + `llmAuditProvider/Model` 配置 + DSH llm 服务可用（.credentials.yaml 有 key）；不可用自动跳过不阻断 |
 | 空提交 | 无变更自动跳过（`committed:false, reason:无变更`） |
 | 插件报 404 | 未注册/未重启：检查 patch insert + file: 依赖 + 软链 + 重启 |
-| code-audit 独立插件 | 已停用并入本插件（v1.1.0），测试实例不再加载；不要再 install dsh-code-audit |
+| 代码审计独立插件 | 已停用并入本插件（v1.1.0），测试实例不再加载；不要再单独安装 |
 | git_scan 等工具报 `userRender is not a function` | **已修复（v1.4.1）**：3 个工具缺 `output.render`（dsh-tools rc.6 起契约必填）导致结果无法回显，已补 render 返回内容块数组；未部署的旧实例仍报错时先用 git 命令或 status API 绕过 |
 | 文档被 docs-conversation 拦下 | 改写为客观表述（只写做了什么）；沟通/需求/移交/待办类文档移入 `data/沟通文档`。注意：描述本规则时用「对话类措辞」等概括表述，避免字面写出禁用措辞被自身规则自命中 |
 | 规则类文档本体入库被拦 | release-docs-rule 等规则文档自身含禁用措辞示例，新规则部署后整文件重入库会被 docs-conversation 拦下：私有归档仓库可用 `audit:false` 放行，或改写示例为概括表述 |

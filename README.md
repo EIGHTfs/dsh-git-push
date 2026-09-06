@@ -38,7 +38,7 @@ DSH（DeepSeek Harness）git 自动提交推送插件。把「扫描仓库 → *
 | `skills/dsh-git-push.md` | 插件使用手册 skill（推送到会话内可按需加载） |
 | 同级仓 `dsh-git-push-User/` | 开发者特殊要求 + 用户级 git skill + 本机凭据（独立私有库，不进插件目录，安装拷贝不会清空） |
 | `docs/` | 架构图、开发文档、工作进度看板等 |
-| `test-*.mjs` | 单测（core / audit / apply / repo-index / viewer / permit） |
+| `test/test-*.mjs` | 单测（core / audit / apply / repo-index / viewer / permit / rules / env-inject），node:test 零依赖 |
 
 ## 启动脚本
 
@@ -46,7 +46,7 @@ DSH（DeepSeek Harness）git 自动提交推送插件。把「扫描仓库 → *
 # 插件随 DSH 主实例自动装载（cordis.patch.yml insert），无需单独启动
 curl -s http://127.0.0.1:3083/api/git-push/status   # 验证加载
 node --check lib/core.js && node --check lib/index.js  # 改代码后语法自检
-node test-core.mjs && node test-audit.mjs && node test-apply.mjs  # 单测
+node test/test-core.mjs && node test/test-audit.mjs && node test/test-apply.mjs && node test/test-repo-index.mjs && node test/test-rules.mjs && node test/test-env-inject.mjs  # 单测
 ```
 
 ## API 总览
@@ -75,6 +75,7 @@ node test-core.mjs && node test-audit.mjs && node test-apply.mjs  # 单测
 
 | 版本 | 内容 |
 |---|---|
+| 1.27.0 | **设备/用户 json 脱敏注入 + 文档凭据引用审计警告 + repo-index 改 JSON**：①注入——`agent/pre-step` 追加「本机设备/用户信息」：读同级仓 `dsh-git-push-User/<owner>/devices/device-map.json`（设备地图）+ `user.json`（身份）全量注入；`devices/ssh-credentials.json`（设备 SSH 凭据）与 `websites/<站点>.json`（网站凭据按站点分文件）**只注入账号/站点清单，不注入密码明文**（明文注入会发给模型服务商+落会话日志），AI 需要真凭据时先告知用户再按需读文件；②审计——文档（md/txt）新增行出现旧凭据位置引用（`.ssh/credentials.md`/`data/sensitive/`/`sudo-key` 等）或凭据明文键值对 → `credential-ref` 警告，提示凭据统一存 `dsh-git-push-User` 内 json；③repo-index 权威源由 md 表格改 `dsh-repo-index.json`（owner 变量探测，兼容旧 md 解析），同步目标 `dsh-git-push-User/<owner>/dsh-repo-index.json |
 | 1.26.0 | **规则配置化 + 环境注入**：①comment-wording 规则可自定义——设置 commentWordingCustom（JSON 文本）/ commentWordingRulesFile（本地路径或 http(s) URL 在线导入）/ `git_push_rules` 工具（show/export/import）+ `/api/git-push/rules` API；②环境注入——`agent/pre-step` 追加注入「工作目录映射（当前 cwd / 项目实际目录 / 父子目录树）+ 工具安装路径（python3/node/git/ffmpeg 等）」，工具清单同步到 `dsh-git-push-User/tools-index.md`，`envInjectionEnabled` / `envInjectionTools` 可关/自定义 |
 | 1.25.0 | **查看器多语言 + 手动选择本地仓库**：①多语言配置化——全部 UI 文案抽到 `lib/viewer-locales.js`（zh/en 字典，键集合一致，页面注入后运行时切换 + localStorage 记忆），默认中文；②手动选择——侧边栏输入仓库路径或目录（支持 paths/root 两种只读扫描，复用 `/api/git-push/repos` 参数），手动仓库带「手动」徽标 |
 | 1.24.0 | **整合 git-commits-viewer + dsh-task-completion**：①提交历史查看器——设置卡「打开提交历史查看器」入口，`/git-push/viewer` 页面（只读：仓库列表/提交历史/类型过滤/分页/单文件 diff；零外部资源；root/depth/extraRepos 复用插件配置；repo 参数精确匹配防任意路径）；②推送许可——`push_permit_status` / `push_permit_config` 工具 + `/api/git-push/permit/*`，AI 回复 ✅ 且许可开启时回合结束自动 commit+push（**走带审计门禁的 commitWithAudit**，默认关闭；状态持久化 `.dsh/git-push-permit.json`）。旧两仓已下线（无审计旁路/打开页面即 push 等缺陷不复刻） |

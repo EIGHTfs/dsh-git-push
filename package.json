@@ -1,6 +1,6 @@
 {
   "name": "dsh-git-push",
-  "version": "1.26.0",
+  "version": "1.27.0",
   "description": "git 自动提交推送 + 代码审计门禁：设置页检测 token/公钥并显示 GitHub 用户；推送后用表格回传远端最近 3 次。内置提交历史查看器（只读，多语言配置文件默认中文 + 手动选择本地仓库）与 AI 回复推送许可（默认关）。",
   "type": "module",
   "main": "lib/index.js",

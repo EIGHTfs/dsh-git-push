@@ -11,7 +11,7 @@ import {
   buildRepoIndex,
   syncRepoIndex,
   detectSkillsDir,
-} from './lib/repo-index.js';
+} from '../lib/repo-index.js';
 
 let pass = 0, fail = 0;
 const ok = (c, l) => { c ? pass++ : fail++; console.log(`${c ? '  ✅' : '  ❌'} ${l}`); };
@@ -73,18 +73,21 @@ execSync('git -c user.email=t@t -c user.name=t add -A && git -c user.email=t@t -
 const localOnly = join(wsRoot, 'dsh-local-only');
 mkdirSync(localOnly, { recursive: true });
 
-const indexMd = await buildRepoIndex({ workspaceRoot: wsRoot, depth: 2, tokenPath: '' });
-ok(indexMd.includes('| dsh-aaa |'), '生成索引包含仓库行');
-ok(indexMd.includes('dsh-aaa-skill'), '「对应 skill」列自动填充');
-ok(indexMd.includes('dsh-local-only'), '本地 only 部分包含无 remote 目录');
-ok(indexMd.includes('DO NOT EDIT MANUALLY'), '含自动生成标记');
-ok(indexMd.includes('dsh-git-push 插件'), '含维护方声明');
+const indexJson = await buildRepoIndex({ workspaceRoot: wsRoot, depth: 2, tokenPath: '' });
+const idx = JSON.parse(indexJson);
+ok(Array.isArray(idx.repos) && idx.repos.some((r) => r.name === 'dsh-aaa'), '生成 JSON 索引包含仓库对象');
+ok(idx.repos.some((r) => r.name === 'dsh-aaa' && r.skills.includes('dsh-aaa-skill')), 'skills 字段自动填充');
+ok(Array.isArray(idx.localOnly) && idx.localOnly.includes('dsh-local-only'), 'localOnly 包含无 remote 目录');
+ok(idx.note && idx.note.includes('DO NOT EDIT MANUALLY'), '含自动生成标记');
+ok(typeof idx.owner === 'string' && idx.owner.length > 0, '含 owner 账号变量');
+ok(idx.version === 1 && idx.generatedAt, '含 version/generatedAt 元数据');
 
-// ---------- 6. syncRepoIndex ----------
-const src = join(root, 'src.md');
+// ---------- 6. syncRepoIndex（v1.27.1：默认目标 = userDir/<owner>/dsh-repo-index.json）----------
 const tgt = join(root, 'tgt.md');
-const sync = syncRepoIndex({ content: '# x\n', sourcePath: src, syncTarget: tgt });
-ok(sync.ok && sync.written.length === 2, '同步写入权威源 + 生效副本');
+const sync = syncRepoIndex({ content: '# x\n', userDir: root, owner: 'EIGHTfs', syncTarget: tgt });
+ok(sync.ok && sync.written.length === 1 && sync.written[0] === tgt, 'syncRepoIndex 显式 syncTarget 写入');
+const sync2 = syncRepoIndex({ content: '{"a":1}\n', userDir: root, owner: 'EIGHTfs' });
+ok(sync2.ok && sync2.written.length === 1 && sync2.written[0].endsWith('EIGHTfs/dsh-repo-index.json'), '默认目标 = userDir/<owner>/dsh-repo-index.json（账号文件夹下）');
 
 // ---------- 7. detectSkillsDir ----------
 ok(typeof detectSkillsDir() === 'string' && detectSkillsDir().length > 0, 'detectSkillsDir 返回路径');

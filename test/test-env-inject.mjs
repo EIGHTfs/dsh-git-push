@@ -17,7 +17,7 @@ import {
   buildEnvInjection,
   buildEnvInjectionWithTools,
   DEFAULT_TOOL_PROBES,
-} from './lib/env-inject.js';
+} from '../lib/env-inject.js';
 
 test('probeToolPath：本机 git 必然存在（零依赖环境也带 git）', () => {
   const r = probeToolPath('git', ['--version']);

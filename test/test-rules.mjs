@@ -15,7 +15,7 @@ import {
   fetchCommentWordingRules,
   loadCommentWordingRulesSync,
   saveCommentWordingRulesFile,
-} from './lib/rules.js';
+} from '../lib/rules.js';
 
 const root = mkdtempSync(join(tmpdir(), 'gprules-'));
 

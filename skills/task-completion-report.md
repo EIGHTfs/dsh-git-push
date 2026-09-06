@@ -9,7 +9,7 @@ generatedBy: grok-4.6 · 2026-09-03
 
 > 权威源 = `dsh-git-push/skills/task-completion-report.md`（插件 skill，随插件版本管理）。
 > 同时是同级仓 `dsh-git-push-User` 的插件要求：调用 `git_commit_push` 前必须按本格式收尾（或即将收尾），✅ 即提交推送授权。
-> 用户原话：「这个回复模板从原来的提取出来保存为单独skill作为gitpush的使用说明skill，作为插件要求」
+> 本说明 skill 由插件作者从回复模板提取固化，作为 dsh-git-push 的使用说明与插件要求。
 
 ## 一、收尾格式（强制）
 
@@ -42,7 +42,7 @@ generatedBy: grok-4.6 · 2026-09-03
 
 ## 三、✅ = 提交推送授权
 
-> 用户原话：「ai 助手输出 ✅ 任务完成 等同于我同意提交推送」（2026-08-18）
+> 约定（2026-08-18）：AI 输出 `✅ 任务完成` 即代表作者同意对本会话改过的仓库提交推送。
 
 - 输出 `✅ 任务完成` 后，**默认即获授权**对本会话改过的每个 git 仓 `git_commit_push`（commit + push），不必再问「可以提交吗」
 - 配套 `commit-push-modified-projects`：漏仓不算完成
@@ -51,9 +51,9 @@ generatedBy: grok-4.6 · 2026-09-03
 
 ## 四、推送后必须把远端最近 3 次发给用户
 
-> 用户原话：「每次推送远端把远端库最新的3次推送heard，标题，推送时间也发给用户」
+> 约定：每次推送远端后，把远端库最近 3 次推送的 head、标题、推送时间发给作者。
 
-`git_commit_push` 成功后结果里有 `remoteHeads.heads` 和 `remoteHeadsText`（Markdown 表格）。收尾或推送汇报里必须用**表格**发给用户（用户原话：「回复用表格形式」），优先原样贴 `remoteHeadsText`：
+`git_commit_push` 成功后结果里有 `remoteHeads.heads` 和 `remoteHeadsText`（Markdown 表格）。收尾或推送汇报里必须用**表格**发给作者（约定：回复用表格形式），优先原样贴 `remoteHeadsText`：
 
 ```
 **远端最近 3 次（owner/repo）**

@@ -8,7 +8,7 @@ import {
   setPermit,
   permitFilePath,
   DEFAULT_PERMIT,
-} from './lib/permit.js';
+} from '../lib/permit.js';
 import { mkdtempSync, rmSync, writeFileSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';

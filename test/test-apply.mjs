@@ -1,5 +1,5 @@
 /** dsh-git-push v1.1.0 apply mock 测试：注册路由/工具 + 审计门禁端到端 */
-import { apply, name } from './lib/index.js';
+import { apply, name } from '../lib/index.js';
 import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
