@@ -40,7 +40,7 @@ generatedBy: user-request 2026-09-07（把插件每个功能写份说明书强�
 
 - **用途**：按模板生成 README；模板优先同级仓 `dsh-git-push-User/readme-template.md`，没有用内置
 - **参数**：`repo`（必填）/ `writePath`（可选，不传只返回内容不写文件）
-- **占位符**：`{{name}} {{description}} {{version}} {{toc}} {{versionTable}}`
+- **占位符**：`{name}` `{description}` `{version}` `{toc}` `{versionTable}`（模板语法实际为双花括号包裹；本说明书经 systemPrompt 注入，双花括号会被 DSH 模板引擎解析为变量引用而报错，故此处以单花括号书写，含义不变）
 
 ### 5. git_remote_create —— 按项目文件夹创建远程仓库
 
