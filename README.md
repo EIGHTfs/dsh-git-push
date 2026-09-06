@@ -29,7 +29,8 @@ DSH（DeepSeek Harness）git 自动提交推送插件。把「扫描仓库 → *
 | `lib/core.js` | 纯函数核心：runGit / commitAndPush / scanRepos / auditRepoPath / scanSensitiveFiles / ensureSensitiveIgnored / resolveGitToken / ensureRemoteRepo / pushViaApi / genReadme / rebuildHistory / loadUserRequirements 等 |
 | `lib/index.js` | 插件装配：agent 工具 + HTTP API + 审计门禁 + repo-index 维护 + 提交历史查看器路由 + 推送许可触发 + 设置命名空间 `git-push` |
 | `lib/client.js` | 浏览器半侧：设置 → 插件 → 插件配置 卡片（填 GitHub token + 打开提交历史查看器入口） |
-| `lib/viewer.js` | 提交历史查看器（v1.24.0 整合 git-commits-viewer）：只读数据层 getCommitHistory / getCommitDiff + 页面渲染 renderViewerPage（零外部资源） |
+| `lib/viewer.js` | 提交历史查看器（v1.24.0 整合 git-commits-viewer）：只读数据层 getCommitHistory / getCommitDiff + 页面渲染 renderViewerPage（零外部资源，多语言 + 手动选择本地仓库） |
+| `lib/viewer-locales.js` | 查看器多语言配置文件（v1.25.0）：zh/en 字典 + 默认中文；新增语言 = 加一个键集合一致的语言对象 |
 | `lib/permit.js` | AI 回复推送许可（v1.24.0 整合 dsh-task-completion）：完成标记检测纯函数 + JSON 文件状态持久化（`.dsh/git-push-permit.json`） |
 | `lib/audit.js` | 审计规则实现 |
 | `lib/repo-index.js` | dsh-repo-index 索引生成/同步 |
@@ -74,6 +75,7 @@ node test-core.mjs && node test-audit.mjs && node test-apply.mjs  # 单测
 
 | 版本 | 内容 |
 |---|---|
+| 1.25.0 | **查看器多语言 + 手动选择本地仓库**：①多语言配置化——全部 UI 文案抽到 `lib/viewer-locales.js`（zh/en 字典，键集合一致，页面注入后运行时切换 + localStorage 记忆），默认中文；②手动选择——侧边栏输入仓库路径或目录（支持 paths/root 两种只读扫描，复用 `/api/git-push/repos` 参数），手动仓库带「手动」徽标 |
 | 1.24.0 | **整合 git-commits-viewer + dsh-task-completion**：①提交历史查看器——设置卡「打开提交历史查看器」入口，`/git-push/viewer` 页面（只读：仓库列表/提交历史/类型过滤/分页/单文件 diff；零外部资源；root/depth/extraRepos 复用插件配置；repo 参数精确匹配防任意路径）；②推送许可——`push_permit_status` / `push_permit_config` 工具 + `/api/git-push/permit/*`，AI 回复 ✅ 且许可开启时回合结束自动 commit+push（**走带审计门禁的 commitWithAudit**，默认关闭；状态持久化 `.dsh/git-push-permit.json`）。旧两仓已下线（无审计旁路/打开页面即 push 等缺陷不复刻） |
 | 1.23.2 | core.js listVersionCommits：首个带版本号提交之前的提交归入 1.0.0，不再丢弃 |
 | 1.23.1 | **SSH 绑定检测**：token 没有 `admin:public_key` 时 `/user/keys` 会 404，不再当成「未绑定」；改打 `ssh.github.com:443`，`Hi <login>!` 即视为已绑到该账号 |

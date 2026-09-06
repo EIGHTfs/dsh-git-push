@@ -1,5 +1,6 @@
-/** dsh-skip-sensitive dsh-git-push 提交历史查看器数据层单测（v1.24.0，真实临时 git 仓库） */
+/** dsh-skip-sensitive dsh-git-push 提交历史查看器数据层单测（v1.25.0，真实临时 git 仓库 + i18n） */
 import { getCommitHistory, getCommitDiff, parseDiffLines, resolveViewerRepo, renderViewerPage } from './lib/viewer.js';
+import { VIEWER_LOCALES, DEFAULT_LOCALE, localeOf } from './lib/viewer-locales.js';
 import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -75,17 +76,33 @@ try {
   ok(resolveViewerRepo('/etc/passwd', { root, depth: 2 }) === null, '扫描范围外路径拒绝（防任意路径）');
   ok(resolveViewerRepo('../repo-v', { root, depth: 2 }) === null, '相对路径拒绝');
 
-  // ---------- renderViewerPage ----------
-  const page = renderViewerPage({ workspaceRoot: root, depth: 2, extraRepos: [], version: '1.24.0' });
-  ok(page.includes('<title>Git 提交历史查看器'), '页面标题');
+  // ---------- renderViewerPage（v1.25.0 多语言 + 手动选择） ----------
+  // i18n 配置文件键一致性：所有语言键集合必须相同
+  const zhKeys = Object.keys(VIEWER_LOCALES.zh).sort();
+  const enKeys = Object.keys(VIEWER_LOCALES.en).sort();
+  ok(DEFAULT_LOCALE === 'zh', '默认语言中文');
+  ok(JSON.stringify(zhKeys) === JSON.stringify(enKeys), `zh/en 键集合一致（${zhKeys.length} 键）`);
+  ok(localeOf('en') === 'en' && localeOf('fr') === 'zh' && localeOf('') === 'zh', '未知语言回退默认中文');
+  ok(Object.keys(VIEWER_LOCALES).every((l) => Object.values(VIEWER_LOCALES[l]).every((v) => typeof v === 'string')), '全部文案为字符串');
+
+  const page = renderViewerPage({ workspaceRoot: root, depth: 2, extraRepos: [], version: '1.25.0' });
+  ok(page.includes('<title>Git 提交历史查看器'), '默认中文标题');
+  ok(page.includes('仓库列表') && page.includes('手动选择本地仓库'), '默认中文侧边栏/手动区文案');
+  ok(page.includes('只读查看器：仅展示提交历史与文件 diff'), '默认中文只读提示');
+  ok(page.includes('id="langBtn"') && page.includes('>EN<'), '默认中文时语言按钮显示 EN（可切英文）');
+  ok(page.includes('id="manualInput"') && page.includes('id="manualBtn"'), '手动选择本地仓库输入框/按钮');
   ok(page.includes('/api/git-push/repos') && page.includes('/api/git-push/commits') && page.includes('/api/git-push/diff'), '页面引用只读 API');
   ok(!page.includes('/api/push') && !page.includes('doPush'), '页面无任何 push 能力');
-  ok(page.includes('只读查看器'), '页面明示只读');
-  ok(page.includes('v1.24.0'), '页面带版本号');
-  // 内嵌 script 结束标签闭合正确（无提前闭合导致的语法破坏）
+  ok(page.includes('v1.25.0'), '页面带版本号');
+  ok(page.includes('window.__VIEWER_I18N') && page.includes('"zh"') && page.includes('"en"'), 'i18n 字典注入页面（zh+en）');
   const open = page.split('<script>').length - 1;
   const close = page.split('</script>').length - 1;
-  ok(open === 1 && close === 1, `script 标签配对（open=${open} close=${close}）`);
+  ok(open === 2 && close === 2, `script 标签配对（open=${open} close=${close}，I18N 注入 + 主脚本）`);
+
+  const pageEn = renderViewerPage({ workspaceRoot: root, depth: 2, extraRepos: [], version: '1.25.0', locale: 'en' });
+  ok(pageEn.includes('Repositories') && pageEn.includes('Add local repository'), 'locale=en 英文侧边栏/手动区文案');
+  ok(pageEn.includes('Read-only viewer') && pageEn.includes('>中<'), 'locale=en 英文提示 + 语言按钮显示 中');
+  ok(pageEn.includes('<html lang="en">'), 'locale=en 页面 lang 属性');
 } finally {
   rmSync(root, { recursive: true, force: true });
 }

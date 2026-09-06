@@ -15,7 +15,8 @@
 | 推送许可整合 | ✅ 完成 | lib/permit.js（检测 + JSON 持久化）+ config + push_permit_* 工具 + permit API + turn/end 触发（走 commitWithAudit） |
 | 测试 | ✅ 完成 | test-viewer.mjs 32 项 / test-permit.mjs 29 项全过；test-core 45 / test-audit 36 / test-repo-index 21 无回归 |
 | README/版本/skill 同步 | ✅ 完成 | v1.24.0（package.json/README/skill 手册/坑速查） |
-| 提交推送 | 🔄 进行中 | 待 git_commit_push（审计门禁 + requirements 核对） |
+| 提交推送 | ✅ 完成 | 9d3ff51 + 8b91af4 推 api.github.com（tag v1.24.0） |
+| v1.25.0 多语言 + 手动选择 | ✅ 完成 | 查看器多语言配置文件化（lib/viewer-locales.js，默认中文，运行时切换 localStorage 记忆）+ 侧边栏手动选择本地仓库（paths/root 只读扫描，手动徽标）；test-viewer 43 项全过（+11）；待推送与重启生效 |
 
 图例：✅ 完成 ｜ 🔄 进行中 ｜ ⏳ 待办
 

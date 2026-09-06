@@ -87,12 +87,14 @@ generatedBy: grok-4.6 · 2026-09-03
 
 测试实例地址：`http://127.0.0.1:3083/api/git-push/status`（局域网反代 3084）。查看器：`http://127.0.0.1:3083/git-push/viewer`。
 
-## 三乙、提交历史查看器（v1.24.0，整合 git-commits-viewer）
+## 三乙、提交历史查看器（v1.24.0 整合 git-commits-viewer；v1.25.0 多语言 + 手动选择）
 
 - **入口**：设置 → 插件 → 插件配置 →「Git 提交推送」卡片内「打开提交历史查看器」按钮（新窗口 `/git-push/viewer`）
 - **功能**：仓库列表（来自插件扫描配置，含 extraReposFile 实时读取）→ 提交历史（类型过滤 / 分页 / 每提交文件与增删统计）→ 单文件 diff（行级）
+- **多语言（v1.25.0）**：UI 文案在 `lib/viewer-locales.js` 配置文件（zh/en 字典，键集合必须一致——test-viewer 校验）；**默认中文**；右上角「中/EN」按钮运行时切换，localStorage 记忆偏好，刷新后保持
+- **手动选择本地仓库（v1.25.0）**：侧边栏输入框填仓库绝对路径或含 .git 的目录 → 只读扫描（先 `paths=` 单仓库、再 `root=` 目录，复用 `/api/git-push/repos` 参数）；手动仓库带「手动」徽标，可直接看提交/diff
 - **只读**：无 push 按钮、无任何写 git 的 API；推送一律走 `git_commit_push` 工具（带审计）
-- **安全**：repo 参数只接受扫描仓库 name/path 精确匹配（防任意路径）；commit id 白名单 4-40 hex；git 全部经 core.js runGit（spawnSync 数组，无 shell 拼接）
+- **安全**：repo 参数接受扫描仓库精确匹配 + 手动输入路径（仅做只读 git log/diff，无写操作）；commit id 白名单 4-40 hex；git 全部经 core.js runGit（spawnSync 数组，无 shell 拼接）
 - **避坑**：单份实现（不复刻旧 generate.js/static-server.js 双份代码）；路径全复用插件配置（不硬编码）；页面内嵌样式脚本零外部资源；页面显示插件版本号
 
 ## 三丙、AI 回复推送许可（v1.24.0，整合 dsh-task-completion）
