@@ -1,6 +1,6 @@
 /** dsh-skip-sensitive dsh-git-push 核心逻辑单测：扫描 + 提交推送（真实 git 操作，临时目录） */
-import { scanRepos, commitAndPush, readRepoStatus, findGitDirs, parseGithubOwnerRepo, httpsUrlOf, apiOriginOf, sshOriginOf, isBadCredentials, githubFetch, resolveUserDir, userRepoCandidates, USER_REPO_NAME, loadUserRequirements, gitCFlags, ensureGlobalFilemodeFalse, runGit, extractRemoteHeads, formatRemoteHeadsTable, persistGithubToken, githubTokenStatus, formatGithubAccountBlock, collectRepoSkillDocs, formatRepoSkillInjection, resolveReadmeTemplate, genReadme, probeSshGithubAuth } from '../lib/core.js';
-import { mkdtempSync, writeFileSync, mkdirSync, rmSync, chmodSync } from 'node:fs';
+import { scanRepos, commitAndPush, readRepoStatus, findGitDirs, parseGithubOwnerRepo, httpsUrlOf, apiOriginOf, sshOriginOf, isBadCredentials, githubFetch, resolveUserDir, userRepoCandidates, USER_REPO_NAME, loadUserRequirements, gitCFlags, ensureGlobalFilemodeFalse, runGit, extractRemoteHeads, formatRemoteHeadsTable, persistGithubToken, githubTokenStatus, formatGithubAccountBlock, collectRepoSkillDocs, formatRepoSkillInjection, resolveReadmeTemplate, genReadme, probeSshGithubAuth, collectRepoSkillDirs, formatRepoSkillDirsInjection, ensureCustomIgnored } from '../lib/core.js';
+import { mkdtempSync, writeFileSync, mkdirSync, rmSync, chmodSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execSync } from 'node:child_process';
@@ -75,7 +75,33 @@ try {
   const inj = formatRepoSkillInjection(docs);
   ok(docs.some((d) => d.path === 'dsh-git-push/skills/handbook.md') && docs.some((d) => d.path === 'dsh-git-push-User/requirements.md'), 'collectRepoSkillDocs 收两仓 md');
   ok(inj.includes('# handbook') && inj.includes('# req') && !inj.includes('ghp_SECRET'), '注入正文含 skill、不含 token');
+  const dirs = collectRepoSkillDirs({ workspaceRoot: skillRoot, pluginRoot: join(skillRoot, 'plugin') });
+  const dirInj = formatRepoSkillDirsInjection(dirs);
+  ok(dirInj.includes('dsh-git-push/skills') && dirInj.includes('handbook.md') && !dirInj.includes('# handbook'), 'collectRepoSkillDirs/formatRepoSkillDirsInjection 只列清单不含正文');
   rmSync(skillRoot, { recursive: true, force: true });
+
+  // v1.28.0 自定义忽略 pattern：追加 .gitignore + 已跟踪文件解除跟踪（ensureCustomIgnored）
+  const ignoreRoot = mkdtempSync(join(tmpdir(), 'git-push-ignore-'));
+  mkdirSync(ignoreRoot, { recursive: true });
+  execSync('git init -b master', { cwd: ignoreRoot, stdio: 'ignore' });
+  writeFileSync(join(ignoreRoot, 'x.bak'), 'backup\n');
+  writeFileSync(join(ignoreRoot, 'keep.txt'), 'keep\n');
+  execSync('git add -A && git -c user.email=t@t -c user.name=t commit -m init', { cwd: ignoreRoot, stdio: 'ignore' });
+  const ig1 = ensureCustomIgnored(ignoreRoot, '*.bak*, *.tmp');
+  ok(ig1.ok && ig1.added.includes('*.bak*') && ig1.added.includes('*.tmp'), 'ensureCustomIgnored 追加缺失 pattern');
+  ok(ig1.tracked.includes('*.bak*'), 'glob 模式 *.bak* 匹配已跟踪的 x.bak → 进 tracked');
+  const giText = readFileSync(join(ignoreRoot, '.gitignore'), 'utf8');
+  ok(giText.includes('*.bak*') && giText.includes('*.tmp'), '.gitignore 已写入自定义 pattern');
+  const lsAfter1 = runGit(['ls-files', '--', 'x.bak'], ignoreRoot);
+  ok(lsAfter1.status === 0 && lsAfter1.stdout.trim() === '', 'ensureCustomIgnored 用 glob 模式解除已跟踪文件跟踪');
+  const ig2 = ensureCustomIgnored(ignoreRoot, '*.bak*, *.tmp');
+  ok(ig2.ok && ig2.added.length === 0, 'ensureCustomIgnored 幂等：重复调用不追加');
+  const igEmpty = ensureCustomIgnored(ignoreRoot, '');
+  ok(igEmpty.ok && igEmpty.added.length === 0, 'ensureCustomIgnored 空 pattern 无操作');
+  // 字面路径已解除跟踪后再次加入 → tracked 为空（文件已不在索引），只追加 .gitignore
+  const ig3 = ensureCustomIgnored(ignoreRoot, 'x.bak');
+  ok(ig3.ok && ig3.added.includes('x.bak') && !ig3.tracked.includes('x.bak'), 'ensureCustomIgnored 已解除文件字面路径加入时 tracked 为空');
+  rmSync(ignoreRoot, { recursive: true, force: true });
 
   const tplRoot = mkdtempSync(join(tmpdir(), 'git-push-tpl-'));
   mkdirSync(join(tplRoot, 'dsh-git-push-User', '.git'), { recursive: true });

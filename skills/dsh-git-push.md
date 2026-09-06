@@ -1,6 +1,6 @@
 ---
 name: dsh-git-push
-description: dsh-git-push 插件（git 自动提交推送 v1.23.1，README 模板在同级仓 dsh-git-push-User/readme-template.md）的使用手册：git_scan / git_commit_push / git_clone / git_remote_create / code_audit 工具与 /api/git-push API 的调用方法、配置（审计 blockOn/llmAudit）、验证与坑速查。处理"提交推送代码""扫描仓库状态""审计代码""推送前拦截 bug""敏感信息检测""文档被审计拦截"类请求时加载；插件不可用/报错排查时必加载（正常情况优先用插件，见 plugin-priority）。
+description: dsh-git-push 插件（git 自动提交推送 v1.28.0，README 模板在同级仓 dsh-git-push-User/readme-template.md）的使用手册：git_scan / git_commit_push / git_clone / git_remote_create / code_audit 工具与 /api/git-push API 的调用方法、配置（审计 blockOn/llmAudit、注入开关 injectFullSkill、自定义忽略 customIgnorePatterns）、验证与坑速查。处理"提交推送代码""扫描仓库状态""审计代码""推送前拦截 bug""敏感信息检测""文档被审计拦截"类请求时加载；插件不可用/报错排查时必加载（正常情况优先用插件，见 plugin-priority）。上下文注入实现定位：lib/index.js 搜「上下文注入」注释块（agent/pre-step 钩子）。
 whenToUse: 需要用插件做 git 提交推送/代码审计但不确定参数/报错排查/插件未装需手做时。
 generatedBy: grok-4.6 · 2026-09-03
 ---
@@ -30,6 +30,7 @@ generatedBy: grok-4.6 · 2026-09-03
 - 启动时若同级仓缺失，插件用 `git_clone`（api.github.com）拉到工作区与 `dsh-git-push` 同一层级
 - **可执行位（v1.18.4）**：启动时 `git config --global core.filemode false`；`runGit`/`gitRaw` 每次带 `-c core.filemode=false`。CIFS 上 100644↔100755 不再进 status/commit
 - **设置页凭据（v1.20.0 / v1.21.0 / v1.23.1）**：入口 = 设置 → 插件 → 插件配置 →「Git 提交推送」。填 GitHub token；点「检测可用」走 `/api/git-push/account-check`（GET `/user`），多行块显示用户名 / id / 主页。公钥是否已绑：先 GET `/user/keys`；token 无权读列表（常见只有 `repo` → 404）时改打 `ssh.github.com:443`，`Hi <login>!` 即已绑定
+- **设置页新增项（v1.28.0）**：同卡片下方——①「注入全部 skill 内容」勾选框（injectFullSkill）：勾选 = 每个会话 pre-step 注入两仓全部 skill 正文，不勾选（默认）= 只注入 skill 目录 + 文件清单；②「自定义忽略文件」输入框（customIgnorePatterns）：逗号/换行分隔 gitignore 模式（如 `*.bak*`），提交时自动追加目标仓库 .gitignore。两项修改即时保存，无需点保存按钮
 - **推送后远端 3 条（v1.21.0 表格）**：`git_commit_push` 推送成功后带 `remoteHeads` + `remoteHeadsText`（Markdown 表格：# / SHA / 标题 / 时间）。AI 必须用表格发给用户，不得改成编号列表
 
 ### 推送通道（v1.18.3：默认 api.github.com，token 无效回退 SSH）
@@ -125,6 +126,8 @@ generatedBy: grok-4.6 · 2026-09-03
         exemptRepos: ['ai-work-archive']   # v1.5.0 备份类豁免：私有/备份仓库（跳过敏感内容规则）
         # pushScope: 'all'          # v1.24.0 推送许可 scope：'all'（默认）/ 'session'
         # commitMessage: 'chore(ai): 任务完成自动提交'   # v1.24.0 自动推送提交信息
+        # injectFullSkill: false    # v1.28.0 勾选=pre-step 注入两仓 skill 全文；false（默认）只列目录清单省 token
+        # customIgnorePatterns: '*.bak*, *.tmp'   # v1.28.0 自定义忽略 pattern（逗号/换行分隔），提交时自动写目标仓库 .gitignore（已跟踪文件自动解除跟踪）
 ```
 
 ## 五、验证与测试

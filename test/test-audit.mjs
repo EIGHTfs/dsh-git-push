@@ -130,7 +130,8 @@ try {
   ok(r17f.findings.some((f) => f.rule === 'syntax'), '豁免仓库语法检查仍生效（只豁免敏感内容规则）');
 
   /* ==================== 代码注释措辞（comment-wording，gbmd 案例固化，2026-09-06） ==================== */
-  // 检测规则：代码/前端标记文件注释行含「///////」→ blocker
+  // 检测规则：代码/前端标记文件注释行含「///」等措辞 → blocker
+  // （v1.27.2 恢复：v1.27.0 公开视角清理误把测试输入里的检测目标措辞当用户视角删除，11 用例失效）
   const r18 = audit([{ path: 'k.js', content: '// 2026-08-26：导出搜索记录\nconst a = 1;\n' }]);
   ok(r18.findings.some((f) => f.rule === 'comment-wording' && f.level === 'blocker'), '代码注释「用户要求」检出 blocker');
 
