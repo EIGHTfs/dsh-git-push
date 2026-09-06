@@ -205,6 +205,20 @@ try {
   });
   ok(r19.findings.some((f) => f.rule === 'comment-wording'), '内置规则经配置化通道注入仍生效');
 
+  // ---- 文档凭据引用/明文警告（credential-ref，v1.27.0）----
+  // 文档新增行出现旧凭据位置引用 → warning
+  const r20 = audit([{ path: 'n.md', content: '凭据在 .ssh/credentials.md 里\n' }]);
+  ok(r20.findings.some((f) => f.rule === 'credential-ref' && f.level === 'warning'), '文档旧凭据文件引用检出 warning');
+  // 文档写凭据明文键值对 → warning
+  const r21 = audit([{ path: 'n2.md', content: '密码: AR-26710\n' }]);
+  ok(r21.findings.some((f) => f.rule === 'credential-ref' && f.level === 'warning'), '文档凭据明文检出 warning');
+  // 示例词上下文豁免（例如/示例）
+  const r22 = audit([{ path: 'n3.md', content: '例如 password: xxxxxx 是示例\n' }]);
+  ok(!r22.findings.some((f) => f.rule === 'credential-ref'), '示例词上下文豁免');
+  // 代码文件不适用该规则
+  const r23 = audit([{ path: 'k.js', content: '// 密码: xxxxxx\nconst a = 1;\n' }]);
+  ok(!r23.findings.some((f) => f.rule === 'credential-ref'), '代码文件不查 credential-ref');
+
 } finally {
   rmSync(root, { recursive: true, force: true });
 }
