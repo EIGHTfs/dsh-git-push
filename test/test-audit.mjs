@@ -1,4 +1,6 @@
-/** dsh-git-push v1.1.0 审计规则单测（内置自 dsh-code-audit，真实临时文件 + files 注入） */
+/** dsh-skip-sensitive dsh-git-push v1.1.0 审计规则单测（内置自 dsh-code-audit，真实临时文件 + files 注入）
+ * 文件头 dsh-skip-sensitive：本文件含 comment-wording 检测目标措辞（作为测试输入数据），
+ * 豁免审计检测与提交前 autoClean 自动清理，防止测试输入被误删（2026-09-07 固化）。 */
 import { auditRepo, cleanCommentWording } from '../lib/audit.js';
 import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -131,7 +133,8 @@ try {
 
   /* ==================== 代码注释措辞（comment-wording，gbmd 案例固化，2026-09-06） ==================== */
   // 检测规则：代码/前端标记文件注释行含「///」等措辞 → blocker
-  // （v1.27.2 恢复：v1.27.0 公开视角清理误把测试输入里的检测目标措辞当用户视角删除，11 用例失效）
+  // （v1.27.2 恢复：v1.27.0 公开视角清理误把测试输入里的检测目标措辞当用户视角删除，11 用例失效；
+  //   2026-09-07 补：文件头 dsh-skip-sensitive 豁免 autoClean 再删，见文件头注释）
   const r18 = audit([{ path: 'k.js', content: '// 2026-08-26：导出搜索记录\nconst a = 1;\n' }]);
   ok(r18.findings.some((f) => f.rule === 'comment-wording' && f.level === 'blocker'), '代码注释「用户要求」检出 blocker');
 

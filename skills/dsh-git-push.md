@@ -23,7 +23,8 @@ generatedBy: grok-4.6 · 2026-09-03
 
 ## 二、开发者特殊要求门禁（v1.10.0）
 
-- 启动时 `agent/pre-step` 注入本仓 `skills/` 与同级仓 `dsh-git-push-User` 全部 md（每个 agent 一次）
+- 启动时 `agent/pre-step` 注入本仓 `skills/` 与同级仓 `dsh-git-push-User` 全部 md（每个 agent 一次；v1.28.0 起受 `injectFullSkill` 开关：勾选=注入全文，默认只列目录清单）
+- **功能说明书强制注入（v1.28.1）**：`skills/dsh-git-push-functions.md`（插件每个功能一份说明书）经 `systemPrompt.section` 系统提示词通道**无条件全文注入**每个会话，不受 `injectFullSkill` 设置影响（text 用函数动态读文件，文件更新即生效）。实现定位：`lib/index.js` 搜「上下文注入」
 - **README 模板（v1.23.0）**：`git_gen_readme` 读同级仓 `dsh-git-push-User/readme-template.md`（或 `User/<用户名>/readme-template.md`）；没有才用插件内置。占位符 `{{name}}` `{{description}}` `{{version}}` `{{toc}}` `{{versionTable}}`
 - 同级仓 `dsh-git-push-User/requirements.md` 放开发者特殊要求清单（独立私有库，不进插件目录）
 - `git_commit_push` 提交前自动读取并逐条核对：未核对（不带 `requirementsConfirmed:true`）直接拦截返回清单；AI 逐条确认达标后重新调用
@@ -128,6 +129,7 @@ generatedBy: grok-4.6 · 2026-09-03
         # commitMessage: 'chore(ai): 任务完成自动提交'   # v1.24.0 自动推送提交信息
         # injectFullSkill: false    # v1.28.0 勾选=pre-step 注入两仓 skill 全文；false（默认）只列目录清单省 token
         # customIgnorePatterns: '*.bak*, *.tmp'   # v1.28.0 自定义忽略 pattern（逗号/换行分隔），提交时自动写目标仓库 .gitignore（已跟踪文件自动解除跟踪）
+        # envInjectionEnabled: true  # v1.28.1 环境注入（工作目录映射+工具路径）走 systemPrompt.section 系统提示词通道，每步组装生效（60s 缓存防重复探测），不受 injectFullSkill 影响；false 关闭
 ```
 
 ## 五、验证与测试

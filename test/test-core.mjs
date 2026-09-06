@@ -1,5 +1,5 @@
 /** dsh-skip-sensitive dsh-git-push 核心逻辑单测：扫描 + 提交推送（真实 git 操作，临时目录） */
-import { scanRepos, commitAndPush, readRepoStatus, findGitDirs, parseGithubOwnerRepo, httpsUrlOf, apiOriginOf, sshOriginOf, isBadCredentials, githubFetch, resolveUserDir, userRepoCandidates, USER_REPO_NAME, loadUserRequirements, gitCFlags, ensureGlobalFilemodeFalse, runGit, extractRemoteHeads, formatRemoteHeadsTable, persistGithubToken, githubTokenStatus, formatGithubAccountBlock, collectRepoSkillDocs, formatRepoSkillInjection, resolveReadmeTemplate, genReadme, probeSshGithubAuth, collectRepoSkillDirs, formatRepoSkillDirsInjection, ensureCustomIgnored } from '../lib/core.js';
+import { scanRepos, commitAndPush, readRepoStatus, findGitDirs, parseGithubOwnerRepo, httpsUrlOf, apiOriginOf, sshOriginOf, isBadCredentials, githubFetch, resolveUserDir, userRepoCandidates, USER_REPO_NAME, loadUserRequirements, gitCFlags, ensureGlobalFilemodeFalse, runGit, extractRemoteHeads, formatRemoteHeadsTable, persistGithubToken, githubTokenStatus, formatGithubAccountBlock, collectRepoSkillDocs, formatRepoSkillInjection, resolveReadmeTemplate, genReadme, probeSshGithubAuth, collectRepoSkillDirs, formatRepoSkillDirsInjection, ensureCustomIgnored, collectFunctionManual } from '../lib/core.js';
 import { mkdtempSync, writeFileSync, mkdirSync, rmSync, chmodSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -79,6 +79,16 @@ try {
   const dirInj = formatRepoSkillDirsInjection(dirs);
   ok(dirInj.includes('dsh-git-push/skills') && dirInj.includes('handbook.md') && !dirInj.includes('# handbook'), 'collectRepoSkillDirs/formatRepoSkillDirsInjection 只列清单不含正文');
   rmSync(skillRoot, { recursive: true, force: true });
+
+  // v1.28.0 插件功能说明书强制全文注入：collectFunctionManual 读 skills/dsh-git-push-functions.md
+  const manualRoot = mkdtempSync(join(tmpdir(), 'git-push-manual-'));
+  mkdirSync(join(manualRoot, 'plugin', 'skills'), { recursive: true });
+  writeFileSync(join(manualRoot, 'plugin', 'skills', 'dsh-git-push-functions.md'), '# dsh-git-push 功能说明书\n\n## git_scan\n\n扫描仓库\n');
+  const manual = collectFunctionManual({ pluginRoot: join(manualRoot, 'plugin') });
+  ok(manual.includes('功能说明书') && manual.includes('git_scan'), 'collectFunctionManual 读说明书全文');
+  const manualMissing = collectFunctionManual({ pluginRoot: join(manualRoot, 'noplugin') });
+  ok(manualMissing === '', 'collectFunctionManual 说明书缺失返回空');
+  rmSync(manualRoot, { recursive: true, force: true });
 
   // v1.28.0 自定义忽略 pattern：追加 .gitignore + 已跟踪文件解除跟踪（ensureCustomIgnored）
   const ignoreRoot = mkdtempSync(join(tmpdir(), 'git-push-ignore-'));
