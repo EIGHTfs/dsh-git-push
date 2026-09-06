@@ -1,5 +1,5 @@
 /** dsh-git-push v1.1.0 审计规则单测（内置自 dsh-code-audit，真实临时文件 + files 注入） */
-import { auditRepo } from './lib/audit.js';
+import { auditRepo, cleanCommentWording } from './lib/audit.js';
 import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -128,6 +128,83 @@ try {
 
   const r17f = audit([{ path: 'a.js', content: 'function ( {\n' }], { exemptRepos: ['repo'] });
   ok(r17f.findings.some((f) => f.rule === 'syntax'), '豁免仓库语法检查仍生效（只豁免敏感内容规则）');
+
+  /* ==================== 代码注释措辞（comment-wording，gbmd 案例固化，2026-09-06） ==================== */
+  // 检测规则：代码/前端标记文件注释行含「用户要求/用户原话/用户说/用户约定/用户规定/用户明确/用户拍板/用户：」→ blocker
+  const r18 = audit([{ path: 'k.js', content: '// 2026-08-26 用户要求：导出搜索记录\nconst a = 1;\n' }]);
+  ok(r18.findings.some((f) => f.rule === 'comment-wording' && f.level === 'blocker'), '代码注释「用户要求」检出 blocker');
+
+  const r18b = audit([{ path: 'k.html', content: '<!-- 用户原话：「导出搜索记录」 -->\n<div></div>\n' }]);
+  ok(r18b.findings.some((f) => f.rule === 'comment-wording'), 'HTML 注释「用户原话」检出');
+
+  const r18c = audit([{ path: 'k.css', content: '/* 用户约定：白天模式 */\nbody { color: #fff }\n' }]);
+  ok(r18c.findings.some((f) => f.rule === 'comment-wording'), 'CSS 注释「用户约定」检出');
+
+  const r18d = audit([{ path: 'k.py', content: '# 用户说：加个开关\nx = 1\n' }]);
+  ok(r18d.findings.some((f) => f.rule === 'comment-wording'), 'Python 注释「用户说」检出');
+
+  // 不误报：代码字符串/标识符里的「用户」不该报（只查注释行）
+  const r18e = audit([{ path: 'k.js', content: 'const msg = "用户要求：xxx";\nconst userId = 1;\n' }]);
+  ok(!r18e.findings.some((f) => f.rule === 'comment-wording'), '代码字符串/标识符中的「用户」不误报');
+
+  // 块注释里面有措辞照报（判定 isCommentLine 只看行首）
+  const r18f = audit([{ path: 'k.js', content: '/* 用户要求：加回 */\n' }]);
+  ok(r18f.findings.some((f) => f.rule === 'comment-wording'), '块注释「用户要求」检出');
+
+  // 豁免：exemptRepos 命中跳过 comment-wording（敏感内容规则）
+  const r18g = audit([{ path: 'k.js', content: '// 用户要求：导出\n' }], { exemptRepos: ['repo'] });
+  ok(!r18g.findings.some((f) => f.rule === 'comment-wording'), '豁免仓库 comment-wording 不报');
+
+  // cleanCommentWording 纯函数：改写为中性说明，保留日期与语义
+  const w1 = cleanCommentWording('// 2026-08-26 用户要求：导出搜索记录\n// 用户原话：「结束不能比今天晚」\n// （用户要求：清理进垃圾桶）\n// 用户约定：初次未设密码只警告\n');
+  ok(w1.count === 4, `cleanCommentWording 计数 4（实际 ${w1.count}）`);
+  ok(w1.text.includes('// 2026-08-26：导出搜索记录'), '日期+用户要求 → 日期保留');
+  ok(w1.text.includes('// 「结束不能比今天晚」'), '用户原话：「…」 → 「…」保留内容');
+  ok(w1.text.includes('// （清理进垃圾桶）'), '（用户要求：…） → （…）');
+  ok(w1.text.includes('// 初次未设密码只警告'), '用户约定： → 删除措辞');
+  ok(!/用户/.test(w1.text), '清理后无「用户」残留');
+
+  // cleanCommentWording 不碰代码字符串（无注释标记的行原样返回）
+  const w2 = cleanCommentWording('const msg = "用户要求：xxx";\nlet userId = 1;\n');
+  ok(w2.count === 0 && w2.text.includes('"用户要求：xxx"'), '字符串里的「用户」不清理');
+
+  // 多段引号并列（用户原话：「a」「b」→ 「a」「b」）——1 处措辞，2 段引号内容都保留
+  const w3 = cleanCommentWording('// 用户原话：「都是运行态json」「而且不止这两个json文件是运行态」\n');
+  ok(w3.count === 1 && w3.text.includes('「都是运行态json」「而且不止这两个json文件是运行态」'), '多段引号并列清理');
+
+  // 括注形态：用户原话：（用户原话）：「内容」 → 「内容」；（用户要求：内容） → （内容）
+  const w4 = cleanCommentWording('// 保存功能作用（用户原话）：「搜索结果覆盖写入 search_cache.json」\n// （用户要求：清理进垃圾桶）\n');
+  ok(w4.count === 2, `括注形态计数 2（实际 ${w4.count}）`);
+  ok(w4.text.includes('// 保存功能作用：「搜索结果覆盖写入 search_cache.json」'), '（用户原话）：「…」 → 「…」');
+  ok(w4.text.includes('// （清理进垃圾桶）'), '（用户要求：…） → （…）');
+
+  // JSDoc/块注释多行中间行（* xxx 开头）同样清理——状态机跟踪 /* */ 开闭
+  const w5 = cleanCommentWording('/**\n * 2026-08-30 用户要求：gif 下载前先 HEAD 获取大小\n * 用户原话：「token无效」\n */\nconst gif = 1;\n');
+  ok(w5.count === 2, `JSDoc 多行计数 2（实际 ${w5.count}）`);
+  ok(w5.text.includes(' * 2026-08-30：gif 下载前先 HEAD 获取大小'), 'JSDoc 中间行 日期+用户要求 → 日期保留');
+  ok(w5.text.includes(' * 「token无效」'), 'JSDoc 中间行 用户原话：「…」 → 「…」');
+
+  // 块注释中间行之后的代码不被误伤
+  const w6 = cleanCommentWording('/* 用户要求：块注释 */\nconst code = "正常代码";\n');
+  ok(w6.count === 1 && w6.text.includes('/* 块注释 */'), '单行块注释清理');
+  ok(w6.text.includes('const code = "正常代码";'), '块注释后的代码原样');
+  // ---- comment-wording 规则配置化（2026-09-06）：自定义规则注入 ----
+  const customAudit = audit([{ path: 'k.js', content: '// 老板拍板：上灰度\n' }], {
+    commentWordingPatterns: [{ name: '老板拍板', pattern: '老板拍板' }],
+  });
+  ok(customAudit.findings.some((f) => f.rule === 'comment-wording' && f.message.includes('老板拍板')), '注入自定义规则后检测命中');
+
+  const builtinOnly = audit([{ path: 'k.js', content: '// 老板拍板：上灰度\n' }]);
+  ok(!builtinOnly.findings.some((f) => f.rule === 'comment-wording'), '未注入时自定义措辞不报（内置规则不变）');
+
+  const wExtra = cleanCommentWording('// 老板拍板：上灰度\n', [new RegExp('老板拍板')]);
+  ok(wExtra.count === 1 && wExtra.text.includes('// 上灰度'), 'extraPatterns 自定义措辞清理');
+
+  const r19 = audit([{ path: 'a.js', content: '// 用户要求：x\n' }], {
+    commentWordingPatterns: [{ name: '用户要求', pattern: '用户要求' }],
+  });
+  ok(r19.findings.some((f) => f.rule === 'comment-wording'), '内置规则经配置化通道注入仍生效');
+
 } finally {
   rmSync(root, { recursive: true, force: true });
 }
