@@ -16,6 +16,8 @@ generatedBy: grok-4.6 · 2026-09-03
 | `git_scan` | 无 | 扫描 workspace 全部 git 仓库 → 分支/remote/未提交变更数/最近活动 |
 | `git_commit_push` | `repo`, `message`(必填), `push?`, `dryRun?`, `audit?`(默认true), `llmAudit?`(默认false) | **先审计** → add -A → commit → push；成功后回传远端最近 3 次 SHA/标题/时间 |
 | `code_audit` | `repo`, `llm?` | 手动审计仓库：L0 静态（默认）+ L1 LLM（llm=true） |
+| `push_permit_status`（v1.24.0） | 无 | 查「AI 回复推送许可」开关 + 最近一次自动检测/推送记录 |
+| `push_permit_config`（v1.24.0） | `enabled`(bool), `pushScope?` | 切推送许可（默认关闭）；`pushScope`=all（默认）/ session |
 
 用法示例：`git_scan` 看改动 → 先 `code_audit {repo:"...", llm:true}` 自查 → `git_commit_push {repo:"...", message:"feat: xxx", push:true}`（审计通过才推）。
 
@@ -76,8 +78,31 @@ generatedBy: grok-4.6 · 2026-09-03
 | `GET /api/git-push/scan` | 扫描全部仓库状态 |
 | `GET /api/git-push/audit?repo=<路径>&llm=true` | 审计指定仓库（llm=true 追加深度审查） |
 | `POST /api/git-push/commit` | `{repo, message, push?, dryRun?, audit?, llmAudit?}` 审计通过后提交推送（curl 用 `-H 'Content-Type: application/json'`） |
+| `GET /git-push/viewer`（v1.24.0） | **提交历史查看器页面**（只读；设置 → 插件配置 → Git 提交推送 卡片「打开提交历史查看器」进入） |
+| `GET /api/git-push/repos`（v1.24.0） | 查看器用：扫描仓库（支持 `root`/`paths`/`extraReposFile` 查询参数覆盖） |
+| `GET /api/git-push/commits?repo=&limit=`（v1.24.0） | 查看器用：仓库提交历史（含每文件 numstat） |
+| `GET /api/git-push/diff?repo=&commit=&file=`（v1.24.0） | 查看器用：单文件 diff（行级 JSON；根提交自动回退 git show） |
+| `GET /api/git-push/permit/status`（v1.24.0） | 推送许可状态（AI 回复 ✅ 是否自动 commit+push；默认关闭） |
+| `POST /api/git-push/permit/config`（v1.24.0） | `{pushOnComplete: true/false, pushScope?}` 切换推送许可 |
 
-测试实例地址：`http://127.0.0.1:3083/api/git-push/status`（局域网反代 3084）。
+测试实例地址：`http://127.0.0.1:3083/api/git-push/status`（局域网反代 3084）。查看器：`http://127.0.0.1:3083/git-push/viewer`。
+
+## 三乙、提交历史查看器（v1.24.0，整合 git-commits-viewer）
+
+- **入口**：设置 → 插件 → 插件配置 →「Git 提交推送」卡片内「打开提交历史查看器」按钮（新窗口 `/git-push/viewer`）
+- **功能**：仓库列表（来自插件扫描配置，含 extraReposFile 实时读取）→ 提交历史（类型过滤 / 分页 / 每提交文件与增删统计）→ 单文件 diff（行级）
+- **只读**：无 push 按钮、无任何写 git 的 API；推送一律走 `git_commit_push` 工具（带审计）
+- **安全**：repo 参数只接受扫描仓库 name/path 精确匹配（防任意路径）；commit id 白名单 4-40 hex；git 全部经 core.js runGit（spawnSync 数组，无 shell 拼接）
+- **避坑**：单份实现（不复刻旧 generate.js/static-server.js 双份代码）；路径全复用插件配置（不硬编码）；页面内嵌样式脚本零外部资源；页面显示插件版本号
+
+## 三丙、AI 回复推送许可（v1.24.0，整合 dsh-task-completion）
+
+- **语义**：AI 回复输出 ✅（任务完成/已解答）且许可开启 → 回合结束自动 commit+push；❌ / ⚠️ 未完成 → 阻断不触发
+- **默认关闭**（pushOnComplete=false）：关闭时只记录 `lastAttempt`，绝不自动推；开启走 `push_permit_config` 工具 / `POST /api/git-push/permit/config`
+- **走审计通道**：自动推送逐个仓库调用 commitWithAudit（L0 审计 + 敏感扫描 + npm ignore + ahead/behind 检查），拦截/失败的仓库逐仓记录到 `lastAutoPush.results`，不静默
+- **pushScope**：`all`（默认，全部有变更仓库）/ `session`（仅会话 cwd 所在仓库）
+- **持久化**：`.dsh/git-push-permit.json`（JSON 文件，零新依赖；重启保留）
+- **安全边界**：自动授权只做可逆操作（commit+push）；删除仓库 / force push / 公开化不在授权内；并发闸（同时只跑一个自动推送）+ 回合去重
 
 ## 四、配置（cordis.patch.yml）
 
@@ -96,6 +121,8 @@ generatedBy: grok-4.6 · 2026-09-03
         llmAuditModel: 'agnes-2.5-flash'   # 如 agnes / deepseek-chat
         maxDiffBytes: 6000          # LLM 审查 diff 截断
         exemptRepos: ['ai-work-archive']   # v1.5.0 备份类豁免：私有/备份仓库（跳过敏感内容规则）
+        # pushScope: 'all'          # v1.24.0 推送许可 scope：'all'（默认）/ 'session'
+        # commitMessage: 'chore(ai): 任务完成自动提交'   # v1.24.0 自动推送提交信息
 ```
 
 ## 五、验证与测试
@@ -105,6 +132,8 @@ node --check lib/core.js && node --check lib/index.js  # 语法
 node test-core.mjs    # 核心 13 项（真实 git 临时仓库）
 node test-audit.mjs   # 审计规则 27 项（L0 静态，含文档措辞拦截）
 node test-apply.mjs   # apply mock 16 项（含审计门禁端到端）
+node test-viewer.mjs  # v1.24.0 查看器数据层 32 项（真实临时仓库：提交历史/diff/根提交/防注入/页面渲染）
+node test-permit.mjs  # v1.24.0 推送许可 29 项（完成检测/JSON 持久化/损坏回退）
 curl -s http://127.0.0.1:3083/api/git-push/status      # 加载验证
 ```
 
@@ -112,6 +141,9 @@ curl -s http://127.0.0.1:3083/api/git-push/status      # 加载验证
 
 | 坑 | 处理 |
 |---|---|
+| `/git-push/viewer` 404 / 设置卡无查看器按钮 | 插件版本 <1.24.0 或 client.js 改动未生效：非 dev 模式平台启动时快照 client bundle，改 client.js 后需重启插件/实例（测试实例先行） |
+| 查看器某仓库无提交 | 仓库为空仓库（rev-list 0）被扫描跳过，属预期 |
+| 自动推送没跑 | `push_permit_status` 看 `pushOnComplete`（默认关）；`lastAttempt.reason` 看未触发原因；许可开时看 `lastAutoPush.results` 逐仓结果（审计拦截/远端领先/无 remote 都会记录） |
 | HTTPS remote push 失败 | 禁止 github.com HTTPS。默认 api.github.com；token 401 时回退 ssh.github.com:443 |
 | `src refspec main does not match` | 本地分支是 master，插件已自动取 `branch --show-current` |
 | 远端领先不推 | 插件 push 前 `fetch` + `rev-list`，远端领先返回 reason，需先 pull |

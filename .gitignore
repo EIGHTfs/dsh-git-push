@@ -16,3 +16,4 @@ User/**
 
 # clone 通道元数据（本机专用，不入库）
 .clone-meta.json
+.git-push-token
