@@ -1,6 +1,6 @@
 /** dsh-skip-sensitive dsh-git-push 核心逻辑单测：扫描 + 提交推送（真实 git 操作，临时目录） */
-import { scanRepos, commitAndPush, readRepoStatus, findGitDirs, parseGithubOwnerRepo, httpsUrlOf, apiOriginOf, sshOriginOf, isBadCredentials, githubFetch, resolveUserDir, userRepoCandidates, USER_REPO_NAME, loadUserRequirements, gitCFlags, ensureGlobalFilemodeFalse, ensureGlobalSafeDirectoryStar, buildReadmeCheckHint, README_CHECK_HINT, runGit, extractRemoteHeads, formatRemoteHeadsTable, persistGithubToken, githubTokenStatus, formatGithubAccountBlock, collectRepoSkillDocs, formatRepoSkillInjection, resolveReadmeTemplate, genReadme, probeSshGithubAuth, collectRepoSkillDirs, formatRepoSkillDirsInjection, ensureCustomIgnored, collectFunctionManual, FUNCTION_MANUAL_COMPACT, resolveGitToken } from '../lib/core.js';
-import { mkdtempSync, writeFileSync, mkdirSync, rmSync, chmodSync, readFileSync } from 'node:fs';
+import { scanRepos, commitAndPush, readRepoStatus, findGitDirs, parseGithubOwnerRepo, httpsUrlOf, apiOriginOf, sshOriginOf, isBadCredentials, githubFetch, resolveUserDir, userRepoCandidates, USER_REPO_NAME, loadUserRequirements, gitCFlags, ensureGlobalFilemodeFalse, ensureGlobalSafeDirectoryStar, buildReadmeCheckHint, README_CHECK_HINT, runGit, extractRemoteHeads, formatRemoteHeadsTable, persistGithubToken, githubTokenStatus, formatGithubAccountBlock, collectRepoSkillDocs, formatRepoSkillInjection, resolveReadmeTemplate, genReadme, probeSshGithubAuth, collectRepoSkillDirs, formatRepoSkillDirsInjection, ensureCustomIgnored, collectFunctionManual, FUNCTION_MANUAL_COMPACT, resolveGitToken, rebuildHistory, previewRebuildHistory } from '../lib/core.js';
+import { mkdtempSync, writeFileSync, mkdirSync, rmSync, chmodSync, readFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execSync } from 'node:child_process';
@@ -220,6 +220,29 @@ try {
   ok(!r4.ok && r4.error.includes('message'), '空 message 被拒绝');
   const r5 = await commitAndPush({ repoPath: join(root, 'no-such'), message: 'x', requirementsConfirmed: true });
   ok(!r5.ok && r5.error.includes('不是 git 仓库'), '非仓库被拒绝');
+
+  // v1.34.0：fresh 重建历史不改版本号、不删 .git、force=false 不推远端
+  const repoFresh = join(root, 'repo-fresh');
+  mkdirSync(repoFresh, { recursive: true });
+  execSync('git init -b main', { cwd: repoFresh, stdio: 'ignore' });
+  writeFileSync(join(repoFresh, 'package.json'), JSON.stringify({ name: 'demo', version: '2.6.0' }, null, 2) + '\n');
+  writeFileSync(join(repoFresh, 'a.txt'), 'one\n');
+  execSync('git add -A && git -c user.email=t@t -c user.name=t commit -m "feat: 2.6.0 first"', { cwd: repoFresh, stdio: 'ignore' });
+  writeFileSync(join(repoFresh, 'a.txt'), 'two\n');
+  execSync('git add -A && git -c user.email=t@t -c user.name=t commit -m "fix: second"', { cwd: repoFresh, stdio: 'ignore' });
+  const beforeCount = Number(execSync('git rev-list --count HEAD', { cwd: repoFresh, encoding: 'utf8' }).trim());
+  ok(beforeCount === 2, `fresh 前提交数=${beforeCount}`);
+  const preview = previewRebuildHistory({ repoPath: repoFresh, mode: 'fresh' });
+  ok(preview.ok && preview.after === 1 && /版本号/.test(preview.plan), `fresh dryRun plan=${preview.plan}`);
+  const rebuilt = await rebuildHistory({ repoPath: repoFresh, mode: 'fresh', force: false });
+  ok(rebuilt.ok === true, `fresh ok error=${rebuilt.error || ''}`);
+  const afterCount = Number(execSync('git rev-list --count HEAD', { cwd: repoFresh, encoding: 'utf8' }).trim());
+  ok(afterCount === 1, `fresh 后提交数=${afterCount}`);
+  const pkgAfter = JSON.parse(readFileSync(join(repoFresh, 'package.json'), 'utf8'));
+  ok(pkgAfter.version === '2.6.0', `fresh 不改版本号 got=${pkgAfter.version}`);
+  ok(rebuilt.version === '2.6.0', `fresh 返回 version=${rebuilt.version}`);
+  ok(rebuilt.push?.pushed === false, `force=false 不推远端 reason=${rebuilt.push?.reason}`);
+  ok(existsSync(join(repoFresh, '.git')), 'fresh 保留 .git（不 git rm .git）');
 } finally {
   rmSync(root, { recursive: true, force: true });
 }

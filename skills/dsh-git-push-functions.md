@@ -1,14 +1,14 @@
 ---
 name: dsh-git-push-functions
 description: dsh-git-push 插件全部功能说明书（每个功能一份说明）：git_scan / git_commit_push / code_audit / git_gen_readme / git_remote_create / git_set_visibility / git_clone / git_rebuild_history / git_push_rules / push_permit_status / push_permit_config / HTTP API / 提交历史查看器 / 上下文注入 / repo-index 维护 / 敏感忽略 / 自定义忽略 / 硬编码路径与 IP 审计 的用途、参数、返回、注意事项。v1.32.0 起系统提示词只注入精简目录，本文件按需加载（不再强制全文注入）；与 skills/dsh-git-push.md（使用手册）配合，排查/细节以本说明书为准。
-whenToUse: 需要了解 dsh-git-push 某个功能怎么用/参数是什么/返回什么；排查插件工具行为；用户问「这个功能是干嘛的」时直接引用本说明书对应章节。
-generatedBy: user-request 2026-09-07（把插件每个功能写份说明书强制注入全部内容，不受设置影响）
+whenToUse: 需要了解 dsh-git-push 某个功能怎么用/参数是什么/返回什么；排查插件工具行为；查询某功能用途时直接引用本说明书对应章节。
+generatedBy: grok-4.6 · 2026-09-07
 ---
 
 # dsh-git-push 插件功能说明书
 
 > 本说明书覆盖插件**每个功能**。v1.32.0 起系统提示词只注入**精简目录**（工具名 + 提交前 README 检查），完整正文按需加载本 skill，不再每个会话塞全文。
-> 版本：v1.32.0。源码：EIGHTfs/dsh-git-push。上下文注入实现定位：`lib/index.js` 搜「上下文注入」。
+> 版本：v1.34.0。源码：EIGHTfs/dsh-git-push。上下文注入实现定位：`lib/index.js` 搜「上下文注入」。
 
 ---
 
@@ -62,9 +62,9 @@ generatedBy: user-request 2026-09-07（把插件每个功能写份说明书强�
 
 ### 8. git_rebuild_history —— 重建仓库历史
 
-- **用途**：squash-bugfixes（补丁并入主版本）/ drop-versions（删版本区间）/ fresh（完全重建为 1.0.0）
-- **参数**：`repo` / `mode` / `dryRun`（预览）/ `dropFrom` / `dropTo` / `force`
-- **注意**：破坏性操作，自动打 backup-<timestamp> tag，先 dryRun
+- **用途**：squash-bugfixes（补丁并入主版本）/ drop-versions（删版本区间）/ fresh（当前文件树作为唯一提交，**不改版本号**）
+- **参数**：`repo` / `mode` / `dryRun`（预览）/ `dropFrom` / `dropTo` / `force`（true=覆盖远端，须已授权 force push）
+- **注意**：破坏性操作，自动打 backup-<timestamp> tag，先 dryRun。force=false 只改本地。v1.34.0 起 fresh 不再把 package.json 改成 1.0.0
 
 ### 9. git_push_rules —— comment-wording 规则管理
 

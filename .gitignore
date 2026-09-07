@@ -17,3 +17,6 @@ User/**
 # clone 通道元数据（本机专用，不入库）
 .clone-meta.json
 .git-push-token
+
+# 未完成草稿（YAML 非法，暂不入库）
+docs/code-quality-checklist.yaml

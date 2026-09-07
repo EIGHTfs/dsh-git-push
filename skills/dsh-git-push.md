@@ -1,6 +1,6 @@
 ---
 name: dsh-git-push
-description: dsh-git-push 插件（git 自动提交推送 v1.32.0，README 模板在同级仓 dsh-git-push-User/readme-template.md）的使用手册：git_scan / git_commit_push / git_clone / git_remote_create / code_audit 工具与 /api/git-push API 的调用方法、配置（审计 blockOn/llmAudit、硬编码路径/IP、注入开关 injectFullSkill、自定义忽略 customIgnorePatterns、SSH 邮箱生成公钥、属主/权限噪声忽略、提交前 README 检查）、验证与坑速查。处理"提交推送代码""扫描仓库状态""审计代码""推送前拦截 bug""敏感信息检测""硬编码路径""文档被审计拦截""生成 SSH 公钥""SSH 连不上"类请求时加载；插件不可用/报错排查时必加载（正常情况优先用插件，见 plugin-priority）。上下文注入实现定位：lib/index.js 搜「上下文注入」注释块（agent/pre-step 钩子）。
+description: dsh-git-push 插件（git 自动提交推送 v1.34.0，README 模板在同级仓 dsh-git-push-User/readme-template.md）的使用手册：git_scan / git_commit_push / git_clone / git_remote_create / git_rebuild_history / code_audit 工具与 /api/git-push API 的调用方法、配置（审计 blockOn/llmAudit、硬编码路径/IP、注入开关 injectFullSkill、自定义忽略 customIgnorePatterns、SSH 邮箱生成公钥、属主/权限噪声忽略、提交前 README 检查）、验证与坑速查。处理"提交推送代码""扫描仓库状态""审计代码""推送前拦截 bug""敏感信息检测""硬编码路径""文档被审计拦截""生成 SSH 公钥""SSH 连不上""重建历史没推远端"类请求时加载；插件不可用/报错排查时必加载（正常情况优先用插件，见 plugin-priority）。上下文注入实现定位：lib/index.js 搜「上下文注入」注释块（agent/pre-step 钩子）。
 whenToUse: 需要用插件做 git 提交推送/代码审计但不确定参数/报错排查/插件未装需手做时。
 generatedBy: grok-4.6 · 2026-09-03
 ---
@@ -169,6 +169,9 @@ node test/test-permit.mjs  # 推送许可（完成检测/JSON 持久化/损坏�
 | 文档被 docs-conversation 拦下 | 改写为客观表述（只写做了什么）；沟通/需求/移交/待办类文档移入 `data/沟通文档`。注意：描述本规则时用「对话类措辞」等概括表述，避免字面写出禁用措辞被自身规则自命中 |
 | 规则类文档本体入库被拦 | release-docs-rule 等规则文档自身含禁用措辞示例，新规则部署后整文件重入库会被 docs-conversation 拦下：私有归档仓库可用 `audit:false` 放行，或改写示例为概括表述 |
 | 检测可用显示公钥未绑定 | token 只有 `repo` 时 GET `/user/keys` 404，v1.23.1 改 SSH 实测；`Hi <login>!` 即已绑定 |
+| `git_rebuild_history` fresh 把版本改成 1.0.0 | **已修（v1.34.0）**：fresh 只覆盖提交历史，版本号保持 `package.json` |
+| `force:true` 没覆盖远端 | **已修（v1.34.0）**：force 走 API PATCH force + 不挂旧 parent，失败回退 `git push --force` |
+| 用插件不好用就手搓 git | 违反 `skills/git-push-live-fix.md`：当场提出并改插件 |
 
 ## 七、边界
 
@@ -179,3 +182,4 @@ node test/test-permit.mjs  # 推送许可（完成检测/JSON 持久化/损坏�
 ## 相关
 
 - `skills/task-completion-report.md`：收尾模板（分隔线 + ✅ 任务完成 + 交付/验证/遗留）；✅ = 提交推送授权
+- `skills/git-push-live-fix.md`：用本插件发现问题要当场提出并改，禁止默默绕过
