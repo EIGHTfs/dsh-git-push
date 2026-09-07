@@ -75,6 +75,7 @@ node test/test-core.mjs && node test/test-audit.mjs && node test/test-repo-index
 
 | 版本 | 内容 |
 |---|---|
+| 1.36.0 | **User 仓搬家仍能找到**：`dsh-git-push-User` 不在同级时，扫工作区/extraRepos 里同名 git 仓。多个候选按 git 比对（官方 remote `EIGHTfs/dsh-git-push-User` 优先，其次提交数/token/要求清单），不再先命中先用 |
 | 1.35.0 | **repo-index JSON 注入会话**：md 表格已废弃，权威源是 `dsh-git-push-User/<owner>/dsh-repo-index.json`（推送成功后自动生成）。会话默认只注入文件名；设置「注入 repo-index JSON 全文」才注入正文。不再写 `.dsh/skills/dsh-repo-index.md` |
 | 1.34.0 | **重建历史按意图**：`fresh` 当前文件树作为唯一提交，**不改** `package.json` 版本号；用 `checkout --orphan` 保留 remote/backup tag（不再 `git rm .git`）。`force=true` 才覆盖远端（API PATCH force + 不挂旧 parent；失败回退 `git push --force`）。工具描述与实现对齐。新增 skill `git-push-live-fix`：用插件时发现问题当场改，禁止默默手搓 git |
 | 1.33.0 | **token 探测改同级仓优先 + SSH 优先 rsa**：设置页写入的 `dsh-git-push-User/github-token` 排在项目内残留 `.git-push-token` 之前。SSH 私钥探测改为 `id_rsa` 优先（设置页生成并已绑定），避免未绑定的 `id_ed25519` 抢先导致「SSH 未认证」 |
