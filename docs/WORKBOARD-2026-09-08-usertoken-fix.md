@@ -18,7 +18,7 @@
 | 全量回归 | ✅ 完成 | core 87 / audit 86 / repo-index 27 / permit 29 / viewer 43 / rules / env-inject 全过 | test-core/test-audit/test-repo-index |
 | 数据修复（快进本地副本 refs） | ✅ 完成 | 本地副本 reset 至 88e74d5 与 NAS 一致；40 位有效 token 已拷入 | 消除 isSynced 假象 |
 | README/版本 v1.36.2 | ✅ 完成 | |
-| 同步 profile + 提交推送 | 🔄 进行中 | requirementsConfirmed=true |
+| 同步 profile + 提交推送 | ✅ 完成 | 3d54625 推 api.github.com（tag v1.36.2）；两副本已同步至 88e74d5 | requirementsConfirmed=true |
 
 图例：✅ 完成 ｜ 🔄 进行中 ｜ ⏳ 待办
 
