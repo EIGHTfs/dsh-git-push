@@ -8,7 +8,7 @@ generatedBy: user-request 2026-09-07（把插件每个功能写份说明书强�
 # dsh-git-push 插件功能说明书（强制全文注入）
 
 > 本说明书覆盖插件**每个功能**，由插件 `agent/pre-step` 钩子**无条件全文注入**每个会话（不受设置里「注入全部 skill 内容」开关影响——那开关只管两仓 skill 正文，本说明书是功能手册，永远注入）。
-> 版本：v1.28.0。源码：EIGHTfs/dsh-git-push。上下文注入实现定位：`lib/index.js` 搜「上下文注入」。
+> 版本：v1.29.0。源码：EIGHTfs/dsh-git-push。上下文注入实现定位：`lib/index.js` 搜「上下文注入」。
 
 ---
 
@@ -93,6 +93,7 @@ generatedBy: user-request 2026-09-07（把插件每个功能写份说明书强�
 | `/api/git-push/permit/status` | GET | 推送许可状态 |
 | `/api/git-push/permit/config` | POST | 切换推送许可 |
 | `/api/git-push/rules` | GET/POST | comment-wording 规则查看/导入 |
+| `/api/git-push/gen-ssh-key` | POST | v1.29.0：按邮箱生成 SSH 密钥对（`{email, force?}` → ssh-keygen -t rsa -b 4096 -C email；返回公钥整行供复制去 GitHub 绑定；已存在拒绝，force 时旧密钥先改名备份） |
 | `/git-push/viewer` | GET | 提交历史查看器页面（只读） |
 | `/api/git-push/repos` / `commits` / `diff` | GET | 查看器数据层 |
 
@@ -102,10 +103,12 @@ generatedBy: user-request 2026-09-07（把插件每个功能写份说明书强�
 
 | 控件 | 配置键 | 说明 |
 |---|---|---|
+| 账号状态（置顶） | — | v1.29.0：卡片展开时**自动跑一次** Token/SSH 检测，结果块显示在设置卡最上方（Token 可用性 + 用户名/id/主页 + SSH 公钥是否绑定，`ssh -T git@ssh.github.com` 实测） |
+| SSH 邮箱 + 生成公钥 | — | v1.29.0：输入邮箱点「生成公钥」→ 后端 ssh-keygen -t rsa -b 4096 -C 邮箱，公钥回显复制去 GitHub 绑定（私钥留本机同级仓） |
 | GitHub token | githubToken | secret，存同级仓 github-token，不进 settings 明文 |
 | SSH 公钥 | sshPub | 存同级仓 *.pub |
-| 注入全部 skill 内容 | injectFullSkill | 勾选=pre-step 注入两仓 skill 全文；默认只列目录清单 |
-| 自定义忽略文件 | customIgnorePatterns | 逗号/换行分隔 gitignore 模式（如 *.bak*），提交时自动写目标仓库 .gitignore，已跟踪文件自动解除跟踪 |
+| 注入全部 skill 内容 | injectFullSkill | 勾选=pre-step 注入两仓 skill 全文；默认只列目录清单；改即存并**回显「已保存并生效」**（v1.29.0 反馈） |
+| 自定义忽略文件 | customIgnorePatterns | 逗号/换行分隔 gitignore 模式（如 *.bak*），提交时自动写目标仓库 .gitignore，已跟踪文件自动解除跟踪；改即存并回显「已保存」 |
 
 ---
 
@@ -128,6 +131,7 @@ generatedBy: user-request 2026-09-07（把插件每个功能写份说明书强�
 - **敏感字段忽略（ensureSensitiveIgnored）**：扫 cookie/device/username/password/token，命中文件自动 .gitignore + git rm --cached 解除跟踪（私有库豁免：private 仓库只报告不写）
 - **自定义忽略（ensureCustomIgnored，v1.28.0）**：设置里 customIgnorePatterns 的模式自动写目标仓库 .gitignore，已跟踪文件解除跟踪
 - **豁免标记 dsh-skip-sensitive**：文件头前 3 行或行内注释带此标记 → 跳过敏感扫描/comment-wording 检测/autoClean 清理（测试文件、示例文档常用）
+- **推送后远端 ref 维护（v1.29.0）**：Git Data API 推送不更新本地 remote-tracking ref（origin 是 api.github.com REST 端点，`git fetch origin` 必 403）——推送成功后会自动 `git update-ref refs/remotes/origin/<branch>`（`git log origin/master` 可看远端最新）+ 自动补 `github-ssh` 辅助 remote（`ssh://git@ssh.github.com:443/<owner>/<repo>.git`，标准 `git fetch github-ssh` / `git pull github-ssh <branch>` 可用；同名 remote 已存在则不覆盖）
 
 ---
 
@@ -137,6 +141,8 @@ generatedBy: user-request 2026-09-07（把插件每个功能写份说明书强�
 2. 推送失败 Bad credentials → token 失效自动回退 ssh.github.com:443（需同级仓 id_ed25519）
 3. autoClean 会清理代码注释里的「记录用户指令」措辞 → 测试输入含这些措辞时给文件头加 `dsh-skip-sensitive`
 4. 设置页改动立即保存（token/SSH 除外，需点保存按钮）
+5. `git fetch origin` 会 403（origin 是 API 端点非 git 地址）→ 想标准 fetch/pull 用 `github-ssh` 辅助 remote（v1.29.0 推送后自动补）
+6. SSH 检测显示「未能实测」→ 通常是没有私钥（只有 .pub 公钥）→ 用设置卡「生成公钥」先 ssh-keygen 生成密钥对，再把公钥绑到 GitHub
 
 ## 相关
 
