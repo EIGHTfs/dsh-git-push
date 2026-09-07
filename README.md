@@ -69,13 +69,14 @@ node test/test-core.mjs && node test/test-audit.mjs && node test/test-repo-index
 
 **agent 工具**：`git_scan` / `git_commit_push`（含 requirementsConfirmed 参数）/ `code_audit` / `git_gen_readme` / `git_rebuild_history` / `git_remote_create` / `git_set_visibility` / `git_clone` / `push_permit_status` / `push_permit_config`（前 8 个详见 dsh-git-push skill 手册）
 
-**配置键**（cordis.patch.yml insert config）：`workspaceRoot` / `extraRepos` / `depth` / `auditEnabled` / `blockOn` / `llmAudit` / `llmAuditProvider` / `llmAuditModel` / `maxDiffBytes` / `repoIndexEnabled` / `repoIndexTokenPath` / `repoIndexSyncTarget` / `repoIndexLocalOnly` / `exemptRepos` / `pushScope` / `commentWordingEnabled` / `commentWordingCustom` / `commentWordingRulesFile` / `commentWordingRulesUrl` / `envInjectionEnabled` / `envInjectionTools` / `injectFullSkill`（v1.28.0：pre-step 注入两仓 skill 全文，默认 false 只列目录清单）/ `customIgnorePatterns`（v1.28.0：自定义忽略 pattern 逗号/换行分隔，提交时自动写 .gitignore）/ `commitMessage`（自动推送提交信息，默认 `chore(ai): 任务完成自动提交`）。注：功能说明书经 systemPrompt 只注入**精简目录**（v1.32.0）；完整 `skills/dsh-git-push-functions.md` 按需加载。环境注入仍走系统提示词通道。
+**配置键**（cordis.patch.yml insert config）：`workspaceRoot` / `extraRepos` / `depth` / `auditEnabled` / `blockOn` / `llmAudit` / `llmAuditProvider` / `llmAuditModel` / `maxDiffBytes` / `repoIndexEnabled` / `repoIndexTokenPath` / `repoIndexSyncTarget` / `repoIndexLocalOnly` / `exemptRepos` / `pushScope` / `commentWordingEnabled` / `commentWordingCustom` / `commentWordingRulesFile` / `commentWordingRulesUrl` / `envInjectionEnabled` / `envInjectionTools` / `injectFullSkill`（v1.28.0：pre-step 注入两仓 skill 全文，默认 false 只列目录清单）/ `injectRepoIndexFull`（v1.35.0：注入 dsh-repo-index.json 正文，默认 false 只注入文件名）/ `customIgnorePatterns`（v1.28.0：自定义忽略 pattern 逗号/换行分隔，提交时自动写 .gitignore）/ `commitMessage`（自动推送提交信息，默认 `chore(ai): 任务完成自动提交`）。注：功能说明书经 systemPrompt 只注入**精简目录**（v1.32.0）；完整 `skills/dsh-git-push-functions.md` 按需加载。环境注入仍走系统提示词通道。
 
 ## 版本列表
 
 | 版本 | 内容 |
 |---|---|
-| 1.34.0 | **重建历史按用户意图**：`fresh` 当前文件树作为唯一提交，**不改** `package.json` 版本号；用 `checkout --orphan` 保留 remote/backup tag（不再 `git rm .git`）。`force=true` 才覆盖远端（API PATCH force + 不挂旧 parent；失败回退 `git push --force`）。工具描述与实现对齐。新增 skill `git-push-live-fix`：用插件时发现问题当场改，禁止默默手搓 git |
+| 1.35.0 | **repo-index JSON 注入会话**：md 表格已废弃，权威源是 `dsh-git-push-User/<owner>/dsh-repo-index.json`（推送成功后自动生成）。会话默认只注入文件名；设置「注入 repo-index JSON 全文」才注入正文。不再写 `.dsh/skills/dsh-repo-index.md` |
+| 1.34.0 | **重建历史按意图**：`fresh` 当前文件树作为唯一提交，**不改** `package.json` 版本号；用 `checkout --orphan` 保留 remote/backup tag（不再 `git rm .git`）。`force=true` 才覆盖远端（API PATCH force + 不挂旧 parent；失败回退 `git push --force`）。工具描述与实现对齐。新增 skill `git-push-live-fix`：用插件时发现问题当场改，禁止默默手搓 git |
 | 1.33.0 | **token 探测改同级仓优先 + SSH 优先 rsa**：设置页写入的 `dsh-git-push-User/github-token` 排在项目内残留 `.git-push-token` 之前。SSH 私钥探测改为 `id_rsa` 优先（设置页生成并已绑定），避免未绑定的 `id_ed25519` 抢先导致「SSH 未认证」 |
 | 1.32.0 | **忽略属主/权限噪声 + 提交时 README 检查注入 + 功能说明书改精简注入**：每次 git 带 `safe.directory=*` 与 `core.filemode=false`；启动写全局 `safe.directory=*`（已有则跳过）。`git_commit_push` 返回 `readmeCheck`，系统提示词常驻「提交前核对 README」。功能说明书不再全文塞进系统提示词，只注入工具目录，完整 md 按需加载 |
 | 1.31.0 | **硬编码路径/IP 审计**：L0 新增 `hardcode-path` / `hardcode-ip`——代码与 JSON/YAML 字面量写死本机绝对路径或局域网私网 IP 为 blocker，文档为 warning；不跟私有库豁免走。同步修掉插件自身 token 探测、clone 默认 dest、skills 目录探测三处死路径，用插件仓做狗粮测试 |

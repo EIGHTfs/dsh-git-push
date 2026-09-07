@@ -108,6 +108,7 @@ generatedBy: grok-4.6 · 2026-09-07
 | GitHub token | githubToken | secret，存同级仓 github-token，不进 settings 明文 |
 | SSH 公钥 | sshPub | 存同级仓 *.pub |
 | 注入全部 skill 内容 | injectFullSkill | 勾选=pre-step 注入两仓 skill 全文；默认只列目录清单；改即存并**回显「已保存并生效」**（v1.29.0 反馈）；**v1.30.0：设置页改动实时同步到运行期（scope.watch 覆盖），勾选/取消立即生效，无需重启** |
+| 注入 repo-index JSON 全文 | injectRepoIndexFull | v1.35.0：勾选=注入 `dsh-repo-index.json` 正文；默认只注入文件名。md 表格已废弃 |
 | 自定义忽略文件 | customIgnorePatterns | 逗号/换行分隔 gitignore 模式（如 *.bak*），提交时自动写目标仓库 .gitignore，已跟踪文件自动解除跟踪；改即存并回显「已保存」；**v1.30.0：同 injectFullSkill，设置页改动实时生效** |
 
 ---
@@ -117,9 +118,10 @@ generatedBy: grok-4.6 · 2026-09-07
 注入内容（按顺序一条 user 消息）：
 1. **功能目录精简注入（v1.32.0，强制）**：只列工具名；完整说明书本文件按需加载（不再全文注入）
 2. **两仓 skill**（dsh-git-push/skills + dsh-git-push-User 的 .md）：`injectFullSkill=true` 注入全文，默认只列目录+文件清单
-3. **环境注入**（v1.26.0）：工作目录映射 + 工具安装路径（envInjectionEnabled 可关，tools-index.md 同步同级仓）
-4. **设备/用户 json 脱敏注入**（v1.27.0）：device-map/user 全量，ssh-credentials/websites 只给清单不给密码明文
-5. **提交前 README 检查（v1.32.0）**：系统提示词常驻；`git_commit_push` 返回 `readmeCheck`
+3. **dsh-repo-index JSON**（v1.35.0）：默认只注入文件名；`injectRepoIndexFull=true` 注入正文。md 表格已废弃
+4. **环境注入**（v1.26.0）：工作目录映射 + 工具安装路径（envInjectionEnabled 可关，tools-index.md 同步同级仓）
+5. **设备/用户 json 脱敏注入**（v1.27.0）：device-map/user 全量，ssh-credentials/websites 只给清单不给密码明文
+6. **提交前 README 检查（v1.32.0）**：系统提示词常驻；`git_commit_push` 返回 `readmeCheck`
 
 实现位置：`lib/index.js` 搜「上下文注入」注释块。
 
@@ -127,7 +129,7 @@ generatedBy: grok-4.6 · 2026-09-07
 
 ## 五、repo-index 维护与忽略机制
 
-- **repo-index**：git_commit_push 推送成功后自动重生成 `dsh-git-push-User/<owner>/dsh-repo-index.json`（v1.27.0 起 JSON 权威源）；该文件**不入库**（同级仓 .gitignore 忽略，v1.28.0）
+- **repo-index**：git_commit_push 推送成功后自动重生成 `dsh-git-push-User/<owner>/dsh-repo-index.json`（v1.27.0 起 JSON 权威源，md 表格已废弃）；该文件**不入库**（同级仓 .gitignore 忽略，v1.28.0）。会话注入由 `injectRepoIndexFull` 开关控制（默认文件名，勾选正文）
 - **npm 屏蔽（ensureNpmIgnored）**：node_modules/ + lock 文件自动写 .gitignore（幂等）
 - **敏感字段忽略（ensureSensitiveIgnored）**：扫 cookie/device/username/password/token，命中文件自动 .gitignore + git rm --cached 解除跟踪（私有库豁免：private 仓库只报告不写）
 - **自定义忽略（ensureCustomIgnored，v1.28.0）**：设置里 customIgnorePatterns 的模式自动写目标仓库 .gitignore，已跟踪文件解除跟踪

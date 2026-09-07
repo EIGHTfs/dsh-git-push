@@ -11,6 +11,8 @@ import {
   buildRepoIndex,
   syncRepoIndex,
   detectSkillsDir,
+  resolveRepoIndexFile,
+  formatRepoIndexInjection,
 } from '../lib/repo-index.js';
 
 let pass = 0, fail = 0;
@@ -91,6 +93,20 @@ ok(sync2.ok && sync2.written.length === 1 && sync2.written[0].endsWith('EIGHTfs/
 
 // ---------- 7. detectSkillsDir ----------
 ok(typeof detectSkillsDir() === 'string' && detectSkillsDir().length > 0, 'detectSkillsDir 返回路径');
+
+// ---------- 8. formatRepoIndexInjection（v1.35.0：默认文件名 / 开关正文）----------
+const userDir = join(root, 'dsh-git-push-User');
+const accDir = join(userDir, 'EIGHTfs');
+mkdirSync(accDir, { recursive: true });
+writeFileSync(join(accDir, 'dsh-repo-index.json'), JSON.stringify({ name: 'dsh-repo-index', repos: [{ name: 'demo' }] }, null, 2) + '\n');
+const idxPath = resolveRepoIndexFile({ syncTarget: join(accDir, 'dsh-repo-index.json') });
+ok(idxPath.endsWith('dsh-repo-index.json'), `resolveRepoIndexFile=${idxPath}`);
+const nameOnly = formatRepoIndexInjection({ syncTarget: idxPath, full: false });
+ok(nameOnly.includes('dsh-repo-index.json') && !nameOnly.includes('"repos"'), '默认只注入文件名，不含 JSON 正文');
+const fullText = formatRepoIndexInjection({ syncTarget: idxPath, full: true });
+ok(fullText.includes('"repos"') && fullText.includes('demo'), '开关打开注入 JSON 正文');
+const missing = formatRepoIndexInjection({ syncTarget: join(accDir, 'no-such.json'), full: false });
+ok(missing.includes('尚未生成') || missing.includes('文件：'), '缺文件时仍注入路径提示');
 
 try {
   rmSync(root, { recursive: true, force: true });
