@@ -1,5 +1,5 @@
 /** dsh-skip-sensitive dsh-git-push 核心逻辑单测：扫描 + 提交推送（真实 git 操作，临时目录） */
-import { scanRepos, commitAndPush, readRepoStatus, findGitDirs, parseGithubOwnerRepo, httpsUrlOf, apiOriginOf, sshOriginOf, isBadCredentials, githubFetch, resolveUserDir, userRepoCandidates, USER_REPO_NAME, loadUserRequirements, gitCFlags, ensureGlobalFilemodeFalse, ensureGlobalSafeDirectoryStar, buildReadmeCheckHint, README_CHECK_HINT, runGit, extractRemoteHeads, formatRemoteHeadsTable, persistGithubToken, githubTokenStatus, formatGithubAccountBlock, collectRepoSkillDocs, formatRepoSkillInjection, resolveReadmeTemplate, genReadme, probeSshGithubAuth, collectRepoSkillDirs, formatRepoSkillDirsInjection, ensureCustomIgnored, collectFunctionManual, FUNCTION_MANUAL_COMPACT, resolveGitToken, rebuildHistory, previewRebuildHistory, inspectUserRepo, scoreUserRepo, pickBestUserRepo } from '../lib/core.js';
+import { scanRepos, commitAndPush, readRepoStatus, findGitDirs, parseGithubOwnerRepo, httpsUrlOf, apiOriginOf, sshOriginOf, isBadCredentials, githubFetch, resolveUserDir, userRepoCandidates, USER_REPO_NAME, loadUserRequirements, gitCFlags, ensureGlobalFilemodeFalse, ensureGlobalSafeDirectoryStar, buildReadmeCheckHint, README_CHECK_HINT, runGit, extractRemoteHeads, formatRemoteHeadsTable, persistGithubToken, githubTokenStatus, formatGithubAccountBlock, collectRepoSkillDocs, formatRepoSkillInjection, resolveReadmeTemplate, genReadme, probeSshGithubAuth, collectRepoSkillDirs, formatRepoSkillDirsInjection, ensureCustomIgnored, collectFunctionManual, FUNCTION_MANUAL_COMPACT, resolveGitToken, resolveValidGitToken, rebuildHistory, previewRebuildHistory, inspectUserRepo, scoreUserRepo, pickBestUserRepo } from '../lib/core.js';
 import { mkdtempSync, writeFileSync, mkdirSync, rmSync, chmodSync, readFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -9,11 +9,19 @@ let pass = 0, fail = 0;
 const ok = (c, l) => { c ? pass++ : fail++; console.log(`${c ? '  ✅' : '  ❌'} ${l}`); };
 
 // 建临时 git 仓库（User 仓通用构造）：requirements.md + 可选 token + N 个提交 + 可选 origin
+// v1.36.2：fixture token 自动补足到 40 位——tokenValid 启发式要求 classic token 为 40 字符，
+// 短 token（截断/占位）会判「不可用」，fixture 模拟真实有效 token 避免选仓误判。
+const tok40 = (t) => {
+  const base = String(t || '').replace(/\s+$/, '');
+  return base.length >= 40 ? base : base + 'X'.repeat(40 - base.length);
+};
 const makeUserGit = (dir, origin, commits, extra = {}) => {
   mkdirSync(dir, { recursive: true });
   execSync('git init -b master', { cwd: dir, stdio: 'ignore' });
   writeFileSync(join(dir, 'requirements.md'), extra.req || '1. item\n');
-  if (extra.token) writeFileSync(join(dir, 'github-token'), extra.token);
+  if (extra.token) writeFileSync(join(dir, 'github-token'), tok40(extra.token) + '\n');
+  // v1.36.2：tokenRaw = 原样写入不 pad（模拟失效/截断的旧副本 token）
+  if (extra.tokenRaw) writeFileSync(join(dir, 'github-token'), extra.tokenRaw);
   execSync('git add -A && git -c user.email=t@t -c user.name=t commit -m init', { cwd: dir, stdio: 'ignore' });
   for (let i = 1; i < commits; i++) {
     writeFileSync(join(dir, `c${i}.txt`), `${i}\n`);
@@ -93,7 +101,7 @@ try {
   ok(typeof probeSshGithubAuth === 'function', 'probeSshGithubAuth 已导出');
   const skillRoot = mkdtempSync(join(tmpdir(), 'git-push-skills-'));
   mkdirSync(join(skillRoot, 'plugin', 'skills'), { recursive: true });
-  makeSyncedUser(join(skillRoot, 'dsh-git-push-User'), 'https://api.github.com/repos/EIGHTfs/dsh-git-push-User', 1, { req: '# req\n1. foo', token: 'ghp_SECRET' });
+  makeSyncedUser(join(skillRoot, 'dsh-git-push-User'), 'https://api.github.com/repos/EIGHTfs/dsh-git-push-User', 1, { req: '# req\n1. foo', token: 'ghp_SKILLROOTTOKENSKILLROOTTOKENSKILL00' });
   writeFileSync(join(skillRoot, 'plugin', 'skills', 'handbook.md'), '# handbook\nuse git_scan');
   const docs = collectRepoSkillDocs({ workspaceRoot: skillRoot, pluginRoot: join(skillRoot, 'plugin') });
   const inj = formatRepoSkillInjection(docs);
@@ -154,12 +162,12 @@ try {
   rmSync(ignoreRoot, { recursive: true, force: true });
 
   const tplRoot = mkdtempSync(join(tmpdir(), 'git-push-tpl-'));
-  makeSyncedUser(join(tplRoot, 'dsh-git-push-User'), 'https://api.github.com/repos/EIGHTfs/dsh-git-push-User', 1);
+  makeSyncedUser(join(tplRoot, 'dsh-git-push-User'), 'https://api.github.com/repos/EIGHTfs/dsh-git-push-User', 1, { token: 'ghp_TPLROOTTOKENTPLROOTTOKENTPLROOTTOK0X' });
   writeFileSync(join(tplRoot, 'dsh-git-push-User', 'readme-template.md'), '# {{name}}\n\n{{description}}\n\n## 我的习惯章节\n\nhello\n');
   const resolved = resolveReadmeTemplate({ workspaceRoot: tplRoot });
   ok(resolved.source.includes('readme-template.md') && resolved.template.includes('我的习惯章节'), 'README 模板优先 User 仓');
   const emptyUser = mkdtempSync(join(tmpdir(), 'git-push-notpl-'));
-  makeSyncedUser(join(emptyUser, 'dsh-git-push-User'), 'https://api.github.com/repos/EIGHTfs/dsh-git-push-User', 1);
+  makeSyncedUser(join(emptyUser, 'dsh-git-push-User'), 'https://api.github.com/repos/EIGHTfs/dsh-git-push-User', 1, { token: 'ghp_EMPTYUSERTOKENEMPTYUSERTOKENEMPTYTOKX' });
   const built = resolveReadmeTemplate({ workspaceRoot: emptyUser });
   ok(built.source === 'builtin', '没有 User 模板时用内置');
   rmSync(emptyUser, { recursive: true, force: true });
@@ -190,7 +198,7 @@ try {
   ok(!cands.some((p) => /\/dsh-git-push\/User$/.test(p)) || cands.some((p) => p.endsWith('/dsh-git-push-User')), '候选优先同级仓');
   const tmpWs = mkdtempSync(join(tmpdir(), 'git-push-user-'));
   const sib = join(tmpWs, 'dsh-git-push-User');
-  makeSyncedUser(sib, 'https://api.github.com/repos/EIGHTfs/dsh-git-push-User', 1, { req: '1. 测试条目\n' });
+  makeSyncedUser(sib, 'https://api.github.com/repos/EIGHTfs/dsh-git-push-User', 1, { req: '1. 测试条目\n', token: 'ghp_SIBTOKENSIBTOKENSIBTOKENSIBTOKENSIB' });
   const ud = resolveUserDir({ workspaceRoot: tmpWs });
   ok(ud.dir === sib, `resolveUserDir 命中同级仓 dir=${ud.dir}`);
   const reqs = loadUserRequirements({ workspaceRoot: tmpWs });
@@ -233,12 +241,12 @@ try {
   const localCopy = join(wsDir, USER_REPO_NAME);        // 本地新仓：origin refs 与 HEAD 一致、作者挂钩文件在 EIGHTfs/ 子目录
   mkdirSync(wsDir, { recursive: true });
   mkdirSync(nasRoot, { recursive: true });
-  makeUserGit(nasCopy, 'https://api.github.com/repos/EIGHTfs/dsh-git-push-User', 5, { token: 'ghp_NASOLDTOKENNASOLDTOKENNASOLDTK00\n' });
+  makeUserGit(nasCopy, 'https://api.github.com/repos/EIGHTfs/dsh-git-push-User', 5, { tokenRaw: 'ghp_NASOLDTOKENNASOLDTOKENNASOLDTK00\n' });
   makeUserGit(localCopy, 'https://api.github.com/repos/EIGHTfs/dsh-git-push-User', 1);
   // 本地仓：作者文件夹 EIGHTfs/ 放 token / requirements / 索引；把 HEAD 记成 origin refs（模拟已与远程同步）
   const authorDir = join(localCopy, 'EIGHTfs');
   mkdirSync(authorDir, { recursive: true });
-  writeFileSync(join(authorDir, 'github-token'), 'ghp_LOCALTOKENLOCALTOKENLOCALTOKEN00\n');
+  writeFileSync(join(authorDir, 'github-token'), tok40('ghp_LOCALTOKENLOCALTOKENLOCALTOKEN00') + '\n');
   writeFileSync(join(authorDir, 'requirements.md'), '1. 本地要求\n');
   writeFileSync(join(authorDir, 'dsh-repo-index.json'), '{"repos":[]}\n');
   execSync('git add -A && git -c user.email=t@t -c user.name=t commit -m author-layout', { cwd: localCopy, stdio: 'ignore' });
@@ -259,6 +267,38 @@ try {
   const tokAuthor = resolveGitToken({ workspaceRoot: wsDir });
   ok(tokAuthor.token.includes('LOCALTOKEN'), 'resolveGitToken 读作者文件夹 github-token');
   rmSync(nasRoot, { recursive: true, force: true });
+
+  // v1.36.2：双副本 token 失效修复——树内副本 isSynced=true 但 token 失效（<40 截断），
+  // 树外副本 token 有效 → 应选树外（tokenValid +800 压过 isSynced 假象）
+  const dupRoot = mkdtempSync(join(tmpdir(), 'git-push-user-dup-'));
+  const dupWs = join(dupRoot, 'ws');
+  const dupStale = join(dupWs, USER_REPO_NAME);        // 树内：isSynced=true 但 token 截断失效
+  const dupGood = join(dupRoot, 'nas', USER_REPO_NAME); // 树外：token 有效（40 位）
+  mkdirSync(dupWs, { recursive: true });
+  mkdirSync(dupRoot, { recursive: true });
+  // 树内失效副本：tokenRaw 截断（19 位，明显失效）
+  makeSyncedUser(dupStale, 'https://api.github.com/repos/EIGHTfs/dsh-git-push-User', 3, { tokenRaw: 'ghp_STALESTALE00\n' });
+  // 树外有效副本：isSynced=false（无 origin refs），但 token 40 位有效。显式指定（与 parked 同款）
+  makeUserGit(dupGood, 'https://api.github.com/repos/EIGHTfs/dsh-git-push-User', 5, { token: 'ghp_GOODTOKENGOODTOKENGOODTOKENGOODTOKEN00' });
+  const dupPick = resolveUserDir({ workspaceRoot: dupWs, extraRepos: [dupGood] });
+  ok(dupPick.dir === dupGood, `双副本：树内 isSynced假象+失效token被排除，显式树外有效仓胜出 got=${dupPick.dir}`);
+  const staleInfo = inspectUserRepo(dupStale);
+  const goodInfo = inspectUserRepo(dupGood);
+  ok(staleInfo.isSynced === true && staleInfo.tokenValid === false, `树内副本 isSynced=${staleInfo.isSynced} tokenValid=${staleInfo.tokenValid}`);
+  ok(goodInfo.tokenValid === true && staleInfo.tokenValid === false, 'tokenValid：有效 40 位 true / 截断 false');
+  ok(scoreUserRepo(goodInfo) > scoreUserRepo(staleInfo), `有效 token 仓分数高（好事 ${scoreUserRepo(goodInfo)} > 假象 ${scoreUserRepo(staleInfo)}）`);
+  rmSync(dupRoot, { recursive: true, force: true });
+
+  // v1.36.2：resolveValidGitToken 异步真校验版——无 token 时返回空（结构正确）；有格式匹配 token 时返回源
+  const noTokRoot = mkdtempSync(join(tmpdir(), 'gp-notok-'));
+  const noTok = await resolveValidGitToken({ workspaceRoot: noTokRoot });
+  ok(typeof noTok.token === 'string' && typeof noTok.source === 'string', 'resolveValidGitToken 无 token 返回空结构');
+  rmSync(noTokRoot, { recursive: true, force: true });
+  const withTokRoot = mkdtempSync(join(tmpdir(), 'gp-withtok-'));
+  makeSyncedUser(join(withTokRoot, USER_REPO_NAME), 'https://api.github.com/repos/EIGHTfs/dsh-git-push-User', 1, { token: 'ghp_WITHTOKENWITHTOKENWITHTOKENWITHTOK0' });
+  const withTok = await resolveValidGitToken({ workspaceRoot: withTokRoot });
+  ok(typeof withTok.token === 'string' && withTok.token.length > 0, 'resolveValidGitToken 有 token 时返回 token');
+  rmSync(withTokRoot, { recursive: true, force: true });
 
   ok(findGitDirs(root, 2).length === 2, `findGitDirs 找到 ${findGitDirs(root, 2).length} 个仓库`);
 
