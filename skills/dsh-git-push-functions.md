@@ -1,14 +1,14 @@
 ---
 name: dsh-git-push-functions
-description: dsh-git-push 插件全部功能说明书（每个功能一份说明）：git_scan / git_commit_push / code_audit / git_gen_readme / git_remote_create / git_set_visibility / git_clone / git_rebuild_history / git_push_rules / push_permit_status / push_permit_config / HTTP API / 提交历史查看器 / 上下文注入 / repo-index 维护 / 敏感忽略 / 自定义忽略 / 硬编码路径与 IP 审计 的用途、参数、返回、注意事项。本说明书由插件 agent/pre-step **强制全文注入**（不受「注入全部 skill 内容」设置影响，每个会话都带全文）；与 skills/dsh-git-push.md（使用手册）配合，排查/细节以本说明书为准。
+description: dsh-git-push 插件全部功能说明书（每个功能一份说明）：git_scan / git_commit_push / code_audit / git_gen_readme / git_remote_create / git_set_visibility / git_clone / git_rebuild_history / git_push_rules / push_permit_status / push_permit_config / HTTP API / 提交历史查看器 / 上下文注入 / repo-index 维护 / 敏感忽略 / 自定义忽略 / 硬编码路径与 IP 审计 的用途、参数、返回、注意事项。v1.32.0 起系统提示词只注入精简目录，本文件按需加载（不再强制全文注入）；与 skills/dsh-git-push.md（使用手册）配合，排查/细节以本说明书为准。
 whenToUse: 需要了解 dsh-git-push 某个功能怎么用/参数是什么/返回什么；排查插件工具行为；用户问「这个功能是干嘛的」时直接引用本说明书对应章节。
 generatedBy: user-request 2026-09-07（把插件每个功能写份说明书强制注入全部内容，不受设置影响）
 ---
 
-# dsh-git-push 插件功能说明书（强制全文注入）
+# dsh-git-push 插件功能说明书
 
-> 本说明书覆盖插件**每个功能**，由插件 `agent/pre-step` 钩子**无条件全文注入**每个会话（不受设置里「注入全部 skill 内容」开关影响——那开关只管两仓 skill 正文，本说明书是功能手册，永远注入）。
-> 版本：v1.31.0。源码：EIGHTfs/dsh-git-push。上下文注入实现定位：`lib/index.js` 搜「上下文注入」。
+> 本说明书覆盖插件**每个功能**。v1.32.0 起系统提示词只注入**精简目录**（工具名 + 提交前 README 检查），完整正文按需加载本 skill，不再每个会话塞全文。
+> 版本：v1.32.0。源码：EIGHTfs/dsh-git-push。上下文注入实现定位：`lib/index.js` 搜「上下文注入」。
 
 ---
 
@@ -26,9 +26,9 @@ generatedBy: user-request 2026-09-07（把插件每个功能写份说明书强�
 - **用途**：先审计 → 敏感扫描自动 .gitignore → 自定义忽略自动 .gitignore → add -A → commit → push origin
 - **参数**：`repo`（仓库绝对路径，必填）/ `message`（commit message，必填）/ `push`（默认 true）/ `dryRun`（只模拟）/ `audit`（默认 true）/ `llmAudit`（LLM 深度审查，默认 false）/ `requirementsConfirmed`（同级仓要求清单核对标记）
 - **流程**：README 预览 → 自动清理代码注释措辞（autoClean，豁免 `dsh-skip-sensitive` 文件头）→ L0 静态审计（语法/JSON/YAML/敏感信息/凭据/大文件/文档措辞/硬编码路径与局域网 IP）→ 拦截判断 → commitAndPush（npm 屏蔽 → 敏感忽略 → 自定义忽略 → add → commit → push → repo-index 维护）
-- **返回**：`{ ok, committed, commitId, push: { pushed, method, pushedTo }, audit: { blocked, findings, summary }, autoClean, remoteHeads, remoteHeadsText }`
+- **返回**：`{ ok, committed, commitId, push: { pushed, method, pushedTo }, audit: { blocked, findings, summary }, autoClean, readmeCheck, remoteHeads, remoteHeadsText }`
 - **推送通道**：默认 api.github.com Git Data API；token 401 回退 ssh.github.com:443；禁止 github.com 直连
-- **注意**：审计拦截返回 `{ok:false, blocked:true}` 不产生提交；远端领先不推
+- **注意**：审计拦截返回 `{ok:false, blocked:true}` 不产生提交；远端领先不推。调用前必须核对 README（系统提示词常驻 + 返回 `readmeCheck`）
 
 ### 3. code_audit —— 手动审计仓库
 
@@ -115,10 +115,11 @@ generatedBy: user-request 2026-09-07（把插件每个功能写份说明书强�
 ## 四、上下文注入（agent/pre-step，每个会话首次注入）
 
 注入内容（按顺序一条 user 消息）：
-1. **本说明书全文（v1.28.0，强制，不受设置影响）**
+1. **功能目录精简注入（v1.32.0，强制）**：只列工具名；完整说明书本文件按需加载（不再全文注入）
 2. **两仓 skill**（dsh-git-push/skills + dsh-git-push-User 的 .md）：`injectFullSkill=true` 注入全文，默认只列目录+文件清单
 3. **环境注入**（v1.26.0）：工作目录映射 + 工具安装路径（envInjectionEnabled 可关，tools-index.md 同步同级仓）
 4. **设备/用户 json 脱敏注入**（v1.27.0）：device-map/user 全量，ssh-credentials/websites 只给清单不给密码明文
+5. **提交前 README 检查（v1.32.0）**：系统提示词常驻；`git_commit_push` 返回 `readmeCheck`
 
 实现位置：`lib/index.js` 搜「上下文注入」注释块。
 
@@ -132,6 +133,7 @@ generatedBy: user-request 2026-09-07（把插件每个功能写份说明书强�
 - **自定义忽略（ensureCustomIgnored，v1.28.0）**：设置里 customIgnorePatterns 的模式自动写目标仓库 .gitignore，已跟踪文件解除跟踪
 - **豁免标记 dsh-skip-sensitive**：文件头前 3 行或行内注释带此标记 → 跳过敏感扫描/comment-wording 检测/autoClean 清理（测试文件、示例文档常用）
 - **推送后远端 ref 维护（v1.29.0）**：Git Data API 推送不更新本地 remote-tracking ref（origin 是 api.github.com REST 端点，`git fetch origin` 必 403）——推送成功后会自动 `git update-ref refs/remotes/origin/<branch>`（`git log origin/master` 可看远端最新）+ 自动补 `github-ssh` 辅助 remote（`ssh://git@ssh.github.com:443/<owner>/<repo>.git`，标准 `git fetch github-ssh` / `git pull github-ssh <branch>` 可用；同名 remote 已存在则不覆盖）
+- **属主/权限噪声（v1.32.0）**：每次 git 带 `safe.directory=*` + `core.filemode=false`；启动写全局 `safe.directory=*`（已有则跳过）
 
 ---
 
@@ -147,4 +149,3 @@ generatedBy: user-request 2026-09-07（把插件每个功能写份说明书强�
 ## 相关
 
 - dsh-git-push（使用手册，与本文档配套）
-- remember-me（先记住我）：用户档案，优先级最高的 skill

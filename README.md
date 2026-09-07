@@ -17,7 +17,7 @@ DSH（DeepSeek Harness）git 自动提交推送插件。把「扫描仓库 → *
 - **分层**：`lib/core.js` 纯函数核心（不依赖 ctx，可独立单测）+ `lib/index.js` 插件装配（工具注册 + HTTP API + 审计门禁接线 + repo-index 维护）
 - **门禁链**：`commitWithAudit` = README 预览 → L0 静态审计（可选 L1 LLM）→ 拦截判断 → `commitAndPush`（npm 屏蔽 → 敏感字段扫描 .gitignore → add → commit → push → repo-index 更新）
 - **推送通道（v1.18.3）**：默认 **api.github.com Git Data API**（blob → tree → commit → ref）；无 token / 401 Bad credentials 时回退 **ssh.github.com:443**（User 仓 `id_ed25519`）。禁止 `git push github.com` / HTTPS
-- **可执行位（v1.18.4）**：启动写 `git config --global core.filemode false`；每次 git 带 `-c core.filemode=false`，CIFS 权限噪声不进提交
+- **可执行位 / 属主（v1.18.4 / v1.32.0）**：启动写 `git config --global core.filemode false` 与 `safe.directory=*`；每次 git 带 `-c core.filemode=false -c safe.directory=*`，CIFS 权限与属主噪声不进提交
 - **审计体系**：L0 静态（语法/JSON/YAML/敏感信息/凭据/大文件/debugger/文档对话类措辞/硬编码路径与局域网 IP）+ L1 LLM 深度审查（可选，diff 喂便宜模型）；豁免类型 = 说明类（示例假凭据）+ 备份类（exemptRepos 白名单；硬编码规则不跟私有库豁免）
 - **用户门禁**：同级仓 `dsh-git-push-User/requirements.md` 开发者特殊要求，提交前逐条核对，未核对拦截（requirementsConfirmed 机制）
 - **设置页凭据（v1.20.0 / v1.23.1）**：设置 → 插件 → 插件配置 →「Git 提交推送」填 token；写入同级仓 `github-token`，secret 字段不进 settings.yaml 明文。点「检测可用」时公钥绑定先读 `/user/keys`，无权则 SSH 实测 `ssh.github.com:443`
@@ -69,12 +69,13 @@ node test/test-core.mjs && node test/test-audit.mjs && node test/test-repo-index
 
 **agent 工具**：`git_scan` / `git_commit_push`（含 requirementsConfirmed 参数）/ `code_audit` / `git_gen_readme` / `git_rebuild_history` / `git_remote_create` / `git_set_visibility` / `git_clone` / `push_permit_status` / `push_permit_config`（前 8 个详见 dsh-git-push skill 手册）
 
-**配置键**（cordis.patch.yml insert config）：`workspaceRoot` / `extraRepos` / `depth` / `auditEnabled` / `blockOn` / `llmAudit` / `llmAuditProvider` / `llmAuditModel` / `maxDiffBytes` / `repoIndexEnabled` / `repoIndexTokenPath` / `repoIndexSyncTarget` / `repoIndexLocalOnly` / `exemptRepos` / `pushScope` / `commentWordingEnabled` / `commentWordingCustom` / `commentWordingRulesFile` / `commentWordingRulesUrl` / `envInjectionEnabled` / `envInjectionTools` / `injectFullSkill`（v1.28.0：pre-step 注入两仓 skill 全文，默认 false 只列目录清单）/ `customIgnorePatterns`（v1.28.0：自定义忽略 pattern 逗号/换行分隔，提交时自动写 .gitignore）/ `commitMessage`（自动推送提交信息，默认 `chore(ai): 任务完成自动提交`）。注：`skills/dsh-git-push-functions.md` 功能说明书 + 环境注入（工作目录/工具路径）经 systemPrompt.section **系统提示词通道强制注入**每个会话，不受 `injectFullSkill` 影响（v1.28.1）
+**配置键**（cordis.patch.yml insert config）：`workspaceRoot` / `extraRepos` / `depth` / `auditEnabled` / `blockOn` / `llmAudit` / `llmAuditProvider` / `llmAuditModel` / `maxDiffBytes` / `repoIndexEnabled` / `repoIndexTokenPath` / `repoIndexSyncTarget` / `repoIndexLocalOnly` / `exemptRepos` / `pushScope` / `commentWordingEnabled` / `commentWordingCustom` / `commentWordingRulesFile` / `commentWordingRulesUrl` / `envInjectionEnabled` / `envInjectionTools` / `injectFullSkill`（v1.28.0：pre-step 注入两仓 skill 全文，默认 false 只列目录清单）/ `customIgnorePatterns`（v1.28.0：自定义忽略 pattern 逗号/换行分隔，提交时自动写 .gitignore）/ `commitMessage`（自动推送提交信息，默认 `chore(ai): 任务完成自动提交`）。注：功能说明书经 systemPrompt 只注入**精简目录**（v1.32.0）；完整 `skills/dsh-git-push-functions.md` 按需加载。环境注入仍走系统提示词通道。
 
 ## 版本列表
 
 | 版本 | 内容 |
 |---|---|
+| 1.32.0 | **忽略属主/权限噪声 + 提交时 README 检查注入 + 功能说明书改精简注入**：每次 git 带 `safe.directory=*` 与 `core.filemode=false`；启动写全局 `safe.directory=*`（已有则跳过）。`git_commit_push` 返回 `readmeCheck`，系统提示词常驻「提交前核对 README」。功能说明书不再全文塞进系统提示词，只注入工具目录，完整 md 按需加载 |
 | 1.31.0 | **硬编码路径/IP 审计**：L0 新增 `hardcode-path` / `hardcode-ip`——代码与 JSON/YAML 字面量写死本机绝对路径或局域网私网 IP 为 blocker，文档为 warning；不跟私有库豁免走。同步修掉插件自身 token 探测、clone 默认 dest、skills 目录探测三处死路径，用插件仓做狗粮测试 |
 | 1.30.0 | **设置页开关即时生效修复 + 一键复制 SSH 公钥**：①修复「勾选注入全部 skill 内容（injectFullSkill）不生效」——此前设置页改动只有 token/sshPub 经 settings scope.watch 落盘，injectFullSkill / customIgnorePatterns 是插件启动时的一次性常量，勾选后 pre-step 注入仍是旧值；现 scope.watch 同步覆盖运行期变量，设置页改完**立即生效**（不用重启）；②「生成公钥」结果区新增**一键复制**按钮——navigator.clipboard 写入（secure context），失败自动兜底 textarea + execCommand('copy')，复制成功回显「已复制到剪贴板」 |
 | 1.29.0 | **设置卡增强 + 推送后远端 ref 维护**：①「SSH 邮箱 + 生成公钥」——设置卡新增邮箱输入与「生成公钥」按钮，后端 `POST /api/git-push/gen-ssh-key` 执行 `ssh-keygen -t rsa -b 4096 -C <邮箱>`（同级仓 dsh-git-push-User 生成 id_rsa/id_rsa.pub，已存在拒绝、force 时先备份，公钥回显供复制去 GitHub 绑定）；②账号状态检测块置顶 + **每次展开设置卡自动跑一遍**（无需手动点检测）；③`injectFullSkill` / `customIgnorePatterns` 改即存后**即时回显「已保存并生效」**（4 秒消失）；④推送成功后自动 `git update-ref refs/remotes/origin/<branch>` 维护本地 remote-tracking ref（Git Data API 推送不更新本地 ref，现可 `git log origin/master`）+ 自动补 `github-ssh` 辅助 remote（`ssh://git@ssh.github.com:443/<owner>/<repo>.git`，本机可 fetch/pull；幂等不覆盖用户自设） |

@@ -1,5 +1,5 @@
 /** dsh-skip-sensitive dsh-git-push 核心逻辑单测：扫描 + 提交推送（真实 git 操作，临时目录） */
-import { scanRepos, commitAndPush, readRepoStatus, findGitDirs, parseGithubOwnerRepo, httpsUrlOf, apiOriginOf, sshOriginOf, isBadCredentials, githubFetch, resolveUserDir, userRepoCandidates, USER_REPO_NAME, loadUserRequirements, gitCFlags, ensureGlobalFilemodeFalse, runGit, extractRemoteHeads, formatRemoteHeadsTable, persistGithubToken, githubTokenStatus, formatGithubAccountBlock, collectRepoSkillDocs, formatRepoSkillInjection, resolveReadmeTemplate, genReadme, probeSshGithubAuth, collectRepoSkillDirs, formatRepoSkillDirsInjection, ensureCustomIgnored, collectFunctionManual } from '../lib/core.js';
+import { scanRepos, commitAndPush, readRepoStatus, findGitDirs, parseGithubOwnerRepo, httpsUrlOf, apiOriginOf, sshOriginOf, isBadCredentials, githubFetch, resolveUserDir, userRepoCandidates, USER_REPO_NAME, loadUserRequirements, gitCFlags, ensureGlobalFilemodeFalse, ensureGlobalSafeDirectoryStar, buildReadmeCheckHint, README_CHECK_HINT, runGit, extractRemoteHeads, formatRemoteHeadsTable, persistGithubToken, githubTokenStatus, formatGithubAccountBlock, collectRepoSkillDocs, formatRepoSkillInjection, resolveReadmeTemplate, genReadme, probeSshGithubAuth, collectRepoSkillDirs, formatRepoSkillDirsInjection, ensureCustomIgnored, collectFunctionManual, FUNCTION_MANUAL_COMPACT } from '../lib/core.js';
 import { mkdtempSync, writeFileSync, mkdirSync, rmSync, chmodSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -33,9 +33,15 @@ try {
   ok(apiOriginOf('EIGHTfs', 'x') === 'https://api.github.com/repos/EIGHTfs/x', 'apiOriginOf');
   ok(sshOriginOf('EIGHTfs', 'x') === 'ssh://git@ssh.github.com:443/EIGHTfs/x.git', 'sshOriginOf 走 ssh.github.com:443');
   const cflags = gitCFlags('/tmp/repo-x');
-  ok(cflags.includes('core.filemode=false') && cflags.includes('safe.directory=/tmp/repo-x'), 'gitCFlags 含 filemode=false 与 safe.directory');
+  ok(cflags.includes('core.filemode=false') && cflags.includes('safe.directory=*') && cflags.includes('safe.directory=/tmp/repo-x'), 'gitCFlags 含 filemode=false、safe.directory=* 与 cwd');
   const fm = ensureGlobalFilemodeFalse();
   ok(typeof fm.ok === 'boolean' && typeof fm.status === 'number', `ensureGlobalFilemodeFalse 返回 ok=${fm.ok} status=${fm.status}`);
+  const sd = ensureGlobalSafeDirectoryStar();
+  ok(typeof sd.ok === 'boolean' && typeof sd.status === 'number', `ensureGlobalSafeDirectoryStar 返回 ok=${sd.ok} skipped=${sd.skipped || ''}`);
+  const hintHas = buildReadmeCheckHint({ hasReadme: true, repoName: 'demo' });
+  ok(hintHas.needed === true && hintHas.hasReadme === true && hintHas.hint.includes('检查该仓库 README'), '有 README 时回传检查提示');
+  const hintNo = buildReadmeCheckHint({ hasReadme: false, repoName: 'demo' });
+  ok(hintNo.hasReadme === false && hintNo.hint.includes('没有 README') && README_CHECK_HINT.includes('git_commit_push'), '无 README 时提示先补');
 
   ok(isBadCredentials('上传 blob 失败 .gitignore: Bad credentials') === true, 'isBadCredentials 认 Bad credentials');
 
@@ -80,14 +86,18 @@ try {
   ok(dirInj.includes('dsh-git-push/skills') && dirInj.includes('handbook.md') && !dirInj.includes('# handbook'), 'collectRepoSkillDirs/formatRepoSkillDirsInjection 只列清单不含正文');
   rmSync(skillRoot, { recursive: true, force: true });
 
-  // v1.28.0 插件功能说明书强制全文注入：collectFunctionManual 读 skills/dsh-git-push-functions.md
+  // v1.32.0 功能说明书改精简注入：默认 compact，全文仅 compact=false
   const manualRoot = mkdtempSync(join(tmpdir(), 'git-push-manual-'));
   mkdirSync(join(manualRoot, 'plugin', 'skills'), { recursive: true });
-  writeFileSync(join(manualRoot, 'plugin', 'skills', 'dsh-git-push-functions.md'), '# dsh-git-push 功能说明书\n\n## git_scan\n\n扫描仓库\n');
-  const manual = collectFunctionManual({ pluginRoot: join(manualRoot, 'plugin') });
-  ok(manual.includes('功能说明书') && manual.includes('git_scan'), 'collectFunctionManual 读说明书全文');
-  const manualMissing = collectFunctionManual({ pluginRoot: join(manualRoot, 'noplugin') });
-  ok(manualMissing === '', 'collectFunctionManual 说明书缺失返回空');
+  writeFileSync(join(manualRoot, 'plugin', 'skills', 'dsh-git-push-functions.md'), '# dsh-git-push 功能说明书\n\n## git_scan\n\n扫描仓库很长很长很长\n');
+  const compact = collectFunctionManual({ pluginRoot: join(manualRoot, 'plugin') });
+  ok(compact === FUNCTION_MANUAL_COMPACT && compact.includes('精简注入') && compact.includes('git_scan') && !compact.includes('很长很长很长'), 'collectFunctionManual 默认精简、不含全文');
+  const full = collectFunctionManual({ pluginRoot: join(manualRoot, 'plugin'), compact: false });
+  ok(full.includes('功能说明书') && full.includes('很长很长很长'), 'compact=false 仍返回全文');
+  const compactMissing = collectFunctionManual({ pluginRoot: join(manualRoot, 'noplugin') });
+  ok(compactMissing === FUNCTION_MANUAL_COMPACT, '说明书缺失时精简目录仍注入');
+  const fullMissing = collectFunctionManual({ pluginRoot: join(manualRoot, 'noplugin'), compact: false });
+  ok(fullMissing === '', 'compact=false 且说明书缺失返回空');
   rmSync(manualRoot, { recursive: true, force: true });
 
   // v1.28.0 自定义忽略 pattern：追加 .gitignore + 已跟踪文件解除跟踪（ensureCustomIgnored）

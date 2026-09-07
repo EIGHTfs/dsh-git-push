@@ -1,6 +1,6 @@
 ---
 name: dsh-git-push
-description: dsh-git-push 插件（git 自动提交推送 v1.31.0，README 模板在同级仓 dsh-git-push-User/readme-template.md）的使用手册：git_scan / git_commit_push / git_clone / git_remote_create / code_audit 工具与 /api/git-push API 的调用方法、配置（审计 blockOn/llmAudit、硬编码路径/IP、注入开关 injectFullSkill、自定义忽略 customIgnorePatterns、SSH 邮箱生成公钥）、验证与坑速查。处理"提交推送代码""扫描仓库状态""审计代码""推送前拦截 bug""敏感信息检测""硬编码路径""文档被审计拦截""生成 SSH 公钥""SSH 连不上"类请求时加载；插件不可用/报错排查时必加载（正常情况优先用插件，见 plugin-priority）。上下文注入实现定位：lib/index.js 搜「上下文注入」注释块（agent/pre-step 钩子）。
+description: dsh-git-push 插件（git 自动提交推送 v1.32.0，README 模板在同级仓 dsh-git-push-User/readme-template.md）的使用手册：git_scan / git_commit_push / git_clone / git_remote_create / code_audit 工具与 /api/git-push API 的调用方法、配置（审计 blockOn/llmAudit、硬编码路径/IP、注入开关 injectFullSkill、自定义忽略 customIgnorePatterns、SSH 邮箱生成公钥、属主/权限噪声忽略、提交前 README 检查）、验证与坑速查。处理"提交推送代码""扫描仓库状态""审计代码""推送前拦截 bug""敏感信息检测""硬编码路径""文档被审计拦截""生成 SSH 公钥""SSH 连不上"类请求时加载；插件不可用/报错排查时必加载（正常情况优先用插件，见 plugin-priority）。上下文注入实现定位：lib/index.js 搜「上下文注入」注释块（agent/pre-step 钩子）。
 whenToUse: 需要用插件做 git 提交推送/代码审计但不确定参数/报错排查/插件未装需手做时。
 generatedBy: grok-4.6 · 2026-09-03
 ---
@@ -24,12 +24,13 @@ generatedBy: grok-4.6 · 2026-09-03
 ## 二、开发者特殊要求门禁（v1.10.0）
 
 - 启动时 `agent/pre-step` 注入本仓 `skills/` 与同级仓 `dsh-git-push-User` 全部 md（每个 agent 一次；v1.28.0 起受 `injectFullSkill` 开关：勾选=注入全文，默认只列目录清单）
-- **功能说明书强制注入（v1.28.1）**：`skills/dsh-git-push-functions.md`（插件每个功能一份说明书）经 `systemPrompt.section` 系统提示词通道**无条件全文注入**每个会话，不受 `injectFullSkill` 设置影响（text 用函数动态读文件，文件更新即生效）。实现定位：`lib/index.js` 搜「上下文注入」
+- **功能说明书（v1.28.1 / v1.32.0 精简）**：系统提示词只注入工具目录精简版；完整 `skills/dsh-git-push-functions.md` 按需加载 skill，不再每个会话塞全文。实现定位：`lib/index.js` 搜「上下文注入」
 - **README 模板（v1.23.0）**：`git_gen_readme` 读同级仓 `dsh-git-push-User/readme-template.md`（或 `User/<用户名>/readme-template.md`）；没有才用插件内置。占位符 `{name}` `{description}` `{version}` `{toc}` `{versionTable}`（模板语法实际为双花括号包裹；本手册可能被全文注入，双花括号会触发 DSH 模板引擎报错，故以单花括号书写）
 - 同级仓 `dsh-git-push-User/requirements.md` 放开发者特殊要求清单（独立私有库，不进插件目录）
 - `git_commit_push` 提交前自动读取并逐条核对：未核对（不带 `requirementsConfirmed:true`）直接拦截返回清单；AI 逐条确认达标后重新调用
 - 启动时若同级仓缺失，插件用 `git_clone`（api.github.com）拉到工作区与 `dsh-git-push` 同一层级
-- **可执行位（v1.18.4）**：启动时 `git config --global core.filemode false`；`runGit`/`gitRaw` 每次带 `-c core.filemode=false`。CIFS 上 100644↔100755 不再进 status/commit
+- **可执行位 / 属主（v1.18.4 / v1.32.0）**：启动时 `git config --global core.filemode false` 与 `safe.directory=*`；`runGit`/`gitRaw` 每次带 `-c core.filemode=false -c safe.directory=*`。CIFS 上 100644↔100755 与「可疑属主」不再进 status/commit
+- **提交前 README 检查（v1.32.0）**：系统提示词常驻提醒；`git_commit_push` 返回 `readmeCheck`（有无 README + 核对提示）。功能/版本变更先改 README 再提交
 - **设置页凭据（v1.20.0 / v1.21.0 / v1.23.1 / v1.29.0 置顶）**：入口 = 设置 → 插件 → 插件配置 →「Git 提交推送」。**v1.29.0 起账号状态块置顶**：卡片展开自动跑一次 Token/SSH 检测（多行块显示用户名 / id / 主页 / Token 可用性 / SSH 公钥绑定状态），无需手动点「检测可用」（按钮仍保留）。公钥是否已绑：先 GET `/user/keys`；token 无权读列表（常见只有 `repo` → 404）时改打 `ssh.github.com:443`，`Hi <login>!` 即已绑定
 - **SSH 邮箱 + 生成公钥 + 一键复制（v1.29.0 / v1.30.0）**：设置卡「SSH 邮箱（生成公钥用）」输入邮箱 → 点「生成公钥」→ 后端 `ssh-keygen -t rsa -b 4096 -C <邮箱>`（写同级仓 `id_rsa` 私钥 600 + `id_rsa.pub` 公钥 644），公钥整行回显在卡片里，**v1.30.0 起点「📋 一键复制」直接复制到剪贴板**（secure context 用 navigator.clipboard，否则 textarea+execCommand 兜底），再粘贴到 GitHub → Settings → SSH and GPG keys → New SSH key 绑定。已存在私钥拒绝（防覆盖），force 时旧密钥改名 `id_rsa.bak-<时间戳>` 备份。生成的公钥绑定后，推送失败回退 SSH / `git fetch github-ssh` 即可用
 - **设置页新增项（v1.28.0 / v1.29.0 保存反馈 / v1.30.0 即时生效）**：同卡片下方——①「注入全部 skill 内容」勾选框（injectFullSkill）：勾选 = 每个会话 pre-step 注入两仓全部 skill 正文，不勾选（默认）= 只注入 skill 目录 + 文件清单；②「自定义忽略文件」输入框（customIgnorePatterns）：逗号/换行分隔 gitignore 模式（如 `*.bak*`），提交时自动追加目标仓库 .gitignore。两项**改即存并回显「已保存并生效」**（v1.29.0，4 秒后消失），无需点保存按钮；**v1.30.0 修复**：设置页改动由 settings scope.watch 实时同步到运行期（此前是启动时一次性常量，勾选不生效），改完**立即生效**无需重启
