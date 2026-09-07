@@ -8,7 +8,7 @@ generatedBy: user-request 2026-09-07（把插件每个功能写份说明书强�
 # dsh-git-push 插件功能说明书（强制全文注入）
 
 > 本说明书覆盖插件**每个功能**，由插件 `agent/pre-step` 钩子**无条件全文注入**每个会话（不受设置里「注入全部 skill 内容」开关影响——那开关只管两仓 skill 正文，本说明书是功能手册，永远注入）。
-> 版本：v1.29.0。源码：EIGHTfs/dsh-git-push。上下文注入实现定位：`lib/index.js` 搜「上下文注入」。
+> 版本：v1.30.0。源码：EIGHTfs/dsh-git-push。上下文注入实现定位：`lib/index.js` 搜「上下文注入」。
 
 ---
 
@@ -104,11 +104,11 @@ generatedBy: user-request 2026-09-07（把插件每个功能写份说明书强�
 | 控件 | 配置键 | 说明 |
 |---|---|---|
 | 账号状态（置顶） | — | v1.29.0：卡片展开时**自动跑一次** Token/SSH 检测，结果块显示在设置卡最上方（Token 可用性 + 用户名/id/主页 + SSH 公钥是否绑定，`ssh -T git@ssh.github.com` 实测） |
-| SSH 邮箱 + 生成公钥 | — | v1.29.0：输入邮箱点「生成公钥」→ 后端 ssh-keygen -t rsa -b 4096 -C 邮箱，公钥回显复制去 GitHub 绑定（私钥留本机同级仓） |
+| SSH 邮箱 + 生成公钥 | — | v1.29.0：输入邮箱点「生成公钥」→ 后端 ssh-keygen -t rsa -b 4096 -C 邮箱，公钥回显复制去 GitHub 绑定（私钥留本机同级仓）；v1.30.0：回显区新增**一键复制**按钮（navigator.clipboard + execCommand 兜底） |
 | GitHub token | githubToken | secret，存同级仓 github-token，不进 settings 明文 |
 | SSH 公钥 | sshPub | 存同级仓 *.pub |
-| 注入全部 skill 内容 | injectFullSkill | 勾选=pre-step 注入两仓 skill 全文；默认只列目录清单；改即存并**回显「已保存并生效」**（v1.29.0 反馈） |
-| 自定义忽略文件 | customIgnorePatterns | 逗号/换行分隔 gitignore 模式（如 *.bak*），提交时自动写目标仓库 .gitignore，已跟踪文件自动解除跟踪；改即存并回显「已保存」 |
+| 注入全部 skill 内容 | injectFullSkill | 勾选=pre-step 注入两仓 skill 全文；默认只列目录清单；改即存并**回显「已保存并生效」**（v1.29.0 反馈）；**v1.30.0：设置页改动实时同步到运行期（scope.watch 覆盖），勾选/取消立即生效，无需重启** |
+| 自定义忽略文件 | customIgnorePatterns | 逗号/换行分隔 gitignore 模式（如 *.bak*），提交时自动写目标仓库 .gitignore，已跟踪文件自动解除跟踪；改即存并回显「已保存」；**v1.30.0：同 injectFullSkill，设置页改动实时生效** |
 
 ---
 
