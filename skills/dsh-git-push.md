@@ -1,6 +1,6 @@
 ---
 name: dsh-git-push
-description: dsh-git-push 插件（git 自动提交推送 v1.34.0，README 模板在同级仓 dsh-git-push-User/readme-template.md）的使用手册：git_scan / git_commit_push / git_clone / git_remote_create / git_rebuild_history / code_audit 工具与 /api/git-push API 的调用方法、配置（审计 blockOn/llmAudit、硬编码路径/IP、注入开关 injectFullSkill、自定义忽略 customIgnorePatterns、SSH 邮箱生成公钥、属主/权限噪声忽略、提交前 README 检查）、验证与坑速查。处理"提交推送代码""扫描仓库状态""审计代码""推送前拦截 bug""敏感信息检测""硬编码路径""文档被审计拦截""生成 SSH 公钥""SSH 连不上""重建历史没推远端"类请求时加载；插件不可用/报错排查时必加载（正常情况优先用插件，见 plugin-priority）。上下文注入实现定位：lib/index.js 搜「上下文注入」注释块（agent/pre-step 钩子）。
+description: dsh-git-push 插件（git 自动提交推送 v1.35.0，README 模板在同级仓 dsh-git-push-User/readme-template.md）的使用手册：git_scan / git_commit_push / git_clone / git_remote_create / git_rebuild_history / code_audit 工具与 /api/git-push API 的调用方法、配置（审计 blockOn/llmAudit、硬编码路径/IP、注入开关 injectFullSkill / injectRepoIndexFull、自定义忽略 customIgnorePatterns、SSH 邮箱生成公钥、属主/权限噪声忽略、提交前 README 检查）、验证与坑速查。处理"提交推送代码""扫描仓库状态""审计代码""推送前拦截 bug""敏感信息检测""硬编码路径""文档被审计拦截""生成 SSH 公钥""SSH 连不上""重建历史没推远端""仓库索引 JSON"类请求时加载；插件不可用/报错排查时必加载（正常情况优先用插件，见 plugin-priority）。上下文注入实现定位：lib/index.js 搜「上下文注入」注释块（agent/pre-step 钩子）。
 whenToUse: 需要用插件做 git 提交推送/代码审计但不确定参数/报错排查/插件未装需手做时。
 generatedBy: grok-4.6 · 2026-09-03
 ---
@@ -177,7 +177,7 @@ node test/test-permit.mjs  # 推送许可（完成检测/JSON 持久化/损坏�
 
 - 只做管道：commit message 由 LLM 生成；插件不判断"该不该提交"
 - LLM 审计默认关（省钱）：需要深度审查时显式 `llmAudit:true` 或 `code_audit {llm:true}`
-- git 相关操作/冲突审查/版本号等约定在同级仓 `dsh-git-push-User`（独立私有库）：git-commits-viewer、git-collab-conflict、versioning-rule、dsh-repo-index 等
+- git 相关操作/冲突审查/版本号等约定在同级仓 `dsh-git-push-User`（独立私有库）：git-commits-viewer、git-collab-conflict、versioning-rule、`dsh-repo-index.json`（md 表格已废弃）
 
 ## 相关
 
