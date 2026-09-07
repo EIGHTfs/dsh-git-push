@@ -1,5 +1,5 @@
 /** dsh-skip-sensitive dsh-git-push 核心逻辑单测：扫描 + 提交推送（真实 git 操作，临时目录） */
-import { scanRepos, commitAndPush, readRepoStatus, findGitDirs, parseGithubOwnerRepo, httpsUrlOf, apiOriginOf, sshOriginOf, isBadCredentials, githubFetch, resolveUserDir, userRepoCandidates, USER_REPO_NAME, loadUserRequirements, gitCFlags, ensureGlobalFilemodeFalse, ensureGlobalSafeDirectoryStar, buildReadmeCheckHint, README_CHECK_HINT, runGit, extractRemoteHeads, formatRemoteHeadsTable, persistGithubToken, githubTokenStatus, formatGithubAccountBlock, collectRepoSkillDocs, formatRepoSkillInjection, resolveReadmeTemplate, genReadme, probeSshGithubAuth, collectRepoSkillDirs, formatRepoSkillDirsInjection, ensureCustomIgnored, collectFunctionManual, FUNCTION_MANUAL_COMPACT, resolveGitToken, resolveValidGitToken, rebuildHistory, previewRebuildHistory, inspectUserRepo, scoreUserRepo, pickBestUserRepo } from '../lib/core.js';
+import { scanRepos, commitAndPush, readRepoStatus, findGitDirs, parseGithubOwnerRepo, httpsUrlOf, apiOriginOf, sshOriginOf, isBadCredentials, githubFetch, resolveUserDir, userRepoCandidates, USER_REPO_NAME, loadUserRequirements, gitCFlags, ensureGlobalFilemodeFalse, ensureGlobalSafeDirectoryStar, buildReadmeCheckHint, README_CHECK_HINT, runGit, extractRemoteHeads, formatRemoteHeadsTable, persistGithubToken, githubTokenStatus, formatGithubAccountBlock, collectRepoSkillDocs, formatRepoSkillInjection, resolveReadmeTemplate, genReadme, probeSshGithubAuth, collectRepoSkillDirs, formatRepoSkillDirsInjection, ensureCustomIgnored, collectFunctionManual, FUNCTION_MANUAL_COMPACT, resolveGitToken, resolveValidGitToken, rebuildHistory, previewRebuildHistory, inspectUserRepo, scoreUserRepo, pickBestUserRepo, createUserRepoTemplate } from '../lib/core.js';
 import { mkdtempSync, writeFileSync, mkdirSync, rmSync, chmodSync, readFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -362,6 +362,26 @@ try {
   ok(rebuilt.version === '2.6.0', `fresh 返回 version=${rebuilt.version}`);
   ok(rebuilt.push?.pushed === false, `force=false 不推远端 reason=${rebuilt.push?.reason}`);
   ok(existsSync(join(repoFresh, '.git')), 'fresh 保留 .git（不 git rm .git）');
+
+  // v1.36.3：User 仓内置模板自动创建——无远端/无 token 时落模板，README+.gitignore+作者夹+git 仓齐全
+  const usertplRoot = mkdtempSync(join(tmpdir(), 'git-push-usertpl-'));
+  const tplDest = join(usertplRoot, USER_REPO_NAME);
+  const tplR = createUserRepoTemplate({ dest: tplDest });
+  ok(tplR.ok === true && tplR.created === 'template' && tplR.template === true, `模板落地成功 ${JSON.stringify(tplR)}`);
+  ok(existsSync(join(tplDest, 'README.md')) && existsSync(join(tplDest, '.gitignore')), '模板含 README + .gitignore');
+  const tplOwner = tplR.owner || 'EIGHTfs';
+  ok(existsSync(join(tplDest, tplOwner)), `作者文件夹 <owner>/ 已创建 owner=${tplOwner}`);
+  ok(existsSync(join(tplDest, '.git')), '模板仓 git init 有效');
+  const tplCommits = runGit(['rev-list', '--all', '--count'], tplDest).stdout.trim();
+  ok(tplCommits === '1', `初始 commit 1 条 got=${tplCommits}`);
+  // 写 token 到作者夹 → git status 仍干净（.gitignore 生效）
+  writeFileSync(join(tplDest, tplOwner, 'github-token'), 'ghp_TESTTESTTESTTESTTESTTESTTESTTEST\n');
+  const tplSt = runGit(['status', '--porcelain'], tplDest).stdout.trim();
+  ok(tplSt === '', `模板 .gitignore 忽略作者夹 github-token（status=${JSON.stringify(tplSt)}）`);
+  // 幂等：已存在非空目录不覆盖
+  const tplAgain = createUserRepoTemplate({ dest: tplDest });
+  ok(tplAgain.ok === true && tplAgain.skipped === 'dest-nonempty', '已存在目录跳过不覆盖');
+  rmSync(usertplRoot, { recursive: true, force: true });
 } finally {
   rmSync(root, { recursive: true, force: true });
 }
