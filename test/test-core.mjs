@@ -1,5 +1,5 @@
 /** dsh-skip-sensitive dsh-git-push 核心逻辑单测：扫描 + 提交推送（真实 git 操作，临时目录） */
-import { scanRepos, commitAndPush, readRepoStatus, findGitDirs, parseGithubOwnerRepo, httpsUrlOf, apiOriginOf, sshOriginOf, isBadCredentials, githubFetch, resolveUserDir, userRepoCandidates, USER_REPO_NAME, loadUserRequirements, gitCFlags, ensureGlobalFilemodeFalse, ensureGlobalSafeDirectoryStar, buildReadmeCheckHint, README_CHECK_HINT, runGit, extractRemoteHeads, formatRemoteHeadsTable, persistGithubToken, githubTokenStatus, formatGithubAccountBlock, collectRepoSkillDocs, formatRepoSkillInjection, resolveReadmeTemplate, genReadme, probeSshGithubAuth, collectRepoSkillDirs, formatRepoSkillDirsInjection, ensureCustomIgnored, collectFunctionManual, FUNCTION_MANUAL_COMPACT } from '../lib/core.js';
+import { scanRepos, commitAndPush, readRepoStatus, findGitDirs, parseGithubOwnerRepo, httpsUrlOf, apiOriginOf, sshOriginOf, isBadCredentials, githubFetch, resolveUserDir, userRepoCandidates, USER_REPO_NAME, loadUserRequirements, gitCFlags, ensureGlobalFilemodeFalse, ensureGlobalSafeDirectoryStar, buildReadmeCheckHint, README_CHECK_HINT, runGit, extractRemoteHeads, formatRemoteHeadsTable, persistGithubToken, githubTokenStatus, formatGithubAccountBlock, collectRepoSkillDocs, formatRepoSkillInjection, resolveReadmeTemplate, genReadme, probeSshGithubAuth, collectRepoSkillDirs, formatRepoSkillDirsInjection, ensureCustomIgnored, collectFunctionManual, FUNCTION_MANUAL_COMPACT, resolveGitToken } from '../lib/core.js';
 import { mkdtempSync, writeFileSync, mkdirSync, rmSync, chmodSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -99,6 +99,19 @@ try {
   const fullMissing = collectFunctionManual({ pluginRoot: join(manualRoot, 'noplugin'), compact: false });
   ok(fullMissing === '', 'compact=false 且说明书缺失返回空');
   rmSync(manualRoot, { recursive: true, force: true });
+
+  // v1.33.0：设置页写入的 User 仓 token 优先于项目内残留 .git-push-token
+  const prioRoot = mkdtempSync(join(tmpdir(), 'git-push-token-prio-'));
+  const prioWs = join(prioRoot, 'ws');
+  const prioUser = join(prioWs, USER_REPO_NAME);
+  const prioRepo = join(prioWs, 'proj');
+  mkdirSync(prioUser, { recursive: true });
+  mkdirSync(prioRepo, { recursive: true });
+  writeFileSync(join(prioUser, 'github-token'), 'ghp_NEWTOKENNEWTOKENNEWTOKENNEWTOKEN00\n');
+  writeFileSync(join(prioRepo, '.git-push-token'), 'ghp_OLDTOKENOLDTOKENOLDTOKENOLDTOKEN00\n');
+  const picked = resolveGitToken({ repoPath: prioRepo, workspaceRoot: prioWs });
+  ok(picked.source === join(prioUser, 'github-token') && picked.token.includes('NEWTOKEN'), 'resolveGitToken 优先同级仓 github-token 而不是仓内 .git-push-token');
+  rmSync(prioRoot, { recursive: true, force: true });
 
   // v1.28.0 自定义忽略 pattern：追加 .gitignore + 已跟踪文件解除跟踪（ensureCustomIgnored）
   const ignoreRoot = mkdtempSync(join(tmpdir(), 'git-push-ignore-'));

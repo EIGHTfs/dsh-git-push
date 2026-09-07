@@ -42,7 +42,7 @@ generatedBy: grok-4.6 · 2026-09-03
 - **clone（v1.17.0）**：`git_clone` 走 api.github.com Git Data API（git/trees + git/blobs，不下 tarball；target=owner/repo 或 URL 只解析不访问；自动探测默认分支 master/main；/tmp 中转建仓整拷回 dest 兼容 CIFS；dest 非空拒绝；origin 写成 `https://api.github.com/repos/o/r`）
 - **默认通道 = api.github.com Git Data API**（pushViaApi：blob→tree→commit→ref，复用远端已有 blob sha）——统一 `githubFetch`（hostname 硬闸 + 拒绝跟随 302）
 - **token 无效回退 SSH（v1.18.3）**：无 token 或 API 返回 401 / Bad credentials 时，用同级仓 `dsh-git-push-User/id_ed25519` 走 `ssh.github.com:443`。禁止 `git push github.com` / HTTPS
-- token 多源探测 resolveGitToken：同级仓 `dsh-git-push-User/github-token` → 项目 `.git-push-token` → workspaceRoot data/sensitive → HOME/DSH_HOME 会话目录
+- token 多源探测 resolveGitToken：显式 tokenPath → 同级仓 `dsh-git-push-User/github-token` → 项目 `.git-push-token` → workspaceRoot data/sensitive → HOME/DSH_HOME 会话目录（v1.33.0 起 User 仓优先，避免仓内过期 `.git-push-token` 盖过设置页手填）
 - 本机无 SSH 私钥且 token 失效：push 失败，需更新 token 或把公钥加到 GitHub
 
 ### 同级仓 dsh-git-push-User（v1.18.0，不再进插件目录）

@@ -46,7 +46,7 @@ generatedBy: user-request 2026-09-07（把插件每个功能写份说明书强�
 
 - **用途**：检查 GitHub 是否已有同名仓库，没有则创建（private/public）+ 设置 origin 为 api.github.com URL
 - **参数**：`repo`（仓库绝对路径）/ `visibility`（public/private，默认 private）/ `dryRun`（只探测不创建）
-- **注意**：token 自动探测：项目 `.git-push-token` → 同级仓 github-token
+- **注意**：token 自动探测：同级仓 github-token（设置页写入）优先，其次项目 `.git-push-token`
 
 ### 6. git_set_visibility —— 切换仓库公开/私有
 

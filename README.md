@@ -75,6 +75,7 @@ node test/test-core.mjs && node test/test-audit.mjs && node test/test-repo-index
 
 | 版本 | 内容 |
 |---|---|
+| 1.33.0 | **token 探测改同级仓优先**：设置页写入的 `dsh-git-push-User/github-token` 排在项目内残留 `.git-push-token` 之前，避免手填新 token 仍被仓内过期文件盖掉 |
 | 1.32.0 | **忽略属主/权限噪声 + 提交时 README 检查注入 + 功能说明书改精简注入**：每次 git 带 `safe.directory=*` 与 `core.filemode=false`；启动写全局 `safe.directory=*`（已有则跳过）。`git_commit_push` 返回 `readmeCheck`，系统提示词常驻「提交前核对 README」。功能说明书不再全文塞进系统提示词，只注入工具目录，完整 md 按需加载 |
 | 1.31.0 | **硬编码路径/IP 审计**：L0 新增 `hardcode-path` / `hardcode-ip`——代码与 JSON/YAML 字面量写死本机绝对路径或局域网私网 IP 为 blocker，文档为 warning；不跟私有库豁免走。同步修掉插件自身 token 探测、clone 默认 dest、skills 目录探测三处死路径，用插件仓做狗粮测试 |
 | 1.30.0 | **设置页开关即时生效修复 + 一键复制 SSH 公钥**：①修复「勾选注入全部 skill 内容（injectFullSkill）不生效」——此前设置页改动只有 token/sshPub 经 settings scope.watch 落盘，injectFullSkill / customIgnorePatterns 是插件启动时的一次性常量，勾选后 pre-step 注入仍是旧值；现 scope.watch 同步覆盖运行期变量，设置页改完**立即生效**（不用重启）；②「生成公钥」结果区新增**一键复制**按钮——navigator.clipboard 写入（secure context），失败自动兜底 textarea + execCommand('copy')，复制成功回显「已复制到剪贴板」 |
