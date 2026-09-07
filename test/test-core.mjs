@@ -1,5 +1,5 @@
 /** dsh-skip-sensitive dsh-git-push 核心逻辑单测：扫描 + 提交推送（真实 git 操作，临时目录） */
-import { scanRepos, commitAndPush, readRepoStatus, findGitDirs, parseGithubOwnerRepo, httpsUrlOf, apiOriginOf, sshOriginOf, isBadCredentials, githubFetch, resolveUserDir, userRepoCandidates, USER_REPO_NAME, loadUserRequirements, gitCFlags, ensureGlobalFilemodeFalse, ensureGlobalSafeDirectoryStar, buildReadmeCheckHint, README_CHECK_HINT, runGit, extractRemoteHeads, formatRemoteHeadsTable, persistGithubToken, githubTokenStatus, formatGithubAccountBlock, collectRepoSkillDocs, formatRepoSkillInjection, resolveReadmeTemplate, genReadme, probeSshGithubAuth, collectRepoSkillDirs, formatRepoSkillDirsInjection, ensureCustomIgnored, collectFunctionManual, FUNCTION_MANUAL_COMPACT, resolveGitToken, rebuildHistory, previewRebuildHistory } from '../lib/core.js';
+import { scanRepos, commitAndPush, readRepoStatus, findGitDirs, parseGithubOwnerRepo, httpsUrlOf, apiOriginOf, sshOriginOf, isBadCredentials, githubFetch, resolveUserDir, userRepoCandidates, USER_REPO_NAME, loadUserRequirements, gitCFlags, ensureGlobalFilemodeFalse, ensureGlobalSafeDirectoryStar, buildReadmeCheckHint, README_CHECK_HINT, runGit, extractRemoteHeads, formatRemoteHeadsTable, persistGithubToken, githubTokenStatus, formatGithubAccountBlock, collectRepoSkillDocs, formatRepoSkillInjection, resolveReadmeTemplate, genReadme, probeSshGithubAuth, collectRepoSkillDirs, formatRepoSkillDirsInjection, ensureCustomIgnored, collectFunctionManual, FUNCTION_MANUAL_COMPACT, resolveGitToken, rebuildHistory, previewRebuildHistory, inspectUserRepo, scoreUserRepo, pickBestUserRepo } from '../lib/core.js';
 import { mkdtempSync, writeFileSync, mkdirSync, rmSync, chmodSync, readFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -180,6 +180,47 @@ try {
   const reqs = loadUserRequirements({ workspaceRoot: tmpWs });
   ok(reqs.found && reqs.files.some((f) => f.items.includes('测试条目')), 'loadUserRequirements 读同级仓');
   rmSync(tmpWs, { recursive: true, force: true });
+
+  // v1.36.0：User 仓搬家仍能找到；多个候选按 git remote / 提交数比对
+  const moveRoot = mkdtempSync(join(tmpdir(), 'git-push-user-move-'));
+  const makeUserGit = (dir, origin, commits, extra = {}) => {
+    mkdirSync(dir, { recursive: true });
+    execSync('git init -b master', { cwd: dir, stdio: 'ignore' });
+    writeFileSync(join(dir, 'requirements.md'), extra.req || '1. item\n');
+    if (extra.token) writeFileSync(join(dir, 'github-token'), extra.token);
+    execSync('git add -A && git -c user.email=t@t -c user.name=t commit -m init', { cwd: dir, stdio: 'ignore' });
+    for (let i = 1; i < commits; i++) {
+      writeFileSync(join(dir, `c${i}.txt`), `${i}\n`);
+      execSync(`git add -A && git -c user.email=t@t -c user.name=t commit -m c${i}`, { cwd: dir, stdio: 'ignore' });
+    }
+    if (origin) execSync(`git remote add origin ${origin}`, { cwd: dir, stdio: 'ignore' });
+  };
+  const moved = join(moveRoot, 'elsewhere', USER_REPO_NAME);
+  makeUserGit(moved, 'https://api.github.com/repos/EIGHTfs/dsh-git-push-User', 3, { token: 'ghp_MOVEDTOKENMOVEDTOKENMOVEDTOKEN00\n' });
+  const candsMoved = userRepoCandidates({ workspaceRoot: moveRoot });
+  ok(candsMoved.some((p) => p === moved), `搬家后候选含 elsewhere/dsh-git-push-User got=${candsMoved.filter((p)=>p.includes(USER_REPO_NAME)).slice(0,4).join(',')}`);
+  const udMoved = resolveUserDir({ workspaceRoot: moveRoot });
+  ok(udMoved.dir === moved && udMoved.matchesTarget === true, `搬家后仍命中 dir=${udMoved.dir} matches=${udMoved.matchesTarget}`);
+
+  const fake = join(moveRoot, USER_REPO_NAME);
+  makeUserGit(fake, 'https://api.github.com/repos/other/not-user', 1);
+  const udPick = resolveUserDir({ workspaceRoot: moveRoot });
+  ok(udPick.dir === moved, `多个候选按 git 比对选官方仓 got=${udPick.dir}`);
+  const fakeInfo = inspectUserRepo(fake);
+  const realInfo = inspectUserRepo(moved);
+  ok(scoreUserRepo(realInfo) > scoreUserRepo(fakeInfo), `官方仓分数 ${scoreUserRepo(realInfo)} > 假仓 ${scoreUserRepo(fakeInfo)}`);
+  const bestUser = pickBestUserRepo([fakeInfo, realInfo]);
+  ok(bestUser && bestUser.dir === moved, 'pickBestUserRepo 选 remote 匹配的仓');
+
+  const outsideRoot = mkdtempSync(join(tmpdir(), 'git-push-user-out-'));
+  const emptyWs = join(outsideRoot, 'ws');
+  const parked = join(outsideRoot, 'parked', USER_REPO_NAME);
+  mkdirSync(emptyWs, { recursive: true });
+  makeUserGit(parked, 'https://api.github.com/repos/EIGHTfs/dsh-git-push-User', 2, { token: 'ghp_PARKEDTOKENPARKEDTOKENPARKEDTOK00\n' });
+  const udParked = resolveUserDir({ workspaceRoot: emptyWs, extraRepos: [parked] });
+  ok(udParked.dir === parked && udParked.matchesTarget === true, `extraRepos 搬家后仍命中 dir=${udParked.dir}`);
+  rmSync(outsideRoot, { recursive: true, force: true });
+  rmSync(moveRoot, { recursive: true, force: true });
 
   ok(findGitDirs(root, 2).length === 2, `findGitDirs 找到 ${findGitDirs(root, 2).length} 个仓库`);
 
