@@ -75,6 +75,7 @@ node test/test-core.mjs && node test/test-audit.mjs && node test/test-repo-index
 
 | 版本 | 内容 |
 |---|---|
+| **1.36.1** | **①硬编码审计扫描范围开关**：设置 → 插件 → git-push 新增「硬编码全量扫」——不勾（默认）只扫新增/变更行；勾选后扫整个文件（含既有历史行），换机前排查存量死路径用，运行期即时生效。**②repo-index 可见性全「未知」修复**：索引生成自动用 resolveGitToken 探测的 token（不再依赖可选 repoIndexTokenPath），可见性查询按各仓 remote 的 owner 查（不再硬编码 EIGHTfs，非 EIGHTfs 仓库此前全查错） |
 | 1.36.0 | **User 仓纯探测选仓（排除 NAS 旧副本）**：`dsh-git-push-User` 不在同级时，扫工作区/extraRepos 里同名 git 仓。多个候选按 git 比对——官方 remote 优先，**HEAD 与远程 origin refs 一致（isSynced）= 更接近远程默认选它**，再比显式配置/作者挂钩文件/提交数；不硬编码任何排除路径。workspaceRoot 树内只有「与远程一致的官方仓」才树内优先；树内无同步官方仓（如 workspaceRoot 指向 NAS 旧副本）则全池按 isSynced 比对。token / ssh key / skill / repo-index 按作者文件夹 `<owner>/` 布局读取（兼容仓根旧布局） |
 | 1.35.0 | **repo-index JSON 注入会话**：md 表格已废弃，权威源是 `dsh-git-push-User/<owner>/dsh-repo-index.json`（推送成功后自动生成）。会话默认只注入文件名；设置「注入 repo-index JSON 全文」才注入正文。不再写 `.dsh/skills/dsh-repo-index.md` |
 | 1.34.0 | **重建历史按意图**：`fresh` 当前文件树作为唯一提交，**不改** `package.json` 版本号；用 `checkout --orphan` 保留 remote/backup tag（不再 `git rm .git`）。`force=true` 才覆盖远端（API PATCH force + 不挂旧 parent；失败回退 `git push --force`）。工具描述与实现对齐。新增 skill `git-push-live-fix`：用插件时发现问题当场改，禁止默默手搓 git |
