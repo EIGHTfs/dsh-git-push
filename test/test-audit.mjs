@@ -283,6 +283,23 @@ try {
   const hc = dog.findings.filter((f) => f.rule === 'hardcode-path' || f.rule === 'hardcode-ip');
   ok(hc.length === 0, `插件 lib/ 自身无硬编码路径/IP（实际 ${hc.length}${hc.length ? ': ' + hc.map((f) => f.file + ':' + f.message).join('; ') : ''}）`);
 
+  /* ============ v1.36.1：hardcodeFullScan 开关（默认只扫新增行，勾选全量扫） ============ */
+  // 文件内容含旧行硬编码（第 1 行），但本次只新增了第 2 行 → 默认不报，全量扫报
+  const mixedContent = 'const old = "/vol1/@appshare/DeepSeekHarness/legacy";\nconst newLine = 1;\n';
+  const mixedPath = join(repo, 'mixed.js');
+  writeFileSync(mixedPath, mixedContent);
+  const mixedFiles = [{ path: 'mixed.js', content: mixedContent, addedLines: ['const newLine = 1;'], isBinary: false }];
+  const r25a = auditRepo(repo, { files: mixedFiles, blockOn: 'blocker' });
+  ok(!r25a.findings.some((f) => f.rule === 'hardcode-path'), '默认只扫新增行：旧行硬编码不报');
+  const r25b = auditRepo(repo, { files: mixedFiles, blockOn: 'blocker', hardcodeFullScan: true });
+  ok(r25b.findings.some((f) => f.rule === 'hardcode-path' && f.level === 'blocker' && f.message.includes('legacy')), 'hardcodeFullScan=true 全量扫：旧行硬编码也报 blocker');
+
+  // 全量扫对新增行同样生效（新增行有硬编码照样报）
+  const mixed2Path = join(repo, 'mixed2.js');
+  writeFileSync(mixed2Path, 'const a = 1;\nconst p = "/vol2/1000/workspace";\n');
+  const r25c = auditRepo(repo, { files: [{ path: 'mixed2.js', content: 'const a = 1;\nconst p = "/vol2/1000/workspace";\n', addedLines: ['const p = "/vol2/1000/workspace";'], isBinary: false }], blockOn: 'blocker', hardcodeFullScan: true });
+  ok(r25c.findings.some((f) => f.rule === 'hardcode-path'), '全量扫模式新增行硬编码仍报');
+
 } finally {
   rmSync(root, { recursive: true, force: true });
 }
