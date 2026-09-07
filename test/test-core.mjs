@@ -222,6 +222,40 @@ try {
   rmSync(outsideRoot, { recursive: true, force: true });
   rmSync(moveRoot, { recursive: true, force: true });
 
+  // v1.36.0：排除 NAS 旧副本 —— 纯探测不硬编码路径，默认选「更接近远程」的仓
+  const nasRoot = mkdtempSync(join(tmpdir(), 'git-push-user-nas-'));
+  const wsDir = join(nasRoot, 'ws');
+  const nasCopy = join(nasRoot, 'nas', USER_REPO_NAME); // 模拟 NAS 旧副本：同 remote、提交数多但没拉过 origin refs、作者文件散在仓根
+  const localCopy = join(wsDir, USER_REPO_NAME);        // 本地新仓：origin refs 与 HEAD 一致、作者挂钩文件在 EIGHTfs/ 子目录
+  mkdirSync(wsDir, { recursive: true });
+  mkdirSync(nasRoot, { recursive: true });
+  makeUserGit(nasCopy, 'https://api.github.com/repos/EIGHTfs/dsh-git-push-User', 5, { token: 'ghp_NASOLDTOKENNASOLDTOKENNASOLDTK00\n' });
+  makeUserGit(localCopy, 'https://api.github.com/repos/EIGHTfs/dsh-git-push-User', 1);
+  // 本地仓：作者文件夹 EIGHTfs/ 放 token / requirements / 索引；把 HEAD 记成 origin refs（模拟已与远程同步）
+  const authorDir = join(localCopy, 'EIGHTfs');
+  mkdirSync(authorDir, { recursive: true });
+  writeFileSync(join(authorDir, 'github-token'), 'ghp_LOCALTOKENLOCALTOKENLOCALTOKEN00\n');
+  writeFileSync(join(authorDir, 'requirements.md'), '1. 本地要求\n');
+  writeFileSync(join(authorDir, 'dsh-repo-index.json'), '{"repos":[]}\n');
+  execSync('git add -A && git -c user.email=t@t -c user.name=t commit -m author-layout', { cwd: localCopy, stdio: 'ignore' });
+  const localHead = execSync('git rev-parse HEAD', { cwd: localCopy, encoding: 'utf8' }).trim();
+  execSync(`git update-ref refs/remotes/origin/master ${localHead}`, { cwd: localCopy, stdio: 'ignore' });
+  // NAS 旧副本：只有 origin URL，没有拉过 origin refs（remoteHeadSha 为空）→ isSynced=false
+  const udNoNas = resolveUserDir({ workspaceRoot: wsDir });
+  ok(udNoNas.dir === localCopy, `排除 NAS 旧副本选本地新仓 got=${udNoNas.dir}`);
+  const nasInfo = inspectUserRepo(nasCopy);
+  const localInfo = inspectUserRepo(localCopy);
+  ok(nasInfo && localInfo && localInfo.isSynced === true && nasInfo.isSynced === false, `isSynced 探测：本地 ${localInfo?.isSynced} / NAS ${nasInfo?.isSynced}`);
+  ok(scoreUserRepo(localInfo) > scoreUserRepo(nasInfo), `更接近远程的仓分数高（本地 ${scoreUserRepo(localInfo)} > NAS ${scoreUserRepo(nasInfo)}）`);
+  const bestNas = pickBestUserRepo([nasInfo, localInfo]);
+  ok(bestNas && bestNas.dir === localCopy, 'pickBestUserRepo 选与远程一致 + 作者文件夹完整的仓');
+  // 作者挂钩文件在作者文件夹也能被读取
+  const reqsAuthor = loadUserRequirements({ workspaceRoot: wsDir });
+  ok(reqsAuthor.files.some((f) => f.file === 'requirements.md' && f.items.includes('本地要求')), 'loadUserRequirements 读作者文件夹 requirements.md');
+  const tokAuthor = resolveGitToken({ workspaceRoot: wsDir });
+  ok(tokAuthor.token.includes('LOCALTOKEN'), 'resolveGitToken 读作者文件夹 github-token');
+  rmSync(nasRoot, { recursive: true, force: true });
+
   ok(findGitDirs(root, 2).length === 2, `findGitDirs 找到 ${findGitDirs(root, 2).length} 个仓库`);
 
   const repos = scanRepos({ root, depth: 2 });
