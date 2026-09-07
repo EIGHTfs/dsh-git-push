@@ -75,6 +75,7 @@ node test/test-core.mjs && node test/test-audit.mjs && node test/test-repo-index
 
 | 版本 | 内容 |
 |---|---|
+| **1.37.0** | **审计按远端可见性定拦截力度**：提交前审计先探测 GitHub 远端可见性（`detectRepoVisibility`，token 真校验）——**private 仓 blocker 全部降级为仅警告（blockOn=none，不拦截）**，敏感规则（secret/凭据/对话措辞）仍豁免；**public 仓保持原 blockOn 拦截**（敏感规则照常阻断）；**user 仓（`dsh-git-push-User` 或 `-User` 结尾）特殊照顾**：探测到 public 时自动 `setRepoVisibility` PATCH 改回 private 再继续（自动私有化），避免凭据仓意外公开。审计结果新增 `visibility` / `visibilityRisk` / `userRepoAutoFixed` 字段。探测失败（无 origin/无 token/API 失败）保守按 public 处理照常拦截 |
 | **1.36.3** | **User 仓内置模板自动创建**：`dsh-git-push-User` 不存在（首次使用 / 无 token / 远端未建）时插件自动用内置模板建仓——README（用途说明 + 凭据位置表）+ 通用 .gitignore（token/ssh 私钥/clone 元数据/索引不入库）+ `<owner>/` 作者文件夹（owner 变量三级解析：origin → 目录名 → 兜底，不写死路径）+ git init 初始 commit；`<owner>/github-token`、`id_rsa` 等凭据合法位置确认（resolveGitToken/resolveUserSshKey/persist 已按作者文件夹读取）；模板 .gitignore 同时修复往已删目录重建残留的问题 |
 | **1.36.2** | **User 仓选仓/Token 探测失效修复**：双副本场景下本地副本 `isSynced` 假象（HEAD 与本地缓存 origin refs 一致但从未 fetch）不再冒充官方仓——选仓新增 `tokenValid` 启发式（token 格式 + 长度 ≥40，失效/截断 token 的副本降权，+800 压过 isSynced 假象）；树内优先条件加 tokenValid；`resolveGitToken` 候选扩展到所有候选仓全列表；新增异步 `resolveValidGitToken`（逐个真校验 `/user`，跳过失效 token，push/索引/可见性探测/建仓/clone 等关键路径改用）。修复后所有 API push 不再因读到失效 token 报 Bad credentials |
 | **1.36.1** | **①硬编码审计扫描范围开关**：设置 → 插件 → git-push 新增「硬编码全量扫」——不勾（默认）只扫新增/变更行；勾选后扫整个文件（含既有历史行），换机前排查存量死路径用，运行期即时生效。**②repo-index 可见性全「未知」修复**：索引生成自动用 resolveGitToken 探测的 token（不再依赖可选 repoIndexTokenPath），可见性查询按各仓 remote 的 owner 查（不再硬编码 EIGHTfs，非 EIGHTfs 仓库此前全查错） |

@@ -300,6 +300,15 @@ try {
   const r25c = auditRepo(repo, { files: [{ path: 'mixed2.js', content: 'const a = 1;\nconst p = "/vol2/1000/workspace";\n', addedLines: ['const p = "/vol2/1000/workspace";'], isBinary: false }], blockOn: 'blocker', hardcodeFullScan: true });
   ok(r25c.findings.some((f) => f.rule === 'hardcode-path'), '全量扫模式新增行硬编码仍报');
 
+  /* ============ v1.37.0：blockOn='none'（私有仓仅警告不拦截） ============ */
+  const n1 = auditRepo(repo, { files: [{ path: 'blocked.js', content: 'const p = "/vol2/1000/workspace";\n', addedLines: ['const p = "/vol2/1000/workspace";'], isBinary: false }], blockOn: 'none', hardcodeFullScan: true });
+  ok(n1.findings.some((f) => f.level === 'blocker'), 'blockOn=none 仍产出 blocker 级别发现');
+  ok(n1.blocked === false && n1.passed === true, 'blockOn=none：有 blocker 也不拦截（仅警告）');
+  const n2 = auditRepo(repo, { files: [{ path: 'blocked2.js', content: 'const p = "/vol2/1000/workspace2";\n', addedLines: ['const p = "/vol2/1000/workspace2";'], isBinary: false }], blockOn: 'any' });
+  ok(n2.blocked === true, 'blockOn=any 对照：同样内容正常拦截');
+  const n3 = auditRepo(repo, { files: [{ path: 'blocked3.js', content: 'function ( {\n', addedLines: ['function ( {\n'], isBinary: false }], blockOn: 'none' });
+  ok(n3.blocked === false, 'blockOn=none：语法错误也不拦截');
+
 } finally {
   rmSync(root, { recursive: true, force: true });
 }
