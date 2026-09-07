@@ -2,9 +2,10 @@
  * 文件头 dsh-skip-sensitive：本文件含 comment-wording 检测目标措辞（作为测试输入数据），
  * 豁免审计检测与提交前 autoClean 自动清理，防止测试输入被误删（2026-09-07 固化）。 */
 import { auditRepo, cleanCommentWording } from '../lib/audit.js';
-import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, mkdirSync, rmSync, readdirSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
 
 let pass = 0, fail = 0;
@@ -222,6 +223,65 @@ try {
   // 代码文件不适用该规则
   const r23 = audit([{ path: 'k.js', content: '// 密码: xxxxxx\nconst a = 1;\n' }]);
   ok(!r23.findings.some((f) => f.rule === 'credential-ref'), '代码文件不查 credential-ref');
+
+  /* ==================== 硬编码路径/IP（hardcode-path / hardcode-ip，v1.31.0） ==================== */
+  // 触发：gitpush 增加审计硬编码功能，测试就用插件本身
+  // 代码字符串写死本机绝对路径 → blocker
+  const r24a = audit([{ path: 'hard.js', content: 'const p = "/vol1/@appshare/DeepSeekHarness/workspace";\n' }]);
+  ok(r24a.findings.some((f) => f.rule === 'hardcode-path' && f.level === 'blocker'), '代码硬编码 /volN 路径 → blocker');
+
+  const r24b = audit([{ path: 'hard.js', content: 'const home = "/home/alice/.dsh/skills";\n' }]);
+  ok(r24b.findings.some((f) => f.rule === 'hardcode-path'), '代码硬编码 /home 路径检出');
+
+  const r24c = audit([{ path: 'hard.js', content: 'const lan = "http://10.10.10.4:3080";\n' }]);
+  ok(r24c.findings.some((f) => f.rule === 'hardcode-ip' && f.level === 'blocker' && f.message.includes('10.10.10.4')), '代码硬编码局域网 IP → blocker');
+
+  const r24d = audit([{ path: 'hard.js', content: 'const loop = "http://127.0.0.1:3081";\nconst bind = "0.0.0.0";\n' }]);
+  ok(!r24d.findings.some((f) => f.rule === 'hardcode-ip'), '127.0.0.1 / 0.0.0.0 不误报');
+
+  const r24e = audit([{ path: 'hard.js', content: 'const t = "/tmp/dsh-clone-x";\nconst u = "/usr/bin/git";\n' }]);
+  ok(!r24e.findings.some((f) => f.rule === 'hardcode-path'), '/tmp /usr 系统通用路径不误报');
+
+  const r24f = audit([{ path: 'hard.js', content: 'const p = process.env.DSH_HOME;\nconst r = join(workspaceRoot, "data");\n' }]);
+  ok(!r24f.findings.some((f) => f.rule === 'hardcode-path' || f.rule === 'hardcode-ip'), '环境变量/相对路径不误报');
+
+  const r24g = audit([{ path: 'README.md', content: '打开 http://10.10.10.4:3080 看 GUI\n' }]);
+  ok(r24g.findings.some((f) => f.rule === 'hardcode-ip' && f.level === 'warning'), '文档硬编码 IP → warning');
+
+  const r24h = audit([{ path: 'README.md', content: 'CIFS 只读卷 doubtful ownership 时带 safe.directory\n' }]);
+  ok(!r24h.findings.some((f) => f.rule === 'hardcode-path'), '文档不含绝对路径不误报');
+
+  const r24i = audit([{ path: 'cfg.json', content: '{"root":"/vol2/1000/workspace"}\n' }]);
+  ok(r24i.findings.some((f) => f.rule === 'hardcode-path' && f.level === 'blocker'), 'JSON 配置硬编码路径 → blocker');
+
+  const r24j = audit([{ path: 'hard.js', content: 'const p = "/vol1/@appshare/x";\n' }], { exemptRepos: ['repo'] });
+  ok(r24j.findings.some((f) => f.rule === 'hardcode-path'), '私有库豁免不跳过硬编码规则');
+
+  const r24k = audit([{ path: 'hard.js', content: '// dsh-skip-sensitive\nconst p = "/vol1/@appshare/x";\n' }]);
+  ok(!r24k.findings.some((f) => f.rule === 'hardcode-path'), '文件头 dsh-skip-sensitive 跳过硬编码');
+
+  const r24l = audit([{ path: 'hard.js', content: 'const msg = "例如 /vol1/@appshare/x 是示例路径";\n' }]);
+  ok(!r24l.findings.some((f) => f.rule === 'hardcode-path'), '示例词上下文豁免硬编码');
+
+  const r24m = audit([{ path: 'hard.js', content: 'const p = "<workspaceRoot>/data";\n' }]);
+  ok(!r24m.findings.some((f) => f.rule === 'hardcode-path'), '占位符路径不误报');
+
+  const r24n = audit([{ path: 'hard.js', content: 'const win = "C:\\\\Users\\\\alice\\\\.dsh";\n' }]);
+  ok(r24n.findings.some((f) => f.rule === 'hardcode-path'), 'Windows 用户目录硬编码检出');
+
+  const r24o = audit([{ path: 'hard.js', content: 'const rel = "workspaceRoot/data/sensitive/github-token";\n' }]);
+  ok(!r24o.findings.some((f) => f.rule === 'hardcode-path'), '相对路径含 data 段不误报');
+
+  // 狗粮：用插件自身源码当审计目标（触发原话：测试就用插件本身）
+  // 扫 lib/*.js 当前全文当新增行——提交本仓时硬编码规则必须能过自己。
+  const pluginRoot = dirname(dirname(fileURLToPath(import.meta.url)));
+  const libFiles = readdirSync(join(pluginRoot, 'lib')).filter((n) => n.endsWith('.js')).map((n) => {
+    const content = readFileSync(join(pluginRoot, 'lib', n), 'utf8');
+    return { path: `lib/${n}`, content, addedLines: content.split('\n'), isBinary: false };
+  });
+  const dog = auditRepo(pluginRoot, { files: libFiles, blockOn: 'blocker' });
+  const hc = dog.findings.filter((f) => f.rule === 'hardcode-path' || f.rule === 'hardcode-ip');
+  ok(hc.length === 0, `插件 lib/ 自身无硬编码路径/IP（实际 ${hc.length}${hc.length ? ': ' + hc.map((f) => f.file + ':' + f.message).join('; ') : ''}）`);
 
 } finally {
   rmSync(root, { recursive: true, force: true });

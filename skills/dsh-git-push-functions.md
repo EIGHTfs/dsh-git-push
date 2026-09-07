@@ -1,6 +1,6 @@
 ---
 name: dsh-git-push-functions
-description: dsh-git-push 插件全部功能说明书（每个功能一份说明）：git_scan / git_commit_push / code_audit / git_gen_readme / git_remote_create / git_set_visibility / git_clone / git_rebuild_history / git_push_rules / push_permit_status / push_permit_config / HTTP API / 提交历史查看器 / 上下文注入 / repo-index 维护 / 敏感忽略 / 自定义忽略 的用途、参数、返回、注意事项。本说明书由插件 agent/pre-step **强制全文注入**（不受「注入全部 skill 内容」设置影响，每个会话都带全文）；与 skills/dsh-git-push.md（使用手册）配合，排查/细节以本说明书为准。
+description: dsh-git-push 插件全部功能说明书（每个功能一份说明）：git_scan / git_commit_push / code_audit / git_gen_readme / git_remote_create / git_set_visibility / git_clone / git_rebuild_history / git_push_rules / push_permit_status / push_permit_config / HTTP API / 提交历史查看器 / 上下文注入 / repo-index 维护 / 敏感忽略 / 自定义忽略 / 硬编码路径与 IP 审计 的用途、参数、返回、注意事项。本说明书由插件 agent/pre-step **强制全文注入**（不受「注入全部 skill 内容」设置影响，每个会话都带全文）；与 skills/dsh-git-push.md（使用手册）配合，排查/细节以本说明书为准。
 whenToUse: 需要了解 dsh-git-push 某个功能怎么用/参数是什么/返回什么；排查插件工具行为；用户问「这个功能是干嘛的」时直接引用本说明书对应章节。
 generatedBy: user-request 2026-09-07（把插件每个功能写份说明书强制注入全部内容，不受设置影响）
 ---
@@ -8,7 +8,7 @@ generatedBy: user-request 2026-09-07（把插件每个功能写份说明书强�
 # dsh-git-push 插件功能说明书（强制全文注入）
 
 > 本说明书覆盖插件**每个功能**，由插件 `agent/pre-step` 钩子**无条件全文注入**每个会话（不受设置里「注入全部 skill 内容」开关影响——那开关只管两仓 skill 正文，本说明书是功能手册，永远注入）。
-> 版本：v1.30.0。源码：EIGHTfs/dsh-git-push。上下文注入实现定位：`lib/index.js` 搜「上下文注入」。
+> 版本：v1.31.0。源码：EIGHTfs/dsh-git-push。上下文注入实现定位：`lib/index.js` 搜「上下文注入」。
 
 ---
 
@@ -25,14 +25,14 @@ generatedBy: user-request 2026-09-07（把插件每个功能写份说明书强�
 
 - **用途**：先审计 → 敏感扫描自动 .gitignore → 自定义忽略自动 .gitignore → add -A → commit → push origin
 - **参数**：`repo`（仓库绝对路径，必填）/ `message`（commit message，必填）/ `push`（默认 true）/ `dryRun`（只模拟）/ `audit`（默认 true）/ `llmAudit`（LLM 深度审查，默认 false）/ `requirementsConfirmed`（同级仓要求清单核对标记）
-- **流程**：README 预览 → 自动清理代码注释措辞（autoClean，豁免 `dsh-skip-sensitive` 文件头）→ L0 静态审计（语法/JSON/YAML/敏感信息/凭据/大文件/文档措辞）→ 拦截判断 → commitAndPush（npm 屏蔽 → 敏感忽略 → 自定义忽略 → add → commit → push → repo-index 维护）
+- **流程**：README 预览 → 自动清理代码注释措辞（autoClean，豁免 `dsh-skip-sensitive` 文件头）→ L0 静态审计（语法/JSON/YAML/敏感信息/凭据/大文件/文档措辞/硬编码路径与局域网 IP）→ 拦截判断 → commitAndPush（npm 屏蔽 → 敏感忽略 → 自定义忽略 → add → commit → push → repo-index 维护）
 - **返回**：`{ ok, committed, commitId, push: { pushed, method, pushedTo }, audit: { blocked, findings, summary }, autoClean, remoteHeads, remoteHeadsText }`
 - **推送通道**：默认 api.github.com Git Data API；token 401 回退 ssh.github.com:443；禁止 github.com 直连
 - **注意**：审计拦截返回 `{ok:false, blocked:true}` 不产生提交；远端领先不推
 
 ### 3. code_audit —— 手动审计仓库
 
-- **用途**：对指定仓库执行代码审计（L0 静态：语法/JSON/YAML/敏感信息/凭据入库/二进制大文件/debugger/console）
+- **用途**：对指定仓库执行代码审计（L0 静态：语法/JSON/YAML/敏感信息/凭据入库/二进制大文件/debugger/console/硬编码路径与局域网 IP）
 - **参数**：`repo`（必填）/ `llm`（true 追加 LLM 深度审查）
 - **返回**：`{ ok, blocked, findings: [{ rule, level, file, line, message }], summary: { blocker, warning, total } }`
 
@@ -137,7 +137,7 @@ generatedBy: user-request 2026-09-07（把插件每个功能写份说明书强�
 
 ## 六、坑速查
 
-1. 提交被审计拦截 → 看 `findings` 逐条修；文档措辞类走 `release-docs-rule`（公开仓库只写做了什么）
+1. 提交被审计拦截 → 看 `findings` 逐条修；文档措辞类走 `release-docs-rule`（公开仓库只写做了什么）；硬编码路径/IP 改配置、环境变量或相对路径（私有库也不豁免）
 2. 推送失败 Bad credentials → token 失效自动回退 ssh.github.com:443（需同级仓 id_ed25519）
 3. autoClean 会清理代码注释里的「记录用户指令」措辞 → 测试输入含这些措辞时给文件头加 `dsh-skip-sensitive`
 4. 设置页改动立即保存（token/SSH 除外，需点保存按钮）

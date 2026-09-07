@@ -1,6 +1,6 @@
 ---
 name: dsh-git-push
-description: dsh-git-push 插件（git 自动提交推送 v1.30.0，README 模板在同级仓 dsh-git-push-User/readme-template.md）的使用手册：git_scan / git_commit_push / git_clone / git_remote_create / code_audit 工具与 /api/git-push API 的调用方法、配置（审计 blockOn/llmAudit、注入开关 injectFullSkill、自定义忽略 customIgnorePatterns、SSH 邮箱生成公钥）、验证与坑速查。处理"提交推送代码""扫描仓库状态""审计代码""推送前拦截 bug""敏感信息检测""文档被审计拦截""生成 SSH 公钥""SSH 连不上"类请求时加载；插件不可用/报错排查时必加载（正常情况优先用插件，见 plugin-priority）。上下文注入实现定位：lib/index.js 搜「上下文注入」注释块（agent/pre-step 钩子）。
+description: dsh-git-push 插件（git 自动提交推送 v1.31.0，README 模板在同级仓 dsh-git-push-User/readme-template.md）的使用手册：git_scan / git_commit_push / git_clone / git_remote_create / code_audit 工具与 /api/git-push API 的调用方法、配置（审计 blockOn/llmAudit、硬编码路径/IP、注入开关 injectFullSkill、自定义忽略 customIgnorePatterns、SSH 邮箱生成公钥）、验证与坑速查。处理"提交推送代码""扫描仓库状态""审计代码""推送前拦截 bug""敏感信息检测""硬编码路径""文档被审计拦截""生成 SSH 公钥""SSH 连不上"类请求时加载；插件不可用/报错排查时必加载（正常情况优先用插件，见 plugin-priority）。上下文注入实现定位：lib/index.js 搜「上下文注入」注释块（agent/pre-step 钩子）。
 whenToUse: 需要用插件做 git 提交推送/代码审计但不确定参数/报错排查/插件未装需手做时。
 generatedBy: grok-4.6 · 2026-09-03
 ---
@@ -56,9 +56,10 @@ generatedBy: grok-4.6 · 2026-09-03
 ## 三、审计（v1.1.0 内置，重点）
 
 - **npm 下载产物屏蔽（v1.6.0，add 前自动）**：每次 commitAndPush 先调用 `ensureNpmIgnored()`——确保仓库 .gitignore 幂等覆盖 `node_modules/` + 常见 lock 文件（package-lock/yarn.lock/pnpm-lock.yaml/bun.lock）+ npm 缓存/日志（.npm/、.pnpm-store/、npm-debug.log*）。不覆盖已有 .gitignore 内容，只追加缺失条目。效果：「上传推送检查屏蔽下载的一堆 npm 包」——npm 产物不进变更、不进审计、不进 git。**单测 + 端到端（真实 git 仓库 + node_modules + lock）均通过**。
-- **L0 静态检查（零 token，默认开）**：JS 语法（node --check）/ JSON / YAML / 敏感信息硬编码（GitHub PAT、sk- key、密钥键值对）/ 凭据文件入库（.env/.credentials）/ 二进制大文件（>1MB）/ debugger 残留 / console.log≥5 / TODO/FIXME
+- **L0 静态检查（零 token，默认开）**：JS 语法（node --check）/ JSON / YAML / 敏感信息硬编码（GitHub PAT、sk- key、密钥键值对）/ **本机路径与局域网 IP 硬编码（v1.31.0：hardcode-path / hardcode-ip）** / 凭据文件入库（.env/.credentials）/ 二进制大文件（>1MB）/ debugger 残留 / console.log≥5 / TODO/FIXME
 - **文档措辞拦截 docs-conversation（v1.4.0，blocker）**：对文档文件（md/markdown/mdx/txt）的**新增行**检查「AI 与用户沟通过程」类措辞（会话引用 / 用户决策来源 / AI 许可表述 / 商量转述等），命中即拦截——公开仓库只提交「做了什么」，沟通/需求/移交/待办类文档统一放 `data/沟通文档`（清单见 release-docs-rule）
 - **L1 LLM 深度审查（默认关，省钱）**：diff 喂便宜模型找逻辑/安全问题，实测 agnes-2.5-flash 精准检出越界/空值/除零/fetch 未检查 res.ok 等 bug
+- **硬编码路径/IP（v1.31.0，hardcode-path / hardcode-ip）**：代码/JSON/YAML 字符串字面量出现本机绝对路径（NAS 卷、用户家目录、挂载点、数据根）或局域网私网 IP → **blocker**；文档同样命中 → **warning**。**不跟私有库豁免走**（换机必炸与可见性无关）。豁免：文件头 `dsh-skip-sensitive`、示例词整行、占位符 `<workspaceRoot>` / `$HOME`、临时目录与系统通用路径、回环/监听地址、环境变量与相对路径
 - **拦截策略 blockOn**：`blocker`（默认，仅严重问题拦截）/ `any`（任何问题拦截）
 - 审计范围 = 工作区相对 HEAD 变更（**含 untracked 新文件**，LLM 也看得到）
 - 拦截时 commit 返回 `{ok:false, error:{code:'AUDIT'}, findings}`，不产生提交
@@ -70,7 +71,7 @@ generatedBy: grok-4.6 · 2026-09-03
 | **说明类（示例凭据）** | 文档/README/示例代码中**用于举例的假凭据**不报敏感信息——值含 假/fake/示例/演示/sample/demo 或占位符（your- 前缀、xxx、example 等），或行内含「例如/举例/示例」等示例词整行豁免 | 「用户名: 假用户 / 密码: 假密码」（中文假值）或 `user: your-username / password: your-password`（占位符） |
 | **备份类（私有库）** | 配置 `exemptRepos` 白名单（仓库绝对路径或目录名）后，命中的**私有/备份仓库**跳过敏感内容规则（secret / 凭据文件 / 对话措辞），其余规则照常；审计结果标注 `exempted:true` | `exemptRepos: ['ai-work-archive']`（私有归档可存 token/会话总结） |
 | **私有库自动豁免（v1.14.0）** | commitAndPush 自动探测 GitHub 仓库可见性（GET /repos/{o}/{r} 读 private 字段，复用 resolveGitToken）：**private → 敏感字段自动 .gitignore 只扫描报告不写入**（`sensitiveExempted` 标注），审计同步跳过敏感内容规则；探测失败/无 origin/无 token → 保守不豁免 | `EIGHTfs/dsh-git-push`（private）提交含密码字段的源码不再被自动 gitignore |
-| **注释豁免（v1.14.0）** | 敏感信息可通过注释申请豁免：**文件头前 3 行**或**行内注释**带 `dsh-skip-sensitive` 即跳过敏感扫描（自动 gitignore + 审计 secret/凭据/对话措辞两处同认） | `// dsh-skip-sensitive` 放文件头 → 整文件豁免；`password = "x" // dsh-skip-sensitive` → 仅该行豁免 |
+| **注释豁免（v1.14.0）** | 敏感信息可通过注释申请豁免：**文件头前 3 行**或**行内注释**带 `dsh-skip-sensitive` 即跳过敏感扫描（自动 gitignore + 审计 secret/凭据/对话措辞/硬编码路径 IP 同认） | `// dsh-skip-sensitive` 放文件头 → 整文件豁免；`password = "x" // dsh-skip-sensitive` → 仅该行豁免 |
 
 **判定原则**：公开仓库只提交「做了什么」，示例凭据必须是**假的**（真实凭据哪怕一行也禁止）；私有备份仓库的敏感信息上传通过 `exemptRepos` 白名单放行（语法/JSON/YAML/大文件检查仍生效）；v1.14.0 起私有库可见性=private 自动豁免敏感自动 gitignore，源码文件如需入库可加 `dsh-skip-sensitive` 注释声明（或依赖只认字符串字面量的根因修复）。
 
@@ -138,12 +139,11 @@ generatedBy: grok-4.6 · 2026-09-03
 
 ```bash
 node --check lib/core.js && node --check lib/index.js  # 语法
-node test-core.mjs    # 核心 13 项（真实 git 临时仓库）
-node test-audit.mjs   # 审计规则 27 项（L0 静态，含文档措辞拦截）
-node test-apply.mjs   # apply mock 16 项（含审计门禁端到端）
-node test-viewer.mjs  # v1.24.0 查看器数据层 32 项（真实临时仓库：提交历史/diff/根提交/防注入/页面渲染）
-node test-permit.mjs  # v1.24.0 推送许可 29 项（完成检测/JSON 持久化/损坏回退）
-curl -s http://127.0.0.1:3083/api/git-push/status      # 加载验证
+node test/test-core.mjs    # 核心（真实 git 临时仓库）
+node test/test-audit.mjs   # 审计规则（L0 静态，含文档措辞 + 硬编码路径/IP + 插件自身狗粮）
+node test/test-viewer.mjs  # 查看器数据层（真实临时仓库：提交历史/diff/根提交/防注入/页面渲染）
+node test/test-permit.mjs  # 推送许可（完成检测/JSON 持久化/损坏回退）
+# test/test-apply.mjs 需 DSH 运行时依赖（@deepseek-ai/dsh-tools），工作区单独跑会缺包
 ```
 
 ## 六、坑速查
@@ -156,7 +156,8 @@ curl -s http://127.0.0.1:3083/api/git-push/status      # 加载验证
 | HTTPS remote push 失败 | 禁止 github.com HTTPS。默认 api.github.com；token 401 时回退 ssh.github.com:443 |
 | `src refspec main does not match` | 本地分支是 master，插件已自动取 `branch --show-current` |
 | 远端领先不推 | 插件 push 前 `fetch` + `rev-list`，远端领先返回 reason，需先 pull |
-| `/vol02` 只读卷 doubtful ownership | 插件每次命令带 `-c safe.directory=` |
+| CIFS 只读卷 doubtful ownership | 插件每次命令带 `-c safe.directory=` |
+| 提交被 hardcode-path / hardcode-ip 拦 | 代码里的本机绝对路径/局域网 IP 改成配置、环境变量或相对路径；文档 warning 改占位符或主机名；测试夹具可加文件头 `dsh-skip-sensitive` |
 | CIFS 上 status 全是 `mode change 100644 => 100755` | 启动时 `git config --global core.filemode false`；每次 git 带 `-c core.filemode=false`（v1.18.4） |
 | commit 被 AUDIT 拦截 | 看返回 `findings` 修掉问题重推；确认误报可 `audit:false`（不推荐）或调 blockOn |
 | LLM 审查没跑 | 检查 `llmAudit` 开关 + `llmAuditProvider/Model` 配置 + DSH llm 服务可用（.credentials.yaml 有 key）；不可用自动跳过不阻断 |

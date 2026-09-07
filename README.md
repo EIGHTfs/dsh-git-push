@@ -18,7 +18,7 @@ DSH（DeepSeek Harness）git 自动提交推送插件。把「扫描仓库 → *
 - **门禁链**：`commitWithAudit` = README 预览 → L0 静态审计（可选 L1 LLM）→ 拦截判断 → `commitAndPush`（npm 屏蔽 → 敏感字段扫描 .gitignore → add → commit → push → repo-index 更新）
 - **推送通道（v1.18.3）**：默认 **api.github.com Git Data API**（blob → tree → commit → ref）；无 token / 401 Bad credentials 时回退 **ssh.github.com:443**（User 仓 `id_ed25519`）。禁止 `git push github.com` / HTTPS
 - **可执行位（v1.18.4）**：启动写 `git config --global core.filemode false`；每次 git 带 `-c core.filemode=false`，CIFS 权限噪声不进提交
-- **审计体系**：L0 静态（语法/JSON/YAML/敏感信息/凭据/大文件/debugger/文档对话类措辞）+ L1 LLM 深度审查（可选，diff 喂便宜模型）；豁免类型 = 说明类（示例假凭据）+ 备份类（exemptRepos 白名单）
+- **审计体系**：L0 静态（语法/JSON/YAML/敏感信息/凭据/大文件/debugger/文档对话类措辞/硬编码路径与局域网 IP）+ L1 LLM 深度审查（可选，diff 喂便宜模型）；豁免类型 = 说明类（示例假凭据）+ 备份类（exemptRepos 白名单；硬编码规则不跟私有库豁免）
 - **用户门禁**：同级仓 `dsh-git-push-User/requirements.md` 开发者特殊要求，提交前逐条核对，未核对拦截（requirementsConfirmed 机制）
 - **设置页凭据（v1.20.0 / v1.23.1）**：设置 → 插件 → 插件配置 →「Git 提交推送」填 token；写入同级仓 `github-token`，secret 字段不进 settings.yaml 明文。点「检测可用」时公钥绑定先读 `/user/keys`，无权则 SSH 实测 `ssh.github.com:443`
 
@@ -46,7 +46,7 @@ DSH（DeepSeek Harness）git 自动提交推送插件。把「扫描仓库 → *
 # 插件随 DSH 主实例自动装载（cordis.patch.yml insert），无需单独启动
 curl -s http://127.0.0.1:3083/api/git-push/status   # 验证加载
 node --check lib/core.js && node --check lib/index.js  # 改代码后语法自检
-node test/test-core.mjs && node test/test-audit.mjs && node test/test-apply.mjs && node test/test-repo-index.mjs && node test/test-rules.mjs && node test/test-env-inject.mjs  # 单测
+node test/test-core.mjs && node test/test-audit.mjs && node test/test-repo-index.mjs && node test/test-rules.mjs && node test/test-env-inject.mjs  # 单测（含硬编码路径/IP；test-apply 需 DSH 运行时依赖）
 ```
 
 ## API 总览
@@ -75,6 +75,7 @@ node test/test-core.mjs && node test/test-audit.mjs && node test/test-apply.mjs 
 
 | 版本 | 内容 |
 |---|---|
+| 1.31.0 | **硬编码路径/IP 审计**：L0 新增 `hardcode-path` / `hardcode-ip`——代码与 JSON/YAML 字面量写死本机绝对路径或局域网私网 IP 为 blocker，文档为 warning；不跟私有库豁免走。同步修掉插件自身 token 探测、clone 默认 dest、skills 目录探测三处死路径，用插件仓做狗粮测试 |
 | 1.30.0 | **设置页开关即时生效修复 + 一键复制 SSH 公钥**：①修复「勾选注入全部 skill 内容（injectFullSkill）不生效」——此前设置页改动只有 token/sshPub 经 settings scope.watch 落盘，injectFullSkill / customIgnorePatterns 是插件启动时的一次性常量，勾选后 pre-step 注入仍是旧值；现 scope.watch 同步覆盖运行期变量，设置页改完**立即生效**（不用重启）；②「生成公钥」结果区新增**一键复制**按钮——navigator.clipboard 写入（secure context），失败自动兜底 textarea + execCommand('copy')，复制成功回显「已复制到剪贴板」 |
 | 1.29.0 | **设置卡增强 + 推送后远端 ref 维护**：①「SSH 邮箱 + 生成公钥」——设置卡新增邮箱输入与「生成公钥」按钮，后端 `POST /api/git-push/gen-ssh-key` 执行 `ssh-keygen -t rsa -b 4096 -C <邮箱>`（同级仓 dsh-git-push-User 生成 id_rsa/id_rsa.pub，已存在拒绝、force 时先备份，公钥回显供复制去 GitHub 绑定）；②账号状态检测块置顶 + **每次展开设置卡自动跑一遍**（无需手动点检测）；③`injectFullSkill` / `customIgnorePatterns` 改即存后**即时回显「已保存并生效」**（4 秒消失）；④推送成功后自动 `git update-ref refs/remotes/origin/<branch>` 维护本地 remote-tracking ref（Git Data API 推送不更新本地 ref，现可 `git log origin/master`）+ 自动补 `github-ssh` 辅助 remote（`ssh://git@ssh.github.com:443/<owner>/<repo>.git`，本机可 fetch/pull；幂等不覆盖用户自设） |
 | 1.28.1 | **功能说明书 + 环境注入改走系统提示词通道 + autoClean 豁免修复**：①新增 `skills/dsh-git-push-functions.md`（插件每个功能一份说明书），经 **systemPrompt.section 系统提示词通道**无条件全文注入每个会话——text 用函数动态读文件，不受「注入全部 skill 内容」设置影响（与 dsh-session-conductor 的 task-completion-report 同通道，order 990）；②**环境注入（工作目录映射 + 工具安装路径）由 agent/pre-step 迁移到 systemPrompt.section**（order 980，用户要求：注入用户环境和工具目录用系统提示词）——每步组装生效、60s 缓存防每步重新探测、缓存过期同步 tools-index.md；两仓 skill 注入（injectFullSkill 开关）与设备/用户 json 注入保持 pre-step user 消息不变；③修复 autoCleanCommentWording 不认 `dsh-skip-sensitive` 文件头豁免——测试文件把检测目标措辞当输入数据，每次 push 被自动清理导致 comment-wording 测试反复失效（v1.27.0 误删根因），现与审计检测同规则跳过豁免文件，test-audit 67 项稳定全绿 |
@@ -125,12 +126,12 @@ node test/test-core.mjs && node test/test-audit.mjs && node test/test-apply.mjs 
 - **clone（v1.17.0）**：git_clone 走 api.github.com Git Data API（git/trees + git/blobs，不跟随 tarball 302）；/tmp 中转建仓后整拷回 dest（绕开 CIFS git init EPERM）；dest 非空拒绝防覆盖；clone 后 origin 设置为 `https://api.github.com/repos/o/r`
 - **禁止直连 github.com**：REST/Git Data 的 hostname 必须是 api.github.com；token 失效时只允许 ssh.github.com:443，不打 github.com
 - **远端领先**：拒绝推送（防覆盖），需先 pull 同步
-- **CIFS 卷**：每次 git 命令带 `-c safe.directory=<cwd>`（/vol02 只读卷 doubtful ownership）；CIFS 下 `git init`/`git remote add` 写 config.lock 会 chmod EPERM——建库用 /tmp 中转复制 .git，origin 用 node 直写 config
+- **CIFS 卷**：每次 git 命令带 `-c safe.directory=<cwd>`（CIFS 只读卷 doubtful ownership）；CIFS 下 `git init`/`git remote add` 写 config.lock 会 chmod EPERM——建库用 /tmp 中转复制 .git，origin 用 node 直写 config
 - **可执行位噪声（v1.18.4）**：CIFS/trimafs 上 chmod 不持久，git 会把 100644↔100755 当成变更。插件启动时执行 `git config --global core.filemode false`；`runGit` / `gitRaw` 每次再带 `-c core.filemode=false`（HOME 只读写不了全局时仍生效）
 - **敏感扫描豁免（v1.14.0）**：①私有库——GitHub 可见性=private 自动豁免（API 探测失败/无 origin 保守不豁免）；②注释豁免——文件头前 3 行或行内注释带 `dsh-skip-sensitive` 即跳过（审计 secret/凭据文件/对话措辞 + 自动 gitignore 两处同认）；③只认字符串字面量值（表达式/拼接/变量引用不误报）
 - **测试环境门禁（v1.14.0 移除）**：原 checkTestEnvCommitGate（DSH_HOME 含 dsh-test-* 禁提交）已删除——commitAndPush/rebuildHistory 不再有测试环境拦截
 - **git_scan 自由配置（v1.15.0）**：①配置 `extraReposFile` 指向文本文件（每行一个仓库绝对路径，`#` 注释），**运行时实时读取，改文件即时生效无需重启**；②工具 `git_scan` 支持 `root`（覆盖扫描根）/ `paths`（逗号分隔临时追加仓库）；③API `/api/git-push/scan` 支持同名查询参数
-- **审计**：L1 LLM 依赖 DSH llm 服务已配置，不可用自动跳过；docs-conversation 只查文档类文件新增行；说明类示例假凭据豁免
+- **审计**：L1 LLM 依赖 DSH llm 服务已配置，不可用自动跳过；docs-conversation 只查文档类文件新增行；说明类示例假凭据豁免；硬编码路径/IP（v1.31.0）代码 blocker、文档 warning，私有库也不跳过
 - **同级仓 dsh-git-push-User（v1.18.0）**：不再放插件目录 `User/`（安装拷贝会清空）。恢复：`git_clone { target: "EIGHTfs/dsh-git-push-User", dest: "<工作区>/dsh-git-push-User" }`（与插件仓同一层级）。本机 `github-token` / SSH 私钥 git 忽略不入库
 - **API 推送限制**：Git Data API 单仓库 blob 数/请求有 GitHub 限额，超大仓库（千级文件）逐 blob 上传较慢；复用远端已有 sha 已减少重复上传
 
