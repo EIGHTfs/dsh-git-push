@@ -26,7 +26,7 @@ function run(args, cwd = tmpdir()) {
 console.log('  help / ruleset');
 {
   const r = run(['help']);
-  ok(r.code === 0 && r.out.includes('git-sluice v1.44.0'), 'help 打印且退出 0');
+  ok(r.code === 0 && r.out.includes('git-sluice v1.46.0'), 'help 打印且退出 0');
   const r2 = run(['ruleset', 'builtin']);
   ok(r2.code === 0 && r2.out.includes('eightfs v1.41.0') && r2.out.includes('"secret": 3'), 'ruleset builtin 解包计数正确');
   const r3 = run(['ruleset', 'builtin', '--json']);
