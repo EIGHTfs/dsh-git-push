@@ -1,6 +1,6 @@
 ---
 name: dsh-git-push
-description: dsh-git-push 插件（git 自动提交推送 v1.35.0，README 模板在同级仓 dsh-git-push-User/readme-template.md）的使用手册：git_scan / git_commit_push / git_clone / git_remote_create / git_rebuild_history / code_audit 工具与 /api/git-push API 的调用方法、配置（审计 blockOn/llmAudit、硬编码路径/IP、注入开关 injectFullSkill / injectRepoIndexFull、自定义忽略 customIgnorePatterns、SSH 邮箱生成公钥、属主/权限噪声忽略、提交前 README 检查）、验证与坑速查。处理"提交推送代码""扫描仓库状态""审计代码""推送前拦截 bug""敏感信息检测""硬编码路径""文档被审计拦截""生成 SSH 公钥""SSH 连不上""重建历史没推远端""仓库索引 JSON"类请求时加载；插件不可用/报错排查时必加载（正常情况优先用插件，见 plugin-priority）。上下文注入实现定位：lib/index.js 搜「上下文注入」注释块（agent/pre-step 钩子）。
+description: dsh-git-push 插件（git 自动提交推送，v1.40.0 起凭据/模板/索引全部插件自持，不再依赖同级仓）的使用手册：git_scan / git_commit_push / git_clone / git_remote_create / git_rebuild_history / code_audit 工具与 /api/git-push API 的调用方法、配置（审计 blockOn/llmAudit、硬编码路径/IP、注入开关 injectFullSkill / injectRepoIndexFull、自定义忽略 customIgnorePatterns、SSH 邮箱生成公钥、属主/权限噪声忽略、提交前 README 检查）、验证与坑速查。处理"提交推送代码""扫描仓库状态""审计代码""推送前拦截 bug""敏感信息检测""硬编码路径""文档被审计拦截""生成 SSH 公钥""SSH 连不上""重建历史没推远端""仓库索引 JSON"类请求时加载；插件不可用/报错排查时必加载（正常情况优先用插件，见 plugin-priority）。上下文注入实现定位：lib/index.js 搜「上下文注入」注释块（agent/pre-step 钩子）。
 whenToUse: 需要用插件做 git 提交推送/代码审计但不确定参数/报错排查/插件未装需手做时。
 generatedBy: grok-4.6 · 2026-09-03
 ---
@@ -23,9 +23,9 @@ generatedBy: grok-4.6 · 2026-09-03
 
 ## 二、开发者特殊要求门禁（v1.10.0）
 
-- 启动时 `agent/pre-step` 注入本仓 `skills/` 与同级仓 `dsh-git-push-User` 全部 md（每个 agent 一次；v1.28.0 起受 `injectFullSkill` 开关：勾选=注入全文，默认只列目录清单）
+- 启动时 `agent/pre-step` 注入本仓 `skills/` 与技能仓库 ai-work-archive/skills 的 git-workflow md（v1.40.0 起两源；每个 agent 一次；v1.28.0 起受 `injectFullSkill` 开关：勾选=注入全文，默认只列目录清单）
 - **功能说明书（v1.28.1 / v1.32.0 精简）**：系统提示词只注入工具目录精简版；完整 `skills/dsh-git-push-functions.md` 按需加载 skill，不再每个会话塞全文。实现定位：`lib/index.js` 搜「上下文注入」
-- **README 模板（v1.23.0）**：`git_gen_readme` 读同级仓 `dsh-git-push-User/readme-template.md`（或 `User/<用户名>/readme-template.md`）；没有才用插件内置。占位符 `{name}` `{description}` `{version}` `{toc}` `{versionTable}`（模板语法实际为双花括号包裹；本手册可能被全文注入，双花括号会触发 DSH 模板引擎报错，故以单花括号书写）
+- **README 模板（v1.23.0，v1.40.0 改源）**：`git_gen_readme` 读插件 `template/README.md`；没有才用插件内置骨架。占位符 `{name}` `{description}` `{version}` `{toc}` `{versionTable}`（模板语法实际为双花括号包裹；本手册可能被全文注入，双花括号会触发 DSH 模板引擎报错，故以单花括号书写）
 - 同级仓 `dsh-git-push-User/requirements.md` 放开发者特殊要求清单（独立私有库，不进插件目录）
 - `git_commit_push` 提交前自动读取并逐条核对：未核对（不带 `requirementsConfirmed:true`）直接拦截返回清单；AI 逐条确认达标后重新调用
 - 启动时若同级仓缺失，插件用 `git_clone`（api.github.com）拉到工作区与 `dsh-git-push` 同一层级

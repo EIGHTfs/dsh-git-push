@@ -8,7 +8,7 @@ generatedBy: grok-4.6 · 2026-09-03
 # 任务完成汇报（dsh-git-push 使用说明）
 
 > 权威源 = `dsh-git-push/skills/task-completion-report.md`（插件 skill，随插件版本管理）。
-> 同时是同级仓 `dsh-git-push-User` 的插件要求：调用 `git_commit_push` 前必须按本格式收尾（或即将收尾），✅ 即提交推送授权。
+> 同时是 dsh-git-push 插件的开发者要求：调用 `git_commit_push` 前必须按本格式收尾（或即将收尾），✅ 即提交推送授权（v1.40.0 起要求清单随插件内置 `lib/user-requirements.json`，原同级仓 requirements.md 废除）。
 > 本说明 skill 由插件作者从回复模板提取固化，作为 dsh-git-push 的使用说明与插件要求。
 
 ## 一、收尾格式（强制）
@@ -46,7 +46,7 @@ generatedBy: grok-4.6 · 2026-09-03
 
 - 输出 `✅ 任务完成` 后，**默认即获授权**对本会话改过的每个 git 仓 `git_commit_push`（commit + push），不必再问「可以提交吗」
 - 配套 `commit-push-modified-projects`：漏仓不算完成
-- 走插件工具 `git_commit_push`，不手敲 git；有 `dsh-git-push-User/requirements.md` 时逐条核对后带 `requirementsConfirmed:true`
+- 走插件工具 `git_commit_push`，不手敲 git；开发者要求清单（v1.40.0 起内置 `lib/user-requirements.json`，可外挂插件配置目录 `requirements.json`）逐条核对后带 `requirementsConfirmed:true`
 - **不在此授权内**：删远端仓库、force push、改生产配置、覆盖他人未拉取的历史、把凭据推进**公开**仓
 
 ## 四、推送后必须把远端最近 3 次发给用户
@@ -70,4 +70,4 @@ generatedBy: grok-4.6 · 2026-09-03
 ## 相关
 
 - `dsh-git-push/skills/dsh-git-push.md`：工具参数与审计
-- 同级仓 `dsh-git-push-User`：开发者要求清单 + 本机凭据（私有，不随本公开仓分发）
+- 插件配置目录 `DSH_HOME/git-push/`（v1.40.0 起，原同级仓废除）：开发者要求清单（内置）+ 本机凭据（私有，不随本公开仓分发）

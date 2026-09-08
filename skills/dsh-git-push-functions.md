@@ -38,7 +38,7 @@ generatedBy: grok-4.6 · 2026-09-07
 
 ### 4. git_gen_readme —— 按模板生成 README
 
-- **用途**：按模板生成 README；模板优先同级仓 `dsh-git-push-User/readme-template.md`，没有用内置
+- **用途**：按模板生成 README；模板 = 插件 `template/README.md`（v1.40.0 起不再读同级仓），没有用内置骨架
 - **参数**：`repo`（必填）/ `writePath`（可选，不传只返回内容不写文件）
 - **占位符**：`{name}` `{description}` `{version}` `{toc}` `{versionTable}`（模板语法实际为双花括号包裹；本说明书经 systemPrompt 注入，双花括号会被 DSH 模板引擎解析为变量引用而报错，故此处以单花括号书写，含义不变）
 
@@ -117,9 +117,9 @@ generatedBy: grok-4.6 · 2026-09-07
 
 注入内容（按顺序一条 user 消息）：
 1. **功能目录精简注入（v1.32.0，强制）**：只列工具名；完整说明书本文件按需加载（不再全文注入）
-2. **两仓 skill**（dsh-git-push/skills + dsh-git-push-User 的 .md）：`injectFullSkill=true` 注入全文，默认只列目录+文件清单
+2. **skill 注入**（v1.40.0 起 = 插件 skills/ + 技能仓库 ai-work-archive/skills 的 git-workflow .md）：`injectFullSkill=true` 注入全文，默认只列目录+文件清单
 3. **dsh-repo-index JSON**（v1.35.0）：默认只注入文件名；`injectRepoIndexFull=true` 注入正文。md 表格已废弃
-4. **环境注入**（v1.26.0）：工作目录映射 + 工具安装路径（envInjectionEnabled 可关，tools-index.md 同步同级仓）
+4. **环境注入**（v1.26.0）：工作目录映射 + 工具安装路径（envInjectionEnabled 可关，tools-index.md 同步插件配置目录，v1.40.0 起）
 5. **提交前 README 检查（v1.32.0）**：系统提示词常驻；`git_commit_push` 返回 `readmeCheck`
 
 > v1.38.0：移除「设备/用户 json 注入」（原 v1.27.0）——凭据类信息注入不属于 git-push 职责；需要设备/站点导航信息时由会话插件/模板注入另行处理。
@@ -130,7 +130,7 @@ generatedBy: grok-4.6 · 2026-09-07
 
 ## 五、repo-index 维护与忽略机制
 
-- **repo-index**：git_commit_push 推送成功后自动重生成 `dsh-git-push-User/<owner>/dsh-repo-index.json`（v1.27.0 起 JSON 权威源，md 表格已废弃）；该文件**不入库**（同级仓 .gitignore 忽略，v1.28.0）。会话注入由 `injectRepoIndexFull` 开关控制（默认文件名，勾选正文）
+- **repo-index**：git_commit_push 推送成功后自动重生成插件配置目录 `git-push/dsh-repo-index.json`（v1.27.0 起 JSON 权威源，md 表格已废弃；v1.40.0 起原同级仓 `<owner>/` 路径废除）；该文件**不入库**（插件配置目录整体不入 git）。会话注入由 `injectRepoIndexFull` 开关控制（默认文件名，勾选正文）
 - **npm 屏蔽（ensureNpmIgnored）**：node_modules/ + lock 文件自动写 .gitignore（幂等）
 - **敏感字段忽略（ensureSensitiveIgnored）**：扫 cookie/device/username/password/token，命中文件自动 .gitignore + git rm --cached 解除跟踪（私有库豁免：private 仓库只报告不写）
 - **自定义忽略（ensureCustomIgnored，v1.28.0）**：设置里 customIgnorePatterns 的模式自动写目标仓库 .gitignore，已跟踪文件解除跟踪

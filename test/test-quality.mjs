@@ -5,7 +5,7 @@
  *   hasTestFiles（测试覆盖）/ scoreQuality（评分与等级）/ loadQualityYaml / locateQualityYaml
  * 零依赖 node:test 风格（自实现 ok 计数，仿 test-core.mjs）。
  */
-import { checkFunctionLength, checkSilentCatch, checkSyncInAsync, hasTestFiles, scoreQuality, loadQualityYaml, locateQualityYaml } from '../lib/quality.js';
+import { checkFunctionLength, checkSilentCatch, checkSyncInAsync, hasTestFiles, scoreQuality, scoreFile, loadQualityYaml, locateQualityYaml } from '../lib/quality.js';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -155,6 +155,28 @@ console.log('  auditRepo 集成');
   } finally {
     fs.rmSync(tmp, { recursive: true, force: true });
   }
+}
+
+console.log('  文件级评分（scoreFile）');
+{
+  const r = scoreFile('a\n'.repeat(100));
+  ok(r.score === 100 && r.grade === 'A' && r.deductions.length === 0 && r.lines === 101, `基准内满分 A 级（score=${r.score} lines=${r.lines}）`);
+}
+{
+  const r = scoreFile('\n'.repeat(300)); // 301 行 → (301-200)*0.05=5.05 → 保留 95
+  ok(r.score === 95 && r.deductions.length === 1 && r.deductions[0].includes('行数 301 行（基准200行）'), `行数超基准扣分（score=${r.score}）`);
+}
+{
+  const r = scoreFile('x'.repeat(60 * 1024)); // ~60KB → 30*0.2=6 → 94
+  ok(r.score === 94 && r.deductions[0].includes('60.0KB（基准30KB）'), `容量超基准扣分（score=${r.score}）`);
+}
+{
+  const r = scoreFile('x'.repeat(500 * 1024) + '\n'.repeat(1000)); // 扣满 40+30
+  ok(r.score === 30 && r.deductions.length === 2 && r.grade === 'D', `扣分上限截断 D 级（score=${r.score}）`);
+}
+{
+  const r = scoreFile('\n'.repeat(300), { fileLinesBase: 500, fileKbBase: 100 });
+  ok(r.score === 100 && r.grade === 'A', '阈值可覆盖（基准 500 行/100KB → 满分）');
 }
 
 console.log(`\n结果: ${pass} 通过 / ${fail} 失败`);
