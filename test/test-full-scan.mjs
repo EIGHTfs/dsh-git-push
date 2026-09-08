@@ -1,8 +1,10 @@
 /**
+ * dsh-skip-sensitive：本文件含 comment-wording/full-scan 检测目标措辞（作为测试输入数据），
  * dsh-git-push — fullScan 附属能力单测（v1.43.0）
  * 覆盖：注释提取（行锚定）/ 评分（黑加白减 + 次级信号）/ 规则包 fullScan 段编译降级 /
  *       全仓扫描（表格/排序/只读）/ 提交门禁集成（新增行注释 → warning 不拦截）
  * 运行：node test/test-full-scan.mjs
+ * 豁免提交前 autoClean 自动清理——v1.45.0 两次实锤（夹具被静默篡改致 3+4 项测试挂）后固化。
  */
 
 import assert from 'node:assert';
@@ -29,7 +31,7 @@ console.log('  注释提取（extractComments，行锚定）');
   ok(cs.length === 1 && cs[0].text.includes('用户指示'), `URL 字符串不算注释，行首 // 才算（got ${cs.length} 条）`);
 }
 {
-  const code = `/*\n * "提交前要审计"\n */\nconst x = 1;\n`;
+  const code = `/*\n * 用户原话："提交前要审计"\n */\nconst x = 1;\n`;
   const cs = extractComments(code, 'js');
   ok(cs.length === 1 && cs.some((c) => c.text.includes('用户原话')), '块注释跨行提取：只出内容行（开口/收尾行不产出）');
   ok(!cs.some((c) => c.text.includes('/*') || c.text.includes('*/')), '块标记本身不进文本');
@@ -85,7 +87,7 @@ console.log('  全仓扫描（fullScanRepo：表格/排序/只读）');
   const before = new Map();
   try {
     writeFileSync(join(d, 'a.js'), '// 用户指示：必须先跑测试再提交\nconst x = 1;\n// 普通注释说明用途\nconst y = 2;\n');
-    writeFileSync(join(d, 'b.py'), '# 这里要加缓存\nz = 3\n');
+    writeFileSync(join(d, 'b.py'), '# 用户说这里要加缓存\nz = 3\n');
     mkdirSync(join(d, 'node_modules'));
     writeFileSync(join(d, 'node_modules', 'c.js'), '// 用户指示：不该被扫到\n');
     before.set('a.js', readFileSync(join(d, 'a.js'), 'utf8'));

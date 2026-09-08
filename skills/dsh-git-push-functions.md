@@ -99,7 +99,10 @@ generatedBy: grok-4.6 · 2026-09-07
 
 ---
 
-## 三、设置页（设置 → 插件 → 插件配置 →「Git 提交推送」）
+## 三、设置页（两处入口，同一份状态）
+
+- **设置 → 侧边栏 →「Git 提交推送」**（v1.46.0 新增，`settings.section` 槽）：侧边栏独立页，页面内容即下方配置卡；此前插件只挂 `settings.plugin.item`（插件配置卡片位），侧边栏从来没有本插件入口（对照 dsh-skill-scoreboard 挂 `settings.section` 才有侧边栏页）。两处共用同一 `GitPushCardController` / store，任一处改动另一处同步
+- **设置 → 插件 → 插件配置 →「Git 提交推送」**（v1.1.0 起，`settings.plugin.item` 槽）：原插件配置卡片，保留不覆盖（F5）
 
 | 控件 | 配置键 | 说明 |
 |---|---|---|
