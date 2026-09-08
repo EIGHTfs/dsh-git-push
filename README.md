@@ -31,7 +31,7 @@ DSH（DeepSeek Harness）git 自动提交推送插件。把「扫描仓库 → *
 | `lib/git-core.js` | git 基础执行（v1.42.0 拆分）：runGit / gitRaw / 全局配置（filemode false / safe.directory=*） |
 | `lib/github-api.js` | GitHub API 访问（v1.42.0 拆分）：token 解析 / pushViaApi / 可见性 / 账号检查 / SSH 密钥 |
 | `lib/repo-scan.js` | 仓库扫描（v1.42.0 拆分）：scanRepos / readExtraReposFile / 变更统计 |
-| `lib/ignore-scan.js` | 敏感文件与 .gitignore 维护（v1.42.0 拆分）：scanSensitiveFiles / ensureSensitiveIgnored / 措辞清理数据 |
+| `lib/ignore-scan.js` | 敏感文件与 .gitignore 维护（v1.42.0 拆分）：scanSensitiveFiles / ensureSensitiveIgnored |
 | `lib/commit-push.js` | 提交推送编排（v1.42.0 拆分）：commitAndPush 步骤拆分（预检 / 忽略 / add+commit / push / remote heads） |
 | `lib/token-credentials.js` | 凭据持久化（v1.42.0 拆分）：credentialsDir / token 与 SSH 公钥落盘 / requirements 清单 |
 | `lib/workspace-context.js` | 环境注入（v1.42.0 拆分）：工作目录映射 / 工具安装路径 / tools-index 同步 |
@@ -44,7 +44,7 @@ DSH（DeepSeek Harness）git 自动提交推送插件。把「扫描仓库 → *
 | `lib/plugin-setup.js` | 插件初始化（v1.42.0 拆分）：resolvePluginEnv（配置规范化/规则包装载/comment-wording 解析）+ 设置页注册 |
 | `lib/plugin-context-inject.js` | 上下文注入（v1.42.0 拆分）：systemPrompt 三段（功能目录/README 检查/环境注入）+ agent/pre-step（skill/repo-index） |
 | `lib/repo-index-sync.js` | dsh-repo-index 自动维护（v1.42.0 拆分）：推送成功后重建索引 JSON |
-| `lib/plugin-audit.js` | 审计服务（v1.42.0 拆分）：auditRepoPath（可见性定拦截力度）/ autoCleanCommentWording / isUserRepoPath |
+| `lib/plugin-audit.js` | 审计服务（v1.42.0 拆分）：auditRepoPath（可见性定拦截力度）/ fullScan 全仓扫描（v1.43.0）/ isUserRepoPath |
 | `lib/plugin-commit-flow.js` | 提交流程（v1.42.0 拆分）：previewReadme + commitWithAudit（审计门禁编排） |
 | `lib/plugin-push-permit.js` | 推送许可（v1.42.0 拆分）：turn/end 防抖检测 → 自动 commit+push（带审计） |
 | `lib/plugin-http.js` | HTTP API（v1.42.0 拆分）：/git-push/viewer + /api/git-push/* 路由 |
@@ -74,6 +74,23 @@ node --check lib/core.js && node --check lib/index.js  # 改代码后语法自�
 node test/test-core.mjs && node test/test-audit.mjs && node test/test-repo-index.mjs && node test/test-rules.mjs && node test/test-env-inject.mjs  # 单测（含硬编码路径/IP；test-apply 需 DSH 运行时依赖）
 ```
 
+## 独立 CLI（脱离 DSH 运行）
+
+v1.44.0 起引擎层（core/audit/rule-packs/full-scan/quality/repo-index 纯函数模块）可脱离 DSH 直接使用：
+
+```bash
+node cli.mjs audit /path/to/repo              # L0 静态审计（blocker 拦截退出码 2）
+node cli.mjs full-scan /path/to/repo          # 全仓 AI 对话残留注释扫描（只读表格报告）
+node cli.mjs commit /path/to/repo -m "msg"    # 审计门禁 → 提交（默认不 push；--push 推远端；--req-confirm 过门禁）
+node cli.mjs scan /path/to/root               # 扫描目录下 git 仓库与变更
+node cli.mjs ruleset builtin                  # 规则包自检（校验+编译+规则计数；作者工具）
+```
+
+- 通用选项：`--json`（原始 JSON）/ `--ruleset <builtin|本地路径|http(s)://>`（临时换包）/ `--fail-on-warn`（full-scan 有⚠时退出 3，CI 用）
+- 退出码：0 成功 / 1 用法错误 / 2 拦截或失败 / 3 full-scan 警告
+- 零第三方依赖（Node ≥18）；L1 LLM 深度审查、设置页、HTTP API、推送许可是 DSH 接线层专属，CLI 不含
+- 发布为 npm 包后可 `npx git-sluice full-scan <repo>`（bin 字段已配）
+
 ## API 总览
 
 | 接口 | 方法 | 说明 |
@@ -100,6 +117,8 @@ node test/test-core.mjs && node test/test-audit.mjs && node test/test-repo-index
 
 | 版本 | 内容 |
 |---|---|
+| **1.45.0**（当前） | **autoClean 废除（只警告不删改）+ full-scan 收尾行修复**：①废除提交前自动清理措辞（autoCleanCommentWording/cleanCommentWording 连同 WORDING_REWRITES 全链移除）——v1.28.1/1.27.0 两次事故复证实害（本次批次4 test-full-scan 夹具再被静默篡改），确立「只警告、不删改」总原则：提交审计扫**提交新增行**、fullScan 扫**全仓**，两通道皆只出警告报告；②措辞 finding message 去「提交时自动清理」过期承诺（改为手动改成中性描述）；③修复 full-scan 块注释收尾行（`*/` 纯闭合行）产出垃圾文本；④test-audit 清理函数 11 用例移除改审计语义断言（76/0），test-full-scan 夹具恢复 + 收尾回归（27/0） |
+| **1.44.0**（当前） | **独立 CLI（脱离 DSH 运行）+ 更名候选 git-sluice**：新增 `cli.mjs` 零依赖 CLI（`audit` / `full-scan` / `commit` / `scan` / `ruleset` 五命令 + `--json`/`--ruleset`/`--push`/`--req-confirm`/`--fail-on-warn`，退出码 0/1/2/3），只 import 纯引擎模块（core/audit/rule-packs/full-scan/quality/repo-index）不 import lib/index.js 接线层——无 DSH 环境可完整跑静态审计/全仓扫描/门禁提交（L1 LLM 与设置页/HTTP/推送许可仍为 DSH 专属）；package.json 增加 `bin: git-sluice`；L1 LLM 无需改造（llm.js 本就只被接线层引用）；test-cli 8 断言（help/ruleset 解包计数/full-scan 表格/门禁拒绝与放行/真实落库） |
 | **1.43.0**（当前） | **全仓 AI 对话残留注释扫描（附属能力，D5）**：①**分数制**——规则包 `fullScan` 段黑名单关键词加分（用户指示/原话/客户要求/request 等）、白名单保护词减分（ID/密码/token 等技术词），总分 ≥ `threshold`（默认 60）标⚠警告，规则包没配该段用内置缺省；②**只读不删码**——门禁侧同样只产出 `full-scan` warning 提示、不拦截不删码；③输出按分数降序的 markdown 表格，列出全部命中位置（文件:行号/分数/黑名单命中/白名单减分/文本）；④行锚定注释提取（只认行首 `//`/`#`/块注释/`<!--`，修复字符串 URL 误报），次级信号只认中文引号、版本号与日期不误报；⑤接入：新工具 `audit_full_scan`（repo+ruleset）+ `GET /api/git-push/full-scan?repo=&ruleset=` + 提交审计新增行注释评分 |
 | **1.42.0** | **D1 函数拆分 + 文件级模块化（行为零变化）**：①index.js 巨型 apply（1183 行）按功能拆 9 个模块（plugin-config/plugin-setup/plugin-context-inject/repo-index-sync/plugin-audit/plugin-commit-flow/plugin-push-permit/plugin-http/plugin-tools），index.js 只留调度器，副作用注册顺序与拆分前一致；②core.js 2511 行拆 11 个功能模块 + 门面（导出面与拆分前完全一致）；③rebuildHistory/ensureRemoteRepo/cloneViaApi/buildRepoIndex/genReadme 等超长函数全部拆步骤函数，check-fnlen 全库清零（viewer.js 例外待后续重写）；④修复 v1.41.0 引入的 `log` TDZ 雷（apply 启动必崩，`const log` 提前到审计规则块之前）；⑤rebuildHistory squash/drop 分支提交补身份兜底（`-c user.name/user.email`，对齐 fresh 分支） |
 | **1.41.0** | **审计规则插件化（规则包）**：①规则数据全部外置 `lib/audit-rules/eightfs.rules.json`（归属 EIGHTfs，支持 `//` 注释；secret×3/credential-file×2/credential-ref×2/comment-wording×9/doc-conversation×5/质量阈值 50-100），代码零硬编码规则；②新模块 `lib/rule-packs.js`：装载（builtin/file/url 三来源，url 8s 超时 2MB 上限）/校验（id 唯一/kind/level/正则可编译）/编译（非法 pattern 降级记 errors）；③`config.auditRuleset` 整体切换第三方规则包，`code_audit` 工具与 `/audit?ruleset=` 按调用临时换包，启动 url 包异步热替换；④json 注释行豁免（用户确立：豁免仅限隐私入库类——secret/credential-file/credential-ref；措辞/对话/质量不豁免），JSONC 文件解析容忍 `//` 注释；⑤审计结果带 `ruleset` 溯源（name/owner/version/source/counts/loadErrors）；⑥quality 评分如实标注口径（measured 5 维 vs fixedValue 5 维） |

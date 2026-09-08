@@ -31,8 +31,9 @@ console.log('  注释提取（extractComments，行锚定）');
 {
   const code = `/*\n * "提交前要审计"\n */\nconst x = 1;\n`;
   const cs = extractComments(code, 'js');
-  ok(cs.length === 2 && cs.some((c) => c.text.includes('用户原话')), '块注释跨行提取（含 * 续行）');
+  ok(cs.length === 1 && cs.some((c) => c.text.includes('用户原话')), '块注释跨行提取：只出内容行（开口/收尾行不产出）');
   ok(!cs.some((c) => c.text.includes('/*') || c.text.includes('*/')), '块标记本身不进文本');
+  ok(!cs.some((c) => /^[*/]+$/.test(c.text)), '收尾行只闭合不产出垃圾（v1.45.0 回归）');
 }
 {
   const py = '# 这是关键逻辑\nx = 1\n';
