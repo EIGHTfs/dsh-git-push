@@ -24,7 +24,9 @@ function audit(files, opts = {}) {
     mkdirSync(dir, { recursive: true });
     writeFileSync(join(repo, f.path), f.content);
   }
-  return auditRepo(repo, { ...opts, files: files.map((f) => ({ path: f.path, addedLines: f.addedLines ?? f.content.split('\n'), isBinary: false })) });
+  // quality 默认关：本文件专注静态规则（语法/secret/凭据/措辞/硬编码）；
+  // 质量维度（func-lines/silent-catch/sync-in-async/no-tests/评分）由 test-quality.mjs 单独覆盖。
+  return auditRepo(repo, { ...opts, quality: opts.quality ?? { enabled: false }, files: files.map((f) => ({ path: f.path, addedLines: f.addedLines ?? f.content.split('\n'), isBinary: false })) });
 }
 
 try {
