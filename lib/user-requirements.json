@@ -1,0 +1,13 @@
+{
+  "user": "EIGHTfs",
+  "description": "EIGHTfs 开发者特殊要求（AI 调用 git_commit_push / git_remote_create 前必须逐条核对达标，全部达标才执行）",
+  "items": [
+    "提交信息写清做了什么：commit message 必须描述本次实际变更内容（做了什么），禁止空泛词（如 update、fix、改了点东西）；格式建议 feat:/fix:/docs:/chore: 前缀 + 具体说明",
+    "大文件/产物不入库：node_modules、lock 文件、构建产物、下载的图片/视频等不入库；如已入库需先清理（.gitignore + 必要时 git rm --cached）",
+    "敏感信息不入库：token/密钥/密码/凭据文件不入公开仓库；如涉及需先移出或豁免确认",
+    "删除需可恢复：删除文件/目录前先确认有 git 历史或备份（禁 rm -rf 无痕删除），大删除先 commit 检查点",
+    "文档对话类措辞：公开仓库文档只写做了什么，不含会话引用/决策来源/AI 许可表述/商量转述等沟通措辞（见 release-docs-rule）",
+    "dryRun 先行：批量/破坏性操作（重建历史、删除、迁移）先 dryRun 预演，确认无误再执行",
+    "版本号同步：功能变更时同步更新 package.json version 与 README 版本记录表"
+  ]
+}

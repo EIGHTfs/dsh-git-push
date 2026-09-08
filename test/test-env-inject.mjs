@@ -79,16 +79,18 @@ test('formatToolsEnvInjection：命中/缺失分组', () => {
   assert.ok(t.includes('nonexist'));
 });
 
-test('ensureToolsIndexFile：写盘可读回、表格含工具行', () => {
+test('ensureToolsIndexFile：写盘可读回、表格含工具行（v1.40.0：userDir 别名隔离，不触碰真实配置目录）', () => {
   const root = mkdtempSync(join(tmpdir(), 'gptools-'));
+  const cfgDir = join(root, 'git-push');
   const r = ensureToolsIndexFile({
-    workspaceRoot: root,
+    userDir: cfgDir,
     tools: [
       { name: 'python3', path: '/usr/bin/python3', version: 'Python 3.11', found: true },
       { name: 'missing', path: '', version: '', found: false },
     ],
   });
   assert.equal(r.ok, true);
+  assert.ok(r.file === join(cfgDir, 'tools-index.md'), `file=${r.file}`);
   const content = readFileSync(r.file, 'utf8');
   assert.ok(content.includes('# 工具安装路径索引'));
   assert.ok(content.includes('| python3 |'));
