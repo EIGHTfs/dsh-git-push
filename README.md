@@ -18,7 +18,7 @@ DSH（DeepSeek Harness）git 自动提交推送插件。把「扫描仓库 → *
 - **门禁链**：`commitWithAudit` = README 预览 → L0 静态审计（可选 L1 LLM）→ 拦截判断 → `commitAndPush`（npm 屏蔽 → 敏感字段扫描 .gitignore → add → commit → push → repo-index 更新）
 - **推送通道（v1.18.3）**：默认 **api.github.com Git Data API**（blob → tree → commit → ref）；无 token / 401 Bad credentials 时回退 **ssh.github.com:443**（User 仓 `id_ed25519`）。禁止 `git push github.com` / HTTPS
 - **可执行位 / 属主（v1.18.4 / v1.32.0）**：启动写 `git config --global core.filemode false` 与 `safe.directory=*`；每次 git 带 `-c core.filemode=false -c safe.directory=*`，CIFS 权限与属主噪声不进提交
-- **审计体系**：L0 静态（语法/JSON/YAML/敏感信息/凭据/大文件/debugger/文档对话类措辞/硬编码路径与局域网 IP）+ L1 LLM 深度审查（可选，diff 喂便宜模型）；豁免类型 = 说明类（示例假凭据）+ 备份类（exemptRepos 白名单；硬编码规则不跟私有库豁免）
+- **审计体系**：L0 静态（语法/JSON/YAML/敏感信息/凭据/大文件/debugger/文档对话类措辞/硬编码路径与局域网 IP）+ **代码质量维度（v1.39.0，依据 `docs/code-quality-checklist.yaml`：函数行数/静默catch/async同步阻塞/测试覆盖）+ 0-100 评分与 A-D 等级**（`quality` 字段）+ L1 LLM 深度审查（可选，diff 喂便宜模型）；豁免类型 = 说明类（示例假凭据）+ 备份类（exemptRepos 白名单；硬编码规则不跟私有库豁免）
 - **用户门禁**：同级仓 `dsh-git-push-User/requirements.md` 开发者特殊要求，提交前逐条核对，未核对拦截（requirementsConfirmed 机制）
 - **设置页凭据（v1.20.0 / v1.23.1）**：设置 → 插件 → 插件配置 →「Git 提交推送」填 token；写入同级仓 `github-token`，secret 字段不进 settings.yaml 明文。点「检测可用」时公钥绑定先读 `/user/keys`，无权则 SSH 实测 `ssh.github.com:443`
 
@@ -75,6 +75,7 @@ node test/test-core.mjs && node test/test-audit.mjs && node test/test-repo-index
 
 | 版本 | 内容 |
 |---|---|
+| **1.39.0** | **代码审计按 code-quality-checklist.yaml 增强质量维度**：新增 `lib/quality.js` 纯函数模块——①可读性：单函数 >50 行 warning / >100 行 blocker（func-lines）；②健壮性：空 catch 静默吞错（silent-catch）；③性能：async 路径 fs.*Sync 同步阻塞（sync-in-async）；④测试覆盖：源码变更但仓库无测试 → no-tests warning；⑤**0-100 评分 + A/B/C/D 等级**（按 yaml `dimensions_weight` 加权，`quality` 字段返回 score/level/dimensions/hasTests）。auditRepo 默认开启，`quality:false` 可关；auditFile 对 .js 变更文件逐文件检查，评分带 yaml 权重与等级描述。test-quality 39 项 + 全量回归绿（test-audit 保持 90 项，helper 默认关 quality 专注静态规则） |
 | **1.38.0** | **移除设备/用户 json 上下文注入（原 v1.27.0 功能）**：凭据类信息注入不属于 git-push 插件的职责——git-push 只负责提交推送；删除 `buildDeviceUserInjection`（含 maskIp/maskName/maskEmail/maskCredentialFields 与 `agent/pre-step` 里的「本机设备/用户信息」注入块）。设备/站点导航信息如需注入，改由会话插件（dsh-session-conductor）模板注入或用户自行配置，git-push 不再内置。测试同步清理，全量回归通过 |
 | **1.37.0** | **审计按远端可见性定拦截力度**：提交前审计先探测 GitHub 远端可见性（`detectRepoVisibility`，token 真校验）——**private 仓 blocker 全部降级为仅警告（blockOn=none，不拦截）**，敏感规则（secret/凭据/对话措辞）仍豁免；**public 仓保持原 blockOn 拦截**（敏感规则照常阻断）；**user 仓（`dsh-git-push-User` 或 `-User` 结尾）特殊照顾**：探测到 public 时自动 `setRepoVisibility` PATCH 改回 private 再继续（自动私有化），避免凭据仓意外公开。审计结果新增 `visibility` / `visibilityRisk` / `userRepoAutoFixed` 字段。探测失败（无 origin/无 token/API 失败）保守按 public 处理照常拦截 |
 | **1.36.3** | **User 仓内置模板自动创建**：`dsh-git-push-User` 不存在（首次使用 / 无 token / 远端未建）时插件自动用内置模板建仓——README（用途说明 + 凭据位置表）+ 通用 .gitignore（token/ssh 私钥/clone 元数据/索引不入库）+ `<owner>/` 作者文件夹（owner 变量三级解析：origin → 目录名 → 兜底，不写死路径）+ git init 初始 commit；`<owner>/github-token`、`id_rsa` 等凭据合法位置确认（resolveGitToken/resolveUserSshKey/persist 已按作者文件夹读取）；模板 .gitignore 同时修复往已删目录重建残留的问题 |
