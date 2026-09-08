@@ -18,7 +18,8 @@ DSH（DeepSeek Harness）git 自动提交推送插件。把「扫描仓库 → *
 - **门禁链**：`commitWithAudit` = README 预览 → L0 静态审计（可选 L1 LLM）→ 拦截判断 → `commitAndPush`（npm 屏蔽 → 敏感字段扫描 .gitignore → add → commit → push → repo-index 更新）
 - **推送通道（v1.18.3）**：默认 **api.github.com Git Data API**（blob → tree → commit → ref）；无 token / 401 Bad credentials 时回退 **ssh.github.com:443**（插件配置目录 `git-push/` 下 SSH 私钥）。禁止 `git push github.com` / HTTPS
 - **可执行位 / 属主（v1.18.4 / v1.32.0）**：启动写 `git config --global core.filemode false` 与 `safe.directory=*`；每次 git 带 `-c core.filemode=false -c safe.directory=*`，CIFS 权限与属主噪声不进提交
-- **审计体系**：L0 静态（语法/JSON/YAML/敏感信息/凭据/大文件/debugger/文档对话类措辞/硬编码路径与局域网 IP）+ **代码质量维度（v1.39.0，依据 `docs/code-quality-checklist.yaml`：函数行数/静默catch/async同步阻塞/测试覆盖）+ 0-100 评分与 A-D 等级**（`quality` 字段）+ L1 LLM 深度审查（可选，diff 喂便宜模型）；豁免类型 = 说明类（示例假凭据）+ 备份类（exemptRepos 白名单；硬编码规则不跟私有库豁免）
+- **审计体系**：L0 静态（语法/JSON/YAML/敏感信息/凭据/大文件/debugger/文档对话类措辞/硬编码路径与局域网 IP）+ **代码质量维度（v1.39.0，依据 `docs/code-quality-checklist.yaml`：函数行数/静默catch/async同步阻塞/测试覆盖）+ 0-100 评分与 A-D 等级**（`quality` 字段，v1.41.0 起如实标注评分口径）+ L1 LLM 深度审查（可选，diff 喂便宜模型）；豁免类型 = 说明类（示例假凭据）+ 备份类（exemptRepos 白名单；硬编码规则不跟私有库豁免）+ json 注释行豁免（v1.41.0：`.json` 内 `//` 注释行豁免**隐私入库类**规则——secret/credential；措辞/对话/质量不豁免）
+- **规则包化（v1.41.0）**：审计规则数据全部外置为规则包 JSON（缺省 `lib/audit-rules/eightfs.rules.json`，归属 EIGHTfs；支持 `//` 注释），代码只保留引擎逻辑（`lib/rule-packs.js` 装载/校验/编译）。`config.auditRuleset` 可整体切换第三方规则包：`''/'builtin'/'eightfs'`=内置包、本地绝对路径=file、`http(s)://`=在线包（8s 超时/2MB 上限，启动后热替换）；`code_audit` 工具与 `/api/git-push/audit?ruleset=` 支持按调用临时换包；审计结果带 `ruleset` 溯源（name/owner/version/source）
 - **用户门禁（v1.40.0 随插件内置）**：开发者特殊要求清单内置为 `lib/user-requirements.json`（归属 EIGHTfs），提交前逐条核对，未核对拦截（requirementsConfirmed 机制）；可放 `<插件配置目录>/requirements.json` 外挂他人清单
 - **设置页凭据（v1.20.0 / v1.40.0）**：设置 → 插件 → 插件配置 →「Git 提交推送」填 token；写入插件配置目录 `git-push/github-token`（0600），secret 字段不进 settings.yaml 明文。点「检测可用」时公钥绑定先读 `/user/keys`，无权则 SSH 实测 `ssh.github.com:443`
 
@@ -32,14 +33,16 @@ DSH（DeepSeek Harness）git 自动提交推送插件。把「扫描仓库 → *
 | `lib/viewer.js` | 提交历史查看器（v1.24.0 整合 git-commits-viewer）：只读数据层 getCommitHistory / getCommitDiff + 页面渲染 renderViewerPage（零外部资源，多语言 + 手动选择本地仓库） |
 | `lib/viewer-locales.js` | 查看器多语言配置文件（v1.25.0）：zh/en 字典 + 默认中文；新增语言 = 加一个键集合一致的语言对象 |
 | `lib/permit.js` | AI 回复推送许可（v1.24.0 整合 dsh-task-completion）：完成标记检测纯函数 + JSON 文件状态持久化（`.dsh/git-push-permit.json`） |
-| `lib/audit.js` | 审计规则实现 |
+| `lib/audit.js` | 审计引擎（v1.41.0 规则包化）：消费规则包编译产物跑 L0 静态检查；引擎保留结构型检查（语法/JSON/YAML/二进制/npm/debugger/TODO/console/硬编码正则），规则数据零硬编码 |
+| `lib/rule-packs.js` | 规则包装载器（v1.41.0）：stripJsonComments / validateRulePack / loadRulePack（builtin/file/url 三来源）/ compileRulePack；非法 pattern 降级记 errors 不崩溃 |
+| `lib/audit-rules/eightfs.rules.json` | 内置审计规则包（归属 EIGHTfs，v1.41.0）：secret ×3 / credential-file ×2 / credential-ref ×2 / comment-wording ×9 / doc-conversation ×5 / 质量阈值 50-100；支持 `//` 注释，可整体替换为第三方包 |
 | `lib/repo-index.js` | dsh-repo-index 索引生成/同步 |
 | `lib/llm.js` | L1 LLM 深度审查调用 |
 | `skills/dsh-git-push.md` | 插件使用手册 skill（推送到会话内可按需加载） |
 | `skills/git-workflow-gitpush/` | git 工作流 skill（v1.40.0 自同级仓迁入：提交检查点/重建历史/API-only 等 16 个 .md + README） |
 | 插件配置目录 `DSH_HOME/git-push/` | 本机私有数据（v1.40.0 自同级仓收敛）：github-token / SSH 密钥（0600）/ dsh-repo-index.json / tools-index.md / 可选 requirements.json 覆盖清单；不入 git |
 | `docs/` | 架构图、开发文档、工作进度看板等 |
-| `test/test-*.mjs` | 单测（core / audit / apply / repo-index / viewer / permit / rules / env-inject），node:test 零依赖 |
+| `test/test-*.mjs` | 单测（core / audit / rule-packs / apply / repo-index / viewer / permit / rules / env-inject / quality），node:test 零依赖 |
 
 ## 启动脚本
 
@@ -70,12 +73,13 @@ node test/test-core.mjs && node test/test-audit.mjs && node test/test-repo-index
 
 **agent 工具**：`git_scan` / `git_commit_push`（含 requirementsConfirmed 参数）/ `code_audit` / `git_gen_readme` / `git_rebuild_history` / `git_remote_create` / `git_set_visibility` / `git_clone` / `push_permit_status` / `push_permit_config`（前 8 个详见 dsh-git-push skill 手册）
 
-**配置键**（cordis.patch.yml insert config）：`workspaceRoot` / `extraRepos` / `depth` / `githubOwner`（v1.40.0：默认 GitHub owner，兜底 EIGHTfs）/ `auditEnabled` / `blockOn` / `llmAudit` / `llmAuditProvider` / `llmAuditModel` / `maxDiffBytes` / `repoIndexEnabled` / `repoIndexTokenPath` / `repoIndexSyncTarget` / `repoIndexLocalOnly` / `exemptRepos` / `pushScope` / `commentWordingEnabled` / `commentWordingCustom` / `commentWordingRulesFile` / `commentWordingRulesUrl` / `envInjectionEnabled` / `envInjectionTools` / `injectFullSkill`（v1.28.0：pre-step 注入 skill 全文，默认 false 只列目录清单；v1.40.0 起来源 = 插件 skills/ + 技能仓库 git-workflow）/ `injectRepoIndexFull`（v1.35.0：注入 dsh-repo-index.json 正文，默认 false 只注入文件名）/ `customIgnorePatterns`（v1.28.0：自定义忽略 pattern 逗号/换行分隔，提交时自动写 .gitignore）/ `commitMessage`（自动推送提交信息，默认 `chore(ai): 任务完成自动提交`）。注：功能说明书经 systemPrompt 只注入**精简目录**（v1.32.0）；完整 `skills/dsh-git-push-functions.md` 按需加载。环境注入仍走系统提示词通道。
+**配置键**（cordis.patch.yml insert config）：`workspaceRoot` / `extraRepos` / `depth` / `githubOwner`（v1.40.0：默认 GitHub owner，兜底 EIGHTfs）/ `auditEnabled` / `blockOn` / `auditRuleset`（v1.41.0：审计规则包来源——`''/'builtin'/'eightfs'`=内置 EIGHTfs 包、本地绝对路径=file、`http(s)://`=在线包）/ `llmAudit` / `llmAuditProvider` / `llmAuditModel` / `maxDiffBytes` / `repoIndexEnabled` / `repoIndexTokenPath` / `repoIndexSyncTarget` / `repoIndexLocalOnly` / `exemptRepos` / `pushScope` / `commentWordingEnabled` / `commentWordingCustom` / `commentWordingRulesFile` / `commentWordingRulesUrl` / `envInjectionEnabled` / `envInjectionTools` / `injectFullSkill`（v1.28.0：pre-step 注入 skill 全文，默认 false 只列目录清单；v1.40.0 起来源 = 插件 skills/ + 技能仓库 git-workflow）/ `injectRepoIndexFull`（v1.35.0：注入 dsh-repo-index.json 正文，默认 false 只注入文件名）/ `customIgnorePatterns`（v1.28.0：自定义忽略 pattern 逗号/换行分隔，提交时自动写 .gitignore）/ `commitMessage`（自动推送提交信息，默认 `chore(ai): 任务完成自动提交`）。注：功能说明书经 systemPrompt 只注入**精简目录**（v1.32.0）；完整 `skills/dsh-git-push-functions.md` 按需加载。环境注入仍走系统提示词通道。
 
 ## 版本列表
 
 | 版本 | 内容 |
 |---|---|
+| **1.41.0** | **审计规则插件化（规则包）**：①规则数据全部外置 `lib/audit-rules/eightfs.rules.json`（归属 EIGHTfs，支持 `//` 注释；secret×3/credential-file×2/credential-ref×2/comment-wording×9/doc-conversation×5/质量阈值 50-100），代码零硬编码规则；②新模块 `lib/rule-packs.js`：装载（builtin/file/url 三来源，url 8s 超时 2MB 上限）/校验（id 唯一/kind/level/正则可编译）/编译（非法 pattern 降级记 errors）；③`config.auditRuleset` 整体切换第三方规则包，`code_audit` 工具与 `/audit?ruleset=` 按调用临时换包，启动 url 包异步热替换；④json 注释行豁免（用户确立：豁免仅限隐私入库类——secret/credential-file/credential-ref；措辞/对话/质量不豁免），JSONC 文件解析容忍 `//` 注释；⑤审计结果带 `ruleset` 溯源（name/owner/version/source/counts/loadErrors）；⑥quality 评分如实标注口径（measured 5 维 vs fixedValue 5 维） |
 | **1.40.0** | **废除同级仓 dsh-git-push-User，凭据/索引收敛插件自持**：①凭据存储改插件配置目录 `DSH_HOME/git-push/`（token/SSH 密钥 0600，`credentialsDir()`）；②repo-index JSON 与 tools-index.md 同步目标改插件配置目录；③开发者要求门禁随插件内置（`lib/user-requirements.json`，可用 `<配置目录>/requirements.json` 外挂他人清单）；④skill 注入源改插件 skills/（新增 `skills/git-workflow-gitpush/` 16 个工作流 skill）+ 技能仓库 ai-work-archive/skills；⑤安全加固：`findGitDirs` 改 spawnSync 数组参数（消命令注入）、`runGit` try/catch+maxBuffer、`readRepoStatus` origin URL 脱敏（`maskRemoteUrl`）、HTTP 请求体 5MB 上限、untracked 二进制/大文件跳过、`docs/code-quality-checklist.yaml` 权重补齐并随包分发；⑥owner 可配置（`config.githubOwner`）。删除 USER_REPO_*/resolveUserDir/userRepoCandidates/inspectUserRepo/scoreUserRepo/loadUserRequirements/ensureUserRepoSibling/createUserRepoTemplate 等 13 个同级仓符号 |
 | **1.39.0** | **代码审计按 code-quality-checklist.yaml 增强质量维度**：新增 `lib/quality.js` 纯函数模块——①可读性：单函数 >50 行 warning / >100 行 blocker（func-lines）；②健壮性：空 catch 静默吞错（silent-catch）；③性能：async 路径 fs.*Sync 同步阻塞（sync-in-async）；④测试覆盖：源码变更但仓库无测试 → no-tests warning；⑤**0-100 评分 + A/B/C/D 等级**（按 yaml `dimensions_weight` 加权，`quality` 字段返回 score/level/dimensions/hasTests）。auditRepo 默认开启，`quality:false` 可关；auditFile 对 .js 变更文件逐文件检查，评分带 yaml 权重与等级描述。test-quality 39 项 + 全量回归绿（test-audit 保持 90 项，helper 默认关 quality 专注静态规则） |
 | **1.38.0** | **移除设备/用户 json 上下文注入（原 v1.27.0 功能）**：凭据类信息注入不属于 git-push 插件的职责——git-push 只负责提交推送；删除 `buildDeviceUserInjection`（含 maskIp/maskName/maskEmail/maskCredentialFields 与 `agent/pre-step` 里的「本机设备/用户信息」注入块）。设备/站点导航信息如需注入，改由会话插件（dsh-session-conductor）模板注入或用户自行配置，git-push 不再内置。测试同步清理，全量回归通过 |
