@@ -16,17 +16,17 @@ DSH（DeepSeek Harness）git 自动提交推送插件。把「扫描仓库 → *
 
 - **分层**：`lib/core.js` 纯函数核心（不依赖 ctx，可独立单测）+ `lib/index.js` 插件装配（工具注册 + HTTP API + 审计门禁接线 + repo-index 维护）
 - **门禁链**：`commitWithAudit` = README 预览 → L0 静态审计（可选 L1 LLM）→ 拦截判断 → `commitAndPush`（npm 屏蔽 → 敏感字段扫描 .gitignore → add → commit → push → repo-index 更新）
-- **推送通道（v1.18.3）**：默认 **api.github.com Git Data API**（blob → tree → commit → ref）；无 token / 401 Bad credentials 时回退 **ssh.github.com:443**（User 仓 `id_ed25519`）。禁止 `git push github.com` / HTTPS
+- **推送通道（v1.18.3）**：默认 **api.github.com Git Data API**（blob → tree → commit → ref）；无 token / 401 Bad credentials 时回退 **ssh.github.com:443**（插件配置目录 `git-push/` 下 SSH 私钥）。禁止 `git push github.com` / HTTPS
 - **可执行位 / 属主（v1.18.4 / v1.32.0）**：启动写 `git config --global core.filemode false` 与 `safe.directory=*`；每次 git 带 `-c core.filemode=false -c safe.directory=*`，CIFS 权限与属主噪声不进提交
 - **审计体系**：L0 静态（语法/JSON/YAML/敏感信息/凭据/大文件/debugger/文档对话类措辞/硬编码路径与局域网 IP）+ **代码质量维度（v1.39.0，依据 `docs/code-quality-checklist.yaml`：函数行数/静默catch/async同步阻塞/测试覆盖）+ 0-100 评分与 A-D 等级**（`quality` 字段）+ L1 LLM 深度审查（可选，diff 喂便宜模型）；豁免类型 = 说明类（示例假凭据）+ 备份类（exemptRepos 白名单；硬编码规则不跟私有库豁免）
-- **用户门禁**：同级仓 `dsh-git-push-User/requirements.md` 开发者特殊要求，提交前逐条核对，未核对拦截（requirementsConfirmed 机制）
-- **设置页凭据（v1.20.0 / v1.23.1）**：设置 → 插件 → 插件配置 →「Git 提交推送」填 token；写入同级仓 `github-token`，secret 字段不进 settings.yaml 明文。点「检测可用」时公钥绑定先读 `/user/keys`，无权则 SSH 实测 `ssh.github.com:443`
+- **用户门禁（v1.40.0 随插件内置）**：开发者特殊要求清单内置为 `lib/user-requirements.json`（归属 EIGHTfs），提交前逐条核对，未核对拦截（requirementsConfirmed 机制）；可放 `<插件配置目录>/requirements.json` 外挂他人清单
+- **设置页凭据（v1.20.0 / v1.40.0）**：设置 → 插件 → 插件配置 →「Git 提交推送」填 token；写入插件配置目录 `git-push/github-token`（0600），secret 字段不进 settings.yaml 明文。点「检测可用」时公钥绑定先读 `/user/keys`，无权则 SSH 实测 `ssh.github.com:443`
 
 ## 文件目录结构及作用
 
 | 路径 | 作用 |
 |---|---|
-| `lib/core.js` | 纯函数核心：runGit / commitAndPush / scanRepos / auditRepoPath / scanSensitiveFiles / ensureSensitiveIgnored / resolveGitToken / ensureRemoteRepo / pushViaApi / genReadme / rebuildHistory / loadUserRequirements 等 |
+| `lib/core.js` | 纯函数核心：runGit / commitAndPush / scanRepos / auditRepoPath / scanSensitiveFiles / ensureSensitiveIgnored / resolveGitToken / ensureRemoteRepo / pushViaApi / genReadme / rebuildHistory / credentialsDir / maskRemoteUrl / loadRequirements 等 |
 | `lib/index.js` | 插件装配：agent 工具 + HTTP API + 审计门禁 + repo-index 维护 + 提交历史查看器路由 + 推送许可触发 + 设置命名空间 `git-push` |
 | `lib/client.js` | 浏览器半侧：设置 → 插件 → 插件配置 卡片（填 GitHub token + 打开提交历史查看器入口） |
 | `lib/viewer.js` | 提交历史查看器（v1.24.0 整合 git-commits-viewer）：只读数据层 getCommitHistory / getCommitDiff + 页面渲染 renderViewerPage（零外部资源，多语言 + 手动选择本地仓库） |
@@ -36,7 +36,8 @@ DSH（DeepSeek Harness）git 自动提交推送插件。把「扫描仓库 → *
 | `lib/repo-index.js` | dsh-repo-index 索引生成/同步 |
 | `lib/llm.js` | L1 LLM 深度审查调用 |
 | `skills/dsh-git-push.md` | 插件使用手册 skill（推送到会话内可按需加载） |
-| 同级仓 `dsh-git-push-User/` | 开发者特殊要求 + 用户级 git skill + 本机凭据（独立私有库，不进插件目录，安装拷贝不会清空） |
+| `skills/git-workflow-gitpush/` | git 工作流 skill（v1.40.0 自同级仓迁入：提交检查点/重建历史/API-only 等 16 个 .md + README） |
+| 插件配置目录 `DSH_HOME/git-push/` | 本机私有数据（v1.40.0 自同级仓收敛）：github-token / SSH 密钥（0600）/ dsh-repo-index.json / tools-index.md / 可选 requirements.json 覆盖清单；不入 git |
 | `docs/` | 架构图、开发文档、工作进度看板等 |
 | `test/test-*.mjs` | 单测（core / audit / apply / repo-index / viewer / permit / rules / env-inject），node:test 零依赖 |
 
@@ -69,12 +70,13 @@ node test/test-core.mjs && node test/test-audit.mjs && node test/test-repo-index
 
 **agent 工具**：`git_scan` / `git_commit_push`（含 requirementsConfirmed 参数）/ `code_audit` / `git_gen_readme` / `git_rebuild_history` / `git_remote_create` / `git_set_visibility` / `git_clone` / `push_permit_status` / `push_permit_config`（前 8 个详见 dsh-git-push skill 手册）
 
-**配置键**（cordis.patch.yml insert config）：`workspaceRoot` / `extraRepos` / `depth` / `auditEnabled` / `blockOn` / `llmAudit` / `llmAuditProvider` / `llmAuditModel` / `maxDiffBytes` / `repoIndexEnabled` / `repoIndexTokenPath` / `repoIndexSyncTarget` / `repoIndexLocalOnly` / `exemptRepos` / `pushScope` / `commentWordingEnabled` / `commentWordingCustom` / `commentWordingRulesFile` / `commentWordingRulesUrl` / `envInjectionEnabled` / `envInjectionTools` / `injectFullSkill`（v1.28.0：pre-step 注入两仓 skill 全文，默认 false 只列目录清单）/ `injectRepoIndexFull`（v1.35.0：注入 dsh-repo-index.json 正文，默认 false 只注入文件名）/ `customIgnorePatterns`（v1.28.0：自定义忽略 pattern 逗号/换行分隔，提交时自动写 .gitignore）/ `commitMessage`（自动推送提交信息，默认 `chore(ai): 任务完成自动提交`）。注：功能说明书经 systemPrompt 只注入**精简目录**（v1.32.0）；完整 `skills/dsh-git-push-functions.md` 按需加载。环境注入仍走系统提示词通道。
+**配置键**（cordis.patch.yml insert config）：`workspaceRoot` / `extraRepos` / `depth` / `githubOwner`（v1.40.0：默认 GitHub owner，兜底 EIGHTfs）/ `auditEnabled` / `blockOn` / `llmAudit` / `llmAuditProvider` / `llmAuditModel` / `maxDiffBytes` / `repoIndexEnabled` / `repoIndexTokenPath` / `repoIndexSyncTarget` / `repoIndexLocalOnly` / `exemptRepos` / `pushScope` / `commentWordingEnabled` / `commentWordingCustom` / `commentWordingRulesFile` / `commentWordingRulesUrl` / `envInjectionEnabled` / `envInjectionTools` / `injectFullSkill`（v1.28.0：pre-step 注入 skill 全文，默认 false 只列目录清单；v1.40.0 起来源 = 插件 skills/ + 技能仓库 git-workflow）/ `injectRepoIndexFull`（v1.35.0：注入 dsh-repo-index.json 正文，默认 false 只注入文件名）/ `customIgnorePatterns`（v1.28.0：自定义忽略 pattern 逗号/换行分隔，提交时自动写 .gitignore）/ `commitMessage`（自动推送提交信息，默认 `chore(ai): 任务完成自动提交`）。注：功能说明书经 systemPrompt 只注入**精简目录**（v1.32.0）；完整 `skills/dsh-git-push-functions.md` 按需加载。环境注入仍走系统提示词通道。
 
 ## 版本列表
 
 | 版本 | 内容 |
 |---|---|
+| **1.40.0** | **废除同级仓 dsh-git-push-User，凭据/索引收敛插件自持**：①凭据存储改插件配置目录 `DSH_HOME/git-push/`（token/SSH 密钥 0600，`credentialsDir()`）；②repo-index JSON 与 tools-index.md 同步目标改插件配置目录；③开发者要求门禁随插件内置（`lib/user-requirements.json`，可用 `<配置目录>/requirements.json` 外挂他人清单）；④skill 注入源改插件 skills/（新增 `skills/git-workflow-gitpush/` 16 个工作流 skill）+ 技能仓库 ai-work-archive/skills；⑤安全加固：`findGitDirs` 改 spawnSync 数组参数（消命令注入）、`runGit` try/catch+maxBuffer、`readRepoStatus` origin URL 脱敏（`maskRemoteUrl`）、HTTP 请求体 5MB 上限、untracked 二进制/大文件跳过、`docs/code-quality-checklist.yaml` 权重补齐并随包分发；⑥owner 可配置（`config.githubOwner`）。删除 USER_REPO_*/resolveUserDir/userRepoCandidates/inspectUserRepo/scoreUserRepo/loadUserRequirements/ensureUserRepoSibling/createUserRepoTemplate 等 13 个同级仓符号 |
 | **1.39.0** | **代码审计按 code-quality-checklist.yaml 增强质量维度**：新增 `lib/quality.js` 纯函数模块——①可读性：单函数 >50 行 warning / >100 行 blocker（func-lines）；②健壮性：空 catch 静默吞错（silent-catch）；③性能：async 路径 fs.*Sync 同步阻塞（sync-in-async）；④测试覆盖：源码变更但仓库无测试 → no-tests warning；⑤**0-100 评分 + A/B/C/D 等级**（按 yaml `dimensions_weight` 加权，`quality` 字段返回 score/level/dimensions/hasTests）。auditRepo 默认开启，`quality:false` 可关；auditFile 对 .js 变更文件逐文件检查，评分带 yaml 权重与等级描述。test-quality 39 项 + 全量回归绿（test-audit 保持 90 项，helper 默认关 quality 专注静态规则） |
 | **1.38.0** | **移除设备/用户 json 上下文注入（原 v1.27.0 功能）**：凭据类信息注入不属于 git-push 插件的职责——git-push 只负责提交推送；删除 `buildDeviceUserInjection`（含 maskIp/maskName/maskEmail/maskCredentialFields 与 `agent/pre-step` 里的「本机设备/用户信息」注入块）。设备/站点导航信息如需注入，改由会话插件（dsh-session-conductor）模板注入或用户自行配置，git-push 不再内置。测试同步清理，全量回归通过 |
 | **1.37.0** | **审计按远端可见性定拦截力度**：提交前审计先探测 GitHub 远端可见性（`detectRepoVisibility`，token 真校验）——**private 仓 blocker 全部降级为仅警告（blockOn=none，不拦截）**，敏感规则（secret/凭据/对话措辞）仍豁免；**public 仓保持原 blockOn 拦截**（敏感规则照常阻断）；**user 仓（`dsh-git-push-User` 或 `-User` 结尾）特殊照顾**：探测到 public 时自动 `setRepoVisibility` PATCH 改回 private 再继续（自动私有化），避免凭据仓意外公开。审计结果新增 `visibility` / `visibilityRisk` / `userRepoAutoFixed` 字段。探测失败（无 origin/无 token/API 失败）保守按 public 处理照常拦截 |

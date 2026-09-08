@@ -10,13 +10,17 @@ npm-debug.log*
 .npm/
 .pnpm-store/
 
-# 历史：User/ 曾嵌在插件目录（v1.18.0 起改同级仓 dsh-git-push-User，安装会清空插件内残留）
+# 历史：User/ 曾嵌在插件目录（v1.18.0 起改同级仓；v1.40.0 同级仓废除，凭据收敛插件配置目录，目录不入 git）
 User/
 User/**
+
+# v1.40.0：本地凭据目录兜底拦截（正常应在 DSH_HOME/git-push，防误入库）
+git-push/
+.dsh/
+
+# 构建辅助脚本（一次性手术脚本，不入库）
+.tmp-build/
 
 # clone 通道元数据（本机专用，不入库）
 .clone-meta.json
 .git-push-token
-
-# 未完成草稿（YAML 非法，暂不入库）
-docs/code-quality-checklist.yaml

@@ -84,12 +84,12 @@ ok(idx.note && idx.note.includes('DO NOT EDIT MANUALLY'), '含自动生成标记
 ok(typeof idx.owner === 'string' && idx.owner.length > 0, '含 owner 账号变量');
 ok(idx.version === 1 && idx.generatedAt, '含 version/generatedAt 元数据');
 
-// ---------- 6. syncRepoIndex（v1.27.1：默认目标 = userDir/<owner>/dsh-repo-index.json）----------
+// ---------- 6. syncRepoIndex（v1.40.0：默认目标 = 插件配置目录 credentialsDir()/dsh-repo-index.json；userDir 保留为自定义目录别名）----------
 const tgt = join(root, 'tgt.md');
 const sync = syncRepoIndex({ content: '# x\n', userDir: root, owner: 'EIGHTfs', syncTarget: tgt });
 ok(sync.ok && sync.written.length === 1 && sync.written[0] === tgt, 'syncRepoIndex 显式 syncTarget 写入');
 const sync2 = syncRepoIndex({ content: '{"a":1}\n', userDir: root, owner: 'EIGHTfs' });
-ok(sync2.ok && sync2.written.length === 1 && sync2.written[0].endsWith('EIGHTfs/dsh-repo-index.json'), '默认目标 = userDir/<owner>/dsh-repo-index.json（账号文件夹下）');
+ok(sync2.ok && sync2.written.length === 1 && sync2.written[0] === join(root, 'dsh-repo-index.json'), 'userDir 别名 = 自定义目录平铺 dsh-repo-index.json（v1.40.0 去 owner 分层）');
 
 // ---------- 7. detectSkillsDir ----------
 ok(typeof detectSkillsDir() === 'string' && detectSkillsDir().length > 0, 'detectSkillsDir 返回路径');
