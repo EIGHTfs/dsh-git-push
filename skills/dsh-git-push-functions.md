@@ -25,8 +25,8 @@ generatedBy: grok-4.6 · 2026-09-07
 
 - **用途**：先审计 → 敏感扫描自动 .gitignore → 自定义忽略自动 .gitignore → add -A → commit → push origin
 - **参数**：`repo`（仓库绝对路径，必填）/ `message`（commit message，必填）/ `push`（默认 true）/ `dryRun`（只模拟）/ `audit`（默认 true）/ `llmAudit`（LLM 深度审查，默认 false）/ `requirementsConfirmed`（同级仓要求清单核对标记）
-- **流程**：README 预览 → 自动清理代码注释措辞（autoClean，豁免 `dsh-skip-sensitive` 文件头）→ L0 静态审计（语法/JSON/YAML/敏感信息/凭据/大文件/文档措辞/硬编码路径与局域网 IP）→ 拦截判断 → commitAndPush（npm 屏蔽 → 敏感忽略 → 自定义忽略 → add → commit → push → repo-index 维护）
-- **返回**：`{ ok, committed, commitId, push: { pushed, method, pushedTo }, audit: { blocked, findings, summary }, autoClean, readmeCheck, remoteHeads, remoteHeadsText }`
+- **流程**：README 预览 → L0 静态审计（v1.45.0 起无自动清理步骤——只警告不删改）（语法/JSON/YAML/敏感信息/凭据/大文件/文档措辞/硬编码路径与局域网 IP）→ 拦截判断 → commitAndPush（npm 屏蔽 → 敏感忽略 → 自定义忽略 → add → commit → push → repo-index 维护）
+- **返回**：`{ ok, committed, commitId, push: { pushed, method, pushedTo }, audit: { blocked, findings, summary }, readmeCheck, remoteHeads, remoteHeadsText }`（v1.45.0 起 autoClean 字段移除）
 - **推送通道**：默认 api.github.com Git Data API；token 401 回退 ssh.github.com:443；禁止 github.com 直连
 - **注意**：审计拦截返回 `{ok:false, blocked:true}` 不产生提交；远端领先不推。调用前必须核对 README（系统提示词常驻 + 返回 `readmeCheck`）
 
@@ -134,7 +134,7 @@ generatedBy: grok-4.6 · 2026-09-07
 - **npm 屏蔽（ensureNpmIgnored）**：node_modules/ + lock 文件自动写 .gitignore（幂等）
 - **敏感字段忽略（ensureSensitiveIgnored）**：扫 cookie/device/username/password/token，命中文件自动 .gitignore + git rm --cached 解除跟踪（私有库豁免：private 仓库只报告不写）
 - **自定义忽略（ensureCustomIgnored，v1.28.0）**：设置里 customIgnorePatterns 的模式自动写目标仓库 .gitignore，已跟踪文件解除跟踪
-- **豁免标记 dsh-skip-sensitive**：文件头前 3 行或行内注释带此标记 → 跳过敏感扫描/comment-wording 检测/autoClean 清理（测试文件、示例文档常用）
+- **豁免标记 dsh-skip-sensitive**：文件头前 3 行或行内注释带此标记 → 跳过敏感扫描/comment-wording 检测（测试文件、示例文档常用）
 - **推送后远端 ref 维护（v1.29.0）**：Git Data API 推送不更新本地 remote-tracking ref（origin 是 api.github.com REST 端点，`git fetch origin` 必 403）——推送成功后会自动 `git update-ref refs/remotes/origin/<branch>`（`git log origin/master` 可看远端最新）+ 自动补 `github-ssh` 辅助 remote（`ssh://git@ssh.github.com:443/<owner>/<repo>.git`，标准 `git fetch github-ssh` / `git pull github-ssh <branch>` 可用；同名 remote 已存在则不覆盖）
 - **属主/权限噪声（v1.32.0）**：每次 git 带 `safe.directory=*` + `core.filemode=false`；启动写全局 `safe.directory=*`（已有则跳过）
 
@@ -144,7 +144,7 @@ generatedBy: grok-4.6 · 2026-09-07
 
 1. 提交被审计拦截 → 看 `findings` 逐条修；文档措辞类走 `release-docs-rule`（公开仓库只写做了什么）；硬编码路径/IP 改配置、环境变量或相对路径（私有库也不豁免）
 2. 推送失败 Bad credentials → token 失效自动回退 ssh.github.com:443（需同级仓 id_ed25519）
-3. autoClean 会清理代码注释里的「记录用户指令」措辞 → 测试输入含这些措辞时给文件头加 `dsh-skip-sensitive`
+3. （v1.45.0 已废除 autoClean）注释里的「记录用户指令」措辞不再被自动改写——只出审计警告；测试输入含这些措辞时文件头仍可加 `dsh-skip-sensitive` 免检测
 4. 设置页改动立即保存（token/SSH 除外，需点保存按钮）
 5. `git fetch origin` 会 403（origin 是 API 端点非 git 地址）→ 想标准 fetch/pull 用 `github-ssh` 辅助 remote（v1.29.0 推送后自动补）
 6. SSH 检测显示「未能实测」→ 通常是没有私钥（只有 .pub 公钥）→ 用设置卡「生成公钥」先 ssh-keygen 生成密钥对，再把公钥绑到 GitHub
