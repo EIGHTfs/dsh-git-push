@@ -47,6 +47,9 @@
   ],
   "quality": {
     "funcLinesWarn": 50,
-    "funcLinesBlock": 100
+    "funcLinesBlock": 100,
+    // v1.42.0：文件级评分（scoreFile）阈值——行数基准 200 / 容量基准 30KB，斜率与扣分上限见内置默认
+    "fileLinesBase": 200,
+    "fileKbBase": 30
   }
 }

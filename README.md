@@ -27,8 +27,28 @@ DSH（DeepSeek Harness）git 自动提交推送插件。把「扫描仓库 → *
 
 | 路径 | 作用 |
 |---|---|
-| `lib/core.js` | 纯函数核心：runGit / commitAndPush / scanRepos / auditRepoPath / scanSensitiveFiles / ensureSensitiveIgnored / resolveGitToken / ensureRemoteRepo / pushViaApi / genReadme / rebuildHistory / credentialsDir / maskRemoteUrl / loadRequirements 等 |
-| `lib/index.js` | 插件装配：agent 工具 + HTTP API + 审计门禁 + repo-index 维护 + 提交历史查看器路由 + 推送许可触发 + 设置命名空间 `git-push` |
+| `lib/core.js` | 纯函数核心门面（v1.42.0 拆分）：re-export 下方功能模块的 runGit / commitAndPush / scanRepos / auditRepoPath / scanSensitiveFiles / ensureSensitiveIgnored / resolveGitToken / ensureRemoteRepo / pushViaApi / genReadme / rebuildHistory / credentialsDir / maskRemoteUrl / loadRequirements 等，导出面与拆分前一致 |
+| `lib/git-core.js` | git 基础执行（v1.42.0 拆分）：runGit / gitRaw / 全局配置（filemode false / safe.directory=*） |
+| `lib/github-api.js` | GitHub API 访问（v1.42.0 拆分）：token 解析 / pushViaApi / 可见性 / 账号检查 / SSH 密钥 |
+| `lib/repo-scan.js` | 仓库扫描（v1.42.0 拆分）：scanRepos / readExtraReposFile / 变更统计 |
+| `lib/ignore-scan.js` | 敏感文件与 .gitignore 维护（v1.42.0 拆分）：scanSensitiveFiles / ensureSensitiveIgnored / 措辞清理数据 |
+| `lib/commit-push.js` | 提交推送编排（v1.42.0 拆分）：commitAndPush 步骤拆分（预检 / 忽略 / add+commit / push / remote heads） |
+| `lib/token-credentials.js` | 凭据持久化（v1.42.0 拆分）：credentialsDir / token 与 SSH 公钥落盘 / requirements 清单 |
+| `lib/workspace-context.js` | 环境注入（v1.42.0 拆分）：工作目录映射 / 工具安装路径 / tools-index 同步 |
+| `lib/version-history.js` | 重建历史（v1.42.0 拆分）：rebuildHistory（fresh/squash-bugfixes/drop-versions）+ 身份兜底提交 |
+| `lib/readme-gen.js` | README 模板生成（v1.42.0 拆分）：genReadme + 版本表构建 |
+| `lib/remote-repo.js` | 远端仓库管理（v1.42.0 拆分）：ensureRemoteRepo 建仓 / cloneViaApi（api.github.com Git Data API） |
+| `lib/plugin-paths.js` | 插件根路径（v1.42.0 拆分）：PLUGIN_ROOT |
+| `lib/index.js` | 插件装配调度器（v1.42.0 拆分）：apply 只负责按序注册；各功能在 plugin-*.js |
+| `lib/plugin-config.js` | 插件配置（v1.42.0 拆分）：Config schema + 设置命名空间 + 插件名 + textRender |
+| `lib/plugin-setup.js` | 插件初始化（v1.42.0 拆分）：resolvePluginEnv（配置规范化/规则包装载/comment-wording 解析）+ 设置页注册 |
+| `lib/plugin-context-inject.js` | 上下文注入（v1.42.0 拆分）：systemPrompt 三段（功能目录/README 检查/环境注入）+ agent/pre-step（skill/repo-index） |
+| `lib/repo-index-sync.js` | dsh-repo-index 自动维护（v1.42.0 拆分）：推送成功后重建索引 JSON |
+| `lib/plugin-audit.js` | 审计服务（v1.42.0 拆分）：auditRepoPath（可见性定拦截力度）/ autoCleanCommentWording / isUserRepoPath |
+| `lib/plugin-commit-flow.js` | 提交流程（v1.42.0 拆分）：previewReadme + commitWithAudit（审计门禁编排） |
+| `lib/plugin-push-permit.js` | 推送许可（v1.42.0 拆分）：turn/end 防抖检测 → 自动 commit+push（带审计） |
+| `lib/plugin-http.js` | HTTP API（v1.42.0 拆分）：/git-push/viewer + /api/git-push/* 路由 |
+| `lib/plugin-tools.js` | agent 工具（v1.42.0 拆分）：11 个 defineTool 注册 |
 | `lib/client.js` | 浏览器半侧：设置 → 插件 → 插件配置 卡片（填 GitHub token + 打开提交历史查看器入口） |
 | `lib/viewer.js` | 提交历史查看器（v1.24.0 整合 git-commits-viewer）：只读数据层 getCommitHistory / getCommitDiff + 页面渲染 renderViewerPage（零外部资源，多语言 + 手动选择本地仓库） |
 | `lib/viewer-locales.js` | 查看器多语言配置文件（v1.25.0）：zh/en 字典 + 默认中文；新增语言 = 加一个键集合一致的语言对象 |
@@ -79,6 +99,7 @@ node test/test-core.mjs && node test/test-audit.mjs && node test/test-repo-index
 
 | 版本 | 内容 |
 |---|---|
+| **1.42.0** | **D1 函数拆分 + 文件级模块化（行为零变化）**：①index.js 巨型 apply（1183 行）按功能拆 9 个模块（plugin-config/plugin-setup/plugin-context-inject/repo-index-sync/plugin-audit/plugin-commit-flow/plugin-push-permit/plugin-http/plugin-tools），index.js 只留调度器，副作用注册顺序与拆分前一致；②core.js 2511 行拆 11 个功能模块 + 门面（导出面与拆分前完全一致）；③rebuildHistory/ensureRemoteRepo/cloneViaApi/buildRepoIndex/genReadme 等超长函数全部拆步骤函数，check-fnlen 全库清零（viewer.js 例外待后续重写）；④修复 v1.41.0 引入的 `log` TDZ 雷（apply 启动必崩，`const log` 提前到审计规则块之前）；⑤rebuildHistory squash/drop 分支提交补身份兜底（`-c user.name/user.email`，对齐 fresh 分支） |
 | **1.41.0** | **审计规则插件化（规则包）**：①规则数据全部外置 `lib/audit-rules/eightfs.rules.json`（归属 EIGHTfs，支持 `//` 注释；secret×3/credential-file×2/credential-ref×2/comment-wording×9/doc-conversation×5/质量阈值 50-100），代码零硬编码规则；②新模块 `lib/rule-packs.js`：装载（builtin/file/url 三来源，url 8s 超时 2MB 上限）/校验（id 唯一/kind/level/正则可编译）/编译（非法 pattern 降级记 errors）；③`config.auditRuleset` 整体切换第三方规则包，`code_audit` 工具与 `/audit?ruleset=` 按调用临时换包，启动 url 包异步热替换；④json 注释行豁免（用户确立：豁免仅限隐私入库类——secret/credential-file/credential-ref；措辞/对话/质量不豁免），JSONC 文件解析容忍 `//` 注释；⑤审计结果带 `ruleset` 溯源（name/owner/version/source/counts/loadErrors）；⑥quality 评分如实标注口径（measured 5 维 vs fixedValue 5 维） |
 | **1.40.0** | **废除同级仓 dsh-git-push-User，凭据/索引收敛插件自持**：①凭据存储改插件配置目录 `DSH_HOME/git-push/`（token/SSH 密钥 0600，`credentialsDir()`）；②repo-index JSON 与 tools-index.md 同步目标改插件配置目录；③开发者要求门禁随插件内置（`lib/user-requirements.json`，可用 `<配置目录>/requirements.json` 外挂他人清单）；④skill 注入源改插件 skills/（新增 `skills/git-workflow-gitpush/` 16 个工作流 skill）+ 技能仓库 ai-work-archive/skills；⑤安全加固：`findGitDirs` 改 spawnSync 数组参数（消命令注入）、`runGit` try/catch+maxBuffer、`readRepoStatus` origin URL 脱敏（`maskRemoteUrl`）、HTTP 请求体 5MB 上限、untracked 二进制/大文件跳过、`docs/code-quality-checklist.yaml` 权重补齐并随包分发；⑥owner 可配置（`config.githubOwner`）。删除 USER_REPO_*/resolveUserDir/userRepoCandidates/inspectUserRepo/scoreUserRepo/loadUserRequirements/ensureUserRepoSibling/createUserRepoTemplate 等 13 个同级仓符号 |
 | **1.39.0** | **代码审计按 code-quality-checklist.yaml 增强质量维度**：新增 `lib/quality.js` 纯函数模块——①可读性：单函数 >50 行 warning / >100 行 blocker（func-lines）；②健壮性：空 catch 静默吞错（silent-catch）；③性能：async 路径 fs.*Sync 同步阻塞（sync-in-async）；④测试覆盖：源码变更但仓库无测试 → no-tests warning；⑤**0-100 评分 + A/B/C/D 等级**（按 yaml `dimensions_weight` 加权，`quality` 字段返回 score/level/dimensions/hasTests）。auditRepo 默认开启，`quality:false` 可关；auditFile 对 .js 变更文件逐文件检查，评分带 yaml 权重与等级描述。test-quality 39 项 + 全量回归绿（test-audit 保持 90 项，helper 默认关 quality 专注静态规则） |

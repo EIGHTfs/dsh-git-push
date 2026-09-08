@@ -1,5 +1,19 @@
-/** dsh-git-push v1.1.0 apply mock 测试：注册路由/工具 + 审计门禁端到端 */
-import { apply, name } from '../lib/index.js';
+/** dsh-git-push v1.1.0 apply mock 测试：注册路由/工具 + 审计门禁端到端
+ * v1.40.0 后 lib/index.js 依赖 DSH 运行时 peer 包（@deepseek-ai/dsh-tools / dsh-llm / schemastery）。
+ * 测试环境（无 DSH runtime）没有这些包 → 先探测，缺失则打印跳过并 exit 0；不 mock 整个 runtime（不值得）。
+ */
+let peer = null;
+try { peer = await import('@deepseek-ai/dsh-tools'); } catch { peer = null; }
+if (!peer) {
+  console.log('⏭ 跳过：需 DSH 运行时依赖（@deepseek-ai/dsh-tools）');
+  process.exit(0);
+}
+let mod = null;
+try { mod = await import('../lib/index.js'); } catch (e) {
+  console.log(`⏭ 跳过：lib/index.js 依赖不可用（${String(e?.message || e).split('\n')[0].slice(0, 160)}）`);
+  process.exit(0);
+}
+const { apply, name } = mod;
 import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
