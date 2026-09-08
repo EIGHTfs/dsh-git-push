@@ -385,5 +385,6 @@ try {
 } finally {
   rmSync(root, { recursive: true, force: true });
 }
+
 console.log(`\n结果: ${pass} 通过 / ${fail} 失败`);
 process.exit(fail ? 1 : 0);
