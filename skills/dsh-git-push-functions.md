@@ -120,8 +120,9 @@ generatedBy: grok-4.6 · 2026-09-07
 2. **两仓 skill**（dsh-git-push/skills + dsh-git-push-User 的 .md）：`injectFullSkill=true` 注入全文，默认只列目录+文件清单
 3. **dsh-repo-index JSON**（v1.35.0）：默认只注入文件名；`injectRepoIndexFull=true` 注入正文。md 表格已废弃
 4. **环境注入**（v1.26.0）：工作目录映射 + 工具安装路径（envInjectionEnabled 可关，tools-index.md 同步同级仓）
-5. **设备/用户 json 脱敏注入**（v1.27.0）：device-map/user 全量，ssh-credentials/websites 只给清单不给密码明文
-6. **提交前 README 检查（v1.32.0）**：系统提示词常驻；`git_commit_push` 返回 `readmeCheck`
+5. **提交前 README 检查（v1.32.0）**：系统提示词常驻；`git_commit_push` 返回 `readmeCheck`
+
+> v1.38.0：移除「设备/用户 json 注入」（原 v1.27.0）——凭据类信息注入不属于 git-push 职责；需要设备/站点导航信息时由会话插件/模板注入另行处理。
 
 实现位置：`lib/index.js` 搜「上下文注入」注释块。
 
