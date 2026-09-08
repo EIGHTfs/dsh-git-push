@@ -45,7 +45,20 @@
     // ---------- code-quality（阈值型规则；warn/block 阈值可整包替换调松紧） ----------
     { "id": "func-lines", "kind": "code-quality", "level": "warning", "threshold": 50, "blockThreshold": 100, "message": "单函数超长难读，应拆分（code-quality-checklist 可读性）" }
   ],
-  "quality": {
+    // v1.43.0：fullScan 附属能力——全仓 AI 对话残留注释扫描（黑名单加分/白名单减分，总分 ≥ threshold 记警告；
+  // 只读不删码；提交门禁只对新增行注释温和提醒。缺省此段 = full-scan.js 内置同一套缺省）
+  "fullScan": {
+    "threshold": 60,
+    "keywords": [
+      { "name": "用户指示词", "pattern": "用户指示|用户原话|用户反馈|根据用户|客户要求|用户说|原话|指示|拍板", "score": 40 },
+      { "name": "英文请求词", "pattern": "\\brequest\\b|\\brequire user\\b|\\bas user said\\b", "score": 40, "flags": "i" }
+    ],
+    "protectWords": [
+      { "name": "技术词", "pattern": "ID|密码|登录|状态|验证|权限|token|session", "score": 30, "flags": "i" }
+    ]
+  },
+
+"quality": {
     "funcLinesWarn": 50,
     "funcLinesBlock": 100,
     // v1.42.0：文件级评分（scoreFile）阈值——行数基准 200 / 容量基准 30KB，斜率与扣分上限见内置默认
