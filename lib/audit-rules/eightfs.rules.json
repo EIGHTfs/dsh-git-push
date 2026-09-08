@@ -1,0 +1,52 @@
+{
+  // ============================================================
+  // dsh-git-push 内置审计规则包（归属 EIGHTfs，v1.41.0 规则插件化 C2）
+  // 代码零硬编码规则：audit.js 引擎只消费本文件编译产物（lib/rule-packs.js compileRulePack）。
+  // 可整体替换：配置 auditRuleset 指向本地文件或 http(s) URL 即装载第三方规则包。
+  // 豁免约定（用户指示 2）：.json 内 // 注释行豁免「隐私入库类」规则（secret /
+  // credential-file）；comment-wording / doc-conversation / 代码质量规则不豁免。
+  // ============================================================
+  "name": "eightfs",
+  "owner": "EIGHTfs",
+  "version": "1.41.0",
+  "description": "EIGHTfs 审计规则包：敏感信息 / 凭据文件与凭据引用 / 注释措辞 / 文档对话措辞 / 代码质量阈值。经 auditRuleset 配置可整体替换为第三方规则包。",
+  "rules": [
+    // ---------- secret（隐私入库类，blocker；json 注释行豁免生效） ----------
+    { "id": "secret-github-pat", "kind": "secret", "level": "blocker", "name": "GitHub PAT", "pattern": "\\bghp_[A-Za-z0-9]{20,}\\b", "message": "疑似 GitHub PAT 硬编码，请确认是否真实凭据" },
+    { "id": "secret-openai-key", "kind": "secret", "level": "blocker", "name": "OpenAI/API key", "pattern": "\\bsk-(proj-)?[A-Za-z0-9-]{16,}\\b", "message": "疑似 API key 硬编码，请确认是否真实凭据" },
+    { "id": "secret-keyvalue", "kind": "secret", "level": "blocker", "name": "密钥键值对", "pattern": "\\b(api[_-]?key|api[_-]?secret|secret|password|passwd|client[_-]?secret|access[_-]?token|auth[_-]?token|private[_-]?key|bearer)\\b\\s*[:=]\\s*[\"']([^\"'\\s]{8,})[\"']", "message": "疑似敏感信息（键值对），请确认是否硬编码" },
+
+    // ---------- credential-file（隐私入库类，blocker；json 注释行豁免生效） ----------
+    { "id": "credfile-common", "kind": "credential-file", "level": "blocker", "name": "常见凭据文件", "pathPattern": "(^|[\\\\/])(\\.credentials[^\\\\/]*|\\.env|\\.env\\.[a-z]+|github-token|data[\\\\/]sensitive[\\\\/][^\\\\/]+|\\.ssh[\\\\/][^\\\\/]+)$" },
+    { "id": "credfile-token-private", "kind": "credential-file", "level": "blocker", "name": "私密目录 token 文件", "pathPattern": "(^|[\\\\/])(data[\\\\/]sensitive[\\\\/]|dsh-private-configs[\\\\/]|\\.ssh[\\\\/]|private)[\\\\/][^\\\\/]*token[^\\\\/]*\\.(txt|md|json)$" },
+
+    // ---------- credential-ref（文档凭据引用，warning；json 注释行豁免生效） ----------
+    { "id": "credref-legacy-path", "kind": "credential-ref", "level": "warning", "name": "旧凭据文件引用", "pattern": "(\\.ssh[\\\\/]credentials|data[\\\\/]sensitive[\\\\/]|credentials\\.md|sudo-key|git-rescue[\\\\/]token)", "message": "文档含旧凭据位置引用：凭据统一存插件配置目录（DSH_HOME/git-push/，0600 权限），需要时按需读取，不在文档留引用" },
+    { "id": "credref-plain-secret", "kind": "credential-ref", "level": "warning", "name": "凭据明文入文档", "pattern": "(密码|password|passwd|token|cookie|账号)\\s*[:：=]\\s*['\"]?[A-Za-z0-9_@.\\-]{6,}['\"]?", "message": "文档疑似含凭据明文：凭据统一存插件配置目录（DSH_HOME/git-push/，0600 权限），不在文档写明文" },
+
+    // ---------- comment-wording（代码注释措辞，blocker；json 注释行不豁免） ----------
+    { "id": "wording-user-require", "kind": "comment-wording", "level": "blocker", "name": "用户要求", "pattern": "用户要求" },
+    { "id": "wording-user-words", "kind": "comment-wording", "level": "blocker", "name": "用户原话", "pattern": "用户原话" },
+    { "id": "wording-user-said", "kind": "comment-wording", "level": "blocker", "name": "用户说", "pattern": "用户说" },
+    { "id": "wording-user-agree", "kind": "comment-wording", "level": "blocker", "name": "用户约定", "pattern": "用户约定" },
+    { "id": "wording-user-stipulate", "kind": "comment-wording", "level": "blocker", "name": "用户规定", "pattern": "用户规定" },
+    { "id": "wording-user-explicit", "kind": "comment-wording", "level": "blocker", "name": "用户明确", "pattern": "用户明确" },
+    { "id": "wording-user-decide", "kind": "comment-wording", "level": "blocker", "name": "用户拍板", "pattern": "用户拍板" },
+    { "id": "wording-user-colon", "kind": "comment-wording", "level": "blocker", "name": "用户：", "pattern": "用户：" },
+    { "id": "wording-user-decision", "kind": "comment-wording", "level": "blocker", "name": "用户决策来源", "pattern": "用户(同意|许可|确认|约定|指定|已定调|拍板|让我|要求我|跟我说)" },
+
+    // ---------- doc-conversation（文档对话措辞，blocker；json 注释行不豁免） ----------
+    { "id": "conv-session-ref", "kind": "doc-conversation", "level": "blocker", "name": "会话引用", "pattern": "(本会话|本次会话|本对话|开发会话|session-[0-9a-f]{8,})" },
+    { "id": "conv-user-decision", "kind": "doc-conversation", "level": "blocker", "name": "用户决策来源", "pattern": "用户(同意|许可|确认|约定|指定|已定调|拍板|让我|要求我|跟我说)" },
+    { "id": "conv-ai-permit", "kind": "doc-conversation", "level": "blocker", "name": "AI 许可表述", "pattern": "我(同意|许可|确认|答应|承诺|已按你)" },
+    { "id": "conv-negotiate", "kind": "doc-conversation", "level": "blocker", "name": "商量/沟通转述", "pattern": "我们(商量|讨论|约定|沟通|说好|议定)" },
+    { "id": "conv-log", "kind": "doc-conversation", "level": "blocker", "name": "对话/沟通记录", "pattern": "(对话记录|聊天记录|沟通记录|对话内容|聊天内容)" },
+
+    // ---------- code-quality（阈值型规则；warn/block 阈值可整包替换调松紧） ----------
+    { "id": "func-lines", "kind": "code-quality", "level": "warning", "threshold": 50, "blockThreshold": 100, "message": "单函数超长难读，应拆分（code-quality-checklist 可读性）" }
+  ],
+  "quality": {
+    "funcLinesWarn": 50,
+    "funcLinesBlock": 100
+  }
+}
