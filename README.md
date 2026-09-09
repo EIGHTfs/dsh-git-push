@@ -142,7 +142,8 @@ DSH（DeepSeek Harness）git 自动提交推送插件 **v2 重构版**（从零�
 
 | 版本 | 说明 |
 |---|---|
-| **1.1.0**（当前） | **功能框架搭建完毕能跑**：8 入口骨架（规则/审计/git/自身/评分/豁免/上下文）+ cli.mjs 最小可用（version/ruleset/scan/audit + --depth/--full 解析）+ scripts/check.mjs 全量语法检查 + test/test-framework.mjs 16 断言全绿；详细任务看板 docs/WORKBOARD-v2.md（每入口含思路与验收标准） |
+| **1.1.1**（当前） | **规则总入口落地**：13 编译函数注册（credential-ref/file/secret/func-lines/6 数值/regex/path-regex/semantic）+ 三统一（kind kebab-case ↔ 函数 ↔ 字段）+ dimensions 声明（一字段多维度）+ 首个 yml 槽位 audit-rules-nodejs.yml（11 条规则示范）+ 未知规则报错不静默；31 测试全绿 |
+| **1.1.0** | **功能框架搭建完毕能跑**：8 入口骨架（规则/审计/git/自身/评分/豁免/上下文）+ cli.mjs 最小可用（version/ruleset/scan/audit + --depth/--full 解析）+ scripts/check.mjs 全量语法检查 + test/test-framework.mjs 16 断言全绿；详细任务看板 docs/WORKBOARD-v2.md（每入口含思路与验收标准） |
 | **1.0.0** | **README 文档（重构计划）**：10 总入口架构确定、统一问题对象确定、版本规范确定、15 条自检问题清单（五份报告已核对）、链接判断规则设计（flaky 域名扣分打折） |
 
 ## 注意事项

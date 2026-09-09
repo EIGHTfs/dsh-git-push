@@ -12,7 +12,7 @@
 | # | 总入口 | 状态 | 说明 |
 |---|--------|------|------|
 | 0 | 1.0.0 计划稿（README） | ✅ 已提交 ccfd1e5 | 10 总入口架构 + 问题对象 + 版本规范 + 问题清单 + 链接规则设计 |
-| 1 | 规则总入口 | 🟡 骨架已写 | `lib/rule/registry.js` + `lib/rule/loader.js`；编译函数未注册、yml 槽位未落 |
+| 1 | 规则总入口 | ✅ 1.1.1 完成 | 13 编译函数注册 + dimensions + nodejs 槽位 11 条规则 |
 | 2 | 审计总入口 | 🟡 骨架已写 | `lib/audit/index.js`（auditChanged/auditFull/auditWithScope）；检查实现未接 |
 | 3 | git 总入口 | 🟡 骨架已写 | `lib/git/index.js`（runGit/commitAndPush/pushViaApi…）；具体实现待 1.1.3 |
 | 4 | 自身总入口 | 🟡 骨架已写 | `lib/self/index.js`（VERSION/readmeTemplate/yamlTemplate）；模板未实现 |
@@ -48,7 +48,7 @@
 |------|------|------|
 | 1.0.0 | README 文档（重构计划） | ✅ ccfd1e5 |
 | **1.1.0** | **功能框架搭建完毕能跑**：目录结构 + 各入口骨架 + cli.mjs 最小可用 + npm test 绿 + 本看板 | 🔄 进行中 |
-| 1.1.1 | 规则总入口（注册表 + 装载 + 首个编译函数落地） | ⏳ |
+| 1.1.1 | 规则总入口（13 编译函数 + dimensions + nodejs 槽位 11 条） | ✅ 本批 |
 | 1.1.2 | 审计总入口（changed/full + 统一问题对象 + exemptHint 接线） | ⏳ |
 | 1.1.3 | git 总入口（token/commit/push/clone/建仓/可见性） | ⏳ |
 | 1.1.4 | 自身总入口（版本单一事实源 + README 模板 + yml 模板 + CLI 完善） | ⏳ |
@@ -310,4 +310,5 @@
 | 版本 | commit | 内容 | 自检 |
 |------|--------|------|------|
 | 1.0.0 | ccfd1e5 | README 计划稿（架构/问题清单/链接规则） | 旧项目扫描 0/0 ✅ |
-| 1.1.0 | （本批） | 框架骨架 8 入口 + cli.mjs + test 16 断言 + scripts/check + 本看板 | 旧项目扫描 0 blocker ✅（初扫 1 blocker docs-conversation 已修） |
+| 1.1.0 | 7969ae1 | 框架骨架 8 入口 + cli.mjs + test 16 断言 + scripts/check + 看板 | 旧项目扫描 0 blocker ✅ |
+| 1.1.1 | （本批） | 规则总入口：13 编译函数 + dimensions + nodejs 槽位 11 条 + test-rule-packs 15 断言（31 全绿） | 旧项目扫描待跑 |

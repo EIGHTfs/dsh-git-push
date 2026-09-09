@@ -19,6 +19,9 @@ const HELP = `git-sluice v${VERSION} — dsh-git-push-v2 引擎独立 CLI（脱�
   git-sluice help                 显示本帮助
 `;
 
+// 导入 compilers 触发注册（副作用：注册 13 种编译函数到 RULE_COMPILERS）
+import './lib/rule/compilers.js';
+
 /** 参数解析：白名单必须与 HELP 文本完全一致（cli-help-sync 自检）。 */
 export function parseArgv(argv) {
   const flags = { depth: undefined, full: false };

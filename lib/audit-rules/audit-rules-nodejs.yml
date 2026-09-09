@@ -1,0 +1,94 @@
+# dsh-git-push-v2 审计规则（nodejs 槽位）
+# 规则类型由编译函数按字段自动指派（显式 kind 可选，写法见各规则）。
+# dimensions：10 维度绑定（可读性/可维护性/健壮性/安全性/性能/测试覆盖/可观测性/可部署性/文档/开发者体验），支持一字段多维度。
+metadata:
+  name: "nodejs 审计规则（v2 示范槽位）"
+  version: "1.0.0"
+
+rules:
+  # ── 凭据类（id 前缀 credref- / credfile- / secret- 自动指派）──
+  - id: secret-aws-access-key
+    name: "AWS Access Key 疑似泄露"
+    category: "security"
+    severity: "error"
+    description: "检测 AWS 访问密钥格式（AKIA 开头 16-20 位）"
+    pattern: "AKIA[0-9A-Z]{16}"
+
+  - id: secret-generic-token
+    name: "通用令牌疑似泄露"
+    category: "security"
+    severity: "error"
+    description: "检测常见 token 赋值的硬编码"
+    patterns:
+      - "\\btoken\\s*=\\s*['\"][^'\"]{12,}['\"]"
+      - "\\bapi[_-]?key\\s*=\\s*['\"][^'\"]{12,}['\"]"
+
+  - id: credfile-key-file
+    name: "私钥文件路径"
+    category: "security"
+    severity: "error"
+    description: "检测私钥/证书类文件名"
+    path_pattern: "(id_rsa|id_ed25519|\\.pem|\\.key)$"
+
+  # ── 函数行数（字段 max_lines + 名字含 function 自动指派）──
+  - id: func-lines
+    name: "单函数超长"
+    category: "readability"
+    severity: "warning"
+    description: "单函数超过 50 行难读，应拆分"
+    max_lines: 50
+
+  # ── 数值阈值类（按字段名自动拆分）──
+  - id: style-min-length
+    name: "标识符过短"
+    category: "readability"
+    severity: "warning"
+    description: "变量/参数名过短降低可读性"
+    min_length: 2
+
+  - id: style-max-complexity
+    name: "圈复杂度超标"
+    category: "maintainability"
+    severity: "warning"
+    description: "函数圈复杂度超过 10"
+    max_complexity: 10
+
+  - id: style-repeated-string
+    name: "重复硬编码字符串"
+    category: "maintainability"
+    severity: "warning"
+    description: "相同字符串字面量出现 3 次以上应提取常量"
+    min_occurrences: 3
+    ignore_values: ["", " ", "0", "1", "true", "false", "null", "undefined"]
+
+  # ── 正则类（pattern/patterns 自动指派）──
+  - id: style-debugger
+    name: "debugger 残留"
+    category: "residue"
+    severity: "error"
+    description: "生产代码不应残留 debugger 语句"
+    pattern: "\\bdebugger\\s*;?"
+
+  - id: style-console-log
+    name: "console.log 输出"
+    category: "residue"
+    severity: "warning"
+    description: "console.log 输出到 stdout，确认是否需要保留"
+    pattern: "\\bconsole\\.(log|debug)\\("
+
+  # ── 路径正则（path_pattern + 显式 kind 也可）──
+  - id: path-private-key-location
+    kind: path-regex
+    name: "私钥文件不得提交"
+    category: "security"
+    severity: "error"
+    description: "私钥文件路径禁止出现在版本库（路径级校验）"
+    path_pattern: ".*\\.(pem|key|p12)$"
+
+  # ── 语义规则（无 pattern 无数值，靠 category/name 关键词）──
+  - id: testing-test-file-missing
+    name: "核心模块应有测试文件"
+    category: "testing"
+    severity: "warning"
+    description: "lib 下核心模块应配套 test-<name>.mjs"
+    detection_method: "test-file-exists"
