@@ -385,6 +385,7 @@ lib/rule/compilers.js L54/L83/L149:
 ### 3.8 侧边栏（1.1.8）⏳
 - **思路**：复用旧 client.js 骨架；零外部资源；审计开关默认关；配置即时生效。
 - **验收**：手写 createElement 无 JSX；侧边栏加载通过；开关默认关。
+- **决策：v2 不实施 viewer（提交历史查看器）**——旧项目 v1.60.1 已移除该类组件（lib/viewer.js + viewer-locales.js + /git-push/viewer 页面 + repos|commits|diff 只读端点，commit 33276c4），**用不上，以后再改**；侧边栏不包含提交历史查看器入口。若未来要浏览提交历史，从旧项目历史版本移植（需新增 test-viewer 覆盖，链接拼接 bug 已在旧版修复）。
 
 ### 3.9 链接判断 yml 规则（1.2.0）⏳
 - **思路**：link-check kind——404/403 大扣分、DNS 中扣分、超时小扣分；flaky 域名（github/api.github.com/raw/npmjs）网络错误 ×0.2；只 warning 不 blocker。
