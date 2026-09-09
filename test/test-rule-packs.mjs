@@ -62,7 +62,7 @@ ok(v.ok, `校验通过（实际错误 ${v.errors.join(';') || '无'}）`);
 
 /* ---------- 编译分桶 ---------- */
 const c = compileYamlRuleSet(loaded.merged, { order: loaded.order, files: loaded.files, source: 'yaml' });
-ok(c.secretPatterns.length === 3, `凭据 secret 3 条（实际 ${c.secretPatterns.length}）`);
+ok(c.secretPatterns.length === 4, `凭据 secret 4 条（含 v1.54.0 真实邮箱入库，实际 ${c.secretPatterns.length}）`);
 ok(c.credentialFileRes.length === 2, `凭据文件 2 条（实际 ${c.credentialFileRes.length}）`);
 ok(c.credentialRefPatterns.length === 2, `凭据引用 2 条（实际 ${c.credentialRefPatterns.length}）`);
 ok(c.wordingPatterns.length >= 2, `comment 高分项进措辞门禁（实际 ${c.wordingPatterns.length}）`);
@@ -87,7 +87,7 @@ ok(withTpl.order.join(',') === 'comment,nodejs,template', '自定义顺序生效
 ok(withTpl.files.some((f) => f.includes('template')), 'template 显式加入才加载');
 // 后覆盖前：comment 在前时，nodejs 的规则仍补齐（同 id 才覆盖）
 const ct = compileYamlRuleSet(withTpl.merged, { order: withTpl.order, files: withTpl.files, source: 'yaml' });
-ok(ct.secretPatterns.length === 3, '自定义顺序下凭据规则仍保留（nodejs 补齐）');
+ok(ct.secretPatterns.length === 4, '自定义顺序下凭据规则仍保留（nodejs 补齐，含邮箱规则）');
 
 /* ---------- 后覆盖前：同 id 规则后者覆盖 ---------- */
 const ov = loadYamlRuleFiles(['nodejs', 'nodejs']); // 同文件重复加载：后加载覆盖前（同 id）
@@ -102,7 +102,7 @@ ok(!badSev.ok && badSev.errors.some((e) => e.includes('severity 非法')), '非�
 /* ---------- getCompiledRulePack（缓存入口） ---------- */
 clearRulePackCache();
 const g = getCompiledRulePack('');
-ok(g.secretPatterns.length === 3 && g.meta.order[g.meta.order.length - 1] === 'private' && !g.meta.order.includes('template'), `getCompiledRulePack 缺省装载正确（private 强制末尾，实际 ${g.meta.order.join(',')}）`);
+ok(g.secretPatterns.length === 4 && g.meta.order[g.meta.order.length - 1] === 'private' && !g.meta.order.includes('template'), `getCompiledRulePack 缺省装载正确（private 强制末尾，实际 ${g.meta.order.join(',')}）`);
 const g2 = getCompiledRulePack(['comment', 'nodejs']);
 ok(g2.meta.order.join(',') === 'comment,nodejs,private', 'getCompiledRulePack 自定义顺序（private 强制末尾）');
 

@@ -458,8 +458,9 @@ try {
   const genReadme = need('genReadme');
   if (resolveReadmeTemplate && genReadme) {
     // v1.40.0：模板只读插件 template/README.md（当前仓无该文件 → 内置骨架），原同级仓模板废除
+    // v1.53.0：内置骨架 yml 化——source 可为 builtin / template/README.md / readme-templates/*.yml，均视为可用
     const built = resolveReadmeTemplate({});
-    const srcOk = built.source === 'builtin' || String(built.source).includes('README.md');
+    const srcOk = built.source === 'builtin' || String(built.source).includes('README.md') || /readme-templates\/.*\.ya?ml$/.test(String(built.source));
     ok(srcOk && built.template.includes('{{name}}'), `resolveReadmeTemplate 模板可用（source=${built.source}）`);
     const repoReadme = tmp('git-push-readme-');
     mkdirSync(repoReadme, { recursive: true });
