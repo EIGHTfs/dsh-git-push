@@ -103,8 +103,10 @@ console.log('  评分（scoreQuality）');
   const worst = scoreQuality({ readability: 99, robustness: 99, performance: 99, testing: false }, {});
   ok(worst.score < 40 && worst.level === 'D', `极端问题 → D（got=${worst.score}:${worst.level}）`);
 
+  // v1.60.0：质量扣分分级后——readability 为加权扣分点（warning 0.5/blocker 2，直接扣不乘 2），
+  // 中等问题（2/3/1）不再扣到 C，落入 B 级
   const mid = scoreQuality({ readability: 2, robustness: 3, performance: 1, testing: false }, {});
-  ok(mid.score >= 40 && mid.score < 70 && mid.level === 'C', `中等 → C（got=${mid.score}:${mid.level}）`);
+  ok(mid.score >= 70 && mid.score < 85 && mid.level === 'B', `中等 → B（got=${mid.score}:${mid.level}）`);
 
   const q = scoreQuality({}, {});
   ok(q.dimensions && Object.keys(q.dimensions).length === 10, `10 维度齐全（got=${Object.keys(q.dimensions).length}）`);
