@@ -12,7 +12,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync } from 'nod
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { extractComments, scoreComment, fullScanRepo, compileFullScan, FULLSCAN_DEFAULTS } from '../lib/full-scan.js';
-import { validateRulePack, compileRulePack } from '../lib/rule-packs.js';
+import { getCompiledRulePack, clearRulePackCache } from '../lib/rule-packs.js';
 import { auditRepo } from '../lib/audit.js';
 
 let pass = 0;
@@ -70,15 +70,17 @@ console.log('  评分（scoreComment：黑加白减）');
   ok(r.score >= 60 && r.warn !== false, `中文引号加分路径：${r.score}`);
 }
 
-console.log('  规则包 fullScan 段（校验 + 编译降级）');
+console.log('  编译产物 fullScan 段（YAML 引擎 → commentScoring 派生 + 降级）');
 {
-  const bad = validateRulePack({ name: 'x', owner: 'o', version: '1', rules: [], fullScan: { threshold: -1, keywords: [{ name: 'a', pattern: '([bad' }] } });
-  ok(!bad.ok && bad.errors.length >= 2, '非法 threshold 与正则报错');
-  const c = compileRulePack({ name: 'x', owner: 'o', version: '1', rules: [], fullScan: { threshold: 80, keywords: [{ name: 'k', pattern: '用户指示', score: 50 }], protectWords: [{ name: 'p', pattern: '([bad' }] } }, { source: 'test' });
-  ok(c.fullScan.threshold === 80 && c.fullScan.keywords[0].score === 50, '合法段编译透传');
-  ok(c.fullScan.protectWords[0].re.test('任何文本') === false, '非法正则降级为永不匹配');
-  const n = compileRulePack({ name: 'x', owner: 'o', version: '1', rules: [] }, { source: 'test' });
-  ok(n.fullScan === null, '未配 fullScan → null（引擎用内置缺省）');
+  clearRulePackCache();
+  const g = getCompiledRulePack('');
+  ok(g.fullScan && g.fullScan.threshold === 60 && g.fullScan.keywords.length >= 16, `fullScan 从 comment.yml 派生（threshold 60 / keywords ${g.fullScan?.keywords.length}）`);
+  ok(g.fullScan.protectWords.length === 22, `白名单 22 项进 protectWords（got ${g.fullScan?.protectWords.length}）`);
+  ok(g.commentScoring && g.commentScoring.blacklist.length === 22, 'commentScoring 独立字段同步产出（黑名单 22）');
+  // 权重覆盖后 fullScan 同步刷新（v1.47.0 侧边栏调权重）
+  const gw = getCompiledRulePack({ order: ['nodejs', 'frontend', 'comment'], weights: { blacklist: { '客户要求': 45 } } });
+  ok(gw.fullScan.keywords.find((k) => k.name === '客户要求')?.score === 45, '权重覆盖同步 fullScan.keywords（45）');
+  ok(gw.wordingPatterns.some((w) => w.name === '客户要求'), '权重 ≥40 进门禁措辞（blocker）');
 }
 
 console.log('  全仓扫描（fullScanRepo：表格/排序/只读）');
@@ -109,9 +111,11 @@ console.log('  提交门禁集成（新增行注释 → warning 不拦截）');
   const d = mkdtempSync(join(tmpdir(), 'fsaudit-'));
   try {
     writeFileSync(join(d, 'a.js'), 'const x = 1;\n');
-    const r = auditRepo(d, { blockOn: 'blocker', files: [{ path: 'a.js', addedLines: ['// 用户指示：必须先跑测试再提交', 'const y = 2;'] }] });
+    // v1.47.0：用低权重措辞（用户反馈 35 < 40 门禁阈）验证 full-scan 通道独立性——
+    // 「用户指示/用户原话」等 ≥40 已是门禁 blocker（同时命中两通道）
+    const r = auditRepo(d, { blockOn: 'blocker', files: [{ path: 'a.js', addedLines: ['// 用户反馈：必须先跑测试再提交', 'const y = 2;'] }] });
     const f = r.findings.filter((x) => x.rule === 'full-scan');
-    ok(f.length === 1 && f[0].level === 'warning' && /评分 70/.test(f[0].message), `新增行黑名单注释产出 warning（got ${f.length} 条）`);
+    ok(f.length === 1 && f[0].level === 'warning' && /评分 65/.test(f[0].message), `新增行黑名单注释产出 warning（got ${f.length} 条）`);
     ok(r.blocked === false && r.passed === true, 'full-scan warning 不拦截提交');
     const r2 = auditRepo(d, { files: [{ path: 'a.js', addedLines: ['// 普通技术注释，说明函数用途', 'const y = 2;'] }] });
     ok(r2.findings.filter((x) => x.rule === 'full-scan').length === 0, '普通注释不产 finding');

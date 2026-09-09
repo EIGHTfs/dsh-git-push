@@ -1,0 +1,235 @@
+# ============================================================
+# 前端 HTML 审计规则集（内嵌管理界面专用版）
+# 作者：DeepSeek
+# 版本：1.0.0
+# 适用：服务端渲染的管理后台、运维面板、内部工具
+# 描述：SEO 规则已移除，聚焦可访问性、安全、表单交互、性能
+# 最后更新：2026-09-08
+# ============================================================
+
+metadata:
+  name: "前端 HTML 审计规则（内嵌管理界面）"
+  version: "1.0.0"
+  language: "html-internal"
+  author: "DeepSeek"
+  description: "用于服务端内嵌管理界面，不面向搜索引擎"
+  last_updated: "2026-09-08"
+
+rules:
+  # ----- 1. 可访问性 -----
+  - id: a11y/img-alt-required
+    name: "img 必须包含 alt 属性"
+    category: "accessibility"
+    severity: "error"
+    description: "缺少 alt 导致屏幕阅读器无法理解图片内容"
+    patterns:
+      - "<img\\s+(?![^>]*\\balt\\s*=)[^>]*>"
+    fixable: true
+
+  - id: a11y/button-has-label
+    name: "按钮必须有可访问名称"
+    category: "accessibility"
+    severity: "warning"
+    description: "仅包含图标的按钮需添加 aria-label"
+    fixable: false
+    mitigation: "添加 aria-label 或 title"
+
+  - id: a11y/link-has-href
+    name: "链接必须有 href 或 role"
+    category: "accessibility"
+    severity: "warning"
+    description: "点击事件建议用 button，而非 a 标签"
+    patterns:
+      - "<a\\s+(?![^>]*\\bhref\\s*=)[^>]*>"
+    fixable: true
+    mitigation: "使用 href='#' + onclick 或改为 button"
+
+  - id: a11y/form-label-association
+    name: "输入框必须关联 label"
+    category: "accessibility"
+    severity: "warning"
+    description: "缺少 label 影响可访问性和操作体验"
+    fixable: false
+    mitigation: "使用 label[for=id] 或 aria-label"
+
+  # ----- 2. 安全性 -----
+  - id: security/script-unsafe-inline
+    name: "禁止内联脚本（未受 CSP 保护）"
+    category: "security"
+    severity: "error"
+    description: "管理界面任何 XSS 漏洞都可能造成严重破坏"
+    patterns:
+      - "<script\\s*>"
+      - "javascript:"
+    fixable: false
+    mitigation: "使用外部脚本 + 严格 CSP"
+
+  - id: security/event-handler-unsafe
+    name: "禁止事件属性使用 javascript: 伪协议"
+    category: "security"
+    severity: "error"
+    description: "onclick='javascript:...' 极易被利用"
+    patterns:
+      - "on\\w+\\s*=\\s*['\"]\\s*javascript:"
+    fixable: true
+
+  - id: security/link-rel-noopener
+    name: "target='_blank' 必须加 rel='noopener'"
+    category: "security"
+    severity: "warning"
+    description: "防止 window.opener 攻击"
+    patterns:
+      - "<a\\s+[^>]*target\\s*=\\s*['\"]_blank['\"][^>]*>"
+    fixable: true
+
+  - id: security/form-method-get-sensitive
+    name: "敏感数据表单禁止使用 GET"
+    category: "security"
+    severity: "error"
+    description: "GET 会暴露数据在 URL/日志中"
+    patterns:
+      - "<form\\s+[^>]*method\\s*=\\s*[\"']get[\"'][^>]*>"
+    fixable: true
+
+  # ----- 3. 表单与交互 -----
+  - id: forms/button-missing-event
+    name: "按钮缺少事件绑定"
+    category: "forms"
+    severity: "error"
+    description: "管理界面中的按钮若无事件，功能不可用"
+    detection_method: "静态正则 + Puppeteer 动态检测"
+    patterns:
+      - "<button\\s+(?![^>]*\\bon(click|submit|tap)\\s*=)[^>]*>"
+      - "<input\\s+[^>]*type\\s*=\\s*['\"](button|submit)['\"](?![^>]*\\bonclick\\s*=)[^>]*>"
+    fixable: false
+    mitigation: "添加 onclick 或 @click 事件"
+
+  - id: forms/input-validation-missing
+    name: "输入框缺少 required 或 aria-required"
+    category: "forms"
+    severity: "warning"
+    description: "管理表单的必填字段应标记"
+    patterns:
+      - '<input\\s+[^>]*type\\s*=\\s*["\''](text|email|number|url)["\''][^>]*>'
+    fixable: true
+
+  - id: forms/form-action-missing
+    name: "表单缺少 action 或提交事件"
+    category: "forms"
+    severity: "warning"
+    description: "未指定提交目标，可能导致操作失败"
+    patterns:
+      - '<form\\s+(?![^>]*\\baction\\s*=)[^>]*>'
+    fixable: true
+    mitigation: "添加 action='' 并使用 JavaScript 拦截"
+
+  - id: forms/input-autocomplete-sensitive
+    name: "敏感输入应设置 autocomplete='off'"
+    category: "forms"
+    severity: "warning"
+    description: "密码等字段建议关闭自动补全"
+    patterns:
+      - '<input\\s+[^>]*type\\s*=\\s*["\''](password|credit-card)["\''][^>]*>'
+    fixable: true
+
+  # ----- 4. 性能 -----
+  - id: performance/script-defer-or-async
+    name: "外部脚本建议使用 defer 或 async"
+    category: "performance"
+    severity: "info"
+    description: "可提升页面响应速度"
+    patterns:
+      - '<script\\s+src\\s*=\\s*["\''][^"\'']+["\''][^>]*>(?!.*?defer)(?!.*?async)'
+    fixable: true
+
+  - id: performance/img-loading-lazy
+    name: "非关键图片建议设置 loading='lazy'"
+    category: "performance"
+    severity: "info"
+    description: "可减少初始加载时间"
+    patterns:
+      - '<img\\s+(?![^>]*\\bloading\\s*=\\s*["\'']lazy["\''])[^>]*>'
+    fixable: true
+
+  # ----- 5. 结构与语义 -----
+  - id: semantic/html-lang-required
+    name: "html 标签必须包含 lang 属性"
+    category: "semantic"
+    severity: "warning"
+    description: "影响语音合成和翻译"
+    patterns:
+      - '<html\\s+(?![^>]*\\blang\\s*=)[^>]*>'
+    fixable: true
+
+  - id: semantic/button-role-warning
+    name: "div/span 模拟按钮需加 role='button'"
+    category: "semantic"
+    severity: "warning"
+    description: "确保辅助设备识别"
+    patterns:
+      - '<div\\s+[^>]*onclick[^>]*>(?![^>]*role\\s*=\\s*["\'']button["\''])'
+    fixable: false
+
+  # ----- 6. 框架 -----
+  - id: framework/react-dangerous-html
+    name: "React 禁止直接使用 dangerouslySetInnerHTML"
+    category: "framework"
+    severity: "error"
+    description: "除非使用 DOMPurify 消毒"
+    patterns:
+      - "dangerouslySetInnerHTML"
+    fixable: false
+
+  - id: framework/vue-v-html
+    name: "Vue 禁止使用 v-html 渲染外部数据"
+    category: "framework"
+    severity: "error"
+    description: "可能引入 XSS"
+    patterns:
+      - "v-html\\s*="
+    fixable: false
+
+  - id: framework/react-key-prop
+    name: "列表渲染必须包含 key"
+    category: "framework"
+    severity: "warning"
+    description: "提升 Diff 性能和状态稳定性"
+    patterns:
+      - "\\{\\s*([a-zA-Z0-9_]+)\\.map\\s*\\([^)]*\\)\\s*=>\\s*<[^>]*>"
+    fixable: true
+
+# ----- 严重级别映射 -----
+severity_map:
+  error: "error"
+  warning: "warning"
+  info: "info"
+
+# ----- 阈值 -----
+thresholds:
+  max_warnings: 15
+  max_errors: 0
+  max_info: 50
+
+# ----- 忽略规则 -----
+ignore:
+  - pattern: "**/dist/**/*.html"
+    rules: ["*"]
+  - pattern: "**/node_modules/**/*.html"
+    rules: ["*"]
+
+# ----- 动态检测 -----
+dynamic_detection:
+  enabled: true
+  wait_for: "networkidle2"
+  timeout: 30000
+  detect:
+    - "按钮事件绑定"
+    - "表单提交"
+    - "label 关联"
+    - "图片 alt"
+
+# ----- 输出 -----
+output:
+  format: "json"
+  include_suggestions: true
+  include_fix_instructions: true

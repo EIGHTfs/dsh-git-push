@@ -171,12 +171,12 @@ try {
   const builtinOnly = audit([{ path: 'k.js', content: '// 老板拍板：上灰度\n' }]);
   ok(!builtinOnly.findings.some((f) => f.rule === 'comment-wording'), '未注入时自定义措辞不报（内置规则不变）');
 
-  const wExtra = audit([{ path: 'k.js', content: '// 老板拍板：上灰度\n' }], {
-    commentWordingPatterns: [{ name: '老板拍板', pattern: '老板拍板' }],
+  const wExtra = audit([{ path: 'k.js', content: '// 用户指示：按原话 12345 执行\n' }], {
+    commentWordingPatterns: [{ name: '老板拍板', pattern: '老板拍板' }, { name: '用户指示', pattern: '用户指示' }],
   });
-  ok(wExtra.findings.some((f) => f.rule === 'comment-wording' && f.message.includes('老板拍板')), '自定义措辞经审计通道命中并出报告');
+  ok(wExtra.findings.some((f) => f.rule === 'comment-wording' && f.message.includes('用户指示')), '自定义措辞经审计通道命中并出报告');
   ok(!wExtra.findings.some((f) => /自动清理/.test(f.message)), 'v1.45.0：措辞提示不再承诺提交时自动清理（autoClean 已移除）');
-  ok(wExtra.findings.some((f) => f.rule === 'full-scan'), '同一注释同时被 full-scan 评分提醒（两条通道独立）');
+  ok(wExtra.findings.some((f) => f.rule === 'full-scan'), '同一注释同时被 full-scan 评分提醒（两条通道独立；「用户指示/原话」高分命中）');
 
   const r19 = audit([{ path: 'a.js', content: '// 用户要求x\n' }], {
     commentWordingPatterns: [{ name: '用户要求', pattern: '用户要求' }],

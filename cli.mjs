@@ -11,9 +11,9 @@
  *   full-scan  <repo>                       全仓 AI 对话残留注释扫描（只读报告，--fail-on-warn 时退出码 3）
  *   commit     <repo> -m <msg>              审计门禁 → 提交（默认 push:false；--push 推远端）
  *   scan       [root]                       扫描目录下的 git 仓库与变更
- *   ruleset    <builtin|path|url>           校验+编译规则包（规则包作者工具）
+ *   ruleset    [nodejs,frontend,comment]   编译 YAML 规则集（作者自检）
  *
- * 通用参数：--json（原始 JSON 输出） --ruleset <builtin|本地路径|http(s)://> --help
+ * 通用参数：--json（原始 JSON 输出） --ruleset <槽位顺序> --help
  * 退出码：0 成功 / 1 用法错误 / 2 审计拦截或提交失败 / 3 full-scan 警告（--fail-on-warn 时）
  *
  * L1 LLM 深度审查、设置页、HTTP API、推送许可面板为 DSH 接线层专属，本 CLI 不含。
@@ -24,9 +24,9 @@ import { join, resolve } from 'node:path';
 import { commitAndPush, scanRepos } from './lib/core.js';
 import { auditRepo } from './lib/audit.js';
 import { fullScanRepo } from './lib/full-scan.js';
-import { loadBuiltinRulePack, loadRulePackFromFile, loadRulePackFromUrl, compileRulePack } from './lib/rule-packs.js';
+import { getCompiledRulePack, RULE_SLOTS, DEFAULT_RULE_ORDER } from './lib/rule-packs.js';
 
-const VERSION = '1.46.0';
+const VERSION = '1.47.0';
 
 /** argv 解析：位置参数 + --flag / --key value / -m value（零依赖手写） */
 function parseArgv(argv) {
@@ -58,11 +58,11 @@ const HELP = `git-sluice v${VERSION} — dsh-git-push 引擎独立 CLI（脱离 
   full-scan <repo>                 全仓 AI 对话残留注释扫描（分数制黑加白减；只读报告）
   commit <repo> -m <msg>           审计门禁 → 提交（默认只 commit 不 push；--push 推远端）
   scan [root] [--depth N]          扫描目录下 git 仓库与变更统计
-  ruleset <builtin|path|url>       校验+编译规则包（规则包作者自检工具）
+  ruleset [nodejs,frontend,comment]   编译 YAML 规则集（作者自检；缺省默认顺序）
   help                             本帮助
 
 选项：
-  --ruleset <builtin|本地路径|http(s)://>   临时换规则包（缺省内置 EIGHTfs 包）
+  --ruleset <槽位顺序>                 临时换规则顺序（如 comment,nodejs；缺省 nodejs,frontend,comment）
   --json                            输出原始 JSON
   --no-push / --push                commit 是否推送（默认不推）
   --dry-run                         commit 只模拟
@@ -72,15 +72,14 @@ const HELP = `git-sluice v${VERSION} — dsh-git-push 引擎独立 CLI（脱离 
 退出码：0 成功 / 1 用法错误 / 2 审计拦截或提交失败 / 3 full-scan 警告
 说明：token/SSH 从插件配置目录探测，独立环境缺省走系统 git 凭据；L1 LLM 审计为 DSH 专属不在本 CLI。`;
 
-/** 装载规则集：builtin / 本地路径 / http(s) URL，失败直接退出（CLI 场景 fail fast） */
+/** 装载规则集：''/builtin/eightfs = 默认顺序 YAML；'a,b,c' = 逗号分隔槽位顺序；失败直接退出（CLI 场景 fail fast） */
 async function loadRuleset(choice) {
   const c = String(choice || '').trim();
-  const loaded = !c || c === 'builtin' || c === 'eightfs'
-    ? loadBuiltinRulePack()
-    : (/^https?:\/\//.test(c) ? await loadRulePackFromUrl(c) : loadRulePackFromFile(c));
-  if (!loaded.ok) throw new Error(`规则包装载失败: ${loaded.error}`);
-  const source = c && c !== 'builtin' && c !== 'eightfs' ? (c.startsWith('http') ? c : 'file') : 'builtin';
-  return compileRulePack(loaded.pack, { source });
+  const order = !c || c === 'builtin' || c === 'eightfs' || c === 'default'
+    ? undefined
+    : c.split(',').map((s) => s.trim()).filter((s) => RULE_SLOTS.includes(s));
+  const rs = getCompiledRulePack(order);
+  return rs;
 }
 
 /** 人读输出：findings 摘要表 */

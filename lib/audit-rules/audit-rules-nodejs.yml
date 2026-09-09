@@ -1,0 +1,292 @@
+# ============================================================
+# Node.js 后端代码审计规则集
+# 作者：DeepSeek
+# 版本：1.0.0
+# 适用：Node.js / JavaScript / TypeScript 后端项目
+# 描述：基于优秀代码评估标准转换的自动化审计规则
+# 最后更新：2026-09-08
+# ============================================================
+
+metadata:
+  name: "Node.js 后端审计规则集"
+  version: "1.0.0"
+  language: "javascript"
+  author: "DeepSeek"
+  description: "覆盖命名规范、代码结构、安全性、健壮性、性能、测试、依赖等维度"
+  last_updated: "2026-09-08"
+
+rules:
+  # ----- 1. 可读性 -----
+  - id: readability/function-name-camelcase
+    name: "函数名使用 camelCase"
+    category: "readability"
+    severity: "warning"
+    description: "函数名应使用 camelCase 命名规范"
+    pattern: "^[a-z][a-zA-Z0-9]*$"
+    fixable: false
+    examples:
+      bad: "function get_user_by_id() {}"
+      good: "function getUserById() {}"
+
+  - id: readability/variable-name-camelcase
+    name: "变量名使用 camelCase"
+    category: "readability"
+    severity: "warning"
+    description: "变量名应使用 camelCase，避免使用缩写或拼音"
+    pattern: "^[a-z][a-zA-Z0-9]*$"
+    fixable: false
+
+  - id: readability/variable-min-length
+    name: "变量名长度不少于 2 个字符"
+    category: "readability"
+    severity: "warning"
+    description: "过短的变量名（如 a, b, x）降低代码可读性"
+    min_length: 2
+    exceptions: ["i", "j", "k", "n", "e", "cb"]
+    fixable: false
+
+  - id: readability/max-function-length
+    name: "函数长度不超过 50 行"
+    category: "readability"
+    severity: "warning"
+    description: "过长的函数难以理解和维护"
+    max_lines: 50
+    fixable: true
+
+  - id: readability/max-file-length
+    name: "文件总行数不超过 400 行"
+    category: "readability"
+    severity: "warning"
+    description: "单文件超过 400 行时应拆分模块（存量超大文件为已知债务，仅提醒不拦截；D1 重构已拆分核心文件）"
+    max_lines: 400
+    fixable: false
+
+  # ----- 2. 可维护性 -----
+  - id: maintainability/no-duplicate-code
+    name: "检测重复代码块"
+    category: "maintainability"
+    severity: "warning"
+    description: "同一段逻辑在多处重复，建议抽取为公共函数"
+    min_lines: 5
+    min_occurrences: 3
+    fixable: true
+
+  - id: maintainability/max-cyclomatic-complexity
+    name: "圈复杂度不超过 10"
+    category: "maintainability"
+    severity: "warning"
+    description: "过高的圈复杂度表示函数逻辑分支过多"
+    max_complexity: 10
+    fixable: false
+
+  # ----- 3. 健壮性 -----
+  - id: robustness/no-sync-fs
+    name: "禁止在异步函数中使用同步 IO"
+    category: "robustness"
+    severity: "warning"
+    description: "同步 IO 会阻塞事件循环"
+    patterns:
+      - "fs\\.(readFileSync|writeFileSync|statSync|existsSync|readdirSync|mkdirSync|rmSync|unlinkSync|renameSync|copyFileSync|appendFileSync)\\s*\\("
+      - "(require\\([\"']fs[\"']\\)|from\\s+[\"']node:?fs[\"'])\\s*\\.(readFileSync|writeFileSync|statSync|existsSync|readdirSync|mkdirSync|rmSync|unlinkSync|renameSync|copyFileSync|appendFileSync)\\s*\\("
+    fixable: true
+    mitigation: "改用 fs.promises.xxx + await"
+
+  - id: robustness/no-empty-catch
+    name: "禁止空的 catch 块"
+    category: "robustness"
+    severity: "warning"
+    description: "空的 catch 块会静默吞掉错误"
+    pattern: "catch\\s*\\([^)]*\\)\\s*\\{\\s*\\}"
+    fixable: true
+    mitigation: "至少添加 console.error(e)"
+
+  - id: robustness/input-validation-required
+    name: "外部输入必须验证"
+    category: "robustness"
+    severity: "warning"
+    description: "用户输入可能包含恶意数据"
+    patterns:
+      - "req\\.(params|query|body)"
+      - "ctx\\.(params|query|body)"
+    fixable: false
+
+  - id: robustness/timeout-on-external-api
+    name: "外部 API 调用必须设置超时"
+    category: "robustness"
+    severity: "warning"
+    description: "外部请求无超时设置会导致请求永久挂起"
+    patterns:
+      - "(fetch|axios\\.|got\\.|request\\.)\\s*\\("
+    fixable: false
+    mitigation: "设置 timeout 或 AbortController"
+
+  # ----- 4. 安全性 -----
+  - id: security/no-hardcoded-credentials
+    name: "禁止硬编码凭据"
+    category: "security"
+    severity: "error"
+    description: "凭据不应硬编码在源代码中"
+    patterns:
+      - "password\\s*[=:]+\\s*['\"][^'\"]+['\"]"
+      - "secret\\s*[=:]+\\s*['\"][^'\"]+['\"]"
+      - "api[_-]?key\\s*[=:]+\\s*['\"][^'\"]+['\"]"
+      - "token\\s*[=:]+\\s*['\"][^'\"]+['\"]"
+      - "cookie\\s*[=:]+\\s*['\"][^'\"]+['\"]"
+    fixable: false
+    mitigation: "使用环境变量 process.env.XXX"
+
+  - id: security/no-path-traversal
+    name: "路径穿越防护"
+    category: "security"
+    severity: "error"
+    description: "直接使用用户输入作为文件路径存在目录遍历风险"
+    fixable: false
+    mitigation: "使用 path.resolve + startsWith 白名单校验"
+
+  # ----- 凭据入库门禁（历史 eightfs 规则翻译，v1.47.0）-----
+  # 提交门禁安全底线：新增行命中即拦截提交；severity=error → blocker
+  - id: secret-github-pat
+    name: "疑似 GitHub PAT 硬编码"
+    category: "security"
+    severity: "error"
+    description: "疑似 GitHub Personal Access Token 硬编码，请确认是否真实凭据"
+    pattern: "\\bghp_[A-Za-z0-9]{20,}\\b"
+    fixable: false
+  - id: secret-openai-key
+    name: "疑似 API key 硬编码"
+    category: "security"
+    severity: "error"
+    description: "疑似 OpenAI/API key 硬编码，请确认是否真实凭据"
+    pattern: "\\bsk-(proj-)?[A-Za-z0-9-]{16,}\\b"
+    fixable: false
+  - id: secret-keyvalue
+    name: "疑似敏感信息键值对"
+    category: "security"
+    severity: "error"
+    description: "疑似敏感信息（键值对）硬编码，请确认（值捕获组供占位符/假值豁免）"
+    pattern: "\\b(api[_-]?key|api[_-]?secret|secret|password|passwd|client[_-]?secret|access[_-]?token|auth[_-]?token|private[_-]?key|bearer|cookie|session[_-]?key)\\b\\s*[:=]\\s*[\"']([^\"'\\s]{8,})[\"']"
+    fixable: false
+    mitigation: "使用环境变量 process.env.XXX"
+  - id: credfile-common
+    name: "凭据/密钥文件入库"
+    category: "security"
+    severity: "error"
+    description: "凭据/密钥文件出现在变更中，禁止提交"
+    path_pattern: "(^|[\\\\/])(\\.credentials[^\\\\/]*|\\.env|\\.env\\.[a-z]+|github-token|data[\\\\/]sensitive[\\\\/][^\\\\/]*|\\.dsh[\\\\/]git-push[\\\\/])"
+    fixable: false
+  - id: credfile-token-private
+    name: "敏感目录入库"
+    category: "security"
+    severity: "error"
+    description: "敏感配置/私钥目录入库，禁止提交"
+    path_pattern: "(^|[\\\\/])(data[\\\\/]sensitive[\\\\/]|dsh-private-configs[\\\\/]|\\.ssh[\\\\/]|private)[\\\\/][^\\\\/]*"
+    fixable: false
+  - id: credref-legacy-path
+    name: "文档引用旧凭据位置"
+    category: "security"
+    severity: "warning"
+    description: "文档含旧凭据位置引用：凭据统一存插件配置目录（DSH_HOME/git-push/，0600 权限）"
+    pattern: "(\\.ssh[\\\\/]credentials|data[\\\\/]sensitive[\\\\/]|credentials\\.md|sudo-key|git-rescue[\\\\/]token)"
+    fixable: false
+  - id: credref-plain-secret
+    name: "文档疑似凭据明文"
+    category: "security"
+    severity: "warning"
+    description: "文档疑似含凭据明文：凭据统一存插件配置目录，不在文档写明文"
+    pattern: "(密码|password|passwd|token|cookie|账号)\\s*[:：=]\\s*['\"]?[A-Za-z0-9_@.\\-]{6,}['\"]?"
+    fixable: false
+
+  - id: security/cookie-secure-flag
+    name: "Cookie 必须包含 Secure 和 HttpOnly"
+    category: "security"
+    severity: "error"
+    description: "生产环境 Cookie 必须带 Secure 和 HttpOnly"
+    patterns:
+      - "Set-Cookie:(?!.*Secure)"
+      - "Set-Cookie:(?!.*HttpOnly)"
+    fixable: true
+
+  - id: security/no-eval
+    name: "禁止使用 eval"
+    category: "security"
+    severity: "error"
+    description: "eval 执行任意代码，存在严重安全风险"
+    patterns:
+      - "eval\\s*\\("
+      - "new Function\\s*\\("
+    fixable: false
+
+  # ----- 5. 性能 -----
+  - id: performance/no-o-n-squared
+    name: "避免 O(n²) 循环嵌套"
+    category: "performance"
+    severity: "warning"
+    description: "嵌套循环可能导致性能问题"
+    patterns:
+      - "for\\s*\\([^)]*\\)\\s*{[^}]*for\\s*\\("
+    fixable: false
+
+  - id: performance/no-json-full-save
+    name: "禁止频繁全量 JSON 写盘"
+    category: "performance"
+    severity: "info"
+    description: "大对象频繁 JSON.stringify 消耗 CPU 和磁盘 IO"
+    patterns:
+      - "JSON\\.stringify\\s*\\([^)]+\\)\\s*,\\s*['\"]?.*\\.json['\"]?"
+    fixable: false
+    mitigation: "使用增量写入或内存缓存"
+
+  - id: performance/config-cache-needed
+    name: "配置文件应使用内存缓存"
+    category: "performance"
+    severity: "info"
+    description: "频繁 readFileSync 读取 config 影响性能"
+    patterns:
+      - "readFileSync\\s*\\(\\s*['\"].*config.*\\.json['\"]"
+    fixable: false
+    mitigation: "添加 TTL 缓存，如 5 秒刷新"
+
+  # ----- 6. 测试 -----
+  - id: testing/test-file-exists
+    name: "核心文件应有对应测试"
+    category: "testing"
+    severity: "warning"
+    description: "关键模块应有 .test.js 文件"
+    fixable: false
+
+  # ----- 7. 依赖 -----
+  - id: dependency/known-vulnerability
+    name: "无已知漏洞依赖"
+    category: "dependency"
+    severity: "error"
+    description: "npm audit 不应有 critical/high 漏洞"
+    fixable: false
+
+# ----- 严重级别映射 -----
+severity_map:
+  error: "error"
+  warning: "warning"
+  info: "info"
+
+# ----- 阈值 -----
+thresholds:
+  max_warnings: 20
+  max_errors: 0
+  max_info: 50
+
+# ----- 忽略规则 -----
+ignore:
+  - pattern: "**/*.{test,spec}.{js,ts}"
+    rules: ["*"]
+  - pattern: "**/vendor/**/*.js"
+    rules: ["*"]
+  - pattern: "**/dist/**/*.js"
+    rules: ["*"]
+  - pattern: "**/legacy/**/*.js"
+    rules: ["readability/*", "maintainability/*"]
+
+# ----- 输出 -----
+output:
+  format: "json"
+  include_suggestions: true
+  include_fix_instructions: true

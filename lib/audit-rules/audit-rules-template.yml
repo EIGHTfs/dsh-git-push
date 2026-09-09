@@ -1,0 +1,65 @@
+# ============================================================
+# 审计规则纯模板（自定义规则入口）
+# 作者：DeepSeek
+# 版本：1.0.0
+# 描述：空白模板，用于自定义添加审计规则
+# 最后更新：2026-09-08
+# ============================================================
+
+metadata:
+  name: "自定义审计规则集"
+  version: "1.0.0"
+  language: "all"
+  author: "DeepSeek"
+  description: "根据项目需求自定义填充规则"
+  last_updated: "2026-09-08"
+
+rules:
+  # ----- 示例规则（请替换为你的规则） -----
+  # - id: category/rule-name
+  #   name: "规则显示名称"
+  #   category: "category"
+  #   severity: "warning"  # error | warning | info
+  #   description: "规则详细说明"
+  #   pattern: "^正则表达式$"
+  #   fixable: true
+  #   examples:
+  #     bad: "错误示例"
+  #     good: "正确示例"
+
+  # ----- 空规则占位（启动时无检查） -----
+  - id: placeholder/example
+    name: "示例规则（可删除）"
+    category: "placeholder"
+    severity: "info"
+    description: "请替换为实际规则"
+    pattern: "^$"
+    fixable: false
+
+# ----- 严重级别映射（可自定义） -----
+severity_map:
+  error: "error"
+  warning: "warning"
+  info: "info"
+
+# ----- 阈值配置（按需调整） -----
+thresholds:
+  max_warnings: 20
+  max_errors: 0
+  max_info: 50
+
+# ----- 忽略规则（按需调整） -----
+ignore:
+  - pattern: "**/node_modules/**/*"
+    rules: ["*"]
+  - pattern: "**/dist/**/*"
+    rules: ["*"]
+  - pattern: "**/*.{test,spec}.js"
+    rules: ["*"]
+
+# ----- 输出配置（按需调整） -----
+output:
+  format: "json"
+  include_suggestions: true
+  include_code_snippets: true
+  include_fix_instructions: true

@@ -1,6 +1,7 @@
 /**
- * dsh-git-push — 独立 CLI 单测（v1.44.0）
- * 覆盖：help / ruleset（builtin 解包计数）/ full-scan（表格与退出码）/ commit 门禁（--req-confirm）
+ * dsh-skip-sensitive dsh-git-push v1.1.0 独立 CLI 单测（v1.44.0）
+ * 文件头 dsh-skip-sensitive：本文件含 comment-wording 检测目标措辞（作为测试输入数据），提交前豁免敏感内容扫描。
+ * 覆盖：help / ruleset（编译计数）/ full-scan（表格与退出码）/ commit 门禁（--req-confirm）
  * 运行：node test/test-cli.mjs（子进程方式调 cli.mjs，不污染主进程）
  */
 
@@ -26,12 +27,12 @@ function run(args, cwd = tmpdir()) {
 console.log('  help / ruleset');
 {
   const r = run(['help']);
-  ok(r.code === 0 && r.out.includes('git-sluice v1.46.0'), 'help 打印且退出 0');
-  const r2 = run(['ruleset', 'builtin']);
-  ok(r2.code === 0 && r2.out.includes('eightfs v1.41.0') && r2.out.includes('"secret": 3'), 'ruleset builtin 解包计数正确');
-  const r3 = run(['ruleset', 'builtin', '--json']);
+  ok(r.code === 0 && r.out.includes('git-sluice v1.47.0'), 'help 打印且退出 0');
+  const r2 = run(['ruleset', 'nodejs,frontend,comment']);
+  ok(r2.code === 0 && r2.out.includes('编译 OK') && r2.out.includes('"secret": 3'), 'ruleset 槽位顺序编译计数正确');
+  const r3 = run(['ruleset', '', '--json']);
   const j = JSON.parse(r3.out);
-  ok(j.ok === true && j.counts.docConversation === 5 && j.counts.fullScan.threshold === 60, 'ruleset --json 输出结构');
+  ok(j.ok === true && j.counts.docConversation === 5 && j.counts.fullScan.threshold === 60 && j.counts.secret === 3, 'ruleset --json 输出结构');
 }
 
 console.log('  full-scan / commit（tmp 仓库端到端）');
@@ -43,11 +44,13 @@ try {
   execFileSync('git', ['add', '-A'], { cwd: d });
   execFileSync('git', ['-c', 'user.name=demo', '-c', 'user.email=d@l', 'commit', '-q', '-m', 'init'], { cwd: d });
 
+  // v1.47.0：YAML 引擎下「用户指示」= 门禁措辞（blocker）+ full-scan 高分（85 = 用户指示 40+指示 15+短 10+上下文 20）
+  // 全仓扫描是只读报告通道，不因 comment-wording 拦截而影响输出
   const fs = run(['full-scan', d]);
-  ok(fs.code === 0 && fs.out.includes('a.js:1') && /\b70\b/.test(fs.out) && fs.out.includes('⚠'), 'full-scan 表格 + 命中 70 分 + ⚠ 标记');
+  ok(fs.code === 0 && fs.out.includes('a.js:1') && /\b85\b/.test(fs.out) && fs.out.includes('⚠'), 'full-scan 表格 + 命中 85 分 + ⚠ 标记');
   const fsJ = run(['full-scan', d, '--json']);
   const fj = JSON.parse(fsJ.out);
-  ok(fj.ok === true && fj.warnCount === 1 && fj.hits[0].score === 70, 'full-scan --json warnCount=1');
+  ok(fj.ok === true && fj.warnCount === 1 && fj.hits[0].score === 85, 'full-scan --json warnCount=1');
 
   const gate = run(['commit', d, '-m', 'gate-test'], d);
   ok(gate.code === 2 && gate.out.includes('"ok": false'), 'commit 不带 --req-confirm 被门禁拒绝（退出 2）');
