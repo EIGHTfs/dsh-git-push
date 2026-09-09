@@ -1,0 +1,101 @@
+# 版本控制审计规则（v1.52.0 默认加载槽位）
+# 权威源：skills/git-workflow-gitpush/versioning-rule.md（EIGHTfs 自研插件版本号规则，
+#   2026-08-20/21 确立，适用本机所有 dsh-* 自研插件 + gbmd 三组件）。
+# 落地为 yml 审计：versioning-rule 的「语义规则」（版本只在提交时变化 / 大版本换代判定）
+#   需 git log 对比，引擎静态正则无法表达（走人工/code_audit LLM）；正则可执行规则全部转这里：
+#   ①硬规则 1 开头（禁止 0.x）②X.Y.Z 三段格式 ③README 版本记录标题 ④patch 版本字段行为。
+# 目标文件：package.json / *.json（manifest） / *.md / README 版本表 —— 用 exts 限定。
+metadata:
+  name: "版本控制审计规则集（versioning-rule 转写）"
+  author: "EIGHTfs"
+  version: "1.0.0"
+  description: "版本号 X.Y.Z 语义 + 1 开头硬规则 + 版本只在提交时变化 + README 更新日志同步（源：versioning-rule.md）"
+
+rules:
+  # ── ① 硬规则：大版本 X 必须 ≥1，禁止 0.x（versioning-rule §二）──
+  - id: version/major-zero
+    name: "版本号 0.x 开头（违反 1 开头硬规则）"
+    category: "version"
+    severity: "error"
+    description: "自研插件/项目 package.json version 必须 1 开头（禁止 0.x）；0.x 是不合规范的预发布写法，一经发现必须修正为 1.x（Y/Z 原样保留：0.2.0 → 1.2.0）"
+    exts: ["json"]
+    patterns:
+      - "\"version\"\\s*:\\s*\"0\\.\\d+\\.\\d+\""
+    fixable: true
+    mitigation: "修正为 1.x（Y/Z 保持）；第三方依赖（@deepseek-ai/@dsh-external）跳过"
+  - id: version/embedded-major-zero
+    name: "代码内版本标记 0.x（内置模块除外）"
+    category: "version"
+    severity: "warning"
+    description: "非内置模块（正式插件）任何位置出现 v0.x/V0.x 版本标记均违反 1 开头硬规则；内置模块（待 burn-in）允许 0.x 起步（versioning-rule §二例外），此规则命中时应人工确认归属"
+    exts: ["js", "mjs", "json", "md"]
+    patterns:
+      - "[vV]0\\.\\d+\\.\\d+"
+    fixable: false
+    mitigation: "确认归属：正式插件改 1.x；内置模块（待内置）允许 0.x 并在 README 注明"
+  - id: version/readme-zero-title
+    name: "README 版本记录标题 0.x"
+    category: "version"
+    severity: "warning"
+    description: "README 更新日志标题出现 v0.x 应与 package.json 同步修正（README 版本记录是权威展示位，见 versioning-rule §六）"
+    exts: ["md"]
+    patterns:
+      - "v0\\.\\d+\\.\\d+"
+    fixable: false
+    mitigation: "README 标题与 package.json version 对齐（1 开头）"
+
+  # ── ② 格式：X.Y.Z 三段（versioning-rule §一）──
+  - id: version/format-not-triple
+    name: "版本号非 X.Y.Z 三段格式"
+    category: "version"
+    severity: "error"
+    description: "DSH 插件 package.json version 必须 X.Y.Z 三段（两段 1.0 / 四段 1.0.0.1 / 带前缀均不合规）；gbmd manifest MV3 同样要求三段"
+    exts: ["json"]
+    patterns:
+      - "\"version\"\\s*:\\s*\"(?![0-9]+\\.[0-9]+\\.[0-9]+\")"
+    fixable: true
+    mitigation: "改为 X.Y.Z（如 1.2.0）；X≥1"
+  - id: version/tag-format
+    name: "git 版本标签格式（vX.Y.Z）"
+    category: "version"
+    severity: "warning"
+    description: "提交/打 tag 用 vX.Y.Z 规范格式（v1.2.0）；不带 v 前缀或非三段标签与发布工具约定不一致"
+    exts: ["md", "sh", "mjs", "yml"]
+    patterns:
+      - "tag\\s+v?[0-9]+\\.[0-9]+[^\\s\"]*"
+    fixable: false
+    mitigation: "统一 vX.Y.Z（如 git tag v1.2.0）"
+
+  # ── ③ 版本只在提交时变化（versioning-rule §零，检出"开发期乱升"线索）──
+  - id: version/changelog-many-entries
+    name: "README 单版本下多条更新记录（可能违反一次提交=一小版本）"
+    category: "version"
+    severity: "info"
+    description: "版本号指向「提交存档」而非「功能进度」：一次提交 = 一个小版本（Y+1）；README 同一版本号下堆积大量功能条目时提示核对是否应分次提交存档。命中即提示，需 git log 人工确认"
+    exts: ["md"]
+    patterns:
+      - "##?\\s+v?[0-9]+\\.[0-9]+\\.[0-9]+"
+    fixable: false
+    mitigation: "核对该版本含几次提交；按「一次提交一小版本」拆版本记录"
+  - id: version/bump-mismatch
+    name: "版本号与提交信息不一致（提交即存档新版本）"
+    category: "version"
+    severity: "info"
+    description: "提交信息里的版本号应与 package.json 一致（提交时先升 Y+1 再提交，见 versioning-rule §七）；本规则命中提交信息含版本号的行，核对与存档版本一致"
+    exts: ["md"]
+    patterns:
+      - "版本\\s*[:：]?\\s*v?[0-9]+\\.[0-9]+\\.[0-9]+"
+    fixable: false
+    mitigation: "提交前核对 package.json version = 提交信息版本号；开发期版本号不动"
+
+  # ── ④ README 更新日志标题（release-docs-rule：新功能提交必须整理 README）──
+  - id: version/readme-changelog
+    name: "README 缺版本记录（更新日志）"
+    category: "version"
+    severity: "info"
+    description: "新功能提交必须整理 README 版本记录（release-docs-rule）；命中 README 中版本表格行即提示核对「当前版本」与 package.json 同步"
+    exts: ["md"]
+    patterns:
+      - "\\*\\*[0-9]+\\.[0-9]+\\.[0-9]+[^*]*\\*\\*"
+    fixable: false
+    mitigation: "README 版本表加当前版本行（功能/修复要点），与 package.json version 一致"
