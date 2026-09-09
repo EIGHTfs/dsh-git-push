@@ -1,0 +1,153 @@
+# dsh-git-push-v2
+
+DSH（DeepSeek Harness）git 自动提交推送插件 **v2 重构版**（从零重建）。
+
+> **状态**：重构中（v1.0.0 计划稿 → v1.1.0 框架 → 每完成一个入口递增第三位）
+> **基线**：旧项目 `../dsh-git-push`（v1.60.0，五份外部审计报告已核对，问题清单见 §五）
+> **血缘**：本项目借旧项目架构经验 + 五份外部报告的教训，按统一函数入口架构重写。
+
+## 目录
+
+- [架构设计](#架构设计)
+- [总入口清单](#总入口清单)
+- [统一问题对象](#统一问题对象)
+- [版本规划](#版本规划)
+- [问题清单（五份报告 → v2 自检）](#问题清单五份报告--v2-自检)
+- [链接判断规则设计](#链接判断规则设计)
+- [文件目录结构及作用](#文件目录结构及作用)
+- [版本列表](#版本列表)
+- [注意事项](#注意事项)
+
+## 架构设计
+
+**核心思想：统一函数入口 + 注册表扩展，加能力不破坏主入口。**
+
+- **规则总入口（yml 管理）**：所有 yml 规则槽位（nodejs/npm/html/comment/dsh/private/structure/version/template 等）统一装载→解析→编译；**加字段=加函数，compileRule 主体永不修改**；每个字段函数自带 `dimensions` 维度绑定（支持一字段多维度）
+- **审计总入口**：`auditChanged`（变动，git diff）/ `auditFull`（全量，非 git 目录可查）；`auditWithScope` 统一调度，`auditScanScope` 设置项控制
+- **git 总入口**：token / sshkey / 提交 / 推送 / clone / 建仓 / 可见性 / 版本历史 / 重建历史
+- **自身总入口**：版本控制（单一事实源）/ README 模板（独立，不走拦截 yml）/ yml 模板（规则模板 + 豁免速查）/ 独立运行能力（CLI，npm test 可复现）
+- **评分总入口**：10 维度加权（可读性 15 / 可维护性 15 / 健壮性 15 / 安全性 18 / 性能 10 / 测试覆盖 10 / 可观测性 5 / 可部署性 5 / 文档 4 / 开发者体验 3，合计 100），问题(dimensions) → 分维度计数 → 加权总分
+- **豁免总入口**：`dsh-skip-*` 注册表（每个豁免类型声明「能豁免哪些维度」），扫描问题输出自带 `exemptHint`
+- **上下文注入入口**：给 AI 会话注入环境（工作目录映射 / 工具路径 / skill 清单）
+- **HTTP API 入口**：鉴权（Origin 校验 / CSRF / 写操作确认）
+- **测试总入口**：`npm test` 一条命令可复现全绿，失败退出非 0
+- **侧边栏（设置 UI）**：复用旧项目 client.js 改造
+
+## 总入口清单
+
+| # | 入口 | 职责 | 状态 |
+|---|------|------|------|
+| 1 | 规则总入口 | 所有 yml 字段解析 + yml 衍生新字段，编辑函数按字段指派 | ⏳ 规划 |
+| 2 | 审计总入口 | 变动/全量/非 git 目录，默认关闭，侧边栏开关 | ⏳ 规划 |
+| 3 | git 总入口 | token/sshkey/提交/推送/clone/建仓/可见性/历史 | ⏳ 规划 |
+| 4 | 自身总入口 | 版本控制/README 模板/yml 模板/CLI | ⏳ 规划 |
+| 5 | 侧边栏 | 设置 UI（复用旧 client.js） | ⏳ 规划 |
+| 6 | 评分总入口 | 10 维度加权 | ⏳ 规划 |
+| 7 | 豁免总入口 | dsh-skip-* 注册表 + exemptHint | ⏳ 规划 |
+| 8 | 上下文注入 | AI 会话环境注入 | ⏳ 规划 |
+| 9 | HTTP API | 鉴权端点 | ⏳ 规划 |
+| 10 | 测试总入口 | npm test 可复现 | ⏳ 规划 |
+
+## 统一问题对象
+
+```
+问题 = {
+  file, line,
+  rule, kind,
+  dimensions: ['可读性', '可维护性'],   // 字段函数里写绑定，支持一字段多维度
+  severity,                            // blocker / warning / info
+  exemptHint,                          // 怎么豁免（含位置语义：文件头=整文件 / 位置=单点）
+  scoreImpact,                         // 该问题对 10 维度评分的影响
+}
+```
+
+每个编译函数（字段函数）声明 `dimensions`——`func-lines` 字段 → `['可读性','可维护性']`，`empty-catch` → `['健壮性','可观测性']`。
+
+## 版本规划
+
+| 版本 | 内容 |
+|------|------|
+| **1.0.0** | README 文档（本文件）：重构计划 + 问题清单 + 链接规则设计 |
+| **1.1.0** | 功能框架搭建完毕能跑（目录结构 + 入口骨架 + npm test 绿） |
+| **1.1.x** | 每完成一个入口 commit 一次，第三位 +1（一次一入口） |
+| … | 全部入口完成后按实际功能跳版本 |
+
+**开发纪律**：每次提交**不推送**，提交前调用旧项目（`../dsh-git-push`）扫描本目录自检；旧项目发现的问题修复后再提交。
+
+## 问题清单（五份报告 → v2 自检）
+
+五份外部报告（code-quality-audit / code-analysis / 代码不足分析报告-实测版 / 代码不足分析-源码实测 / CODE-ANALYSIS-independent）已逐条实测核对。已证实问题转化为 v2 规则引擎的**内置自检规则**：
+
+| # | 已证实问题（来源） | v2 自检规则 | 规则槽位 |
+|---|---|---|---|
+| 1 | 死导入/未使用导出（execSync/commitAndPush/readdirSync/gitRaw） | `unused-import` / `unused-export` | nodejs |
+| 2 | 真空 catch / 静默吞错（readme-gen:166） | `empty-catch` | robustness |
+| 3 | 依赖未声明（js-yaml，三份报告都中） | `declared-dependency` | npm |
+| 4 | npm test 入口坏（三份报告都中） | `test-entry` | npm |
+| 5 | CLI 文档 vs 实现不一致（--depth，三份报告都中） | `cli-help-sync` | npm |
+| 6 | README/注释/工具数滞后（11 vs 12） | `doc-sync` | dsh |
+| 7 | HTTP 写端点无鉴权 | `http-auth` | dsh |
+| 8 | quality 规则自身假阴性（checkSyncInAsync 前缀匹配等） | `quality-rule-selfcheck` | dsh |
+| 9 | 同步 fs 204 处阻塞 | `sync-fs`（AST 全量） | performance |
+| 10 | 凭据卫生（origin 内嵌 token、/tmp PID） | `credential-in-url` / `tmp-symlink` | security |
+| 11 | 链接拼接错误（viewer 双协议前缀） | **`link-check`** | 新 kind |
+| 12 | 配置被忽略（githubOwner） | `config-ignored` | dsh |
+| 13 | 门禁链路漏接（requirementsConfirmed 只工具传） | `gateway-chain` | dsh |
+| 14 | 循环依赖（git-core⇆github-api） | `circular-import` | structure |
+| 15 | 文档措辞被自家拦截 | `docs-conversation` + **输出附带一键改写建议** | comment |
+
+**自检闭环**：v2 自己提交前跑一遍上面的 self-check = 等价于一次外部审计——「别人发现问题」→「自己每天发现」。
+
+## 链接判断规则设计
+
+**新规则 kind：`link-check`**——扫描项目内所有 URL，访问验证，报错扣分。
+
+```yaml
+- id: link/valid-url
+  kind: link-check
+  severity: warning
+  retries: 1
+  timeout_ms: 5000
+  flaky_domains:            # 不稳定的知名域名，网络错误扣分打折
+    - github.com
+    - api.github.com
+    - raw.githubusercontent.com
+    - npmjs.com
+  dimension: 文档            # 绑 10 维度
+  concurrent: 5
+```
+
+| 错误类型 | 基准扣分 | flaky 域名打折 | 绑定维度 |
+|---|---|---|---|
+| 404/403（连得上但目标不在） | 3 | 1.0（不打折） | 文档×3 |
+| DNS 解析失败 | 2 | 0.3 | 文档×2 |
+| 连接超时 | 1 | 0.2 | 文档×1 |
+| 网络层其他 | 1 | 0.2 | 文档×1 |
+
+**boundary（防误报核心）**：github 系列域名天然不稳 → flaky 域名网络错误扣分 ×0.2；DNS 失败且域名在 flaky 列表 → 只记 debug 不记分。**链接检查只跑 warning 不拦截**（网络不可靠，blocker 会造成假阳性拦截）。
+
+## 文件目录结构及作用
+
+（框架搭建后填充——1.1.0 起按实际模块更新本表并 commit）
+
+| 路径 | 作用 |
+|---|---|
+| `lib/` | 引擎模块（按总入口划分） |
+| `lib/audit-rules/` | yml 规则槽位 |
+| `test/` | 测试（test-<module>.mjs，npm test 可复现） |
+| `docs/` | 文档（本计划 / 看板 / 报告） |
+| `cli.mjs` | 独立 CLI（git-sluice） |
+
+## 版本列表
+
+| 版本 | 说明 |
+|---|---|
+| **1.0.0**（当前） | **README 文档（重构计划）**：10 总入口架构确定、统一问题对象确定、版本规范确定、15 条自检问题清单（五份报告已核对）、链接判断规则设计（flaky 域名扣分打折） |
+
+## 注意事项
+
+- **开发中不推送、不发布**；每次提交前用旧项目（`../dsh-git-push`）扫描自检
+- **规则加载器铁律**：加字段 = 加函数 + 注册一行，`compileRule` 主体永不修改
+- **命名格式统一**：一个功能一个根词，各层（函数/服务字段/工具/路由/yml 段）只做格式转换，对外 API 与函数名完全一致、无别名
+- **审计默认关闭**：审计功能默认不开，由侧边栏设置开启（本项目自身开发中保持一致开启）
+- **npm 发布完整性**：dependencies（js-yaml 等）显式声明，files 白名单含 cli.mjs，npm test 一条命令可复现

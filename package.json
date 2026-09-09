@@ -1,0 +1,22 @@
+{
+  "name": "dsh-git-push-v2",
+  "version": "1.0.0",
+  "description": "DSH git 自动提交推送插件 v2 重构版——统一函数入口架构（规则/审计/git/自身/侧边栏/评分/豁免/上下文/HTTP/测试十大总入口）",
+  "type": "module",
+  "main": "lib/index.js",
+  "bin": {
+    "git-sluice": "./cli.mjs"
+  },
+  "license": "UNLICENSED",
+  "private": true,
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0"
+  },
+  "scripts": {
+    "test": "node --test test/*.mjs",
+    "check": "for f in lib/*.js cli.mjs; do node --check \"$f\" || exit 1; done"
+  }
+}
