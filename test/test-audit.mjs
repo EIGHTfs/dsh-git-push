@@ -4,15 +4,17 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
 import '../lib/rule/compilers.js';
 import { auditFull, auditWithScope, makeFinding, summarize } from '../lib/audit/index.js';
-import { collectTextFiles, isGitRepo, readText } from '../lib/audit/collector.js';
+import { collectTextFiles, collectChangedFiles, isGitRepo, readText } from '../lib/audit/collector.js';
 import { checkEmptyCatch } from '../lib/audit/checks.js';
 
 let fixture = '';
+let gitRepo = '';
 
 before(() => {
   fixture = mkdtempSync(join(tmpdir(), 'v2-audit-'));
@@ -28,6 +30,18 @@ before(() => {
   writeFileSync(join(fixture, 'repo', 'secret.log'), 'AKIA1234567890ABCDEF\n');
   // ③ 豁免文件：文件头 dsh-skip-sensitive
   writeFileSync(join(fixture, 'exempt.js'), '// dsh-skip-sensitive: fixture\nconst t = "AKIA1234567890ABCDEF";\n');
+  // ④ git 仓库（auditChanged 真 diff 用）：init + 基线 commit → 再改 2 个文件
+  gitRepo = join(fixture, 'gitrepo');
+  mkdirSync(gitRepo);
+  writeFileSync(join(gitRepo, 'clean.js'), 'const ok = 1;\n');
+  const git = (args) => execFileSync('git', ['-C', gitRepo, ...args], { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] });
+  git(['init', '-q']);
+  git(['config', 'user.email', 'v2-test@local']);
+  git(['config', 'user.name', 'v2 test']);
+  git(['add', '-A']);
+  git(['commit', '-q', '-m', 'baseline']);
+  writeFileSync(join(gitRepo, 'clean.js'), 'const ok = 2;\n'); // M
+  writeFileSync(join(gitRepo, 'new.js'), 'const key = "AKIA1234567890ABCDEF";\n'); // ??
 });
 
 after(() => {
@@ -109,4 +123,30 @@ test('auditFull：summary 结构完整 + files 计数', () => {
   const res = auditFull(fixture);
   assert.deepEqual(Object.keys(res.summary).sort(), ['blocker', 'total', 'warning']);
   assert.ok(res.files >= 3);
+});
+
+test('collectChangedFiles：git 仓库变动列表（M + ??）', () => {
+  const changed = collectChangedFiles(gitRepo);
+  const rels = changed.map((c) => c.rel).sort();
+  assert.deepEqual(rels, ['clean.js', 'new.js']);
+  const statuses = changed.map((c) => c.status).sort();
+  assert.deepEqual(statuses, ['??', 'M']);
+});
+
+test('auditChanged：git 仓库只审计变动文件（真 diff）', () => {
+  const res = auditWithScope(gitRepo, { scope: 'diff' });
+  assert.equal(res.scope, 'changed');
+  assert.equal(res.files, 2, '只应审计 2 个变动文件');
+  const secret = res.findings.filter((f) => f.kind === 'secret');
+  assert.ok(secret.length >= 1, 'new.js 中的 AKIA 应命中 secret');
+  const files = new Set(res.findings.map((f) => f.file));
+  assert.ok(!files.has('a.js'), '未变动文件 a.js 不应出现在变动审计中');
+});
+
+test('auditChanged：删除的文件跳过（status D 无可读内容）', () => {
+  rmSync(join(gitRepo, 'clean.js'));
+  const res = auditWithScope(gitRepo, { scope: 'diff' });
+  const cleanHits = res.findings.filter((f) => f.file === 'clean.js');
+  assert.equal(cleanHits.length, 0, '删除文件不应产出 findings');
+  assert.ok(res.files <= 1);
 });
