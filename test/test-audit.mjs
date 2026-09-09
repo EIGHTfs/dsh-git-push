@@ -273,6 +273,24 @@ try {
   const r25c = auditRepo(repo, { files: [{ path: 'mixed2.js', content: 'const a = 1;\nconst p = "/vol2/1000/workspace";\n', addedLines: ['const p = "/vol2/1000/workspace";'], isBinary: false }], blockOn: 'blocker', hardcodeFullScan: true });
   ok(r25c.findings.some((f) => f.rule === 'hardcode-path'), '全量扫模式新增行硬编码仍报');
 
+  /* ============ v1.60.0：豁免体系分维度（文件头标记 → 对应拦截类型豁免） ============ */
+  const exFiles = [
+    { path: 'big.bin', content: '', addedLines: [], isBinary: true },
+    { path: 'size-exempt.bin', content: '/** dsh-skip-size */', addedLines: [], isBinary: true },
+    { path: 'syntax-exempt.js', content: '/** dsh-skip-syntax */\nfunction ( {\n', addedLines: ['function ( {\n'], isBinary: false },
+    { path: 'residue-exempt.js', content: '/** dsh-skip-residue */\nfunction a() { debugger; }\n', addedLines: ['function a() { debugger; }'], isBinary: false },
+    { path: 'func-exempt.js', content: '/** dsh-skip-func-length */\nfunction longFn() {\n' + '  a();\n'.repeat(200) + '}\n', addedLines: ['function longFn() {'], isBinary: false },
+    { path: 'style-exempt.css', content: '/** dsh-skip-style */\n.bad { color: red !important; }\n', addedLines: ['.bad { color: red !important; }'], isBinary: false },
+  ];
+  for (const f of exFiles) writeFileSync(join(repo, f.path), f.content);
+  const ex = auditRepo(repo, { files: exFiles, yamlMode: 'js-yaml' });
+  ok(ex.findings.some((f) => f.rule === 'binary' && f.file === 'big.bin'), '对照：无豁免大文件仍报 binary');
+  ok(!ex.findings.some((f) => f.rule === 'binary' && f.file === 'size-exempt.bin'), 'dsh-skip-size 文件头豁免 binary');
+  ok(!ex.findings.some((f) => f.rule === 'syntax' && f.file === 'syntax-exempt.js'), 'dsh-skip-syntax 文件头豁免语法错误');
+  ok(!ex.findings.some((f) => f.rule === 'debugger' && f.file === 'residue-exempt.js'), 'dsh-skip-residue 文件头豁免 debugger');
+  ok(!ex.findings.some((f) => f.rule === 'func-lines' && f.file === 'func-exempt.js'), 'dsh-skip-func-length 文件头豁免全部函数长度');
+  ok(!ex.findings.some((f) => f.rule.startsWith('style:') && f.file === 'style-exempt.css'), 'dsh-skip-style 文件头豁免 styleRules');
+
   /* ============ v1.37.0：blockOn='none'（私有仓仅警告不拦截） ============ */
   const n1 = auditRepo(repo, { files: [{ path: 'blocked.js', content: 'const p = "/vol2/1000/workspace";\n', addedLines: ['const p = "/vol2/1000/workspace";'], isBinary: false }], blockOn: 'none', hardcodeFullScan: true });
   ok(n1.findings.some((f) => f.level === 'blocker'), 'blockOn=none 仍产出 blocker 级别发现');
