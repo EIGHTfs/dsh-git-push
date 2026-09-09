@@ -109,6 +109,10 @@ console.log('  评分（scoreQuality）');
   const q = scoreQuality({}, {});
   ok(q.dimensions && Object.keys(q.dimensions).length === 10, `10 维度齐全（got=${Object.keys(q.dimensions).length}）`);
   ok(q.levelDesc && q.levelDesc.length > 0, '等级描述非空');
+
+  // v1.59.0：qualityWeights 覆盖（维度名 → 权重，合并进默认权重）
+  const over = scoreQuality({ readability: 1, robustness: 1, performance: 1, testing: true }, { qualityWeights: { 可读性: 50 } });
+  ok(typeof over.score === 'number' && over.score !== q.score, `qualityWeights 覆盖改变得分（base=${q.score} over=${over.score}）`);
 }
 
 // ---- yaml 解析 ----
@@ -116,12 +120,13 @@ console.log('  yaml 解析（loadQualityYaml / locateQualityYaml）');
 {
   const fallback = loadQualityYaml('');
   ok(fallback.weights['可读性'] === 15 && Object.keys(fallback.weights).length === 10, '默认权重 10 项');
-  ok(loadQualityYaml('/nonexistent-xyz.yaml').weights['安全性'] === 20, '文件缺失降级默认');
+  // v1.59.0：安全性 20→18 文档 3→4 DX 2→3（定稿 10 维度合并版）
+  ok(loadQualityYaml('/nonexistent-xyz.yaml').weights['安全性'] === 18, '文件缺失降级默认（安全性 18）');
 
   const yp = locateQualityYaml(TEST_REPO_ROOT);
   ok(yp.endsWith('code-quality-checklist.yaml'), `定位到 checklist（got=${yp.split('/').pop()}）`);
   const parsed = loadQualityYaml(yp);
-  ok(parsed.weights['可读性'] === 15 && parsed.weights['安全性'] === 20 && parsed.weights['开发者体验'] === 2, `解析 yaml 权重（可读性=${parsed.weights['可读性']} 安全性=${parsed.weights['安全性']} DX=${parsed.weights['开发者体验']}）`);
+  ok(parsed.weights['可读性'] === 15 && parsed.weights['安全性'] === 18 && parsed.weights['开发者体验'] === 3 && parsed.weights['文档'] === 4, `解析 yaml 权重（可读=${parsed.weights['可读性']} 安全=${parsed.weights['安全性']} DX=${parsed.weights['开发者体验']} 文档=${parsed.weights['文档']}）`);
   ok(parsed.levels.A && parsed.levels.D, `解析 A/D 等级描述`);
 }
 
