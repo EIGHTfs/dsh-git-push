@@ -27,6 +27,30 @@ rules:
   #     bad: "错误示例"
   #     good: "正确示例"
 
+  # ----- v1.55.0 目录结构校验（kind: path-regex——对文件路径跑正则，如复数目录名） -----
+  # - id: structure/dir-singular
+  #   name: "目录命名统一单数"
+  #   category: "maintainability"
+  #   severity: "warning"
+  #   kind: "path-regex"
+  #   pattern: "(?:^|/)(tools|tests|scripts|configs|libs|logs)/"
+
+  # ----- v1.56.0 嵌套深度（kind: max-depth——缩进层级超阈值） -----
+  # - id: readability/max-nesting-depth
+  #   name: "嵌套过深"
+  #   category: "readability"
+  #   severity: "warning"
+  #   max_depth: 3
+
+  # ----- v1.58.0 重复硬编码字符串（kind: repeated-string——字面量出现数 + 白名单豁免） -----
+  # - id: security/no-repeated-hardcoded-literals
+  #   name: "检测重复出现的硬编码文本"
+  #   category: "security"
+  #   severity: "warning"
+  #   min_occurrences: 3
+  #   ignore_patterns: ["^\\d+$", "^utf-?8$"]
+  #   ignore_values: ["0", "1", "true", "false", "null", "undefined", "''", "\"\""]
+
   # ----- 空规则占位（启动时无检查） -----
   - id: placeholder/example
     name: "示例规则（可删除）"

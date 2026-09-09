@@ -120,6 +120,24 @@ ok(hasRule(r15, 'robustness/no-sync-fs'), '用户服务：同步 IO fs.readFileS
 ok(hasRule(r15, 'readability/vague-function-name'), '用户服务：万能词 doEverything/handle 检出');
 ok(hasRule(r15, 'readability/max-nesting-depth'), '用户服务：嵌套超 3 层检出');
 
+/* ---------- v1.58.0 重复硬编码字符串（repeated-string）：test/fixture/repeated-hardcoded.js ---------- */
+// fixture 含 dsh-skip-sensitive 豁免头（入库防凭据拦截），测试复制时替换关键字为空——styleRules 检出需豁免失效
+const repeatedText = readFileSync(new URL('./fixture/repeated-hardcoded.js', import.meta.url), 'utf8')
+  .replace(/dsh-skip-sensitive/g, 'x-no-exempt');
+writeFileSync(join(repo, 'repeated.js'), repeatedText);
+const r16 = auditRepo(repo, {
+  files: [{ path: 'repeated.js', addedLines: repeatedText.split('\n'), isBinary: false }],
+  quality: { enabled: false },
+});
+const repVals = r16.findings
+  .filter((f) => f.rule.includes('no-repeated-hardcoded'))
+  .map((f) => (f.message.match(/「(.+?)」/) || [])[1]);
+ok(repVals.includes('/var/log/app.log'), '重复硬编码：路径 /var/log/app.log 检出');
+ok(repVals.includes('pending') && repVals.includes('completed'), '重复硬编码：状态 pending/completed 检出');
+ok(repVals.includes('/tmp/cache') && repVals.includes('admin'), '重复硬编码：路径 + 用户名 admin 检出');
+ok(repVals.includes('Bearer '), '重复硬编码：token 片段 Bearer 检出');
+ok(!['utf-8', '.json', '\n', 'true', '0', '1'].some((v) => repVals.includes(v)), '重复硬编码：编码/扩展名/换行/布尔/数字白名单豁免不误报');
+
 rmSync(root, { recursive: true, force: true });
 console.log(`\n结果: ${pass} 通过 / ${fail} 失败`);
 process.exit(fail ? 1 : 0);
