@@ -59,8 +59,8 @@ rules:
     name: "函数名万能词（doIt/handle/process 等）"
     category: "readability"
     severity: "warning"
-    description: "doIt/handle/process/run/do/exec 等万能动词函数名无法表达具体职责，应从名字看出做什么"
-    pattern: "\\bfunction\\s+(doIt|doItAll|handle|process|run|do|exec|deal|make|thing)\\b\\s*\\("
+    description: "doIt/handle/process/run/do/exec/doEverything 等万能动词函数名无法表达具体职责，应从名字看出做什么"
+    pattern: "\\bfunction\\s+(doIt|doItAll|doEverything|handle|process|run|do|exec|deal|make|thing)\\b\\s*\\("
     fixable: false
     mitigation: "换成具体动作：doIt→submitOrder、handle→handleOrderCancellation、process→parsePayload"
 

@@ -108,6 +108,18 @@ ok(hasRule(r13, 'readability/max-nesting-depth'), '坏命名：嵌套过深检�
 const r14 = auditFile('legit.js', 'export const ok = () => 1;\nconst count = 1;\nconst version = 1.0;\nif (x > 0) { run(); }\n');
 ok(!hasRule(r14, 'readability/magic-number'), '魔数：赋值/箭头/>0 边界不误报');
 
+/* ---------- v1.57.0 用户服务坏样本：test/fixture/user-service-bad.js（空 catch/同步IO/嵌套等混合） ---------- */
+const userSvcText = readFileSync(new URL('./fixture/user-service-bad.js', import.meta.url), 'utf8');
+writeFileSync(join(repo, 'user-service.js'), userSvcText);
+const r15 = auditRepo(repo, {
+  files: [{ path: 'user-service.js', addedLines: userSvcText.split('\n'), isBinary: false }],
+  quality: { enabled: false },
+});
+ok(hasRule(r15, 'robustness/no-empty-catch'), '用户服务：空 catch 静默吞错检出');
+ok(hasRule(r15, 'robustness/no-sync-fs'), '用户服务：同步 IO fs.readFileSync 检出');
+ok(hasRule(r15, 'readability/vague-function-name'), '用户服务：万能词 doEverything/handle 检出');
+ok(hasRule(r15, 'readability/max-nesting-depth'), '用户服务：嵌套超 3 层检出');
+
 rmSync(root, { recursive: true, force: true });
 console.log(`\n结果: ${pass} 通过 / ${fail} 失败`);
 process.exit(fail ? 1 : 0);
