@@ -27,7 +27,7 @@ function run(args, cwd = tmpdir()) {
 console.log('  help / ruleset');
 {
   const r = run(['help']);
-  ok(r.code === 0 && r.out.includes('git-sluice v1.49.1'), 'help 打印且退出 0');
+  ok(r.code === 0 && r.out.includes('git-sluice v1.50.0'), 'help 打印且退出 0');
   const r2 = run(['ruleset', 'nodejs,frontend,comment']);
   ok(r2.code === 0 && r2.out.includes('编译 OK') && r2.out.includes('"secret": 3'), 'ruleset 槽位顺序编译计数正确');
   const r3 = run(['ruleset', '', '--json']);
