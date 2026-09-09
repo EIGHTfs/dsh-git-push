@@ -1,0 +1,23 @@
+# 私密拦截审计规则（v1.48.0 强制加载槽位）
+# 强制加载：无论 auditRuleOrder 如何配置，本槽位永远合并进最终规则集（末尾追加，优先级最高）。
+# 语义：仓库跟踪到以下私密文件时，按远端可见性分级——
+#   public → blocker 拦截提交（私密文件已可被任何人获取）；private/unknown → warning 提醒。
+# 本文件是规则文件也是权重文件：清单增删即规则调整（与插件其它 YAML 规则一致）。
+metadata:
+  name: 私密文件拦截审计（强制槽位）
+  author: EIGHTfs
+  version: "1.0.0"
+private_files:
+  - "**/id_ed25519"
+  - "**/id_rsa"
+  - "**/*.pem"
+  - "**/*.key"
+  - "**/github-token"
+  - "**/.git-push-token"
+  - "**/.env"
+  - "**/.env.*"
+  - "**/data/sensitive/**"
+  - "**/.ssh/**"
+  - "**/.dsh/git-push/**"
+  - "**/.npmrc"
+rules: []
