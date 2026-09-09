@@ -166,6 +166,38 @@ rules:
     mitigation: "设置 timeout 或 AbortController"
 
   # ----- 4. 安全性 -----
+  # v1.58.0：重复硬编码字符串（repeated-string 类型）——字符串字面量在同文件出现 ≥3 次且不在白名单 → 建议配置化
+  - id: security/no-repeated-hardcoded-literals
+    name: "检测重复出现的硬编码文本"
+    category: "security"
+    severity: "warning"
+    description: "如果一个字符串（路径、域名、用户名、token、端口、URL 等）在代码中重复出现 3 次或以上，建议提取为常量或配置变量"
+    fixable: true
+    min_occurrences: 3
+    ignore_patterns:
+      - "^\\d+$"
+      - "^(true|false|null|undefined)$"
+      - "^[{}[\\]]$"
+      - "^[+\\-*/=]$"
+      - "^['\"`]$"
+      - "^\\s*$"
+      - "^\\\\n$"
+      - "^\\d+\\.\\d+$"
+      - "^\\.(json|txt|log|md|yaml|yml|html|css|js|mjs|ts|png|jpg|jpeg|gif|svg)$"
+      - "^utf-?8$"
+      - "^utf-?16le?$"
+    ignore_values:
+      - "0"
+      - "1"
+      - "-1"
+      - "true"
+      - "false"
+      - "null"
+      - "undefined"
+      - "''"
+      - '""'
+    mitigation: "提取为常量（UPPER_SNAKE_CASE）放入 config/constant.js 或通过环境变量注入"
+
   - id: security/no-hardcoded-credentials
     name: "禁止硬编码凭据"
     category: "security"
