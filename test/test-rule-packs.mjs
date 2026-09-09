@@ -18,14 +18,20 @@ const ok = (c, l) => { c ? pass++ : fail++; console.log(`${c ? '  ✅' : '  ❌'
 const root = mkdtempSync(join(tmpdir(), 'gitpush-yaml-test-'));
 mkdirSync(join(root, 'repo'), { recursive: true });
 
-/* ---------- 槽位与默认顺序 ---------- */
-ok(RULE_SLOTS.length === 7 && RULE_SLOTS.includes('template') && RULE_SLOTS.includes('private') && RULE_SLOTS.includes('dsh') && RULE_SLOTS.includes('npm'), '七个规则槽位存在（含 template 模板 + dsh 插件审计 + npm 发布审计 + private 强制槽位）');
-ok(DEFAULT_RULE_ORDER.join(',') === 'nodejs,frontend,comment,dsh,npm', `默认顺序 nodejs→frontend→comment→dsh→npm（template 不加载）实际: ${DEFAULT_RULE_ORDER.join(',')}`);
+/* ---------- 槽位与默认顺序（v1.52.0 动态发现：扫描 audit-rules/*.yml） ---------- */
+// 固定核心槽位（内置规则文件存在即应被发现；不再写死数组数量——加新 yml 自动成为槽位）
+for (const core of ['nodejs', 'frontend', 'comment', 'dsh', 'npm', 'version', 'template', 'private']) {
+  ok(RULE_SLOTS.includes(core), `动态发现的槽位含 ${core}`);
+}
+ok(!RULE_SLOTS.some((s) => !/^[a-z0-9_-]+$/.test(s)), '槽位 id 全部为合法短横线小写');
+// 默认顺序：不含 template（空模板不加载）与 private（强制末尾另行合入），但覆盖全部其它槽位
+ok(!DEFAULT_RULE_ORDER.includes('template') && !DEFAULT_RULE_ORDER.includes('private'), '默认顺序排除 template/private');
+ok(DEFAULT_RULE_ORDER.filter((s) => !RULE_SLOTS.includes(s)).length === 0, `默认顺序全部是已知槽位（实际 ${DEFAULT_RULE_ORDER.join(',')}`);
 
 /* ---------- 私密拦截强制槽位（v1.48.0）---------- */
 {
   const c = getCompiledRulePack('');
-  ok(c.meta.order.join(',') === 'nodejs,frontend,comment,dsh,npm,private', `强制槽位末尾合入（默认+dsh+npm）实际: ${c.meta.order.join(',')}`);
+  ok(c.meta.order[c.meta.order.length - 1] === 'private' && c.meta.order.includes('private'), `强制槽位末尾合入（实际 ${c.meta.order.join(',')}`);
   ok(Array.isArray(c.privateFiles) && c.privateFiles.length >= 10, `privateFiles 编译（≥10 条）实际: ${c.privateFiles?.length}`);
   ok(c.privateFiles.some((p) => p.glob === '**/id_ed25519' || /id_ed25519/.test(p.glob)), 'privateFiles 含 id_ed25519 清单');
   const c2 = getCompiledRulePack(['comment']);
@@ -37,7 +43,7 @@ ok(DEFAULT_RULE_ORDER.join(',') === 'nodejs,frontend,comment,dsh,npm', `默认�
   ok(pf && !pf.re.test('lib/ed25519.js'), 'glob **/id_ed25519 不误配同名普通文件');
 }
 
-/* ---------- 四份 YAML 各自可装载 ---------- */
+/* ---------- 全部槽位 YAML 各自可装载 ---------- */
 for (const s of RULE_SLOTS) {
   const r = loadYamlRuleFile(s);
   ok(r.ok, `YAML 可装载: ${s}`);
@@ -46,8 +52,8 @@ for (const s of RULE_SLOTS) {
 /* ---------- 默认装载（template 排除） ---------- */
 const loaded = loadYamlRuleFiles();
 ok(loaded.ok, '默认装载成功');
-ok(loaded.order.join(',') === 'nodejs,frontend,comment,dsh,npm', `实际加载顺序 ${loaded.order.join(',')}`);
-ok(loaded.files.length === 5 && loaded.files.every((f) => !f.includes('template')), 'template.yml 不加载（默认加载 nodejs/frontend/comment/dsh/npm 五份）');
+ok(loaded.order.length === DEFAULT_RULE_ORDER.length && !loaded.order.includes('template') && !loaded.order.includes('private'), `实际加载顺序=${loaded.order.join(',')}（排除 template/private）`);
+ok(loaded.files.length === loaded.order.length && loaded.files.every((f) => !f.includes('template')), `默认加载 ${loaded.files.length} 份（排除 template）`);
 ok(loaded.errors.length === 0, `装载零错误（实际 ${loaded.errors.length}）`);
 
 /* ---------- 校验 ---------- */
@@ -65,7 +71,7 @@ ok(c.semanticRules.length >= 4, `语义规则桶 ≥4 条（实际 ${c.semanticR
 ok(c.ignore.length >= 5, `ignore 路径豁免 ≥5 条（实际 ${c.ignore.length}）`);
 ok(c.commentScoring && c.commentScoring.threshold === 60 && c.commentScoring.thresholdHighlySuspicious === 80, `comment 评分阈值 60/80（实际 ${c.commentScoring?.threshold}/${c.commentScoring?.thresholdHighlySuspicious}）`);
 ok(c.commentScoring && c.commentScoring.blacklist.length === 22 && c.commentScoring.whitelist.length === 22, `comment 黑名单 22（16 用户原表 + 9 历史翻译 - 3 重复去重） / 白名单 22（实际 ${c.commentScoring?.blacklist.length}/${c.commentScoring?.whitelist.length}）`);
-ok(c.meta.order.join(',') === 'nodejs,frontend,comment,dsh,npm', `meta.order 随装载`);
+ok(c.meta.order.length === loaded.order.length && !c.meta.order.includes('template') && !c.meta.order.includes('private'), `meta.order 随装载（${c.meta.order.join(',')}）`);
 ok(c.errors.length === 0, `编译零错误（实际 ${c.errors.length}）`);
 
 /* ---------- severity 三级映射 ---------- */
@@ -96,18 +102,18 @@ ok(!badSev.ok && badSev.errors.some((e) => e.includes('severity 非法')), '非�
 /* ---------- getCompiledRulePack（缓存入口） ---------- */
 clearRulePackCache();
 const g = getCompiledRulePack('');
-ok(g.secretPatterns.length === 3 && g.meta.order.join(',') === 'nodejs,frontend,comment,dsh,npm,private', 'getCompiledRulePack 缺省装载正确（private 强制末尾）');
+ok(g.secretPatterns.length === 3 && g.meta.order[g.meta.order.length - 1] === 'private' && !g.meta.order.includes('template'), `getCompiledRulePack 缺省装载正确（private 强制末尾，实际 ${g.meta.order.join(',')}）`);
 const g2 = getCompiledRulePack(['comment', 'nodejs']);
 ok(g2.meta.order.join(',') === 'comment,nodejs,private', 'getCompiledRulePack 自定义顺序（private 强制末尾）');
 
 /* ---------- resolveRulesetChoice 兼容旧调用 ---------- */
-ok(resolveRulesetChoice('').source === 'yaml' && resolveRulesetChoice('').order.length === 6, '空配置 → yaml 默认顺序（含 dsh+npm+private 强制）');
+ok(resolveRulesetChoice('').source === 'yaml' && resolveRulesetChoice('').order[resolveRulesetChoice('').order.length - 1] === 'private' && !resolveRulesetChoice('').order.includes('template'), `空配置 → yaml 默认顺序（private 强制末尾，实际 ${resolveRulesetChoice('').order.join(',')}）`);
 ok(resolveRulesetChoice('comment,nodejs').order.join(',') === 'comment,nodejs,private', '逗号分隔顺序解析（private 强制末尾）');
 ok(resolveRulesetChoice('eightfs').source === 'yaml', '别名 eightfs → yaml 引擎（替换语义）');
 
 /* ---------- loadRulePack 兼容名 ---------- */
 const lu = await loadRulePack('');
-ok(lu.ok && lu.source === 'yaml' && lu.order.length === 6, 'loadRulePack 默认装载（含 dsh+npm+private 强制）');
+ok(lu.ok && lu.source === 'yaml' && lu.order[lu.order.length - 1] === 'private' && !lu.order.includes('template'), `loadRulePack 默认装载（private 强制末尾，实际 ${lu.order.join(',')}）`);
 const lorder = await loadRulePack({ order: ['frontend', 'comment'] });
 ok(lorder.ok && lorder.order.join(',') === 'frontend,comment,private', 'loadRulePack 自定义顺序（private 强制末尾）');
 
