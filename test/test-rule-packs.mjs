@@ -19,8 +19,23 @@ const root = mkdtempSync(join(tmpdir(), 'gitpush-yaml-test-'));
 mkdirSync(join(root, 'repo'), { recursive: true });
 
 /* ---------- 槽位与默认顺序 ---------- */
-ok(RULE_SLOTS.length === 4 && RULE_SLOTS.includes('template'), '四个规则槽位存在（含 template 模板）');
+ok(RULE_SLOTS.length === 5 && RULE_SLOTS.includes('template') && RULE_SLOTS.includes('private'), '五个规则槽位存在（含 template 模板 + private 强制槽位）');
 ok(DEFAULT_RULE_ORDER.join(',') === 'nodejs,frontend,comment', `默认顺序 nodejs→frontend→comment（template 不加载）实际: ${DEFAULT_RULE_ORDER.join(',')}`);
+
+/* ---------- 私密拦截强制槽位（v1.48.0）---------- */
+{
+  const c = getCompiledRulePack('');
+  ok(c.meta.order.join(',') === 'nodejs,frontend,comment,private', `强制槽位末尾合入（默认）实际: ${c.meta.order.join(',')}`);
+  ok(Array.isArray(c.privateFiles) && c.privateFiles.length >= 10, `privateFiles 编译（≥10 条）实际: ${c.privateFiles?.length}`);
+  ok(c.privateFiles.some((p) => p.glob === '**/id_ed25519' || /id_ed25519/.test(p.glob)), 'privateFiles 含 id_ed25519 清单');
+  const c2 = getCompiledRulePack(['comment']);
+  ok(c2.meta.order.join(',') === 'comment,private', `用户仅排 comment → private 仍强制末尾实际: ${c2.meta.order.join(',')}`);
+  const c3 = getCompiledRulePack({ order: [], weights: {} });
+  ok(c3.meta.order.includes('private'), '空 order → private 仍强制合入');
+  const pf = c.privateFiles.find((p) => p.glob === '**/id_ed25519');
+  ok(pf && pf.re.test('EIGHTfs/id_ed25519'), 'glob **/id_ed25519 能匹配子目录私钥路径');
+  ok(pf && !pf.re.test('lib/ed25519.js'), 'glob **/id_ed25519 不误配同名普通文件');
+}
 
 /* ---------- 四份 YAML 各自可装载 ---------- */
 for (const s of RULE_SLOTS) {
@@ -81,20 +96,20 @@ ok(!badSev.ok && badSev.errors.some((e) => e.includes('severity 非法')), '非�
 /* ---------- getCompiledRulePack（缓存入口） ---------- */
 clearRulePackCache();
 const g = getCompiledRulePack('');
-ok(g.secretPatterns.length === 3 && g.meta.order.join(',') === 'nodejs,frontend,comment', 'getCompiledRulePack 缺省装载正确');
+ok(g.secretPatterns.length === 3 && g.meta.order.join(',') === 'nodejs,frontend,comment,private', 'getCompiledRulePack 缺省装载正确（private 强制末尾）');
 const g2 = getCompiledRulePack(['comment', 'nodejs']);
-ok(g2.meta.order.join(',') === 'comment,nodejs', 'getCompiledRulePack 自定义顺序');
+ok(g2.meta.order.join(',') === 'comment,nodejs,private', 'getCompiledRulePack 自定义顺序（private 强制末尾）');
 
 /* ---------- resolveRulesetChoice 兼容旧调用 ---------- */
-ok(resolveRulesetChoice('').source === 'yaml' && resolveRulesetChoice('').order.length === 3, '空配置 → yaml 默认顺序');
-ok(resolveRulesetChoice('comment,nodejs').order.join(',') === 'comment,nodejs', '逗号分隔顺序解析');
+ok(resolveRulesetChoice('').source === 'yaml' && resolveRulesetChoice('').order.length === 4, '空配置 → yaml 默认顺序（含 private 强制）');
+ok(resolveRulesetChoice('comment,nodejs').order.join(',') === 'comment,nodejs,private', '逗号分隔顺序解析（private 强制末尾）');
 ok(resolveRulesetChoice('eightfs').source === 'yaml', '别名 eightfs → yaml 引擎（替换语义）');
 
 /* ---------- loadRulePack 兼容名 ---------- */
 const lu = await loadRulePack('');
-ok(lu.ok && lu.source === 'yaml' && lu.order.length === 3, 'loadRulePack 默认装载');
+ok(lu.ok && lu.source === 'yaml' && lu.order.length === 4, 'loadRulePack 默认装载（含 private 强制）');
 const lorder = await loadRulePack({ order: ['frontend', 'comment'] });
-ok(lorder.ok && lorder.order.join(',') === 'frontend,comment', 'loadRulePack 自定义顺序');
+ok(lorder.ok && lorder.order.join(',') === 'frontend,comment,private', 'loadRulePack 自定义顺序（private 强制末尾）');
 
 /* ---------- auditRepo 端到端：YAML 规则引擎生效 ---------- */
 // 凭据规则拦截（secret error→blocker）
