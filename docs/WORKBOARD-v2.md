@@ -1,314 +1,472 @@
-# WORKBOARD v2 —— dsh-git-push-v2 重构任务看板
+# WORKBOARD v2 —— dsh-git-push-v2 重构任务看板（榜样版 · 交接版）
 
-> 状态：**重构进行中**（1.0.0 计划稿已提交 → 1.1.0 框架搭建中）
-> 仓库：`工作区/dsh-git-push-v2`（新文件夹，git 已 init，`master` 分支）
-> 关系：旧项目 `工作区/dsh-git-push`（v1.60.0）存档保留，作为自检扫描工具 + 经验来源
-> 本板内容：总入口架构 → 每入口详细任务（思路 + 验收标准）→ 版本节奏 → 问题清单 → 坑与风险
-
----
-
-## 〇、状态总览
-
-| # | 总入口 | 状态 | 说明 |
-|---|--------|------|------|
-| 0 | 1.0.0 计划稿（README） | ✅ 已提交 ccfd1e5 | 10 总入口架构 + 问题对象 + 版本规范 + 问题清单 + 链接规则设计 |
-| 1 | 规则总入口 | ✅ 1.1.1 完成 | 13 编译函数注册 + dimensions + nodejs 槽位 11 条规则 |
-| 2 | 审计总入口 | 🟡 骨架已写 | `lib/audit/index.js`（auditChanged/auditFull/auditWithScope）；检查实现未接 |
-| 3 | git 总入口 | 🟡 骨架已写 | `lib/git/index.js`（runGit/commitAndPush/pushViaApi…）；具体实现待 1.1.3 |
-| 4 | 自身总入口 | 🟡 骨架已写 | `lib/self/index.js`（VERSION/readmeTemplate/yamlTemplate）；模板未实现 |
-| 5 | 评分总入口 | 🟡 骨架已写 | `lib/score/index.js`（10 维度权重/分维度计数/scoreQuality）；口径待校准 |
-| 6 | 豁免总入口 | 🟡 骨架已写 | `lib/exempt/index.js`（7 标记注册表/exemptHint）；未接入审计 |
-| 7 | 上下文注入 | 🟡 骨架已写 | `lib/context/index.js`；未接 audit 输出 exemptHint |
-| 8 | HTTP API | ⏳ 未开始 | 鉴权设计见 §四-8 |
-| 9 | 测试总入口 | ⏳ 未开始 | test/ 空；npm test 脚本已就位（node --test test/*.mjs） |
-| 10 | 侧边栏 | ⏳ 未开始 | 复用旧项目 client.js 改造 |
+> **状态**：重构进行中（已提交 1.0.0 / 1.1.0 / 1.1.1；当前 1.1.2 审计总入口——半成品在工作区未提交）
+> **仓库**：`工作区/dsh-git-push-v2`（本地 master，**不推送**）
+> **看板双重身份**：
+> 1. **交接文档**——另一 AI 可凭本板完全接管 dsh-git-push-v2 重构，不读代码也能干活；
+> 2. **写作样板**——本板同时示范「一个好的任务看板长什么样、为什么这样写」，供其他 AI 学习如何写任务看板。
+>
+> 更新纪律：每个入口完成时同步本板「执行记录」+ README 版本表 + 测试全绿 + 旧项目扫描 0 blocker。
 
 ---
 
-## 一、架构回顾（一句话版）
+# 第一部分 任务看板写作方法（榜样学什么）
 
-**统一函数入口 + 注册表扩展：加能力不破坏主入口。** 十个总入口各自一个 `lib/<domain>/index.js` 门面 + 内部按 yml 字段/功能拆函数；`compileRule` 主体永不修改，加字段 = 加函数 + 注册一行。
+> 这一部分是「怎么看懂本板」和「以后怎么写一个同样好的看板」的说明书。clone 本板模板时，保留第一部分的骨架，替换第二部分为你的项目内容。
+
+## 1.1 看板是什么、不是什么
+
+| | 是 | 不是 |
+|---|---|---|
+| 本质 | **项目唯一权威的执行蓝图**：目标、现状、步骤、验收、风险、进度一次性写清，任何新接手者（人或 AI）只读本板就能继续 | 随手记的笔记、草稿、过程对话散存 |
+| 粒度 | 事无巨细：文件级、函数级、命令级、断言数级 | 「做优化」「重构一下」这种大而空的话 |
+| 交付 | 每步**可验收**（有命令、有数字、有对比） | 只有「计划做」没有「怎么算做完」 |
+| 时效 | 随进度实时勾选更新 | 写一次就扔 |
+
+写作心法一句话：**看板不是给你写的，是给下一个不知道上下文的人（或 AI）写的。**
+
+## 1.2 好任务看板的 8 要素（每个要素：为什么 + 怎么写）
+
+| # | 要素 | 为什么必须有 | 怎么写 |
+|---|------|------------|--------|
+| 1 | **状态总览** | 一眼知道项目在哪个阶段、哪些完成 | 表格：# / 入口 / ✅🔄⏳ / 说明 |
+| 2 | **架构图** | 一图看懂全貌，避免新接手者迷失在文件海洋 | ASCII 树 + 标注数据流方向 |
+| 3 | **现状盘点** | 接手者知道已有什么、缺什么 | 逐文件逐函数清单（见 §2.6） |
+| 4 | **任务拆分** | 大目标拆到「可勾选、可单次提交」的粒度 | 每入口：目标 / 已做[ x ] / 待做[ ] |
+| 5 | **验收标准** | 判断「做完没做完」的唯一依据——必须有命令/数字 | 每条一个 `[ ]`，写「跑什么命令 → 看什么输出」 |
+| 6 | **实施思路** | 让接手者理解「为什么这么设计」，能自己决策 | 每入口一段「思路」 |
+| 7 | **风险与对策** | 提前暴露坑，避免重复踩 | 表格：风险/概率/影响/对策 |
+| 8 | **执行记录** | 版本演进可追溯，每步有 commit 锚点 | 表格：版本/commit/内容/自检结果 |
+
+## 1.3 格式约定（全板统一）
+
+- **状态符号**：`✅ 完成` / `🔄 进行中` / `⏳ 未开始`
+- **任务勾选**：`- [x]` 已完成 / `- [ ]` 待做（markdown 原生，可勾选）
+- **断言数显式化**：每个测试文件写 `≥N 断言`，验收直接对照
+- **命令可复制**：所有验收命令写成可复制的一行 bash
+- **数字可复现**：能写数字不写形容词（「31 测试全绿」而非「测试都过了」）
+
+## 1.4 反模式（以前踩过的坑，避免再犯）
+
+| 反模式 | 危害 | 正确做法 |
+|--------|------|---------|
+| 看板只写大目标（「优化审计」「重构规则」） | 接手 AI 不知道从哪下手 | 拆到文件级+函数级步骤 |
+| 无验收标准 | 做完不知道算不算完，互相扯皮 | 每条目标配「跑 X 命令 → Y 输出」 |
+| 无函数清单 | 接手 AI 要重新通读全部代码才知道有哪些函数 | §2.6 逐文件逐函数表 |
+| 无风险对策 | 同样坑每个接手者各踩一次 | §2.9 风险表，踩过就补 |
+| 只更新版本不改看板 | 看板与代码脱节，变成废纸 | 更新纪律：每入口提交必同步本板 |
+| 文档用会话措辞 | 公共文档被自家门禁拦（docs-conversation） | 只写做了什么，不写「谁拍了板」「哪个会话」 |
+
+## 1.5 本板如何被复用（模板用法）
+
+1. 复制本文件到新项目 `docs/WORKBOARD.md`
+2. 保留「第一部分」骨架（方法论通用）
+3. 替换「第二部分」为你项目的：架构图 / 文件清单 / 入口任务 / 验收标准
+4. 每完成一个小步骤：勾选 + 更新执行记录 + commit（commit 信息里带版本号）
 
 ---
 
-## 二、开发纪律（每次提交必须遵守）
+# 第二部分 dsh-git-push-v2 交接全景
 
-1. **不推送、不发布**——v2 全部 commit 只落本地 master
-2. **每次提交前**：调旧项目扫描自检 `node ../dsh-git-push/cli.mjs audit . --json`（0 blocker 才提交）
-3. **版本节奏**：1.1.0 框架能跑 → **每完成一个入口 commit 一次，第三位 +1**（1.1.1 规则 → 1.1.2 审计 → …）
-4. **提交信息**：`<版本> <入口名>：做了什么（可验收）`
-5. **README 同步**：每次版本变更后更新 README 版本表（readmeCheck 铁律）
-6. **测试同步**：每个入口必须带 test-<name>.mjs，`npm test` 一条命令全绿
+## 2.1 项目元信息
 
----
+| 项 | 值 |
+|---|---|
+| 项目 | dsh-git-push-v2（DSH git 插件 v2 重构版，从零重建） |
+| 位置 | `工作区/dsh-git-push-v2` |
+| 旧项目（自检工具） | `工作区/dsh-git-push`（v1.60.0，存档+扫描用） |
+| 架构 | 10 总入口（规则/审计/git/自身/评分/豁免/上下文/HTTP/测试/侧边栏） |
+| 铁律 | compileRule 主体永不修改；加字段=加函数+注册一行 |
+| 命名 | 一个功能一个根词，各层格式转换，外部 API 与函数名完全一致，无别名 |
+| 版本规范 | 1.0.0 README → 1.1.0 框架能跑 → 每完成一入口第三位+1 |
+| 提交策略 | **永不推送**；每次提交前旧项目扫描 0 blocker |
 
-## 三、版本节奏（定稿）
+## 2.2 架构图（总览）
+
+```
+dsh-git-push-v2
+│
+├── cli.mjs  ────────────── 独立 CLI（git-sluice）：version / ruleset / scan / audit
+│      │
+│      ▼
+├── lib/
+│   ├── rule/        ★ 规则总入口（核心，yml 驱动）
+│   │   ├── registry.js   注册表：RULE_COMPILERS / registerCompiler / compileRule / compileAllRules
+│   │   ├── loader.js     yml 装载：loadYamlRuleFile / discoverRuleSlots / loadRuleFiles
+│   │   └── compilers.js  13 种编译函数注册（副作用导入即注册）+ safeRe + ruleOut
+│   │                     └──► 依赖 lib/audit-rules/*.yml（槽位数据）
+│   │
+│   ├── audit/       ★ 审计总入口（消费编译规则，产出统一问题对象）——1.1.2 半成品
+│   │   ├── index.js      makeFinding / summarize / auditFile / auditFull / auditChanged / auditWithScope
+│   │   ├── collector.js  collectTextFiles（gitignore 感知）/ isGitRepo / readText
+│   │   └── checks.js     groupByKind / checkRegexRules / checkPathRegexRules / checkFuncLines / checkEmptyCatch / runChecks
+│   │                     └──► 依赖 lib/exempt（豁免判定）
+│   │
+│   ├── exempt/      ★ 豁免总入口
+│   │   └── index.js      EXEMPT_MARKERS（7 标记）/ hasHeaderExempt / hasLineExempt / exemptHintFor
+│   │
+│   ├── score/       ★ 评分总入口（10 维度加权）
+│   │   └── index.js      DEFAULT_WEIGHTS / DIMENSION_ORDER / countByDimension / scoreQuality
+│   │
+│   ├── git/         ★ git 总入口（骨架，1.1.3 实现）
+│   │   └── index.js      runGit / resolveToken / commitAndPush / pushViaApi / cloneViaApi / ensureRemoteRepo / setVisibility
+│   │
+│   ├── self/        ★ 自身总入口（骨架，1.1.4 实现）
+│   │   └── index.js      VERSION / readmeTemplate / yamlTemplate / selfVersion
+│   │
+│   ├── context/     ★ 上下文注入（骨架，1.1.7 实现）
+│   │   └── index.js      createEnvInjectionText
+│   │
+│   └── audit-rules/     yml 数据槽位（当前仅 nodejs）
+│       └── audit-rules-nodejs.yml   11 条示范规则
+│
+├── scripts/
+│   └── check.mjs       语法检查（npm run check，递归 lib + cli.mjs）
+│
+└── test/
+    ├── test-framework.mjs   16 断言（注册表/装载/评分/豁免/CLI 骨架）✅ 全绿
+    ├── test-rule-packs.mjs  15 断言（编译函数/字段探测/dimensions/装载闭环）✅ 全绿
+    └── test-audit.mjs       11 断言（审计四象限）⚠️ 半成品：5 fail（见 §2.5 已知问题）
+```
+
+**数据流（一条链）**：
+`yml 槽位` → `loader.loadRuleFiles` → `registry.compileRule`（按字段指派编译函数）→ `compilers.js 注册的 13 编译函数` → 编译产物（kind + dimensions + threshold）→ `audit.checks.runChecks` → findings（统一问题对象，带 exemptHint）→ `audit.index.auditWithScope` 汇总 → `score.scoreQuality` 10 维度加权评分。
+
+## 2.3 统一问题对象（所有审计出口）
+
+```
+问题 = {
+  file: string,          // 相对路径
+  line: number,          // 行号（1-based）
+  rule: string,          // 规则 id
+  kind: string,          // kebab-case 规则类型（13 种之一）
+  severity: 'blocker'|'warning'|'info',  // 编译时映射：error→blocker / warning→warning / info→pass
+  message: string,
+  dimensions: string[],  // 10 维度绑定（支持一字段多维度）
+  exemptHint: string,    // 怎么豁免（文件头=整文件 / 行尾=单点）
+  scoreImpact: 1|2,      // warning=1, blocker=2
+}
+```
+
+## 2.4 版本节奏
 
 | 版本 | 内容 | 状态 |
 |------|------|------|
-| 1.0.0 | README 文档（重构计划） | ✅ ccfd1e5 |
-| **1.1.0** | **功能框架搭建完毕能跑**：目录结构 + 各入口骨架 + cli.mjs 最小可用 + npm test 绿 + 本看板 | 🔄 进行中 |
-| 1.1.1 | 规则总入口（13 编译函数 + dimensions + nodejs 槽位 11 条） | ✅ 本批 |
-| 1.1.2 | 审计总入口（changed/full + 统一问题对象 + exemptHint 接线） | ⏳ |
+| 1.0.0 | README 计划稿（架构/问题清单/链接规则） | ✅ ccfd1e5 |
+| 1.1.0 | 框架骨架 8 入口 + cli + test 16 + check 脚本 + 本看板 | ✅ 7969ae1 |
+| 1.1.1 | 规则总入口（13 编译函数 + nodejs 槽位 11 条 + 15 测试） | ✅ 6076007 |
+| **1.1.2** | **审计总入口（collector + checks + auditFull/Changed + exempt 接线）** | 🔄 半成品（见 §2.5） |
 | 1.1.3 | git 总入口（token/commit/push/clone/建仓/可见性） | ⏳ |
-| 1.1.4 | 自身总入口（版本单一事实源 + README 模板 + yml 模板 + CLI 完善） | ⏳ |
-| 1.1.5 | 评分总入口（口径校准 + 与审计闭环） | ⏳ |
-| 1.1.6 | 豁免总入口（7 标记接入审计全消费点） | ⏳ |
-| 1.1.7 | 上下文注入 + HTTP API + 测试总入口（npm test 可复现固化） | ⏳ |
-| 1.1.8 | 侧边栏（复用旧 client.js 改造） | ⏳ |
-| 1.2.0 | 链接判断 yml 规则（link-check kind，flaky 域名扣分打折） | ⏳ |
-| 2.0.0 | 全入口完成：DSH 插件接线（cordis.yml 能挂）+ 双副本同步 + 推送准备 | ⏳ |
+| 1.1.4 | 自身总入口（版本单源/README 模板/yml 模板/CLI 完善） | ⏳ |
+| 1.1.5 | 评分总入口（AST 化质量检查 + 口径锚定） | ⏳ |
+| 1.1.6 | 豁免总入口（7 标记接入审计全消费点，已部分接） | ⏳ |
+| 1.1.7 | 上下文注入 + HTTP API + 测试总入口 | ⏳ |
+| 1.1.8 | 侧边栏（复用旧 client.js） | ⏳ |
+| 1.2.0 | 链接判断 yml 规则（link-check kind） | ⏳ |
+| 2.0.0 | DSH 插件接线 + 双副本同步 + 推送准备 | ⏳ |
 
-> 说明：1.1.0 是「骨架能跑」；1.2.0 把新能力（link-check）落地；2.0.0 才具备与旧项目同等的完整插件能力（可挂 DSH、可推送）。
+## 2.5 当前卡点：1.1.2 半成品状态（接手第一件事）
 
----
+**测试现状**：`npm test` 31 通过 / **5 失败**（全部集中在 test-audit.mjs 的 auditFull 相关）。
 
-## 四、每入口详细任务（思路 + 验收标准）
+**失败根因（已定位，未修——留待接手者按看板修）**：
+```
+lib/rule/compilers.js L54/L83/L149:
+  pattern: r.pattern, patterns: list.length ? r.patterns : undefined,
+问题：patterns 存的是原始字符串数组，而 checks.js checkRegexRules L29 直接
+     调 p.test(line) 需要 RegExp 对象 → TypeError: p.test is not a function
+修复方向：patterns 应传编译后的 RegExp 数组（list 已 safeRe 编译），
+     即 patterns: list.length ? list : undefined（pattern 同理传编译版）
+```
+**修复后**：test-audit.mjs 11 断言应全绿；然后补 `auditChanged` 的 git diff 真实实现（当前为非 git 退化 full），再按 §3.2 验收标准逐条过。
 
-### 1. 规则总入口（1.1.1）
+**已知连带问题**：test-audit.mjs 里 sub/c.js 的「超长函数 fixture」断言依赖行数统计，若修复后仍不命中，检查 checkFuncLines 的简易函数边界扫描是否识别单行多语句函数。
 
-**思路**：从旧项目 7 编译函数 if/else 链 → 注册表。不强制 yml 写 kind，字段探测指派；但**显式 kind 优先**。新编译函数声明 `dimensions`（10 维度绑定，支持一字段多维度）。
+## 2.6 逐文件逐函数清单（含签名注释，交接依据）
 
-**文件**：`lib/rule/registry.js`（已写骨架）/ `lib/rule/loader.js`（已写骨架）/ `lib/rule/compilers/*.js`（待写）/ `lib/audit-rules/*.yml`（待落）
+> 约定：`[x] 已实现` / `[ ] 待实现`。接手 AI 按此清单核对代码与注释是否一致。
 
-**子任务**：
-- [x] 注册表骨架：RULE_COMPILERS / registerCompiler / compileRule / compileAllRules
-- [x] 装载骨架：loadYamlRuleFile / discoverRuleSlots / loadRuleFiles（后覆盖前）
-- [ ] 编译函数 13 种：credential-ref / credential-file / secret / func-lines / min-length / max-lines / max-complexity / max-depth / min-occurrences / repeated-string / regex / path-regex / semantic
-- [ ] 字段 → 编译函数映射表落库（三统一：kind kebab-case ↔ 函数 PascalCase ↔ 字段 snake_case）
-- [ ] 首个 yml 槽位：audit-rules-nodejs.yml（含 5 条示范规则）
-- [ ] 未知规则从「静默跳过」改「报错收集进 ctx.errors」
-- [ ] dimensions 声明：每个编译函数返回的 rule 带 `dimensions: []`
+### 1️⃣ lib/rule/registry.js —— 规则注册表（核心铁律区）✅
 
-**验收标准**：
-1. `loadRuleFiles(['nodejs'])` ok，rule 条目编译全部成功
-2. 显式 `kind` 优先于字段探测（构造同形状规则验证）
-3. 未知字段组合报错进 ctx.errors，不静默
-4. 编译产物每条带 dimensions（func-lines → ['可读性','可维护性']）
-5. test-rule-packs.mjs：断言 ≥20 条（注册表行为 + kinds + dimensions）
-6. `node cli.mjs ruleset` 输出编译统计
+> **铁律：`compileRule` 主体永不修改。加字段 = 加函数 + registerCompiler 一行。**
+> 职责注释已写：kind 优先 → 字段探测 → 未知报错。
 
-### 2. 审计总入口（1.1.2）
+| 符号 | 签名 | 说明 |
+|------|------|------|
+| `RULE_COMPILERS` | `Array<{kind, detect, compile}>` | 已注册编译函数表（compilers.js 副作用填充） |
+| `registerCompiler` | `(kind, detect, compile) => void` | 注册一行；ctx = `{errors, label}` |
+| `compileRule` | `(rule, ctx={}) => {ok, rule\|error}` | **统一入口**：显式 kind 优先 → detect 字段探测 → 报错不静默 |
+| `compileAllRules` | `(rules, ctx) => object[]` | 批量编译，错误收集进 ctx.errors 不中断 |
 
-**思路**：`auditWithScope(repo, { scope })` 统一调度（默认 diff，设置 auditScanScope 可切 full）。**非 git 目录可查全量**。统一问题对象五要素带齐（file/line/rule/kind/dimensions/severity/exemptHint/scoreImpact）。gitignore 感知（默认排除 git 忽略文件）。
+### 2️⃣ lib/rule/loader.js —— yml 装载 ✅
 
-**文件**：`lib/audit/index.js`（骨架已写）+ `lib/audit/checks/*.js`（待写）
+| 符号 | 签名 | 说明 |
+|------|------|------|
+| `RULE_YAML_DIR` | 常量 | 规则 yml 目录 |
+| `RULE_SLOTS` | `string[]` | 9 槽位（template 默认不加载） |
+| `loadYamlRuleFile` | `(slot) => {ok, data, file}\|{ok:false, error}` | 单槽位读+解析，失败返回错误 |
+| `discoverRuleSlots` | `(dir?) => string[]` | 目录自动发现 `audit-rules-*.yml` |
+| `loadRuleFiles` | `(order?) => {ok, merged, order, files, errors}` | 顺序装载合并，后覆盖前 |
 
-**子任务**：
-- [ ] auditChanged：git diff HEAD → 逐变更文件跑规则
-- [ ] auditFull：目录递归 → listTextFiles（git check-ignore 批量判定 + 缓存）→ 逐文件跑规则
-- [ ] 检查器接线：syntax/JSON/YAML + residue + sensitive + style + func-lines + empty-catch
-- [ ] 豁免消费：读文件时检查 dsh-skip-*（文件头=整文件 / 位置=单点）
-- [ ] makeFinding 统一出口（已写）；结果带 `exemptHint`（来自豁免注册表）
-- [ ] summary 统计（blocker/warning/total）+ quality 分数附加
+### 3️⃣ lib/rule/compilers.js —— 13 编译函数注册 ✅（含 1 个待修 bug）
 
-**验收标准**：
-1. 非 git 目录 `auditFull(dir)` 能出 findings（不依赖 .git）
-2. gitignore 排除文件不出现在收集列表（有 .gitignore 的 fixture 目录验证）
-3. 豁免端到端：文件头 dsh-skip-func-length → 该文件 func-lines 不报
-4. 每 finding 必带 exemptHint（非空）
-5. test-audit.mjs ≥25 断言：changed/full/豁免/gitignore 四象限
-6. 与旧项目同 fixture 对比结果一致（回归锚点）
+> 三统一：kind kebab-case ↔ 函数 PascalCase ↔ yml 字段 snake_case。每个编译函数声明 dimensions。
 
-### 3. git 总入口（1.1.3）
+| 注册 kind | detect 条件 | dimensions | 说明 |
+|---|---|---|---|
+| `credential-ref` | id 前缀 `credref-` | 安全性 | 凭据引用正则 |
+| `credential-file` | id 前缀 `credfile-` | 安全性 | 私钥/证书文件名 |
+| `secret` | id 前缀 `secret-` | 安全性 | 令牌/密钥正则 |
+| `func-lines` | id==='func-lines' 或 (max_lines+function 名) | 可读性+可维护性 | 单函数超长 |
+| `min-length` | `min_length` 存在 | 可读性 | 标识符最短长度 |
+| `max-lines` | `max_lines` 存在且不含 function 名 | 可读性+可维护性 | 文件行数 |
+| `max-complexity` | `max_complexity` 存在 | 可维护性 | 圈复杂度 |
+| `max-depth` | `max_depth` 存在 | 可维护性 | 嵌套深度 |
+| `min-occurrences` | `min_occurrences` 无 ignore | 可维护性 | 重复次数 |
+| `repeated-string` | `min_occurrences` + ignore 字段 | 可维护性+可读性 | 重复硬编码串 |
+| `regex` | pattern/patterns 字符串 | 可读性 | 通用正则 |
+| `path-regex` | kind==='path-regex' 或 path_pattern | 可读性+可维护性 | 路径校验 |
+| `semantic` | detection_method/category 关键词 | 健壮性 | 语义规则 |
 
-**思路**：统一 runGit（数组参数零注入面、stderr 保留供排障——修旧项目 P0：stderr 被丢）。token 解析三层探测。push 默认 api.github.com Git Data API，401 回退 ssh.github.com:443。
+| 工具 | 签名 | 说明 |
+|------|------|------|
+| `safeRe` | `(pattern, label, errors) => RegExp\|null` | 安全编译，非法收集错误不抛 |
+| `DIMENSIONS` | 常量 | 10 维度中文映射 |
+| `ruleOut` | 内部 | 统一编译出口 |
+| `listRegisteredKinds` | `() => Promise<string[]>` | kind 统计（异步防循环） |
 
-**文件**：`lib/git/index.js`（骨架已写）+ `lib/git/github-api.js`（待写）+ `lib/git/credentials.js`（待写）
+⚠️ **待修**：`pattern/patterns` 字段应传编译后 RegExp（L54/L83/L149），见 §2.5。
 
-**子任务**：
-- [ ] runGit 定稿（数组参数 + -C cwd + stderr 保留 + 超时）
-- [ ] resolveToken：插件配置目录 github-token / env / 项目 .git-push-token → api.github.com token；401 回退 SSH
-- [ ] commitAndPush：预检（README 检查 + requirements 门禁 + 敏感字段扫描 .gitignore）→ add → commit → push
-- [ ] pushViaApi：blob → tree → commit → ref（Git Data API 四步）
-- [ ] cloneViaApi：git/trees + git/blobs 递归拉取（不跟随 tarball 302）
-- [ ] ensureRemoteRepo / setVisibility / rebuildHistory / versionHistory
-- [ ] origin 去 token 化：检测 remote 内嵌 userinfo → 告警（修旧项目 P2-7）
+### 4️⃣ lib/audit/index.js —— 审计总入口 🔄 半成品
 
-**验收标准**：
-1. runGit 数组参数：注入面为零（构造恶意参数验证无 shell 解释）
-2. resolveToken 三层探测顺序固定，无人 token 时返回明确错误
-3. commitAndPush 缺 requirements 确认 → 拦截（dryRun 验证）
-4. 敏感字段文件自动 .gitignore（fixture 造 token 文件验证）
-5. 401 回退 SSH：mock API 401 → 走 ssh.github.com:443
-6. test-git.mjs ≥30 断言（git 操作在 /tmp 临时仓跑，不碰真实远端）
+| 符号 | 签名 | 说明 |
+|------|------|------|
+| `makeFinding` | `(params) => finding` | 统一问题对象构造器 |
+| `summarize` | `(findings) => {blocker, warning, total}` | 统计 |
+| `auditFile` | `({file, relPath, text, grouped}) => findings[]` | 单文件检查+文件头豁免 |
+| `auditFull` | `(repoPath, opts) => result` | 全量：collect→逐文件；非 git 可查 |
+| `auditChanged` | `(repoPath, opts) => result` | **待实现 diff**（当前非 git 退化 full） |
+| `auditWithScope` | `(repoPath, {scope}) => result` | 统一入口 |
 
-### 4. 自身总入口（1.1.4）
+### 5️⃣ lib/audit/collector.js —— 文件收集 🔄 半成品
 
-**思路**：版本单一事实源（VERSION 常量 + scan-version 校验 package.json 一致性）；README 模板**独立**（README 生成不走拦截 yml——用户明确：有 yml 规则控制的才归规则入口，README 是独立能力）；yml 模板 = 规则模板（示范 kind + dimensions）。
+| 符号 | 签名 | 说明 |
+|------|------|------|
+| `collectTextFiles` | `(dir, opts) => Array<{path, ext, full}>` | 递归收集；git check-ignore 排除（Map 缓存）；跳过 node_modules/.git/dist |
+| `isGitRepo` | `(dir) => boolean` | .git 判定 |
+| `readText` | `(full) => string\|null` | UTF-8 读，失败 null |
 
-**文件**：`lib/self/index.js`（骨架已写）+ `cli.mjs`（部分已写）+ `scan-version.mjs`（待写）
+### 6️⃣ lib/audit/checks.js —— 检查器 🔄 半成品
 
-**子任务**：
-- [ ] VERSION 单源：package.json / cli.mjs / lib/self/index.js 三处一致（scan-version.mjs 自动校验）
-- [ ] readmeTemplate：{{name}}/{{description}}/{{version}}/{{toc}}/{{versionTable}} 渲染
-- [ ] yamlTemplate：规则模板（显式 kind + dimensions 示范）+ 豁免标记速查
-- [ ] cli.mjs 完善：version / help / ruleset / scan / audit / commit 子命令 + --depth 解析（修旧项目 P0-3）
-- [ ] cli HELP 文本 vs parseArgv 白名单一致（防 --depth 类回归）
+| 符号 | 签名 | 说明 |
+|------|------|------|
+| `groupByKind` | `(compiled) => {kind: rules[]}` | 编译规则分组 |
+| `checkRegexRules` | `({file, text, rules}) => findings[]` | 逐行跑 regex/secret/credref |
+| `checkPathRegexRules` | `({file, relPath, rules}) => findings[]` | 路径校验 |
+| `checkFuncLines` | `({file, text, rules}) => findings[]` | 简易函数边界扫描超长 |
+| `checkEmptyCatch` | `({file, text}) => findings[]` | 真空 catch 检测 |
+| `runChecks` | `({file, relPath, text, grouped}) => findings[]` | 调度器 |
 
-**验收标准**：
-1. `scan-version.mjs` 通过：三处版本号一致
-2. `cli.mjs --help` 每个选项 parseArgv 都认（机器比对 HELP 选项集）
-3. `cli.mjs yaml-template` 输出带 kind + dimensions 示范
-4. `cli.mjs audit` 非 git 目录可跑
-5. test-cli.mjs ≥10 断言
+### 7️⃣ lib/exempt/index.js —— 豁免总入口 ✅
 
-### 5. 评分总入口（1.1.5）
+| 符号 | 签名 | 说明 |
+|------|------|------|
+| `EXEMPT_MARKERS` | 对象 | 7 标记注册表（含 blocked[] + hint 位置语义） |
+| `hasHeaderExempt` | `(text, marker) => boolean` | 前 3 行匹配→整文件豁免 |
+| `hasLineExempt` | `(line, marker) => boolean` | 单行匹配→单点豁免 |
+| `exemptHintFor` | `(ruleOrKind) => string` | 反查豁免标记 |
 
-**思路**：10 维度权重沿用旧项目（可读15/可维护15/健壮15/安全18/性能10/测试10/可观测5/部署5/文档4/DX3）。问题 dimensions → 分维度计数 → 加权总分。**口径校准**：修旧项目假阴性（checkSyncInAsync 只认 fs.xxxSync 前缀——v2 改 AST 全量扫描；checkSilentCatch 只看首行——v2 看整函数体）。
+### 8️⃣ lib/score/index.js —— 评分总入口 ✅（已修归一化 bug）
 
-**文件**：`lib/score/index.js`（骨架已写）+ 质量检查器（待写）
+| 符号 | 签名 | 说明 |
+|------|------|------|
+| `DEFAULT_WEIGHTS` | 常量 | 可读15/可维护15/健壮15/安全18/性能10/测试10/可观测5/部署5/文档4/DX3 |
+| `DIMENSION_ORDER` | `string[]` | 维度顺序 |
+| `countByDimension` | `(findings) => {dim: count}` | 分维度计数（blocker 计 2） |
+| `scoreQuality` | `(findings, weights?) => {dims, counts, score, level}` | `dimSum/(10×totalWeight)×100`；A≥85/B≥70/C≥55/D |
 
-**子任务**：
-- [ ] 权重表 + 分维度计数（已写）验证
-- [ ] AST 化质量检查：sync-fs 全量（含 named import）、empty-catch 整函数体、func-lines 行数
-- [ ] 评分口径文档化：测试/参考目录不计分（isDeliveryCode）
-- [ ] audit 结果附加 quality（attachQualityScore）
+### 9️⃣ lib/git/index.js —— git 总入口（骨架）⏳ 1.1.3
 
-**验收标准**：
-1. 已知坏样本检出率 100%：构造 sync-fs（named import）、empty-catch（多行注释）、func-lines 超长 → 全中
-2. 权重覆盖：qualityWeights 参数覆盖默认
-3. 评分算式与旧项目同 fixture 结果一致（回归锚点）
-4. test-quality.mjs ≥20 断言
+| 符号 | 签名 | 说明 |
+|------|------|------|
+| `runGit` | `(args, {cwd, timeoutMs}) => {ok, stdout, stderr}` | 数组参数零注入；stderr 保留 |
+| `resolveToken` | `(opts) => {ok, error}` | 待实现三层探测 |
+| `commitAndPush` | `({repoPath, message, push, dryRun})` | 待实现 |
+| `pushViaApi` | `({owner, repo, branch, token, files})` | 待实现 Git Data API |
+| `cloneViaApi` | `({target, dest, token, branch})` | 待实现 |
+| `ensureRemoteRepo` | `({repoPath, visibility, dryRun})` | 待实现建仓 |
+| `setVisibility` | `({owner, repo, visibility, token})` | 待实现 |
 
-### 6. 豁免总入口（1.1.6）
+### 🔟 lib/self/index.js —— 自身总入口（骨架）⏳ 1.1.4
 
-**思路**：7 标记注册表（已写）接入审计全部消费点。每个标记声明 `blocked`（哪些拦截类型）+ `dimensions`（豁免掉哪些维度）+ `hint`（位置语义）。问题输出自带 exemptHint。
+| 符号 | 签名 | 说明 |
+|------|------|------|
+| `VERSION` | 常量 | 单一事实源（需与 package.json/cli 三处一致） |
+| `readmeTemplate` | `() => {ok, template, version}` | 待实现 |
+| `yamlTemplate` | `() => string` | 规则模板示范 |
+| `selfVersion` | `() => string` | 返回 VERSION |
 
-**文件**：`lib/exempt/index.js`（骨架已写）+ audit 消费点（接线待写）
+### 1️⃣1️⃣ lib/context/index.js —— 上下文注入（骨架）⏳ 1.1.7
 
-**子任务**：
-- [ ] hasHeaderExempt / hasLineExempt 接审计文件读取管线
-- [ ] exemptHintFor 反向查询（rule/kind → 标记 + 提示）
-- [ ] 位置语义验证：size 只能文件头；func-length 文件头=全文件/函数行尾=单函数
-- [ ] test-exempt.mjs ≥15 断言
+| 符号 | 签名 | 说明 |
+|------|------|------|
+| `createEnvInjectionText` | `({cwd, projectRoot}) => string` | AI 环境注入文本 |
 
-**验收标准**：
-1. 6 类豁免场景端到端通过（同旧项目 v1.60.0 12 个豁免场景）
-2. exemptHint 非空且可直接使用（用户照抄即可豁免）
-3. 对照：无标记文件出问题、有标记文件不出——逐类验证
+### 1️⃣2️⃣ cli.mjs —— 独立 CLI ✅
 
-### 7. 上下文注入（1.1.7 前半）
+| 符号 | 签名 | 说明 |
+|------|------|------|
+| `parseArgv` | `(argv) => {flags, positional}\|{error}` | 白名单 --depth/--full；未知参数报错 |
+| `cmdVersion` | `() => void` | 版本 |
+| `cmdRuleset` | `(slots) => void` | 编译统计 |
+| `cmdScan` | `(root, flags) => void` | 全量扫描 |
+| `cmdAudit` | `(root, flags) => void` | 审计+评分 |
+| `main` | `(argv) => void` | 分发 |
 
-**思路**：给 AI 会话注入环境（cwd/项目根/skills 目录），systemPrompt section 组装。旧项目 v1.49.0 的 env 注入三开关沿用。
+### 1️⃣3️⃣ scripts/check.mjs —— 语法检查 ✅
 
-**文件**：`lib/context/index.js`（骨架已写）+ 插件装配（静态注入文本）
+| 符号 | 说明 |
+|------|------|
+| `collectJs(dir)` | 递归收集 lib/**/*.js + cli.mjs |
+| 主流程 | node --check 逐个；失败 exit 1 |
 
-**验收标准**：
-1. 注入文本含 cwd / 项目根 / skills 存在性
-2. 开关关闭时不注入（配置可控）
-3. test-context.mjs ≥5 断言
+### 1️⃣4️⃣ test/ —— 测试
 
-### 8. HTTP API（1.1.7 后半）
-
-**思路**：修旧项目 P1-2 —— **写端点鉴权**：Origin 校验 + X-DSH-CSRF 头 + 高危端点（rebuild/gen-ssh-key/commit）确认参数。readJson 5MB 上限。路由全部走统一入口函数（不重复实现逻辑）。
-
-**文件**：`lib/http/index.js`（待写）
-
-**子任务**：
-- [ ] 鉴权中间件：Origin allowlist + CSRF 头校验
-- [ ] 端点：status/scan/audit/commit/rebuild/remote-create/permit/rules/diff/commits/repos/scan-comment-residue
-- [ ] 写操作确认参数（rebuild force=true 需 body 带 confirm:true）
-- [ ] 5MB body 限制 + 错误统一响应结构
-
-**验收标准**：
-1. 无 Origin / 错误 Origin → 403（写操作）
-2. rebuild force=true 缺 confirm → 400
-3. 超大 body → 413
-4. 端点全部复用 lib 函数（零重复逻辑）
-5. test-http.mjs ≥15 断言（mock req/res）
-
-### 9. 测试总入口（1.1.7 收尾）
-
-**思路**：`npm test` = `node --test test/*.mjs`（已修——旧项目 P0-2 的直接教训）；每个入口一个 test-<name>.mjs；失败退出非 0。
-
-**子任务**：
-- [ ] test-rule-packs / test-audit / test-git / test-cli / test-quality / test-exempt / test-context / test-http
-- [ ] npm test 一条命令全绿
-- [ ] 测试框架统一 node:test（不用双轨手写）
-
-**验收标准**：
-1. `npm test` 退出码 0；任一断言失败退出码 1（验证一个坏断言）
-2. 全部套件 ≤ 60 秒
-3. 无 test-apply 类「跳过依赖运行时」的花架子（v2 测试全可独立跑）
-
-### 10. 侧边栏（1.1.8）
-
-**思路**：复用旧项目 `lib/client.js` 改造（已定「复用」）：规则引擎槽位 + 权重滑块 + 豁免管理 + 版本信息 + 审计开关（默认关，本项目开发中一致开）。不引入 JSX/bundler（DSH 客户端无编译环境，手写 createElement）。
-
-**子任务**：
-- [ ] 移植旧 client.js 骨架（含 GitPushRuleCards / 权重滑块 / 槽位排序）
-- [ ] 新增：审计开关（默认 off）+ 豁免标记速查展示
-- [ ] controller/store 与配置双向同步
-
-**验收标准**：
-1. 侧边栏页零外部资源（纯内联）
-2. 审计开关默认关闭；开启后 audit 结果展示
-3. 配置变更即时生效（watch 监听）
-4. 手写 createElement（无 JSX）通过 DSH 加载
-
-### 11. 链接判断规则（1.2.0，新能力）
-
-**思路**：新 kind `link-check`：扫描项目内 URL → 批量 HEAD 校验 → 报错扣分。**flaky 域名豁免**：github.com/api.github.com/raw.githubusercontent.com/npmjs.com 网络错误扣分打折（×0.2），DNS 失败且 flaky → 只记 debug；404/403 是大扣分（目标真不在）；只跑 warning 不拦截（防网络假阳性 blocker）。
-
-**文件**：`lib/rule/compilers/link-check.js` + url 抓取器（待写）
-
-**子任务**：
-- [ ] URL 提取：正则扫文件（http/https 完整链接）
-- [ ] HEAD 校验：并发 5、超时 5s、重试 1 次
-- [ ] 扣分映射：404=3 / DNS=2 / timeout=1 / other=1，flaky ×0.2
-- [ ] 维度绑定：文档
-- [ ] domains 白名单配置（可加自己的 flaky 域名）
-
-**验收标准**：
-1. fake server 起 404/500 端点 → 正确分级扣分
-2. flaky 域名 mock 网络错误 → 扣分打折
-3. 断网环境下 run → 不 blocker（warning 上限）
-4. 扫描 100 链接 ≤ 30 秒
-5. test-link-check.mjs ≥10 断言
+| 文件 | 断言 | 状态 | 覆盖 |
+|------|------|------|------|
+| test-framework.mjs | 16 | ✅ 全绿 | 注册表/装载/评分/豁免/CLI |
+| test-rule-packs.mjs | 15 | ✅ 全绿 | 13 编译函数/字段探测/dimensions/闭环 |
+| test-audit.mjs | 11 | ⚠️ 5 fail | 审计四象限（需先修 §2.5） |
 
 ---
 
-## 五、问题清单（五份报告 → v2 自检，防再犯）
+## 3 每入口详解（任务 + 思路 + 验收标准）
 
-| # | 已证实问题 | v2 对策 | 覆盖轮次 |
-|---|-----------|---------|---------|
-| 1 | 死导入/未使用导出 | unused-import/export 自检规则 | 1.1.2 |
-| 2 | 真空 catch | empty-catch 检查器（整函数体） | 1.1.2 |
-| 3 | js-yaml 未声明 | package.json 显式 (已做) + npm 规则自检 | 1.0.0 已做 |
-| 4 | npm test 坏 | test/*.mjs 显式 glob (已做) | 1.0.0 已做 |
-| 5 | CLI --depth 文档/实现不符 | cli-help-sync 机器比对 | 1.1.4 |
-| 6 | README/工具数滞后 | doc-sync 自检 | 1.1.4 |
-| 7 | HTTP 写端点无鉴权 | Origin+CSRF+确认参数 | 1.1.7 |
-| 8 | quality 假阴性 | AST 全量检查 + 坏样本回归 | 1.1.5 |
-| 9 | 同步 fs 204 处 | sync-fs AST 检查器 | 1.1.5 |
-| 10 | 凭据卫生 | credential-in-url 告警 | 1.1.3 |
-| 11 | 链接拼接错误 | link-check 规则 | 1.2.0 |
-| 12 | 配置被忽略 | config-ignored 自检 | 1.1.3 |
-| 13 | 门禁链路漏接 | gateway-chain：全部提交入口强制 requirements | 1.1.3 |
-| 14 | 循环依赖 | circular-import 检查 | 1.1.2 |
-| 15 | 文档措辞被拦截 | docs-conversation + 输出改写建议 | 1.1.2 |
+### 3.1 规则总入口（1.1.1）✅ 已提交 6076007
+- **子任务**：注册表骨架 / 装载骨架 / 13 编译函数 / 三统一映射 / nodejs 槽位 11 条 / 未知规则报错 / dimensions 声明——全部完成。
+- **验收**：31 测试全绿；`node cli.mjs ruleset nodejs` 输出 11 条分桶统计；旧项目扫描 0 blocker。
+
+### 3.2 审计总入口（1.1.2）🔄 半成品（接手下一步）
+- **已完成**：collector（gitignore 感知）/ checks 全部检查器 / auditFile 豁免 / auditFull 框架 / 11 条测试。
+- **待做**（按序）：
+  - [ ] 修 compilers.js patterns→RegExp（§2.5 已定位根因）
+  - [ ] 复跑 `npm test` 至全绿
+  - [ ] auditChanged 实现真 git diff（当前非 git 退化 full）
+  - [ ] 与旧项目同 fixture 对比锚定
+- **验收标准**：
+  - [ ] `auditFull('/tmp/非git目录')` 出 findings（不依赖 .git）
+  - [ ] gitignore 排除生效（fixture 有 .gitignore 验证忽略文件不在列表）
+  - [ ] 文件头 `dsh-skip-sensitive` → 该文件无 secret 类
+  - [ ] 每 finding 必带非空 exemptHint
+  - [ ] test-audit.mjs ≥15 断言全绿
+  - [ ] `node cli.mjs audit . --full` 出 findings + quality
+  - [ ] 旧项目同 fixture 对比一致
+
+### 3.3 git 总入口（1.1.3）⏳
+- **思路**：runGit 数组参数零注入；token 三层探测；push 走 api.github.com Git Data API 401 回退 SSH；测试全在 /tmp 临时仓。
+- **验收**：runGit 注入面为零 / resolveToken 三层顺序 / 缺 requirements 拦截 / 敏感文件自动 .gitignore / 401 回退 SSH / test-git ≥30 断言。
+
+### 3.4 自身总入口（1.1.4）⏳
+- **思路**：版本三处一致（scan-version 校验）；README 模板独立（不走拦截 yml）；CLI HELP 与 parseArgv 机器比对防 --depth 类回归。
+- **验收**：scan-version 通过 / HELP 选项全认 / yaml-template 输出带 kind+dimensions / test-cli ≥10 断言。
+
+### 3.5 评分总入口（1.1.5）⏳
+- **思路**：10 维度权重延续；AST 化质量检查修旧项目假阴性（sync-fs named import / empty-catch 多行 / func-lines 超长坏样本 100% 检出）。
+- **验收**：坏样本检出率 100% / qualityWeights 覆盖生效 / 同 fixture 与旧项目一致 / test-quality ≥20 断言。
+
+### 3.6 豁免总入口（1.1.6）⏳
+- **思路**：7 标记接入审计全消费点；位置语义逐类测试（size 只能文件头等）。
+- **验收**：6 类豁免场景端到端（对照旧项目 12 场景）/ exemptHint 可直接使用 / test-exempt ≥15 断言。
+
+### 3.7 上下文注入 + HTTP API + 测试总入口（1.1.7）⏳
+- **思路**：HTTP 写端点鉴权（无 Origin→403 / rebuild 缺 confirm→400 / 超大 body→413）；npm test 退出码 0、坏断言退出码 1。
+- **验收**：test-context ≥5 / test-http ≥15；全部套件 ≤60 秒。
+
+### 3.8 侧边栏（1.1.8）⏳
+- **思路**：复用旧 client.js 骨架；零外部资源；审计开关默认关；配置即时生效。
+- **验收**：手写 createElement 无 JSX；侧边栏加载通过；开关默认关。
+
+### 3.9 链接判断 yml 规则（1.2.0）⏳
+- **思路**：link-check kind——404/403 大扣分、DNS 中扣分、超时小扣分；flaky 域名（github/api.github.com/raw/npmjs）网络错误 ×0.2；只 warning 不 blocker。
+- **验收**：fake server 分级扣分 / flaky 打折 / 断网不 blocker / 100 链接 ≤30 秒 / test-link-check ≥10 断言。
 
 ---
 
-## 六、坑与风险
+## 4 问题清单（五份外部报告 → v2 自检，防再犯）
+
+| # | 已证实问题 | v2 对策 | 状态 |
+|---|-----------|---------|------|
+| 1 | 死导入/未使用导出 | unused-import/export 自检 | ⏳ |
+| 2 | 真空 catch | checkEmptyCatch 已实现 | ✅ |
+| 3 | js-yaml 未声明 | package.json dependencies 显式 | ✅ 1.0.0 |
+| 4 | npm test 坏 | test/*.mjs 显式 glob | ✅ 1.0.0 |
+| 5 | CLI --depth 文档/实现不符 | cli-help-sync 机器比对 | ⏳ 1.1.4 |
+| 6 | README/工具数滞后 | doc-sync 自检 | ⏳ 1.1.4 |
+| 7 | HTTP 写端点无鉴权 | Origin+CSRF+确认参数 | ⏳ 1.1.7 |
+| 8 | quality 假阴性 | AST 全量检查+坏样本回归 | ⏳ 1.1.5 |
+| 9 | 同步 fs 204 处 | sync-fs AST 检查器 | ⏳ 1.1.5 |
+| 10 | 凭据卫生 | credential-in-url 告警 | ⏳ 1.1.3 |
+| 11 | 链接拼接错误 | link-check 规则 | ⏳ 1.2.0 |
+| 12 | 配置被忽略 | config-ignored 自检 | ⏳ 1.1.3 |
+| 13 | 门禁链路漏接 | gateway-chain | ⏳ 1.1.3 |
+| 14 | 循环依赖 | circular-import | ⏳ |
+| 15 | 文档措辞被拦截 | docs-conversation + 改写建议 | ✅ 门禁已生效 |
+
+---
+
+## 5 开发纪律（每次提交必须遵守）
+
+1. **不推送、不发布**——v2 全部 commit 只落本地 master
+2. **每次提交前**：`node ../dsh-git-push/cli.mjs audit . --json` → 0 blocker
+3. **版本节奏**：每完成一个入口 commit 一次，第三位 +1
+4. **提交信息**：`<版本> <入口名>：做了什么（可验收）`
+5. **README 版本表 + 本看板执行记录同步**（readmeCheck 铁律）
+6. **每个入口必须带 test-<name>.mjs**，`npm test` 一条命令全绿
+7. **每个函数必须有注释**：签名 + 用途 + 关键逻辑（§2.6 是注释基线）
+
+---
+
+## 6 坑与风险
 
 | 风险 | 概率 | 影响 | 对策 |
 |------|------|------|------|
-| 注册表退化回 if/else | 中 | 高 | 代码审查铁律：compileRule 只有注册表循环；新增规则=注册一行 |
-| link-check 网络假阳性 | 中 | 高 | 只 warning 不 blocker + flaky 折扣 + 断网兜底 |
-| git 操作污染真实仓库 | 低 | 高 | 测试全部在 /tmp 临时仓；commit 前 git-remote 检查 |
-| 侧边栏移植破坏旧 UI | 中 | 中 | 先移植骨架跑通，再逐组件改；DSH 加载验证 |
-| 版本号漂移 | 低 | 中 | scan-version.mjs 校验三处一致 |
+| 注册表退化回 if/else | 中 | 高 | 审查铁律：compileRule 只注册表循环 |
+| link-check 网络假阳性 | 中 | 高 | 只 warning + flaky 折扣 + 断网兜底 |
+| git 操作污染真实仓库 | 低 | 高 | 测试全在 /tmp 临时仓 |
+| 侧边栏移植破坏旧 UI | 中 | 中 | 先骨架后组件；DSH 加载验证 |
+| 版本号漂移 | 低 | 中 | scan-version 校验三处一致 |
 | 评分口径漂移 | 中 | 中 | 同 fixture 与旧项目对比锚定 |
-| 豁免标记语义混乱 | 中 | 中 | 注册表注释 + 测试逐类验证位置语义 |
+| 豁免标记语义混乱 | 中 | 中 | 注册表注释 + 逐类测试 |
+| **编译函数 patterns 存字符串而非 RegExp** | **已踩** | 高 | §2.5 定位；测试全覆盖后此类回归不可能漏 |
+| **yml 规则 id 用斜杠风格 vs detect 前缀风格** | **已踩** | 高 | id 统一 dash 风格匹配 detect 契约；新增槽位先跑分桶测试 |
+| 接手 AI 偏离看板 | 中 | 高 | 本板唯一权威：函数清单+验收标准逐条对照 |
 
 ---
 
-## 七、执行记录
+## 7 执行记录
 
 | 版本 | commit | 内容 | 自检 |
 |------|--------|------|------|
-| 1.0.0 | ccfd1e5 | README 计划稿（架构/问题清单/链接规则） | 旧项目扫描 0/0 ✅ |
-| 1.1.0 | 7969ae1 | 框架骨架 8 入口 + cli.mjs + test 16 断言 + scripts/check + 看板 | 旧项目扫描 0 blocker ✅ |
-| 1.1.1 | （本批） | 规则总入口：13 编译函数 + dimensions + nodejs 槽位 11 条 + test-rule-packs 15 断言（31 全绿） | 旧项目扫描待跑 |
+| 1.0.0 | ccfd1e5 | README 计划稿 | 旧项目扫描 0/0 ✅ |
+| 1.1.0 | 7969ae1 | 框架骨架 + cli + test 16 + check 脚本 | 旧项目扫描 0 blocker ✅ |
+| 1.1.1 | 6076007 | 规则总入口：13 编译函数 + nodejs 槽位 + test 15（31 全绿） | 旧项目扫描 0 blocker ✅ |
+| 1.1.2 | （工作区未提交） | 审计总入口半成品：collector + checks + auditFull + test-audit 11（5 fail 待修） | ⚠️ 待修 §2.5 |
+
+---
+
+## 8 接手 AI 起步清单（30 分钟上手）
+
+```bash
+# ① 环境
+cd "/vol2/1000/DeepSeek Harness/dsh-v0.1.2-alpha.4/.dsh-home/工作区/dsh-git-push-v2"
+npm test          # 期望：31 pass + 5 fail（先读 §2.5 再修）
+npm run check     # 期望：10/10 语法通过
+
+# ② 读本板顺序
+#   §2.5（当前卡点）→ §2.2（架构）→ §2.6（函数清单）→ §3.2（1.1.2 验收）
+#   → 修 §2.5 bug → 复跑 npm test → 过 §3.2 验收 → 提交 1.1.2
+
+# ③ 提交前
+node ../dsh-git-push/cli.mjs audit . --json   # 0 blocker 才提交
+# 提交（不推送）：git add -A && git commit -m "1.1.2 审计总入口：…"
+```
