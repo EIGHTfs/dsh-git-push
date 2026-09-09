@@ -4,7 +4,7 @@
 import { auditRepo, resetAuditRuleset } from '../lib/audit.js';
 import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 let pass = 0, fail = 0;
 const ok = (c, l) => { c ? pass++ : fail++; console.log(`${c ? '  ✅' : '  ❌'} ${l}`); };
@@ -17,6 +17,7 @@ resetAuditRuleset(); // 用 YAML 缺省规则（含全部 styleRules）
 
 // helper：审计单文件
 function auditFile(filePath, content, opts = {}) {
+  mkdirSync(join(repo, dirname(filePath)), { recursive: true });
   writeFileSync(join(repo, filePath), content);
   return auditRepo(repo, {
     files: [{ path: filePath, addedLines: content.split('\n'), isBinary: false }],
@@ -80,6 +81,16 @@ ok(hasRule(r7b, 'a11y/img-alt-required'), 'HTML：img 无 alt 检出 blocker');
 mkdirSync(join(repo, 'dist'), { recursive: true });
 const r8 = auditFile('dist/x.html', '<img src="x.jpg">\n');
 ok(!r8.findings.some((f) => f.rule && f.rule.startsWith('style:')), 'ignore：dist/ 下 styleRules 全豁免');
+
+/* ---------- v1.55.0 path-regex：目录单数命名（structure 槽位） ---------- */
+const r9 = auditFile('tools/build.js', 'export const build = () => 1;\n');
+ok(hasRule(r9, 'structure/dir-singular'), 'path-regex：tools/ 复数目录命中（目录命名统一单数）');
+const r10 = auditFile('tests/a.mjs', 'import { ok } from "node:assert";\n');
+ok(hasRule(r10, 'structure/dir-singular'), 'path-regex：tests/ 复数目录命中');
+const r11 = auditFile('test/test-core.mjs', 'import { ok } from "node:assert";\n');
+ok(!hasRule(r11, 'structure/dir-singular'), 'path-regex：test/ 单数不命中');
+const r12 = auditFile('docs/任务清单.md', '# 任务清单\n');
+ok(!hasRule(r12, 'structure/dir-singular'), 'path-regex：docs/ 存量例外不命中');
 
 rmSync(root, { recursive: true, force: true });
 console.log(`\n结果: ${pass} 通过 / ${fail} 失败`);
