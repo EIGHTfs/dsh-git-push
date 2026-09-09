@@ -21,7 +21,7 @@
 | 豁免标记体系（全拦截类型） | ✅ 完成 | v1.60.0：makeExemptors 工厂 + 6 类标记（sensitive/size/func-length/syntax/quality/residue/style），位置语义=文件头整文件/位置级单点；函数长度豁免写函数定义行尾。已接入 audit.js 全部消费点（binary/syntax/residue/style/quality/funcLength），端到端实测 6 场景全豁免 + 对照组正确；test-audit 82/0 |
 | 新功能 auditChanged/auditFull | ⏳ 待办 | 见「四、新功能设计」——本批优先做质量提分，此功能下一批 |
 | 测试/回归 | ✅ 完成 | 全量 11 套件 **503/0**（豁免断言 +6，test-quality 断言同步新评分语义 44→45） |
-| README/版本/任务清单/双副本/推送 | 🔄 进行中 | v1.60.0 收尾中（版本已 bump、README 版本表+当前标记清理、任务清单批次21、template.yml 豁免速查） |
+| README/版本/任务清单/双副本/推送 | ✅ 完成 | v1.60.0 全收尾：版本 bump（package.json/cli.mjs/test-cli/README 当前标记清理）、任务清单批次21（执行记录+批次条目）、template.yml 豁免速查段、双副本同步 1.60.0、推送 `ee753ea` + auto-tag v1.60.0（0 blocker，78 warning 均存量债务） |
 
 图例：✅ 完成 ｜ 🔄 进行中 ｜ ⏳ 待办
 
