@@ -20,4 +20,5 @@ private_files:
   - "**/.ssh/**"
   - "**/.dsh/git-push/**"
   - "**/.npmrc"
+  - "**/*@*.{md,txt,js,json}" # v1.54.0：邮箱形态文件名（如 your-name@example.com 占位文件）——历史踩坑：真实邮箱做占位文件名入库，含空文件仓无法走 Git Data API 推送且邮箱公开
 rules: []

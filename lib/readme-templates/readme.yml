@@ -1,0 +1,38 @@
+# README 生成模板（yml 化，v1.53.0）
+# git_gen_readme 的 README 骨架模板——本体收进 yml 文件，改章节结构不再动代码（与审计规则 yml 同思路）。
+# 用法：
+#   - header：封面区（# 标题 + 引言），{{name}}/{{description}} 占位符原样保留
+#   - sections：章节列表，每项 title = ## 章节标题，body = 章节模板文本
+#   - 占位符（生成时替换）：{{name}} 项目名 / {{description}} 简介 / {{version}} 版本 /
+#     {{toc}} 目录（自动从章节生成） / {{versionTable}} 版本记录表（git log 版本组）
+# 优先级：插件 template/README.md（用户自定义整份 md）> 本 yml > 代码内置兜底骨架。
+metadata:
+  name: "README 生成模板（yml 化）"
+  author: "EIGHTfs"
+  version: "1.0.0"
+  description: "git_gen_readme 生成的 README 骨架：header + 章节列表；加章/改章/调序只改本文件"
+
+# 封面区（# 标题 + 引言；title=一级标题行，intro=引言行，渲染为 markdown 封面）
+# 注：不用块标量（header: |）——L0 yamlCheck 是启发式行检查，块标量内容行（如 "> {{description}}"）会被误报
+header:
+  title: "# {{name}}"
+  intro: "> {{description}}"
+
+# 章节列表（按顺序渲染为 ## 标题 + body；{{toc}}/{{versionTable}} 等占位符由生成器替换）
+sections:
+  - title: 目录
+    body: "{{toc}}"
+  - title: 架构设计
+    body: "<!-- INSERT: 项目核心架构说明（分层/组件/模块/关键设计决策） -->"
+  - title: 文件目录结构及作用
+    body: "<!-- INSERT: 关键文件/目录清单 + 每项作用说明 -->"
+  - title: 启动脚本
+    body: "<!-- INSERT: start.sh 用法：start / stop / restart / status，含端口与环境要求 -->"
+  - title: API 总览
+    body: "<!-- INSERT: | 方法 | 路径 | 说明 |（每行路径跳转到对应详细说明锚点） -->"
+  - title: 版本列表
+    body: "{{versionTable}}"
+  - title: 注意事项
+    body: "<!-- INSERT: 踩过的坑、边界条件、依赖环境要求、已知限制 -->"
+  - title: 开发计划 / 疑难杂症
+    body: "<!-- INSERT: 待办功能、已知问题、未解决的技术难题 -->"

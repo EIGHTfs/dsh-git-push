@@ -27,12 +27,12 @@ function run(args, cwd = tmpdir()) {
 console.log('  help / ruleset');
 {
   const r = run(['help']);
-  ok(r.code === 0 && r.out.includes('git-sluice v1.52.0'), 'help 打印且退出 0');
+  ok(r.code === 0 && r.out.includes('git-sluice v1.54.0'), 'help 打印且退出 0');
   const r2 = run(['ruleset', 'nodejs,frontend,comment']);
-  ok(r2.code === 0 && r2.out.includes('编译 OK') && r2.out.includes('"secret": 3'), 'ruleset 槽位顺序编译计数正确');
+  ok(r2.code === 0 && r2.out.includes('编译 OK') && r2.out.includes('"secret": 4'), 'ruleset 槽位顺序编译计数正确');
   const r3 = run(['ruleset', '', '--json']);
   const j = JSON.parse(r3.out);
-  ok(j.ok === true && j.counts.docConversation === 5 && j.counts.fullScan.threshold === 60 && j.counts.secret === 3, 'ruleset --json 输出结构');
+  ok(j.ok === true && j.counts.docConversation === 5 && j.counts.fullScan.threshold === 60 && j.counts.secret === 4, 'ruleset --json 输出结构');
 }
 
 console.log('  full-scan / commit（tmp 仓库端到端）');
