@@ -26,7 +26,7 @@ import { auditRepo } from './lib/audit.js';
 import { fullScanRepo } from './lib/full-scan.js';
 import { getCompiledRulePack, RULE_SLOTS, DEFAULT_RULE_ORDER } from './lib/rule-packs.js';
 
-const VERSION = '1.60.0';
+const VERSION = '1.60.1';
 
 /** argv 解析：位置参数 + --flag / --key value / -m value（零依赖手写） */
 function parseArgv(argv) {
