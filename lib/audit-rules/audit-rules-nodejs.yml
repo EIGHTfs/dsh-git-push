@@ -45,6 +45,51 @@ rules:
     exceptions: ["i", "j", "k", "n", "e", "cb"]
     fixable: false
 
+  # v1.56.0：坏命名检出增强（用户提供 bad-naming 样本实测补全）——函数名缩写/万能词/通用词/魔数/嵌套深度
+  - id: readability/function-name-too-short
+    name: "函数名过短（缩写，无法猜出含义）"
+    category: "readability"
+    severity: "warning"
+    description: "函数名 ≤2 字符是缩写（如 gU），无法从名字猜出含义"
+    pattern: "\\bfunction\\s+[a-zA-Z_$][a-zA-Z0-9_$]{0,1}\\s*\\("
+    fixable: false
+    mitigation: "函数名用有含义的完整单词：getUser / sumArray / buildReport"
+
+  - id: readability/vague-function-name
+    name: "函数名万能词（doIt/handle/process 等）"
+    category: "readability"
+    severity: "warning"
+    description: "doIt/handle/process/run/do/exec 等万能动词函数名无法表达具体职责，应从名字看出做什么"
+    pattern: "\\bfunction\\s+(doIt|doItAll|handle|process|run|do|exec|deal|make|thing)\\b\\s*\\("
+    fixable: false
+    mitigation: "换成具体动作：doIt→submitOrder、handle→handleOrderCancellation、process→parsePayload"
+
+  - id: readability/vague-variable-name
+    name: "变量名通用词（data/obj/flag/tmp 等）"
+    category: "readability"
+    severity: "warning"
+    description: "data/obj/flag/tmp/temp/val/value/item/thing 等通用词变量名信息量低，看不出具体内容"
+    pattern: "\\b(?:const|let|var)\\s+(data|obj|object|flag|tmp|temp|val|value|item|thing|stuff|res|result)\\b"
+    fixable: false
+    mitigation: "用内容命名：data→userList、flag→isAdmin、tmp→tempFile"
+
+  - id: readability/magic-number
+    name: "魔数散落（魔法数字）"
+    category: "readability"
+    severity: "warning"
+    description: "代码中出现无解释的魔数（如系数 1.2/0.05、比较 1000、等值状态码 1/2/3），建议提取为命名常量并注释含义；赋值初始值（= 1）、箭头返回（=> 1）、比较符后的 0/1 边界（> 0、< 1）不报"
+    pattern: "(?<![=!'\\.])(?:[*+%/]|={2,}|!=)\\s*\\d+(\\.\\d+)?|(?<![=!'\\.])[<>]=?\\s*(?!(?:0|1)(?:\\.0*)?(?![\\d]))\\d+(\\.\\d+)?"
+    fixable: false
+    mitigation: "提取常量：const TAX_RATE = 1.2; const MAX_LIMIT = 1000; 并加注释说明 1/2/3 等状态码含义"
+
+  - id: readability/max-nesting-depth
+    name: "嵌套过深（缩进层级 > 3）"
+    category: "readability"
+    severity: "warning"
+    description: "代码缩进嵌套超过 3 层（如 for→for→if→if），可读性灾难，应提前 return 或抽函数"
+    max_depth: 3
+    fixable: false
+
   - id: readability/max-function-length
     name: "函数长度不超过 50 行"
     category: "readability"

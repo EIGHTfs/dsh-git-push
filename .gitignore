@@ -24,3 +24,6 @@ git-push/
 # clone 通道元数据（本机专用，不入库）
 .clone-meta.json
 .git-push-token
+
+# 本地临时目录（测试运行产物，v1.55.0 起不入库）
+.tmp-run/
