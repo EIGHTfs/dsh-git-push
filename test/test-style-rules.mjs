@@ -2,7 +2,7 @@
  * 文件头 dsh-skip-sensitive：本文件含 eval / img 无 alt / 短变量等检测目标样本（作为测试输入数据），提交前豁免敏感内容扫描。
  * 覆盖：min-length / max-lines / max-complexity / min-occurrences / regex 各类型真实检出 */
 import { auditRepo, resetAuditRuleset } from '../lib/audit.js';
-import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, mkdirSync, rmSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
@@ -91,6 +91,22 @@ const r11 = auditFile('test/test-core.mjs', 'import { ok } from "node:assert";\n
 ok(!hasRule(r11, 'structure/dir-singular'), 'path-regex：test/ 单数不命中');
 const r12 = auditFile('docs/任务清单.md', '# 任务清单\n');
 ok(!hasRule(r12, 'structure/dir-singular'), 'path-regex：docs/ 存量例外不命中');
+
+/* ---------- v1.56.0 坏命名检出：test/fixture/bad-naming-sample.js 整文件审计 ---------- */
+const badNamingText = readFileSync(new URL('./fixture/bad-naming-sample.js', import.meta.url), 'utf8');
+writeFileSync(join(repo, 'bad-naming.js'), badNamingText);
+const r13 = auditRepo(repo, {
+  files: [{ path: 'bad-naming.js', addedLines: badNamingText.split('\n'), isBinary: false }],
+  quality: { enabled: false },
+});
+ok(hasRule(r13, 'readability/function-name-too-short'), '坏命名：函数名缩写 gU 检出');
+ok(hasRule(r13, 'readability/vague-function-name'), '坏命名：万能词 doIt/handle 检出');
+ok(hasRule(r13, 'readability/vague-variable-name'), '坏命名：通用词 data/flag 检出');
+ok(hasRule(r13, 'readability/magic-number'), '坏命名：魔数检出（1.2/0.05/===1/>1000）');
+ok(hasRule(r13, 'readability/max-nesting-depth'), '坏命名：嵌套过深检出（3 层）');
+// 合法 JS 不误报魔数（赋值/箭头/0-1 边界）
+const r14 = auditFile('legit.js', 'export const ok = () => 1;\nconst count = 1;\nconst version = 1.0;\nif (x > 0) { run(); }\n');
+ok(!hasRule(r14, 'readability/magic-number'), '魔数：赋值/箭头/>0 边界不误报');
 
 rmSync(root, { recursive: true, force: true });
 console.log(`\n结果: ${pass} 通过 / ${fail} 失败`);
