@@ -1,6 +1,6 @@
 # WORKBOARD v2 —— dsh-git-push-v2 重构任务看板（榜样版 · 交接版）
 
-> **状态**：重构进行中（已提交 1.0.0 / 1.1.0 / 1.1.1 / **1.1.2**；下一入口 1.1.3 git 总入口）
+> **状态**：重构进行中（已提交 1.0.0 / 1.1.0 / 1.1.1 / **1.1.2** / **1.1.3**；下一入口 1.1.4 自身总入口）
 > **仓库**：`工作区/dsh-git-push-v2`（本地 master，**不推送**）
 > **看板双重身份**：
 > 1. **交接文档**——另一 AI 可凭本板完全接管 dsh-git-push-v2 重构，不读代码也能干活；
@@ -110,8 +110,8 @@ dsh-git-push-v2
 │   ├── score/       ★ 评分总入口（10 维度加权）
 │   │   └── index.js      DEFAULT_WEIGHTS / DIMENSION_ORDER / countByDimension / scoreQuality
 │   │
-│   ├── git/         ★ git 总入口（骨架，1.1.3 实现）
-│   │   └── index.js      runGit / resolveToken / commitAndPush / pushViaApi / cloneViaApi / ensureRemoteRepo / setVisibility
+│   ├── git/         ★ git 总入口 ✅ 1.1.3 已实现
+│   │   └── index.js      runGit / resolveToken / commitAndPush / pushViaApi(+SSH 回退) / cloneViaApi / ensureRemoteRepo / setVisibility / githubFetch / parseGithubOwnerRepo / scanSensitiveFiles+ensureGitignore
 │   │
 │   ├── self/        ★ 自身总入口（骨架，1.1.4 实现）
 │   │   └── index.js      VERSION / readmeTemplate / yamlTemplate / selfVersion
@@ -128,7 +128,8 @@ dsh-git-push-v2
 └── test/
     ├── test-framework.mjs   16 断言（注册表/装载/评分/豁免/CLI 骨架）✅ 全绿
     ├── test-rule-packs.mjs  15 断言（编译函数/字段探测/dimensions/装载闭环）✅ 全绿
-    └── test-audit.mjs       11 断言（审计四象限）⚠️ 半成品：5 fail（见 §2.5 已知问题）
+    ├── test-audit.mjs       14 断言（审计四象限 + git 变动）✅ 全绿
+    └── test-git.mjs         35 断言（git 总入口，mock fetch + /tmp 临时仓）✅ 全绿
 ```
 
 **数据流（一条链）**：
@@ -158,6 +159,7 @@ dsh-git-push-v2
 | 1.1.0 | 框架骨架 8 入口 + cli + test 16 + check 脚本 + 本看板 | ✅ 7969ae1 |
 | 1.1.1 | 规则总入口（13 编译函数 + nodejs 槽位 11 条 + 15 测试） | ✅ 6076007 |
 | **1.1.2** | **审计总入口（collector + checks + auditFull/Changed + exempt 接线）** | ✅ 已提交（见 §2.5 修复记录） |
+| **1.1.3** | **git 总入口（token/commit/push/clone/建仓/可见性 + SSH 回退）** | ✅ 已提交（见 §3.3） |
 | 1.1.3 | git 总入口（token/commit/push/clone/建仓/可见性） | ⏳ |
 | 1.1.4 | 自身总入口（版本单源/README 模板/yml 模板/CLI 完善） | ⏳ |
 | 1.1.5 | 评分总入口（AST 化质量检查 + 口径锚定） | ⏳ |
@@ -368,9 +370,18 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
   - [x] `node cli.mjs audit . --full` 出 findings + quality（25 findings + 73/100 B）
   - [x] 旧项目同 fixture 对比一致（见上）
 
-### 3.3 git 总入口（1.1.3）⏳
-- **思路**：runGit 数组参数零注入；token 三层探测；push 走 api.github.com Git Data API 401 回退 SSH；测试全在 /tmp 临时仓。
-- **验收**：runGit 注入面为零 / resolveToken 三层顺序 / 缺 requirements 拦截 / 敏感文件自动 .gitignore / 401 回退 SSH / test-git ≥30 断言。
+### 3.3 git 总入口（1.1.3）✅ 已提交
+- **思路**：runGit 数组参数零注入；token 三层探测（显式→env→配置目录/项目 .git-push-token，格式校验）；push 走 api.github.com Git Data API 401 回退 SSH（ssh.github.com:443）；githubFetch 硬闸（拒绝非 api.github.com、拒 302）；敏感文件自动 .gitignore；测试全在 /tmp 临时仓 + mock fetch。
+- **已实现**：`runGit` / `resolveToken` / `resolveSshKey` / `credentialsDir` / `githubFetch` / `parseGithubOwnerRepo` / `isBadCredentials` / `scanSensitiveFiles` / `ensureGitignore` / `readmeCheckHint` / `commitAndPush` / `pushViaSsh` / `pushViaApi`（blob→tree→commit→ref + 分支免疫 default_branch）/ `cloneViaApi`（trees+blobs 写文件转 git 仓）/ `ensureRemoteRepo`（建仓+设 origin，dryRun）/ `setVisibility`（PATCH）。
+- **验收**（全部通过）：
+  - [x] runGit 注入面为零（数组参数 + execFileSync 零 shell）
+  - [x] resolveToken 三层顺序（显式 > DSH_GIT_PUSH_TOKEN/GITHUB_TOKEN > 配置目录 > 项目 .git-push-token）
+  - [x] 缺 message 拦截 / 非 git 仓库拦截 / 无变更拦截
+  - [x] 敏感文件自动 .gitignore（幂等）
+  - [x] 401 回退 SSH（mock 401 → pushViaSsh，无私钥 reason 明确）
+  - [x] githubFetch 硬闸（拒绝非 api.github.com + 拒 302）
+  - [x] test-git 35 断言全绿（79 总测试全绿）
+  - [x] 旧项目扫描 0 blocker
 
 ### 3.4 自身总入口（1.1.4）⏳
 - **思路**：版本三处一致（scan-version 校验）；README 模板独立（不走拦截 yml）；CLI HELP 与 parseArgv 机器比对防 --depth 类回归。
@@ -458,7 +469,8 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
 | 1.0.0 | ccfd1e5 | README 计划稿 | 旧项目扫描 0/0 ✅ |
 | 1.1.0 | 7969ae1 | 框架骨架 + cli + test 16 + check 脚本 | 旧项目扫描 0 blocker ✅ |
 | 1.1.1 | 6076007 | 规则总入口：13 编译函数 + nodejs 槽位 + test 15（31 全绿） | 旧项目扫描 0 blocker ✅ |
-| 1.1.2 | 待提交 | 审计总入口：修 patterns→RegExp + func-lines 语句密度 + auditChanged 真 diff + collectChangedFiles + test-audit 14（44 全绿）+ CLI audit 73/100 B + 旧项目同 fixture 锚定 | 旧项目扫描 0 blocker ✅ |
+| 1.1.2 | 90449dd | 审计总入口：修 patterns→RegExp + func-lines 语句密度 + auditChanged 真 diff + collectChangedFiles + test-audit 14（44 全绿）+ CLI audit 73/100 B + 旧项目同 fixture 锚定 | 旧项目扫描 0 blocker ✅ |
+| 1.1.3 | 待提交 | git 总入口：runGit/resolveToken 三层/commitAndPush/敏感文件 .gitignore/pushViaApi+SSH 回退/cloneViaApi/ensureRemoteRepo/setVisibility/githubFetch 硬闸 + test-git 35（79 全绿） | 旧项目扫描 0 blocker ✅ |
 
 ---
 
