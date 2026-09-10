@@ -1,6 +1,6 @@
 # WORKBOARD v2 —— dsh-git-push 开发任务看板（榜样版 · 交接版）
 
-> **状态**：开发进行中（已提交 0.0.0 / 0.1.0 / 0.1.1 / 0.1.2 / 0.1.3 / 0.1.4 / 0.1.5 / 0.1.6 / **0.1.7**；下一入口 0.1.8 侧边栏）
+> **状态**：开发进行中（已提交 0.0.0 / 0.1.0~0.1.7 / **0.1.8**；下一入口 0.2.0 链接判断规则）
 > **版本号规则（用户指定）**：大版本号从 **0** 开始——0.x = 单机引擎与总入口建设期，1.0.0 = DSH 插件接线完成首发（原「2.0.0」改为 1.0.0）。
 > **仓库**：`工作区/dsh-git-push-v2`（本地 master，**不推送**）
 > **看板双重身份**：
@@ -135,7 +135,8 @@ dsh-git-push
     ├── test-quality.mjs     31 断言（评分总入口：AST 质量检查器 + 权重评分）✅ 全绿
     ├── test-exempt.mjs      25 断言（豁免总入口：7 标记/位置语义/12 场景）✅ 全绿
     ├── test-http.mjs        30 断言（HTTP 总入口：Origin/CSRF/写确认/413）✅ 全绿
-    └── test-context.mjs      7 断言（上下文注入文本 + 路径归属）✅ 全绿
+    ├── test-context.mjs      7 断言（上下文注入文本 + 路径归属）✅ 全绿
+    └── test-client.mjs      16 断言（侧边栏：无 JSX/零外部资源/默认关/即时生效）✅ 全绿
 ```
 
 **数据流（一条链）**：
@@ -170,6 +171,7 @@ dsh-git-push
 | **0.1.5** | **评分总入口（AST 质量检查器 + 10 维度加权）** | ✅ 已提交（见 §3.5） |
 | **0.1.6** | **豁免总入口（7 标记注册表驱动全消费 + 位置语义 + 规则定义文件豁免）** | ✅ 已提交（见 §3.6） |
 | **0.1.7** | **上下文注入 + HTTP 总入口（Origin/CSRF/写确认/413）** | ✅ 已提交（见 §3.7） |
+| **0.1.8** | **侧边栏（手写 createElement 无 JSX + 零外部资源 + 开关默认关）** | ✅ 已提交（见 §3.8） |
 | 0.1.3 | git 总入口（token/commit/push/clone/建仓/可见性） | ⏳ |
 | 0.1.4 | 自身总入口（版本单源/README 模板/yml 模板/CLI 完善） | ⏳ |
 | 0.1.5 | 评分总入口（AST 化质量检查 + 口径锚定） | ⏳ |
@@ -436,9 +438,16 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
   - [x] test-http 30 断言 + test-context 7 断言全绿（190 总测试全绿）
   - [x] npm test 退出码 0；旧项目扫描 0 blocker
 
-### 3.8 侧边栏（0.1.8）⏳
+### 3.8 侧边栏（0.1.8）✅ 已提交
 - **思路**：复用旧 client.js 骨架；零外部资源；审计开关默认关；配置即时生效。
-- **验收**：手写 createElement 无 JSX；侧边栏加载通过；开关默认关。
+- **已实现**：`lib/client/index.js`——SETTINGS_SCHEMA（设置项单一事实源）/ defaultConfig（开关全默认关）/ resolveConfig（类型校正 + 未知键丢弃 + 纯函数）/ createSettingsCard（手写 createElement，无 JSX）/ collectExternalRefs（零外部资源自检）/ INLINE_CSS（纯内联无 @import·无 url()）/ clientModuleInfo（接线用）。
+- **验收**（全部通过）：
+  - [x] 手写 createElement 无 JSX（源码无 JSX 标签、不依赖 jsx-runtime；mock react 验证元素树）
+  - [x] 零外部资源（内联 CSS 无外链/url()/@import；自检能抓出外链样本）
+  - [x] 审计开关默认关（auditEnabled/pushPermitEnabled/llmAudit/全量扫 全 false）
+  - [x] 配置即时生效（onChange 立即回调；布尔严格取真值；enum 非法回落）
+  - [x] 无 viewer 入口（0.1.8 决策：不实施提交历史查看器）
+  - [x] test-client 16 断言全绿（208 总测试全绿）
 - **决策：v2 不实施 viewer（提交历史查看器）**——旧项目 v1.60.1 已移除该类组件（lib/viewer.js + viewer-locales.js + /git-push/viewer 页面 + repos|commits|diff 只读端点，commit 33276c4），**用不上，以后再改**；侧边栏不包含提交历史查看器入口。若未来要浏览提交历史，从旧项目历史版本移植（需新增 test-viewer 覆盖，链接拼接 bug 已在旧版修复）。
 
 ### 3.9 链接判断 yml 规则（0.2.0）⏳
@@ -515,6 +524,7 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
 | 0.1.6 | acfa588 | 豁免总入口：exemptForFinding 注册表驱动全消费（7 标记/位置语义/12 场景）+ residue 仅代码文件 + 规则定义文件自动豁免（修 §2.5 debugger 自举）+ test-exempt 25（153 全绿） | 旧项目扫描 0 blocker ✅ |
 | 版本号改口径 | 93734cf | **用户要求**：大版本号从 0 开始（1.x→0.x，2.0.0→1.0.0），全仓文档/代码/看板/历史提交信息统一 | 190 全绿 ✅ |
 | 0.1.7 | 93734cf | 上下文注入 + HTTP 总入口：Origin/CSRF(403)/写确认(400)/413 + 路由分发 + 注入文本机器解析 + test-http 30 + test-context 7（190 全绿） | 旧项目扫描 0 blocker ✅ |
+| 0.1.8 | 待提交 | 侧边栏：手写 createElement 无 JSX + 零外部资源 + 开关默认关 + 配置即时生效 + 无 viewer + test-client 16（208 全绿） | 旧项目扫描 0 blocker（version/major-zero 为用户指定口径豁免）✅ |
 
 ---
 
