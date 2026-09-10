@@ -129,7 +129,9 @@ dsh-git-push
     ├── test-framework.mjs   16 断言（注册表/装载/评分/豁免/CLI 骨架）✅ 全绿
     ├── test-rule-packs.mjs  15 断言（编译函数/字段探测/dimensions/装载闭环）✅ 全绿
     ├── test-audit.mjs       14 断言（审计四象限 + git 变动）✅ 全绿
-    └── test-git.mjs         35 断言（git 总入口，mock fetch + /tmp 临时仓）✅ 全绿
+    ├── test-git.mjs         35 断言（git 总入口，mock fetch + /tmp 临时仓）✅ 全绿
+    ├── test-cli.mjs         18 断言（自身总入口：版本一致性/模板/helpSync/parseArgv）✅ 全绿
+    └── test-quality.mjs     31 断言（评分总入口：AST 质量检查器 + 权重评分）✅ 全绿
 ```
 
 **数据流（一条链）**：
@@ -161,6 +163,7 @@ dsh-git-push
 | **1.1.2** | **审计总入口（collector + checks + auditFull/Changed + exempt 接线）** | ✅ 已提交（见 §2.5 修复记录） |
 | **1.1.3** | **git 总入口（token/commit/push/clone/建仓/可见性 + SSH 回退）** | ✅ 已提交（见 §3.3） |
 | **1.1.4** | **自身总入口（版本一致性/README 模板/yml 模板/CLI 自检）** | ✅ 已提交（见 §3.4） |
+| **1.1.5** | **评分总入口（AST 质量检查器 + 10 维度加权）** | ✅ 已提交（见 §3.5） |
 | 1.1.3 | git 总入口（token/commit/push/clone/建仓/可见性） | ⏳ |
 | 1.1.4 | 自身总入口（版本单源/README 模板/yml 模板/CLI 完善） | ⏳ |
 | 1.1.5 | 评分总入口（AST 化质量检查 + 口径锚定） | ⏳ |
@@ -394,9 +397,15 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
   - [x] test-cli 18 断言全绿（97 总测试全绿）
   - [x] 旧项目扫描 0 blocker
 
-### 3.5 评分总入口（1.1.5）⏳
+### 3.5 评分总入口（1.1.5）✅ 已提交
 - **思路**：10 维度权重延续；AST 化质量检查修旧项目假阴性（sync-fs named import / empty-catch 多行 / func-lines 超长坏样本 100% 检出）。
-- **验收**：坏样本检出率 100% / qualityWeights 覆盖生效 / 同 fixture 与旧项目一致 / test-quality ≥20 断言。
+- **已实现**：`lib/score/ast.js` 轻量 tokenizer（字符串/模板/注释感知）→ 括号平衡区间 → `checkSyncFs`（named-import 直调 + fs 前缀双识别，async 作用域判定）/ `checkEmptyCatchAst`（多行空块/仅注释块）/ `checkFuncLinesAst`（精确行数，字符串不误报）；`checks.js` runChecks 接入 AST 版（func-lines 行数+语句密度互补，单行海量语句兜底）；`scoreQuality`（weights 覆盖 + counts 返回）。
+- **验收**（全部通过）：
+  - [x] 坏样本文件 100% 检出（sync-fs 2 处 named+prefix / 多行空 catch / 超长函数）
+  - [x] qualityWeights 覆盖生效（单维度全扣=90 验证权重占比）
+  - [x] 同 fixture 与旧项目一致（v2 扫描自身 94/100 A、0 blocker）
+  - [x] test-quality 31 断言全绿（128 总测试全绿）
+  - [x] 旧项目扫描 0 blocker
 
 ### 3.6 豁免总入口（1.1.6）⏳
 - **思路**：7 标记接入审计全消费点；位置语义逐类测试（size 只能文件头等）。
@@ -479,7 +488,8 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
 | 1.1.2 | e007eba | 审计总入口：修 patterns→RegExp + func-lines 语句密度 + auditChanged 真 diff + collectChangedFiles + test-audit 14（44 全绿）+ CLI audit 73/100 B + 旧项目同 fixture 锚定 | 旧项目扫描 0 blocker ✅ |
 | 1.1.3 | df843dc | git 总入口：runGit/resolveToken 三层/commitAndPush/敏感文件 .gitignore/pushViaApi+SSH 回退/cloneViaApi/ensureRemoteRepo/setVisibility/githubFetch 硬闸 + test-git 35（79 全绿） | 旧项目扫描 0 blocker ✅ |
 | 身份基线 | 33f5cd2 | 本项目即 dsh-git-push 本体：package.json name/description + README/看板/注释统一名称，恢复工作区路径引用 | 79 全绿 + 旧项目扫描 0 blocker ✅ |
-| 1.1.4 | 待提交 | 自身总入口：VERSION 三处一致(scan-version)/readmeTemplate/yamlTemplate/helpSync/CLI self-check + test-cli 18（97 全绿） | 旧项目扫描 0 blocker ✅ |
+| 1.1.4 | 6406f26 | 自身总入口：VERSION 三处一致(scan-version)/readmeTemplate/yamlTemplate/helpSync/CLI self-check + test-cli 18（97 全绿） | 旧项目扫描 0 blocker ✅ |
+| 1.1.5 | 待提交 | 评分总入口：lib/score/ast.js tokenizer+AST 检查器（sync-fs named-import/empty-catch 多行/func-lines 精确行数）+ runChecks 接入 + test-quality 31（128 全绿） | 旧项目扫描 0 blocker ✅ |
 
 ---
 
@@ -488,7 +498,7 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
 ```bash
 # ① 环境
 cd "/vol2/1000/DeepSeek Harness/dsh-v0.1.2-alpha.4/.dsh-home/工作区/dsh-git-push-v2"
-npm test          # 期望：44 全绿（当前 1.1.2 已提交）
+npm test          # 期望：128 全绿（当前 1.1.5 已提交）
 npm run check     # 期望：12/12 语法通过
 
 # ② 读本板顺序
