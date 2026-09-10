@@ -1,6 +1,6 @@
 # WORKBOARD v2 —— dsh-git-push 开发任务看板（榜样版 · 交接版）
 
-> **状态**：开发进行中（已提交 1.0.0 / 1.1.0 / 1.1.1 / **1.1.2** / **1.1.3**；下一入口 1.1.4 自身总入口）
+> **状态**：开发进行中（已提交 1.0.0 / 1.1.0 / 1.1.1 / 1.1.2 / 1.1.3 / **1.1.4**；下一入口 1.1.5 评分总入口）
 > **仓库**：`工作区/dsh-git-push-v2`（本地 master，**不推送**）
 > **看板双重身份**：
 > 1. **交接文档**——另一 AI 可凭本板完全接管 dsh-git-push 开发，不读代码也能干活；
@@ -160,6 +160,7 @@ dsh-git-push
 | 1.1.1 | 规则总入口（13 编译函数 + nodejs 槽位 11 条 + 15 测试） | ✅ fdf2b34 |
 | **1.1.2** | **审计总入口（collector + checks + auditFull/Changed + exempt 接线）** | ✅ 已提交（见 §2.5 修复记录） |
 | **1.1.3** | **git 总入口（token/commit/push/clone/建仓/可见性 + SSH 回退）** | ✅ 已提交（见 §3.3） |
+| **1.1.4** | **自身总入口（版本一致性/README 模板/yml 模板/CLI 自检）** | ✅ 已提交（见 §3.4） |
 | 1.1.3 | git 总入口（token/commit/push/clone/建仓/可见性） | ⏳ |
 | 1.1.4 | 自身总入口（版本单源/README 模板/yml 模板/CLI 完善） | ⏳ |
 | 1.1.5 | 评分总入口（AST 化质量检查 + 口径锚定） | ⏳ |
@@ -383,9 +384,15 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
   - [x] test-git 35 断言全绿（79 总测试全绿）
   - [x] 旧项目扫描 0 blocker
 
-### 3.4 自身总入口（1.1.4）⏳
+### 3.4 自身总入口（1.1.4）✅ 已提交
 - **思路**：版本三处一致（scan-version 校验）；README 模板独立（不走拦截 yml）；CLI HELP 与 parseArgv 机器比对防 --depth 类回归。
-- **验收**：scan-version 通过 / HELP 选项全认 / yaml-template 输出带 kind+dimensions / test-cli ≥10 断言。
+- **已实现**：VERSION 单一事实源（lib/self）→ versionInfo() + scripts/scan-version.mjs 机器校验三处一致；readmeTemplate（{{name}} {{description}} {{version}} {{versionTable}} 占位符）；yamlTemplate（kind+dimensions 示范）；helpSync()（HELP↔KNOWN_FLAGS 双向比对）；parseArgv --depth 缺值报错（不静默 NaN）；CLI 新增 yaml-template / readme-template / self-check 子命令。
+- **验收**（全部通过）：
+  - [x] scan-version 通过（lib/self=package.json=cli HELP v${VERSION} 模板）
+  - [x] HELP 选项全认（--depth --full 双向一致，self-check 绿）
+  - [x] yaml-template 输出带 kind+dimensions
+  - [x] test-cli 18 断言全绿（97 总测试全绿）
+  - [x] 旧项目扫描 0 blocker
 
 ### 3.5 评分总入口（1.1.5）⏳
 - **思路**：10 维度权重延续；AST 化质量检查修旧项目假阴性（sync-fs named import / empty-catch 多行 / func-lines 超长坏样本 100% 检出）。
@@ -472,6 +479,7 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
 | 1.1.2 | e007eba | 审计总入口：修 patterns→RegExp + func-lines 语句密度 + auditChanged 真 diff + collectChangedFiles + test-audit 14（44 全绿）+ CLI audit 73/100 B + 旧项目同 fixture 锚定 | 旧项目扫描 0 blocker ✅ |
 | 1.1.3 | df843dc | git 总入口：runGit/resolveToken 三层/commitAndPush/敏感文件 .gitignore/pushViaApi+SSH 回退/cloneViaApi/ensureRemoteRepo/setVisibility/githubFetch 硬闸 + test-git 35（79 全绿） | 旧项目扫描 0 blocker ✅ |
 | 身份基线 | 33f5cd2 | 本项目即 dsh-git-push 本体：package.json name/description + README/看板/注释统一名称，恢复工作区路径引用 | 79 全绿 + 旧项目扫描 0 blocker ✅ |
+| 1.1.4 | 待提交 | 自身总入口：VERSION 三处一致(scan-version)/readmeTemplate/yamlTemplate/helpSync/CLI self-check + test-cli 18（97 全绿） | 旧项目扫描 0 blocker ✅ |
 
 ---
 
