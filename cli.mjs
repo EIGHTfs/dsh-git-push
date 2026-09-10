@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * dsh-git-push-v2 独立 CLI（git-sluice）
+ * dsh-git-push 独立 CLI（git-sluice）
  * 不依赖 DSH 运行时，可独立运行。命名/参数与 lib 函数完全一致（外部 API 与函数名一致）。
  */
 import { VERSION } from './lib/self/index.js';
@@ -9,7 +9,7 @@ import { compileAllRules } from './lib/rule/registry.js';
 import { auditWithScope } from './lib/audit/index.js';
 import { scoreQuality } from './lib/score/index.js';
 
-const HELP = `git-sluice v${VERSION} — dsh-git-push-v2 引擎独立 CLI（脱离 DSH 运行）
+const HELP = `git-sluice v${VERSION} — dsh-git-push 引擎独立 CLI（脱离 DSH 运行）
 
 用法:
   git-sluice version              查看版本
@@ -38,7 +38,7 @@ export function parseArgv(argv) {
 
 /** 子命令：version */
 export function cmdVersion() {
-  console.log(`git-sluice v${VERSION} — dsh-git-push-v2（统一函数入口架构）`);
+  console.log(`git-sluice v${VERSION} — dsh-git-push（统一函数入口架构）`);
 }
 
 /** 子命令：ruleset — 编译规则包输出统计。 */
