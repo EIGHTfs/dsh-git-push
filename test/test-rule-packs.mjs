@@ -323,6 +323,43 @@ test('1.0.3：全槽位编译 96+ 条 0 失败（9 旧 + robustness/folder/i18n 
   }
 });
 
+// ---------- 1.0.4：G6 字段认领（scoring/action/suggestions/minLines/examples 透传） ----------
+test('1.0.4：blacklist 认领 scoring.threshold_suspicious → threshold + action/suggestions 透传', () => {
+  const res = compileRule({
+    id: 'test/blacklist-cm', name: '评论残留', category: 'documentation', severity: 'warning',
+    description: 'd', blacklist: [{ pattern: '用户指示', weight: 40 }],
+    scoring: { threshold_suspicious: 60, threshold_highly_suspicious: 80, max_score: 100 },
+    action: '建议清理', suggestions: ['建议移入 commit message', '改为 NOTE 格式'],
+  });
+  assert.equal(res.ok, true);
+  assert.equal(res.rule.kind, 'blacklist');
+  assert.equal(res.rule.threshold, 60, 'scoring.threshold_suspicious 应作 threshold 兜底');
+  assert.equal(res.rule.action, '建议清理');
+  assert.deepEqual(res.rule.suggestions, ['建议移入 commit message', '改为 NOTE 格式']);
+  assert.equal(res.rule.scoring.threshold_highly_suspicious, 80);
+});
+
+test('1.0.4：min-occurrences 认领 min_lines → minLines 透传', () => {
+  const res = compileRule({
+    id: 'test/no-dup', name: '重复代码', category: 'maintainability', severity: 'warning',
+    description: 'd', min_occurrences: 3, min_lines: 5,
+  });
+  assert.equal(res.ok, true);
+  assert.equal(res.rule.kind, 'min-occurrences');
+  assert.equal(res.rule.threshold, 3);
+  assert.equal(res.rule.minLines, 5, 'min_lines 应透传为 minLines');
+});
+
+test('1.0.4：regex 认领 examples（bad/good 展示字段）', () => {
+  const res = compileRule({
+    id: 'test/name-case', name: '命名规范', category: 'readability', severity: 'warning',
+    description: 'd', pattern: '^[a-z][a-zA-Z0-9]*$', examples: { bad: 'get_user()', good: 'getUser()' },
+  });
+  assert.equal(res.ok, true);
+  assert.equal(res.rule.kind, 'regex');
+  assert.deepEqual(res.rule.examples, { bad: 'get_user()', good: 'getUser()' });
+});
+
 // ---------- 1.0.4 beta：regex 子模式（文档 §13 memory-bomb 落地 + 测试断言） ----------
 test('1.0.4：regex 子模式编译（patterns 对象数组含 id/pattern/message）', () => {
   const rule = {
