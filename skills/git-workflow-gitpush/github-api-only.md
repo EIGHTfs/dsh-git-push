@@ -6,7 +6,7 @@
 >
 > 2026-09-02：dsh-git-push v1.17.0 已把 clone / push / 建仓 / 可见性 / 打 tag 接到 api.github.com（Git Data API），不跟随 tarball 302 到 codeload。
 >
-> 2026-09-02：v1.18.0 本组 skill 不再嵌在插件 `User/` 目录（安装拷贝会清空）。v1.40.0 起权威位置 = 本插件 `skills/git-workflow-gitpush/`（原工作区同级 `dsh-git-push-User` 仓已废除），恢复：`git_clone { target: "EIGHTfs/dsh-git-push" }` 后取 skills/。
+> 2026-09-02：v1.18.0 本组 skill 不再嵌在插件 `User/` 目录（安装拷贝会清空）。v1.40.0 起权威位置 = 本插件 `skills/git-workflow-gitpush/`（原工作区同级 `dsh-git-push-User` 仓已废除）。v2 恢复方式相同：`git_clone { target: "EIGHTfs/dsh-git-push" }` 后取 skills/。
 >
 > 2026-09-02：v1.18.3 token 无效（401 Bad credentials）时，push 允许回退 `ssh.github.com:443`（本仓 `id_ed25519`）。仍禁止 `github.com` HTTPS。
 
