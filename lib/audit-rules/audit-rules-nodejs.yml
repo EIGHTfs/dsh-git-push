@@ -1,3 +1,6 @@
+# dsh-skip-sensitive: 规则定义文件含凭据正则示范文本（AKIA/token 等非真实凭据）
+# dsh-skip-residue: 规则定义文件含 debugger/console 模式串示范（style-debugger 规则定义本身）
+# dsh-skip-style: 规则定义文件含 style-* 规则定义示范
 # dsh-git-push 审计规则（nodejs 槽位）
 # 规则类型由编译函数按字段自动指派（显式 kind 可选，写法见各规则）。
 # dimensions：10 维度绑定（可读性/可维护性/健壮性/安全性/性能/测试覆盖/可观测性/可部署性/文档/开发者体验），支持一字段多维度。

@@ -1,6 +1,6 @@
 # WORKBOARD v2 —— dsh-git-push 开发任务看板（榜样版 · 交接版）
 
-> **状态**：开发进行中（已提交 1.0.0 / 1.1.0 / 1.1.1 / 1.1.2 / 1.1.3 / **1.1.4**；下一入口 1.1.5 评分总入口）
+> **状态**：开发进行中（已提交 1.0.0 / 1.1.0 / 1.1.1 / 1.1.2 / 1.1.3 / 1.1.4 / 1.1.5 / **1.1.6**；下一入口 1.1.7 上下文注入 + HTTP 总入口）
 > **仓库**：`工作区/dsh-git-push-v2`（本地 master，**不推送**）
 > **看板双重身份**：
 > 1. **交接文档**——另一 AI 可凭本板完全接管 dsh-git-push 开发，不读代码也能干活；
@@ -164,6 +164,7 @@ dsh-git-push
 | **1.1.3** | **git 总入口（token/commit/push/clone/建仓/可见性 + SSH 回退）** | ✅ 已提交（见 §3.3） |
 | **1.1.4** | **自身总入口（版本一致性/README 模板/yml 模板/CLI 自检）** | ✅ 已提交（见 §3.4） |
 | **1.1.5** | **评分总入口（AST 质量检查器 + 10 维度加权）** | ✅ 已提交（见 §3.5） |
+| **1.1.6** | **豁免总入口（7 标记注册表驱动全消费 + 位置语义 + 规则定义文件豁免）** | ✅ 已提交（见 §3.6） |
 | 1.1.3 | git 总入口（token/commit/push/clone/建仓/可见性） | ⏳ |
 | 1.1.4 | 自身总入口（版本单源/README 模板/yml 模板/CLI 完善） | ⏳ |
 | 1.1.5 | 评分总入口（AST 化质量检查 + 口径锚定） | ⏳ |
@@ -489,7 +490,8 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
 | 1.1.3 | df843dc | git 总入口：runGit/resolveToken 三层/commitAndPush/敏感文件 .gitignore/pushViaApi+SSH 回退/cloneViaApi/ensureRemoteRepo/setVisibility/githubFetch 硬闸 + test-git 35（79 全绿） | 旧项目扫描 0 blocker ✅ |
 | 身份基线 | 33f5cd2 | 本项目即 dsh-git-push 本体：package.json name/description + README/看板/注释统一名称，恢复工作区路径引用 | 79 全绿 + 旧项目扫描 0 blocker ✅ |
 | 1.1.4 | 6406f26 | 自身总入口：VERSION 三处一致(scan-version)/readmeTemplate/yamlTemplate/helpSync/CLI self-check + test-cli 18（97 全绿） | 旧项目扫描 0 blocker ✅ |
-| 1.1.5 | 待提交 | 评分总入口：lib/score/ast.js tokenizer+AST 检查器（sync-fs named-import/empty-catch 多行/func-lines 精确行数）+ runChecks 接入 + test-quality 31（128 全绿） | 旧项目扫描 0 blocker ✅ |
+| 1.1.5 | e07b810 | 评分总入口：lib/score/ast.js tokenizer+AST 检查器（sync-fs named-import/empty-catch 多行/func-lines 精确行数）+ runChecks 接入 + test-quality 31（128 全绿） | 旧项目扫描 0 blocker ✅ |
+| 1.1.6 | 待提交 | 豁免总入口：exemptForFinding 注册表驱动全消费（7 标记/位置语义/12 场景）+ residue 仅代码文件 + 规则定义文件自动豁免（修 §2.5 debugger 自举）+ test-exempt 25（153 全绿） | 旧项目扫描 0 blocker ✅ |
 
 ---
 

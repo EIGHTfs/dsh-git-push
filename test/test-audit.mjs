@@ -1,3 +1,5 @@
+// dsh-skip-sensitive: 测试 fixture 含 mock 凭据字面量（AKIA… 非真实凭据）
+// dsh-skip-func-length: 测试 fixture 含超长函数样本（200 语句，故意触发 func-lines）
 /**
  * 审计总入口测试：auditFull / auditChanged / 豁免 / gitignore 感知。
  */
