@@ -622,7 +622,7 @@ node ../dsh-git-push/cli.mjs audit . --json   # 0 blocker 才提交
 | G3 | kind 命名夹带同形字符：`сrеdеn t iаl-ref` 非 ASCII，按 ASCII 写规则匹配不上 | 全仓扫描 | **高** |
 | G4 | `summarize` 漏统 error 级（出现「0 blocker 0 warning 但 total=3」） | 本轮实测 | ✅ 已修（error 归 blocker） |
 | G5 | 正则大小写敏感导致驼峰凭据漏检（apiKey/API_KEY） | 本轮实测 | ✅ 已修（默认 i 标志） |
-| G6 | 规则字段覆盖：旧项目用到 30 字段，v2 编译函数需全部认领 | 字段统计 | ⚠️ 部分（96 条编译全通过无未知类型；threshold/exclude_dirs/signatures/blacklist/whitelist 等已按同名函数认领；scoring/action 等展示字段进台账） |
+| G6 | 规则字段覆盖：旧项目用到 30 字段，v2 编译函数需全部认领 | 字段统计 | ✅ 已修（1.0.4 全部认领：29 字段逐一核对，scoring→threshold 兜底 / action / suggestions / examples / minLines 走 extra 透传；blacklist 阈值 40→60 真实生效） |
 | G7 | 侧边栏：权重自定义 / 规则包导入导出删除 / 审计强度选择 | 会话第 34/157 条 | 中 |
 | G8 | 测试组织：一脚本对一入口（用户本轮要求） | 本轮指令 | ✅ 已修（11 脚本 ↔ 10 入口 + 插件接线，test-framework 溶解归位） |
 | G9 | **匹配器空值崩溃**：`checkRegexRules` / `checkPathRegexRules` 收 `rules=undefined` 时 `for..of` 抛 TypeError（`rules is not iterable`） | 本轮补测暴露 | ✅ 已修（`rules \|\| []`） |
