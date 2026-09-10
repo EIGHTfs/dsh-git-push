@@ -161,9 +161,9 @@ dsh-git-push
 
 | 版本 | 内容 | 状态 |
 |------|------|------|
-| 0.0.0 | README 计划稿（架构/问题清单/链接规则） | ✅ a936a66 |
-| 0.1.0 | 框架骨架 8 入口 + cli + test 16 + check 脚本 + 本看板 | ✅ 19fe21c |
-| 0.1.1 | 规则总入口（13 编译函数 + nodejs 槽位 11 条 + 15 测试） | ✅ fdf2b34 |
+| 0.0.0 | README 计划稿（架构/问题清单/链接规则） | ✅ 090ff84 |
+| 0.1.0 | 框架骨架 8 入口 + cli + test 16 + check 脚本 + 本看板 | ✅ afa85ec |
+| 0.1.1 | 规则总入口（13 编译函数 + nodejs 槽位 11 条 + 15 测试） | ✅ 6a23d0b |
 | **0.1.2** | **审计总入口（collector + checks + auditFull/Changed + exempt 接线）** | ✅ 已提交（见 §2.5 修复记录） |
 | **0.1.3** | **git 总入口（token/commit/push/clone/建仓/可见性 + SSH 回退）** | ✅ 已提交（见 §3.3） |
 | **0.1.4** | **自身总入口（版本一致性/README 模板/yml 模板/CLI 自检）** | ✅ 已提交（见 §3.4） |
@@ -360,7 +360,7 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
 
 ## 3 每入口详解（任务 + 思路 + 验收标准）
 
-### 3.1 规则总入口（0.1.1）✅ 已提交 fdf2b34
+### 3.1 规则总入口（0.1.1）✅ 已提交 6a23d0b
 - **子任务**：注册表骨架 / 装载骨架 / 13 编译函数 / 三统一映射 / nodejs 槽位 11 条 / 未知规则报错 / dimensions 声明——全部完成。
 - **验收**：31 测试全绿；`node cli.mjs ruleset nodejs` 输出 11 条分桶统计；旧项目扫描 0 blocker。
 
@@ -504,17 +504,17 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
 
 | 版本 | commit | 内容 | 自检 |
 |------|--------|------|------|
-| 0.0.0 | a936a66 | README 计划稿 | 旧项目扫描 0/0 ✅ |
-| 0.1.0 | 19fe21c | 框架骨架 + cli + test 16 + check 脚本 | 旧项目扫描 0 blocker ✅ |
-| 0.1.1 | fdf2b34 | 规则总入口：13 编译函数 + nodejs 槽位 + test 15（31 全绿） | 旧项目扫描 0 blocker ✅ |
-| 0.1.2 | e007eba | 审计总入口：修 patterns→RegExp + func-lines 语句密度 + auditChanged 真 diff + collectChangedFiles + test-audit 14（44 全绿）+ CLI audit 73/100 B + 旧项目同 fixture 锚定 | 旧项目扫描 0 blocker ✅ |
-| 0.1.3 | df843dc | git 总入口：runGit/resolveToken 三层/commitAndPush/敏感文件 .gitignore/pushViaApi+SSH 回退/cloneViaApi/ensureRemoteRepo/setVisibility/githubFetch 硬闸 + test-git 35（79 全绿） | 旧项目扫描 0 blocker ✅ |
-| 身份基线 | 33f5cd2 | 本项目即 dsh-git-push 本体：package.json name/description + README/看板/注释统一名称，恢复工作区路径引用 | 79 全绿 + 旧项目扫描 0 blocker ✅ |
-| 0.1.4 | 6406f26 | 自身总入口：VERSION 三处一致(scan-version)/readmeTemplate/yamlTemplate/helpSync/CLI self-check + test-cli 18（97 全绿） | 旧项目扫描 0 blocker ✅ |
-| 0.1.5 | e07b810 | 评分总入口：lib/score/ast.js tokenizer+AST 检查器（sync-fs named-import/empty-catch 多行/func-lines 精确行数）+ runChecks 接入 + test-quality 31（128 全绿） | 旧项目扫描 0 blocker ✅ |
-| 0.1.6 | e633861 | 豁免总入口：exemptForFinding 注册表驱动全消费（7 标记/位置语义/12 场景）+ residue 仅代码文件 + 规则定义文件自动豁免（修 §2.5 debugger 自举）+ test-exempt 25（153 全绿） | 旧项目扫描 0 blocker ✅ |
-| 版本号改口径 | 待提交 | **用户要求**：大版本号从 0 开始（1.x→0.x，2.0.0→1.0.0），全仓文档/代码/看板/历史提交信息统一 | 190 全绿 ✅ |
-| 0.1.7 | 待提交 | 上下文注入 + HTTP 总入口：Origin/CSRF(403)/写确认(400)/413 + 路由分发 + 注入文本机器解析 + test-http 30 + test-context 7（190 全绿） | 旧项目扫描 0 blocker ✅ |
+| 0.0.0 | 090ff84 | README 计划稿 | 旧项目扫描 0/0 ✅ |
+| 0.1.0 | afa85ec | 框架骨架 + cli + test 16 + check 脚本 | 旧项目扫描 0 blocker ✅ |
+| 0.1.1 | 6a23d0b | 规则总入口：13 编译函数 + nodejs 槽位 + test 15（31 全绿） | 旧项目扫描 0 blocker ✅ |
+| 0.1.2 | 90e48ca | 审计总入口：修 patterns→RegExp + func-lines 语句密度 + auditChanged 真 diff + collectChangedFiles + test-audit 14（44 全绿）+ CLI audit 73/100 B + 旧项目同 fixture 锚定 | 旧项目扫描 0 blocker ✅ |
+| 0.1.3 | a3d5c8a | git 总入口：runGit/resolveToken 三层/commitAndPush/敏感文件 .gitignore/pushViaApi+SSH 回退/cloneViaApi/ensureRemoteRepo/setVisibility/githubFetch 硬闸 + test-git 35（79 全绿） | 旧项目扫描 0 blocker ✅ |
+| 身份基线 | 696e3ba | 本项目即 dsh-git-push 本体：package.json name/description + README/看板/注释统一名称，恢复工作区路径引用 | 79 全绿 + 旧项目扫描 0 blocker ✅ |
+| 0.1.4 | c582130 | 自身总入口：VERSION 三处一致(scan-version)/readmeTemplate/yamlTemplate/helpSync/CLI self-check + test-cli 18（97 全绿） | 旧项目扫描 0 blocker ✅ |
+| 0.1.5 | 9b7c45e | 评分总入口：lib/score/ast.js tokenizer+AST 检查器（sync-fs named-import/empty-catch 多行/func-lines 精确行数）+ runChecks 接入 + test-quality 31（128 全绿） | 旧项目扫描 0 blocker ✅ |
+| 0.1.6 | acfa588 | 豁免总入口：exemptForFinding 注册表驱动全消费（7 标记/位置语义/12 场景）+ residue 仅代码文件 + 规则定义文件自动豁免（修 §2.5 debugger 自举）+ test-exempt 25（153 全绿） | 旧项目扫描 0 blocker ✅ |
+| 版本号改口径 | 93734cf | **用户要求**：大版本号从 0 开始（1.x→0.x，2.0.0→1.0.0），全仓文档/代码/看板/历史提交信息统一 | 190 全绿 ✅ |
+| 0.1.7 | 93734cf | 上下文注入 + HTTP 总入口：Origin/CSRF(403)/写确认(400)/413 + 路由分发 + 注入文本机器解析 + test-http 30 + test-context 7（190 全绿） | 旧项目扫描 0 blocker ✅ |
 
 ---
 
