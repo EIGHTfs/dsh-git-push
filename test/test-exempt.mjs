@@ -20,10 +20,10 @@ function f(kind, rule, line = 3) {
 const SENSITIVE_TEXT = '// dsh-skip-sensitive: 测试含 mock token\n// 第二行\n// 第三行\nconst x = 1;';
 
 // ---------- 注册表完整性 ----------
-test('注册表：7 个标记齐全', () => {
+test('注册表：8 个标记齐全', () => {
   const markers = Object.keys(EXEMPT_MARKERS);
   assert.deepEqual(markers.sort(), [
-    'dsh-skip-func-length', 'dsh-skip-quality', 'dsh-skip-residue',
+    'dsh-skip-func-length', 'dsh-skip-i18n', 'dsh-skip-quality', 'dsh-skip-residue',
     'dsh-skip-sensitive', 'dsh-skip-size', 'dsh-skip-style', 'dsh-skip-syntax',
   ].sort());
 });
@@ -92,6 +92,23 @@ test('文件头 dsh-skip-size → large-file/binary 豁免（位置语义：只�
     'const x = 1; // dsh-skip-size（第 4 行，非文件头，无效）',
   ].join('\n');
   assert.equal(exemptForFinding(f('large-file', 'binary-large-file', 4), t2), false);
+});
+
+test('文件头 dsh-skip-i18n → i18n/* 整文件豁免 + 行尾单点豁免（1.0.4）', () => {
+  const t = '// dsh-skip-i18n\nconst x = 1;';
+  assert.equal(exemptForFinding(f('regex', 'i18n/hardcoded-user-visible'), t), true);
+  assert.equal(exemptForFinding(f('regex', 'i18n/concat-in-t'), t), true);
+  // 行尾单点：标记须在前 3 行之外（第 4 行起才是单点）
+  const t2 = 'const a = 1;\nconst b = 2;\nconst c = 3;\nconst msg = "hello"; // dsh-skip-i18n\nconst d = 4;';
+  const lineHit = exemptForFinding(f('regex', 'i18n/hardcoded-user-visible', 4), t2);
+  assert.equal(lineHit, true, '标记行应豁免');
+  // 其他行照报
+  assert.equal(exemptForFinding(f('regex', 'i18n/hardcoded-user-visible', 5), t2), false, '其他行照报');
+  // 文件头内（前 3 行）的标记=整文件豁免，第 4 行也豁免
+  const t3 = 'const a = 1; // dsh-skip-i18n\nconst b = 2;\nconst c = 3;\nconst msg = "hello";';
+  assert.equal(exemptForFinding(f('regex', 'i18n/hardcoded-user-visible', 4), t3), true, '前 3 行标记=整文件豁免');
+  // 非 i18n 规则不受影响
+  assert.equal(exemptForFinding(f('regex', 'debugger-statement'), t), false, '非 i18n 规则不豁免');
 });
 
 test('文件头 dsh-skip-syntax → syntax/json-parse/yaml-parse 豁免', () => {
@@ -189,15 +206,15 @@ test('exemptHintFor：未知 kind 给默认敏感提示', () => {
 });
 
 // ---------- 12 场景计数（对照旧项目场景矩阵） ----------
-test('场景矩阵：整文件 7 标记 + 行级 3 标记 = 12 场景全覆盖', () => {
-  const headerMarkers = ['dsh-skip-sensitive', 'dsh-skip-size', 'dsh-skip-func-length', 'dsh-skip-syntax', 'dsh-skip-quality', 'dsh-skip-residue', 'dsh-skip-style'];
+test('场景矩阵：整文件 8 标记 + 行级 4 标记 = 12+ 场景全覆盖', () => {
+  const headerMarkers = ['dsh-skip-sensitive', 'dsh-skip-size', 'dsh-skip-func-length', 'dsh-skip-syntax', 'dsh-skip-quality', 'dsh-skip-residue', 'dsh-skip-style', 'dsh-skip-i18n'];
   const lineMarkers = Object.entries(EXEMPT_MARKERS).filter(([, m]) => m.lineLevel).map(([k]) => k);
   // 整文件 7 场景
   for (const m of headerMarkers) {
     assert.equal(hasHeaderExempt(`// ${m}\nx`, m), true, `${m} 文件头应豁免`);
   }
-  // 行级 3 场景（sensitive/func-length/residue）
-  assert.deepEqual(lineMarkers.sort(), ['dsh-skip-func-length', 'dsh-skip-residue', 'dsh-skip-sensitive'].sort());
+  // 行级 4 场景（sensitive/func-length/residue/i18n）
+  assert.deepEqual(lineMarkers.sort(), ['dsh-skip-func-length', 'dsh-skip-i18n', 'dsh-skip-residue', 'dsh-skip-sensitive'].sort());
   // 对应位置标记应豁免（行级标记在行内生效）
   for (const m of lineMarkers) {
     assert.equal(hasLineExempt(`const x = 1; // ${m}`, m), true, `${m} 行内应生效`);
@@ -234,8 +251,8 @@ test('端到端：无豁免 → secret 照常 block', async () => {
 });
 
 // ---------- 标记注册 / 头行判定 / 反查（原 test-framework）----------
-test('豁免：7 类标记注册齐全', () => {
-  assert.equal(Object.keys(EXEMPT_MARKERS).length, 7);
+test('豁免：8 类标记注册齐全', () => {
+  assert.equal(Object.keys(EXEMPT_MARKERS).length, 8);
   assert.ok(EXEMPT_MARKERS['dsh-skip-sensitive']);
   assert.ok(EXEMPT_MARKERS['dsh-skip-func-length']);
 });

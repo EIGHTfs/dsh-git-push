@@ -1,5 +1,6 @@
 /**
  * dsh-git-push 客户端插件（DSH 侧边栏，1.0.0）
+ * dsh-skip-i18n: 插件为中文零依赖 CLI（无 i18n 框架需求），用户可见文案硬编码为产品设计
  *
  * 形态：DSH 客户端模块加载器入口（`__ModuleLoader__.load({ id, factory })`）。
  * 与 lib/client/index.js（纯逻辑/可单测）的关系：本文件是**浏览器侧适配层**，
