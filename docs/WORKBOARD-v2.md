@@ -155,9 +155,9 @@ dsh-git-push
 
 | 版本 | 内容 | 状态 |
 |------|------|------|
-| 1.0.0 | README 计划稿（架构/问题清单/链接规则） | ✅ ccfd1e5 |
-| 1.1.0 | 框架骨架 8 入口 + cli + test 16 + check 脚本 + 本看板 | ✅ 7969ae1 |
-| 1.1.1 | 规则总入口（13 编译函数 + nodejs 槽位 11 条 + 15 测试） | ✅ 6076007 |
+| 1.0.0 | README 计划稿（架构/问题清单/链接规则） | ✅ a936a66 |
+| 1.1.0 | 框架骨架 8 入口 + cli + test 16 + check 脚本 + 本看板 | ✅ 19fe21c |
+| 1.1.1 | 规则总入口（13 编译函数 + nodejs 槽位 11 条 + 15 测试） | ✅ fdf2b34 |
 | **1.1.2** | **审计总入口（collector + checks + auditFull/Changed + exempt 接线）** | ✅ 已提交（见 §2.5 修复记录） |
 | **1.1.3** | **git 总入口（token/commit/push/clone/建仓/可见性 + SSH 回退）** | ✅ 已提交（见 §3.3） |
 | 1.1.3 | git 总入口（token/commit/push/clone/建仓/可见性） | ⏳ |
@@ -350,7 +350,7 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
 
 ## 3 每入口详解（任务 + 思路 + 验收标准）
 
-### 3.1 规则总入口（1.1.1）✅ 已提交 6076007
+### 3.1 规则总入口（1.1.1）✅ 已提交 fdf2b34
 - **子任务**：注册表骨架 / 装载骨架 / 13 编译函数 / 三统一映射 / nodejs 槽位 11 条 / 未知规则报错 / dimensions 声明——全部完成。
 - **验收**：31 测试全绿；`node cli.mjs ruleset nodejs` 输出 11 条分桶统计；旧项目扫描 0 blocker。
 
@@ -466,11 +466,12 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
 
 | 版本 | commit | 内容 | 自检 |
 |------|--------|------|------|
-| 1.0.0 | ccfd1e5 | README 计划稿 | 旧项目扫描 0/0 ✅ |
-| 1.1.0 | 7969ae1 | 框架骨架 + cli + test 16 + check 脚本 | 旧项目扫描 0 blocker ✅ |
-| 1.1.1 | 6076007 | 规则总入口：13 编译函数 + nodejs 槽位 + test 15（31 全绿） | 旧项目扫描 0 blocker ✅ |
-| 1.1.2 | 90449dd | 审计总入口：修 patterns→RegExp + func-lines 语句密度 + auditChanged 真 diff + collectChangedFiles + test-audit 14（44 全绿）+ CLI audit 73/100 B + 旧项目同 fixture 锚定 | 旧项目扫描 0 blocker ✅ |
-| 1.1.3 | 待提交 | git 总入口：runGit/resolveToken 三层/commitAndPush/敏感文件 .gitignore/pushViaApi+SSH 回退/cloneViaApi/ensureRemoteRepo/setVisibility/githubFetch 硬闸 + test-git 35（79 全绿） | 旧项目扫描 0 blocker ✅ |
+| 1.0.0 | a936a66 | README 计划稿 | 旧项目扫描 0/0 ✅ |
+| 1.1.0 | 19fe21c | 框架骨架 + cli + test 16 + check 脚本 | 旧项目扫描 0 blocker ✅ |
+| 1.1.1 | fdf2b34 | 规则总入口：13 编译函数 + nodejs 槽位 + test 15（31 全绿） | 旧项目扫描 0 blocker ✅ |
+| 1.1.2 | e007eba | 审计总入口：修 patterns→RegExp + func-lines 语句密度 + auditChanged 真 diff + collectChangedFiles + test-audit 14（44 全绿）+ CLI audit 73/100 B + 旧项目同 fixture 锚定 | 旧项目扫描 0 blocker ✅ |
+| 1.1.3 | df843dc | git 总入口：runGit/resolveToken 三层/commitAndPush/敏感文件 .gitignore/pushViaApi+SSH 回退/cloneViaApi/ensureRemoteRepo/setVisibility/githubFetch 硬闸 + test-git 35（79 全绿） | 旧项目扫描 0 blocker ✅ |
+| 身份基线 | 33f5cd2 | 本项目即 dsh-git-push 本体：package.json name/description + README/看板/注释统一名称，恢复工作区路径引用 | 79 全绿 + 旧项目扫描 0 blocker ✅ |
 
 ---
 
