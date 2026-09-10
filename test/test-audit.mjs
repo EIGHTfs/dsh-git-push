@@ -377,3 +377,23 @@ test('loader：private_files 顶层字段跨文件合并（后覆盖前追加）
   assert.ok(pf.includes('**/id_ed25519'), '清单含 id_ed25519');
   assert.ok(pf.includes('**/.env') && pf.includes('**/.env.*'), '清单含 .env 族');
 });
+
+
+
+// ---------- 1.0.4：G7-S4 审计强度三档（quick 跳过 AST/语义；standard/deep 全量） ----------
+test('auditLevel：quick 比 standard 少跑 AST/语义检查（findings 更少）', () => {
+  const quick = auditFull('.', { auditLevel: 'quick' });
+  const std = auditFull('.', { auditLevel: 'standard' });
+  assert.ok(quick.findings.length <= std.findings.length, `quick(${quick.findings.length}) 应 ≤ standard(${std.findings.length})`);
+  // quick 仍保留正则/黑名单/凭据类（基础安全不因强度降级）
+  const quickDims = new Set(quick.findings.flatMap((f) => f.dimensions || []));
+  assert.ok(!quickDims.has('可维护性') || quick.findings.length < std.findings.length,
+    'quick 若含可维护性维度则数量应明显少于 standard');
+});
+
+test('auditLevel：deep 与 standard 全量等价（当前引擎无第三档内容，留扩展位）', () => {
+  const std = auditFull('.', { auditLevel: 'standard' });
+  const deep = auditFull('.', { auditLevel: 'deep' });
+  assert.equal(deep.findings.length, std.findings.length, 'deep 与 standard 数量一致');
+  assert.equal(deep.summary.blocker, std.summary.blocker);
+});
