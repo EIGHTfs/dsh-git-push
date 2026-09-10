@@ -8,6 +8,8 @@ import { loadRuleFiles, RULE_SLOTS, discoverRuleSlots } from './lib/rule/loader.
 import { compileAllRules } from './lib/rule/registry.js';
 import { auditWithScope } from './lib/audit/index.js';
 import { scoreQuality } from './lib/score/index.js';
+import { checkLinks, sumLinkPenalty } from './lib/link-check/index.js';
+import { collectTextFiles, readText } from './lib/audit/collector.js';
 import { readFileSync } from 'node:fs';
 
 /** parseArgv 认识的选项白名单（cli-help-sync 机器比对基准，必须与 HELP 文本一致）。 */
@@ -20,6 +22,7 @@ const HELP = `git-sluice v${VERSION} — dsh-git-push 引擎独立 CLI（脱离 
   git-sluice ruleset [槽位...]    编译规则包并输出统计（默认全部槽位）
   git-sluice scan <root> [--depth N]   全量扫描目录（非 git 目录可查）
   git-sluice audit <root>         审计目录（默认 diff 范围；--full 走全量）
+  git-sluice link-check <路径>    检查 md/文本中的链接有效性（只 warning，flaky 域名打折）
   git-sluice yaml-template        输出规则 yml 模板（含 kind + dimensions 示范）
   git-sluice readme-template      输出 README 模板（{{name}} {{version}} 占位符）
   git-sluice self-check           版本一致性 + HELP↔parseArgv 机器比对（自检）
@@ -90,6 +93,19 @@ export function cmdAudit(root, flags) {
   console.log(`  quality: ${q.score}/100（${q.level}）`);
 }
 
+/** 子命令：link-check — 检查文本文件的链接有效性（只 warning，不拦提交）。 */
+export async function cmdLinkCheck(root = '.') {
+  const files = collectTextFiles(root, { depth: 5 }).filter((f) => /\.(md|markdown|txt)$/i.test(f.path));
+  const all = [];
+  for (const f of files) {
+    const findings = await checkLinks({ file: f.path, text: readText(f.full) });
+    if (findings.length) all.push(...findings);
+  }
+  console.log(`链接检查 ${root}（${files.length} 个文档）`);
+  for (const x of all) console.log(`  ${x.file}:${x.line} [${x.linkLevel}${x.flaky ? '/flaky' : ''}] ${x.message}`);
+  console.log(`共 ${all.length} 个问题，扣分合计 ${sumLinkPenalty(all)}（只 warning，不拦提交）`);
+}
+
 export function cmdYamlTemplate() {
   console.log(yamlTemplate());
 }
@@ -148,6 +164,7 @@ export function main(argv = process.argv.slice(2)) {
     if (error) return console.error(error);
     return cmdAudit(positional[0] || '.', flags);
   }
+  if (cmd === 'link-check') return cmdLinkCheck(rest[0] || '.');
   if (cmd === 'yaml-template') return cmdYamlTemplate();
   if (cmd === 'readme-template') return cmdReadmeTemplate();
   if (cmd === 'self-check') return cmdSelfCheck();

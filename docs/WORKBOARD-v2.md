@@ -1,6 +1,6 @@
 # WORKBOARD v2 —— dsh-git-push 开发任务看板（榜样版 · 交接版）
 
-> **状态**：开发进行中（已提交 0.0.0 / 0.1.0~0.1.7 / **0.1.8**；下一入口 0.2.0 链接判断规则）
+> **状态**：开发进行中（已提交 0.0.0 / 0.1.0~0.1.8 / **0.2.0**；下一里程碑 1.0.0 DSH 插件接线首发）
 > **版本号规则（用户指定）**：大版本号从 **0** 开始——0.x = 单机引擎与总入口建设期，1.0.0 = DSH 插件接线完成首发（原「2.0.0」改为 1.0.0）。
 > **仓库**：`工作区/dsh-git-push-v2`（本地 master，**不推送**）
 > **看板双重身份**：
@@ -136,7 +136,8 @@ dsh-git-push
     ├── test-exempt.mjs      25 断言（豁免总入口：7 标记/位置语义/12 场景）✅ 全绿
     ├── test-http.mjs        30 断言（HTTP 总入口：Origin/CSRF/写确认/413）✅ 全绿
     ├── test-context.mjs      7 断言（上下文注入文本 + 路径归属）✅ 全绿
-    └── test-client.mjs      16 断言（侧边栏：无 JSX/零外部资源/默认关/即时生效）✅ 全绿
+    ├── test-client.mjs      16 断言（侧边栏：无 JSX/零外部资源/默认关/即时生效）✅ 全绿
+    └── test-link-check.mjs  24 断言（链接分级/flaky 打折/断网不 blocker/性能）✅ 全绿
 ```
 
 **数据流（一条链）**：
@@ -172,6 +173,7 @@ dsh-git-push
 | **0.1.6** | **豁免总入口（7 标记注册表驱动全消费 + 位置语义 + 规则定义文件豁免）** | ✅ 已提交（见 §3.6） |
 | **0.1.7** | **上下文注入 + HTTP 总入口（Origin/CSRF/写确认/413）** | ✅ 已提交（见 §3.7） |
 | **0.1.8** | **侧边栏（手写 createElement 无 JSX + 零外部资源 + 开关默认关）** | ✅ 已提交（见 §3.8） |
+| **0.2.0** | **链接判断 yml 规则（link-check 分级扣分 + flaky 打折）** | ✅ 已提交（见 §3.9） |
 | 0.1.3 | git 总入口（token/commit/push/clone/建仓/可见性） | ⏳ |
 | 0.1.4 | 自身总入口（版本单源/README 模板/yml 模板/CLI 完善） | ⏳ |
 | 0.1.5 | 评分总入口（AST 化质量检查 + 口径锚定） | ⏳ |
@@ -450,9 +452,16 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
   - [x] test-client 16 断言全绿（208 总测试全绿）
 - **决策：v2 不实施 viewer（提交历史查看器）**——旧项目 v1.60.1 已移除该类组件（lib/viewer.js + viewer-locales.js + /git-push/viewer 页面 + repos|commits|diff 只读端点，commit 33276c4），**用不上，以后再改**；侧边栏不包含提交历史查看器入口。若未来要浏览提交历史，从旧项目历史版本移植（需新增 test-viewer 覆盖，链接拼接 bug 已在旧版修复）。
 
-### 3.9 链接判断 yml 规则（0.2.0）⏳
-- **思路**：link-check kind——404/403 大扣分、DNS 中扣分、超时小扣分；flaky 域名（github/api.github.com/raw/npmjs）网络错误 ×0.2；只 warning 不 blocker。
-- **验收**：fake server 分级扣分 / flaky 打折 / 断网不 blocker / 100 链接 ≤30 秒 / test-link-check ≥10 断言。
+### 3.9 链接判断 yml 规则（0.2.0）✅ 已提交
+- **思路**：link-check kind——404/403 大扣分、DNS 中扣分、超时小扣分；flaky 域名网络错误 ×0.2；只 warning 不 blocker。
+- **已实现**：`lib/link-check/index.js`（extractLinks 去重去标点跳占位符 / gradeResult 分级纯函数 / probeLink+probeLinks 并发受限探测 / checkLinks 统一问题对象 / sumLinkPenalty）；`lib/audit-rules/audit-rules-docs.yml` 规则槽位（link-check kind）；编译函数注册（加一行）；RULE_SLOTS 修正为只列已建槽位 + PLANNED_SLOTS 记录规划槽位；CLI `link-check <路径>` 子命令。
+- **验收**（全部通过）：
+  - [x] fake server 分级扣分（404/403→-3 dead、DNS→-2、超时/连接/5xx→-1）
+  - [x] flaky 打折（api.github.com/raw.githubusercontent.com DNS -2→-0.4、超时 -1→-0.2；非 flaky 不打折）
+  - [x] 断网不 blocker（全部网络错误只产 warning，无一 blocker）
+  - [x] 100 链接并发（10 并发、50ms/请求）≤30 秒
+  - [x] test-link-check 24 断言全绿（233 总测试全绿）
+  - [x] CLI link-check 子命令可用（docs 扫描 0 问题）
 
 ---
 
@@ -524,7 +533,8 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
 | 0.1.6 | acfa588 | 豁免总入口：exemptForFinding 注册表驱动全消费（7 标记/位置语义/12 场景）+ residue 仅代码文件 + 规则定义文件自动豁免（修 §2.5 debugger 自举）+ test-exempt 25（153 全绿） | 旧项目扫描 0 blocker ✅ |
 | 版本号改口径 | 93734cf | **用户要求**：大版本号从 0 开始（1.x→0.x，2.0.0→1.0.0），全仓文档/代码/看板/历史提交信息统一 | 190 全绿 ✅ |
 | 0.1.7 | 93734cf | 上下文注入 + HTTP 总入口：Origin/CSRF(403)/写确认(400)/413 + 路由分发 + 注入文本机器解析 + test-http 30 + test-context 7（190 全绿） | 旧项目扫描 0 blocker ✅ |
-| 0.1.8 | 待提交 | 侧边栏：手写 createElement 无 JSX + 零外部资源 + 开关默认关 + 配置即时生效 + 无 viewer + test-client 16（208 全绿） | 旧项目扫描 0 blocker（version/major-zero 为用户指定口径豁免）✅ |
+| 0.1.8 | 9699179 | 侧边栏：手写 createElement 无 JSX + 零外部资源 + 开关默认关 + 配置即时生效 + 无 viewer + test-client 16（208 全绿） | 旧项目扫描 0 blocker（version/major-zero 为用户指定口径豁免）✅ |
+| 0.2.0 | 待提交 | 链接判断：link-check kind yml 槽位 + 分级扣分(404/-3·DNS/-2·超时/-1) + flaky×0.2 + 并发探测 + CLI 子命令 + test-link-check 24（233 全绿） | 旧项目扫描 0 blocker（同前豁免）✅ |
 
 ---
 

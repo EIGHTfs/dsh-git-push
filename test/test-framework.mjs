@@ -38,10 +38,12 @@ test('注册表：compileAllRules 收集错误不中断', () => {
   assert.equal(ctx.errors.length, 1);
 });
 
-test('装载：RULE_SLOTS 槽位齐全', () => {
+test('装载：RULE_SLOTS 只列已建槽位（缺失槽位不进默认装载）', () => {
   assert.ok(RULE_SLOTS.includes('nodejs'));
-  assert.ok(RULE_SLOTS.includes('npm'));
+  assert.ok(RULE_SLOTS.includes('docs'));
   assert.ok(RULE_SLOTS.includes('template') === false); // template 默认不加载
+  // 规划中未建的槽位不该在默认装载列表（否则每次编译报缺失）
+  assert.ok(!RULE_SLOTS.includes('npm'), 'npm 槽位未建，不应列入默认装载');
 });
 
 test('装载：loadRuleFiles 对缺失槽位不崩溃，返回错误收集', () => {
