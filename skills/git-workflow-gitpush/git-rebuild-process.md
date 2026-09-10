@@ -2,7 +2,7 @@
 name: git-rebuild-process
 description: 重新建库流程（2026-08-21 EIGHTfs 确立，权威；权威源 = dsh-git-push 插件项目 skills/）——在数据文件夹新建 git 仓库 → 按原始项目每次提交重新分析合理提交点 → 建立长期任务分步骤按顺序还原到提交点复制进新 git → 走 gitpush 提交流程（不推送）→ 全部转移完成推送 → 仓库移到根目录（.dsh 同级）「项目」文件夹。处理「重新建库」「重建仓库」「按提交点还原重建」「迁移仓库到项目文件夹」类任务时加载。
 whenToUse: 用户说「重新建库/重建仓库」、原仓库需按提交历史重梳理还原、项目仓库要迁移到「项目」文件夹、需要分步骤按提交点重建 git 时。
-generatedBy: EIGHTfs 2026-08-21（用户原话整理，已确认理解；权威归属经用户确认 = dsh-git-push 插件权威 skill）
+generatedBy: EIGHTfs 2026-08-21（规则整理；权威归属 = dsh-git-push 插件权威 skill）
 ---
 
 > ⭐ **先记住我**：任何会话开始前，先读用户档案 `.dsh/skills/remember-me.md`（优先级最高的 skill）：我是谁、我怎么用你、我立过的规矩。

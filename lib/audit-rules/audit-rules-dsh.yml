@@ -1,0 +1,94 @@
+# dsh 插件专属审计规则（v1.50.0 默认加载槽位）
+# 依据：DeepSeek Harness 官方文档（https://deepseekdocs.com/docs/learn/core/plugin-anatomy 等）
+#   ① 插件 = cordis 插件 + package.json dsh 字段（dsh.bundle.patch / dsh.client / dsh.profile.bundles）
+#   ② capability 安全：依赖必须静态声明（export const inject / static inject），未声明访问被 Proxy 拒绝
+#   ③ 装载闭包只含 @deepseek-ai/* scoped 包；裸名 cordis/schemastery 解析失败
+#   ④ 工具契约：output.render 必填（dsh-tools rc.6 起缺省抛 userRender is not a function）
+#   ⑤ cordis.patch.yml 顶层数组：insert 或按 id 覆盖；config 整行替换非深合并；name 不符 warn 跳过
+#   ⑥ Client 半部：exports["./client"] + dsh.client 声明，懒 CJS 模块表
+# 适用：dsh 插件项目（含 dsh-git-push 自身）——非插件项目命中率低，成本可忽略。
+# 引擎约束：styleRules regex 逐行扫描新增行，因此全部规则设计为「单行命中即违规」的正向模式；
+#   跨行/缺失类检查（如 inject 缺声明、output 缺 render）请用 code_audit 的 LLM 深度审查兜底。
+metadata:
+  name: "dsh 插件专属审计规则集"
+  author: "EIGHTfs"
+  version: "1.0.0"
+  description: "针对 DeepSeek Harness 插件（cordis 形态）的结构、依赖、工具契约、patch 语义审计；单行正则可执行"
+
+rules:
+  # ── ① 依赖与导入（文档：装载闭包只含 @deepseek-ai/*）──
+  - id: dsh/import-bare-cordis
+    name: "禁止裸名导入 cordis"
+    category: "dsh"
+    severity: "error"
+    description: "必须 import from '@deepseek-ai/cordis'（框架被 vendor 化只发布为 @deepseek-ai/* scoped 包）；裸名 cordis 在新 loader 装载闭包中解析失败"
+    patterns:
+      - "import\\s+.*?\\s+from\\s+['\"]cordis['\"]"
+      - "require\\s*\\(\\s*['\"]cordis['\"]\\s*\\)"
+    fixable: true
+    mitigation: "改为 import ... from '@deepseek-ai/cordis'；若已依赖裸名 cordis 需在插件目录自身安装该依赖"
+  - id: dsh/import-bare-schemastery
+    name: "禁止裸名导入 schemastery"
+    category: "dsh"
+    severity: "error"
+    description: "配置 schema 必须 z from '@deepseek-ai/schemastery'；裸名 schemastery 解析失败"
+    patterns:
+      - "import\\s+.*?\\s+from\\s+['\"]schemastery['\"]"
+      - "require\\s*\\(\\s*['\"]schemastery['\"]\\s*\\)"
+    fixable: true
+    mitigation: "改为 import z from '@deepseek-ai/schemastery'"
+
+  # ── ② 工具契约：output.render 空实现/缺失等价（dsh-tools 契约）──
+  - id: dsh/tool-render-empty-body
+    name: "工具 render 空实现（返回 null/undefined/空体）"
+    category: "dsh"
+    severity: "error"
+    description: "dsh-tools 契约要求 render 返回内容块数组；空实现/返回 null 使工具结果无法回显（等效缺失）"
+    patterns:
+      - "render\\s*\\([^)]*\\)\\s*\\{\\s*\\}"
+      - "render\\s*\\([^)]*\\)\\s*\\{\\s*return\\s+null\\s*;?\\s*\\}"
+      - "render\\s*\\([^)]*\\)\\s*\\{\\s*return\\s+undefined\\s*;?\\s*\\}"
+    fixable: false
+    mitigation: "render(_args, value) { return [{ type: 'text', text: String(value) }] }"
+  - id: dsh/client-node-builtin-require
+    name: "Client 半部 require Node 内置模块"
+    category: "dsh"
+    severity: "error"
+    description: "浏览器 client 半部无 Node 运行时；require('fs'/'path'/'os'/'child_process'/'net'/'http'(无 window)) 必然运行失败"
+    patterns:
+      - "require\\s*\\(\\s*['\"](?:node:)?(?:fs|path|os|child_process|net|dgram|tls|http|https|worker_threads|cluster)['\"]\\s*\\)"
+    fixable: false
+    mitigation: "浏览器侧改用 fetch/WebSocket/indexedDB 等 web API；Node 侧能力留在 host 半部经 RPC 暴露"
+
+  # ── ③ 配置 schema：凭据字段应 role('secret')（落盘脱敏）──
+  - id: dsh/schema-secret-field-role
+    name: "配置凭据字段未标注 role('secret')"
+    category: "dsh"
+    severity: "warning"
+    description: "配置 schema 中的 token/secret/apiKey/password 字段应 z.string().role('secret')，凭据才不进 settings 明文/日志；缺 role 有泄露风险"
+    patterns:
+      - "(?:token|secret|apiKey|password|credential)[A-Za-z0-9_]*\\s*:\\s*z\\.string\\(\\)(?!\\s*\\.\\s*role)"
+    fixable: true
+    mitigation: "改为 z.string().role('secret')；凭据值落插件配置目录（0600），不回写 settings.yaml"
+
+  # ── ④ patch 语义（cordis.patch.yml）：insert 与按 id 覆盖冲突 ──
+  - id: dsh/patch-insert-unique-id
+    name: "patch insert 行 id 应与被覆盖行区分"
+    category: "dsh"
+    severity: "warning"
+    description: "cordis.patch.yml 中 insert 新建的行若与后续按 id 覆盖行同 id 会 duplicate-id 双挂；insert 行 id 应唯一（除非刻意二次配置，需确认覆盖语义）"
+    patterns:
+      - "insert\\s*:\\s*$"
+    fixable: false
+    mitigation: "insert 行与按 id 覆盖行避免同 id；核对 dsh web --dump-config 组合树"
+
+  # ── ⑤ 结构红线：Client 半部入口规范 ──
+  - id: dsh/client-module-loader-id
+    name: "Client 半部入口应使用统一 ModuleLoader 契约"
+    category: "dsh"
+    severity: "warning"
+    description: "client 半部应通过 window.__ModuleLoader__.load({ id, factory (模块表) }) 注册懒加载入口；直接顶层副作用写法不生效"
+    patterns:
+      - "window\\.__ModuleLoader__\\.load\\s*\\([^)]{0,80}"
+    fixable: false
+    mitigation: "window.__ModuleLoader__.load({ id: '<pkg>', factory: (require) => ({ apply }) })"

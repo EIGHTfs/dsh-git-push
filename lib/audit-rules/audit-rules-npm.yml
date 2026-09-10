@@ -1,0 +1,124 @@
+# npm 插件发布审计规则（v1.51.0 默认加载槽位）
+# 依据：npm 官方 best practices（npm pack 内容判定 / package.json 字段契约）+ 本机 dsh 插件发布经验。
+# 目标文件：package.json / .npmrc —— 通过 exts 字段显式放行（json/npmrc 默认不在 styleCode，
+#   v1.51.0 起 styleRules regex 支持 per-rule exts，npm 规则只扫这两个类型，不误伤代码文件）。
+# 语义：全部正则可执行；「缺某个字段」类检查（如缺 license/repository）正则无法表达，
+#   走缺失检测兜底（附 npm doctor / npm publish --dry-run 建议），或由人工在发布前核查。
+metadata:
+  name: "npm 插件发布审计规则集"
+  author: "EIGHTfs"
+  version: "1.0.0"
+  description: "针对要发布到 npm 的 dsh 插件：发布清单/依赖声明/凭据防泄漏/publishConfig 语义审计（只扫 package.json + .npmrc）"
+
+rules:
+  # ── ① package.json 发布清单（files 白名单）──
+  - id: npm/files-suspicious-entry
+    name: "files 白名单含可疑条目（应核对实际打包路径）"
+    category: "npm"
+    severity: "warning"
+    description: "files 白名单决定 npm pack 打进包的内容；不存在/错误路径的条目会让包缺运行时文件（如 audit-rules 应写 lib/audit-rules 而非 audit-rules）。发布前应 npm pack --dry-run 核对"
+    exts: ["json"]
+    patterns:
+      - "\"files\"\\s*:\\s*\\["
+      - "\"audit-rules\""
+      - "\"template\""
+    fixable: false
+    mitigation: "npm pack --dry-run 看实际打进包的文件清单；规则目录写完整相对路径（lib/audit-rules）"
+  - id: npm/files-missing-lib
+    name: "files 白名单可能漏掉 lib（主代码目录）"
+    category: "npm"
+    severity: "error"
+    description: "main/exports 指向 lib/ 下的入口，若 files 未包含 lib 目录，npm pack 包内没有入口文件 → 安装后 import 即失败"
+    kind: "npm-json"
+    exts: ["json"]
+    fixable: false
+    mitigation: "files 数组包含 \"lib\"（或列出实际入口文件）；npm pack --dry-run 验证"
+  - id: npm/exports-without-client
+    name: "exports 缺 ./client 子路径（双半插件）"
+    category: "npm"
+    severity: "warning"
+    description: "dsh 双半插件（host+client）应 exports[\"./client\"] 指向 client 入口，宿主才能按子路径解析浏览器半部"
+    exts: ["json"]
+    patterns:
+      - "\"dsh\"\\s*:\\s*\\{[^}]*\"client\""
+    fixable: false
+    mitigation: "package.json 增加 exports[\"./client\"]；与官方 client 插件清单对齐"
+
+  # ── ② 依赖声明 ──
+  - id: npm/dependency-star-range
+    name: "依赖版本用 * 通配（未锁定）"
+    category: "npm"
+    severity: "error"
+    description: "dependencies/peerDependencies 用 \"*\" 或 ^0.x 让安装解析到不可控版本；发布插件应锁定可复现的范围（^x.y.z），peer 用符合实际装载的版本"
+    exts: ["json"]
+    patterns:
+      - "\"(?:dependencies|peerDependencies|devDependencies|optionalDependencies)\"\\s*:\\s*\\{[^}]*\"\\*\""
+      - "\"[a-zA-Z@][^\"@]*(?:@[0-9]+)?\"\\s*:\\s*\"\\*\""
+    fixable: true
+    mitigation: "改为精确范围（如 ^4.1.0）；对照实际安装版本（npm ls js-yaml）"
+  - id: npm/undeclared-js-yaml
+    name: "import 了 js-yaml 但未声明依赖"
+    category: "npm"
+    severity: "error"
+    description: "lib 代码 import 'js-yaml' 且 package.json dependencies 无此项：纯净安装后 Cannot find module 'js-yaml'。npm 依赖必须声明，发布前 npm ls 全绿"
+    kind: "npm-json"
+    exts: ["json"]
+    fixable: true
+    mitigation: "package.json dependencies 增加 \"js-yaml\": \"^4.1.0\"；npm ls 验证"
+
+  # ── ③ 凭据防泄漏（.npmrc / package.json）──
+  - id: npm/npmrc-authtoken
+    name: ".npmrc 含认证 token（禁止入库）"
+    category: "npm"
+    severity: "error"
+    description: ".npmrc 里 _authToken / //registry.npmjs.org/:_authToken 是 npm 发布凭据，进 git 即泄露；发布 token 应只在本机 ~/.npmrc，绝不进仓库"
+    exts: ["json", "npmrc"]
+    patterns:
+      - "_authToken"
+      - "//registry\\.npmjs\\.org/:_authToken"
+      - "always-auth\\s*=\\s*true"
+    fixable: false
+    mitigation: "从 .npmrc 删除 token 并加 .gitignore；令牌在 npmjs.com 撤销重发"
+  - id: npm/package-auth-props
+    name: "package.json 含发布凭据字段"
+    category: "npm"
+    severity: "error"
+    description: "package.json 不应含 publishConfig._authToken / //registry 凭据行；发布凭据只在本机环境"
+    exts: ["json"]
+    patterns:
+      - "\"publishConfig\"\\s*:\\s*\\{[^}]*_auth"
+      - "authToken"
+    fixable: false
+    mitigation: "删除 publishConfig 凭据字段；用环境变量 NODE_AUTH_TOKEN"
+
+  # ── ④ 发布语义 ──
+  - id: npm/private-true-conflict
+    name: "\"private\": true 与发布矛盾"
+    category: "npm"
+    severity: "warning"
+    description: "package.json 标记 private: true 时 npm publish 会被 npm 拒绝（除非 --access=restricted 私有包）；要发布公开插件应去掉 private 或明确私有包意图"
+    exts: ["json"]
+    patterns:
+      - "\"private\"\\s*:\\s*true"
+    fixable: true
+    mitigation: "去掉 private 或按私有包发布；核对 npm registry 可见性预期"
+  - id: npm/license-field-check
+    name: "license 字段核对（缺失则 npm pack 告警）"
+    category: "npm"
+    severity: "warning"
+    description: "npm 要求 package.json 有 license 字段（可 SPDX 表达式）；缺失时 npm publish 拒绝（npm 8+ 默认无 license 不可发布公共包）。本规则命中 \"version\" 行即提示核对"
+    exts: ["json"]
+    patterns:
+      - "\"version\"\\s*:\\s*\"[0-9]"
+    fixable: false
+    mitigation: "增加 \"license\": \"MIT\"（或项目实际 SPDX 值）+ LICENSE 文件；npm publish --dry-run 验证"
+  - id: npm/repository-field-check
+    name: "repository 字段核对（npm 包元数据）"
+    category: "npm"
+    severity: "info"
+    description: "建议声明 repository（{type,url}）便于 npm 页面与依赖审计溯源；命中 \"homepage\" 行即提示"
+    exts: ["json"]
+    patterns:
+      - "\"homepage\""
+    fixable: false
+    mitigation: "增加 \"repository\": { \"type\": \"git\", \"url\": \"https://github.com/<owner>/<repo>.git\" }"

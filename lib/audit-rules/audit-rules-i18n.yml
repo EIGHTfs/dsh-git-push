@@ -1,0 +1,41 @@
+# dsh-skip-sensitive: 规则定义文件含符号示范文本（t() 调用等非真实数据）
+# dsh-git-push 审计规则（i18n 槽位，1.0.3）
+# 国际化审计：用户可见文案禁止硬编码（须 t('key') 包裹）、语言包文件分语言输出。
+# 规则类型由编译函数按字段自动指派（pattern/patterns → regex kind；detection_method → semantic）。
+# dimensions：10 维度绑定（文档/可维护性）。
+metadata:
+  name: "国际化审计规则（i18n 六条转规则）"
+  version: "1.0.0"
+
+rules:
+  # ----- 规则 1：用户可见文案硬编码（未用 t() 包裹）-----
+  - id: i18n/hardcoded-user-visible
+    name: "用户可见文案硬编码，未用 t() 包裹"
+    category: "i18n"
+    severity: "warning"
+    description: "用户可见文案禁止硬编码，必须使用 t('key') 包裹（点分层级 key，动态内容用插值 t('key', { name, count })）"
+    patterns:
+      - "(message|title|label|placeholder|description|tooltip|errorMsg)\\s*[:=]\\s*['\"][^'\"]{4,}['\"]"
+      - "console\\.(log|warn|error)\\s*\\(\\s*['\"][^'\"]{4,}['\"]"
+    fixable: false
+    mitigation: "改为 t('module.field')，语言包按 zh-CN.json / en-US.json 分文件输出"
+
+  # ----- 规则 2：t() 动态内容用字符串拼接（应插值）-----
+  - id: i18n/concat-in-t
+    name: "t() 内字符串拼接（应使用插值）"
+    category: "i18n"
+    severity: "warning"
+    description: "动态内容应使用插值 t('key', { name, count })，禁止在 t() 参数内拼接多语言句子"
+    pattern: "t\\s*\\(\\s*['\"][^'\"]*['\"]\\s*\\+"
+    fixable: false
+    mitigation: "改为 t('key', { name, count })"
+
+  # ----- 规则 3：语言包文件缺失（zh-CN.json / en-US.json 分文件）-----
+  - id: i18n/locale-file-missing
+    name: "语言包文件缺失（zh-CN.json / en-US.json 分文件）"
+    category: "i18n"
+    severity: "warning"
+    description: "语言包文件单独输出，按 zh-CN.json / en-US.json 分文件（i18next 复数/日期/货币用其复数规则或 Intl API）"
+    detection_method: "locale-file-exists"
+    fixable: false
+    mitigation: "补齐 zh-CN.json / en-US.json 语言包文件"

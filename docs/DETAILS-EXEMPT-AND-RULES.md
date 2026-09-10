@@ -76,6 +76,7 @@ audit 消费时对 `audit-rules-*.yml` 路径跳过 residue 类豁免（规则�
 | version | `lib/audit-rules/audit-rules-version.yml` | 8 |
 | dsh | `lib/audit-rules/audit-rules-dsh.yml` | 7 |
 | comment | `lib/audit-rules/audit-rules-comment.yml` | 6 |
+| i18n | `lib/audit-rules/audit-rules-i18n.yml` | 3 |
 | folder | `lib/audit-rules/audit-rules-folder.yml` | 4 |
 | docs | `lib/audit-rules/audit-rules-docs.yml` | 1 |
 | robustness | `lib/audit-rules/audit-rules-robustness.yml` | 1 |
@@ -128,7 +129,7 @@ output:
 ### 2.3 字段 → 编译函数认领表（lib/rule/compilers.js 全部注册）
 
 > 一个规则**不用写 kind**——按字段自动探测（也可显式 `kind:` 抢跑）。
-> 认领顺序：显式 kind → 注册表顺序（凭据→函数→数值→正则→链接→语义→黑名单→目录）。
+> 认领顺序：显式 kind → 注册表顺序（凭据→函数→数值→正则→链接→语义→黑名单→目录→npm 结构化）。
 
 | 编译 kind | 认领条件（detect 探测字段 / id） | 编译产物关键字段 | 维度 |
 |---|---|---|---|
@@ -148,6 +149,8 @@ output:
 | `semantic` | detection_method / category security|accessibility / 名含测试等关键词 / id 含 testing|dependency | detectionMethod | 健壮性 |
 | `blacklist` | `blacklist` 数组非空 | blacklist[]（{pattern,weight}）+ whitelist[] | 文档 |
 | `folder` | category==='folder' 或 (threshold + exclude_dirs/signatures/required_patterns) | threshold + excludeDirs + signatures + requiredPatterns | 可维护+可部署 |
+| `npm-json` | 显式 kind==='npm-json'（package.json 结构化判定） | detectionMethod / 结构化条件 | 可部署性 |
+| `i18n` | 槽位 i18n 规则（pattern→regex / detection_method→semantic） | hardcoded-user-visible / concat-in-t / locale-file-missing | 文档+可维护 |
 
 ### 2.4 正则类 vs 数值类：加一条规则的两种写法
 
@@ -489,4 +492,61 @@ commitAndPush({ repoPath, message, push?, dryRun?, token?, transport: 'api'|'ssh
 4. 测试：test-git.mjs 补 transport 三分支断言
 5. 本板 §五 token 探测不变（token 与通道解耦：api 用 token，ssh 用私钥）
 
-> 说明：本清单是**设计备忘**，实施时机由用户/接手 AI 决定，不在本次落码。
+> 说明：本清单是**设计备忘**，实施时机由开发者决定，不在本次落码。
+
+---
+
+## 十五、设计：单次硬编码提醒（复用第三等级 info，2026-09-10 确立 4 项）
+
+> **背景**：repeated-string 现在只对「重复 ≥ min_occurrences 的硬编码值」出 warning。
+> 新增设计：**单次出现的硬编码值也扫**，不警告、只「提醒」——提示该硬编码值
+> 是否需要转成变量/配置文件/常量。正好利用 severity 第三级 **info**（单列、不拦门禁）。
+
+### 15.1 四项设计决策（2026-09-10 已确认）
+
+| # | 决策点 | 定案 |
+|---|---|---|
+| 1 | 触发范围 | **路径 + 纯数字**（URL/域名/端口/绝对路径/`:8080`/`127.0.0.1` 等值型特征 + 纯数字字面量放开 `num` 类型） |
+| 2 | 档位边界 | **可配置阈值**（yml 加 `min_remind` 字段：`count ≥ min_remind` → info 提醒；`count ≥ min_occurrences` → warning 警告） |
+| 3 | 评分影响 | **计 0 分**（提醒不进评分、不进 blocker/warning 统计，仅单列展示） |
+| 4 | 实现形态 | **同 kind 双档恒开**（repeated-string 检查器同时产 warning + info，不加开关字段） |
+
+### 15.2 目标设计（将来实施）
+
+**切换逻辑（checkRepeated 内）**：
+```
+对每个硬编码字面量命中：
+  count ≥ min_occurrences（默认 3）→ severity='warning'，scoreImpact=1（原行为不变）
+  min_remind ≤ count < min_occurrences → severity='info'，scoreImpact=0（新增提醒档）
+```
+- 范围放宽：`checkRepeatedStringsAst` 对应处放开 `num`（纯数字）与路径/URL 类值型特征；
+  仍排除：纯标识符、dotfile、2-4 字汉字维度词、`len<4` 短串（噪音过滤基线保留）
+- `countByDimension`：`info`/`notice` 计 0（当前非 blocker 一律计 1，需加 severity 分支）
+- `summarize`：info 已单列 notice（无需改）
+- **评分盲点预警**：放开 num 会把大量数字字面量计入计数——`count=1` 的纯数字若全提醒会噪音爆炸，
+  实施时建议对纯数字再设长度/语义过滤（如仅提醒 `≥4 位` 或含小数/科学计数，`1/2/3` 等小整数仍忽略）
+
+### 15.3 yml 字段（min_remind，repeated-string 编译函数认领）
+
+```yaml
+- id: security/no-repeated-hardcoded-literals
+  name: "检测重复硬编码 + 单次硬编码提醒"
+  category: "security"
+  severity: "warning"
+  description: "重复 ≥ min_occurrences 警告（建议配置化）；单次硬编码（路径/纯数字）info 提醒（是否转常量/配置）"
+  min_occurrences: 3          # warning 阈值（现有）
+  min_remind: 1               # 新增：info 提醒阈值（count≥1 即提醒单次硬编码）
+  ignore_patterns: [ ... ]    # 现有 ignore 逻辑对两档同时生效
+```
+
+### 15.4 修改面清单（涉及文件）
+
+1. `lib/audit-rules/audit-rules-nodejs.yml`：`no-repeated-hardcoded-literals` 加 `min_remind: 1`
+2. `lib/rule/compilers.js`：repeated-string 编译函数增加 `min_remind` 字段透传（extra.remindThreshold）
+3. `lib/audit/checks.js`：`checkRepeated` 切双档（≥min_occurrences→warning；min_remind≤count<min_occurrences→info，scoreImpact=0）
+4. `lib/score/ast.js`：`checkRepeatedStringsAst` 放开 num/路径类筛选（按 15.2 噪音控制）
+5. `lib/score/index.js`：`countByDimension` info/notice 计 0
+6. `test/test-quality.mjs` / `test/test-rule-packs.mjs`：补双档断言
+7. skill `skills/dsh-git-push.md` repeated-string 描述同步
+
+> 说明：本清单是**设计备忘**，实施时机由开发者决定，不在本次落码。

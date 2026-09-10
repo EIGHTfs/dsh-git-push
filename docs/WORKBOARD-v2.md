@@ -565,7 +565,8 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
 | 1.0.0 | 442cf02 | **首发**：DSH 插件接线（lib/index.js apply/7 工具/HTTP/Config）+ scanRepos + client.js 根级客户端插件 + 双副本同步脚本（dry-run 默认）+ cordis.patch.yml + package.json exports/files + test-plugin 25（263 全绿） | 旧项目扫描 0 blocker ✅ |
 | 1.0.0 收尾 | 22cdb31 | 自审质量达标：文件类别豁免（test/scripts 的 console-log·sync-fs）+ 空 catch 语义细化（说明注释即算交代）+ ast.js 函数行豁免 → **自审 0 问题 100/100 A**（265 全绿） | 旧项目扫描 0 blocker ✅ |
 | 1.0.1 | 77f86aa | **六个真实缺陷修复**：① `summarize` 漏统 error 级 → error 归拦截级 + notice 单列（消除「0 blocker 0 warning 但 total=3」矛盾统计）；② **9 个 kind 死桶**（编译后无人消费）→ 新增 5 个 AST 检查器（checkNameLengthAst/checkComplexityAst/checkNestingDepthAst/checkFileLines/checkRepeatedStringsAst）+ 8 个 kind 全接线；③ `[FUNC]-` 规则被 `regex` 抢走（detect 写 `/^[FUNC]-/` 是字符集）→ `/^(\[FUNC\]\|secret)-/`；④ **豁免完全失效**（checks/exempt 读 `secret` 而编译产出 `[FUNC]`，命名不一致）→ 全仓统一；⑤ 槽位半硬编码 → `SLOT_ORDER_HINT` 仅排序偏好 + 纯动态发现（放 yml 即生效）；⑥ `detectTargets` 漏真实加载源 → 双目标（`local-plugins/` 优先 + `node_modules/`）；另加 `capSeverity`（规则 severity 为上限，检查器不得越级升 blocker）｜**278 全绿** | 旧项目扫描 0 blocker ✅ |
-| **1.0.2** | 待提交 | **测试按入口重组 + 审计健壮性加固**：① 测试一脚本对一入口（test-framework 溶解归位：规则/评分/豁免/自身各归其位，test-cli 更名 test-self，同步/打包测试归自身入口）；② **G9** 匹配器空值崩溃（`rules=undefined` → `rules is not iterable`）→ `rules \|\| []`；③ **G10** 重复串死检测（tokenizer 产出 `str`/`tmpl`，检查器过滤 `string`/`number` → 永不命中）→ 按实际类型名收集 + 去引号；④ **G11** 重复串泛滥（修复后自审 343 条：文档数字/域名词汇噪音）→ 排除 `num`/纯标识符/dotfile/短期望词 + 文档/测试目录豁免 maintainability；⑤ **G12** `node_modules.orig` 入 .gitignore（用户定稿：`ensureGitignore` 基线忽略 + 扫描器跳过）；⑥ 提取 `HINT_QUALITY`/`MSG_REPO_REQUIRED` 常量消除重复字面量；⑦ 会话归档 zip 按约定从索引移除；⑧ 审计入口测试 13→33 断言｜**315 全绿** | 旧项目扫描 0 blocker ✅（待提交） |
+| **1.0.3** | 待提交 | **旧项目规则包全量复制 + 3 新槽位**：① 复制旧项目 9 槽位 86 条规则 → v2 规则 12→96 条；② 新槽位 robustness（mkdir-before-write）/ folder（目录审计 4 条，checkFolderRules 挂 auditFull）/ i18n（国际化审计 3 条，locale 仓库级一次判定）；③ 新 kind 同名函数：blacklist（comment 黑名单加分制 24+22+6）+ folder + npm-json（两条死规则改 JSON 结构化真判定）；④ 修复真缺陷：dsh-skip-sensitive 对 regex 宽声明安全类豁免失效（17 假阳性）、func-lines/max-lines 中文「函数」名识别、detectionMethod 顶层展开读取；⑤ v2 独有能力合并回 nodejs 防覆盖丢失；⑥ skill 文档措辞中性化 + 新增 DETAILS-EXEMPT-AND-RULES.md 细节权威；⑦ 测试 315→320 全绿｜双扫描 0 blocker | 旧项目扫描 0 blocker ✅（待提交） |
+| **1.0.2** | 2432cc4 | **测试按入口重组 + 审计健壮性加固**：① 测试一脚本对一入口（test-framework 溶解归位：规则/评分/豁免/自身各归其位，test-cli 更名 test-self，同步/打包测试归自身入口）；② **G9** 匹配器空值崩溃（`rules=undefined` → `rules is not iterable`）→ `rules \|\| []`；③ **G10** 重复串死检测（tokenizer 产出 `str`/`tmpl`，检查器过滤 `string`/`number` → 永不命中）→ 按实际类型名收集 + 去引号；④ **G11** 重复串泛滥（修复后自审 343 条：文档数字/域名词汇噪音）→ 排除 `num`/纯标识符/dotfile/短期望词 + 文档/测试目录豁免 maintainability；⑤ **G12** `node_modules.orig` 入 .gitignore（用户定稿：`ensureGitignore` 基线忽略 + 扫描器跳过）；⑥ 提取 `HINT_QUALITY`/`MSG_REPO_REQUIRED` 常量消除重复字面量；⑦ 会话归档 zip 按约定从索引移除；⑧ 审计入口测试 13→33 断言｜**315 全绿** | 旧项目扫描 0 blocker ✅ |
 
 ---
 
@@ -615,17 +616,17 @@ node ../dsh-git-push/cli.mjs audit . --json   # 0 blocker 才提交
 ### 2.7.3 验收发现的缺口（1.0.x 待修）
 | # | 缺口 | 依据 | 优先级 |
 |---|---|---|---|
-| G1 | **规则覆盖度**：v2 仅 2 槽位 12 条；旧项目 9 槽位 86 条 | 旧项目 lib/audit-rules/ | **高** |
-| G2 | 缺 7 个槽位：npm / frontend(html) / comment / dsh / private / structure / version | 同上 | **高** |
+| G1 | **规则覆盖度**：v2 仅 2 槽位 12 条；旧项目 9 槽位 86 条 | 旧项目 lib/audit-rules/ | ✅ 已修（1.0.3 复制 9 槽位 86 条 + 3 新槽位 → 96 条） |
+| G2 | 缺 7 个槽位：npm / frontend(html) / comment / dsh / private / structure / version | 同上 | ✅ 已修（1.0.3 全量复制，动态发现自动生效） |
 | G3 | kind 命名夹带同形字符：`сrеdеn t iаl-ref` 非 ASCII，按 ASCII 写规则匹配不上 | 全仓扫描 | **高** |
 | G4 | `summarize` 漏统 error 级（出现「0 blocker 0 warning 但 total=3」） | 本轮实测 | ✅ 已修（error 归 blocker） |
 | G5 | 正则大小写敏感导致驼峰凭据漏检（apiKey/API_KEY） | 本轮实测 | ✅ 已修（默认 i 标志） |
-| G6 | 规则字段覆盖：旧项目用到 30 字段，v2 编译函数需全部认领 | 字段统计 | 中 |
+| G6 | 规则字段覆盖：旧项目用到 30 字段，v2 编译函数需全部认领 | 字段统计 | ⚠️ 部分（96 条编译全通过无未知类型；threshold/exclude_dirs/signatures/blacklist/whitelist 等已按同名函数认领；scoring/action 等展示字段进台账） |
 | G7 | 侧边栏：权重自定义 / 规则包导入导出删除 / 审计强度选择 | 会话第 34/157 条 | 中 |
 | G8 | 测试组织：一脚本对一入口（用户本轮要求） | 本轮指令 | ✅ 已修（11 脚本 ↔ 10 入口 + 插件接线，test-framework 溶解归位） |
 | G9 | **匹配器空值崩溃**：`checkRegexRules` / `checkPathRegexRules` 收 `rules=undefined` 时 `for..of` 抛 TypeError（`rules is not iterable`） | 本轮补测暴露 | ✅ 已修（`rules \|\| []`） |
 | G10 | **repeated-string 死检测**：tokenizer 产出 `str`/`num`/`tmpl`，检查器却过滤 `string`/`number` → 重复串检测永不命中 | 本轮补测暴露 | ✅ 已修（按实际类型名收集 + 去引号 + `tmpl` 入列） |
-| G11 | **repeated-string 泛滥**：修复后自审 343 条，多为文档数字（10/15/版本号）——数值字面量重复属正常，不该按「硬编码文本」报 | 修复后自审 | ⚠️ 待修（排除 num / 文档类文件降噪） |
+| G11 | **repeated-string 泛滥**：修复后自审 343 条，多为文档数字（10/15/版本号）——数值字面量重复属正常，不该按「硬编码文本」报 | 修复后自审 | ✅ 已修（1.0.2 排除 num/纯标识符/dotfile/短期望词 + 文档/测试豁免，自审 0 命中） |
 | G12 | **node_modules.orig 入 .gitignore**：插件 `ensureGitignore` 要恒定排除 `node_modules/` 与 `node_modules.orig/`（机器本地产物 / 安装残留副本），且扫描器不得走进 `node_modules.orig` 误报 | 用户本轮指令 | ✅ 已修（DEFAULT_IGNORE_PATTERNS + 扫描器跳过） |
 
 ### 2.7.4 旧项目规则槽位清单（G1/G2 的验收标准）

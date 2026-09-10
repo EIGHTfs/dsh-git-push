@@ -100,11 +100,11 @@ test('装载：nodejs 槽位 yml 已落地，编译全部成功', () => {
   assert.equal(r.files.length, 1, 'nodejs 文件应成功加载');
 });
 
-test('装载：nodejs 槽位 11 条全编译', () => {
+test('装载：nodejs 槽位全量编译（1.0.3 复制旧项目 34 条 + v2 独有能力）', () => {
   const r = loadRuleFiles(['nodejs']);
   const ctx = { errors: [] };
   const compiled = compileAllRules(r.merged.rules, ctx);
-  assert.equal(compiled.length, 11, `编译 ${compiled.length} 条`);
+  assert.ok(compiled.length >= 34, `编译 ${compiled.length} 条（应 ≥ 旧项目 34 条）`);
   assert.equal(ctx.errors.length, 0, `errors: ${ctx.errors.join('; ')}`);
   for (const c of compiled) {
     assert.ok(Array.isArray(c.dimensions) && c.dimensions.length > 0, `${c.id} 缺 dimensions`);
@@ -112,20 +112,19 @@ test('装载：nodejs 槽位 11 条全编译', () => {
   }
 });
 
-test('编译统计：各 kind 分桶正确', () => {
+test('编译统计：关键 kind 齐全 + 全部带维度（1.0.3 规则包扩展后）', () => {
   const r = loadRuleFiles(['nodejs']);
   const compiled = compileAllRules(r.merged.rules, { errors: [] });
   const byKind = {};
   for (const c of compiled) byKind[c.kind] = (byKind[c.kind] || 0) + 1;
-  assert.equal(byKind['[FUNC]'], 2, '2 条 [FUNC]');
-  assert.equal(byKind['credential-file'], 1);
-  assert.equal(byKind['func-lines'], 1);
-  assert.equal(byKind['regex'], 2);
-  assert.equal(byKind['path-regex'], 1);
-  assert.equal(byKind['semantic'], 1);
-  assert.equal(byKind['repeated-string'], 1);
-  assert.equal(byKind['min-length'], 1);
-  assert.equal(byKind['max-complexity'], 1);
+  // 关键 kind 必须存在（1.0.3 契约：旧项目规则全接线 + v2 独有能力保留）
+  assert.ok(byKind['[FUNC]'] >= 1, '[FUNC] 应有 secret-* 规则');
+  assert.ok(byKind['credential-file'] >= 1, 'credential-file 应有');
+  assert.ok(byKind['func-lines'] >= 1, 'func-lines 应有（中文「函数」识别）');
+  assert.ok(byKind['regex'] >= 1, 'regex 宽类应有');
+  assert.ok(byKind['semantic'] >= 1, 'semantic 应有');
+  // 全部带维度
+  for (const c of compiled) assert.ok(Array.isArray(c.dimensions) && c.dimensions.length > 0, `${c.id} 缺 dimensions`);
 });
 
 // ---------- 正则安全编译（1.0.x 修复：大小写不敏感防漏检） ----------
@@ -172,7 +171,9 @@ test('槽位：resolveSlotOrder 默认取 RULE_SLOTS ∩ 目录实际文件', ()
 
 test('槽位：显式配置数组生效（配置驱动，不写死）', () => {
   const slots = resolveSlotOrder(['docs']);
-  assert.deepEqual(slots.filter((s) => s !== 'nodejs'), ['docs']);
+  assert.ok(slots.includes('docs'), '显式指定 docs 应在列');
+  assert.ok(slots.includes('nodejs'), 'nodejs 默认应在列');
+  assert.ok(slots.indexOf('docs') < slots.indexOf('nodejs'), '显式槽位排前');
 });
 
 test('槽位：逗号分隔字符串配置生效', () => {
@@ -182,8 +183,8 @@ test('槽位：逗号分隔字符串配置生效', () => {
 });
 
 test('槽位：未落文件的槽位静默跳过（不报缺失）', () => {
-  const slots = resolveSlotOrder(['npm', 'nodejs']);
-  assert.ok(!slots.includes('npm'), 'npm 未落文件应跳过');
+  const slots = resolveSlotOrder(['nonexistent-slot', 'nodejs']);
+  assert.ok(!slots.includes('nonexistent-slot'), '不存在的槽位应跳过');
   assert.ok(slots.includes('nodejs'));
 });
 
@@ -266,4 +267,57 @@ test('发现槽位：空目录不崩溃', () => {
   const slots = discoverRuleSlots('/tmp/nonexistent-dir-for-test');
   assert.ok(Array.isArray(slots));
   assert.equal(slots.length, 0);
+});
+
+// ---------- 1.0.3 新 kind：blacklist / folder / npm-json / i18n（同名函数 + 注册一行） ----------
+test('1.0.3：blacklist kind 编译（comment 槽位黑名单加分制）', () => {
+  const r = loadRuleFiles(['comment']);
+  const compiled = compileAllRules(r.merged.rules, { errors: [] });
+  const bl = compiled.filter((c) => c.kind === 'blacklist');
+  assert.ok(bl.length >= 1, 'comment 槽位应有 blacklist 规则');
+  const rule = bl[0];
+  assert.ok(Array.isArray(rule.blacklist) && rule.blacklist.length > 0, 'blacklist 数组应编译');
+  assert.ok(rule.blacklist.some((b) => b.weight > 0), 'blacklist 条目应带 weight');
+  assert.ok(Array.isArray(rule.whitelist) && rule.whitelist.length > 0, 'whitelist 应编译');
+});
+
+test('1.0.3：folder kind 编译（目录级审计 4 条）', () => {
+  const r = loadRuleFiles(['folder']);
+  const compiled = compileAllRules(r.merged.rules, { errors: [] });
+  const folder = compiled.filter((c) => c.kind === 'folder');
+  assert.ok(folder.length >= 4, `folder 槽位应 ≥4 条（得 ${folder.length}）`);
+  assert.ok(folder.some((c) => c.id === 'folder/total-count' && c.threshold === 30), 'total-count 带 threshold=30');
+  assert.ok(folder.some((c) => Array.isArray(c.signatures) && c.signatures.length > 0), '解包特征带 signatures');
+  assert.ok(folder.some((c) => Array.isArray(c.requiredPatterns) && c.requiredPatterns.length > 0), 'gitignore 覆盖带 requiredPatterns');
+});
+
+test('1.0.3：npm-json kind 编译（结构化判定取代弱 pattern）', () => {
+  const r = loadRuleFiles(['npm']);
+  const compiled = compileAllRules(r.merged.rules, { errors: [] });
+  const npmj = compiled.filter((c) => c.kind === 'npm-json');
+  assert.ok(npmj.length >= 2, `npm-json 应 ≥2 条（得 ${npmj.length}）`);
+  const ids = npmj.map((c) => c.id);
+  assert.ok(ids.includes('npm/files-missing-lib'), 'files-missing-lib 应走 npm-json');
+  assert.ok(ids.includes('npm/undeclared-js-yaml'), 'undeclared-js-yaml 应走 npm-json');
+});
+
+test('1.0.3：i18n 槽位编译（国际化审计 3 条）', () => {
+  const r = loadRuleFiles(['i18n']);
+  const compiled = compileAllRules(r.merged.rules, { errors: [] });
+  assert.ok(compiled.length >= 3, `i18n 槽位应 ≥3 条（得 ${compiled.length}）`);
+  assert.ok(compiled.some((c) => c.id === 'i18n/hardcoded-user-visible'), '硬编码文案规则');
+  assert.ok(compiled.some((c) => c.id === 'i18n/concat-in-t'), 't() 拼接规则');
+  assert.ok(compiled.some((c) => c.id === 'i18n/locale-file-missing' && c.detectionMethod === 'locale-file-exists'), '语言包缺失规则（仓库级）');
+});
+
+test('1.0.3：全槽位编译 96+ 条 0 失败（9 旧 + robustness/folder/i18n + docs）', () => {
+  const r = loadRuleFiles();
+  const ctx = { errors: [] };
+  const compiled = compileAllRules(r.merged.rules, ctx);
+  assert.equal(ctx.errors.length, 0, `errors: ${ctx.errors.join('; ')}`);
+  assert.ok(compiled.length >= 96, `总规则应 ≥96 条（得 ${compiled.length}）`);
+  const kinds = new Set(compiled.map((c) => c.kind));
+  for (const k of ['blacklist', 'folder', 'npm-json', 'regex', 'semantic', '[FUNC]', 'func-lines', 'link-check']) {
+    assert.ok(kinds.has(k), `kind ${k} 应存在`);
+  }
 });

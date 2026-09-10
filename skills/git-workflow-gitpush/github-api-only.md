@@ -71,7 +71,7 @@ curl -s "https://api.github.com/rate_limit" | jq '.resources.core'
 ## 相关文件
 
 - APK 分析：`会话/github_apk_analysis/GitHub_1.203.0_analysis.txt`
-- 连通性测试记录：本次会话
+- 连通性测试记录：实测记录
 
 ## 配套规则
 

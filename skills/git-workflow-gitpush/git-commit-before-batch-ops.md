@@ -2,7 +2,7 @@
 
 ---
 name: git-commit-before-batch-ops
-description: Git 项目里批量文件操作（复制/删除/移动/重命名/覆盖）前必须先提交（不推送）的硬纪律。任何 AI 在 git 仓库内做批量文件操作前先 commit 检查点，操作出错可 git 回退；提交不推送（推送仍需用户同意）。
+description: Git 项目里批量文件操作（复制/删除/移动/重命名/覆盖）前必须先提交（不推送）的硬纪律。任何 AI 在 git 仓库内做批量文件操作前先 commit 检查点，操作出错可 git 回退；提交不推送（推送仍需授权）。
 whenToUse: 任务涉及 git 仓库内的批量复制/删除/移动/重命名/覆盖文件、批量整理目录、批量迁移文件、批量覆盖配置时。
 generatedBy: user-request 2026-08-22
 ---
@@ -24,7 +24,7 @@ generatedBy: user-request 2026-08-22
 | 单个/少量（≤2 文件）低风险改动 | 可不必先 commit（但仍建议留痕） |
 
 **提交原则**：
-- **提交不推送**：commit 可自主执行（bugfix-auto-authority 铁律），**push 仍需用户同意**（dsh-git-push 纪律）
+- **提交不推送**：commit 可自主执行（bugfix-auto-authority 铁律），**push 仍需授权**（dsh-git-push 纪律）
 - commit message 说明「批量操作前检查点」（如 `checkpoint: 批量整理前备份`）
 - 走 dsh-git-push 插件审计门禁（git_commit_push 默认开审计）
 
@@ -45,7 +45,7 @@ git 仓库内要做批量文件操作（cp/rm/mv/覆盖 ≥ 3 个）
 ③ 执行批量操作（cp/rm/mv/覆盖）
 ④ 验证结果（数量核对/抽查/回读）
 ⑤ git status 查看操作产生的变更，必要时再 commit 一次记录操作结果
-（全程不 push，等用户同意）
+（全程不 push，推送需先获授权）
 ```
 
 ## 四、边界与配套

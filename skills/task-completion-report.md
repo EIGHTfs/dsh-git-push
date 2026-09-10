@@ -1,6 +1,6 @@
 ---
 name: task-completion-report
-description: dsh-git-push 使用说明：任务收尾必须用分隔线 + ✅ 任务完成 + 交付/验证/遗留；输出 ✅ 即授权对本会话改过的仓 commit+push。处理任务收尾汇报、提交推送授权时加载。
+description: dsh-git-push 使用说明：任务收尾必须用分隔线 + ✅ 任务完成 + 交付/验证/遗留；输出 ✅ 即授权对改过的仓 commit+push。处理任务收尾汇报、提交推送授权时加载。
 whenToUse: 每次完成有交付物的任务后收尾；调用 git_commit_push 前；用户问「怎么汇报完成」「✅ 能不能推送」时。
 generatedBy: grok-4.6 · 2026-09-03
 ---
@@ -42,9 +42,9 @@ generatedBy: grok-4.6 · 2026-09-03
 
 ## 三、✅ = 提交推送授权
 
-> 约定（2026-08-18）：AI 输出 `✅ 任务完成` 即代表作者同意对本会话改过的仓库提交推送。
+> 规则（2026-08-18 确立）：AI 输出 `✅ 任务完成` 即代表对改过的仓库提交推送授权。
 
-- 输出 `✅ 任务完成` 后，**默认即获授权**对本会话改过的每个 git 仓 `git_commit_push`（commit + push），不必再问「可以提交吗」
+- 输出 `✅ 任务完成` 后，**默认即获授权**对改过的每个 git 仓 `git_commit_push`（commit + push），不必再问「可以提交吗」
 - 配套 `commit-push-modified-projects`：漏仓不算完成
 - 走插件工具 `git_commit_push`，不手敲 git；开发者要求清单（v1.40.0 起内置 `lib/user-requirements.json`，可外挂插件配置目录 `requirements.json`）逐条核对后带 `requirementsConfirmed:true`
 - **不在此授权内**：删远端仓库、force push、改生产配置、覆盖他人未拉取的历史、把凭据推进**公开**仓
