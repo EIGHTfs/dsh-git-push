@@ -1,11 +1,16 @@
 #!/usr/bin/env node
 // dsh-skip-i18n: CLI 输出硬编码中文为产品行为（无 i18n 需求）
 /**
- * dual-scan.mjs — 双扫描比对（用户定稿：每次写完同时跑旧项目扫描 + 重构版扫描，全量比对重构区）
+ * dual-scan.mjs — 双扫描比对（用户定稿：每次写完同时跑旧项目扫描 + 重构版扫描，比对重构区）
  *
- * 两侧都全量扫同一目标目录：
- *   1) 重构版 v2：本仓 lib/audit/index.js 的 auditFull（scope=full）
- *   2) 旧项目：../dsh-git-push/cli.mjs audit <root> --json（规则包全量）
+ * 1) 重构版 v2：本仓 lib/audit/index.js 的 auditFull（scope=full，全量文件）
+ * 2) 旧项目（1.0.3 起）：../dsh-git-push/cli.mjs audit <root> --json
+ *    ⚠ diff 语义：旧 audit 只审 git 新增行，工作树干净时返回 0 是设计行为（提交门禁视角），不是失败
+ * 3) 旧项目 full-scan（1.0.4 增）：全仓对话残留扫描，工作树干净时唯一可比的旧侧通道
+ *
+ * 差异口径（已知边界）：v2=全量 vs 旧 audit=新增行，基线不同，diff 数量只作提示；
+ * 收敛看「旧 full-scan warn」与 v2 自身 comment/blacklist 桶——v2 已自动豁免
+ * audit-rules-*.yml 规则定义示范词（旧 full-scan 无豁免机制，规则定义文件命中属旧项目边界）。
  *
  * 输出：
  *   - summary 对照表（blocker / warning / notice / total）
@@ -30,8 +35,8 @@ const json = process.argv.includes('--json');
 const positional = process.argv.filter((a) => !a.startsWith('-'));
 const target = resolve(positional[2] ?? ROOT);
 
-/** 旧项目扫描（走其 CLI 的 --json）。目标不是本仓时用 --full 语义？旧项目 audit 默认 diff，
- * 但这里要求全量 —— 旧项目 CLI 若支持 --full 传给它；不支持就退化为默认。 */
+/** 旧项目规则审计（走其 CLI 的 --json）。语义 = git 新增行（diff）：旧项目 audit 只审
+ * addedLines，工作树干净时返回 0。这是设计行为（提交门禁视角），不是扫描失败。 */
 function scanOld(root) {
   const oldCli = join(ROOT, '..', 'dsh-git-push', 'cli.mjs');
   if (!existsSync(oldCli)) return { ok: false, error: `旧项目 CLI 不存在: ${oldCli}` };
@@ -44,6 +49,23 @@ function scanOld(root) {
     const out = e?.stdout?.toString?.() || '';
     try { return { ok: true, data: JSON.parse(out) }; } catch { /* 不是 JSON */ }
     return { ok: false, error: e?.message || String(e), stderr: (e?.stderr || '').toString().slice(0, 400) };
+  }
+}
+
+/** 旧项目全仓残留扫描（full-scan，分数制黑加白减，只读报告）。与旧 audit 的 diff 语义互补：
+ * 审计看「新增行」，full-scan 看「存量对话措辞残留」——工作树干净时它是唯一可比的旧侧通道。 */
+function scanOldFullScan(root) {
+  const oldCli = join(ROOT, '..', 'dsh-git-push', 'cli.mjs');
+  if (!existsSync(oldCli)) return { ok: false, error: `旧项目 CLI 不存在: ${oldCli}` };
+  try {
+    const args = [oldCli, 'full-scan', root, '--json'];
+    const out = execFileSync(process.execPath, args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+    const d = JSON.parse(out);
+    return { ok: true, data: { warnCount: d.warnCount, threshold: d.threshold, hits: d.hits || [] } };
+  } catch (e) {
+    const out = e?.stdout?.toString?.() || '';
+    try { const d = JSON.parse(out); return { ok: true, data: { warnCount: d.warnCount, threshold: d.threshold, hits: d.hits || [] } }; } catch { /* 不是 JSON */ }
+    return { ok: false, error: e?.message || String(e) };
   }
 }
 
@@ -67,6 +89,7 @@ function main() {
   const old = scanOld(target);
   const v2 = scanV2(target);
   const out = { target, v2: null, old: null, diff: null, blocked: false };
+  const oldFS = scanOldFullScan(target);
 
   if (v2) out.v2 = { summary: v2.summary, quality: v2.quality?.score ?? v2.quality?.level ?? null };
   if (old.ok) out.old = { summary: old.data.summary, quality: old.data.quality };
@@ -93,7 +116,13 @@ function main() {
     console.log(`双扫描比对: ${target}`);
     console.log(`  v2（重构版）: ${JSON.stringify(out.v2?.summary)} quality=${out.v2?.quality ?? '—'}`);
     console.log(`  旧项目      : ${JSON.stringify(out.old?.summary)} quality=${out.old?.quality ?? '—'}`);
-    if (!old.ok) console.log(`  ⚠ 旧项目扫描失败: ${old.error}`);
+    if (!old.ok) console.log(`  ⚠ 旧项目 audit 失败: ${old.error}`);
+    if (oldFS.ok) {
+      console.log(`  旧项目 full-scan（全仓残留）: ${oldFS.data.warnCount} warn（阈值 ${oldFS.data.threshold}）`);
+      for (const h of oldFS.data.hits || []) console.log(`    ${h.file}:${h.line} score=${h.score} ${h.hits?.join('/') ?? ''}`);
+    } else {
+      console.log(`  ⚠ 旧项目 full-scan 失败: ${oldFS.error}`);
+    }
     console.log(`  差异（数量不同的规则前缀，top ${out.diff.length}）:`);
     if (!out.diff.length) console.log('    （无差异）');
     for (const d of out.diff) console.log(`    ${d.kind.padEnd(28)} 旧=${d.old}  v2=${d.v2}`);
