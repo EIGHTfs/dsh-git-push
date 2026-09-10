@@ -1,6 +1,6 @@
 ---
 name: dsh-git-push-functions
-description: dsh-git-push 插件功能说明书——七个 agent 工具的完整参数/返回/失败处理（git_scan / git_commit_push / code_audit / git_clone / git_remote_create / git_set_visibility / link_check）、HTTP API 路由与鉴权、设置侧边栏配置项、上下文注入内容、规则包与豁免机制、10 总入口的源码定位（lib/ 下每个入口的文件与关键函数）。处理「插件某工具怎么调」「参数填什么」「报错怎么排查」「改插件源码从哪进」「规则包/豁免/评分怎么工作」类请求时加载。
+description: dsh-git-push 插件功能说明书——八个 agent 工具的完整参数/返回/失败处理（git_scan / git_commit_push / code_audit / git_gen_readme / git_clone / git_remote_create / git_set_visibility / link_check）、HTTP API 路由与鉴权、设置侧边栏配置项、上下文注入内容、规则包与豁免机制、10 总入口的源码定位（lib/ 下每个入口的文件与关键函数）。处理「插件某工具怎么调」「参数填什么」「报错怎么排查」「改插件源码从哪进」「规则包/豁免/评分怎么工作」类请求时加载。
 whenToUse: 需要查工具参数细节、排查插件报错、或修改插件源码（定位到文件与函数）时加载；日常使用看 dsh-git-push 手册即可。
 ---
 
@@ -84,12 +84,31 @@ whenToUse: 需要查工具参数细节、排查插件报错、或修改插件源
 
 | 参数 | 类型 | 说明 |
 |---|---|---|
-| `repo` | string? | 仓库路径 |
-| `paths` | string? | 指定文件/目录 |
+| `path` | string? | 文件或目录（缺省 workspaceRoot） |
 
 分级扣分：404/403 → −3，DNS 失败 → −2，超时/5xx → −1；flaky 域名（github 等）网络错误 ×0.2。
 **只 warning，永不 blocker**；并发 10，100 链接 ≤30 秒。
 **实现在 `lib/link-check/index.js` 的 `checkLinks` / `probeLinks`。**
+
+### 8. `git_gen_readme` —— 按模板生成仓库 README（1.0.4 迁移）
+
+| 参数 | 类型 | 说明 |
+|---|---|---|
+| `repo` | string 必填 | 仓库绝对路径 |
+| `writePath` | string? | 写入路径（默认只返回内容不写文件） |
+
+模板优先级：插件 `template/README.md`（用户可改整份章节）> 内置 `lib/readme-templates/readme.yml`（章节模板）> 代码兜底骨架。占位符 `{{name}}` `{{description}}` `{{version}}` `{{toc}}` `{{versionTable}}`；版本表由 `git log --reverse` 提交标题里的 X.Y.Z 聚合（补丁并入主版本，最新→最旧）。
+**实现在 `lib/readme-gen/index.js` 的 `genReadme` / `buildReadmeVersionTable` / `listVersionCommits`。**
+
+---
+
+## 一.5、接线层（lib/plugin/index.js，1.0.4 起）
+
+Host 侧注册统一走独立接线层，四段真实 API（对照运行中插件实证）：
+- 工具：`ctx.inject(['tools'])` → `get('tools').register(defineTool(spec))`；`output.render` **必须返回块数组** `[{type:'text',text}]`（否则会话日志损坏）
+- 提示词注入：`ctx.inject(['systemPrompt'])` → `section({name, order, text:()=>同步文本})`（callback 返回值不是注册）
+- HTTP：`ctx.inject(['webServer'])` → `register({kind:'prefix', path, handler})`（handler 返回 undefined 放行）
+- 客户端：**不在此注册**，由 package.json `dsh.client` + `exports["./client"]` 自动发现
 
 ---
 
