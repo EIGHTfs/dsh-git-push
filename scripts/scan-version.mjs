@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * scan-version.mjs — 版本一致性校验（自身总入口 1.1.4）
+ * scan-version.mjs — 版本一致性校验（自身总入口 0.1.4）
  *
  * 校验三处版本必须一致：
  *   1) lib/self/index.js 的 VERSION（单一事实源）

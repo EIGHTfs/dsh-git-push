@@ -1,7 +1,7 @@
 // dsh-skip-sensitive: 测试 fixture 含 mock token 字面量（ghp_ 非真实凭据）
 // dsh-skip-residue: 测试 fixture 含 debugger 关键词样本（规则定义示范文本）
 /**
- * 豁免总入口测试（1.1.6）：7 标记全消费 + 位置语义（文件头整文件 / 行内单点）逐类验证。
+ * 豁免总入口测试（0.1.6）：7 标记全消费 + 位置语义（文件头整文件 / 行内单点）逐类验证。
  * 场景对照：旧项目 12 个豁免场景（文件头 sensitive/size/func-length/syntax/quality/residue/style
  * + 行尾 sensitive/residue/func-length 单点 + 豁免不越权 + 未豁免照常报）。
  */

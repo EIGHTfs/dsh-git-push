@@ -1,5 +1,5 @@
 /**
- * 评分总入口测试（1.1.5）：AST 级质量检查器（sync-fs named import / empty-catch 多行 /
+ * 评分总入口测试（0.1.5）：AST 级质量检查器（sync-fs named import / empty-catch 多行 /
  * func-lines 坏样本 100% 检出）+ scoreQuality / countByDimension / qualityWeights 覆盖。
  */
 import { test } from 'node:test';

@@ -1,5 +1,5 @@
 /**
- * 自身总入口测试（1.1.4）：VERSION 一致性 / versionInfo / readmeTemplate /
+ * 自身总入口测试（0.1.4）：VERSION 一致性 / versionInfo / readmeTemplate /
  * yamlTemplate / helpSync（HELP↔parseArgv 机器比对）/ parseArgv 边界 / CLI 子命令。
  */
 import { test } from 'node:test';
@@ -56,8 +56,8 @@ test('readmeTemplate：占位符渲染（name/version）', () => {
 });
 
 test('readmeTemplate：versionTable 可注入', () => {
-  const r = readmeTemplate({ versionTable: '| 版本 | 说明 |\n|---|---|\n| 1.0.0 | 测试 |' });
-  assert.ok(r.template.includes('| 1.0.0 | 测试 |'));
+  const r = readmeTemplate({ versionTable: '| 版本 | 说明 |\n|---|---|\n| 0.0.0 | 测试 |' });
+  assert.ok(r.template.includes('| 0.0.0 | 测试 |'));
 });
 
 test('yamlTemplate：含 kind + dimensions 示范', () => {

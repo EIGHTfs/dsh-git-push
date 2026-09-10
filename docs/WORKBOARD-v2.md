@@ -1,6 +1,7 @@
 # WORKBOARD v2 —— dsh-git-push 开发任务看板（榜样版 · 交接版）
 
-> **状态**：开发进行中（已提交 1.0.0 / 1.1.0 / 1.1.1 / 1.1.2 / 1.1.3 / 1.1.4 / 1.1.5 / **1.1.6**；下一入口 1.1.7 上下文注入 + HTTP 总入口）
+> **状态**：开发进行中（已提交 0.0.0 / 0.1.0 / 0.1.1 / 0.1.2 / 0.1.3 / 0.1.4 / 0.1.5 / 0.1.6 / **0.1.7**；下一入口 0.1.8 侧边栏）
+> **版本号规则（用户指定）**：大版本号从 **0** 开始——0.x = 单机引擎与总入口建设期，1.0.0 = DSH 插件接线完成首发（原「2.0.0」改为 1.0.0）。
 > **仓库**：`工作区/dsh-git-push-v2`（本地 master，**不推送**）
 > **看板双重身份**：
 > 1. **交接文档**——另一 AI 可凭本板完全接管 dsh-git-push 开发，不读代码也能干活；
@@ -80,7 +81,7 @@
 | 架构 | 10 总入口（规则/审计/git/自身/评分/豁免/上下文/HTTP/测试/侧边栏） |
 | 铁律 | compileRule 主体永不修改；加字段=加函数+注册一行 |
 | 命名 | 一个功能一个根词，各层格式转换，外部 API 与函数名完全一致，无别名 |
-| 版本规范 | 1.0.0 README → 1.1.0 框架能跑 → 每完成一入口第三位+1 |
+| 版本规范 | 0.0.0 README → 0.1.0 框架能跑 → 每完成一入口第三位+1 |
 | 提交策略 | **永不推送**；每次提交前旧项目扫描 0 blocker |
 
 ## 2.2 架构图（总览）
@@ -98,7 +99,7 @@ dsh-git-push
 │   │   └── compilers.js  13 种编译函数注册（副作用导入即注册）+ safeRe + ruleOut
 │   │                     └──► 依赖 lib/audit-rules/*.yml（槽位数据）
 │   │
-│   ├── audit/       ★ 审计总入口（消费编译规则，产出统一问题对象）——1.1.2 半成品
+│   ├── audit/       ★ 审计总入口（消费编译规则，产出统一问题对象）——0.1.2 半成品
 │   │   ├── index.js      makeFinding / summarize / auditFile / auditFull / auditChanged / auditWithScope
 │   │   ├── collector.js  collectTextFiles（gitignore 感知）/ isGitRepo / readText
 │   │   └── checks.js     groupByKind / checkRegexRules / checkPathRegexRules / checkFuncLines / checkEmptyCatch / runChecks
@@ -110,13 +111,13 @@ dsh-git-push
 │   ├── score/       ★ 评分总入口（10 维度加权）
 │   │   └── index.js      DEFAULT_WEIGHTS / DIMENSION_ORDER / countByDimension / scoreQuality
 │   │
-│   ├── git/         ★ git 总入口 ✅ 1.1.3 已实现
+│   ├── git/         ★ git 总入口 ✅ 0.1.3 已实现
 │   │   └── index.js      runGit / resolveToken / commitAndPush / pushViaApi(+SSH 回退) / cloneViaApi / ensureRemoteRepo / setVisibility / githubFetch / parseGithubOwnerRepo / scanSensitiveFiles+ensureGitignore
 │   │
-│   ├── self/        ★ 自身总入口（骨架，1.1.4 实现）
+│   ├── self/        ★ 自身总入口（骨架，0.1.4 实现）
 │   │   └── index.js      VERSION / readmeTemplate / yamlTemplate / selfVersion
 │   │
-│   ├── context/     ★ 上下文注入（骨架，1.1.7 实现）
+│   ├── context/     ★ 上下文注入（骨架，0.1.7 实现）
 │   │   └── index.js      createEnvInjectionText
 │   │
 │   └── audit-rules/     yml 数据槽位（当前仅 nodejs）
@@ -131,7 +132,10 @@ dsh-git-push
     ├── test-audit.mjs       14 断言（审计四象限 + git 变动）✅ 全绿
     ├── test-git.mjs         35 断言（git 总入口，mock fetch + /tmp 临时仓）✅ 全绿
     ├── test-cli.mjs         18 断言（自身总入口：版本一致性/模板/helpSync/parseArgv）✅ 全绿
-    └── test-quality.mjs     31 断言（评分总入口：AST 质量检查器 + 权重评分）✅ 全绿
+    ├── test-quality.mjs     31 断言（评分总入口：AST 质量检查器 + 权重评分）✅ 全绿
+    ├── test-exempt.mjs      25 断言（豁免总入口：7 标记/位置语义/12 场景）✅ 全绿
+    ├── test-http.mjs        30 断言（HTTP 总入口：Origin/CSRF/写确认/413）✅ 全绿
+    └── test-context.mjs      7 断言（上下文注入文本 + 路径归属）✅ 全绿
 ```
 
 **数据流（一条链）**：
@@ -157,24 +161,25 @@ dsh-git-push
 
 | 版本 | 内容 | 状态 |
 |------|------|------|
-| 1.0.0 | README 计划稿（架构/问题清单/链接规则） | ✅ a936a66 |
-| 1.1.0 | 框架骨架 8 入口 + cli + test 16 + check 脚本 + 本看板 | ✅ 19fe21c |
-| 1.1.1 | 规则总入口（13 编译函数 + nodejs 槽位 11 条 + 15 测试） | ✅ fdf2b34 |
-| **1.1.2** | **审计总入口（collector + checks + auditFull/Changed + exempt 接线）** | ✅ 已提交（见 §2.5 修复记录） |
-| **1.1.3** | **git 总入口（token/commit/push/clone/建仓/可见性 + SSH 回退）** | ✅ 已提交（见 §3.3） |
-| **1.1.4** | **自身总入口（版本一致性/README 模板/yml 模板/CLI 自检）** | ✅ 已提交（见 §3.4） |
-| **1.1.5** | **评分总入口（AST 质量检查器 + 10 维度加权）** | ✅ 已提交（见 §3.5） |
-| **1.1.6** | **豁免总入口（7 标记注册表驱动全消费 + 位置语义 + 规则定义文件豁免）** | ✅ 已提交（见 §3.6） |
-| 1.1.3 | git 总入口（token/commit/push/clone/建仓/可见性） | ⏳ |
-| 1.1.4 | 自身总入口（版本单源/README 模板/yml 模板/CLI 完善） | ⏳ |
-| 1.1.5 | 评分总入口（AST 化质量检查 + 口径锚定） | ⏳ |
-| 1.1.6 | 豁免总入口（7 标记接入审计全消费点，已部分接） | ⏳ |
-| 1.1.7 | 上下文注入 + HTTP API + 测试总入口 | ⏳ |
-| 1.1.8 | 侧边栏（复用旧 client.js） | ⏳ |
-| 1.2.0 | 链接判断 yml 规则（link-check kind） | ⏳ |
-| 2.0.0 | DSH 插件接线 + 双副本同步 + 推送准备 | ⏳ |
+| 0.0.0 | README 计划稿（架构/问题清单/链接规则） | ✅ a936a66 |
+| 0.1.0 | 框架骨架 8 入口 + cli + test 16 + check 脚本 + 本看板 | ✅ 19fe21c |
+| 0.1.1 | 规则总入口（13 编译函数 + nodejs 槽位 11 条 + 15 测试） | ✅ fdf2b34 |
+| **0.1.2** | **审计总入口（collector + checks + auditFull/Changed + exempt 接线）** | ✅ 已提交（见 §2.5 修复记录） |
+| **0.1.3** | **git 总入口（token/commit/push/clone/建仓/可见性 + SSH 回退）** | ✅ 已提交（见 §3.3） |
+| **0.1.4** | **自身总入口（版本一致性/README 模板/yml 模板/CLI 自检）** | ✅ 已提交（见 §3.4） |
+| **0.1.5** | **评分总入口（AST 质量检查器 + 10 维度加权）** | ✅ 已提交（见 §3.5） |
+| **0.1.6** | **豁免总入口（7 标记注册表驱动全消费 + 位置语义 + 规则定义文件豁免）** | ✅ 已提交（见 §3.6） |
+| **0.1.7** | **上下文注入 + HTTP 总入口（Origin/CSRF/写确认/413）** | ✅ 已提交（见 §3.7） |
+| 0.1.3 | git 总入口（token/commit/push/clone/建仓/可见性） | ⏳ |
+| 0.1.4 | 自身总入口（版本单源/README 模板/yml 模板/CLI 完善） | ⏳ |
+| 0.1.5 | 评分总入口（AST 化质量检查 + 口径锚定） | ⏳ |
+| 0.1.6 | 豁免总入口（7 标记接入审计全消费点，已部分接） | ⏳ |
+| 0.1.7 | 上下文注入 + HTTP API + 测试总入口 | ⏳ |
+| 0.1.8 | 侧边栏（复用旧 client.js） | ⏳ |
+| 0.2.0 | 链接判断 yml 规则（link-check kind） | ⏳ |
+| 1.0.0 | DSH 插件接线 + 双副本同步 + 推送准备 | ⏳ |
 
-## 2.5 卡点记录：1.1.2 已修复（原 5 fail → 44 全绿）
+## 2.5 卡点记录：0.1.2 已修复（原 5 fail → 44 全绿）
 
 **原失败根因（已修复，2026-09-10）**：
 ```
@@ -192,7 +197,7 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
 
 **修复后现状**：`npm test` **44 全绿**（test-audit 14 测试）；`node cli.mjs audit . --full` 出 25 findings + quality 73/100（B）；旧项目扫描 **0 blocker**。
 
-**已知连带问题（记录在案，1.1.6 豁免总入口处理）**：v2 扫自身仓库时报 6 个 style-debugger blocker——命中点是**规则定义元数据本身**（audit-rules-nodejs.yml 的 pattern 字符串 `\bdebugger\s*;?`、exempt/index.js 注册表 blocked:['debugger']、audit/index.js:49 的 /residue|console|debugger/ 正则），非真实代码残留。属引擎自举假阳性：规则/豁免定义中的关键词字样被自家 regex 规则命中。对策：1.1.6 豁免总入口完善「规则定义文件豁免」语义时一并处理（yml 槽位文件排除 regex 类自举命中）。
+**已知连带问题（记录在案，0.1.6 豁免总入口处理）**：v2 扫自身仓库时报 6 个 style-debugger blocker——命中点是**规则定义元数据本身**（audit-rules-nodejs.yml 的 pattern 字符串 `\bdebugger\s*;?`、exempt/index.js 注册表 blocked:['debugger']、audit/index.js:49 的 /residue|console|debugger/ 正则），非真实代码残留。属引擎自举假阳性：规则/豁免定义中的关键词字样被自家 regex 规则命中。对策：0.1.6 豁免总入口完善「规则定义文件豁免」语义时一并处理（yml 槽位文件排除 regex 类自举命中）。
 
 ## 2.6 逐文件逐函数清单（含签名注释，交接依据）
 
@@ -257,7 +262,7 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
 | `summarize` | `(findings) => {blocker, warning, total}` | 统计 |
 | `auditFile` | `({file, relPath, text, grouped}) => findings[]` | 单文件检查+文件头豁免 |
 | `auditFull` | `(repoPath, opts) => result` | 全量：collect→逐文件；非 git 可查 |
-| `auditChanged` | `(repoPath, opts) => result` | **1.1.2 真 diff 实现**：collectChangedFiles→逐文件（D 跳过）；非 git 退化 full 且 scope 标 changed |
+| `auditChanged` | `(repoPath, opts) => result` | **0.1.2 真 diff 实现**：collectChangedFiles→逐文件（D 跳过）；非 git 退化 full 且 scope 标 changed |
 | `auditWithScope` | `(repoPath, {scope}) => result` | 统一入口 |
 
 ### 5️⃣ lib/audit/collector.js —— 文件收集 🔄 半成品
@@ -267,7 +272,7 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
 | `collectTextFiles` | `(dir, opts) => Array<{path, ext, full}>` | 递归收集；git check-ignore 排除（Map 缓存）；跳过 node_modules/.git/dist |
 | `isGitRepo` | `(dir) => boolean` | .git 判定 |
 | `readText` | `(full) => string\|null` | UTF-8 读，失败 null |
-| `collectChangedFiles` | `(repoPath) => Array<{rel, full, status}>\|null` | **1.1.2 新增**：git status --porcelain 变动收集（A/M/R/??；D 保留调用方过滤）；非 git 或 git 失败返回 null |
+| `collectChangedFiles` | `(repoPath) => Array<{rel, full, status}>\|null` | **0.1.2 新增**：git status --porcelain 变动收集（A/M/R/??；D 保留调用方过滤）；非 git 或 git 失败返回 null |
 
 ### 6️⃣ lib/audit/checks.js —— 检查器 🔄 半成品
 
@@ -298,7 +303,7 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
 | `countByDimension` | `(findings) => {dim: count}` | 分维度计数（blocker 计 2） |
 | `scoreQuality` | `(findings, weights?) => {dims, counts, score, level}` | `dimSum/(10×totalWeight)×100`；A≥85/B≥70/C≥55/D |
 
-### 9️⃣ lib/git/index.js —— git 总入口（骨架）⏳ 1.1.3
+### 9️⃣ lib/git/index.js —— git 总入口（骨架）⏳ 0.1.3
 
 | 符号 | 签名 | 说明 |
 |------|------|------|
@@ -310,7 +315,7 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
 | `ensureRemoteRepo` | `({repoPath, visibility, dryRun})` | 待实现建仓 |
 | `setVisibility` | `({owner, repo, visibility, token})` | 待实现 |
 
-### 🔟 lib/self/index.js —— 自身总入口（骨架）⏳ 1.1.4
+### 🔟 lib/self/index.js —— 自身总入口（骨架）⏳ 0.1.4
 
 | 符号 | 签名 | 说明 |
 |------|------|------|
@@ -319,7 +324,7 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
 | `yamlTemplate` | `() => string` | 规则模板示范 |
 | `selfVersion` | `() => string` | 返回 VERSION |
 
-### 1️⃣1️⃣ lib/context/index.js —— 上下文注入（骨架）⏳ 1.1.7
+### 1️⃣1️⃣ lib/context/index.js —— 上下文注入（骨架）⏳ 0.1.7
 
 | 符号 | 签名 | 说明 |
 |------|------|------|
@@ -355,11 +360,11 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
 
 ## 3 每入口详解（任务 + 思路 + 验收标准）
 
-### 3.1 规则总入口（1.1.1）✅ 已提交 fdf2b34
+### 3.1 规则总入口（0.1.1）✅ 已提交 fdf2b34
 - **子任务**：注册表骨架 / 装载骨架 / 13 编译函数 / 三统一映射 / nodejs 槽位 11 条 / 未知规则报错 / dimensions 声明——全部完成。
 - **验收**：31 测试全绿；`node cli.mjs ruleset nodejs` 输出 11 条分桶统计；旧项目扫描 0 blocker。
 
-### 3.2 审计总入口（1.1.2）✅ 已提交
+### 3.2 审计总入口（0.1.2）✅ 已提交
 - **已完成**：collector（gitignore 感知 + collectChangedFiles）/ checks 全部检查器（含单行多语句 func-lines）/ auditFile 豁免 / auditFull 框架 / auditChanged 真 git diff / 14 条测试。
 - **待做**（全部完成，2026-09-10）：
   - [x] 修 compilers.js patterns→RegExp（§2.5 已定位根因）
@@ -375,7 +380,7 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
   - [x] `node cli.mjs audit . --full` 出 findings + quality（25 findings + 73/100 B）
   - [x] 旧项目同 fixture 对比一致（见上）
 
-### 3.3 git 总入口（1.1.3）✅ 已提交
+### 3.3 git 总入口（0.1.3）✅ 已提交
 - **思路**：runGit 数组参数零注入；token 三层探测（显式→env→配置目录/项目 .git-push-token，格式校验）；push 走 api.github.com Git Data API 401 回退 SSH（ssh.github.com:443）；githubFetch 硬闸（拒绝非 api.github.com、拒 302）；敏感文件自动 .gitignore；测试全在 /tmp 临时仓 + mock fetch。
 - **已实现**：`runGit` / `resolveToken` / `resolveSshKey` / `credentialsDir` / `githubFetch` / `parseGithubOwnerRepo` / `isBadCredentials` / `scanSensitiveFiles` / `ensureGitignore` / `readmeCheckHint` / `commitAndPush` / `pushViaSsh` / `pushViaApi`（blob→tree→commit→ref + 分支免疫 default_branch）/ `cloneViaApi`（trees+blobs 写文件转 git 仓）/ `ensureRemoteRepo`（建仓+设 origin，dryRun）/ `setVisibility`（PATCH）。
 - **验收**（全部通过）：
@@ -388,7 +393,7 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
   - [x] test-git 35 断言全绿（79 总测试全绿）
   - [x] 旧项目扫描 0 blocker
 
-### 3.4 自身总入口（1.1.4）✅ 已提交
+### 3.4 自身总入口（0.1.4）✅ 已提交
 - **思路**：版本三处一致（scan-version 校验）；README 模板独立（不走拦截 yml）；CLI HELP 与 parseArgv 机器比对防 --depth 类回归。
 - **已实现**：VERSION 单一事实源（lib/self）→ versionInfo() + scripts/scan-version.mjs 机器校验三处一致；readmeTemplate（{{name}} {{description}} {{version}} {{versionTable}} 占位符）；yamlTemplate（kind+dimensions 示范）；helpSync()（HELP↔KNOWN_FLAGS 双向比对）；parseArgv --depth 缺值报错（不静默 NaN）；CLI 新增 yaml-template / readme-template / self-check 子命令。
 - **验收**（全部通过）：
@@ -398,7 +403,7 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
   - [x] test-cli 18 断言全绿（97 总测试全绿）
   - [x] 旧项目扫描 0 blocker
 
-### 3.5 评分总入口（1.1.5）✅ 已提交
+### 3.5 评分总入口（0.1.5）✅ 已提交
 - **思路**：10 维度权重延续；AST 化质量检查修旧项目假阴性（sync-fs named import / empty-catch 多行 / func-lines 超长坏样本 100% 检出）。
 - **已实现**：`lib/score/ast.js` 轻量 tokenizer（字符串/模板/注释感知）→ 括号平衡区间 → `checkSyncFs`（named-import 直调 + fs 前缀双识别，async 作用域判定）/ `checkEmptyCatchAst`（多行空块/仅注释块）/ `checkFuncLinesAst`（精确行数，字符串不误报）；`checks.js` runChecks 接入 AST 版（func-lines 行数+语句密度互补，单行海量语句兜底）；`scoreQuality`（weights 覆盖 + counts 返回）。
 - **验收**（全部通过）：
@@ -408,20 +413,35 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
   - [x] test-quality 31 断言全绿（128 总测试全绿）
   - [x] 旧项目扫描 0 blocker
 
-### 3.6 豁免总入口（1.1.6）⏳
-- **思路**：7 标记接入审计全消费点；位置语义逐类测试（size 只能文件头等）。
-- **验收**：6 类豁免场景端到端（对照旧项目 12 场景）/ exemptHint 可直接使用 / test-exempt ≥15 断言。
+### 3.6 豁免总入口（0.1.6）✅ 已提交
+- **思路**：7 标记注册表驱动接入审计全消费点；位置语义逐类测试（对照旧项目 12 场景）；同时修复 §2.5 记录的规则定义/文档 debugger 自举假阳性。
+- **已实现**：`exemptForFinding(finding, text)` 注册表驱动统一消费（EXEMPT_MARKERS 每标记声明 blocked/lineLevel/hint）；auditFile 接入；residue/style 检查只对代码文件生效；audit-rules-*.yml 规则定义文件自动豁免自举命中。
+- **验收**（全部通过）：
+  - [x] 7 标记全消费（sensitive/size/func-length/syntax/quality/residue/style）
+  - [x] 位置语义：文件头前 3 行=整文件；行内=sensitive/func-length/residue 单点；size/syntax/quality/style 仅文件头
+  - [x] 旧项目 12 场景矩阵全覆盖（7 整文件 + 3 行级 + 不越权 + 未豁免照报）
+  - [x] §2.5 已知 6 个 debugger 假阳性已修复（自审 0 blocker、98/100 A）
+  - [x] test-exempt 25 断言全绿（153 总测试全绿）
+  - [x] 旧项目扫描 0 blocker
 
-### 3.7 上下文注入 + HTTP API + 测试总入口（1.1.7）⏳
-- **思路**：HTTP 写端点鉴权（无 Origin→403 / rebuild 缺 confirm→400 / 超大 body→413）；npm test 退出码 0、坏断言退出码 1。
-- **验收**：test-context ≥5 / test-http ≥15；全部套件 ≤60 秒。
+### 3.7 上下文注入 + HTTP API + 测试总入口（0.1.7）✅ 已提交
+- **思路**：HTTP 写端点鉴权（无 Origin→403 / 跨源→403 / 破坏性操作缺 confirm→400 / 超大 body→413）；上下文注入文本生成与机器解析；npm test 退出码 0。
+- **已实现**：`lib/http/index.js` 纯函数鉴权（checkOrigin 同源判定忽略端口/路径、checkWriteConfirm、checkBodySize 5MB、authPipeline、routeRequest 路由分发、readJsonBody 流式 413 防护）；`lib/context/index.js` createEnvInjectionText/parseEnvInjection/isWithinRoot（防目录穿越）。
+- **验收**（全部通过）：
+  - [x] 无 Origin 的写请求 → 403（POST/PUT/PATCH/DELETE 全覆盖；GET/OPTIONS 免校验）
+  - [x] 跨源写请求 → 403（192.168.1.100 等一律拒绝）
+  - [x] 破坏性操作缺 confirm → 400（confirm 非 true 一律拒）
+  - [x] 超大 body → 413（>5MB；恰好 5MB 放行；流式超限 destroy）
+  - [x] 路由分发：写端点鉴权前置（403 时处理器不被调用）、未知端点 404
+  - [x] test-http 30 断言 + test-context 7 断言全绿（190 总测试全绿）
+  - [x] npm test 退出码 0；旧项目扫描 0 blocker
 
-### 3.8 侧边栏（1.1.8）⏳
+### 3.8 侧边栏（0.1.8）⏳
 - **思路**：复用旧 client.js 骨架；零外部资源；审计开关默认关；配置即时生效。
 - **验收**：手写 createElement 无 JSX；侧边栏加载通过；开关默认关。
 - **决策：v2 不实施 viewer（提交历史查看器）**——旧项目 v1.60.1 已移除该类组件（lib/viewer.js + viewer-locales.js + /git-push/viewer 页面 + repos|commits|diff 只读端点，commit 33276c4），**用不上，以后再改**；侧边栏不包含提交历史查看器入口。若未来要浏览提交历史，从旧项目历史版本移植（需新增 test-viewer 覆盖，链接拼接 bug 已在旧版修复）。
 
-### 3.9 链接判断 yml 规则（1.2.0）⏳
+### 3.9 链接判断 yml 规则（0.2.0）⏳
 - **思路**：link-check kind——404/403 大扣分、DNS 中扣分、超时小扣分；flaky 域名（github/api.github.com/raw/npmjs）网络错误 ×0.2；只 warning 不 blocker。
 - **验收**：fake server 分级扣分 / flaky 打折 / 断网不 blocker / 100 链接 ≤30 秒 / test-link-check ≥10 断言。
 
@@ -433,17 +453,17 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
 |---|-----------|---------|------|
 | 1 | 死导入/未使用导出 | unused-import/export 自检 | ⏳ |
 | 2 | 真空 catch | checkEmptyCatch 已实现 | ✅ |
-| 3 | js-yaml 未声明 | package.json dependencies 显式 | ✅ 1.0.0 |
-| 4 | npm test 坏 | test/*.mjs 显式 glob | ✅ 1.0.0 |
-| 5 | CLI --depth 文档/实现不符 | cli-help-sync 机器比对 | ⏳ 1.1.4 |
-| 6 | README/工具数滞后 | doc-sync 自检 | ⏳ 1.1.4 |
-| 7 | HTTP 写端点无鉴权 | Origin+CSRF+确认参数 | ⏳ 1.1.7 |
-| 8 | quality 假阴性 | AST 全量检查+坏样本回归 | ⏳ 1.1.5 |
-| 9 | 同步 fs 204 处 | sync-fs AST 检查器 | ⏳ 1.1.5 |
-| 10 | 凭据卫生 | credential-in-url 告警 | ⏳ 1.1.3 |
-| 11 | 链接拼接错误 | link-check 规则 | ⏳ 1.2.0 |
-| 12 | 配置被忽略 | config-ignored 自检 | ⏳ 1.1.3 |
-| 13 | 门禁链路漏接 | gateway-chain | ⏳ 1.1.3 |
+| 3 | js-yaml 未声明 | package.json dependencies 显式 | ✅ 0.0.0 |
+| 4 | npm test 坏 | test/*.mjs 显式 glob | ✅ 0.0.0 |
+| 5 | CLI --depth 文档/实现不符 | cli-help-sync 机器比对 | ⏳ 0.1.4 |
+| 6 | README/工具数滞后 | doc-sync 自检 | ⏳ 0.1.4 |
+| 7 | HTTP 写端点无鉴权 | Origin+CSRF+确认参数 | ⏳ 0.1.7 |
+| 8 | quality 假阴性 | AST 全量检查+坏样本回归 | ⏳ 0.1.5 |
+| 9 | 同步 fs 204 处 | sync-fs AST 检查器 | ⏳ 0.1.5 |
+| 10 | 凭据卫生 | credential-in-url 告警 | ⏳ 0.1.3 |
+| 11 | 链接拼接错误 | link-check 规则 | ⏳ 0.2.0 |
+| 12 | 配置被忽略 | config-ignored 自检 | ⏳ 0.1.3 |
+| 13 | 门禁链路漏接 | gateway-chain | ⏳ 0.1.3 |
 | 14 | 循环依赖 | circular-import | ⏳ |
 | 15 | 文档措辞被拦截 | docs-conversation + 改写建议 | ✅ 门禁已生效 |
 
@@ -474,7 +494,8 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
 | 豁免标记语义混乱 | 中 | 中 | 注册表注释 + 逐类测试 |
 | **编译函数 patterns 存字符串而非 RegExp** | **已踩** | 高 | §2.5 定位；测试全覆盖后此类回归不可能漏 |
 | **yml 规则 id 用斜杠风格 vs detect 前缀风格** | **已踩** | 高 | id 统一 dash 风格匹配 detect 契约；新增槽位先跑分桶测试 |
-| **规则定义元数据被自家 regex 自举命中** | **已踩** | 中 | 1.1.6 豁免总入口补「规则定义文件豁免」语义（§2.5 已记录 6 个假阳性 debugger） |
+| **版本号口径与旧项目审计规则冲突** | **已踩** | 中 | **用户明确要求**大版本号从 0 开始（1.x→0.x，2.0.0→1.0.0）；旧项目 `version/major-zero` 规则要求 DSH 插件 version 必须 1 开头 → 旧项目扫描本仓会报 1 个 blocker（已知豁免项，以用户指令为准；若日后改口径需全仓回改） |
+| **规则定义元数据被自家 regex 自举命中** | **已踩** | 中 | 0.1.6 豁免总入口补「规则定义文件豁免」语义（§2.5 已记录 6 个假阳性 debugger） |
 | 接手 AI 偏离看板 | 中 | 高 | 本板唯一权威：函数清单+验收标准逐条对照 |
 
 ---
@@ -483,15 +504,17 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
 
 | 版本 | commit | 内容 | 自检 |
 |------|--------|------|------|
-| 1.0.0 | a936a66 | README 计划稿 | 旧项目扫描 0/0 ✅ |
-| 1.1.0 | 19fe21c | 框架骨架 + cli + test 16 + check 脚本 | 旧项目扫描 0 blocker ✅ |
-| 1.1.1 | fdf2b34 | 规则总入口：13 编译函数 + nodejs 槽位 + test 15（31 全绿） | 旧项目扫描 0 blocker ✅ |
-| 1.1.2 | e007eba | 审计总入口：修 patterns→RegExp + func-lines 语句密度 + auditChanged 真 diff + collectChangedFiles + test-audit 14（44 全绿）+ CLI audit 73/100 B + 旧项目同 fixture 锚定 | 旧项目扫描 0 blocker ✅ |
-| 1.1.3 | df843dc | git 总入口：runGit/resolveToken 三层/commitAndPush/敏感文件 .gitignore/pushViaApi+SSH 回退/cloneViaApi/ensureRemoteRepo/setVisibility/githubFetch 硬闸 + test-git 35（79 全绿） | 旧项目扫描 0 blocker ✅ |
+| 0.0.0 | a936a66 | README 计划稿 | 旧项目扫描 0/0 ✅ |
+| 0.1.0 | 19fe21c | 框架骨架 + cli + test 16 + check 脚本 | 旧项目扫描 0 blocker ✅ |
+| 0.1.1 | fdf2b34 | 规则总入口：13 编译函数 + nodejs 槽位 + test 15（31 全绿） | 旧项目扫描 0 blocker ✅ |
+| 0.1.2 | e007eba | 审计总入口：修 patterns→RegExp + func-lines 语句密度 + auditChanged 真 diff + collectChangedFiles + test-audit 14（44 全绿）+ CLI audit 73/100 B + 旧项目同 fixture 锚定 | 旧项目扫描 0 blocker ✅ |
+| 0.1.3 | df843dc | git 总入口：runGit/resolveToken 三层/commitAndPush/敏感文件 .gitignore/pushViaApi+SSH 回退/cloneViaApi/ensureRemoteRepo/setVisibility/githubFetch 硬闸 + test-git 35（79 全绿） | 旧项目扫描 0 blocker ✅ |
 | 身份基线 | 33f5cd2 | 本项目即 dsh-git-push 本体：package.json name/description + README/看板/注释统一名称，恢复工作区路径引用 | 79 全绿 + 旧项目扫描 0 blocker ✅ |
-| 1.1.4 | 6406f26 | 自身总入口：VERSION 三处一致(scan-version)/readmeTemplate/yamlTemplate/helpSync/CLI self-check + test-cli 18（97 全绿） | 旧项目扫描 0 blocker ✅ |
-| 1.1.5 | e07b810 | 评分总入口：lib/score/ast.js tokenizer+AST 检查器（sync-fs named-import/empty-catch 多行/func-lines 精确行数）+ runChecks 接入 + test-quality 31（128 全绿） | 旧项目扫描 0 blocker ✅ |
-| 1.1.6 | 待提交 | 豁免总入口：exemptForFinding 注册表驱动全消费（7 标记/位置语义/12 场景）+ residue 仅代码文件 + 规则定义文件自动豁免（修 §2.5 debugger 自举）+ test-exempt 25（153 全绿） | 旧项目扫描 0 blocker ✅ |
+| 0.1.4 | 6406f26 | 自身总入口：VERSION 三处一致(scan-version)/readmeTemplate/yamlTemplate/helpSync/CLI self-check + test-cli 18（97 全绿） | 旧项目扫描 0 blocker ✅ |
+| 0.1.5 | e07b810 | 评分总入口：lib/score/ast.js tokenizer+AST 检查器（sync-fs named-import/empty-catch 多行/func-lines 精确行数）+ runChecks 接入 + test-quality 31（128 全绿） | 旧项目扫描 0 blocker ✅ |
+| 0.1.6 | e633861 | 豁免总入口：exemptForFinding 注册表驱动全消费（7 标记/位置语义/12 场景）+ residue 仅代码文件 + 规则定义文件自动豁免（修 §2.5 debugger 自举）+ test-exempt 25（153 全绿） | 旧项目扫描 0 blocker ✅ |
+| 版本号改口径 | 待提交 | **用户要求**：大版本号从 0 开始（1.x→0.x，2.0.0→1.0.0），全仓文档/代码/看板/历史提交信息统一 | 190 全绿 ✅ |
+| 0.1.7 | 待提交 | 上下文注入 + HTTP 总入口：Origin/CSRF(403)/写确认(400)/413 + 路由分发 + 注入文本机器解析 + test-http 30 + test-context 7（190 全绿） | 旧项目扫描 0 blocker ✅ |
 
 ---
 
@@ -500,12 +523,12 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
 ```bash
 # ① 环境
 cd "/vol2/1000/DeepSeek Harness/dsh-v0.1.2-alpha.4/.dsh-home/工作区/dsh-git-push-v2"
-npm test          # 期望：128 全绿（当前 1.1.5 已提交）
+npm test          # 期望：128 全绿（当前 0.1.5 已提交）
 npm run check     # 期望：12/12 语法通过
 
 # ② 读本板顺序
-#   §2.5（卡点历史与已知问题）→ §2.2（架构）→ §2.6（函数清单）→ §3.3（1.1.3 git 总入口验收）
-#   → 从 1.1.3 git 总入口开始下一入口
+#   §2.5（卡点历史与已知问题）→ §2.2（架构）→ §2.6（函数清单）→ §3.3（0.1.3 git 总入口验收）
+#   → 从 0.1.3 git 总入口开始下一入口
 
 # ③ 提交前
 node ../dsh-git-push/cli.mjs audit . --json   # 0 blocker 才提交

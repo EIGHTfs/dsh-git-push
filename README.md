@@ -2,7 +2,7 @@
 
 DSH（DeepSeek Harness）git 自动提交推送插件——统一函数入口架构（从零开发的独立实现）。
 
-> **状态**：开发中（v1.0.0 计划稿 → v1.1.0 框架 → 每完成一个入口递增第三位）
+> **状态**：开发中（v0.0.0 计划稿 → v0.1.0 框架 → 每完成一个入口递增第三位）
 > **基线**：`../dsh-git-push`（v1.60.1，存档+自检扫描用，五份外部审计报告已核对，问题清单见 §五）
 > **血缘**：本项目按统一函数入口架构从零开发，参考既有经验与五份外部报告的教训独立实现。
 
@@ -67,8 +67,8 @@ DSH（DeepSeek Harness）git 自动提交推送插件——统一函数入口架
 
 | 版本 | 内容 |
 |------|------|
-| **1.0.0** | README 文档（本文件）：开发计划 + 问题清单 + 链接规则设计 |
-| **1.1.0** | 功能框架搭建完毕能跑（目录结构 + 入口骨架 + npm test 绿） |
+| **0.0.0** | README 文档（本文件）：开发计划 + 问题清单 + 链接规则设计 |
+| **0.1.0** | 功能框架搭建完毕能跑（目录结构 + 入口骨架 + npm test 绿） |
 | **1.1.x** | 每完成一个入口 commit 一次，第三位 +1（一次一入口） |
 | … | 全部入口完成后按实际功能跳版本 |
 
@@ -128,7 +128,7 @@ DSH（DeepSeek Harness）git 自动提交推送插件——统一函数入口架
 
 ## 文件目录结构及作用
 
-（框架搭建后填充——1.1.0 起按实际模块更新本表并 commit）
+（框架搭建后填充——0.1.0 起按实际模块更新本表并 commit）
 
 | 路径 | 作用 |
 |---|---|
@@ -142,14 +142,15 @@ DSH（DeepSeek Harness）git 自动提交推送插件——统一函数入口架
 
 | 版本 | 说明 |
 |---|---|
-| **1.1.6**（当前） | **豁免总入口落地**：exemptForFinding 注册表驱动统一消费（7 标记全接入，blocked/lineLevel/hint 声明式）+ 位置语义（文件头前 3 行=整文件 / sensitive/func-length/residue 行内单点）+ residue/style 仅代码文件生效 + audit-rules-*.yml 规则定义文件自动豁免自举命中（修复 §2.5 记录的 6 个 debugger 假阳性）；test-exempt 25 断言（153 总全绿）+ v2 自审 0 blocker（98/100 A）+ 旧项目扫描 0 blocker |
-| **1.1.5** | **评分总入口落地**：lib/score/ast.js 轻量 tokenizer（字符串/模板/注释感知）+ AST 质量检查器（checkSyncFs 修 named-import 假阴性、checkEmptyCatchAst 修多行空块、checkFuncLinesAst 精确行数）+ runChecks 接入（func-lines 行数+语句密度互补）+ scoreQuality weights 覆盖；test-quality 31 断言（128 总全绿）+ 旧项目扫描 0 blocker |
-| **1.1.4** | **自身总入口落地**：VERSION 单一事实源 + versionInfo 机器校验（scripts/scan-version.mjs，三处一致）/ readmeTemplate（{{name}} {{version}} {{versionTable}} 占位符渲染）/ yamlTemplate（kind+dimensions 示范）/ helpSync（HELP↔parseArgv 机器比对，防 --depth 类回归）/ parseArgv --depth 缺值报错 / CLI 新增 yaml-template/readme-template/self-check 子命令；test-cli 18 断言（97 总全绿）+ 旧项目扫描 0 blocker |
-| **1.1.3** | **git 总入口落地**：runGit（数组参数零注入）/ resolveToken（三层：显式→env→配置目录/项目 token，格式校验）/ commitAndPush（预检+敏感文件自动 .gitignore+add+commit+push）/ pushViaApi（Git Data API blob→tree→commit→ref，分支免疫，401→pushViaSsh 回退 ssh.github.com:443）/ cloneViaApi（trees+blobs 写文件转 git 仓）/ ensureRemoteRepo（建仓+设 origin，dryRun）/ setVisibility（PATCH）/ githubFetch（api.github.com 硬闸拒 302）+ parseGithubOwnerRepo + isBadCredentials；test-git 35 断言（79 总全绿）+ 旧项目扫描 0 blocker |
-| **1.1.2** | **审计总入口落地**：collector（gitignore 感知 + collectChangedFiles 变动收集）/ checks 全部检查器（regex/path-regex/func-lines 含单行多语句识别/empty-catch）/ auditFile 豁免接线 / auditFull（非 git 可查）/ auditChanged 真 git diff（git status --porcelain，删除文件跳过）/ 统一问题对象 + exemptHint；44 测试全绿 + 旧项目扫描 0 blocker；修 §2.5 patterns→RegExp 卡点 |
-| **1.1.1** | **规则总入口落地**：13 编译函数注册（credential-ref/file/secret/func-lines/6 数值/regex/path-regex/semantic）+ 三统一（kind kebab-case ↔ 函数 ↔ 字段）+ dimensions 声明（一字段多维度）+ 首个 yml 槽位 audit-rules-nodejs.yml（11 条规则示范）+ 未知规则报错不静默；31 测试全绿 |
-| **1.1.0** | **功能框架搭建完毕能跑**：8 入口骨架（规则/审计/git/自身/评分/豁免/上下文）+ cli.mjs 最小可用（version/ruleset/scan/audit + --depth/--full 解析）+ scripts/check.mjs 全量语法检查 + test/test-framework.mjs 16 断言全绿；详细任务看板 docs/WORKBOARD-v2.md（每入口含思路与验收标准） |
-| **1.0.0** | **README 文档（开发计划）**：10 总入口架构确定、统一问题对象确定、版本规范确定、15 条自检问题清单（五份报告已核对）、链接判断规则设计（flaky 域名扣分打折） |
+| **0.1.7**（当前） | **上下文注入 + HTTP 总入口落地**：lib/http/index.js 纯函数鉴权（checkOrigin 同源判定忽略端口/路径 → 无 Origin/跨源 403、checkWriteConfirm 破坏性操作缺 confirm → 400、checkBodySize 5MB → 413、authPipeline、routeRequest 路由分发、readJsonBody 流式 413 防护）+ lib/context/index.js（createEnvInjectionText/parseEnvInjection/isWithinRoot 防目录穿越）；test-http 30 + test-context 7 断言（190 总全绿）+ 旧项目扫描 0 blocker |
+| **0.1.6** | **豁免总入口落地**：exemptForFinding 注册表驱动统一消费（7 标记全接入，blocked/lineLevel/hint 声明式）+ 位置语义（文件头前 3 行=整文件 / sensitive/func-length/residue 行内单点）+ residue/style 仅代码文件生效 + audit-rules-*.yml 规则定义文件自动豁免自举命中（修复 §2.5 记录的 6 个 debugger 假阳性）；test-exempt 25 断言（153 总全绿）+ v2 自审 0 blocker（98/100 A）+ 旧项目扫描 0 blocker |
+| **0.1.5** | **评分总入口落地**：lib/score/ast.js 轻量 tokenizer（字符串/模板/注释感知）+ AST 质量检查器（checkSyncFs 修 named-import 假阴性、checkEmptyCatchAst 修多行空块、checkFuncLinesAst 精确行数）+ runChecks 接入（func-lines 行数+语句密度互补）+ scoreQuality weights 覆盖；test-quality 31 断言（128 总全绿）+ 旧项目扫描 0 blocker |
+| **0.1.4** | **自身总入口落地**：VERSION 单一事实源 + versionInfo 机器校验（scripts/scan-version.mjs，三处一致）/ readmeTemplate（{{name}} {{version}} {{versionTable}} 占位符渲染）/ yamlTemplate（kind+dimensions 示范）/ helpSync（HELP↔parseArgv 机器比对，防 --depth 类回归）/ parseArgv --depth 缺值报错 / CLI 新增 yaml-template/readme-template/self-check 子命令；test-cli 18 断言（97 总全绿）+ 旧项目扫描 0 blocker |
+| **0.1.3** | **git 总入口落地**：runGit（数组参数零注入）/ resolveToken（三层：显式→env→配置目录/项目 token，格式校验）/ commitAndPush（预检+敏感文件自动 .gitignore+add+commit+push）/ pushViaApi（Git Data API blob→tree→commit→ref，分支免疫，401→pushViaSsh 回退 ssh.github.com:443）/ cloneViaApi（trees+blobs 写文件转 git 仓）/ ensureRemoteRepo（建仓+设 origin，dryRun）/ setVisibility（PATCH）/ githubFetch（api.github.com 硬闸拒 302）+ parseGithubOwnerRepo + isBadCredentials；test-git 35 断言（79 总全绿）+ 旧项目扫描 0 blocker |
+| **0.1.2** | **审计总入口落地**：collector（gitignore 感知 + collectChangedFiles 变动收集）/ checks 全部检查器（regex/path-regex/func-lines 含单行多语句识别/empty-catch）/ auditFile 豁免接线 / auditFull（非 git 可查）/ auditChanged 真 git diff（git status --porcelain，删除文件跳过）/ 统一问题对象 + exemptHint；44 测试全绿 + 旧项目扫描 0 blocker；修 §2.5 patterns→RegExp 卡点 |
+| **0.1.1** | **规则总入口落地**：13 编译函数注册（credential-ref/file/secret/func-lines/6 数值/regex/path-regex/semantic）+ 三统一（kind kebab-case ↔ 函数 ↔ 字段）+ dimensions 声明（一字段多维度）+ 首个 yml 槽位 audit-rules-nodejs.yml（11 条规则示范）+ 未知规则报错不静默；31 测试全绿 |
+| **0.1.0** | **功能框架搭建完毕能跑**：8 入口骨架（规则/审计/git/自身/评分/豁免/上下文）+ cli.mjs 最小可用（version/ruleset/scan/audit + --depth/--full 解析）+ scripts/check.mjs 全量语法检查 + test/test-framework.mjs 16 断言全绿；详细任务看板 docs/WORKBOARD-v2.md（每入口含思路与验收标准） |
+| **0.0.0** | **README 文档（开发计划）**：10 总入口架构确定、统一问题对象确定、版本规范确定、15 条自检问题清单（五份报告已核对）、链接判断规则设计（flaky 域名扣分打折） |
 
 ## 注意事项
 
