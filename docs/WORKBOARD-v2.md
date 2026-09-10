@@ -184,6 +184,23 @@ dsh-git-push
 
 后 6 项属重构未迁移能力：需要时按 `lib/` 统一入口补（git 总入口 / 评分 / 推送许可），或暂用旧仓源码 + CLI 手动调用。
 
+**⚠️ 装后实测发现并修复（1.0.4 同日）：v2 接线层四段 API 全部用错、静默失效**（当时尚未真正跑过 DSH）
+
+| 段 | 原写法（错，静默） | 修后（真实 API，对照运行中 conductor/旧版现场） |
+|---|---|---|
+| 工具注册 | `ctx.tools.define(...)` | `ctx.inject(['tools'])` → `get('tools').register(defineTool(spec))` |
+| 提示词注入 | callback 返回 `{name,content}` | callback 内 `get('systemPrompt').section({name, order, text:()=>同步})` |
+| HTTP | `ctx.http.route(...)` | `ctx.inject(['webServer'])` → `register({kind:'prefix', path, handler})` |
+| 客户端 | `ctx.inject(['slots'])`（虚构） | 删除——由 package.json `dsh.client` + `exports["./client"]` 自动发现 |
+| 工具形状 | 参数简写 `'string?'` | `{k:{type,description}}` + `output:{schema,render}`（render 必须返回块数组） |
+| 依赖 | 无 | package.json 补 `peerDependencies: @deepseek-ai/dsh-tools` |
+
+接线层为独立模块 `lib/plugin/index.js`，三处注册均以 mock ctx 单测断言「真 API 被调用」（test-plugin.mjs，345 全绿）。
+
+**迁移（用户确认「只迁常用的两项」）**：
+- `git_gen_readme` ✅ 已迁：`lib/readme-gen/index.js`（模板优先级 template/README.md > readme.yml > 内置兜底；版本表 git log 版本聚合）+ `lib/readme-templates/readme.yml`。工具数 7 → 8。
+- `push_permit_status/config` ❓ **发现与 dsh-session-conductor 提供同名工具冲突**（conductor 已实现同款，v2 再注册会重名），故未迁移——需要时直接用 conductor 的那两个工具即可。剩余未迁：audit_full_scan / git_rebuild_history / git_push_rules（工作区旧仓源码在，可异步补）。
+
 **生效条件**：重启 DSH 后新插件进进程（当前进程仍加载旧代码）。
 
 ## 2.4 版本节奏
@@ -501,7 +518,7 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
   - `cordis.patch.yml`（insert 顶层写法）+ package.json exports/files/bin（`npm run sync-plugin`）。
 - **验收**（全部通过）：
   - [x] 入口导出齐全（name/Config/apply/callTool/handleHttp/listTools）且可 apply 无 ctx 不崩
-  - [x] 工具清单 7 个（git_scan/git_commit_push/code_audit/git_clone/git_remote_create/git_set_visibility/link_check）均带描述与参数
+  - [x] 工具清单 8 个（git_scan/git_commit_push/code_audit/git_gen_readme/git_clone/git_remote_create/git_set_visibility/link_check）均带描述与参数
   - [x] 工具分发：git_scan 扫到本仓、缺参报错、未知工具报错、code_audit 出 summary+quality
   - [x] HTTP 接线后鉴权仍生效（GET 免 Origin / POST 无 Origin 403 / 破坏性端点缺 confirm 400 / 超大 body 413 / 未知端点 404）
   - [x] 双副本同步 dry-run 不写盘、真写幂等（第二次 0 写）、缺目标报错不静默、探测无 HOME 不崩

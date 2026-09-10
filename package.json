@@ -47,6 +47,9 @@
   "dependencies": {
     "js-yaml": "^4.1.0"
   },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-tools": "*"
+  },
   "scripts": {
     "test": "node --test test/*.mjs",
     "check": "node scripts/check.mjs",

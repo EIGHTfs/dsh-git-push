@@ -8,6 +8,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { name, GIT_PUSH_SETTINGS_NS, Config, apply, callTool, handleHttp, listTools } from '../lib/index.js';
+import { setDefineToolOverride } from '../lib/plugin/index.js';
 import { listSyncFiles, syncPlugin, detectTargets, SYNC_ENTRIES, SYNC_EXCLUDE } from '../scripts/sync-plugin.mjs';
 import { VERSION } from '../lib/self/index.js';
 
@@ -32,24 +33,67 @@ test('入口：导出 apply/callTool/handleHttp/listTools', () => {
   assert.equal(typeof listTools, 'function');
 });
 
-// ---------- apply（接线） ----------
-test('apply：注入 context/slots + 工具注册 + http 路由', async () => {
-  const injected = [];
-  const defined = [];
-  const routes = [];
+// ---------- apply（接线，真实 API 断言） ----------
+test('apply：工具注册走 tools.register(defineTool(...))（真实 API）', async () => {
+  const registered = [];
+  const defineCalls = [];
   const ctx = {
     workspaceRoot: '/tmp/ws',
-    inject: (keys, fn) => { injected.push([keys, fn()]); },
-    tools: { define: (n, s, h) => defined.push({ n, s, h }) },
-    http: { route: (p, h) => routes.push({ p, h }) },
-    log: { info: () => {} },
+    inject: (keys, fn) => {
+      if (keys[0] === 'tools') fn({ get: (k) => k === 'tools' ? { register: (t) => registered.push(t) } : undefined });
+      if (keys[0] === 'systemPrompt') fn({ get: (k) => k === 'systemPrompt' ? { section: (s) => {} } : undefined });
+      if (keys[0] === 'webServer') fn({ get: (k) => k === 'webServer' ? { register: (r) => {} } : undefined });
+    },
+    log: { info: () => {}, warn: () => {} },
+  };
+  setDefineToolOverride((spec) => { defineCalls.push(spec); return spec; });
+  const r = await apply(ctx, {});
+  assert.equal(r.ok, true);
+  assert.ok(defineCalls.length >= 6, `应经 defineTool 包装（实际 ${defineCalls.length}）`);
+  assert.equal(registered.length, defineCalls.length, 'register 数量应与 define 一致');
+  const names = registered.map((t) => t.name);
+  for (const n of ['git_scan', 'git_commit_push', 'code_audit', 'git_clone', 'git_remote_create', 'git_set_visibility', 'link_check']) {
+    assert.ok(names.includes(n), `缺工具 ${n}`);
+  }
+  setDefineToolOverride(null);
+});
+
+test('apply：systemPrompt 注入走 section({name,order,text})（真实 API）', async () => {
+  const sections = [];
+  const ctx = {
+    workspaceRoot: '/tmp/ws',
+    inject: (keys, fn) => {
+      if (keys[0] === 'tools') fn({ get: (k) => k === 'tools' ? { register: () => {} } : undefined });
+      if (keys[0] === 'systemPrompt') fn({ get: (k) => k === 'systemPrompt' ? { section: (s) => sections.push(s) } : undefined });
+      if (keys[0] === 'webServer') fn({ get: (k) => k === 'webServer' ? { register: () => {} } : undefined });
+    },
+    log: { info: () => {}, warn: () => {} },
   };
   const r = await apply(ctx, {});
   assert.equal(r.ok, true);
-  assert.equal(r.version, VERSION);
-  assert.ok(injected.length >= 1, '应注入 systemPrompt/slots');
-  assert.equal(defined.length, listTools().length, '工具数量应与清单一致');
-  assert.equal(routes.length, 1);
+  assert.ok(sections.length >= 1, '应注册至少一段 systemPrompt');
+  assert.ok(sections.every((s) => typeof s.name === 'string' && typeof s.text === 'function'),
+    '段必须含 name + 同步 text()');
+  assert.ok(sections.some((s) => s.name === 'dsh-git-push-env'), '应含环境注入段');
+  assert.ok(sections.some((s) => s.name === 'dsh-git-push-readme-check'), '应含 README 检查提醒段');
+});
+
+test('apply：HTTP 走 webServer.register({kind:"prefix"})（真实 API）', async () => {
+  const routes = [];
+  const ctx = {
+    workspaceRoot: '/tmp/ws',
+    inject: (keys, fn) => {
+      if (keys[0] === 'tools') fn({ get: (k) => k === 'tools' ? { register: () => {} } : undefined });
+      if (keys[0] === 'systemPrompt') fn({ get: (k) => k === 'systemPrompt' ? { section: () => {} } : undefined });
+      if (keys[0] === 'webServer') fn({ get: (k) => k === 'webServer' ? { register: (r) => routes.push(r) } : undefined });
+    },
+    log: { info: () => {}, warn: () => {} },
+  };
+  await apply(ctx, {});
+  assert.equal(routes.length, 1, '应注册 1 条前缀路由');
+  assert.equal(routes[0].kind, 'prefix');
+  assert.equal(routes[0].path, '/api/git-push');
+  assert.equal(typeof routes[0].handler, 'function');
 });
 
 test('apply：无 ctx 不崩溃（防御性）', async () => {
@@ -58,9 +102,9 @@ test('apply：无 ctx 不崩溃（防御性）', async () => {
 });
 
 // ---------- 工具清单 ----------
-test('工具：7 个工具名齐全', () => {
+test('工具：8 个工具名齐全（含 git_gen_readme）', () => {
   const names = listTools().map((t) => t.name);
-  for (const n of ['git_scan', 'git_commit_push', 'code_audit', 'git_clone', 'git_remote_create', 'git_set_visibility', 'link_check']) {
+  for (const n of ['git_scan', 'git_commit_push', 'code_audit', 'git_clone', 'git_remote_create', 'git_set_visibility', 'link_check', 'git_gen_readme']) {
     assert.ok(names.includes(n), `缺工具 ${n}`);
   }
 });
@@ -78,6 +122,23 @@ test('工具分发：git_scan 扫到本仓（含 .git）', async () => {
   assert.equal(r.ok, true);
   assert.ok(r.count >= 1);
   assert.ok(r.repos.some((x) => x.path === ROOT));
+});
+
+test('工具分发：git_gen_readme 生成 README 内容（模板 + 版本表 + 目录）', async () => {
+  const r = await callTool('git_gen_readme', { repo: ROOT }, { workspaceRoot: '' }, {});
+  assert.equal(r.ok, true);
+  assert.equal(r.name, 'dsh-git-push');
+  assert.equal(typeof r.content, 'string');
+  assert.ok(r.content.length > 200, '内容应有足够长度');
+  assert.ok(r.versionTable.length >= 1, '应有版本表行');
+  assert.ok(r.toc.includes('架构设计'), '目录应含第一章');
+  assert.equal(r.written, false, '未传 writePath 不应写文件');
+  assert.ok(r.templateSource.includes('readme-templates') || r.templateSource === 'builtin', '模板源应来自内置 yml 或兜底');
+});
+
+test('工具分发：git_gen_readme 缺 repo 报错', async () => {
+  const r = await callTool('git_gen_readme', {}, { workspaceRoot: '' }, {});
+  assert.equal(r.ok, false);
 });
 
 test('工具分发：缺 repo 参数明确报错（不静默）', async () => {
