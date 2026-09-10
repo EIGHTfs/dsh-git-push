@@ -97,12 +97,15 @@ window.__ModuleLoader__.load({
     }
 
     /** 插件应用：注册设置卡片到 settings.plugin.item 槽位。 */
-    function apply(ctx) {
-      ctx.slots.inject('settings.plugin.item', () => ctx.slots.register({
-        name: 'settings.plugin.item',
-        key: SETTINGS_NS,
-        locale: NS,
-      }, GitPushCard));
+    // 【临时禁用 2026-09-11】ctx.slots 直读抛 "cannot get property \"slots\" without inject"，
+    // 先注释恢复实例可用；副作用：设置页不显示 git-push 卡片，插件工具/审计/推送功能不受影响。
+    // 【TODO】确认 DSH 客户端插件 inject 的正确声明入口后恢复。
+    function apply() {
+      // ctx.slots.inject('settings.plugin.item', () => ctx.slots.register({
+      //   name: 'settings.plugin.item',
+      //   key: SETTINGS_NS,
+      //   locale: NS,
+      // }, GitPushCard));
     }
 
     exports.NS = NS;

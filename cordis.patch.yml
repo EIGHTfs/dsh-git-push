@@ -8,7 +8,7 @@
 # 【背景】早期直接改工作区方案；市场报「目标不存在 / patch target not found」
 # 【思路】无 insert 的 - id 是覆盖已有 loader 行；基座没有 git-push，bundle 层打空。与 dsh-cloud-workspaces / dshmarket 同款。
 - insert:
-    - id: git-push
+    - id: dsh-git-push
       name: dsh-git-push
       config:
         enabled: true

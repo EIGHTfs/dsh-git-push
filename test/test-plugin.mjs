@@ -21,9 +21,15 @@ test('入口：插件名为 dsh-git-push（身份一致）', () => {
 });
 
 test('入口：Config schema 含关键开关且默认关', () => {
-  assert.equal(Config.auditEnabled.default, false);
-  assert.equal(Config.pushPermitEnabled.default, false);
-  assert.equal(Config.enabled.default, true);
+  // Config 是 schemastery Schema.object（可调用 validate）；字段经 refs 索引
+  const j = Config.toJSON();
+  const fields = Object.values(j.refs || {}).map((r) => r.meta?.description).filter(Boolean);
+  // 作为函数调用返回带默认值的配置对象（schemastery 真实语义）
+  const cfg = Config({});
+  assert.equal(cfg.auditEnabled, false, 'auditEnabled 默认关');
+  assert.equal(cfg.pushPermitEnabled, false, 'pushPermitEnabled 默认关');
+  assert.equal(cfg.enabled, true, 'enabled 默认开');
+  assert.ok(fields.some((d) => String(d).includes('审计')), 'schema 含审计开关描述');
 });
 
 test('入口：导出 apply/callTool/handleHttp/listTools', () => {
@@ -38,17 +44,18 @@ test('apply：工具注册走 tools.register(defineTool(...))（真实 API）', 
   const registered = [];
   const defineCalls = [];
   const ctx = {
-    workspaceRoot: '/tmp/ws',
+    // cordis 服务属性必须经 get() 防御式读取（2026-09-11 修复：直读抛 without inject）
+    get: (k) => k === 'log' ? { info: () => {}, warn: () => {} } : undefined,
     inject: (keys, fn) => {
       if (keys[0] === 'tools') fn({ get: (k) => k === 'tools' ? { register: (t) => registered.push(t) } : undefined });
       if (keys[0] === 'systemPrompt') fn({ get: (k) => k === 'systemPrompt' ? { section: (s) => {} } : undefined });
       if (keys[0] === 'webServer') fn({ get: (k) => k === 'webServer' ? { register: (r) => {} } : undefined });
     },
-    log: { info: () => {}, warn: () => {} },
   };
   setDefineToolOverride((spec) => { defineCalls.push(spec); return spec; });
   const r = await apply(ctx, {});
-  assert.equal(r.ok, true);
+  // 2026-09-11 修复：apply 返回 undefined（cordis 标准：只收 disposer/Promise/undefined，对象抛 Invalid effect）
+  assert.equal(r, undefined, 'apply 应返回 undefined（cordis 标准写法）');
   assert.ok(defineCalls.length >= 6, `应经 defineTool 包装（实际 ${defineCalls.length}）`);
   assert.equal(registered.length, defineCalls.length, 'register 数量应与 define 一致');
   const names = registered.map((t) => t.name);
@@ -61,16 +68,15 @@ test('apply：工具注册走 tools.register(defineTool(...))（真实 API）', 
 test('apply：systemPrompt 注入走 section({name,order,text})（真实 API）', async () => {
   const sections = [];
   const ctx = {
-    workspaceRoot: '/tmp/ws',
+    get: (k) => k === 'log' ? { info: () => {}, warn: () => {} } : undefined,
     inject: (keys, fn) => {
       if (keys[0] === 'tools') fn({ get: (k) => k === 'tools' ? { register: () => {} } : undefined });
       if (keys[0] === 'systemPrompt') fn({ get: (k) => k === 'systemPrompt' ? { section: (s) => sections.push(s) } : undefined });
       if (keys[0] === 'webServer') fn({ get: (k) => k === 'webServer' ? { register: () => {} } : undefined });
     },
-    log: { info: () => {}, warn: () => {} },
   };
   const r = await apply(ctx, {});
-  assert.equal(r.ok, true);
+  assert.equal(r, undefined, 'apply 应返回 undefined（cordis 标准写法）');
   assert.ok(sections.length >= 1, '应注册至少一段 systemPrompt');
   assert.ok(sections.every((s) => typeof s.name === 'string' && typeof s.text === 'function'),
     '段必须含 name + 同步 text()');
@@ -81,7 +87,7 @@ test('apply：systemPrompt 注入走 section({name,order,text})（真实 API）'
 test('apply：HTTP 走 webServer.register({kind:"prefix"})（真实 API）', async () => {
   const routes = [];
   const ctx = {
-    workspaceRoot: '/tmp/ws',
+    get: (k) => k === 'log' ? { info: () => {}, warn: () => {} } : undefined,
     inject: (keys, fn) => {
       if (keys[0] === 'tools') fn({ get: (k) => k === 'tools' ? { register: () => {} } : undefined });
       if (keys[0] === 'systemPrompt') fn({ get: (k) => k === 'systemPrompt' ? { section: () => {} } : undefined });
@@ -98,7 +104,7 @@ test('apply：HTTP 走 webServer.register({kind:"prefix"})（真实 API）', asy
 
 test('apply：无 ctx 不崩溃（防御性）', async () => {
   const r = await apply(undefined, {});
-  assert.equal(r.ok, true);
+  assert.equal(r, undefined, '无 ctx 也不崩，返回 undefined');
 });
 
 // ---------- 工具清单 ----------
@@ -226,4 +232,21 @@ test('契约：dsh.skills 每条路径都真实存在（防列了不存在的文
   for (const rel of skills) {
     assert.ok(existsSync(join(ROOT, rel)), `dsh.skills 列了不存在的文件: ${rel}`);
   }
+});
+
+// ---------- commitWithAudit（审计提交总入口，1.0.4 供外部插件复用） ----------
+import { commitWithAudit } from '../lib/commit-push.js';
+test('commitWithAudit：非 git 仓库不崩且带审计摘要', async () => {
+  const r = await commitWithAudit({ repoPath: '/nonexistent-xyz', message: 'x' });
+  assert.equal(r.ok, false);
+  assert.equal(r.blocked, undefined, '放行路径不设 blocked（仅拦截时 blocked=true）');
+});
+test('commitWithAudit：audit=false 不跑审计（audit 为 null）', async () => {
+  const r = await commitWithAudit({ repoPath: '/nonexistent-xyz', message: 'x', audit: false });
+  assert.equal(r.audit, null);
+});
+test('commitWithAudit：dryRun 透传（对真实仓库）', async () => {
+  const r = await commitWithAudit({ repoPath: ROOT, message: 'test', dryRun: true, audit: false });
+  assert.equal(r.ok, true);
+  assert.equal(r.dryRun, true);
 });
