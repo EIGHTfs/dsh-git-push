@@ -295,3 +295,198 @@ cd ../dsh-git-push && node cli.mjs audit ../dsh-git-push-v2 --json
 | `pushPermitEnabled` | **false** | AI 回复推送许可默认关（回复含「任务完成」才触发） |
 
 > 侧边栏零外部资源、无 JSX（手写 createElement）、配置即时生效、无 viewer。
+
+---
+
+## 十、扫描输出 → 豁免方法速查（给用户看的豁免指引）
+
+> 目的：AI 把扫描 findings 汇报给用户时，**每条问题都附「被哪条规则拦 → 怎么豁免」**，
+> 让用户不困惑、可自助豁免（豁免只影响提醒，不掩盖硬问题——敏感/语法/大文件不豁免）。
+
+### 10.1 正则/残留类 → 两种豁免姿势
+
+| finding 的 rule/kind | 被谁拦截 | 豁免方法（写哪） |
+|---|---|---|
+| `[FUNC]`(secret-*) / `credential-ref-*` / `credential-file-*` / 私钥路径 | **dsh-skip-sensitive** | 行尾 `// dsh-skip-sensitive`（仅本行）或文件头（整文件） |
+| `func-lines` 函数过长 | **dsh-skip-func-length** | 函数定义行行尾（单函数）或文件头（整文件） |
+| debugger / todo / console 残留（regex 类） | **dsh-skip-residue** | 行尾（本行）或文件头（整文件） |
+| style-* 数值风格（min-length/max-lines/max-complexity/max-depth/…） | **dsh-skip-style** | 只能文件头 |
+| sync-fs / empty-catch / func-lines（质量类） | **dsh-skip-quality** | 只能文件头 |
+| binary / large-file | **dsh-skip-size** | 只能文件头 |
+| syntax / json-parse / yaml-parse | **dsh-skip-syntax** | 只能文件头 |
+
+### 10.2 测试/脚本自动豁免（不用写标记）
+
+| 文件位置 | 自动豁免的规则 |
+|---|---|
+| `test/**` | residue / console-log / sync-fs / empty-catch |
+| `scripts/**`、`cli.mjs` | residue / console-log / sync-fs |
+
+### 10.3 汇报话术模板
+
+```
+⚠️ 警告（rule=xxx，kind=yyy）：<message>
+   豁免：<该 kind 对应标记>（文件头=整文件 / 行尾=单点）——若确属刻意写法可加，否则建议修复
+```
+
+> 每 finding 已自带 `exemptHint`，AI 汇报时直接引用即可，无需查表。
+
+---
+
+## 十一、审计功能默认关（用户侧说明）
+
+| 开关 | 位置 | 默认 | 说明 |
+|---|---|---|---|
+| 审计开关 `auditEnabled` | 设置 → 侧边栏 → 审计开关 | **关** | 开启后提交前自动审计（默认关，本机一致开由用户显式打开） |
+| 推送许可 `pushPermitEnabled` | 设置 → 侧边栏 → AI 回复推送许可 | **关** | 回复含「任务完成」才自动提交推送 |
+
+> 两条默认关是**产品决策**：不在用户不知情时自动拦截提交 / 自动推送。
+> 需要自动审计的部署，在侧边栏打开即可，配置即时生效（无需重启）。
+
+---
+
+## 十二、10 维度字段绑定（问题字段 ↔ 维度）
+
+> 设计：**所有问题都归入 10 个维度**；每个 yml 字段在**对应编译函数里写维度绑定**，
+> 支持**一个字段绑定多个维度**（如 repeated-string → 可维护性+可读性）。
+
+### 12.1 绑定位置 = 编译函数（compilers.js），不是 yml
+
+| kind | 维度绑定（compilers.js 内声明） |
+|---|---|
+| credential-ref / credential-file / `[FUNC]` | 安全性 |
+| func-lines | 可读性 + 可维护性 |
+| min-length | 可读性 |
+| max-lines | 可读性 + 可维护性 |
+| max-complexity | 可维护性 |
+| max-depth | 可维护性 |
+| min-occurrences | 可维护性 |
+| repeated-string | 可维护性 + 可读性 |
+| regex | 可读性 |
+| path-regex | 可读性 + 可维护性 |
+| link-check | 文档 + 可维护性 |
+| semantic | 健壮性 |
+| blacklist | 文档 |
+| folder | 可维护性 + 可部署性 |
+
+### 12.2 为什么绑定写在字段函数里
+
+- **yml 保持纯数据**：规则作者不用懂维度，只管写 pattern/阈值；
+- **一处声明全链生效**：编译产物直接带 `dimensions[]`，评分 `countByDimension` 直接消费；
+- **加新字段 = 加函数 + 注册一行**（compileRule 主体永不改）。
+
+---
+
+## 十三、示例规则：performance/memory-bomb（内存爆炸检测）
+
+> 完整规则定义（含子模式级 message + mitigation），可直接落进任意槽位 yml。
+
+```yaml
+- id: performance/memory-bomb
+  name: "检测可能导致内存爆炸的代码"
+  category: "performance"
+  severity: "warning"
+  description: "短时间内占用大量内存的代码模式"
+  patterns:
+    - id: full-file-read
+      pattern: "fs\\.(readFileSync|readFile)\\s*\\("
+      message: "全量读入文件可能占用大量内存，建议用流式处理"
+    - id: unbounded-push
+      pattern: "\\.push\\s*\\("
+      message: "检查 push 是否有清理机制或上限控制"
+    - id: array-spread
+      pattern: "\\[\\s*\\.\\.\\.\\w+\\s*,\\s*\\.\\.\\.\\w+\\s*\\]"
+      message: "展开多个大数组会一次性创建新数组"
+    - id: infinite-loop
+      pattern: "while\\s*\\(\\s*true\\s*\\)"
+      message: "无限循环需确认有 break 条件和内存控制"
+    - id: exec-sync
+      pattern: "execSync\\s*\\("
+      message: "execSync 输出全部进内存，建议用 spawn + 流"
+    - id: json-stringify-large
+      pattern: "JSON\\.stringify\\s*\\([^)]{50,}\\)"
+      message: "大对象序列化会瞬间产生等量字符串"
+  fixable: false
+  mitigation: |
+    - 大文件用 fs.createReadStream 流式处理
+    - 数组累积加 maxLength 上限，超出时丢弃旧数据
+    - 缓存加 TTL 或 LRU 淘汰机制
+    - 递归加深度限制
+    - 子进程用 spawn + 流式读取
+```
+
+### 13.1 检测方式对比（为什么正则为主、AST 补充）
+
+| 检测方式 | 能检测什么 | 局限 |
+|---|---|---|
+| 正则扫描 | 可疑模式（push、while true、readFileSync） | 误报多，无法判断实际内存量 |
+| AST 分析 | 循环内分配、递归缺终止、闭包捕获 | 需要解析器，实现复杂 |
+| 动态监控 | 真实内存增长、泄漏、OOM | 需要运行环境，无法静态发现 |
+| 压力测试 | 高并发下的内存峰值 | 需要测试基础设施 |
+
+### 13.2 AST 补充检测思路（@babel/parser，将来扩展 semantic kind 用）
+
+```js
+// 用 @babel/parser 检测：
+// 1. 循环内是否有内存分配  2. 递归函数是否有终止条件  3. 闭包是否捕获大对象
+traverse(ast, {
+  // 检测循环内 push
+  CallExpression(path) {
+    const isPush = path.node.callee.property?.name === 'push'
+    const insideLoop = path.findParent(p =>
+      p.isForStatement() || p.isWhileStatement() || p.isForOfStatement()
+    )
+    if (isPush && insideLoop) {
+      console.warn(`⚠️ 循环内 push（第 ${path.node.loc.start.line} 行），检查是否有上限`)
+    }
+  },
+  // 检测递归调用
+  FunctionDeclaration(path) {
+    const fnName = path.node.id?.name
+    if (!fnName) return
+    let isRecursive = false
+    path.traverse({
+      CallExpression(inner) {
+        if (inner.node.callee.name === fnName) isRecursive = true
+      }
+    })
+    if (isRecursive) {
+      const hasBaseCase = path.node.body.body.some(stmt =>
+        stmt.type === 'IfStatement' && stmt.alternate?.type === 'ReturnStatement'
+      )
+      if (!hasBaseCase) {
+        console.error(`🔴 递归函数 ${fnName}（第 ${path.node.loc.start.line} 行）缺少终止条件`)
+      }
+    }
+  }
+})
+```
+
+---
+
+## 十四、待办设计：git push 通道自主选择（AI 填参数，去掉默认 api 硬推）
+
+> **决策记录（2026-09-10，仅设计不实施）**：原设计「所有功能默认 api.github.com + 401 自动回退 SSH」改为
+> **AI 填参数自主选择通道**，不保留隐式默认主通道。
+
+### 14.1 目标签名（将来 commitAndPush 增加 transport）
+
+```
+commitAndPush({ repoPath, message, push?, dryRun?, token?, transport: 'api'|'ssh'|'auto' })
+```
+
+| transport | 行为 |
+|---|---|
+| `api` | 只走 Git Data API（api.github.com），失败即失败，不自动回退（AI 显式选 API = 认定 token 可用） |
+| `ssh` | 只走 SSH（ssh.github.com:443），失败即失败，不自动回退 |
+| `auto` | AI 未指定时兜底：先 API，401/失败再回退 SSH（保留旧行为但仅为显式兜底，非默认主通道） |
+
+### 14.2 需要同步改的点（清单）
+
+1. `lib/git/index.js`：`commitAndPush` 加 `transport` 参数 + 分支逻辑；`pushViaApi` 去掉内部 401→SSH 回退（上移到 auto 分支）；文件头注释「默认 api 硬闸」改「通道由 AI 选择」
+2. `lib/index.js`：工具 schema `git_commit_push` 加 `transport` 参数并透传；description 去掉「默认 api」
+3. **相关 skill**：`skills/dsh-git-push.md`（git_commit_push 行加 transport、git_clone/git_remote_create 的「走 api.github.com」改「通道按参数」）、`skills/dsh-git-push-functions.md`（L57/L68/L180 的「只走 api.github.com」同步改）
+4. 测试：test-git.mjs 补 transport 三分支断言
+5. 本板 §五 token 探测不变（token 与通道解耦：api 用 token，ssh 用私钥）
+
+> 说明：本清单是**设计备忘**，实施时机由用户/接手 AI 决定，不在本次落码。
