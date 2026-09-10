@@ -16,6 +16,7 @@ DSH（DeepSeek Harness）git 自动提交推送插件——统一函数入口架
 - [链接判断规则设计](#链接判断规则设计)
 - [文件目录结构及作用](#文件目录结构及作用)
 - [设置项（侧边栏 / 插件配置）](#设置项侧边栏--插件配置)
+- [独立 CLI（git-sluice）](#独立-cligit-sluice)
 - [版本列表](#版本列表)
 - [注意事项](#注意事项)
 
@@ -176,6 +177,24 @@ DSH（DeepSeek Harness）git 自动提交推送插件——统一函数入口架
 ### 权重覆盖（weightOverrides）
 
 评分默认 10 维度权重表（合计 100，见「架构设计」）。`weightOverrides` 传 JSON（如 `{"安全性":100}`）→ `scoreQuality(findings, weights)` 与默认表合并（未指定维度保持默认）→ 输出 `quality.dims` 与总分随之变化。JSON 非法时回退默认权重，不中断审计。
+
+## 独立 CLI（git-sluice）
+
+脱离 DSH 独立运行（零第三方依赖，仅需 Node ≥18 与本机 git）。`git-sluice self-check` 做版本一致性 + `HELP ↔ parseArgv` 机器比对（选项白名单必须与 HELP 文本一致）。
+
+```
+git-sluice version              查看版本
+git-sluice ruleset [槽位...]    编译规则包并输出统计（默认全部槽位）
+git-sluice scan <root> [--depth N]   全量扫描目录（非 git 目录可查）
+git-sluice audit <root> [--full] [--level quick|standard|deep] [--ruleset <目录>] [--weights <JSON>]
+                                审计目录（默认 diff 范围）
+git-sluice link-check <路径>    检查 md/文本中的链接有效性（只 warning）
+git-sluice yaml-template        输出规则 yml 模板（含 kind + dimensions 示范）
+git-sluice readme-template      输出 README 模板（{{name}} {{version}} 占位符）
+git-sluice self-check           版本一致性 + HELP↔parseArgv 机器比对
+```
+
+`audit` 参数与服务端设置项对应：`--full` ↔ `auditScanScope=full`、`--level` ↔ `auditLevel`（非法取值直接报错，不静默降级）、`--ruleset` ↔ `auditRuleset`（自定规则目录）、`--weights` ↔ `weightOverrides`（非法 JSON 回退默认权重表并提示）。
 
 ## 版本列表
 

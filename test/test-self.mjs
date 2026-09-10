@@ -101,6 +101,24 @@ test('parseArgv：--depth 与 --full 识别', () => {
   assert.deepEqual(r.positional, ['/tmp/x']);
 });
 
+test('parseArgv：--level / --ruleset / --weights 识别（G7 CLI 对齐）', () => {
+  const r = parseArgv(['/tmp/x', '--level', 'quick', '--ruleset', '/tmp/rs', '--weights', '{"安全性":100}']);
+  assert.equal(r.flags.level, 'quick');
+  assert.equal(r.flags.ruleset, '/tmp/rs');
+  assert.equal(r.flags.weights, '{"安全性":100}');
+  assert.deepEqual(r.positional, ['/tmp/x']);
+});
+
+test('parseArgv：--level 非法取值 → 报错（白名单校验）', () => {
+  assert.match(parseArgv(['--level', 'insane']).error, /quick\|standard\|deep/);
+  assert.equal(parseArgv(['--level', 'deep']).flags.level, 'deep');
+});
+
+test('parseArgv：--ruleset / --weights 缺值 → 报错', () => {
+  assert.match(parseArgv(['--ruleset']).error, /--ruleset 缺值/);
+  assert.match(parseArgv(['--weights']).error, /--weights 缺值/);
+});
+
 test('parseArgv：未知参数报错', () => {
   const r = parseArgv(['--bogus']);
   assert.match(r.error, /未知参数: --bogus/);
