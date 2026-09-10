@@ -656,7 +656,7 @@ node ../dsh-git-push/cli.mjs audit . --json   # 0 blocker 才提交
 | 脱离 dsh 独立运行（CLI 单独可跑） | T1–T33 考古 | ✅ cli.mjs + bin git-sluice |
 | 规则白名单（忽略清单） | T1–T33 考古 | ✅ ignore_values / whitelist 字段编译消费 |
 | 审计强度选择（quick/standard/deep） | T1–T33 考古 | ⚠️ 待定（G7 侧边栏项） |
-| 私密文件强制槽位：public→blocker / private→warning | T34–T65 考古 | ⚠️ G2 private 槽位未建 |
+| 私密文件强制槽位：public→blocker / private→warning | T34–T65 考古 | ✅ 已修（1.0.4：loader 合并顶层 private_files 13 条 + globToRegex（**/ * / {a,b} 零依赖）+ checkPrivateFiles（git ls-files × 分级 public→blocker/private→warning）；auditFull 与 auditChanged 双路径接线） |
 | 槽位动态化（配置/环境变量控制槽位集合） | T50 | ✅ resolveSlotOrder（G12 已闭环） |
 | 双副本同步：local-plugins 是真实加载源，node_modules 是 npm-link 产物 | T42/T43 | ✅ detectTargets 双目标（G13 已闭环） |
 | yamlCheckMode 双模式（加载期校验 / 运行期校验） | T34–T65 考古 | ✅ 编译期错误收集（compileAllRules ctx.errors） |

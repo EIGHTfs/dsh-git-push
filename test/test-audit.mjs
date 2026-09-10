@@ -16,8 +16,10 @@ import { collectTextFiles, collectChangedFiles, isGitRepo, readText } from '../l
 import {
   checkEmptyCatch, checkRegexRules, checkPathRegexRules, checkFuncLines, checkSyncFsInFile,
   checkCredentialFiles, checkMinLength, checkComplexity, checkDepth, checkMaxLines,
-  checkRepeated, checkSemantic, groupByKind, runChecks, capSeverity,
+  checkRepeated, checkSemantic, groupByKind, runChecks, capSeverity, checkPrivateFiles,
 } from '../lib/audit/checks.js';
+import { globToRegex, globMatch } from '../lib/audit/glob.js';
+import { loadRuleFiles } from '../lib/rule/loader.js';
 import { CODE_EXTS } from '../lib/audit/index.js';
 
 let fixture = '';
@@ -328,4 +330,50 @@ test('summarize：缺 severity 字段按 warning 计（不丢统计）', () => {
   const s = summarize([{}, { severity: undefined }]);
   assert.equal(s.warning, 2);
   assert.equal(s.total, 2);
+});
+
+
+
+// ---------- 1.0.4：private 槽位（T1-T33 考古验收） ----------
+test('globToRegex：** 跨层 / * 单层 / {a,b} 分支 / 特殊字符转义', () => {
+  assert.equal(globMatch('**/id_ed25519', 'id_ed25519'), true, '**/ 应匹配根级');
+  assert.equal(globMatch('**/id_ed25519', 'a/b/id_ed25519'), true, '**/ 应匹配任意深度');
+  assert.equal(globMatch('**/*.key', 'x.key'), true);
+  assert.equal(globMatch('**/*.key', 'a/b/x.key'), true);
+  assert.equal(globMatch('**/.env.*', '.env.local'), true);
+  assert.equal(globMatch('**/*@*.{md,txt,js}', 'me@x.com.txt'), true, '{a,b} 分支应工作');
+  assert.equal(globMatch('**/id_ed25519', 'normal.js'), false, '普通文件不应误报');
+  assert.equal(globMatch('*.key', 'a/b/x.key'), false, '单星不跨层级');
+  assert.equal(globMatch('**/data/sensitive/**', 'data/sensitive/secret/k.txt'), true);
+});
+
+test('checkPrivateFiles：public→blocker / private→warning / 未跟踪不报', () => {
+  const root = mkdtempSync(join(tmpdir(), 'priv-'));
+  try {
+    execFileSync('git', ['init', '-q'], { cwd: root });
+    writeFileSync(join(root, 'id_ed25519'), 'x');
+    writeFileSync(join(root, 'normal.js'), 'y');
+    execFileSync('git', ['add', '-A'], { cwd: root });
+    execFileSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', 'init'], { cwd: root });
+    const pfs = ['**/id_ed25519'];
+    const pub = checkPrivateFiles({ root, visibility: 'public', privateFiles: pfs });
+    assert.equal(pub.length, 1, 'public 应命中私密文件');
+    assert.equal(pub[0].severity, 'blocker', 'public → blocker');
+    assert.ok(/禁止推送/.test(pub[0].message), 'blocker 文案应含禁止推送');
+    const priv = checkPrivateFiles({ root, visibility: 'private', privateFiles: pfs });
+    assert.equal(priv[0].severity, 'warning', 'private → warning');
+    assert.equal(priv[0].file, 'id_ed25519');
+    const none = checkPrivateFiles({ root, visibility: 'public', privateFiles: [] });
+    assert.equal(none.length, 0, '无清单不报');
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('loader：private_files 顶层字段跨文件合并（后覆盖前追加）', () => {
+  const loaded = loadRuleFiles();
+  const pf = loaded.merged.private_files || [];
+  assert.ok(pf.length >= 12, `private.yml 清单应合并 ≥12 条（实际 ${pf.length}）`);
+  assert.ok(pf.includes('**/id_ed25519'), '清单含 id_ed25519');
+  assert.ok(pf.includes('**/.env') && pf.includes('**/.env.*'), '清单含 .env 族');
 });
