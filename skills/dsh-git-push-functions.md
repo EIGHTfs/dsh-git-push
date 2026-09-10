@@ -179,6 +179,7 @@ whenToUse: 需要查工具参数细节、排查插件报错、或修改插件源
 - `readmeTemplate()` / `yamlTemplate()` 提供模板
 - `selfVersion()` / `versionInfo()` / `helpSync()` 供自检
 - **独立运行**：`cli.mjs` 子命令 `version` / `ruleset` / `scan` / `audit` / `link-check` / `readme-template` / `yaml-template` / `self-check`；`bin.git-sluice` 指向它
+- **CLI 选项**（白名单 `KNOWN_FLAGS` 必须与 HELP 文本一致，`self-check` 机器比对）：`--depth N`（scan）/ `--full` / `--level quick|standard|deep`（非法取值直接报错）/ `--ruleset <目录>`（自定规则目录）/ `--weights <JSON>`（非法回退默认权重表并提示）——`audit` 子命令与服务端设置项一一对应
 
 ---
 
