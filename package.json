@@ -20,6 +20,25 @@
   "bin": {
     "git-sluice": "./cli.mjs"
   },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-settings-plugins",
+        "@deepseek-ai/dsh-client-ui-settings",
+        "@deepseek-ai/dsh-client-locale"
+      ]
+    },
+    "skills": [
+      "./skills/dsh-git-push.md",
+      "./skills/dsh-git-push-functions.md",
+      "./skills/task-completion-report.md",
+      "./skills/git-workflow-gitpush/versioning-rule.md"
+    ]
+  },
   "license": "UNLICENSED",
   "private": true,
   "engines": {
