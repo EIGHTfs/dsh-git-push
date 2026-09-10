@@ -663,7 +663,7 @@ node ../dsh-git-push/cli.mjs audit . --json   # 0 blocker 才提交
 | severity 三级映射（error/warning/notice） | T34–T65 考古 | ✅ capSeverity + summarize |
 | 扫描拆两函数（auditChanged / auditFull） | T63 | ✅ 已闭环 |
 | 权重 10 维度定稿 | T34–T65 考古 | ✅ DEFAULT_WEIGHTS 合计 100；1.0.4 增 weightOverrides 覆盖（JSON 配置/工具参数，未指定维度保持默认） |
-| 设置双位 UI（设置页 + 插件配置卡） | T34–T65 考古 | ✅ 插件配置卡 + settings 注入（G7 侧边栏页待补） |
+| 设置双位 UI（设置页 + 插件配置卡） | T34–T65 考古 | ⚠️ 半完成：插件配置卡已实现（`settings.plugin.item`，client.js `apply()`）；设置左侧栏独立页（`settings.section`）**未实现**，`clientModuleInfo().slots` 声明两项但只注册一项（代码注释已标明「实现前不要按已支持两槽位理解」）。补设置页属新功能，待用户决定 |
 | 规则字段全认领（30 字段） | 字段统计 | ⚠️ G6 中 |
 
 **早期四份外部报告逐条核验（1.0.4，结论：v2 架构上问题已消除或不再适用）**
