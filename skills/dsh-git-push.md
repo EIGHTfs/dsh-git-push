@@ -15,7 +15,7 @@ whenToUse: 需要用插件做 git 提交推送 / 代码审计 / 规则包定制 
 |---|---|---|
 | `git_scan` | `root?`, `paths?`, `extraReposFile?` | 扫描全部 git 仓库 → 分支/remote/未提交变更数/最近活动 |
 | `git_commit_push` | `repo`(必填), `message`(必填), `push?`, `dryRun?`, `audit?`(默认 true), `llmAudit?`, `requirementsConfirmed?` | **先审计** → `git add -A` → commit → push；审计有 blocker 时拦截 |
-| `code_audit` | `repo`, `llm?`, `ruleset?` | 审计仓库：L0 静态检查 + 10 维度质量评分；`llm=true` 追加 LLM 深度审查 |
+| `code_audit` | `repo`, `scope?`, `llm?`, `ruleset?`, `auditLevel?`, `weights?` | 审计仓库：L0 静态检查 + 10 维度质量评分；`scope=full` 全量；`ruleset` 指向自定规则目录（整体替换规则包）；`auditLevel=quick/standard/deep` 控强度；`weights` JSON 覆盖权重 |
 | `git_clone` | `target`(必填), `dest?`, `branch?` | 经 `api.github.com` Git Data API 克隆（不跟随 302、不直连 codeload） |
 | `git_remote_create` | `repo`, `visibility?`(默认 private), `dryRun?` | 按目录名建远程仓库并设 origin（走 api.github.com） |
 | `git_set_visibility` | `repo`, `visibility`(必填) | 切换仓库公开/私有（改 public 前先确认无凭据泄露） |

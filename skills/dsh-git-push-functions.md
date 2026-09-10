@@ -40,10 +40,13 @@ whenToUse: 需要查工具参数细节、排查插件报错、或修改插件源
 | 参数 | 类型 | 说明 |
 |---|---|---|
 | `repo` | string 必填 | 仓库绝对路径 |
+| `scope` | string? | `full`=全量扫描 / 缺省=仅本次变动（非 git 目录自动退化为全量） |
 | `llm` | bool? | 追加 LLM 深度审查（需配置 provider/model） |
-| `ruleset` | string? | 本次临时换规则包（`builtin` / 本地路径 / http(s) URL） |
+| `ruleset` | string? | 自定规则目录（指向含 `audit-rules-<名>.yml` 的目录即整体替换内置规则包；空=内置） |
+| `auditLevel` | string? | 审计强度：`quick`（跳 AST/语义重检查）/ `standard`（默认全量）/ `deep` |
+| `weights` | string? | 权重覆盖 JSON（如 `{"安全性":100}`；非法 JSON 回退默认权重表） |
 
-返回：问题清单（blocker 拦截级 / warning 提醒级）、quality 评分（0-100，A/B/C/D）、是否通过、规则包溯源。
+返回：问题清单（blocker 拦截级 / warning 提醒级）、quality 评分（0-100，A/B/C/D）、是否通过。
 **实现在 `lib/audit/index.js` 的 `auditWithScope`（`auditFull` 全量 / `auditChanged` 仅变动）。**
 
 ### 4. `git_clone` —— 从 GitHub 克隆
@@ -119,6 +122,18 @@ whenToUse: 需要查工具参数细节、排查插件报错、或修改插件源
 - 审计开关 / 推送开关 **默认关闭**
 - `collectExternalRefs()` 供「零外部资源」自检
 
+**设置项三处同源**（新增项必须三处同加，`test-client.mjs` 断言一致性）：
+`lib/index.js` 的 `Config`（服务端 schema）+ `lib/client/index.js` 的 `SETTINGS_SCHEMA`（纯逻辑，可单测）+ `client.js` 的 `SCHEMA`/`zh`（浏览器侧内联，无法 import 服务端 ESM）。
+
+**11 项设置**：`auditEnabled` / `pushPermitEnabled` / `llmAudit` / `hardcodeFullScan` / `injectFullSkill` / `injectRepoIndexFull`（boolean，均默认 false）、`auditScanScope`（diff|full）、`auditLevel`（quick|standard|deep）、`auditRuleset`（自定规则目录）、`weightOverrides`（权重 JSON）、`commitMessage`（string）。
+
+**审计强度三档**（`auditLevel`，透传链 配置/工具参数 → `auditWithScope` → `auditFull`/`auditChanged` → `auditFile(…, {level})` → `runChecks({…}, {level})`）：
+`quick` 跳过 AST/语义重检查（func-lines / max-complexity / max-depth / max-lines / repeated-string / min-occurrences / semantic / credential-file / min-length），保留正则、凭据、路径、黑名单、空 catch、同步 IO——基础安全不随强度降级；`standard` 全量；`deep` 当前与 standard 等效（预留扩展位）。
+
+**自定规则包**（`auditRuleset` / 工具 `ruleset` 参数）：目录里每个 `audit-rules-<名>.yml` 即一个槽位，放文件即生效、删文件即移除（导入/导出/删除 = 对该目录的文件操作）；装载走 `loadRuleFiles(order, { dir })`，指向空/不存在目录会装载 0 条规则（`errors` 有记录），不静默沿用内置包。
+
+**权重覆盖**（`weightOverrides` / 工具 `weights` 参数）：JSON 与默认 10 维度权重表合并（未指定维度保持默认）→ `scoreQuality(findings, weights)` → `quality.dims` 与总分随之变化；JSON 非法回退默认权重，不中断审计。
+
 ---
 
 ## 四、上下文注入（`lib/context/index.js`）
@@ -134,7 +149,7 @@ whenToUse: 需要查工具参数细节、排查插件报错、或修改插件源
 
 ### 规则包（`lib/rule/`）
 
-- `loader.js`：`discoverRuleSlots()` 扫 `lib/audit-rules/*.yml` 动态发现槽位；`resolveSlotOrder()` 定顺序（配置 > 环境变量 `DSH_GIT_PUSH_RULE_SLOTS` > `SLOT_ORDER_HINT` 偏好）；`loadRuleFiles(order)` 合并多槽位并返回 `{ok, merged, order, files, errors}`
+- `loader.js`：`discoverRuleSlots(dir)` 扫 `audit-rules-*.yml` 动态发现槽位；`resolveSlotOrder(order, {dir})` 定顺序（配置 > 环境变量 `DSH_GIT_PUSH_RULE_SLOTS` > `SLOT_ORDER_HINT` 偏好）；`loadRuleFiles(order, {dir})` 合并多槽位并返回 `{ok, merged, order, files, errors}`（`dir` 可指向自定规则目录 = 整体替换规则包；`merged.private_files` 汇总各槽位顶层私密清单）
 - `registry.js`：`compileRule()` 是统一入口（**永不修改**），`registerCompiler(kind, detect, compile)` 是扩展点
 - `compilers.js`：各 kind 的 `detect` + `compile` 实现；`safeRe()` 默认大小写不敏感（驼峰/大写凭据不漏检）
 
@@ -146,14 +161,15 @@ whenToUse: 需要查工具参数细节、排查插件报错、或修改插件源
 
 ### 审计执行（`lib/audit/`）
 
-`index.js`：`makeFinding` / `summarize`（error 归拦截级，notice 单列）/ `auditFile` / `auditFull` / `auditChanged` / `auditWithScope`
-`checks.js`：`runChecks` 按 kind 分发到各检查器（正则类 / 路径类 / AST 质量类 / 凭据文件 / 语义）
+`index.js`：`makeFinding` / `summarize`（error 归拦截级，notice 单列）/ `auditFile(src, {level})` / `auditFull` / `auditChanged` / `auditWithScope`
+`checks.js`：`runChecks({...}, {level})` 按 kind 分发（正则类 / 路径类 / AST 质量类 / 凭据文件 / 语义；`quick` 档跳重检查）；`checkPrivateFiles({root, visibility, privateFiles})` 私密文件强制检查
+`glob.js`：`globToRegex(glob, anchored)` / `globMatch(glob, path)` 零依赖 glob→RegExp（`**` 跨层 / `*` 单层 / `{}` 分支 / `[类]`；`anchored=false` 供 `{}` 内部递归）
 `collector.js`：`collectTextFiles`（gitignore 感知）、`collectChangedFiles`（git status --porcelain）
 
 ### 评分（`lib/score/`）
 
 `ast.js`：`tokenize` + 各 AST 检查器（`checkFuncLinesAst` / `checkNameLengthAst` / `checkComplexityAst` / `checkNestingDepthAst` / `checkFileLines` / `checkRepeatedStringsAst` / `checkSyncFs` / `checkEmptyCatchAst`）
-`index.js`：`DEFAULT_WEIGHTS`（10 维度加权合计 100）、`countByDimension`、`scoreQuality`
+`index.js`：`DEFAULT_WEIGHTS`（10 维度加权合计 100）、`countByDimension`、`scoreQuality(findings, weights)`（weights 覆盖默认表，未指定维度保持默认）
 
 ---
 
