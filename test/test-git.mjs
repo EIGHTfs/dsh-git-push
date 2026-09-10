@@ -201,6 +201,34 @@ test('ensureGitignore：追加敏感文件到 .gitignore（幂等）', () => {
   rmSync(join(repo, '.gitignore'), { force: true });
 });
 
+test('ensureGitignore：基线忽略 node_modules 与 node_modules.orig', () => {
+  const r = ensureGitignore(repo);
+  const gi = readFileSync(join(repo, '.gitignore'), 'utf8');
+  assert.ok(r.baseline >= 1, '应有基线补入');
+  assert.ok(gi.includes('node_modules/'), '应含 node_modules/');
+  assert.ok(gi.includes('node_modules.orig/'), '应含 node_modules.orig/');
+  // 幂等：二次调用不再追加基线
+  const r2 = ensureGitignore(repo);
+  assert.equal(r2.baseline, 0, '基线已存在时不重复写');
+  rmSync(join(repo, '.gitignore'), { force: true });
+});
+
+test('ensureGitignore：已手写 node_modules（无斜杠）时不重复追加', () => {
+  writeFileSync(join(repo, '.gitignore'), 'node_modules\nnode_modules.orig\n');
+  const r = ensureGitignore(repo);
+  assert.equal(r.baseline, 0, '裸名与带斜杠视为同一忽略项');
+  rmSync(join(repo, '.gitignore'), { force: true });
+});
+
+test('ensureGitignore：node_modules.orig 目录不参与敏感文件扫描', () => {
+  mkdirSync(join(repo, 'node_modules.orig'), { recursive: true });
+  writeFileSync(join(repo, 'node_modules.orig', '.env'), 'KEY=1\n');
+  const r = ensureGitignore(repo);
+  assert.ok(!r.files.some((f) => f.includes('node_modules.orig')), '残留副本目录内的文件不应被当成仓库敏感文件');
+  rmSync(join(repo, 'node_modules.orig'), { recursive: true, force: true });
+  rmSync(join(repo, '.gitignore'), { force: true });
+});
+
 test('readmeCheckHint：有/无 README 区分', () => {
   const without = readmeCheckHint(repo);
   assert.equal(without.hasReadme, false);

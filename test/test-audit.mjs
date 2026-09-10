@@ -13,7 +13,12 @@ import { tmpdir } from 'node:os';
 import '../lib/rule/compilers.js';
 import { auditFull, auditWithScope, makeFinding, summarize } from '../lib/audit/index.js';
 import { collectTextFiles, collectChangedFiles, isGitRepo, readText } from '../lib/audit/collector.js';
-import { checkEmptyCatch } from '../lib/audit/checks.js';
+import {
+  checkEmptyCatch, checkRegexRules, checkPathRegexRules, checkFuncLines, checkSyncFsInFile,
+  checkCredentialFiles, checkMinLength, checkComplexity, checkDepth, checkMaxLines,
+  checkRepeated, checkSemantic, groupByKind, runChecks, capSeverity,
+} from '../lib/audit/checks.js';
+import { CODE_EXTS } from '../lib/audit/index.js';
 
 let fixture = '';
 let gitRepo = '';
@@ -151,4 +156,155 @@ test('auditChanged：删除的文件跳过（status D 无可读内容）', () =>
   const cleanHits = res.findings.filter((f) => f.file === 'clean.js');
   assert.equal(cleanHits.length, 0, '删除文件不应产出 findings');
   assert.ok(res.files <= 1);
+});
+/* ───────────────── 检查器逐类覆盖（审计总入口全功能） ───────────────── */
+
+test('checkRegexRules：命中报 + 未命中不报 + source 标注', () => {
+  const rules = [{ id: 'r1', kind: 'regex', severity: 'warning', patterns: [/SECRET\d+/], message: '命中', dimensions: ['安全性'] }];
+  const hit = checkRegexRules({ file: 'a.js', text: 'const a = "SECRET123";', rules });
+  assert.equal(hit.length, 1);
+  assert.equal(hit[0].rule, 'r1');
+  const miss = checkRegexRules({ file: 'a.js', text: 'const a = "public";', rules });
+  assert.equal(miss.length, 0);
+});
+
+test('checkRegexRules：空规则数组返回空（不崩溃）', () => {
+  assert.deepEqual(checkRegexRules({ file: 'a.js', text: 'x', rules: [] }), []);
+  assert.deepEqual(checkRegexRules({ file: 'a.js', text: 'x', rules: undefined }), []);
+});
+
+test('checkPathRegexRules：文件路径命中与不命中', () => {
+  const rules = [{ id: 'p1', kind: 'path-regex', severity: 'warning', pathPattern: '\\.key$', message: '私钥路径', dimensions: ['安全性'] }];
+  assert.equal(checkPathRegexRules({ file: 'a', relPath: 'certs/a.key', rules }).length, 1);
+  assert.equal(checkPathRegexRules({ file: 'a', relPath: 'src/a.js', rules }).length, 0);
+});
+
+test('checkCredentialFiles：按文件名与路径判定凭据文件', () => {
+  const rules = [{ id: 'c1', kind: 'credential-file', severity: 'warning', patterns: [/^id_rsa$/, /\.pem$/], message: '凭据文件', dimensions: ['安全性'] }];
+  assert.equal(checkCredentialFiles({ file: 'x', relPath: '.ssh/id_rsa', rules }).length, 1);
+  assert.equal(checkCredentialFiles({ file: 'x', relPath: 'certs/server.pem', rules }).length, 1);
+  assert.equal(checkCredentialFiles({ file: 'x', relPath: 'src/index.js', rules }).length, 0);
+});
+
+test('checkFuncLines：超阈函数报、未超不报', () => {
+  const rules = [{ id: 'func-lines', kind: 'func-lines', severity: 'warning', threshold: 3, dimensions: ['可读性'] }];
+  const long = 'function f() {\n' + 'let a = 1;\n'.repeat(6) + '}\n';
+  assert.ok(checkFuncLines({ file: 'a.js', text: long, rules }).length >= 1);
+  assert.equal(checkFuncLines({ file: 'a.js', text: 'function g() { return 1; }\n', rules }).length, 0);
+});
+
+test('checkSyncFsInFile：async 中的同步 fs 报、纯同步不报', () => {
+  const viaPrefix = 'export async function f() {\n  const x = fs.readFileSync("a");\n}\n';
+  assert.ok(checkSyncFsInFile({ file: 'a.mjs', text: viaPrefix }).length >= 1, 'fs. 前缀应报');
+  const viaImport = 'import { readFileSync } from "node:fs";\nexport async function g() {\n  const x = readFileSync("a");\n}\n';
+  assert.ok(checkSyncFsInFile({ file: 'a.mjs', text: viaImport }).length >= 1, 'named import 后直调应报（修旧项目假阴性）');
+  const plain = 'const x = fs.readFileSync("a");\n';
+  assert.equal(checkSyncFsInFile({ file: 'a.mjs', text: plain }).length, 0, '非 async 上下文不报');
+  const custom = 'export async function h() {\n  const x = readFileSync("a");\n}\n';
+  assert.equal(checkSyncFsInFile({ file: 'a.mjs', text: custom }).length, 0, '未 import 的同名自定义函数不误报');
+});
+
+test('checkMinLength：过短命名报、正常命名不报', () => {
+  const rules = [{ id: 'min-length', kind: 'min-length', severity: 'warning', threshold: 3, dimensions: ['可读性'] }];
+  const short = 'function fn(qq) {\n  const zz = 1;\n  return zz;\n}\n';
+  assert.ok(checkMinLength({ file: 'a.js', text: short, rules }).length >= 1);
+  const ok = 'function compute(length) {\n  const result = length;\n  return result;\n}\n';
+  assert.equal(checkMinLength({ file: 'a.js', text: ok, rules }).length, 0);
+});
+
+test('checkComplexity：高复杂度报、简单函数不报', () => {
+  const rules = [{ id: 'cx', kind: 'max-complexity', severity: 'warning', threshold: 2, dimensions: ['可维护性'] }];
+  const complex = 'function f(a) {\n  if (a && a.b || a.c) return 1;\n  for (;;) { if (a) break; }\n  return 0;\n}\n';
+  assert.ok(checkComplexity({ file: 'a.js', text: complex, rules }).length >= 1);
+  assert.equal(checkComplexity({ file: 'a.js', text: 'function g() { return 1; }\n', rules }).length, 0);
+});
+
+test('checkDepth：深嵌套报、浅嵌套不报', () => {
+  const rules = [{ id: 'd', kind: 'max-depth', severity: 'warning', threshold: 2, dimensions: ['可读性'] }];
+  const deep = 'function f() {\n  if (1) {\n    if (2) {\n      if (3) { return 1; }\n    }\n  }\n}\n';
+  assert.ok(checkDepth({ file: 'a.js', text: deep, rules }).length >= 1);
+  assert.equal(checkDepth({ file: 'a.js', text: 'function g() { return 1; }\n', rules }).length, 0);
+});
+
+test('checkMaxLines：超行数报、未超不报', () => {
+  const rules = [{ id: 'ml', kind: 'max-lines', severity: 'warning', threshold: 5, dimensions: ['可维护性'] }];
+  assert.equal(checkMaxLines({ file: 'a.js', text: 'x\n'.repeat(3), rules }).length, 0);
+  const big = checkMaxLines({ file: 'a.js', text: 'x\n'.repeat(20), rules });
+  assert.equal(big.length, 1);
+  assert.equal(big[0].line, 1, '文件级问题定位到第 1 行');
+});
+
+test('checkRepeated：重复硬编码串报、单次不报', () => {
+  const rules = [{ id: 'rp', kind: 'repeated-string', severity: 'warning', threshold: 3, dimensions: ['可维护性'] }];
+  const text = 'const a = "api.example.com";\nconst b = "api.example.com";\nconst c = "api.example.com";\n';
+  assert.ok(checkRepeated({ file: 'a.js', text, rules }).length >= 1);
+  assert.equal(checkRepeated({ file: 'a.js', text: 'const a = "once-only.example.com";\n', rules }).length, 0);
+});
+
+test('checkRepeated：ignoreValues 生效（忽略清单内的串不报）', () => {
+  const rules = [{ id: 'rp', kind: 'repeated-string', severity: 'warning', threshold: 3, ignoreValues: ['ignore-me'], dimensions: ['可维护性'] }];
+  const text = 'const a = "ignore-me";\nconst b = "ignore-me";\nconst c = "ignore-me";\n';
+  assert.equal(checkRepeated({ file: 'a.js', text, rules }).length, 0);
+});
+
+test('checkSemantic：产出 notice 级提示（不升为拦截）', () => {
+  const rules = [{ id: 'sem-1', kind: 'semantic', message: '需人工确认的语义规则', dimensions: ['健壮性'] }];
+  const out = checkSemantic({ file: 'a.js', relPath: 'a.js', rules });
+  assert.equal(out.length, 1);
+  assert.equal(out[0].severity, 'notice');
+});
+
+test('capSeverity：规则声明 warning 时内部 blocker 不得越级', () => {
+  assert.equal(capSeverity('warning', 'blocker'), 'warning');
+  assert.equal(capSeverity('warning', 'warning'), 'warning');
+  assert.equal(capSeverity('error', 'warning'), 'warning', '内部低风险按内部算');
+  assert.equal(capSeverity('error', 'blocker'), 'error');
+  assert.equal(capSeverity('info', 'blocker'), 'notice', 'info 归入 notice');
+});
+
+test('groupByKind：按 kind 分桶（同 kind 聚一组）', () => {
+  const g = groupByKind([
+    { kind: 'regex', id: 'a' }, { kind: 'regex', id: 'b' }, { kind: 'secret', id: 'c' },
+  ]);
+  assert.equal(g.regex.length, 2);
+  assert.equal(g.secret.length, 1);
+  assert.deepEqual(groupByKind([]), {});
+  assert.deepEqual(groupByKind(undefined), {});
+});
+
+test('runChecks：多 kind 齐发（regex + 空 catch + sync-fs 同文件命中）', () => {
+  const grouped = {
+    regex: [{ id: 'r', kind: 'regex', severity: 'warning', patterns: [/TRIGGER/], message: 'm', dimensions: ['安全性'] }],
+  };
+  const text = 'export async function f() {\n  try { await g(); } catch (e) {}\n  const x = readFileSync("a");\n  const t = "TRIGGER";\n}\n';
+  const out = runChecks({ file: 'a.mjs', relPath: 'a.mjs', text, grouped });
+  const kinds = out.map((f) => f.kind);
+  assert.ok(kinds.includes('regex'), '正则命中');
+  assert.ok(kinds.filter((k) => k === undefined || k === 'empty-catch' || k === 'sync-fs').length >= 1, '内置检查命中');
+});
+
+test('runChecks：空 grouped 仍跑内置检查（不依赖 yml 规则）', () => {
+  const out = runChecks({ file: 'a.mjs', relPath: 'a.mjs', text: 'export async function f() {\n  try { await g(); } catch (e) {}\n}\n', grouped: {} });
+  assert.ok(out.length >= 1, '内置空 catch 检查不依赖规则包');
+});
+
+test('CODE_EXTS：含常见代码扩展名、不含文档扩展名', () => {
+  for (const e of ['js', 'mjs', 'ts', 'py', 'go']) assert.ok(CODE_EXTS.has(e), `应含 ${e}`);
+  for (const e of ['md', 'json', 'yml', 'txt']) assert.ok(!CODE_EXTS.has(e), `不应含 ${e}`);
+});
+
+test('summarize：error 归拦截级、notice 单列、total 与实际一致', () => {
+  const s = summarize([
+    { severity: 'blocker' }, { severity: 'error' }, { severity: 'warning' }, { severity: 'notice' },
+  ]);
+  assert.equal(s.blocker, 2, 'blocker + error 都算拦截级');
+  assert.equal(s.warning, 1);
+  assert.equal(s.notice, 1);
+  assert.equal(s.total, 4, 'total 应等于问题总数（不再出现 0/0/3 矛盾）');
+});
+
+test('summarize：缺 severity 字段按 warning 计（不丢统计）', () => {
+  const s = summarize([{}, { severity: undefined }]);
+  assert.equal(s.warning, 2);
+  assert.equal(s.total, 2);
 });

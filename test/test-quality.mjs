@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { tokenize, checkSyncFs, checkEmptyCatchAst, checkFuncLinesAst } from '../lib/score/ast.js';
-import { DEFAULT_WEIGHTS, countByDimension, scoreQuality } from '../lib/score/index.js';
+import { DEFAULT_WEIGHTS, DIMENSION_ORDER, countByDimension, scoreQuality } from '../lib/score/index.js';
 import { checkSyncFsInFile, checkEmptyCatch } from '../lib/audit/checks.js';
 
 // ---------- tokenizer ----------
@@ -236,4 +236,26 @@ test('scoreQuality：dimensions 汇总齐全（10 键）', () => {
 test('scoreQuality：返回 counts 供审计展示', () => {
   const r = scoreQuality([{ dimensions: ['安全性'], severity: 'warning' }]);
   assert.equal(r.counts['安全性'], 1);
+});
+
+// ---------- 10 维度权重与评分基线（原 test-framework）----------
+test('评分：10 维度权重合计 100', () => {
+  const total = Object.values(DEFAULT_WEIGHTS).reduce((a, b) => a + b, 0);
+  assert.equal(total, 100);
+  assert.equal(DIMENSION_ORDER.length, 10);
+});
+
+test('评分：无问题 → 满分 A 级', () => {
+  const q = scoreQuality([]);
+  assert.equal(q.score, 100);
+  assert.equal(q.level, 'A');
+});
+
+test('评分：blocker 扣分重于 warning', () => {
+  const q = scoreQuality([
+    { severity: 'warning', dimensions: ['可读性'] },
+    { severity: 'blocker', dimensions: ['安全性'] },
+  ]);
+  assert.ok(q.counts['可读性'] === 1);
+  assert.ok(q.counts['安全性'] === 2);
 });

@@ -232,3 +232,27 @@ test('端到端：无豁免 → secret 照常 block', async () => {
   const secrets = findings.filter((x) => x.kind.includes('[FUNC]'));
   assert.ok(secrets.length > 0, '无豁免时应报 secret');
 });
+
+// ---------- 标记注册 / 头行判定 / 反查（原 test-framework）----------
+test('豁免：7 类标记注册齐全', () => {
+  assert.equal(Object.keys(EXEMPT_MARKERS).length, 7);
+  assert.ok(EXEMPT_MARKERS['dsh-skip-sensitive']);
+  assert.ok(EXEMPT_MARKERS['dsh-skip-func-length']);
+});
+
+test('豁免：文件头检测只看前 3 行', () => {
+  const text = '// dsh-skip-sensitive: 测试\nconst a = 1;\n';
+  assert.equal(hasHeaderExempt(text, 'dsh-skip-sensitive'), true);
+  assert.equal(hasHeaderExempt('line1\nline2\nline3\nline4 dsh-skip-sensitive', 'dsh-skip-sensitive'), false);
+});
+
+test('豁免：行级检测', () => {
+  assert.equal(hasLineExempt('const x = 1; // dsh-skip-sensitive', 'dsh-skip-sensitive'), true);
+  assert.equal(hasLineExempt('const x = 1;', 'dsh-skip-sensitive'), false);
+});
+
+test('豁免：exemptHintFor 反查 non-empty', () => {
+  const hint = exemptHintFor('func-lines');
+  assert.ok(typeof hint === 'string' && hint.length > 0);
+  assert.match(hint, /dsh-skip-func-length/);
+});

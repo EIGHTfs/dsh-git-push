@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import '../lib/rule/compilers.js'; // 副作用导入：注册编译函数
-import { compileRule, compileAllRules, RULE_COMPILERS } from '../lib/rule/registry.js';
+import { registerCompiler, compileRule, compileAllRules, RULE_COMPILERS } from '../lib/rule/registry.js';
 import { loadRuleFiles, RULE_SLOTS, resolveSlotOrder, discoverRuleSlots } from '../lib/rule/loader.js';
 import { safeRe } from '../lib/rule/compilers.js';
 
@@ -212,4 +212,58 @@ test('装载：loadRuleFiles 无参走配置驱动（向后兼容数组入参）
   assert.ok(r.merged.rules.length > 0);
   assert.ok(r.order.length > 0, '应返回生效槽位顺序');
   assert.equal(r.errors.length, 0, '已建槽位不应报缺失');
+});
+
+// ---------- 注册表行为 / 装载健壮性 / 槽位发现（原 test-framework）----------
+test('注册表：registerCompiler 后 compileRule 按 detect 指派', () => {
+  registerCompiler('test-kind-a', (r) => r.path_pattern, (r) => ({ ok: true, rule: { kind: 'path-regex', dimensions: ['文档'] } }));
+  const res = compileRule({ path_pattern: '*.md' });
+  assert.equal(res.ok, true);
+  assert.equal(res.rule.kind, 'path-regex');
+});
+
+test('注册表：显式 kind 优先于字段探测', () => {
+  const res = compileRule({ kind: '不存在的kind' });
+  assert.equal(res.ok, false);
+  assert.match(res.error, /未知规则类型/);
+});
+
+test('注册表：compileRule 对字段可自动探测', () => {
+  // 无 kind、无已知字段 → 报错而非静默跳过
+  const res = compileRule({ id: 'x', name: '未知' });
+  assert.equal(res.ok, false);
+  assert.match(res.error, /无法识别规则类型/);
+});
+
+test('注册表：compileAllRules 收集错误不中断', () => {
+  const ctx = { errors: [] };
+  const out = compileAllRules([{ id: 'bad', name: '未知规则' }], ctx);
+  assert.equal(out.length, 0);
+  assert.equal(ctx.errors.length, 1);
+});
+
+test('装载：槽位全动态——由目录文件决定，放文件即生效', () => {
+  const discovered = discoverRuleSlots();
+  // 已建槽位必在发现列表里
+  assert.ok(discovered.includes('nodejs'));
+  assert.ok(discovered.includes('docs'));
+  // 默认装载不报缺失：只装目录里真实存在的槽位
+  const r = loadRuleFiles();
+  assert.equal(r.errors.length, 0, `不应报缺失：${r.errors.join('; ')}`);
+  for (const slot of r.order) assert.ok(discovered.includes(slot), `${slot} 应实际存在`);
+  // template 默认不加载（模板保持为空，不进默认装载）
+  assert.ok(!r.order.includes('template'));
+});
+
+test('装载：loadRuleFiles 对缺失槽位不崩溃，返回错误收集', () => {
+  // audit-rules 目录尚未落任何 yml → 全部槽位报缺失，但函数正常返回
+  const r = loadRuleFiles(['nodejs']);
+  assert.equal(typeof r.ok, 'boolean');
+  assert.ok(Array.isArray(r.errors));
+});
+
+test('发现槽位：空目录不崩溃', () => {
+  const slots = discoverRuleSlots('/tmp/nonexistent-dir-for-test');
+  assert.ok(Array.isArray(slots));
+  assert.equal(slots.length, 0);
 });

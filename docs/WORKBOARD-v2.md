@@ -564,7 +564,8 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
 | 0.2.0 | 45a0f36 | 链接判断：link-check kind yml 槽位 + 分级扣分(404/-3·DNS/-2·超时/-1) + flaky×0.2 + 并发探测 + CLI 子命令 + test-link-check 24（233 全绿） | 旧项目扫描 0 blocker（同前豁免）✅ |
 | 1.0.0 | 442cf02 | **首发**：DSH 插件接线（lib/index.js apply/7 工具/HTTP/Config）+ scanRepos + client.js 根级客户端插件 + 双副本同步脚本（dry-run 默认）+ cordis.patch.yml + package.json exports/files + test-plugin 25（263 全绿） | 旧项目扫描 0 blocker ✅ |
 | 1.0.0 收尾 | 22cdb31 | 自审质量达标：文件类别豁免（test/scripts 的 console-log·sync-fs）+ 空 catch 语义细化（说明注释即算交代）+ ast.js 函数行豁免 → **自审 0 问题 100/100 A**（265 全绿） | 旧项目扫描 0 blocker ✅ |
-| **1.0.1** | 待提交 | **六个真实缺陷修复**：① `summarize` 漏统 error 级 → error 归拦截级 + notice 单列（消除「0 blocker 0 warning 但 total=3」矛盾统计）；② **9 个 kind 死桶**（编译后无人消费）→ 新增 5 个 AST 检查器（checkNameLengthAst/checkComplexityAst/checkNestingDepthAst/checkFileLines/checkRepeatedStringsAst）+ 8 个 kind 全接线；③ `[FUNC]-` 规则被 `regex` 抢走（detect 写 `/^[FUNC]-/` 是字符集）→ `/^(\[FUNC\]\|secret)-/`；④ **豁免完全失效**（checks/exempt 读 `secret` 而编译产出 `[FUNC]`，命名不一致）→ 全仓统一；⑤ 槽位半硬编码 → `SLOT_ORDER_HINT` 仅排序偏好 + 纯动态发现（放 yml 即生效）；⑥ `detectTargets` 漏真实加载源 → 双目标（`local-plugins/` 优先 + `node_modules/`）；另加 `capSeverity`（规则 severity 为上限，检查器不得越级升 blocker）｜**278 全绿** | 旧项目扫描 0 blocker ✅ |
+| 1.0.1 | 77f86aa | **六个真实缺陷修复**：① `summarize` 漏统 error 级 → error 归拦截级 + notice 单列（消除「0 blocker 0 warning 但 total=3」矛盾统计）；② **9 个 kind 死桶**（编译后无人消费）→ 新增 5 个 AST 检查器（checkNameLengthAst/checkComplexityAst/checkNestingDepthAst/checkFileLines/checkRepeatedStringsAst）+ 8 个 kind 全接线；③ `[FUNC]-` 规则被 `regex` 抢走（detect 写 `/^[FUNC]-/` 是字符集）→ `/^(\[FUNC\]\|secret)-/`；④ **豁免完全失效**（checks/exempt 读 `secret` 而编译产出 `[FUNC]`，命名不一致）→ 全仓统一；⑤ 槽位半硬编码 → `SLOT_ORDER_HINT` 仅排序偏好 + 纯动态发现（放 yml 即生效）；⑥ `detectTargets` 漏真实加载源 → 双目标（`local-plugins/` 优先 + `node_modules/`）；另加 `capSeverity`（规则 severity 为上限，检查器不得越级升 blocker）｜**278 全绿** | 旧项目扫描 0 blocker ✅ |
+| **1.0.2** | 待提交 | **测试按入口重组 + 审计健壮性加固**：① 测试一脚本对一入口（test-framework 溶解归位：规则/评分/豁免/自身各归其位，test-cli 更名 test-self，同步/打包测试归自身入口）；② **G9** 匹配器空值崩溃（`rules=undefined` → `rules is not iterable`）→ `rules \|\| []`；③ **G10** 重复串死检测（tokenizer 产出 `str`/`tmpl`，检查器过滤 `string`/`number` → 永不命中）→ 按实际类型名收集 + 去引号；④ **G11** 重复串泛滥（修复后自审 343 条：文档数字/域名词汇噪音）→ 排除 `num`/纯标识符/dotfile/短期望词 + 文档/测试目录豁免 maintainability；⑤ **G12** `node_modules.orig` 入 .gitignore（用户定稿：`ensureGitignore` 基线忽略 + 扫描器跳过）；⑥ 提取 `HINT_QUALITY`/`MSG_REPO_REQUIRED` 常量消除重复字面量；⑦ 会话归档 zip 按约定从索引移除；⑧ 审计入口测试 13→33 断言｜**315 全绿** | 旧项目扫描 0 blocker ✅（待提交） |
 
 ---
 
@@ -621,7 +622,11 @@ node ../dsh-git-push/cli.mjs audit . --json   # 0 blocker 才提交
 | G5 | 正则大小写敏感导致驼峰凭据漏检（apiKey/API_KEY） | 本轮实测 | ✅ 已修（默认 i 标志） |
 | G6 | 规则字段覆盖：旧项目用到 30 字段，v2 编译函数需全部认领 | 字段统计 | 中 |
 | G7 | 侧边栏：权重自定义 / 规则包导入导出删除 / 审计强度选择 | 会话第 34/157 条 | 中 |
-| G8 | 测试组织：一脚本对一入口（用户本轮要求） | 本轮指令 | 中 |
+| G8 | 测试组织：一脚本对一入口（用户本轮要求） | 本轮指令 | ✅ 已修（11 脚本 ↔ 10 入口 + 插件接线，test-framework 溶解归位） |
+| G9 | **匹配器空值崩溃**：`checkRegexRules` / `checkPathRegexRules` 收 `rules=undefined` 时 `for..of` 抛 TypeError（`rules is not iterable`） | 本轮补测暴露 | ✅ 已修（`rules \|\| []`） |
+| G10 | **repeated-string 死检测**：tokenizer 产出 `str`/`num`/`tmpl`，检查器却过滤 `string`/`number` → 重复串检测永不命中 | 本轮补测暴露 | ✅ 已修（按实际类型名收集 + 去引号 + `tmpl` 入列） |
+| G11 | **repeated-string 泛滥**：修复后自审 343 条，多为文档数字（10/15/版本号）——数值字面量重复属正常，不该按「硬编码文本」报 | 修复后自审 | ⚠️ 待修（排除 num / 文档类文件降噪） |
+| G12 | **node_modules.orig 入 .gitignore**：插件 `ensureGitignore` 要恒定排除 `node_modules/` 与 `node_modules.orig/`（机器本地产物 / 安装残留副本），且扫描器不得走进 `node_modules.orig` 误报 | 用户本轮指令 | ✅ 已修（DEFAULT_IGNORE_PATTERNS + 扫描器跳过） |
 
 ### 2.7.4 旧项目规则槽位清单（G1/G2 的验收标准）
 | 槽位 | 规则数 | 内容 |
@@ -635,4 +640,32 @@ node ../dsh-git-push/cli.mjs audit . --json   # 0 blocker 才提交
 | structure | 1(+decisions) | 目录结构规范（单数命名 path-regex + 取舍结论） |
 | private | 0(+private_files) | 私密文件强制槽位（清单即规则） |
 | template | 1 | 空模板（默认不加载，供自定义入口） |
+
+### 2.7.5 子代理考古结果（会话归档 98 回合 → 需求/验收清单）
+
+> 依据：外部提供的项目会话归档 zip（98 回合）由两个考古子代理分片研读（T1–T33、T34–T65），T66–T97 主代理直读。
+> 归档已按约定删除（分析完毕）；此处留存提取出的需求与验收口径，防遗忘。
+
+**需求/验收口径（需在 1.0.x 兑现）**
+| 项 | 来源回合 | 状态 |
+|---|---|---|
+| 规则包插件化：规则以可插拔包形式存放，可整体替换 | T1–T33 考古 | ✅ auditRuleset 配置项 + ruleset 参数（code_audit/audit_full_scan 均支持） |
+| comment-wording 分数制（非一刀切禁词） | T1–T33 考古 | ✅ 黑名单加分 + 白名单减分（fullScan） |
+| 脱离 dsh 独立运行（CLI 单独可跑） | T1–T33 考古 | ✅ cli.mjs + bin git-sluice |
+| 规则白名单（忽略清单） | T1–T33 考古 | ✅ ignore_values / whitelist 字段编译消费 |
+| 审计强度选择（quick/standard/deep） | T1–T33 考古 | ⚠️ 待定（G7 侧边栏项） |
+| 私密文件强制槽位：public→blocker / private→warning | T34–T65 考古 | ⚠️ G2 private 槽位未建 |
+| 槽位动态化（配置/环境变量控制槽位集合） | T50 | ✅ resolveSlotOrder（G12 已闭环） |
+| 双副本同步：local-plugins 是真实加载源，node_modules 是 npm-link 产物 | T42/T43 | ✅ detectTargets 双目标（G13 已闭环） |
+| yamlCheckMode 双模式（加载期校验 / 运行期校验） | T34–T65 考古 | ✅ 编译期错误收集（compileAllRules ctx.errors） |
+| severity 三级映射（error/warning/notice） | T34–T65 考古 | ✅ capSeverity + summarize |
+| 扫描拆两函数（auditChanged / auditFull） | T63 | ✅ 已闭环 |
+| 权重 10 维度定稿 | T34–T65 考古 | ✅ DEFAULT_WEIGHTS 合计 100 |
+| 设置双位 UI（设置页 + 插件配置卡） | T34–T65 考古 | ✅ 插件配置卡 + settings 注入（G7 侧边栏页待补） |
+| 规则字段全认领（30 字段） | 字段统计 | ⚠️ G6 中 |
+
+**考古复述的新 bug/教训（并入 §4 防再犯）**
+- 改动刷新看不到的根因 = 双副本不同步（旧 v1.46–v1.49 反复出现）→ G13 已修
+- 规则 detect 写 `/^[FUNC]-/` 被当字符集 → G10（本次实测复现同类：token 类型名不匹配）
+- 语义规则曾是大空桶（compiled 但无人消费）→ G10 已修（9 死桶全接线）
 
