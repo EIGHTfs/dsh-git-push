@@ -565,7 +565,7 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
 | 1.0.0 | 442cf02 | **首发**：DSH 插件接线（lib/index.js apply/7 工具/HTTP/Config）+ scanRepos + client.js 根级客户端插件 + 双副本同步脚本（dry-run 默认）+ cordis.patch.yml + package.json exports/files + test-plugin 25（263 全绿） | 旧项目扫描 0 blocker ✅ |
 | 1.0.0 收尾 | 22cdb31 | 自审质量达标：文件类别豁免（test/scripts 的 console-log·sync-fs）+ 空 catch 语义细化（说明注释即算交代）+ ast.js 函数行豁免 → **自审 0 问题 100/100 A**（265 全绿） | 旧项目扫描 0 blocker ✅ |
 | 1.0.1 | 77f86aa | **六个真实缺陷修复**：① `summarize` 漏统 error 级 → error 归拦截级 + notice 单列（消除「0 blocker 0 warning 但 total=3」矛盾统计）；② **9 个 kind 死桶**（编译后无人消费）→ 新增 5 个 AST 检查器（checkNameLengthAst/checkComplexityAst/checkNestingDepthAst/checkFileLines/checkRepeatedStringsAst）+ 8 个 kind 全接线；③ `[FUNC]-` 规则被 `regex` 抢走（detect 写 `/^[FUNC]-/` 是字符集）→ `/^(\[FUNC\]\|secret)-/`；④ **豁免完全失效**（checks/exempt 读 `secret` 而编译产出 `[FUNC]`，命名不一致）→ 全仓统一；⑤ 槽位半硬编码 → `SLOT_ORDER_HINT` 仅排序偏好 + 纯动态发现（放 yml 即生效）；⑥ `detectTargets` 漏真实加载源 → 双目标（`local-plugins/` 优先 + `node_modules/`）；另加 `capSeverity`（规则 severity 为上限，检查器不得越级升 blocker）｜**278 全绿** | 旧项目扫描 0 blocker ✅ |
-| **1.0.4** | 待提交 | **regex 子模式 + performance 槽位**：① patterns 支持对象子模式 {id,pattern,message}（文档 §13 承诺兑现），命中输出 per-pattern message；② 新槽位 performance：memory-bomb 7 子模式 + busy-wait；③ push 宽正则误报降噪（91 假阳性→循环内/链式精确子模式）；④ test/ 补 performance 自动豁免｜**323 全绿** | 双扫描 0 blocker（待提交） |
+| **1.0.4** | adc2e13…9eb1c86（14 提交） | **规则引擎加固 + 配置面双线**：① regex 子模式（文档 §13 兑现）；② performance 新槽位（memory-bomb 7 子模式 + busy-wait，push 误报 91→精确子模式）；③ **G3 同形字符**（homoglyph 映射 + compileRule 入口拦截 kind/id）；④ **G6 字段全认领**（29 字段，blacklist 阈值 40→60 真实生效）；⑤ **private 槽位**（loader 合并 13 条 + glob.js + checkPrivateFiles，public→blocker/private→warning 双路径）；⑥ **G7 侧边栏三项**（审计强度三档 / 自定规则目录 / 权重覆盖，三处同步 + 双路径接线）；⑦ i18n 降噪（dsh-skip-i18n）；⑧ dual-scan 补旧 full-scan 通道｜**334 全绿** | 双扫描两侧 0 blocker；自审 0 blocker |
 | **1.0.3** | 待提交 | **旧项目规则包全量复制 + 3 新槽位**：① 复制旧项目 9 槽位 86 条规则 → v2 规则 12→96 条；② 新槽位 robustness（mkdir-before-write）/ folder（目录审计 4 条，checkFolderRules 挂 auditFull）/ i18n（国际化审计 3 条，locale 仓库级一次判定）；③ 新 kind 同名函数：blacklist（comment 黑名单加分制 24+22+6）+ folder + npm-json（两条死规则改 JSON 结构化真判定）；④ 修复真缺陷：dsh-skip-sensitive 对 regex 宽声明安全类豁免失效（17 假阳性）、func-lines/max-lines 中文「函数」名识别、detectionMethod 顶层展开读取；⑤ v2 独有能力合并回 nodejs 防覆盖丢失；⑥ skill 文档措辞中性化 + 新增 DETAILS-EXEMPT-AND-RULES.md 细节权威；⑦ 测试 315→320 全绿｜双扫描 0 blocker | 旧项目扫描 0 blocker ✅（待提交） |
 | **1.0.2** | 2432cc4 | **测试按入口重组 + 审计健壮性加固**：① 测试一脚本对一入口（test-framework 溶解归位：规则/评分/豁免/自身各归其位，test-cli 更名 test-self，同步/打包测试归自身入口）；② **G9** 匹配器空值崩溃（`rules=undefined` → `rules is not iterable`）→ `rules \|\| []`；③ **G10** 重复串死检测（tokenizer 产出 `str`/`tmpl`，检查器过滤 `string`/`number` → 永不命中）→ 按实际类型名收集 + 去引号；④ **G11** 重复串泛滥（修复后自审 343 条：文档数字/域名词汇噪音）→ 排除 `num`/纯标识符/dotfile/短期望词 + 文档/测试目录豁免 maintainability；⑤ **G12** `node_modules.orig` 入 .gitignore（用户定稿：`ensureGitignore` 基线忽略 + 扫描器跳过）；⑥ 提取 `HINT_QUALITY`/`MSG_REPO_REQUIRED` 常量消除重复字面量；⑦ 会话归档 zip 按约定从索引移除；⑧ 审计入口测试 13→33 断言｜**315 全绿** | 旧项目扫描 0 blocker ✅ |
 
@@ -623,7 +623,7 @@ node ../dsh-git-push/cli.mjs audit . --json   # 0 blocker 才提交
 | G4 | `summarize` 漏统 error 级（出现「0 blocker 0 warning 但 total=3」） | 本轮实测 | ✅ 已修（error 归 blocker） |
 | G5 | 正则大小写敏感导致驼峰凭据漏检（apiKey/API_KEY） | 本轮实测 | ✅ 已修（默认 i 标志） |
 | G6 | 规则字段覆盖：旧项目用到 30 字段，v2 编译函数需全部认领 | 字段统计 | ✅ 已修（1.0.4 全部认领：29 字段逐一核对，scoring→threshold 兜底 / action / suggestions / examples / minLines 走 extra 透传；blacklist 阈值 40→60 真实生效） |
-| G7 | 侧边栏：权重自定义 / 规则包导入导出删除 / 审计强度选择 | 会话第 34/157 条 | 中 |
+| G7 | 侧边栏：权重自定义 / 规则包导入导出删除 / 审计强度选择 | 会话第 34/157 条 | ✅ 已修（1.0.4：审计强度 quick/standard/deep 三档引擎语义 + 自定规则目录 auditRuleset（loader dir 参数）+ 权重覆盖 weightOverrides JSON；三处同步 Config/SETTINGS_SCHEMA/client.js 内联；code_audit 与 git_commit_push 双路径接线） |
 | G8 | 测试组织：一脚本对一入口（用户本轮要求） | 本轮指令 | ✅ 已修（11 脚本 ↔ 10 入口 + 插件接线，test-framework 溶解归位） |
 | G9 | **匹配器空值崩溃**：`checkRegexRules` / `checkPathRegexRules` 收 `rules=undefined` 时 `for..of` 抛 TypeError（`rules is not iterable`） | 本轮补测暴露 | ✅ 已修（`rules \|\| []`） |
 | G10 | **repeated-string 死检测**：tokenizer 产出 `str`/`num`/`tmpl`，检查器却过滤 `string`/`number` → 重复串检测永不命中 | 本轮补测暴露 | ✅ 已修（按实际类型名收集 + 去引号 + `tmpl` 入列） |
@@ -651,18 +651,18 @@ node ../dsh-git-push/cli.mjs audit . --json   # 0 blocker 才提交
 **需求/验收口径（需在 1.0.x 兑现）**
 | 项 | 来源回合 | 状态 |
 |---|---|---|
-| 规则包插件化：规则以可插拔包形式存放，可整体替换 | T1–T33 考古 | ✅ auditRuleset 配置项 + ruleset 参数（code_audit/audit_full_scan 均支持） |
+| 规则包插件化：规则以可插拔包形式存放，可整体替换 | T1–T33 考古 | ✅ 已落地（1.0.4：loader 支持自定目录 `loadRuleFiles(order, {dir})` + `auditRuleset` 配置项 + `code_audit` 的 `ruleset` 参数；此前记录为已完成但代码未实现，本次补齐并实测：自定目录规则命中 blocker → 门禁拦截） |
 | comment-wording 分数制（非一刀切禁词） | T1–T33 考古 | ✅ 黑名单加分 + 白名单减分（fullScan） |
 | 脱离 dsh 独立运行（CLI 单独可跑） | T1–T33 考古 | ✅ cli.mjs + bin git-sluice |
 | 规则白名单（忽略清单） | T1–T33 考古 | ✅ ignore_values / whitelist 字段编译消费 |
-| 审计强度选择（quick/standard/deep） | T1–T33 考古 | ⚠️ 待定（G7 侧边栏项） |
+| 审计强度选择（quick/standard/deep） | T1–T33 考古 | ✅ 已修（1.0.4 G7：runChecks 按 level 跳过 AST/语义重检查，quick 档基础安全不降级；实测自身仓 quick 501 / standard+deep 869 findings） |
 | 私密文件强制槽位：public→blocker / private→warning | T34–T65 考古 | ✅ 已修（1.0.4：loader 合并顶层 private_files 13 条 + globToRegex（**/ * / {a,b} 零依赖）+ checkPrivateFiles（git ls-files × 分级 public→blocker/private→warning）；auditFull 与 auditChanged 双路径接线） |
 | 槽位动态化（配置/环境变量控制槽位集合） | T50 | ✅ resolveSlotOrder（G12 已闭环） |
 | 双副本同步：local-plugins 是真实加载源，node_modules 是 npm-link 产物 | T42/T43 | ✅ detectTargets 双目标（G13 已闭环） |
 | yamlCheckMode 双模式（加载期校验 / 运行期校验） | T34–T65 考古 | ✅ 编译期错误收集（compileAllRules ctx.errors） |
 | severity 三级映射（error/warning/notice） | T34–T65 考古 | ✅ capSeverity + summarize |
 | 扫描拆两函数（auditChanged / auditFull） | T63 | ✅ 已闭环 |
-| 权重 10 维度定稿 | T34–T65 考古 | ✅ DEFAULT_WEIGHTS 合计 100 |
+| 权重 10 维度定稿 | T34–T65 考古 | ✅ DEFAULT_WEIGHTS 合计 100；1.0.4 增 weightOverrides 覆盖（JSON 配置/工具参数，未指定维度保持默认） |
 | 设置双位 UI（设置页 + 插件配置卡） | T34–T65 考古 | ✅ 插件配置卡 + settings 注入（G7 侧边栏页待补） |
 | 规则字段全认领（30 字段） | 字段统计 | ⚠️ G6 中 |
 

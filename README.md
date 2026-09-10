@@ -15,6 +15,7 @@ DSH（DeepSeek Harness）git 自动提交推送插件——统一函数入口架
 - [问题清单（五份报告 → v2 自检）](#问题清单五份报告--v2-自检)
 - [链接判断规则设计](#链接判断规则设计)
 - [文件目录结构及作用](#文件目录结构及作用)
+- [设置项（侧边栏 / 插件配置）](#设置项侧边栏--插件配置)
 - [版本列表](#版本列表)
 - [注意事项](#注意事项)
 
@@ -23,7 +24,7 @@ DSH（DeepSeek Harness）git 自动提交推送插件——统一函数入口架
 **核心思想：统一函数入口 + 注册表扩展，加能力不破坏主入口。**
 
 - **规则总入口（yml 管理）**：所有 yml 规则槽位（nodejs/npm/html/comment/dsh/private/structure/version/template 等）统一装载→解析→编译；**加字段=加函数，compileRule 主体永不修改**；每个字段函数自带 `dimensions` 维度绑定（支持一字段多维度）
-- **审计总入口**：`auditChanged`（变动，git diff）/ `auditFull`（全量，非 git 目录可查）；`auditWithScope` 统一调度，`auditScanScope` 设置项控制
+- **审计总入口**：`auditChanged`（变动，git diff）/ `auditFull`（全量，非 git 目录可查）；`auditWithScope` 统一调度；设置项控制扫描范围（`auditScanScope`：diff/full）、强度（`auditLevel`：quick 跳 AST 语义重检查 / standard 全量 / deep 扩展位）、规则包目录（`auditRuleset`：空=内置，指向含 `audit-rules-<名>.yml` 的目录即整体替换）
 - **git 总入口**：token / sshkey / 提交 / 推送 / clone / 建仓 / 可见性 / 版本历史 / 重建历史
 - **自身总入口**：版本控制（单一事实源）/ README 模板（独立，不走拦截 yml）/ yml 模板（规则模板 + 豁免速查）/ 独立运行能力（CLI，npm test 可复现）
 - **评分总入口**：10 维度加权（可读性 15 / 可维护性 15 / 健壮性 15 / 安全性 18 / 性能 10 / 测试覆盖 10 / 可观测性 5 / 可部署性 5 / 文档 4 / 开发者体验 3，合计 100），问题(dimensions) → 分维度计数 → 加权总分
@@ -138,11 +139,49 @@ DSH（DeepSeek Harness）git 自动提交推送插件——统一函数入口架
 | `docs/` | 文档（本计划 / 看板 / 报告） |
 | `cli.mjs` | 独立 CLI（git-sluice） |
 
+## 设置项（侧边栏 / 插件配置）
+
+设置项三处同源保持同步：`lib/index.js` 的 `Config`（服务端 schema）、`lib/client/index.js` 的 `SETTINGS_SCHEMA`（纯逻辑 + 单测）、`client.js` 的 `SCHEMA` + 中文文案（浏览器侧内联，无法 import 服务端 ESM）。新增设置项必须三处同加，一致性由 test-client.mjs 断言守着。
+
+| 设置项 | 类型 | 默认 | 作用 |
+|---|---|---|---|
+| `auditEnabled` | boolean | false | 提交前自动审计门禁（关=只提交不审计） |
+| `pushPermitEnabled` | boolean | false | AI 回复推送许可（回复含「任务完成」后自动提交推送） |
+| `llmAudit` | boolean | false | LLM 深度审查（需配置 provider/model） |
+| `hardcodeFullScan` | boolean | false | 硬编码全量扫（换机前排查存量死路径） |
+| `injectFullSkill` | boolean | false | 注入全部 skill 正文（默认只注目录+清单省 token） |
+| `injectRepoIndexFull` | boolean | false | 注入 repo-index 全文（默认只注文件名） |
+| `auditScanScope` | enum | diff | 扫描范围：diff=仅本次变动 / full=全量 |
+| `auditLevel` | enum | standard | 审计强度：见下节三档语义 |
+| `auditRuleset` | string | '' | 自定规则目录：空=内置规则包 |
+| `weightOverrides` | string | '' | 权重覆盖 JSON：如 `{"安全性":100}`，空=默认权重表 |
+| `commitMessage` | string | '' | 自动提交信息（留空则用调用方传入的 message） |
+
+### 审计强度三档（auditLevel）
+
+| 档位 | 检查范围 | 适用场景 |
+|---|---|---|
+| `quick` | 正则 / 凭据 / 路径 / 黑名单 / 空 catch / 同步 IO（**跳过 AST 与语义重检查**：函数行数、圈复杂度、嵌套深度、文件行数、重复串、语义规则、凭据文件、命名长度） | 大仓快速门禁、冒烟自检 |
+| `standard` | 全量（默认，与 v1.0.3 行为一致） | 日常提交前审计 |
+| `deep` | 当前与 standard 等效（全量）；为后续追加深度检查预留 | 需要最严格检查时 |
+
+流程：配置或工具参数（`code_audit` 的 `auditLevel`）→ `code_audit` / `git_commit_push` 传入 `auditWithScope({ auditLevel })` → `auditFull` / `auditChanged` → `auditFile(..., { level })` → `runChecks({ grouped }, { level })` 按档位跳过重检查。基础安全项（凭据、路径穿越、空 catch）在任何档位都不降级。
+
+### 自定规则包（auditRuleset）
+
+规则槽位由目录文件驱动：目录里每个 `audit-rules-<名>.yml` 即一个槽位，放文件即生效、删文件即移除——「导入/导出/删除规则包」就是对该目录的文件操作，无需改代码。
+
+流程：`auditRuleset` 指向目录 → `loadRuleFiles(order, { dir })` 从该目录装载（默认 `lib/audit-rules/`）→ 编译注册表认领字段 → 审计消费。指向不存在或空的目录会装载 0 条规则（`loaded.errors` 有记录），不会静默沿用内置规则包。
+
+### 权重覆盖（weightOverrides）
+
+评分默认 10 维度权重表（合计 100，见「架构设计」）。`weightOverrides` 传 JSON（如 `{"安全性":100}`）→ `scoreQuality(findings, weights)` 与默认表合并（未指定维度保持默认）→ 输出 `quality.dims` 与总分随之变化。JSON 非法时回退默认权重，不中断审计。
+
 ## 版本列表
 
 | 版本 | 说明 |
 |---|---|
-| **1.0.4**（当前 · 子模式支持） | **regex 子模式 + performance 槽位**：① patterns 支持对象子模式 `{id, pattern, message}`（文档 §13 承诺兑现），命中输出 per-pattern 专属 message；② 新槽位 performance：memory-bomb（7 子模式：全量读入/循环内 push/链式 push/数组展开/无限循环/execSync/大对象序列化）+ busy-wait；③ push 误报降噪：`\.push` 宽正则（91 假阳性）→ 循环内 push + 链式 push 精确子模式；④ test/ 自动豁免补 performance（测试 fixture 含危险模式样本做断言）｜323 全绿 |
+| **1.0.4**（当前 · 规则引擎加固 + 侧边栏配置面） | **规则引擎 + 配置面双线**：① **regex 子模式**：patterns 支持对象子模式 `{id, pattern, message}`，命中输出 per-pattern 专属 message；② **performance 槽位**（新）：memory-bomb 7 子模式（全量读入/循环内 push/链式 push/数组展开/无限循环/execSync/大对象序列化）+ busy-wait，push 宽正则 91 假阳性 → 精确子模式降噪；③ **同形字符防再犯（G3）**：lib/rule/homoglyph.js 西里尔/希腊→ASCII 映射表（28 项）+ compileRule 入口拦截 kind/id 同形（с→c/д→d），静默失效 → 显式报错；④ **规则字段全认领（G6）**：旧项目 29 字段逐一核对，scoring→threshold 兜底 / action / suggestions / examples / minLines 走 extra 透传，blacklist 阈值 40→60 真实生效；⑤ **private 槽位**（T1-T33 考古验收）：loader 合并顶层 private_files 13 条 + lib/audit/glob.js（**/*/{a,b} 零依赖 glob→RegExp）+ checkPrivateFiles（git ls-files 全量 × 分级 public→blocker / private→warning），auditFull/auditChanged 双路径接线；⑥ **侧边栏三项（G7）**：审计强度 quick/standard/deep（quick 跳 AST/语义重检查）+ 自定规则目录 auditRuleset（放 yml 即整体替换规则包）+ 权重覆盖 weightOverrides（JSON），三处同步（Config / SETTINGS_SCHEMA / client.js 内联）；⑦ i18n 降噪新增 dsh-skip-i18n 豁免标记；⑧ dual-scan 补旧项目 full-scan 通道 ｜334 全绿 | **regex 子模式 + performance 槽位**：① patterns 支持对象子模式 `{id, pattern, message}`（文档 §13 承诺兑现），命中输出 per-pattern 专属 message；② 新槽位 performance：memory-bomb（7 子模式：全量读入/循环内 push/链式 push/数组展开/无限循环/execSync/大对象序列化）+ busy-wait；③ push 误报降噪：`\.push` 宽正则（91 假阳性）→ 循环内 push + 链式 push 精确子模式；④ test/ 自动豁免补 performance（测试 fixture 含危险模式样本做断言）｜323 全绿 |
 | **1.0.3**（规则包对齐） | **旧项目规则包全量复制 + 3 新槽位 + 同名函数扩展**：① 复制旧项目 9 槽位 86 条规则（nodejs/frontend/npm/version/dsh/comment/structure/private/template），v2 规则从 12 条 → 96 条；② 新槽位 **robustness**（mkdir-before-write 写文件目录保障）、**folder**（文件夹数量审计 4 条：目录总数/单目录文件数/解包特征/.gitignore 覆盖，目录级检查器挂 auditFull）、**i18n**（国际化审计 3 条：硬编码文案 t() 包裹/插值/语言包分文件）；③ 新 kind 按「同名函数 + 注册一行」铁律：**blacklist**（comment 槽位黑名单加分制，24 黑名单+22 白名单+6 附加特征）+ **folder** + **npm-json**（两条旧「命中即提示」死规则改为 JSON 结构化真判定）+ **npm-json**（files 含 lib / js-yaml 已声明依赖即不报）；④ 修复测试暴露的真缺陷：`dsh-skip-sensitive` 对 regex 宽声明的安全类规则豁免失效（17 条假阳性）、func-lines/max-lines 识别中文「函数」名（旧项目 34 条规则误归类）、detectionMethod 顶层展开读取（test-file/locale-file 三处 `rule.extra?` 失效）；⑤ 保留 v2 独有能力（secret-aws-access-key 等合并回 nodejs 槽位防覆盖丢失）；⑥ skill 文档措辞中性化（去除文档中的对话措辞残留，符合 comment 审计规则）+ 新增 docs/DETAILS-EXEMPT-AND-RULES.md 细节权威；⑦ 测试 315→320 断言全绿（含 5 个新 kind 编译断言）｜双扫描 0 blocker（旧项目扫描 v2 区 0 blocker） |
 | **1.0.2**（修 bug） | **测试按入口重组 + 审计健壮性加固**：① 测试一脚本对一入口（test-framework 溶解归位：注册表/装载→规则、评分→评分、豁免→豁免、CLI/同步/打包→自身，test-cli 更名 test-self）；② **G9 匹配器空值崩溃**（`checkRegexRules`/`checkPathRegexRules` 收 `rules=undefined` 抛 `rules is not iterable`）→ `rules \|\| []`；③ **G10 重复串死检测**（tokenizer 产出 `str`/`tmpl`，检查器却过滤 `string`/`number` → 永不命中）→ 按实际类型名收集 + `tmpl` 入列 + 去引号；④ **G11 重复串泛滥**（修复后自审 343 条，多为文档数字/域名词汇）→ 排除 `num`/纯标识符/dotfile/短期望词 + 文档/测试目录豁免 maintainability 检查；⑤ **G12 `node_modules.orig` 入 .gitignore**：`ensureGitignore` 基线忽略 `node_modules/`+`node_modules.orig/`，扫描器跳过该目录（用户定稿）；⑥ 提取 `HINT_QUALITY`/`MSG_REPO_REQUIRED` 常量消除重复字面量；⑦ 审计入口测试 13→33 断言（315 总全绿） |
 | **1.0.1**（修 bug） | **六个真实缺陷修复**：① `summarize` 漏统 error 级（出现「0 blocker 0 warning 但 total=3」矛盾统计）→ error 归拦截级 + notice 单列；② **9 个 kind 死桶**（编译后无人消费，旧项目被批评的同一问题）→ 补 `checkNameLengthAst`/`checkComplexityAst`/`checkNestingDepthAst`/`checkFileLines`/`checkRepeatedStringsAst` 5 个 AST 检查器 + `credential-file`/`min-length`/`max-complexity`/`max-depth`/`max-lines`/`repeated-string`/`min-occurrences`/`semantic` 全接线；③ `[FUNC]-` 规则被 `regex` 抢走（detect 前缀 `/^[FUNC]-/` 是字符集非字面量）→ `/^(\[FUNC\]\|secret)-/`；④ **豁免完全失效**——`checks`/`exempt` 读的键名与编译产出 kind 不一致（`secret` vs `[FUNC]`），全仓统一；⑤ 槽位仍半硬编码（`RULE_SLOTS` 当默认基准）→ 纯动态发现 + `SLOT_ORDER_HINT` 仅排序偏好，放 yml 即生效；⑥ 同步漏真实加载源（只同步 `node_modules/`）→ `detectTargets` 双目标（`local-plugins/` 优先 + `node_modules/`），修旧项目「改动刷新看不到」根因；另加 `capSeverity` 规则 severity 上限约束（规则声明 warning 不得被检查器升为 blocker）｜278 断言全绿 |
