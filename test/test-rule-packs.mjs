@@ -323,6 +323,43 @@ test('1.0.3：全槽位编译 96+ 条 0 失败（9 旧 + robustness/folder/i18n 
   }
 });
 
+// ---------- 1.0.4：G3 同形字符防再犯（kind/id 含西里尔/希腊同形 → 显式拦截） ----------
+test('G3：findHomoglyphs 检出西里尔同形字符（с→c/е→e/а→a）', async () => {
+  const { findHomoglyphs, hasHomoglyphs, HOMOGLYPH_MAP } = await import('../lib/rule/homoglyph.js');
+  const pure = 'credential-ref';
+  assert.equal(findHomoglyphs(pure).length, 0, '纯 ASCII 应 0 命中');
+  const evil = 'credetial-ref'.replace('d', 'd'); // 正常
+  const tainted = 'сrеdеntial-ref'; // с/е/а 西里尔同形
+  const hits = findHomoglyphs(tainted);
+  assert.ok(hits.length > 0, '西里尔同形应命中');
+  assert.equal(hits[0].ascii, 'c', 'с 应映射 c');
+  assert.ok(Object.keys(HOMOGLYPH_MAP).length >= 20, '同形表应 ≥20 项');
+  assert.equal(hasHomoglyphs('аbc'), true);
+  assert.equal(hasHomoglyphs('abc'), false);
+});
+
+test('G3：compileRule 拦截同形 kind/id（不静默失效，显式报错）', () => {
+  const evilKind = {
+    id: 'test/homo', name: '同形', category: 'test', severity: 'warning',
+    kind: 'max-dерth', // д=西里尔 d 同形
+    max_depth: 3,
+  };
+  const res = compileRule(evilKind, { errors: [] });
+  assert.equal(res.ok, false, '同形 kind 应被拦截');
+  assert.ok(/同形字符/.test(res.error), `报错应说明同形: ${res.error}`);
+  const evilId = {
+    id: 'security/credential-ref', name: '凭据', category: 'security', severity: 'warning',
+    patterns: ['AKIA[0-9A-Z]{16}'],
+  };
+  // id 里的西里尔同形（credеntial 中 е=西里尔）
+  const taintedId = { ...evilId, id: 'security/cre' + 'д' + 'ential-ref' };
+  const res2 = compileRule(taintedId, { errors: [] });
+  assert.equal(res2.ok, false, '同形 id 应被拦截');
+  // 纯 ASCII 规则不受影响
+  const ok = compileRule(evilId, { errors: [] });
+  assert.equal(ok.ok, true, '纯 ASCII 规则应正常编译');
+});
+
 // ---------- 1.0.4：G6 字段认领（scoring/action/suggestions/minLines/examples 透传） ----------
 test('1.0.4：blacklist 认领 scoring.threshold_suspicious → threshold + action/suggestions 透传', () => {
   const res = compileRule({

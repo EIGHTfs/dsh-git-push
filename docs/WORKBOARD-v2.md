@@ -619,7 +619,7 @@ node ../dsh-git-push/cli.mjs audit . --json   # 0 blocker 才提交
 |---|---|---|---|
 | G1 | **规则覆盖度**：v2 仅 2 槽位 12 条；旧项目 9 槽位 86 条 | 旧项目 lib/audit-rules/ | ✅ 已修（1.0.3 复制 9 槽位 86 条 + 3 新槽位 → 96 条） |
 | G2 | 缺 7 个槽位：npm / frontend(html) / comment / dsh / private / structure / version | 同上 | ✅ 已修（1.0.3 全量复制，动态发现自动生效） |
-| G3 | kind 命名夹带同形字符：`сrеdеn t iаl-ref` 非 ASCII，按 ASCII 写规则匹配不上 | 全仓扫描 | **高** |
+| G3 | kind 命名夹带同形字符：`сrеdеn t iаl-ref` 非 ASCII，按 ASCII 写规则匹配不上 | 全仓扫描 | ✅ 已修（1.0.4：lib/rule/homoglyph.js 同形映射表 + findHomoglyphs；compileRule 入口对 kind/id 显式拦截，静默失效→显式报错；全仓扫描确认当前 0 命中） |
 | G4 | `summarize` 漏统 error 级（出现「0 blocker 0 warning 但 total=3」） | 本轮实测 | ✅ 已修（error 归 blocker） |
 | G5 | 正则大小写敏感导致驼峰凭据漏检（apiKey/API_KEY） | 本轮实测 | ✅ 已修（默认 i 标志） |
 | G6 | 规则字段覆盖：旧项目用到 30 字段，v2 编译函数需全部认领 | 字段统计 | ✅ 已修（1.0.4 全部认领：29 字段逐一核对，scoring→threshold 兜底 / action / suggestions / examples / minLines 走 extra 透传；blacklist 阈值 40→60 真实生效） |
