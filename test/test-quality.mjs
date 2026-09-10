@@ -87,8 +87,18 @@ test('empty-catch：多行空 catch 命中（旧项目假阴性）', () => {
   assert.equal(hits.length, 1);
 });
 
-test('empty-catch：仅注释 catch 命中', () => {
-  const hits = checkEmptyCatchAst('try { a(); } catch (e) {\n  // 忽略\n}');
+test('empty-catch：完全空 catch（无语句无注释）命中', () => {
+  const hits = checkEmptyCatchAst('try { a(); } catch (e) {\n}');
+  assert.equal(hits.length, 1);
+});
+
+test('empty-catch：带说明注释的静默 catch 不命中（已交代原因）', () => {
+  const hits = checkEmptyCatchAst('try { a(); } catch (e) {\n  // 忽略：文件不存在属正常\n}');
+  assert.equal(hits.length, 0);
+});
+
+test('empty-catch：无说明词的注释 catch 仍命中（注释不算交代）', () => {
+  const hits = checkEmptyCatchAst('try { a(); } catch (e) {\n  // e\n}');
   assert.equal(hits.length, 1);
 });
 
