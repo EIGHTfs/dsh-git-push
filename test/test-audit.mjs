@@ -168,6 +168,27 @@ test('checkRegexRules：命中报 + 未命中不报 + source 标注', () => {
   assert.equal(miss.length, 0);
 });
 
+test('checkRegexRules：子模式（subPatterns）命中输出专属 message（文档 §13）', () => {
+  const rules = [{
+    id: 'performance/memory-bomb', kind: 'regex', severity: 'warning',
+    message: '规则级 message',
+    subPatterns: [
+      { regex: /fs\.readFileSync\s*\(/, message: 'per-a 全量读入' },
+      { regex: /\.push\s*\(/, message: 'per-b 无界 push' },
+    ],
+    dimensions: ['性能'],
+  }];
+  const hit = checkRegexRules({ file: 'a.js', text: 'const x = fs.readFileSync("/b");', rules });
+  assert.equal(hit.length, 1, '应命中 1 条');
+  assert.equal(hit[0].message, 'per-a 全量读入', '子模式专属 message 优先');
+  const hit2 = checkRegexRules({ file: 'a.js', text: 'arr.push(1);', rules });
+  assert.equal(hit2[0].message, 'per-b 无界 push');
+  // 无 subPatterns 的旧结构仍走规则级 message（向后兼容）
+  const legacy = [{ id: 'r9', kind: 'regex', severity: 'warning', patterns: [/TODO/], message: '旧结构', dimensions: ['可读性'] }];
+  const lHit = checkRegexRules({ file: 'a.js', text: '// TODO fix', rules: legacy });
+  assert.equal(lHit[0].message, '旧结构');
+});
+
 test('checkRegexRules：空规则数组返回空（不崩溃）', () => {
   assert.deepEqual(checkRegexRules({ file: 'a.js', text: 'x', rules: [] }), []);
   assert.deepEqual(checkRegexRules({ file: 'a.js', text: 'x', rules: undefined }), []);

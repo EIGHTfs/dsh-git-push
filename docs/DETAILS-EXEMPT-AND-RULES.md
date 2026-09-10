@@ -143,7 +143,7 @@ output:
 | `max-depth` | `max_depth` 存在 | threshold | 可维护 |
 | `min-occurrences` | `min_occurrences` 存在且无 ignore 字段 | threshold | 可维护 |
 | `repeated-string` | `min_occurrences` + ignore_patterns/ignore_values | threshold + ignorePatterns + ignoreValues | 可维护+可读 |
-| `regex` | `pattern`/`patterns` 字符串 | pattern / patterns + exts（可选限定扩展名） | 可读性 |
+| `regex` | `pattern`/`patterns` 字符串 **或对象子模式 `{id,pattern,message}`** | pattern / patterns + subPatterns[]（{regex,message}）+ exts | 可读性 |
 | `path-regex` | `kind==='path-regex'` 或 `path_pattern`（非 credfile） | pathPattern | 可读+可维护 |
 | `link-check` | `kind==='link-check'` 或 (flaky_hosts + status_dead) | statusDead/statusTransient/flakyHosts/score*/timeoutMs/concurrency/maxLinks | 文档+可维护 |
 | `semantic` | detection_method / category security|accessibility / 名含测试等关键词 / id 含 testing|dependency | detectionMethod | 健壮性 |
@@ -383,6 +383,9 @@ cd ../dsh-git-push && node cli.mjs audit ../dsh-git-push-v2 --json
 ## 十三、示例规则：performance/memory-bomb（内存爆炸检测）
 
 > 完整规则定义（含子模式级 message + mitigation），可直接落进任意槽位 yml。
+> **已兑现（1.0.4）**：本示例已落地为 `lib/audit-rules/audit-rules-performance.yml`，
+> regex 编译器支持对象子模式（patterns 条目可为 `{id, pattern, message}`），
+> 命中时输出 per-pattern 专属 message（详见 §2.3 认领表 subPatterns 行）。
 
 ```yaml
 - id: performance/memory-bomb

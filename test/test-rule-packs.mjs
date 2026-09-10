@@ -321,3 +321,32 @@ test('1.0.3：全槽位编译 96+ 条 0 失败（9 旧 + robustness/folder/i18n 
     assert.ok(kinds.has(k), `kind ${k} 应存在`);
   }
 });
+
+// ---------- 1.0.4 beta：regex 子模式（文档 §13 memory-bomb 落地 + 测试断言） ----------
+test('1.0.4：regex 子模式编译（patterns 对象数组含 id/pattern/message）', () => {
+  const rule = {
+    id: 'performance/memory-bomb', name: '内存炸弹', category: 'performance',
+    severity: 'warning', description: 'd',
+    patterns: [
+      { id: 'a', pattern: 'fs\\.readFileSync\\s*\\(', message: 'per-a 专属信息' },
+      { id: 'b', pattern: '\\.push\\s*\\(', message: 'per-b 专属信息' },
+    ],
+  };
+  const res = compileRule(rule);
+  assert.equal(res.ok, true, `编译失败: ${res.error || ''}`);
+  assert.equal(res.rule.kind, 'regex');
+  assert.ok(Array.isArray(res.rule.subPatterns) && res.rule.subPatterns.length === 2, 'subPatterns 应保留 2 条');
+  assert.ok(res.rule.subPatterns[0].regex instanceof RegExp, '子模式 regex 应为 RegExp');
+  assert.equal(res.rule.subPatterns[0].message, 'per-a 专属信息');
+  assert.equal(res.rule.subPatterns[1].message, 'per-b 专属信息');
+});
+
+test('1.0.4：performance 槽位编译（memory-bomb 6 子模式 + busy-wait）', () => {
+  const r = loadRuleFiles(['performance']);
+  const compiled = compileAllRules(r.merged.rules, { errors: [] });
+  assert.ok(compiled.length >= 2, `performance 槽位应 ≥2 条（得 ${compiled.length}）`);
+  const bomb = compiled.find((c) => c.id === 'performance/memory-bomb');
+  assert.ok(bomb, 'memory-bomb 应编译');
+  assert.equal(bomb.kind, 'regex');
+  assert.ok(Array.isArray(bomb.subPatterns) && bomb.subPatterns.length >= 6, `memory-bomb 应含 ≥6 个子模式（得 ${bomb.subPatterns?.length}）`);
+});
