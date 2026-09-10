@@ -666,6 +666,19 @@ node ../dsh-git-push/cli.mjs audit . --json   # 0 blocker 才提交
 | 设置双位 UI（设置页 + 插件配置卡） | T34–T65 考古 | ✅ 插件配置卡 + settings 注入（G7 侧边栏页待补） |
 | 规则字段全认领（30 字段） | 字段统计 | ⚠️ G6 中 |
 
+**早期四份外部报告逐条核验（1.0.4，结论：v2 架构上问题已消除或不再适用）**
+
+| 报告问题 | 核验方式 | v2 结论 |
+|---|---|---|
+| `package.json` files 白名单与运行期依赖脱节（npm 装后 `createUserRepoTemplate` 必炸） | 读 `package.json` + 全仓 grep `template/user-repo` | ✅ 已消除：v2 无该运行期功能；files 白名单 = lib/skills/cli.mjs/client.js/cordis.patch.yml/README.md，与代码引用一致 |
+| `docs/code-quality-checklist.yaml` 被 gitignore 且三处代码依赖它（克隆后测试红、评分回退） | 全仓 grep `code-quality-checklist` / `locateQualityYaml` | ✅ 不再适用：v2 零代码依赖该文件（唯一命中是 structure.yml 的一条提醒正则）；权重表内置 `DEFAULT_WEIGHTS` |
+| `runGit`/`gitRaw` 无 try/catch、无 maxBuffer（git 缺失或超 1MB 输出即穿透） | 读 `lib/git/index.js` 封装 | ✅ 已消除：统一封装带 `maxBuffer: 16MB` + 异常捕获 |
+| 评分只算 4 个维度、其余 6 维硬编码（诚实性问题） | 读 `lib/score/index.js` | ✅ 已消除：`DEFAULT_WEIGHTS` 10 维齐全合计 100，无硬编码维度 |
+| 硬编码默认 owner `EIGHTfs` | 全仓 grep `EIGHTfs`（lib/ 与 cli.mjs） | ✅ 已消除：0 处命中 |
+| 巨型文件难维护（旧项目 core.js 2714 行 / index.js 1237 行） | `wc -l` 排序 | ✅ 已消除：最大文件 580 行（checks.js），lib 全量 3486 行按 10 入口拆分 |
+| 无工程工具链（无 eslint/测试框架） | 读 `package.json` scripts/devDeps | ⚠️ 部分差异（有意为之）：`npm test` = `node --test test/*.mjs`（337 断言）+ `npm run check` + scan-version + sync-plugin；按零依赖项目规范（zero-dep）不引入 eslint/第三方框架 |
+| 全端点无鉴权（POST /commit、/rebuild 仅靠本机端口兜底） | 读 `lib/http/index.js` | ✅ 已消除：`authPipeline`（Origin 校验 + CSRF + 写操作 confirm） |
+
 **考古复述的新 bug/教训（并入 §4 防再犯）**
 - 改动刷新看不到的根因 = 双副本不同步（旧 v1.46–v1.49 反复出现）→ G13 已修
 - 规则 detect 写 `/^[FUNC]-/` 被当字符集 → G10（本次实测复现同类：token 类型名不匹配）
