@@ -159,6 +159,33 @@ dsh-git-push
 }
 ```
 
+## 2.3.9 安装记录（1.0.4 · 2026-09-11）
+
+**动作**：卸载旧版 dsh-git-push（工作区 `../dsh-git-push` 源码保留），把本仓（v2）装为正式插件。
+
+| 项目 | 结果 |
+|---|---|
+| 插件目录 | `profiles/web/local-plugins/dsh-git-push`（真实目录，无 v2 标识）+ `profiles/web/node_modules/dsh-git-push`（两份 diff 一致、零软链） |
+| profile 依赖 | `dependencies.dsh-git-push: file:./local-plugins/dsh-git-push`（未改，指向同路径） |
+| bundles | 含 `dsh-git-push`（未改） |
+| 用户层 patch | `cordis.patch.yml` 的 `- id: git-push` 段按重构版字段重写（保留 workspaceRoot/extraRepos/auditEnabled；旧版专有字段注释留档）；备份 `cordis.patch.yml.bak-20260911013636` |
+| 插件配置目录 | `.dsh/git-push/`（github-token / id_ed25519 / dsh-repo-index.json / tools-index.md）保留，重构版共用 |
+| 旧插件备份 | 删除前 3 个历史 `.bak-*`（9月6–7日）未动，仍在 local-plugins |
+
+**装前 dry-run（install-plugin-dryrun-first 四检）**：① 从真实装载路径 import 通过（name/ns/apply/listTools 正常，7 工具）② js-yaml 4.3.2 从 profile node_modules 解析通过 ③ patch YAML 合法、git-push 段进树 ④ 三处装载齐备（源码 + dependencies + patch）。
+
+**契约核验（DSH client-modules 要求）**：`dsh.client.platform=web` ✓、`exports["./client"]=./client.js` 文件存在 ✓、`dsh.bundle.patch=./cordis.patch.yml` 存在 ✓、`dsh.skills` 4 项全存在 ✓、`client.inject` 三件套齐全 ✓。
+
+**⚠️ 与旧版的功能差异（工具集 12 → 7）**
+
+| 共同（6） | v2 独有（1） | 旧版独有、v2 未实现（6） |
+|---|---|---|
+| git_scan / git_commit_push / code_audit / git_clone / git_remote_create / git_set_visibility | link_check | **audit_full_scan / git_gen_readme / git_rebuild_history / git_push_rules / push_permit_status / push_permit_config** |
+
+后 6 项属重构未迁移能力：需要时按 `lib/` 统一入口补（git 总入口 / 评分 / 推送许可），或暂用旧仓源码 + CLI 手动调用。
+
+**生效条件**：重启 DSH 后新插件进进程（当前进程仍加载旧代码）。
+
 ## 2.4 版本节奏
 
 | 版本 | 内容 | 状态 |
