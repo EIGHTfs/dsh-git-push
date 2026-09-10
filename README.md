@@ -142,7 +142,8 @@ DSH（DeepSeek Harness）git 自动提交推送插件——统一函数入口架
 
 | 版本 | 说明 |
 |---|---|
-| **0.2.0**（当前） | **链接判断落地**：lib/link-check/index.js（extractLinks 去重去占位符 / gradeResult 分级：404·403→-3、DNS→-2、超时·5xx→-1 / flaky 域名网络错误 ×0.2 / probeLinks 并发受限 / checkLinks 统一问题对象，**只 warning 永不 blocker**）+ audit-rules-docs.yml 槽位（link-check kind）+ CLI `link-check <路径>`；test-link-check 24 断言（233 总全绿） |
+| **1.0.0**（当前 · 首发） | **DSH 插件接线完成**：lib/index.js（apply + 7 工具注册 + HTTP 鉴权分发 + Config schema）+ client.js（DSH 客户端插件，手写 createElement/零外部资源/开关默认关）+ scripts/sync-plugin.mjs（双副本同步，默认 dry-run）+ cordis.patch.yml + scanRepos；test-plugin 25 + test-client 21 断言（263 总全绿） |
+| **0.2.0** | **链接判断落地**：lib/link-check/index.js（extractLinks 去重去占位符 / gradeResult 分级：404·403→-3、DNS→-2、超时·5xx→-1 / flaky 域名网络错误 ×0.2 / probeLinks 并发受限 / checkLinks 统一问题对象，**只 warning 永不 blocker**）+ audit-rules-docs.yml 槽位（link-check kind）+ CLI `link-check <路径>`；test-link-check 24 断言（233 总全绿） |
 | **0.1.8** | **侧边栏落地**：lib/client/index.js 手写 createElement（无 JSX，无需构建）+ 零外部资源（纯内联 CSS，无 CDN/外链字体图标）+ 审计开关默认关（auditEnabled/pushPermitEnabled 等全 false）+ 配置即时生效（onChange 立即回调、类型校正、未知键丢弃）+ 不实施 viewer；test-client 16 断言（208 总全绿） |
 | **0.1.7** | **上下文注入 + HTTP 总入口落地**：lib/http/index.js 纯函数鉴权（checkOrigin 同源判定忽略端口/路径 → 无 Origin/跨源 403、checkWriteConfirm 破坏性操作缺 confirm → 400、checkBodySize 5MB → 413、authPipeline、routeRequest 路由分发、readJsonBody 流式 413 防护）+ lib/context/index.js（createEnvInjectionText/parseEnvInjection/isWithinRoot 防目录穿越）；test-http 30 + test-context 7 断言（190 总全绿）+ 旧项目扫描 0 blocker |
 | **0.1.6** | **豁免总入口落地**：exemptForFinding 注册表驱动统一消费（7 标记全接入，blocked/lineLevel/hint 声明式）+ 位置语义（文件头前 3 行=整文件 / sensitive/func-length/residue 行内单点）+ residue/style 仅代码文件生效 + audit-rules-*.yml 规则定义文件自动豁免自举命中（修复 §2.5 记录的 6 个 debugger 假阳性）；test-exempt 25 断言（153 总全绿）+ v2 自审 0 blocker（98/100 A）+ 旧项目扫描 0 blocker |

@@ -1,6 +1,6 @@
 # WORKBOARD v2 —— dsh-git-push 开发任务看板（榜样版 · 交接版）
 
-> **状态**：开发进行中（已提交 0.0.0 / 0.1.0~0.1.8 / **0.2.0**；下一里程碑 1.0.0 DSH 插件接线首发）
+> **状态**：**1.0.0 首发完成**（0.0.0 / 0.1.0~0.1.8 / 0.2.0 / **1.0.0**）；后续按需迭代（规划槽位 npm/html/frontend/comment/dsh/private/structure/version 见 PLANNED_SLOTS）
 > **版本号规则（用户指定）**：大版本号从 **0** 开始——0.x = 单机引擎与总入口建设期，1.0.0 = DSH 插件接线完成首发（原「2.0.0」改为 1.0.0）。
 > **仓库**：`工作区/dsh-git-push-v2`（本地 master，**不推送**）
 > **看板双重身份**：
@@ -174,6 +174,7 @@ dsh-git-push
 | **0.1.7** | **上下文注入 + HTTP 总入口（Origin/CSRF/写确认/413）** | ✅ 已提交（见 §3.7） |
 | **0.1.8** | **侧边栏（手写 createElement 无 JSX + 零外部资源 + 开关默认关）** | ✅ 已提交（见 §3.8） |
 | **0.2.0** | **链接判断 yml 规则（link-check 分级扣分 + flaky 打折）** | ✅ 已提交（见 §3.9） |
+| **1.0.0** | **DSH 插件接线 + 双副本同步 + 推送准备（首发）** | ✅ 已提交（见 §3.10） |
 | 0.1.3 | git 总入口（token/commit/push/clone/建仓/可见性） | ⏳ |
 | 0.1.4 | 自身总入口（版本单源/README 模板/yml 模板/CLI 完善） | ⏳ |
 | 0.1.5 | 评分总入口（AST 化质量检查 + 口径锚定） | ⏳ |
@@ -181,7 +182,7 @@ dsh-git-push
 | 0.1.7 | 上下文注入 + HTTP API + 测试总入口 | ⏳ |
 | 0.1.8 | 侧边栏（复用旧 client.js） | ⏳ |
 | 0.2.0 | 链接判断 yml 规则（link-check kind） | ⏳ |
-| 1.0.0 | DSH 插件接线 + 双副本同步 + 推送准备 | ⏳ |
+| 1.0.0 | DSH 插件接线 + 双副本同步 + 推送准备 | ✅ 已提交（见 §3.10） |
 
 ## 2.5 卡点记录：0.1.2 已修复（原 5 fail → 44 全绿）
 
@@ -463,6 +464,24 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
   - [x] test-link-check 24 断言全绿（233 总测试全绿）
   - [x] CLI link-check 子命令可用（docs 扫描 0 问题）
 
+### 3.10 DSH 插件接线 + 双副本同步 + 推送准备（1.0.0）✅ 已提交（首发）
+- **思路**：把十大总入口接到 DSH 运行时（薄适配层）；工作区源 → DSH 插件目录双副本同步；产物齐备待推送（**按纪律不推送**）。
+- **已实现**：
+  - `lib/index.js` 插件入口：`apply(ctx, config)`（systemPrompt 注入 + 工具注册 + HTTP 路由 + settings 槽位）、`listTools()` 7 工具、`callTool()` 分发、`handleHttp()` 鉴权前置分发、`Config` schema（开关默认关）。
+  - `lib/git/index.js` 新增 `scanRepos()` + `describeRepo()`（分支/remote/变更数/最近提交）。
+  - `client.js` 根级 DSH 客户端插件（`__ModuleLoader__.load` 格式，手写 createElement、零外部资源、开关默认关）。
+  - `scripts/sync-plugin.mjs` 双副本同步（**默认 dry-run**，`--write` 才写；排除 test/、看板、node_modules；幂等：内容一致跳过）。
+  - `cordis.patch.yml`（insert 顶层写法）+ package.json exports/files/bin（`npm run sync-plugin`）。
+- **验收**（全部通过）：
+  - [x] 入口导出齐全（name/Config/apply/callTool/handleHttp/listTools）且可 apply 无 ctx 不崩
+  - [x] 工具清单 7 个（git_scan/git_commit_push/code_audit/git_clone/git_remote_create/git_set_visibility/link_check）均带描述与参数
+  - [x] 工具分发：git_scan 扫到本仓、缺参报错、未知工具报错、code_audit 出 summary+quality
+  - [x] HTTP 接线后鉴权仍生效（GET 免 Origin / POST 无 Origin 403 / 破坏性端点缺 confirm 400 / 超大 body 413 / 未知端点 404）
+  - [x] 双副本同步 dry-run 不写盘、真写幂等（第二次 0 写）、缺目标报错不静默、探测无 HOME 不崩
+  - [x] 客户端插件零外部资源 + 无 JSX + 开关默认关（与服务端 schema 一致）
+  - [x] 推送准备产物齐备（package.json name/version/exports/files/bin + cordis.patch.yml）
+  - [x] test-plugin 25 断言 + test-client 21 断言全绿（263 总测试全绿）
+
 ---
 
 ## 4 问题清单（五份外部报告 → v2 自检，防再犯）
@@ -534,7 +553,8 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
 | 版本号改口径 | 93734cf | **用户要求**：大版本号从 0 开始（1.x→0.x，2.0.0→1.0.0），全仓文档/代码/看板/历史提交信息统一 | 190 全绿 ✅ |
 | 0.1.7 | 93734cf | 上下文注入 + HTTP 总入口：Origin/CSRF(403)/写确认(400)/413 + 路由分发 + 注入文本机器解析 + test-http 30 + test-context 7（190 全绿） | 旧项目扫描 0 blocker ✅ |
 | 0.1.8 | 9699179 | 侧边栏：手写 createElement 无 JSX + 零外部资源 + 开关默认关 + 配置即时生效 + 无 viewer + test-client 16（208 全绿） | 旧项目扫描 0 blocker（version/major-zero 为用户指定口径豁免）✅ |
-| 0.2.0 | 待提交 | 链接判断：link-check kind yml 槽位 + 分级扣分(404/-3·DNS/-2·超时/-1) + flaky×0.2 + 并发探测 + CLI 子命令 + test-link-check 24（233 全绿） | 旧项目扫描 0 blocker（同前豁免）✅ |
+| 0.2.0 | 45a0f36 | 链接判断：link-check kind yml 槽位 + 分级扣分(404/-3·DNS/-2·超时/-1) + flaky×0.2 + 并发探测 + CLI 子命令 + test-link-check 24（233 全绿） | 旧项目扫描 0 blocker（同前豁免）✅ |
+| 1.0.0 | 待提交 | **首发**：DSH 插件接线（lib/index.js apply/7 工具/HTTP/Config）+ scanRepos + client.js 根级客户端插件 + 双副本同步脚本（dry-run 默认）+ cordis.patch.yml + package.json exports/files + test-plugin 25（263 全绿） | 旧项目扫描 0 blocker（version/major-zero 为用户指定口径豁免）✅ |
 
 ---
 

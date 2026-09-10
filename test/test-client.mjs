@@ -145,3 +145,40 @@ test('模块描述：不实现 viewer（0.1.8 决策）', () => {
   const info = clientModuleInfo();
   assert.ok(!JSON.stringify(info).includes('viewer'), '侧边栏不应含提交历史查看器入口');
 });
+// ---------- 根 client.js（DSH 客户端插件适配层，1.0.0） ----------
+const rootClientSrc = readFileSync(join(ROOT, 'client.js'), 'utf8');
+
+test('client.js：DSH 模块加载器格式 + 手写 createElement 无 JSX', () => {
+  assert.ok(rootClientSrc.includes('__ModuleLoader__.load'), '应为 DSH 客户端模块入口');
+  assert.ok(rootClientSrc.includes("id: 'dsh-git-push'"));
+  assert.ok(rootClientSrc.includes('react.createElement') || rootClientSrc.includes('const h = react.createElement'));
+  assert.ok(!/jsx-runtime/.test(rootClientSrc), '不应依赖 jsx-runtime');
+});
+
+test('client.js：零外部资源（内联 CSS 无外链/url()/@import）', () => {
+  // 取源码里 INLINE_CSS 常量文本做实际检查（注释中提及 url() 属说明文字）
+  const cssMatch = /const INLINE_CSS = ([\s\S]*?);\n/.exec(rootClientSrc);
+  assert.ok(cssMatch, '应能取到 INLINE_CSS 常量');
+  assert.deepEqual(collectExternalRefs(cssMatch[1]), []);
+  assert.ok(!cssMatch[1].includes('@import'));
+  assert.ok(!cssMatch[1].includes('url('));
+  // 源码整体不应出现真实外链字符串
+  assert.ok(!/['"`]https?:\/\//.test(rootClientSrc), '不应引用外部 URL');
+});
+
+test('client.js：开关默认关（与服务端 schema 一致）', () => {
+  for (const key of ['auditEnabled', 'pushPermitEnabled', 'llmAudit', 'hardcodeFullScan', 'injectFullSkill']) {
+    assert.ok(new RegExp(`key: '${key}', type: 'boolean', default: false`).test(rootClientSrc), `${key} 应默认 false`);
+  }
+});
+
+test('client.js：设置项与服务端 SETTINGS_SCHEMA 键一致', () => {
+  const serverKeys = SETTINGS_SCHEMA.map((s) => s.key).filter((k) => !['commitMessage', 'injectRepoIndexFull'].includes(k));
+  for (const k of serverKeys) {
+    assert.ok(rootClientSrc.includes(`'${k}'`), `client.js 缺设置项 ${k}`);
+  }
+});
+
+test('client.js：不实施 viewer', () => {
+  assert.ok(!rootClientSrc.includes('viewer'));
+});
