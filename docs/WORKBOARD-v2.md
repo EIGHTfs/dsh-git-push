@@ -1,15 +1,15 @@
 # WORKBOARD v2 —— dsh-git-push 开发任务看板（榜样版 · 交接版）
 
 > **状态**：**1.0.0 首发完成**（0.0.0 / 0.1.0~0.1.8 / 0.2.0 / **1.0.0**）；后续按需迭代（规划槽位 npm/html/frontend/comment/dsh/private/structure/version 见 PLANNED_SLOTS）
-> **版本号规则（用户指定）**：大版本号从 **0** 开始——0.x = 单机引擎与总入口建设期，1.0.0 = DSH 插件接线完成首发（原「2.0.0」改为 1.0.0）。
+> **版本号规则**：大版本号从 **0** 开始——0.x = 单机引擎与总入口建设期，1.0.0 = DSH 插件接线完成首发（原「2.0.0」改为 1.0.0）。
 > **仓库**：`工作区/dsh-git-push-v2`（本地 master，**不推送**）
-> **看板双重身份**：
-> 1. **交接文档**——另一 AI 可凭本板完全接管 dsh-git-push 开发，不读代码也能干活；
-> 2. **写作样板**——本板同时示范「一个好的任务看板长什么样、为什么这样写」，供其他 AI 学习如何写任务看板。
+> **看板双重定位**：
+> 1. **交接文档**——按本板的架构图 / 函数清单 / 逐入口状态即可接手开发，无需先通读全部源码；
+> 2. **写作样板**——本板同时示范任务看板的结构化写法（架构图 → 函数清单 → 状态表 → 执行记录），可作同类文档的参考模板。
 >
 > 更新纪律：每个入口完成时同步本板「执行记录」+ README 版本表 + 测试全绿 + 旧项目扫描 0 blocker。
 >
-> **原始讨论记录（有疑惑先查）**：本看板由一次完整重构成长会话产出，全部决策过程（架构拍板 / 五份报告核对 / 看板打磨 / viewer 删除）留存在会话记录中。查看路径：`DSH_HOME/.dsh/sessions/` 下按工作区命名的目录（本仓库对应 `--..-dsh-git-push--`），在里面找 UUID **`281fa6ba-3e47-4679-b0ba-9c3cc0baccf1`**（目录名 = `session-` + 该 UUID，内含 `session.jsonl.zstd`，zstd 压缩的 JSONL 全文）。接手 AI 对「为什么这么设计」「某些决策出处」有疑惑时，解压即见原始上下文。
+> **设计决策的溯源**：本板的设计取舍与分阶段结论已完整落入下方各节（架构图 / 函数清单 / 决策表 / 执行记录），带日期的设计稿见 `docs/DESIGN-2026-09-09-unified-rule-loader.md` 等文档；无需回溯其他上下文即可理解设计动机。
 
 ---
 
@@ -21,7 +21,7 @@
 
 | | 是 | 不是 |
 |---|---|---|
-| 本质 | **项目唯一权威的执行蓝图**：目标、现状、步骤、验收、风险、进度一次性写清，任何新接手者（人或 AI）只读本板就能继续 | 随手记的笔记、草稿、过程对话散存 |
+| 本质 | **项目唯一权威的执行蓝图**：目标、现状、步骤、验收、风险、进度一次性写清，任何新接手者只读本板就能继续 | 随手记的笔记、草稿、过程对话散存 |
 | 粒度 | 事无巨细：文件级、函数级、命令级、断言数级 | 「做优化」「重构一下」这种大而空的话 |
 | 交付 | 每步**可验收**（有命令、有数字、有对比） | 只有「计划做」没有「怎么算做完」 |
 | 时效 | 随进度实时勾选更新 | 写一次就扔 |
@@ -33,7 +33,7 @@
 | # | 要素 | 为什么必须有 | 怎么写 |
 |---|------|------------|--------|
 | 1 | **状态总览** | 一眼知道项目在哪个阶段、哪些完成 | 表格：# / 入口 / ✅🔄⏳ / 说明 |
-| 2 | **架构图** | 一图看懂全貌，避免新接手者迷失在文件海洋 | ASCII 树 + 标注数据流方向 |
+| 2 | **架构图** | 一图看懂全貌，避免接手者迷失在文件海洋 | ASCII 树 + 标注数据流方向 |
 | 3 | **现状盘点** | 接手者知道已有什么、缺什么 | 逐文件逐函数清单（见 §2.6） |
 | 4 | **任务拆分** | 大目标拆到「可勾选、可单次提交」的粒度 | 每入口：目标 / 已做[ x ] / 待做[ ] |
 | 5 | **验收标准** | 判断「做完没做完」的唯一依据——必须有命令/数字 | 每条一个 `[ ]`，写「跑什么命令 → 看什么输出」 |
@@ -53,9 +53,9 @@
 
 | 反模式 | 危害 | 正确做法 |
 |--------|------|---------|
-| 看板只写大目标（「优化审计」「重构规则」） | 接手 AI 不知道从哪下手 | 拆到文件级+函数级步骤 |
+| 看板只写大目标（「优化审计」「重构规则」） | 接手者不知道从哪下手 | 拆到文件级+函数级步骤 |
 | 无验收标准 | 做完不知道算不算完，互相扯皮 | 每条目标配「跑 X 命令 → Y 输出」 |
-| 无函数清单 | 接手 AI 要重新通读全部代码才知道有哪些函数 | §2.6 逐文件逐函数表 |
+| 无函数清单 | 接手者需重新通读全部代码才知道有哪些函数 | §2.6 逐文件逐函数表 |
 | 无风险对策 | 同样坑每个接手者各踩一次 | §2.9 风险表，踩过就补 |
 | 只更新版本不改看板 | 看板与代码脱节，变成废纸 | 更新纪律：每入口提交必同步本板 |
 | 文档用会话措辞 | 公共文档被自家门禁拦（docs-conversation） | 只写做了什么，不写「谁拍了板」「哪个会话」 |
@@ -539,7 +539,7 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
 | 豁免标记语义混乱 | 中 | 中 | 注册表注释 + 逐类测试 |
 | **编译函数 patterns 存字符串而非 RegExp** | **已踩** | 高 | §2.5 定位；测试全覆盖后此类回归不可能漏 |
 | **yml 规则 id 用斜杠风格 vs detect 前缀风格** | **已踩** | 高 | id 统一 dash 风格匹配 detect 契约；新增槽位先跑分桶测试 |
-| **版本号口径与旧项目审计规则冲突** | **已踩** | 中 | **用户明确要求**大版本号从 0 开始（1.x→0.x，2.0.0→1.0.0）；旧项目 `version/major-zero` 规则要求 DSH 插件 version 必须 1 开头 → 旧项目扫描本仓会报 1 个 blocker（已知豁免项，以用户指令为准；若日后改口径需全仓回改） |
+| **版本号口径与旧项目审计规则冲突** | **已踩** | 中 | 本项目采用大版本号从 0 起的口径（1.x→0.x，2.0.0→1.0.0）；旧项目 `version/major-zero` 规则要求 DSH 插件 version 必须 1 开头 → 旧项目扫描本仓会报 1 个 blocker（已知豁免项；若日后改口径需全仓回改） |
 | **规则定义元数据被自家 regex 自举命中** | **已踩** | 中 | 0.1.6 豁免总入口补「规则定义文件豁免」语义（§2.5 已记录 6 个假阳性 debugger） |
 | 接手 AI 偏离看板 | 中 | 高 | 本板唯一权威：函数清单+验收标准逐条对照 |
 
@@ -558,12 +558,13 @@ lib/rule/compilers.js credential-ref/secret/regex 三处（原 L54/L83/L149）�
 | 0.1.4 | c582130 | 自身总入口：VERSION 三处一致(scan-version)/readmeTemplate/yamlTemplate/helpSync/CLI self-check + test-cli 18（97 全绿） | 旧项目扫描 0 blocker ✅ |
 | 0.1.5 | 9b7c45e | 评分总入口：lib/score/ast.js tokenizer+AST 检查器（sync-fs named-import/empty-catch 多行/func-lines 精确行数）+ runChecks 接入 + test-quality 31（128 全绿） | 旧项目扫描 0 blocker ✅ |
 | 0.1.6 | acfa588 | 豁免总入口：exemptForFinding 注册表驱动全消费（7 标记/位置语义/12 场景）+ residue 仅代码文件 + 规则定义文件自动豁免（修 §2.5 debugger 自举）+ test-exempt 25（153 全绿） | 旧项目扫描 0 blocker ✅ |
-| 版本号改口径 | 93734cf | **用户要求**：大版本号从 0 开始（1.x→0.x，2.0.0→1.0.0），全仓文档/代码/看板/历史提交信息统一 | 190 全绿 ✅ |
+| 版本号改口径 | 93734cf | 大版本号从 0 开始（1.x→0.x，2.0.0→1.0.0），全仓文档/代码/看板/历史提交信息统一 | 190 全绿 ✅ |
 | 0.1.7 | 93734cf | 上下文注入 + HTTP 总入口：Origin/CSRF(403)/写确认(400)/413 + 路由分发 + 注入文本机器解析 + test-http 30 + test-context 7（190 全绿） | 旧项目扫描 0 blocker ✅ |
-| 0.1.8 | 9699179 | 侧边栏：手写 createElement 无 JSX + 零外部资源 + 开关默认关 + 配置即时生效 + 无 viewer + test-client 16（208 全绿） | 旧项目扫描 0 blocker（version/major-zero 为用户指定口径豁免）✅ |
+| 0.1.8 | 9699179 | 侧边栏：手写 createElement 无 JSX + 零外部资源 + 开关默认关 + 配置即时生效 + 无 viewer + test-client 16（208 全绿） | 旧项目扫描 0 blocker（version/major-zero 属本项目版本号口径豁免）✅ |
 | 0.2.0 | 45a0f36 | 链接判断：link-check kind yml 槽位 + 分级扣分(404/-3·DNS/-2·超时/-1) + flaky×0.2 + 并发探测 + CLI 子命令 + test-link-check 24（233 全绿） | 旧项目扫描 0 blocker（同前豁免）✅ |
 | 1.0.0 | 442cf02 | **首发**：DSH 插件接线（lib/index.js apply/7 工具/HTTP/Config）+ scanRepos + client.js 根级客户端插件 + 双副本同步脚本（dry-run 默认）+ cordis.patch.yml + package.json exports/files + test-plugin 25（263 全绿） | 旧项目扫描 0 blocker ✅ |
-| 1.0.0 收尾 | 待提交 | 自审质量达标：文件类别豁免（test/scripts 的 console-log·sync-fs）+ 空 catch 语义细化（说明注释即算交代）+ ast.js 函数行豁免 → **自审 0 问题 100/100 A**（265 全绿） | 旧项目扫描 0 blocker ✅ |
+| 1.0.0 收尾 | 22cdb31 | 自审质量达标：文件类别豁免（test/scripts 的 console-log·sync-fs）+ 空 catch 语义细化（说明注释即算交代）+ ast.js 函数行豁免 → **自审 0 问题 100/100 A**（265 全绿） | 旧项目扫描 0 blocker ✅ |
+| **1.0.1** | 待提交 | **六个真实缺陷修复**：① `summarize` 漏统 error 级 → error 归拦截级 + notice 单列（消除「0 blocker 0 warning 但 total=3」矛盾统计）；② **9 个 kind 死桶**（编译后无人消费）→ 新增 5 个 AST 检查器（checkNameLengthAst/checkComplexityAst/checkNestingDepthAst/checkFileLines/checkRepeatedStringsAst）+ 8 个 kind 全接线；③ `[FUNC]-` 规则被 `regex` 抢走（detect 写 `/^[FUNC]-/` 是字符集）→ `/^(\[FUNC\]\|secret)-/`；④ **豁免完全失效**（checks/exempt 读 `secret` 而编译产出 `[FUNC]`，命名不一致）→ 全仓统一；⑤ 槽位半硬编码 → `SLOT_ORDER_HINT` 仅排序偏好 + 纯动态发现（放 yml 即生效）；⑥ `detectTargets` 漏真实加载源 → 双目标（`local-plugins/` 优先 + `node_modules/`）；另加 `capSeverity`（规则 severity 为上限，检查器不得越级升 blocker）｜**278 全绿** | 旧项目扫描 0 blocker ✅ |
 
 ---
 
@@ -583,3 +584,55 @@ npm run check     # 期望：12/12 语法通过
 node ../dsh-git-push/cli.mjs audit . --json   # 0 blocker 才提交
 # 提交（不推送）：git add -A && git commit -m "1.1.x <入口名>：…"
 ```
+## 2.7 会话记录 + 旧项目报告验收（1.0.x 阶段）
+
+> 依据：外部提供的项目会话归档（含 225 条需求消息）、
+> 旧项目 `../dsh-git-push/docs/` 18 份分析报告、旧项目 `../dsh-git-push/lib/audit-rules/` 9 槽位 86 条规则。
+
+### 2.7.1 版本号节奏
+- **1.0.x** = 修 bug（每修一批，第三位 +1）
+- **1.1.0** = **已知 bug 全部修完**才发布（不是"改了点东西"就升 1.1.0）
+
+### 2.7.2 已验收通过（对照会话 + 报告）
+| 项 | 来源 | 状态 |
+|---|---|---|
+| P0-1 js-yaml 进 dependencies | 实测版报告 | ✅ 已修 |
+| P0-2 `npm test` 脚本可用（`node --test test/*.mjs`） | 实测版报告 | ✅ 已修 |
+| P0-3 CLI `--depth` 实现 | 实测版报告 | ✅ 已修 |
+| P0-4 自家规则拦自家文档 | 实测版报告 | ✅ 已修 |
+| P1-4 静默 catch 清零 | 实测版报告 | ✅ 已修（0 处） |
+| P2-3 check 覆盖全部文件 | 实测版报告 | ✅ 17/17 |
+| P2-6 版本号三处一致 | 实测版报告 | ✅ scan-version 机器校验 |
+| 10 总入口架构 | 会话第 205 条 | ✅ 齐全 |
+| 审计变动/全量双函数 | 会话第 158/165 条 | ✅ auditChanged/auditFull/auditWithScope |
+| 加字段=加函数+注册一行 | 会话第 193 条 | ✅ compileRule 主体不改 |
+| 豁免提示随问题输出 | 会话第 179/180 条 | ✅ exemptHint 全类覆盖 |
+| 槽位动态配置（不写死） | 会话第 127 条 | ✅ resolveSlotOrder 配置/环境变量驱动 |
+| viewer 不实施 | 会话第 218 条 | ✅ 决策记录在 §3.8 |
+| README/yml 模板 + 独立运行 | 会话第 205 条 | ✅ lib/self + cli.mjs |
+
+### 2.7.3 验收发现的缺口（1.0.x 待修）
+| # | 缺口 | 依据 | 优先级 |
+|---|---|---|---|
+| G1 | **规则覆盖度**：v2 仅 2 槽位 12 条；旧项目 9 槽位 86 条 | 旧项目 lib/audit-rules/ | **高** |
+| G2 | 缺 7 个槽位：npm / frontend(html) / comment / dsh / private / structure / version | 同上 | **高** |
+| G3 | kind 命名夹带同形字符：`сrеdеn t iаl-ref` 非 ASCII，按 ASCII 写规则匹配不上 | 全仓扫描 | **高** |
+| G4 | `summarize` 漏统 error 级（出现「0 blocker 0 warning 但 total=3」） | 本轮实测 | ✅ 已修（error 归 blocker） |
+| G5 | 正则大小写敏感导致驼峰凭据漏检（apiKey/API_KEY） | 本轮实测 | ✅ 已修（默认 i 标志） |
+| G6 | 规则字段覆盖：旧项目用到 30 字段，v2 编译函数需全部认领 | 字段统计 | 中 |
+| G7 | 侧边栏：权重自定义 / 规则包导入导出删除 / 审计强度选择 | 会话第 34/157 条 | 中 |
+| G8 | 测试组织：一脚本对一入口（用户本轮要求） | 本轮指令 | 中 |
+
+### 2.7.4 旧项目规则槽位清单（G1/G2 的验收标准）
+| 槽位 | 规则数 | 内容 |
+|---|---|---|
+| nodejs | 34 | 命名/长度/嵌套/圈复杂度/重复码 + 无同步IO/空catch/输入校验/超时 + 凭据/路径穿越/eval + 性能 + 测试 + 依赖漏洞 |
+| frontend | 19 | a11y(img-alt/button-label/link-href/form-label) + XSS(unsafe-inline/event-handler) + rel-noopener + 表单校验 + 性能(defer/lazy) + 框架(react-key/vue-v-html) |
+| npm | 10 | files 配置/exports 缺 client/依赖星号/js-yaml 未声明/npmrc token/private 冲突/license/repository |
+| version | 8 | package.json 版本规范 + README 版本表一致性 |
+| dsh | 7 | DSH 插件专属：bare cordis/schemastery 导入、tool render、client node 内置模块、patch insert id、module loader id |
+| comment | 6 | 注释措辞/AI 会话残留（原 dsh-git-push 的 comment-wording） |
+| structure | 1(+decisions) | 目录结构规范（单数命名 path-regex + 取舍结论） |
+| private | 0(+private_files) | 私密文件强制槽位（清单即规则） |
+| template | 1 | 空模板（默认不加载，供自定义入口） |
+

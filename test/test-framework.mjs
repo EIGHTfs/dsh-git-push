@@ -38,12 +38,17 @@ test('注册表：compileAllRules 收集错误不中断', () => {
   assert.equal(ctx.errors.length, 1);
 });
 
-test('装载：RULE_SLOTS 只列已建槽位（缺失槽位不进默认装载）', () => {
-  assert.ok(RULE_SLOTS.includes('nodejs'));
-  assert.ok(RULE_SLOTS.includes('docs'));
-  assert.ok(RULE_SLOTS.includes('template') === false); // template 默认不加载
-  // 规划中未建的槽位不该在默认装载列表（否则每次编译报缺失）
-  assert.ok(!RULE_SLOTS.includes('npm'), 'npm 槽位未建，不应列入默认装载');
+test('装载：槽位全动态——由目录文件决定，放文件即生效', () => {
+  const discovered = discoverRuleSlots();
+  // 已建槽位必在发现列表里
+  assert.ok(discovered.includes('nodejs'));
+  assert.ok(discovered.includes('docs'));
+  // 默认装载不报缺失：只装目录里真实存在的槽位
+  const r = loadRuleFiles();
+  assert.equal(r.errors.length, 0, `不应报缺失：${r.errors.join('; ')}`);
+  for (const slot of r.order) assert.ok(discovered.includes(slot), `${slot} 应实际存在`);
+  // template 默认不加载（模板保持为空，不进默认装载）
+  assert.ok(!r.order.includes('template'));
 });
 
 test('装载：loadRuleFiles 对缺失槽位不崩溃，返回错误收集', () => {

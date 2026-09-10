@@ -73,7 +73,7 @@ test('auditFull：非 git 目录出 findings（secret 命中）', () => {
   const res = auditFull(fixture);
   assert.equal(res.ok, true);
   assert.equal(res.scope, 'full');
-  const secret = res.findings.filter((f) => f.kind === 'secret');
+  const secret = res.findings.filter((f) => f.kind === '[FUNC]');
   assert.ok(secret.length >= 1, `应命中 secret（得 ${secret.length}）`);
   // 每 finding 带 exemptHint
   for (const f of res.findings) {
@@ -83,7 +83,7 @@ test('auditFull：非 git 目录出 findings（secret 命中）', () => {
 
 test('auditFull：exempt 文件头 dsh-skip-sensitive → 该文件无 secret 类', () => {
   const res = auditFull(fixture);
-  const hits = res.findings.filter((f) => f.kind === 'secret' && f.file === 'exempt.js');
+  const hits = res.findings.filter((f) => f.kind === '[FUNC]' && f.file === 'exempt.js');
   assert.equal(hits.length, 0, '豁免文件不应报 secret');
 });
 
@@ -110,7 +110,7 @@ test('checkEmptyCatch：真空 catch 命中', () => {
 
 test('makeFinding / summarize：统一问题对象 + 统计', () => {
   const fs = [
-    makeFinding({ file: 'a', line: 1, rule: 'r1', kind: 'secret', severity: 'blocker' }),
+    makeFinding({ file: 'a', line: 1, rule: 'r1', kind: '[FUNC]', severity: 'blocker' }),
     makeFinding({ file: 'b', line: 2, rule: 'r2', kind: 'regex', severity: 'warning' }),
   ];
   const s = summarize(fs);
@@ -123,7 +123,7 @@ test('makeFinding / summarize：统一问题对象 + 统计', () => {
 
 test('auditFull：summary 结构完整 + files 计数', () => {
   const res = auditFull(fixture);
-  assert.deepEqual(Object.keys(res.summary).sort(), ['blocker', 'total', 'warning']);
+  assert.deepEqual(Object.keys(res.summary).sort(), ['blocker', 'notice', 'total', 'warning']);
   assert.ok(res.files >= 3);
 });
 
@@ -139,7 +139,7 @@ test('auditChanged：git 仓库只审计变动文件（真 diff）', () => {
   const res = auditWithScope(gitRepo, { scope: 'diff' });
   assert.equal(res.scope, 'changed');
   assert.equal(res.files, 2, '只应审计 2 个变动文件');
-  const secret = res.findings.filter((f) => f.kind === 'secret');
+  const secret = res.findings.filter((f) => f.kind === '[FUNC]');
   assert.ok(secret.length >= 1, 'new.js 中的 AKIA 应命中 secret');
   const files = new Set(res.findings.map((f) => f.file));
   assert.ok(!files.has('a.js'), '未变动文件 a.js 不应出现在变动审计中');

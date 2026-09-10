@@ -51,10 +51,17 @@ export function listSyncFiles(root = SOURCE_ROOT) {
 }
 
 /**
- * 探测 DSH 插件目录（DSH_HOME/.dsh/profiles/PROFILE/node_modules/插件名）。
+ * 探测 DSH 插件目录。
+ *
+ * **两个位置都要同步**（旧项目最大教训：只同步 node_modules 导致改动看不到）：
+ *   1) `<profile>/local-plugins/<插件名>`  ← **真实加载源**（profile 的 package.json
+ *      写的是 `"dsh-git-push": "file:./local-plugins/dsh-git-push"`，DSH 加载这里）
+ *   2) `<profile>/node_modules/<插件名>`   ← npm link 产物（部分运行路径会解析到这里）
+ *
+ * 旧项目 v1.46–v1.49 的 UI 改动「刷新看不到」，根因就是只 rsync 了 node_modules。
  * @param {string} [home] DSH_HOME（默认从环境变量推断）
- * @param {string} [pluginName]
- * @returns {string[]} 命中的目标目录（可能多个 profile）
+ * @param {string} [pluginName] 插件名
+ * @returns {string[]} 命中的目标目录（local-plugins 在前）
  */
 export function detectTargets(home = process.env.DSH_HOME || '', pluginName = 'dsh-git-push') {
   const hits = [];
@@ -63,8 +70,13 @@ export function detectTargets(home = process.env.DSH_HOME || '', pluginName = 'd
   if (!existsSync(profiles)) return hits;
   for (const profile of readdirSync(profiles, { withFileTypes: true })) {
     if (!profile.isDirectory()) continue;
-    const target = join(profiles, profile.name, 'node_modules', pluginName);
-    if (existsSync(target)) hits.push(target);
+    const base = join(profiles, profile.name);
+    // 真实加载源优先（package.json 的 file: 指向这里）
+    const local = join(base, 'local-plugins', pluginName);
+    if (existsSync(local)) hits.push(local);
+    // npm link 产物（保留：部分解析路径走这里）
+    const nm = join(base, 'node_modules', pluginName);
+    if (existsSync(nm)) hits.push(nm);
   }
   return hits;
 }

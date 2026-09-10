@@ -4,7 +4,7 @@
  * 不依赖 DSH 运行时，可独立运行。命名/参数与 lib 函数完全一致（外部 API 与函数名一致）。
  */
 import { VERSION, readmeTemplate, yamlTemplate, helpSync } from './lib/self/index.js';
-import { loadRuleFiles, RULE_SLOTS, discoverRuleSlots } from './lib/rule/loader.js';
+import { loadRuleFiles, discoverRuleSlots } from './lib/rule/loader.js';
 import { compileAllRules } from './lib/rule/registry.js';
 import { auditWithScope } from './lib/audit/index.js';
 import { scoreQuality } from './lib/score/index.js';
@@ -56,8 +56,8 @@ export function cmdVersion() {
 
 /** 子命令：ruleset — 编译规则包输出统计。 */
 export function cmdRuleset(slots) {
-  const order = slots.length ? slots : RULE_SLOTS;
-  const { ok, merged, errors, files } = loadRuleFiles(order);
+  const order = slots.length ? slots : null; // null=动态发现全部槽位
+  const { ok, merged, errors, files, order: effective } = loadRuleFiles(order);
   const ctx = { errors: [] };
   const compiled = compileAllRules(merged.rules, ctx);
   if (!ok || ctx.errors.length) {
@@ -66,7 +66,7 @@ export function cmdRuleset(slots) {
     process.exitCode = 1;
     return;
   }
-  console.log(`规则包编译 OK（${order.join('+')}）`);
+  console.log(`规则包编译 OK（${effective.join('+')}）`);
   console.log(`  文件: ${files.length} 个槽位, 规则条目 ${merged.rules.length}, 编译成功 ${compiled.length}`);
   const byKind = {};
   for (const r of compiled) byKind[r.kind || r.type || 'other'] = (byKind[r.kind || r.type || 'other'] || 0) + 1;

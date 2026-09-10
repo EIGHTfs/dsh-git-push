@@ -14,7 +14,7 @@ import {
 
 /** 构造最小 finding。 */
 function f(kind, rule, line = 3) {
-  return { file: 'a.js', line, rule: rule || kind, kind, severity: kind.startsWith('secret') ? 'blocker' : 'warning', dimensions: [], exemptHint: '', scoreImpact: 1 };
+  return { file: 'a.js', line, rule: rule || kind, kind, severity: kind.startsWith('[FUNC]') ? 'blocker' : 'warning', dimensions: [], exemptHint: '', scoreImpact: 1 };
 }
 
 const SENSITIVE_TEXT = '// dsh-skip-sensitive: 测试含 mock token\n// 第二行\n// 第三行\nconst x = 1;';
@@ -45,7 +45,7 @@ test('注册表：sensitive/quality/func-length/residue 支持行级', () => {
 // ---------- 文件头豁免（整文件）----------
 test('文件头 dsh-skip-sensitive → secret 整文件豁免', () => {
   assert.equal(hasHeaderExempt(SENSITIVE_TEXT, 'dsh-skip-sensitive'), true);
-  assert.equal(exemptForFinding(f('secret', 'secret-aws-access-key'), SENSITIVE_TEXT), true);
+  assert.equal(exemptForFinding(f('[FUNC]', 'secret-aws-access-key'), SENSITIVE_TEXT), true);
   assert.equal(exemptForFinding(f('credential-ref', 'secret-generic-token'), SENSITIVE_TEXT), true);
   assert.equal(exemptForFinding(f('path-regex', 'path-private-key-location'), SENSITIVE_TEXT), true);
 });
@@ -110,15 +110,15 @@ test('行尾 dsh-skip-sensitive → 仅本行豁免，其他行照报（标记�
     'const token = "ghp_1234567890abcdefghij"; // dsh-skip-sensitive',
     'const d = token;',
   ].join('\n');
-  assert.equal(exemptForFinding(f('secret', 'secret-generic-token', 4), t), true, '标记行应豁免');
-  assert.equal(exemptForFinding(f('secret', 'secret-generic-token', 5), t), false, '无标记行不应豁免');
+  assert.equal(exemptForFinding(f('[FUNC]', 'secret-generic-token', 4), t), true, '标记行应豁免');
+  assert.equal(exemptForFinding(f('[FUNC]', 'secret-generic-token', 5), t), false, '无标记行不应豁免');
   // 标记在第 2 行（前 3 行内）= 文件头 → 整文件豁免（符合设计，非单点）
   const t2 = [
     'const a = 1;',
     'const token = "ghp_1234567890abcdefghij"; // dsh-skip-sensitive',
     'const b = token;',
   ].join('\n');
-  assert.equal(exemptForFinding(f('secret', 'secret-generic-token', 3), t2), true, '前 3 行内标记=文件头豁免整文件');
+  assert.equal(exemptForFinding(f('[FUNC]', 'secret-generic-token', 3), t2), true, '前 3 行内标记=文件头豁免整文件');
 });
 
 test('行尾 dsh-skip-func-length → 函数定义行豁免单函数', () => {
@@ -147,7 +147,7 @@ test('豁免不越权：sensitive 文件头不影响 func-lines/质量检查', (
 
 test('豁免不越权：quality 文件头不影响 secret', () => {
   const t = '// dsh-skip-quality\nconst x = 1;';
-  assert.equal(exemptForFinding(f('secret', 'secret-generic-token', 3), t), false);
+  assert.equal(exemptForFinding(f('[FUNC]', 'secret-generic-token', 3), t), false);
 });
 
 test('豁免不越权：style 文件头不影响空 catch', () => {
@@ -162,19 +162,19 @@ test('豁免不越权：文件头第 4 行标记不豁免（仅前 3 行）', ()
     'const c = 3;',
     '// dsh-skip-sensitive（第 4 行无效）',
   ].join('\n');
-  assert.equal(exemptForFinding(f('secret', 'secret-generic-token', 2), t), false);
+  assert.equal(exemptForFinding(f('[FUNC]', 'secret-generic-token', 2), t), false);
 });
 
 test('无豁免标记 → 全部照报', () => {
   const t = 'const x = 1;';
-  assert.equal(exemptForFinding(f('secret', 'secret-generic-token', 1), t), false);
+  assert.equal(exemptForFinding(f('[FUNC]', 'secret-generic-token', 1), t), false);
   assert.equal(exemptForFinding(f('func-lines', 'func-lines', 1), t), false);
   assert.equal(exemptForFinding(f('empty-catch', 'quality/empty-catch', 1), t), false);
 });
 
 // ---------- exemptHintFor（查找提示） ----------
 test('exemptHintFor：secret 反查 sensitive 提示', () => {
-  const hint = exemptHintFor('secret');
+  const hint = exemptHintFor('[FUNC]');
   assert.ok(hint.includes('dsh-skip-sensitive'));
 });
 
@@ -220,7 +220,7 @@ test('端到端：dsh-skip-sensitive 文件头 → secret 不进入 findings', a
   const grouped = await compileGrouped();
   const text = '// dsh-skip-sensitive: mock 测试\nconst token = "ghp_1234567890abcdefghij";\nconst aws = "AKIA1234567890ABCDEF";';
   const findings = auditFile({ file: 't.mjs', relPath: 't.mjs', text, grouped });
-  const secrets = findings.filter((x) => x.kind.includes('secret') || x.kind === 'path-regex');
+  const secrets = findings.filter((x) => x.kind.includes('[FUNC]') || x.kind === 'path-regex');
   assert.equal(secrets.length, 0, `sensitive 文件头应豁免全部 secret，实际 ${secrets.length}`);
 });
 
@@ -229,6 +229,6 @@ test('端到端：无豁免 → secret 照常 block', async () => {
   const grouped = await compileGrouped();
   const text = 'const token = "ghp_1234567890abcdefghij";';
   const findings = auditFile({ file: 't.mjs', relPath: 't.mjs', text, grouped });
-  const secrets = findings.filter((x) => x.kind.includes('secret'));
+  const secrets = findings.filter((x) => x.kind.includes('[FUNC]'));
   assert.ok(secrets.length > 0, '无豁免时应报 secret');
 });
