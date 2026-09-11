@@ -64,6 +64,16 @@ audit 消费时对 `audit-rules-*.yml` 路径跳过 residue 类豁免（规则�
 
 每个 finding 自带 `exemptHint`（构造时写入），直接照做即可；也可用 `exemptHintFor(ruleOrKind)` 反查。
 
+### 1.6 目录级豁免：`.samples` 空文件（1.0.4 起，与 v1 同步）
+
+在任意目录放一个 **0 字节的 `.samples` 空文件**，即声明「该目录（含子目录）整目录豁免」：
+
+- **照常出结果**：审计 findings / 敏感扫描 hits 全量保留（summary 里照常统计，不隐藏问题）。
+- **不构成提交推送拦截**：该目录内 blocker 不计入提交门禁（`commitWithAudit` blocked 判定排除）；敏感文件不写 `.gitignore`、不解除跟踪（`ensureGitignore` / v1 `ensureSensitiveIgnored` 跳过）。
+- **用途**：样本/测试目录——故意构造坏样本（长函数、假 token、XSS）用于行为比对时，不被门禁挡住推送（`test/fixtures/compare/` 已放标记）。
+
+判定函数：`isSampleExemptDir(repoPath, relPath)`（v2 `lib/exempt/index.js` / v1 `lib/ignore-scan.js`），自文件所在目录向上逐级找 `.samples` 空文件（非空文件不算标记；`../` 逃逸路径不算）。
+
 ---
 
 ## 二、规则 yml 写法全录
