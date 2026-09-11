@@ -16,6 +16,7 @@ import {
   scanSensitiveFiles, ensureGitignore, readmeCheckHint,
   commitAndPush, pushViaSsh, pushViaApi, cloneViaApi, ensureRemoteRepo, setVisibility,
 } from '../lib/git/index.js';
+import { commitWithAudit } from '../lib/commit-push.js';
 
 let tmp = '';
 let repo = '';
@@ -563,4 +564,41 @@ test('commitAndPush：私有库豁免（private 不写 .gitignore 只扫描报�
   assert.equal(r.ok, true);
   assert.ok(r.steps.some((s) => s.includes('private-exempt')), `steps 应含 private-exempt（实际: ${r.steps.join(',')}）`);
   assert.ok(!existsSync(join(repo4, '.gitignore')), 'private 仓库不应写 .gitignore');
+});
+
+// 2026-09-11：force 强推参数（对齐 v1 commitPushDoPush force；pushViaApi 内容级短路需被 force 跳过）
+test('pushViaApi：force=true 跳过内容级短路（remoteHead===headSha 仍建 commit）', async () => {
+  runGit(['remote', 'set-url', 'origin', 'https://api.github.com/repos/octo/repo'], { cwd: repo });
+  const headSha = runGit(['rev-parse', 'HEAD'], { cwd: repo }).stdout;
+  const treeSha = 't'.repeat(40);
+  const commitSha = 'c'.repeat(40);
+  // remoteHead === 本地 headSha：非 force 会命中「无新提交可推送」短路；force 必须继续走建 commit。
+  mockFetch([
+    { match: (u, m) => m === 'GET' && u.endsWith('/repos/octo/repo'), status: 200, body: { default_branch: 'main' } },
+    { match: (u) => u.includes('/git/ref/heads/main'), status: 200, body: { object: { sha: headSha } } },
+    { match: (u) => u.includes('/git/commits/') && u.includes('HEAD'), status: 200, body: { object: { sha: headSha } } },
+    { match: (u, m) => m === 'POST' && u.includes('/git/blobs'), status: 201, body: { sha: 'b'.repeat(40) } },
+    { match: (u, m) => m === 'POST' && u.includes('/git/trees'), status: 201, body: { sha: treeSha } },
+    { match: (u, m) => m === 'POST' && u.includes('/git/commits'), status: 201, body: { sha: commitSha } },
+    { match: (u, m) => m === 'PATCH' && u.includes('/git/refs/heads/main'), status: 200, body: { ref: 'refs/heads/main', object: { sha: commitSha } } },
+  ]);
+  const rForce = await pushViaApi({ repoPath: repo, token: 'ghp_force', branch: 'main', force: true });
+  assert.equal(rForce.ok, true, `force 推送应成功（实际 error: ${rForce.reason || '-'}）`);
+  assert.equal(rForce.pushed, true, 'force 推送应 pushed=true');
+  assert.ok(fetchCalls.some((c) => c.method === 'POST' && c.url.includes('/git/commits')), 'force 时应建 commit（跳过短路）');
+  assert.ok(fetchCalls.some((c) => c.method === 'PATCH' && c.url.includes('/git/refs/heads/main')), 'force 时应 PATCH ref（覆盖远端历史）');
+  // 对照组：非 force 同场景命中短路，不建 commit。
+  const rNoForce = await pushViaApi({ repoPath: repo, token: 'ghp_noforce', branch: 'main', force: false });
+  assert.equal(rNoForce.pushed, false, '非 force 同场景应「无新提交可推送」短路');
+  assert.match(rNoForce.reason, /无新提交/, `非 force 短路原因（实际: ${rNoForce.reason}）`);
+});
+
+test('commitWithAudit：force 参数透传到 commitAndPush（返回含 force 语义的步骤）', async () => {
+  // 非 git 仓库走不到 push，无法观察 force；改验证 commitWithAudit 不再吞掉 force（签名存在 + push=false 时步骤正常）
+  const root2 = join(tmpdir(), `gp-cwa-force-${Date.now()}`);
+  mkdirSync(root2);
+  const r = await commitWithAudit({ repoPath: root2, message: 'force test', push: false, dryRun: true, requirementsConfirmed: true, force: true });
+  assert.equal(r.ok, false, '非 git 仓库应 ok:false（force 不改变预检语义）');
+  assert.match(r.error || '', /非 git 仓库/, `error 应为非 git 仓库（实际: ${r.error}）`);
+  rmSync(root2, { recursive: true, force: true });
 });
