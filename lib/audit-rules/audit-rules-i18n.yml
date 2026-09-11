@@ -26,7 +26,7 @@ rules:
     category: "i18n"
     severity: "warning"
     description: "动态内容应使用插值 t('key', { name, count })，禁止在 t() 参数内拼接多语言句子"
-    pattern: "t\\s*\\(\\s*['\"][^'\"]*['\"]\\s*\\+"
+    pattern: "(?<![A-Za-z])t\\s*\\(\\s*['\"][^'\"]*['\"]\\s*\\+"
     fixable: false
     mitigation: "改为 t('key', { name, count })"
 
