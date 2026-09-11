@@ -16,6 +16,7 @@ import {
   scanSensitiveFiles, ensureGitignore, readmeCheckHint,
   commitAndPush, pushViaSsh, pushViaApi, cloneViaApi, ensureRemoteRepo, setVisibility,
 } from '../lib/git/index.js';
+import { gitRaw } from '../lib/git/index.js';
 import { commitWithAudit } from '../lib/commit-push.js';
 
 let tmp = '';
@@ -601,4 +602,32 @@ test('commitWithAudit：force 参数透传到 commitAndPush（返回含 force �
   assert.equal(r.ok, false, '非 git 仓库应 ok:false（force 不改变预检语义）');
   assert.match(r.error || '', /非 git 仓库/, `error 应为非 git 仓库（实际: ${r.error}）`);
   rmSync(root2, { recursive: true, force: true });
+});
+
+// 2026-09-11：gitRaw buffer 通道——防 pushViaApi blob 损坏回归（runGit utf8+trim 丢末尾换行）
+test('gitRaw：buffer 通道保留 blob 原始字节（含末尾换行/非 UTF-8 字节）', () => {
+  const dir = join(tmpdir(), `gp-gitraw-${Date.now()}`);
+  mkdirSync(dir);
+  try {
+    runGit(['init', '-b', 'master'], { cwd: dir });
+    writeFileSync(join(dir, 'a.txt'), '你好\n第二行\n');           // 末尾换行 + UTF-8 中文
+    writeFileSync(join(dir, 'b.bin'), Buffer.from([0x00, 0xff, 0xfe, 0x0a])); // 非 UTF-8 原始字节
+    runGit(['add', '-A'], { cwd: dir });
+    runGit(['-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-m', 'init'], { cwd: dir });
+    // a.txt：gitRaw 读回必须保留末尾换行（runGit 的 trim 会丢）
+    const shaA = runGit(['rev-parse', 'HEAD:a.txt'], { cwd: dir }).stdout;
+    const bufA = gitRaw(['cat-file', 'blob', shaA], { cwd: dir });
+    assert.equal(bufA.status, 0, 'gitRaw 应成功');
+    assert.equal(bufA.stdout.toString('utf8'), '你好\n第二行\n', 'gitRaw 应完整保留文本（含末尾换行）');
+    // b.bin：gitRaw 读回必须与原始字节完全一致（runGit utf8 解码会损坏 0xff/0xfe）
+    const shaB = runGit(['rev-parse', 'HEAD:b.bin'], { cwd: dir }).stdout;
+    const bufB = gitRaw(['cat-file', 'blob', shaB], { cwd: dir });
+    assert.equal(bufB.status, 0, 'gitRaw 二进制也应成功');
+    assert.deepEqual([...bufB.stdout], [0x00, 0xff, 0xfe, 0x0a], 'gitRaw 二进制字节应逐一一致');
+    // 对照：runGit 读同一 blob 会丢末尾换行（旧 bug 语义——pushViaApi 曾因它损坏 17/109 文件）
+    const oldWay = runGit(['cat-file', 'blob', shaA], { cwd: dir });
+    assert.notEqual(oldWay.stdout, '你好\n第二行\n', 'runGit(utf8+trim) 应有损（证明 gitRaw 必要）');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
