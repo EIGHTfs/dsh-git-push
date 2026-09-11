@@ -26,7 +26,7 @@ import { auditRepo } from './lib/audit.js';
 import { fullScanRepo } from './lib/full-scan.js';
 import { getCompiledRulePack, RULE_SLOTS, DEFAULT_RULE_ORDER } from './lib/rule-packs.js';
 
-const VERSION = '1.60.1';
+const VERSION = '1.60.2';
 
 /** argv 解析：位置参数 + --flag / --key value / -m value（零依赖手写） */
 function parseArgv(argv) {
@@ -37,6 +37,7 @@ function parseArgv(argv) {
     if (a === '--json') flags.json = true;
     else if (a === '--push') flags.push = true;
     else if (a === '--no-push') flags.push = false;
+    else if (a === '--force') flags.force = true;
     else if (a === '--dry-run') flags.dryRun = true;
     else if (a === '--req-confirm') flags.reqConfirm = true;
     else if (a === '--fail-on-warn') flags.failOnWarn = true;
@@ -65,6 +66,7 @@ const HELP = `git-sluice v${VERSION} — dsh-git-push 引擎独立 CLI（脱离 
   --ruleset <槽位顺序>                 临时换规则顺序（如 comment,nodejs；缺省 nodejs,frontend,comment）
   --json                            输出原始 JSON
   --no-push / --push                commit 是否推送（默认不推）
+  --force                           commit push 强推（覆盖远端历史；API 通道重建 commit 去旧 parent / SSH 通道 git push --force）
   --dry-run                         commit 只模拟
   --req-confirm                     声明已核对开发者特殊要求（缺省未核对会拒绝提交）
   --fail-on-warn                    full-scan 有 ⚠ 警告时退出码 3（CI 用）
@@ -154,6 +156,7 @@ async function cmdCommit({ pos, flags }) {
     dryRun: flags.dryRun === true,
     requirementsConfirmed: flags.reqConfirm === true,
     workspaceRoot: repo,
+    force: flags.force === true,
   });
   if (flags.json) console.log(JSON.stringify(result, null, 2));
   else {

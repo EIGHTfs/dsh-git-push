@@ -27,3 +27,4 @@ git-push/
 
 # 本地临时目录（测试运行产物，v1.55.0 起不入库）
 .tmp-run/
+node_modules.orig/
