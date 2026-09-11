@@ -8,3 +8,5 @@ dist/
 .trash/
 *.bak
 *.bak-*
+# 行为快照样本（samples 分支持有，主分支不跟踪）
+test/fixtures/compare/
