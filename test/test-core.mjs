@@ -386,21 +386,22 @@ try {
     const ensureSensitiveIgnored = need('ensureSensitiveIgnored');
     if (ensureSensitiveIgnored) {
       const s1 = ensureSensitiveIgnored(repoSens);
-      ok(s1.ok === true && s1.added.includes('secret.js'), 'ensureSensitiveIgnored 命中文件追加 .gitignore');
-      ok(readFileSync(join(repoSens, '.gitignore'), 'utf8').includes('secret.js'), '.gitignore 已写入命中文件');
+      ok(s1.ok === true && s1.added.length === 0, '2026-09-12：ensureSensitiveIgnored 只报告不写盘（added 恒空）');
+      ok(s1.hits.some((h) => h.path === 'secret.js'), '敏感文件照常报告（hits 保留）');
+      ok(!existsSync(join(repoSens, '.gitignore')) || !readFileSync(join(repoSens, '.gitignore'), 'utf8').includes('secret.js'), '不写 .gitignore（扫描到不动 git 忽略）');
       const s2 = ensureSensitiveIgnored(repoSens);
-      ok(s2.ok === true && s2.added.length === 0, 'ensureSensitiveIgnored 幂等');
+      ok(s2.ok === true && s2.added.length === 0, 'ensureSensitiveIgnored 幂等（恒空）');
       const s3 = ensureSensitiveIgnored(repoSens, { skipWrite: true });
-      ok(s3.ok === true && s3.added.length === 0 && s3.skipped === 'private-repo-exempt', 'skipWrite=true 只报告不写（私有库豁免）');
-      // 2026-09-11：.samples 空文件目录豁免 —— 目录内敏感文件照常报告、不写 .gitignore
+      ok(s3.ok === true && s3.added.length === 0 && s3.skipped === 'private-repo-exempt', 'skipWrite=true 语义兼容（只报告不写）');
+      // 2026-09-12：.samples 目录豁免语义简化——一律只报告，不写 .gitignore、不解除跟踪
       mkdirSync(join(repoSens, 'samples'));
       writeFileSync(join(repoSens, 'samples', '.samples'), '');
       writeFileSync(join(repoSens, 'samples', 'secret2.js'), 'const password = "hunter3pass";\n');
       rmSync(join(repoSens, '.gitignore'), { force: true });
       const s4 = ensureSensitiveIgnored(repoSens);
       ok(s4.ok === true && s4.hits.some((h) => h.path === 'samples/secret2.js'), '.samples 目录内敏感文件照常报告（hits 保留）');
-      ok(s4.sampleExempted === 1, 'sampleExempted 计数 = 1');
-      ok(!readFileSync(join(repoSens, '.gitignore'), 'utf8').includes('samples/secret2.js'), '.samples 目录内敏感文件不写 .gitignore');
+      ok(s4.sampleExempted === 0, 'sampleExempted 恒 0（不再遍历写盘豁免逻辑）');
+      ok(!existsSync(join(repoSens, '.gitignore')) || !readFileSync(join(repoSens, '.gitignore'), 'utf8').includes('secret2.js'), '不写 .gitignore');
       rmSync(join(repoSens, 'samples'), { recursive: true, force: true });
       rmSync(join(repoSens, 'secret.js'), { force: true });
       rmSync(join(repoSens, 'ok.js'), { force: true });
