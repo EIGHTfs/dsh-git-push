@@ -62,6 +62,22 @@ window.__ModuleLoader__.load({
       firstLoad: '（先加载）',
       lastOverride: '（后覆盖）',
       noRules: '（无规则槽位文件）',
+      // 1.0.5 侧边栏账号卡（对齐 v1 账号检查 + SSH 密钥生成按钮）
+      account: '账号检查',
+      tokenLabel: 'GitHub Token（可选）',
+      sshPubLabel: 'SSH 公钥（可选）',
+      checkBtn: '检查账号',
+      checking: '检测中…',
+      checkHint: '填 Token 或公钥后检查 GitHub 账号状态（POST 本机端点，局域网 GUI 同源放行）',
+      sshEmail: 'SSH 邮箱（生成公钥用）',
+      sshEmailHint: '如 you@example.com。生成 ssh-rsa 4096 密钥对，私钥留本机，公钥复制到 GitHub → Settings → SSH and GPG keys',
+      genKey: '生成 SSH 密钥',
+      genKeying: '生成中…',
+      genKeyDone: '公钥已生成（私钥在插件配置目录 *.key，公钥如下可复制）：',
+      copyPub: '复制公钥',
+      copied: '已复制',
+      genKeyFail: '生成失败：',
+      accountBlockFail: '检测失败：',
     };
 
     /** 10 维度权威表（与 lib/score DEFAULT_WEIGHTS 一致；合计 100）。 */
@@ -94,7 +110,20 @@ window.__ModuleLoader__.load({
       + '.dshgp_weight_row{display:flex;align-items:center;gap:6px;margin:2px 0}'
       + '.dshgp_weight_name{font-size:12px;min-width:88px}'
       + '.dshgp_weight_val{font-size:12px;min-width:40px}'
-      + '.dshgp_weight_row input[type=range]{flex:1}';
+      + '.dshgp_weight_row input[type=range]{flex:1}'
+      // 1.0.5 侧边栏账号卡样式（对齐 v1 dshgp_* 类）
+      + '.dshgp_account{margin-top:12px;border-top:1px solid rgba(128,128,128,.25);padding-top:8px}'
+      + '.dshgp_account_h{font-size:13px;font-weight:600;margin-bottom:4px}'
+      + '.dshgp_row{display:flex;align-items:center;gap:6px;margin:4px 0}'
+      + '.dshgp_label{font-size:12px;display:block;margin-top:6px}'
+      + '.dshgp_input{flex:1;min-width:0;padding:3px 6px;font-size:13px;border:1px solid rgba(128,128,128,.4);border-radius:4px;background:transparent;color:inherit}'
+      + '.dshgp_keybtn{padding:3px 10px;font-size:13px;border:1px solid rgba(128,128,128,.4);border-radius:4px;background:transparent;color:inherit;cursor:pointer;white-space:nowrap}'
+      + '.dshgp_keybtn:disabled{opacity:.5;cursor:not-allowed}'
+      + '.dshgp_hint{font-size:11px;color:rgba(128,128,128,.7);margin:4px 0 0}'
+      + '.dshgp_block{font-size:12px;white-space:pre-wrap;margin:6px 0 0;padding:6px;border-radius:4px;background:rgba(128,128,128,.08)}'
+      + '.dshgp_ok{color:#4caf50}.dshgp_err{color:#e57373}'
+      + '.dshgp_pub{font-size:11px;white-space:pre-wrap;word-break:break-all;margin:6px 0 0;padding:6px;border-radius:4px;background:rgba(128,128,128,.08)}'
+      + '.dshgp_saved{font-size:12px;color:#4caf50;margin:6px 0 0}.dshgp_fail{font-size:12px;color:#e57373;margin:6px 0 0}';
 
     /** 槽位显示名兜底（host 未注入 ruleSlotMeta 时用内置名表，防老配置/host 未注入）。 */
     function fallbackNames() {
@@ -210,6 +239,114 @@ window.__ModuleLoader__.load({
       ]);
     }
 
+    /** 账号卡共享 POST 助手（本机端点，局域网 GUI 同源放行 1.0.5）。 */
+    const apiPost = (path, body) => fetch(path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      credentials: 'same-origin',
+    }).then((r) => r.json());
+
+    /**
+     * 1.0.5 账号检查卡：填 GitHub Token / SSH 公钥 → POST account-check。
+     * React 状态本地化（不写 settingsScope）：token/公钥仅浏览器内存，关闭即消失。
+     */
+    function AccountCheckCard() {
+      const h = react.createElement;
+      const [token, setToken] = react.useState('');
+      const [sshPub, setSshPub] = react.useState('');
+      const [busy, setBusy] = react.useState(false);
+      const [block, setBlock] = react.useState('');
+      const check = async () => {
+        if (busy) return;
+        setBusy(true);
+        setBlock('检测中…');
+        try {
+          const payload = {};
+          if (token.trim()) payload.githubToken = token.trim();
+          if (sshPub.trim()) payload.sshPub = sshPub.trim();
+          const data = await apiPost('/api/git-push/account-check', payload);
+          setBlock(data.block || data.detail || JSON.stringify(data));
+        } catch (e) {
+          setBlock('❌ ' + (e && e.message || e));
+        }
+        setBusy(false);
+      };
+      const okCls = block.startsWith('✅') || block.startsWith('✓') ? ' dshgp_ok' : ' dshgp_err';
+      return h('div', { className: 'dshgp_account' }, [
+        h('div', { className: 'dshgp_account_h' }, zh.account),
+        h('label', { className: 'dshgp_label' }, zh.tokenLabel),
+        h('div', { className: 'dshgp_row' }, [
+          h('input', {
+            className: 'dshgp_input', type: 'text', autoComplete: 'off',
+            value: token, onChange: (e) => setToken(e.target.value), disabled: busy,
+          }),
+          h('button', { type: 'button', className: 'dshgp_keybtn', disabled: busy, onClick: check },
+            busy ? zh.checking : zh.checkBtn),
+        ]),
+        h('label', { className: 'dshgp_label' }, zh.sshPubLabel),
+        h('input', {
+          className: 'dshgp_input', type: 'text', autoComplete: 'off',
+          value: sshPub, onChange: (e) => setSshPub(e.target.value), disabled: busy,
+        }),
+        block ? h('pre', { className: 'dshgp_block' + okCls }, block) : null,
+        h('p', { className: 'dshgp_hint' }, zh.checkHint),
+      ]);
+    }
+
+    /**
+     * 1.0.5 SSH 密钥生成卡：填邮箱 → POST gen-ssh-key → 公钥回显 + 一键复制。
+     * 私钥只落本机插件配置目录，公钥整行回显供复制到 GitHub。
+     */
+    function AccountKeyGenCard() {
+      const h = react.createElement;
+      const [email, setEmail] = react.useState('');
+      const [busy, setBusy] = react.useState(false);
+      const [pub, setPub] = react.useState('');
+      const [msg, setMsg] = react.useState('');
+      const [copied, setCopied] = react.useState(false);
+      const genKey = async () => {
+        if (busy || !email.trim()) return;
+        setBusy(true);
+        setPub('');
+        setMsg('');
+        try {
+          const data = await apiPost('/api/git-push/gen-ssh-key', { email: email.trim(), force: false });
+          if (!data.ok) setMsg((data.error && data.error.message) || data.error || '生成失败');
+          else { setPub(data.pub || ''); setEmail(''); }
+        } catch (e) {
+          setMsg('❌ ' + (e && e.message || e));
+        }
+        setBusy(false);
+      };
+      const copyPub = async () => {
+        if (!pub) return;
+        try {
+          await navigator.clipboard.writeText(pub);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1600);
+        } catch { /* 剪贴板不可用忽略 */ }
+      };
+      return h('div', { className: 'dshgp_account' }, [
+        h('label', { className: 'dshgp_label' }, zh.sshEmail),
+        h('div', { className: 'dshgp_row' }, [
+          h('input', {
+            className: 'dshgp_input dshgp_email', type: 'text', autoComplete: 'off', placeholder: 'you@example.com',
+            value: email, onChange: (e) => setEmail(e.target.value), disabled: busy,
+          }),
+          h('button', { type: 'button', className: 'dshgp_keybtn', disabled: busy || !email.trim(), onClick: genKey },
+            busy ? zh.genKeying : zh.genKey),
+        ]),
+        h('p', { className: 'dshgp_hint' }, zh.sshEmailHint),
+        msg ? h('p', { className: 'dshgp_fail' }, zh.genKeyFail + msg) : null,
+        pub ? h('div', null, [
+          h('p', { className: 'dshgp_saved' }, zh.genKeyDone),
+          h('pre', { className: 'dshgp_pub' }, pub),
+          h('button', { type: 'button', className: 'dshgp_keybtn', onClick: copyPub }, copied ? zh.copied : zh.copyPub),
+        ]) : null,
+      ]);
+    }
+
     /** 设置卡片：手写 createElement（无 JSX）。 */
     function GitPushCard(props) {
       const h = react.createElement;
@@ -257,7 +394,8 @@ window.__ModuleLoader__.load({
         h('div', { key: 'd', className: 'dsh-git-push-desc' }, zh.description),
         h('style', { key: 's' }, INLINE_CSS),
         ...rows,
-        h(RuleEngineCard, { key: 'rules', state, saveRuleOrder, saveRuleWeights }),
+        h(AccountCheckCard, { key: 'account' }), h(AccountKeyGenCard, { key: 'keygen' }),
+        h(RuleEngineCard, { key: 'rules', state, saveRuleOrder, saveRuleWeights, saveDimWeights }),
       ]);
     }
 

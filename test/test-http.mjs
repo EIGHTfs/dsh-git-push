@@ -40,6 +40,28 @@ test('Origin：POST 同源放行', () => {
   assert.equal(r.ok, true);
 });
 
+// ---------- 1.0.5：侧边栏按钮同源放行（局域网 GUI） ----------
+test('Origin 1.0.5：局域网 GUI 同源放行（Host 头一致）', () => {
+  const r = checkOrigin('POST', 'http://10.10.10.4:3080', undefined, '10.10.10.4:3080');
+  assert.equal(r.ok, true, 'Origin host 与请求 Host 一致 → 放行（侧边栏按钮可用）');
+});
+
+test('Origin 1.0.5：同源放行忽略端口差异', () => {
+  const r = checkOrigin('POST', 'http://10.10.10.4:9999', undefined, '10.10.10.4:3080');
+  assert.equal(r.ok, true, '同主机不同端口 → 放行');
+});
+
+test('Origin 1.0.5：跨站 Origin 即使 Host 同域也拒绝（域名不同）', () => {
+  const r = checkOrigin('POST', 'https://evil.example.com', undefined, '10.10.10.4:3080');
+  assert.equal(r.ok, false, '攻击者站点 Origin ≠ Host → 拒绝');
+  assert.equal(r.code, 'CROSS_ORIGIN');
+});
+
+test('Origin 1.0.5：Host 头缺失回退白名单（本机回环仍放行）', () => {
+  const r = checkOrigin('POST', 'http://127.0.0.1:30801', undefined, '');
+  assert.equal(r.ok, true, '无 Host 头 + 本机回环 Origin → 白名单兜底放行');
+});
+
 test('Origin：localhost 允许（开发 GUI）', () => {
   assert.equal(checkOrigin('PATCH', 'http://localhost').ok, true);
 });

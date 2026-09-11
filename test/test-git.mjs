@@ -210,15 +210,16 @@ test('scanSensitiveFiles：占位符 / 示例 / 豁免注释不误报', () => {
   for (const f of ['ok.js', 'ok2.js', 'exempt.js']) rmSync(join(repo, f), { force: true });
 });
 
-test('ensureGitignore：追加敏感文件到 .gitignore（幂等）', () => {
+test('ensureGitignore：敏感文件只报告不写 .gitignore（2026-09-12 用户指令）', () => {
   writeFileSync(join(repo, '.env'), 'KEY=1\n');
   const r1 = ensureGitignore(repo);
-  assert.ok(r1.added >= 1);
-  assert.ok(Array.isArray(r1.files), 'files 应为路径数组');
+  assert.ok(r1.files.includes('.env'), 'files 应报告 .env');
   const gi = readFileSync(join(repo, '.gitignore'), 'utf8');
-  assert.ok(gi.includes('/.env'));
+  assert.ok(!gi.includes('.env'), '敏感文件不写 .gitignore');
+  // 敏感文件不再写盘，基线与自定义照常（基线幂等）
+  assert.ok(gi.includes('node_modules/'), '基线忽略照常写');
   const r2 = ensureGitignore(repo);
-  assert.equal(r2.added, 0, '二次调用不重复写');
+  assert.equal(r2.baseline, 0, '二次调用基线不重复写');
   rmSync(join(repo, '.env'), { force: true });
   rmSync(join(repo, '.gitignore'), { force: true });
 });
@@ -262,7 +263,7 @@ test('ensureGitignore：node_modules.orig 目录不参与敏感文件扫描', ()
   rmSync(join(repo, '.gitignore'), { force: true });
 });
 
-test('ensureGitignore：.samples 目录豁免——不写 .gitignore、照常报告', () => {
+test('ensureGitignore：.samples 目录豁免——敏感文件一律不写 .gitignore、照常报告', () => {
   // fixtures/.samples 空文件 = 豁免标记：目录内假 token 照常报告，但不进 .gitignore
   mkdirSync(join(repo, 'fixtures'), { recursive: true });
   writeFileSync(join(repo, 'fixtures', '.samples'), '');
@@ -273,8 +274,9 @@ test('ensureGitignore：.samples 目录豁免——不写 .gitignore、照常报
   assert.ok(r.files.includes('real.js'), '非豁免敏感文件照常报告');
   assert.equal(r.sampleExempted, 1, 'sampleExempted 计数 = 1');
   const gi = readFileSync(join(repo, '.gitignore'), 'utf8');
+  // 2026-09-12 用户指令：扫描到敏感文件不改动 git 忽略——豁免与非豁免都不写 .gitignore
   assert.ok(!gi.includes('fixtures/secret.js'), '豁免目录文件不写 .gitignore');
-  assert.ok(gi.includes('/real.js') || gi.includes('real.js'), '非豁免文件照常写 .gitignore');
+  assert.ok(!gi.includes('real.js'), '非豁免文件也不写 .gitignore（只报告）');
   rmSync(join(repo, 'fixtures'), { recursive: true, force: true });
   rmSync(join(repo, 'real.js'), { force: true });
   rmSync(join(repo, '.gitignore'), { force: true });
