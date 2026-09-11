@@ -55,12 +55,20 @@ window.__ModuleLoader__.load({
       ruleEngine: '规则引擎（YAML）',
       ruleEngineHint: '顺序=加载次序，后加载覆盖先加载（同 id/pattern）；权重改完即存即生效，不影响 YAML 文件本体。',
       keywordWeights: '关键词权重（≥40 进门禁 blocker）',
+      dimWeights: '10 维度权重（可调，改完即生效；合计建议 100）',
+      dimWeightsHint: '权重 JSON 存于 weightOverrides；滑块改单维度，其余取默认表。维度绑定在 yml 规则的编译函数里（支持一字段多维度）。',
       forcedPrivate: '私密文件拦截（强制加载，不可排序；远端公开+含私钥/token → 拦截）',
       enableTemplate: '启用 template 自定义规则文件（空模板，默认不加载）',
       firstLoad: '（先加载）',
       lastOverride: '（后覆盖）',
       noRules: '（无规则槽位文件）',
     };
+
+    /** 10 维度权威表（与 lib/score DEFAULT_WEIGHTS 一致；合计 100）。 */
+    const DIM_WEIGHTS = [
+      ['可读性', 15], ['可维护性', 15], ['健壮性', 15], ['安全性', 18], ['性能', 10],
+      ['测试覆盖', 10], ['可观测性', 5], ['可部署性', 5], ['文档', 4], ['开发者体验', 3],
+    ];
 
     /** 设置项（与服务端 lib/client/index.js SETTINGS_SCHEMA 一致）。 */
     const SCHEMA = [
@@ -142,6 +150,21 @@ window.__ModuleLoader__.load({
         next[pat] = Number(val);
         props.saveRuleWeights(next);
       };
+      // 10 维度权重：读 weightOverrides JSON（缺省用默认表），滑块改单维度写回合并 JSON
+      const parseDimOverrides = () => {
+        try {
+          const raw = state.weightOverrides || '';
+          if (!raw.trim()) return {};
+          const obj = JSON.parse(raw);
+          return (obj && typeof obj === 'object') ? obj : {};
+        } catch { return {}; }
+      };
+      const saveDimWeight = (dim, val) => {
+        const next = { ...parseDimOverrides() };
+        next[dim] = Number(val);
+        try { props.saveDimWeights(JSON.stringify(next)); } catch { /* 写回失败忽略 */ }
+      };
+      const dimVals = parseDimOverrides();
       // keyword 权重滑块（对齐旧项目 v1.47：≥40 进门禁 blocker；默认 30）
       const pats = ['用户指示', '用户原话', '用户说', '用户要求', '客户要求', '用户反馈', '根据用户'];
       const orderRows = state.active.map((slot) => h('div', {
@@ -173,6 +196,16 @@ window.__ModuleLoader__.load({
             h('span', { className: 'dshgp_weight_val' }, String(val) + (val >= 40 ? ' 🔒' : '')),
           ]);
         }),
+        h('div', { className: 'dshgp_rules_h' }, zh.dimWeights),
+        ...DIM_WEIGHTS.map(([dim, def]) => {
+          const val = dimVals[dim] !== undefined ? Number(dimVals[dim]) : def;
+          return h('label', { key: dim, className: 'dshgp_weight_row' }, [
+            h('span', { className: 'dshgp_weight_name' }, dim),
+            h('input', { type: 'range', min: 0, max: 100, step: 1, value: val, onChange: (e) => saveDimWeight(dim, e.target.value) }),
+            h('span', { className: 'dshgp_weight_val' }, String(val)),
+          ]);
+        }),
+        h('div', { className: 'dshgp_rules_note' }, zh.dimWeightsHint),
         h('div', { className: 'dshgp_rules_note' }, zh.ruleEngineHint),
       ]);
     }
@@ -185,10 +218,12 @@ window.__ModuleLoader__.load({
       const setKey = (key) => (value) => scope.set(key, value);
       const saveRuleOrder = (arr) => scope.set('auditRuleOrder', arr);
       const saveRuleWeights = (weights) => scope.set('auditRuleWeights', weights);
+      const saveDimWeights = (json) => scope.set('weightOverrides', json);
       const state = resolveSlotOrder({
         ruleOrder: Array.isArray(config.auditRuleOrder) ? config.auditRuleOrder : [],
         ruleWeights: (config.auditRuleWeights && typeof config.auditRuleWeights === 'object') ? config.auditRuleWeights : {},
         ruleSlotMeta: (props.slotMeta && typeof props.slotMeta === 'object') ? props.slotMeta : {},
+        weightOverrides: config.weightOverrides,
       });
       const rows = SCHEMA.map((item) => {
         if (item.type === 'enum') {
