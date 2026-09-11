@@ -197,7 +197,7 @@ dsh-git-push
 
 接线层为独立模块 `lib/plugin/index.js`，三处注册均以 mock ctx 单测断言「真 API 被调用」（test-plugin.mjs，345 全绿）。
 
-**迁移（用户确认「只迁常用的两项」）**：
+**迁移（只迁常用的两项）**：
 - `git_gen_readme` ✅ 已迁：`lib/readme-gen/index.js`（模板优先级 template/README.md > readme.yml > 内置兜底；版本表 git log 版本聚合）+ `lib/readme-templates/readme.yml`。工具数 7 → 8。
 - `push_permit_status/config` ❓ **发现与 dsh-session-conductor 提供同名工具冲突**（conductor 已实现同款，v2 再注册会重名），故未迁移——需要时直接用 conductor 的那两个工具即可。剩余未迁：audit_full_scan / git_rebuild_history / git_push_rules（工作区旧仓源码在，可异步补）。
 

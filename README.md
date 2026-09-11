@@ -147,8 +147,6 @@ DSH（DeepSeek Harness）git 自动提交推送插件——统一函数入口架
 | 设置项 | 类型 | 默认 | 作用 |
 |---|---|---|---|
 | `auditEnabled` | boolean | false | 提交前自动审计门禁（关=只提交不审计） |
-| `pushPermitEnabled` | boolean | false | AI 回复推送许可（回复含「任务完成」后自动提交推送） |
-| `llmAudit` | boolean | false | LLM 深度审查（需配置 provider/model） |
 | `hardcodeFullScan` | boolean | false | 硬编码全量扫（换机前排查存量死路径） |
 | `injectFullSkill` | boolean | false | 注入全部 skill 正文（默认只注目录+清单省 token） |
 | `injectRepoIndexFull` | boolean | false | 注入 repo-index 全文（默认只注文件名） |
@@ -168,11 +166,21 @@ DSH（DeepSeek Harness）git 自动提交推送插件——统一函数入口架
 
 流程：配置或工具参数（`code_audit` 的 `auditLevel`）→ `code_audit` / `git_commit_push` 传入 `auditWithScope({ auditLevel })` → `auditFull` / `auditChanged` → `auditFile(..., { level })` → `runChecks({ grouped }, { level })` 按档位跳过重检查。基础安全项（凭据、路径穿越、空 catch）在任何档位都不降级。
 
-### 自定规则包（auditRuleset）
+### 自定规则包（auditRuleset）与动态槽位
 
-规则槽位由目录文件驱动：目录里每个 `audit-rules-<名>.yml` 即一个槽位，放文件即生效、删文件即移除——「导入/导出/删除规则包」就是对该目录的文件操作，无需改代码。
+规则槽位由目录文件驱动：目录里每个 `audit-rules-<名>.yml` 即一个槽位，放文件即生效、删文件即移除——「导入/导出/删除规则包」就是对该目录的文件操作，无需改代码。内置槽位 14 个（nodejs 36 / frontend 19 / npm 10 / version 8 / dsh 7 / comment 6 / folder 4 / i18n 3 / performance 2 / docs 1 / robustness 1 / structure 1 / template 1 / private 0 条私有拦截清单）。
 
 流程：`auditRuleset` 指向目录 → `loadRuleFiles(order, { dir })` 从该目录装载（默认 `lib/audit-rules/`）→ 编译注册表认领字段 → 审计消费。指向不存在或空的目录会装载 0 条规则（`loaded.errors` 有记录），不会静默沿用内置规则包。
+
+**槽位加载与合并语义**（细节全录见 `docs/DETAILS-EXEMPT-AND-RULES.md` §2）：
+
+- **发现**：`discoverRuleSlots()` 扫目录取 `audit-rules-<名>.yml`，槽位集合以**目录实际文件**为准（常量表只是排序偏好，非槽位清单）
+- **顺序**：配置显式顺序优先（数组 / 逗号串 / 环境变量 `DSH_GIT_PUSH_RULE_SLOTS`）→ 未覆盖的按 `SLOT_ORDER_HINT` 偏好排（nodejs→frontend→npm→version→dsh→comment→structure→private→docs→template）→ 仍未列出的按文件名字典序；配置声明但文件不存在静默跳过；`template` 槽位默认不加载
+- **合并**：按顺序逐槽位装载，`rules` **后覆盖前**（同 id 后者胜）；`severity_map`/`thresholds` 对象合并；`metadata` 取第一个非空；`ignore` 追加；`private_files` 跨文件**追加**（private 槽位恒最后加载 → 清单累加不覆盖）
+- **容错**：单槽位 yml 解析失败记入 `errors` 不中断，其余槽位照常加载；非法正则由 `safeRe` 收集错误返回 null，该规则跳过不抛异常
+- **编译出口**：`ruleOut` 顶层只保留 `id/name/kind/severity/level/message/pattern/patterns/pathPattern/threshold/dimensions`，其余 yml 字段必须挂 `extra` 供检查器读取
+- **severity 映射**：yml `error` → 引擎级 `blocker`（拦截）；`warning` → `warning`；`info` → `pass`
+- **正则默认不区分大小写**：`safeRe` 默认加 `i`（`apiKey`/`API_KEY` 都命中）；要区分大小写写前缀 `(?-i)`
 
 ### 权重覆盖（weightOverrides）
 
@@ -206,7 +214,6 @@ git-sluice self-check           版本一致性 + HELP↔parseArgv 机器比对
 | **1.0.1**（修 bug） | **六个真实缺陷修复**：① `summarize` 漏统 error 级（出现「0 blocker 0 warning 但 total=3」矛盾统计）→ error 归拦截级 + notice 单列；② **9 个 kind 死桶**（编译后无人消费，旧项目被批评的同一问题）→ 补 `checkNameLengthAst`/`checkComplexityAst`/`checkNestingDepthAst`/`checkFileLines`/`checkRepeatedStringsAst` 5 个 AST 检查器 + `credential-file`/`min-length`/`max-complexity`/`max-depth`/`max-lines`/`repeated-string`/`min-occurrences`/`semantic` 全接线；③ `[FUNC]-` 规则被 `regex` 抢走（detect 前缀 `/^[FUNC]-/` 是字符集非字面量）→ `/^(\[FUNC\]\|secret)-/`；④ **豁免完全失效**——`checks`/`exempt` 读的键名与编译产出 kind 不一致（`secret` vs `[FUNC]`），全仓统一；⑤ 槽位仍半硬编码（`RULE_SLOTS` 当默认基准）→ 纯动态发现 + `SLOT_ORDER_HINT` 仅排序偏好，放 yml 即生效；⑥ 同步漏真实加载源（只同步 `node_modules/`）→ `detectTargets` 双目标（`local-plugins/` 优先 + `node_modules/`），修旧项目「改动刷新看不到」根因；另加 `capSeverity` 规则 severity 上限约束（规则声明 warning 不得被检查器升为 blocker）｜278 断言全绿 |
 | **1.0.0**（首发） | **DSH 插件接线完成**：lib/index.js（apply + 7 工具注册 + HTTP 鉴权分发 + Config schema）+ client.js（DSH 客户端插件，手写 createElement/零外部资源/开关默认关）+ scripts/sync-plugin.mjs（双副本同步，默认 dry-run）+ cordis.patch.yml + scanRepos；test-plugin 25 + test-client 21 断言（263 总全绿） |
 | **0.2.0** | **链接判断落地**：lib/link-check/index.js（extractLinks 去重去占位符 / gradeResult 分级：404·403→-3、DNS→-2、超时·5xx→-1 / flaky 域名网络错误 ×0.2 / probeLinks 并发受限 / checkLinks 统一问题对象，**只 warning 永不 blocker**）+ audit-rules-docs.yml 槽位（link-check kind）+ CLI `link-check <路径>`；test-link-check 24 断言（233 总全绿） |
-| **0.1.8** | **侧边栏落地**：lib/client/index.js 手写 createElement（无 JSX，无需构建）+ 零外部资源（纯内联 CSS，无 CDN/外链字体图标）+ 审计开关默认关（auditEnabled/pushPermitEnabled 等全 false）+ 配置即时生效（onChange 立即回调、类型校正、未知键丢弃）+ 不实施 viewer；test-client 16 断言（208 总全绿） |
 | **0.1.7** | **上下文注入 + HTTP 总入口落地**：lib/http/index.js 纯函数鉴权（checkOrigin 同源判定忽略端口/路径 → 无 Origin/跨源 403、checkWriteConfirm 破坏性操作缺 confirm → 400、checkBodySize 5MB → 413、authPipeline、routeRequest 路由分发、readJsonBody 流式 413 防护）+ lib/context/index.js（createEnvInjectionText/parseEnvInjection/isWithinRoot 防目录穿越）；test-http 30 + test-context 7 断言（190 总全绿）+ 旧项目扫描 0 blocker |
 | **0.1.6** | **豁免总入口落地**：exemptForFinding 注册表驱动统一消费（7 标记全接入，blocked/lineLevel/hint 声明式）+ 位置语义（文件头前 3 行=整文件 / sensitive/func-length/residue 行内单点）+ residue/style 仅代码文件生效 + audit-rules-*.yml 规则定义文件自动豁免自举命中（修复 §2.5 记录的 6 个 debugger 假阳性）；test-exempt 25 断言（153 总全绿）+ v2 自审 0 blocker（98/100 A）+ 旧项目扫描 0 blocker |
 | **0.1.5** | **评分总入口落地**：lib/score/ast.js 轻量 tokenizer（字符串/模板/注释感知）+ AST 质量检查器（checkSyncFs 修 named-import 假阴性、checkEmptyCatchAst 修多行空块、checkFuncLinesAst 精确行数）+ runChecks 接入（func-lines 行数+语句密度互补）+ scoreQuality weights 覆盖；test-quality 31 断言（128 总全绿）+ 旧项目扫描 0 blocker |

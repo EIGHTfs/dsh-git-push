@@ -28,7 +28,6 @@ whenToUse: 需要查工具参数细节、排查插件报错、或修改插件源
 | `repo` | string 必填 | — | 仓库绝对路径 |
 | `message` | string 必填 | — | commit message |
 | `audit` | bool | true | 提交前审计（有 blocker 时拦截） |
-| `llmAudit` | bool | false | 追加 LLM 深度审查 |
 | `push` | bool | true | 是否推送 |
 | `dryRun` | bool | false | 只模拟不写入 |
 
@@ -144,7 +143,7 @@ Host 侧注册统一走独立接线层，四段真实 API（对照运行中插�
 **设置项三处同源**（新增项必须三处同加，`test-client.mjs` 断言一致性）：
 `lib/index.js` 的 `Config`（服务端 schema）+ `lib/client/index.js` 的 `SETTINGS_SCHEMA`（纯逻辑，可单测）+ `client.js` 的 `SCHEMA`/`zh`（浏览器侧内联，无法 import 服务端 ESM）。
 
-**11 项设置**：`auditEnabled` / `pushPermitEnabled` / `llmAudit` / `hardcodeFullScan` / `injectFullSkill` / `injectRepoIndexFull`（boolean，均默认 false）、`auditScanScope`（diff|full）、`auditLevel`（quick|standard|deep）、`auditRuleset`（自定规则目录）、`weightOverrides`（权重 JSON）、`commitMessage`（string）。
+**11 项设置**：`auditEnabled` / `hardcodeFullScan` / `injectFullSkill` / `injectRepoIndexFull`（boolean，均默认 false）、`auditScanScope`（diff|full）、`auditLevel`（quick|standard|deep）、`auditRuleset`（自定规则目录）、`weightOverrides`（权重 JSON）、`commitMessage`（string）。
 
 **审计强度三档**（`auditLevel`，透传链 配置/工具参数 → `auditWithScope` → `auditFull`/`auditChanged` → `auditFile(…, {level})` → `runChecks({…}, {level})`）：
 `quick` 跳过 AST/语义重检查（func-lines / max-complexity / max-depth / max-lines / repeated-string / min-occurrences / semantic / credential-file / min-length），保留正则、凭据、路径、黑名单、空 catch、同步 IO——基础安全不随强度降级；`standard` 全量；`deep` 当前与 standard 等效（预留扩展位）。

@@ -27,7 +27,7 @@ test('入口：Config schema 含关键开关且默认关', () => {
   // 作为函数调用返回带默认值的配置对象（schemastery 真实语义）
   const cfg = Config({});
   assert.equal(cfg.auditEnabled, false, 'auditEnabled 默认关');
-  assert.equal(cfg.pushPermitEnabled, false, 'pushPermitEnabled 默认关');
+  assert.equal(cfg.pushPermitEnabled, undefined, 'pushPermitEnabled 已移除（2026-09-11 用户要求全删）');
   assert.equal(cfg.enabled, true, 'enabled 默认开');
   assert.ok(fields.some((d) => String(d).includes('审计')), 'schema 含审计开关描述');
 });
@@ -235,18 +235,35 @@ test('契约：dsh.skills 每条路径都真实存在（防列了不存在的文
 });
 
 // ---------- commitWithAudit（审计提交总入口，1.0.4 供外部插件复用） ----------
-import { commitWithAudit } from '../lib/commit-push.js';
+import { commitWithAudit, commitMany } from '../lib/commit-push.js';
 test('commitWithAudit：非 git 仓库不崩且带审计摘要', async () => {
-  const r = await commitWithAudit({ repoPath: '/nonexistent-xyz', message: 'x' });
+  const r = await commitWithAudit({ repoPath: '/nonexistent-xyz', message: 'x', requirementsConfirmed: true });
   assert.equal(r.ok, false);
   assert.equal(r.blocked, undefined, '放行路径不设 blocked（仅拦截时 blocked=true）');
 });
+
+// D16 commitMany：批量提交（对齐 v1 commitMany；不含审计门禁）
+test('commitMany：逐仓返回结果数组（含非 git 仓库错误）', async () => {
+  const results = await commitMany({
+    repos: [ROOT, '/nonexistent-abc'],
+    message: 'batch test',
+    dryRun: true,
+    requirementsConfirmed: true,
+  });
+  assert.equal(results.length, 2);
+  assert.equal(results[0].repo, ROOT);
+  assert.equal(results[0].ok, true, '真实仓库 dryRun 应成功');
+  assert.equal(results[0].dryRun, true);
+  assert.equal(results[1].repo, '/nonexistent-abc');
+  assert.equal(results[1].ok, false, '非 git 仓库应记失败不抛异常');
+  assert.match(results[1].error, /非 git 仓库/);
+});
 test('commitWithAudit：audit=false 不跑审计（audit 为 null）', async () => {
-  const r = await commitWithAudit({ repoPath: '/nonexistent-xyz', message: 'x', audit: false });
+  const r = await commitWithAudit({ repoPath: '/nonexistent-xyz', message: 'x', audit: false, requirementsConfirmed: true });
   assert.equal(r.audit, null);
 });
 test('commitWithAudit：dryRun 透传（对真实仓库）', async () => {
-  const r = await commitWithAudit({ repoPath: ROOT, message: 'test', dryRun: true, audit: false });
+  const r = await commitWithAudit({ repoPath: ROOT, message: 'test', dryRun: true, audit: false, requirementsConfirmed: true });
   assert.equal(r.ok, true);
   assert.equal(r.dryRun, true);
 });

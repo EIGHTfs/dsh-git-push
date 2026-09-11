@@ -25,11 +25,11 @@ function mockReact() {
 }
 
 // ---------- 默认关（关键安全默认） ----------
-test('默认关：审计开关/推送许可/LLM/全量扫 全部默认 false', () => {
+test('默认关：审计开关/LLM/全量扫 全部默认 false', () => {
   const c = defaultConfig();
   assert.equal(c.auditEnabled, false);
-  assert.equal(c.pushPermitEnabled, false);
-  assert.equal(c.llmAudit, false);
+  assert.equal(c.pushPermitEnabled, undefined, 'pushPermitEnabled 已移除（2026-09-11）');
+  assert.equal(c.llmAudit, undefined, 'llmAudit 已移除（v2 不提供 LLM 深度审查）');
   assert.equal(c.hardcodeFullScan, false);
   assert.equal(c.injectFullSkill, false);
   assert.equal(c.injectRepoIndexFull, false);
@@ -167,9 +167,11 @@ test('client.js：零外部资源（内联 CSS 无外链/url()/@import）', () =
 });
 
 test('client.js：开关默认关（与服务端 schema 一致）', () => {
-  for (const key of ['auditEnabled', 'pushPermitEnabled', 'llmAudit', 'hardcodeFullScan', 'injectFullSkill']) {
+  for (const key of ['auditEnabled', 'hardcodeFullScan', 'injectFullSkill']) {
     assert.ok(new RegExp(`key: '${key}', type: 'boolean', default: false`).test(rootClientSrc), `${key} 应默认 false`);
   }
+  assert.ok(!rootClientSrc.includes("'llmAudit'"), 'client.js 不应含 llmAudit（v2 不提供 LLM 深度审查）');
+  assert.ok(!rootClientSrc.includes("'pushPermitEnabled'"), 'client.js 不应含 pushPermitEnabled（已移除 2026-09-11）');
 });
 
 test('client.js：设置项与服务端 SETTINGS_SCHEMA 键一致', () => {

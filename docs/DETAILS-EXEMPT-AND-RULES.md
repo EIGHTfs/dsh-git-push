@@ -70,9 +70,9 @@ audit 消费时对 `audit-rules-*.yml` 路径跳过 residue 类豁免（规则�
 
 ### 2.1 槽位（slot）→ 文件
 
-| 槽位 | 文件 | 规则数（2026-09-10 工作区实测） |
+| 槽位 | 文件 | 规则数（2026-09-11 工作区实测） |
 |---|---|---|
-| nodejs | `lib/audit-rules/audit-rules-nodejs.yml` | 34 |
+| nodejs | `lib/audit-rules/audit-rules-nodejs.yml` | 36 |
 | frontend | `lib/audit-rules/audit-rules-frontend.yml` | 19 |
 | npm | `lib/audit-rules/audit-rules-npm.yml` | 10 |
 | version | `lib/audit-rules/audit-rules-version.yml` | 8 |
@@ -80,14 +80,15 @@ audit 消费时对 `audit-rules-*.yml` 路径跳过 residue 类豁免（规则�
 | comment | `lib/audit-rules/audit-rules-comment.yml` | 6 |
 | i18n | `lib/audit-rules/audit-rules-i18n.yml` | 3 |
 | folder | `lib/audit-rules/audit-rules-folder.yml` | 4 |
+| performance | `lib/audit-rules/audit-rules-performance.yml` | 2（memory-bomb 7 子模式 + busy-wait） |
 | docs | `lib/audit-rules/audit-rules-docs.yml` | 1 |
 | robustness | `lib/audit-rules/audit-rules-robustness.yml` | 1 |
 | structure | `lib/audit-rules/audit-rules-structure.yml` | 1 |
 | template | `lib/audit-rules/audit-rules-template.yml` | 1（模板，默认不加载） |
 | private | `lib/audit-rules/audit-rules-private.yml` | 0（私有拦截清单槽位） |
 
-> 槽位顺序 / 加载 / 合并见 `lib/rule/loader.js`（RULE_SLOTS，后覆盖前）；
-> 新增槽位 = 新建 `audit-rules-<名>.yml`，`discoverRuleSlots` 自动发现，**不需要改代码**。
+> 槽位全动态：**新建 `audit-rules-<名>.yml` 即自动成为槽位**（`discoverRuleSlots` 扫目录），删文件即移除，不需要改代码。
+> 加载/合并/排序细节见 2.6「槽位加载与合并语义」。
 
 ### 2.2 文件骨架
 
@@ -167,6 +168,9 @@ output:
   fixable: true
 ```
 
+> **正则大小写语义（1.0.0 起）**：默认加 `i` 标志（不区分大小写）——规则本意是匹配「凭据/关键词写法」，`apiKey`/`API_KEY` 等驼峰与大写写法都要命中。
+> 需要显式区分大小写：pattern 前缀 `(?-i)`（关掉 i）；同义 `(?i)` 可写可不写（本来就默认 i）。
+
 **数值类**：
 ```yaml
 - id: readability/max-function-length
@@ -178,6 +182,9 @@ output:
   exceptions: ["i", "j", "k", "n", "e", "cb"]   # 数值规则共享
   fixable: true
 ```
+
+> **min_occurrences 分流**：带 `ignore_patterns`/`ignore_values` → 编译为 `repeated-string`（重复硬编码串，忽略清单内不报）；
+> 不带 ignore 字段 → 编译为 `min-occurrences`（简单次数阈值）。同一字段按有无 ignore 自动分流。
 
 ### 2.5 链接判断规则（link-check，0.2.0 起）
 
@@ -201,6 +208,64 @@ output:
 > 分级：404/403=死链 -3（不打折）；DNS 失败 -2（flaky×0.2）；超时 -1（×0.2）；
 > 只 warning 不 blocker；断网整体扣分很少（防假阳性）。
 
+### 2.6 槽位加载与合并语义（lib/rule/loader.js 全部细节）
+
+**发现（discoverRuleSlots）**：扫 `RULE_YAML_DIR`（=`lib/audit-rules`），凡匹配 `audit-rules-<名>.yml` 即一个槽位，返回 `<名>` 列表。放文件即生效、删文件即移除，**不改代码**。
+
+**顺序（resolveSlotOrder）**：
+1. 槽位集合 = `discoverRuleSlots()` 目录实际文件（不是常量表）
+2. 顺序 = 配置显式顺序优先（数组或逗号分隔字符串，可经环境变量 `DSH_GIT_PUSH_RULE_SLOTS` 注入）
+3. 配置未覆盖的，按 `SLOT_ORDER_HINT` 偏好排序（nodejs→frontend→npm→version→dsh→comment→structure→private→docs→template），未列出的按文件名字典序追加
+4. 配置声明但文件不存在的槽位 → **静默跳过**（不报缺失，方便先写配置后放文件）
+5. `template` 槽位默认不加载（`includeTemplate:false`），模板保持为空不进默认装载
+
+**合并（loadRuleFiles）**：按顺序逐槽位读取，`rules` 数组**后覆盖前**（同名 id 后者胜）；
+`severity_map`/`thresholds` 对象合并；`metadata` 只取第一个非空槽位的；`ignore` 数组追加；
+`private_files`（私密拦截清单）**跨文件追加**——private 槽位永远最后加载，天然保证清单累加不覆盖。
+
+**错误收集**：单个槽位 yml 解析失败 → 记入 `errors` 不中断（`ok=false` 当 errors 非空），其余槽位照常加载。
+
+**编译出口形状（ruleOut 白名单）**：编译产物顶层只保留
+`id/name/kind/severity/level/message/pattern/patterns/pathPattern/threshold/dimensions`，
+**其余 yml 字段必须走 `extra`**（G6 认领：scoring→threshold 兜底 / action / suggestions / examples / minLines 透传等）。
+规则里想带自定义字段给检查器 → 在编译函数里挂到 `extra`，检查器从 `rule.extra.xxx` 读。
+
+**severity 映射（severityLevel）**：yml 写 `error` → 引擎级 `blocker`（拦截）；`warning` → `warning`；`info` → `pass`。
+**非法正则不炸**：`safeRe` 编译失败记入 errors 返回 null，该规则跳过，全流程不抛异常。
+
+**SLOT_ORDER_HINT vs RULE_SLOTS**：`RULE_SLOTS` 是 deprecated 兼容别名（=排序偏好），**槽位集合永远以 `discoverRuleSlots()` 为准**。
+
+### 2.7 注释措辞黑名单（comment 槽位 → blacklist 编译，1.0.3）
+
+comment 槽位的总纲规则用**加分制黑名单**（不是简单命中即报）：命中黑名单词按 weight 累计分数，
+超阈值判「措辞可疑」。yml 形态：
+
+```yaml
+- id: comment/wording
+  name: "注释措辞审查"
+  category: "comment"
+  severity: "warning"
+  description: "注释/文档中残留对话措辞或自指表述"
+  blacklist:                          # 命中加分（weight 越大越可疑）
+    - pattern: "按照您的要求"
+      weight: 60
+  whitelist:                          # 命中减分（正当用法豁免）
+    - pattern: "示例"
+      penalty: 20
+  additional_features:                # 附加特征加权
+    - pattern: "第[一二三四五六七八九十]+步"
+      weight: 10
+  scoring:
+    threshold_suspicious: 60          # 超此分 → 报可疑
+  threshold: 60                       # 等价写法（优先取 threshold）
+  action: "改写为客观陈述"
+  suggestions: ["去掉「你/我」", "改为陈述句"]
+```
+
+**编译产物**：`blacklist[]`（{pattern,weight}）+ `whitelist[]`（{pattern,penalty}）+ `additionalFeatures[]` + `threshold` + `scoring`/`action`/`suggestions` 透传（展示字段）。
+**阈值兜底**：`threshold ?? scoring.threshold_suspicious`（comment.yml 用 60）——只写 `scoring.threshold_suspicious` 也能生效。
+**认领条件**：`blacklist` 数组非空（无需写 kind）。维度绑定「文档」。
+
 ---
 
 ## 三、写代码时的高频坑（写规则 yml / 豁免注释前必读）
@@ -214,6 +279,10 @@ output:
 | 5 | 行内豁免不生效 | 标记 `lineLevel: false`（size/syntax/quality/style） | 换文件头写法 |
 | 6 | func-lines 豁免整文件 | 只想豁免单函数却写了文件头 | 函数定义行行尾 `dsh-skip-func-length` |
 | 7 | 规则定义文件自举命中 | yml 描述里写 debugger/todo 关键词 → 被 residue 命中 | 规则定义文件已自动豁免（0.1.6） |
+| 8 | 正则莫名匹配大写写法 | `safeRe` 默认加 `i`（不区分大小写），以为写了小写就只匹配小写 | 默认就不区分大小写；**要区分**才写 `(?-i)` 前缀 |
+| 9 | yml 自定义字段检查器读不到 | 编译出口 `ruleOut` 只保留固定白名单字段，多余顶层字段被丢弃 | 自定义字段挂 `extra`（检查器读 `rule.extra.xxx`） |
+| 10 | yml 写 `severity: error` 想「只提示」 | `error` 被映射为引擎级 **blocker（拦截提交）** | 只警告用 `warning`；`info` 映射为 `pass` |
+| 11 | 槽位改了顺序没生效 | 以为 `SLOT_ORDER_HINT` 决定槽位集合 | 集合由目录文件决定；顺序可经配置/环境变量覆盖，未列出的按字典序 |
 
 ---
 
