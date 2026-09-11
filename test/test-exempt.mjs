@@ -7,9 +7,12 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 import {
-  EXEMPT_MARKERS, hasHeaderExempt, hasLineExempt, exemptForFinding, exemptHintFor,
+  EXEMPT_MARKERS, hasHeaderExempt, hasLineExempt, exemptForFinding, exemptHintFor, isSampleExemptDir,
 } from '../lib/exempt/index.js';
 
 /** 构造最小 finding。 */
@@ -272,4 +275,58 @@ test('豁免：exemptHintFor 反查 non-empty', () => {
   const hint = exemptHintFor('func-lines');
   assert.ok(typeof hint === 'string' && hint.length > 0);
   assert.match(hint, /dsh-skip-func-length/);
+});
+
+// ---------- 2026-09-11：.samples 空文件目录豁免 ----------
+test('目录豁免：.samples 空文件豁免整个所在目录（含子目录）', () => {
+  const root = mkdtempSync(join(tmpdir(), 'gp-exempt-dir-'));
+  try {
+    // 标记目录 marked/ 放 .samples 空文件
+    mkdirSync(join(root, 'marked', 'sub', 'deep'), { recursive: true });
+    writeFileSync(join(root, 'marked', '.samples'), '');
+    writeFileSync(join(root, 'marked', 'a.js'), 'const a = 1;');
+    writeFileSync(join(root, 'marked', 'sub', 'b.js'), 'const b = 2;');
+    writeFileSync(join(root, 'marked', 'sub', 'deep', 'c.js'), 'const c = 3;');
+    // 非标记目录
+    mkdirSync(join(root, 'plain'), { recursive: true });
+    writeFileSync(join(root, 'plain', 'p.js'), 'const p = 4;');
+    writeFileSync(join(root, 'root.js'), 'const r = 5;');
+
+    assert.equal(isSampleExemptDir(root, 'marked/a.js'), true, '标记目录内文件豁免');
+    assert.equal(isSampleExemptDir(root, 'marked/sub/b.js'), true, '标记目录子目录豁免');
+    assert.equal(isSampleExemptDir(root, 'marked/sub/deep/c.js'), true, '标记目录孙目录豁免');
+    assert.equal(isSampleExemptDir(root, 'plain/p.js'), false, '非标记目录不豁免');
+    assert.equal(isSampleExemptDir(root, 'root.js'), false, '仓库根（无标记时）不豁免');
+    assert.equal(isSampleExemptDir(root, 'marked/'), true, '标记目录本身豁免');
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('目录豁免：仓库根放 .samples 空文件 → 全部豁免', () => {
+  const root = mkdtempSync(join(tmpdir(), 'gp-exempt-root-'));
+  try {
+    writeFileSync(join(root, '.samples'), '');
+    mkdirSync(join(root, 'sub'), { recursive: true });
+    writeFileSync(join(root, 'sub', 'x.js'), 'const x = 1;');
+    assert.equal(isSampleExemptDir(root, 'sub/x.js'), true, '根标记传播到子目录');
+    assert.equal(isSampleExemptDir(root, 'sub/y.js'), true, '根标记传播到任意文件');
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('目录豁免：防逃逸 / 非空标记不豁免 / 空 relPath', () => {
+  const root = mkdtempSync(join(tmpdir(), 'gp-exempt-safe-'));
+  try {
+    mkdirSync(join(root, 'd'), { recursive: true });
+    writeFileSync(join(root, 'd', '.samples'), 'not-empty'); // 非空 → 不是豁免标记
+    writeFileSync(join(root, 'd', 'f.js'), 'const f = 1;');
+    assert.equal(isSampleExemptDir(root, 'd/f.js'), false, '非空 .samples 不是豁免标记');
+    assert.equal(isSampleExemptDir(root, '../outside.js'), false, '../ 逃逸不豁免');
+    assert.equal(isSampleExemptDir(root, ''), false, '空 relPath 返回 false');
+    assert.equal(isSampleExemptDir('', 'a.js'), false, '空 repoPath 返回 false');
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 });

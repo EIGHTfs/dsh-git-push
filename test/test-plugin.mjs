@@ -3,9 +3,11 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { tmpdir } from 'node:os';
+import { execSync } from 'node:child_process';
 
 import { name, GIT_PUSH_SETTINGS_NS, Config, apply, callTool, handleHttp, listTools } from '../lib/index.js';
 import { setDefineToolOverride } from '../lib/plugin/index.js';
@@ -266,4 +268,42 @@ test('commitWithAudit：dryRun 透传（对真实仓库）', async () => {
   const r = await commitWithAudit({ repoPath: ROOT, message: 'test', dryRun: true, audit: false, requirementsConfirmed: true });
   assert.equal(r.ok, true);
   assert.equal(r.dryRun, true);
+});
+
+// 2026-09-11：.samples 空文件目录豁免 —— 审计照常出结果，但该目录内 blocker 不拦截提交
+function makeExemptRepo() {
+  const root = mkdtempSync(join(tmpdir(), 'gp-cwa-exempt-'));
+  execSync('git init -b master', { cwd: root, stdio: 'ignore' });
+  writeFileSync(join(root, 'base.js'), 'export const base = 1;\n');
+  execSync('git -c user.email=t@t -c user.name=t add -A && git -c user.email=t@t -c user.name=t commit -m init', { cwd: root, stdio: 'ignore' });
+  return root;
+}
+function addSecretFile(root, path) {
+  mkdirSync(join(root, dirname(path)), { recursive: true });
+  writeFileSync(join(root, path), 'const apiKey = "sk-test-abcdef1234567890abcdef";\n');
+}
+test('commitWithAudit：.samples 目录内 blocker 不拦截（照常可推 dryRun）', async () => {
+  const root = makeExemptRepo();
+  try {
+    mkdirSync(join(root, 'fixtures'), { recursive: true });
+    writeFileSync(join(root, 'fixtures', '.samples'), '');
+    addSecretFile(root, 'fixtures/sample.js');
+    const r = await commitWithAudit({ repoPath: root, message: 'sample', dryRun: true, audit: true, requirementsConfirmed: true });
+    assert.equal(r.blocked, undefined, '豁免目录 blocker 不应拦截');
+    assert.equal(r.ok, true, 'dryRun 应放行');
+    assert.ok(r.audit && r.audit.summary.blocker >= 1, '审计结果照常出（blocker 计数保留）');
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+test('commitWithAudit：对照——非豁免目录 blocker 照常拦截', async () => {
+  const root = makeExemptRepo();
+  try {
+    addSecretFile(root, 'real.js');
+    const r = await commitWithAudit({ repoPath: root, message: 'real', dryRun: true, audit: true, requirementsConfirmed: true });
+    assert.equal(r.blocked, true, '非豁免目录 blocker 应拦截');
+    assert.match(r.error, /审计拦截/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 });

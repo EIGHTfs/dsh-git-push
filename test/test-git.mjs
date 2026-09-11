@@ -260,6 +260,24 @@ test('ensureGitignore：node_modules.orig 目录不参与敏感文件扫描', ()
   rmSync(join(repo, '.gitignore'), { force: true });
 });
 
+test('ensureGitignore：.samples 目录豁免——不写 .gitignore、照常报告', () => {
+  // fixtures/.samples 空文件 = 豁免标记：目录内假 token 照常报告，但不进 .gitignore
+  mkdirSync(join(repo, 'fixtures'), { recursive: true });
+  writeFileSync(join(repo, 'fixtures', '.samples'), '');
+  writeFileSync(join(repo, 'fixtures', 'secret.js'), 'const apiKey = "sk-test-abcdef1234567890abcdef";\n');
+  writeFileSync(join(repo, 'real.js'), 'const apiKey = "sk-test-abcdef1234567890abcdef";\n');
+  const r = ensureGitignore(repo);
+  assert.ok(r.files.includes('fixtures/secret.js'), '豁免目录敏感文件照常报告');
+  assert.ok(r.files.includes('real.js'), '非豁免敏感文件照常报告');
+  assert.equal(r.sampleExempted, 1, 'sampleExempted 计数 = 1');
+  const gi = readFileSync(join(repo, '.gitignore'), 'utf8');
+  assert.ok(!gi.includes('fixtures/secret.js'), '豁免目录文件不写 .gitignore');
+  assert.ok(gi.includes('/real.js') || gi.includes('real.js'), '非豁免文件照常写 .gitignore');
+  rmSync(join(repo, 'fixtures'), { recursive: true, force: true });
+  rmSync(join(repo, 'real.js'), { force: true });
+  rmSync(join(repo, '.gitignore'), { force: true });
+});
+
 test('readmeCheckHint：有/无 README 区分', () => {
   const without = readmeCheckHint(repo);
   assert.equal(without.hasReadme, false);
