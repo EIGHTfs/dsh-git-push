@@ -24,7 +24,7 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "test": "node --test test/",
+    "test": "node --test \"test/*.mjs\"",
     "check": "node --check lib/index.js && node --check lib/core.js && node --check lib/audit.js && node --check lib/quality.js && node --check lib/rules.js && node --check lib/permit.js && node --check lib/client.js && node --check lib/repo-index.js && node --check lib/env-inject.js && node --check lib/llm.js"
   },
   "peerDependencies": {

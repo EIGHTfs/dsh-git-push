@@ -300,6 +300,20 @@ try {
   const n3 = auditRepo(repo, { files: [{ path: 'blocked3.js', content: 'function ( {\n', addedLines: ['function ( {\n'], isBinary: false }], blockOn: 'none' });
   ok(n3.blocked === false, 'blockOn=none：语法错误也不拦截');
 
+  /* ============ 2026-09-11：.samples 空文件目录豁免（整目录照常出结果、不拦截） ============ */
+  const sRepo = join(root, 'srepo');
+  mkdirSync(join(sRepo, 'fixtures'), { recursive: true });
+  writeFileSync(join(sRepo, 'fixtures', '.samples'), ''); // 空文件 = 标记
+  execSync('git init -b master', { cwd: sRepo, stdio: 'ignore' });
+  execSync('git -c user.email=t@t -c user.name=t add -A && git -c user.email=t@t -c user.name=t commit -m init', { cwd: sRepo, stdio: 'ignore' });
+  const s1 = auditRepo(sRepo, { files: [{ path: 'fixtures/sample-a.js', content: 'const apiKey = "sk-test-abcdef1234567890abcdef";\n', addedLines: ['const apiKey = "sk-test-abcdef1234567890abcdef";'], isBinary: false }], blockOn: 'any' });
+  ok(s1.findings.some((f) => f.rule === 'secret'), '.samples 目录内 secret 照常出结果');
+  ok(s1.blocked === false && s1.passed === true, '.samples 目录内 secret 不拦截（blockOn=any 也放行）');
+  ok(s1.sampleExemptFindings > 0, '返回 sampleExemptFindings 计数');
+  const s2 = auditRepo(sRepo, { files: [{ path: 'real.js', content: 'const apiKey = "sk-test-abcdef1234567890abcdef";\n', addedLines: ['const apiKey = "sk-test-abcdef1234567890abcdef";'], isBinary: false }], blockOn: 'any' });
+  ok(s2.findings.some((f) => f.rule === 'secret'), '对照：标记外 secret 照常检出');
+  ok(s2.blocked === true, '对照：标记外 secret 照常拦截');
+
 } finally {
   rmSync(root, { recursive: true, force: true });
 }

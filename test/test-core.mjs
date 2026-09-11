@@ -392,6 +392,20 @@ try {
       ok(s2.ok === true && s2.added.length === 0, 'ensureSensitiveIgnored 幂等');
       const s3 = ensureSensitiveIgnored(repoSens, { skipWrite: true });
       ok(s3.ok === true && s3.added.length === 0 && s3.skipped === 'private-repo-exempt', 'skipWrite=true 只报告不写（私有库豁免）');
+      // 2026-09-11：.samples 空文件目录豁免 —— 目录内敏感文件照常报告、不写 .gitignore
+      mkdirSync(join(repoSens, 'samples'));
+      writeFileSync(join(repoSens, 'samples', '.samples'), '');
+      writeFileSync(join(repoSens, 'samples', 'secret2.js'), 'const password = "hunter3pass";\n');
+      rmSync(join(repoSens, '.gitignore'), { force: true });
+      const s4 = ensureSensitiveIgnored(repoSens);
+      ok(s4.ok === true && s4.hits.some((h) => h.path === 'samples/secret2.js'), '.samples 目录内敏感文件照常报告（hits 保留）');
+      ok(s4.sampleExempted === 1, 'sampleExempted 计数 = 1');
+      ok(!readFileSync(join(repoSens, '.gitignore'), 'utf8').includes('samples/secret2.js'), '.samples 目录内敏感文件不写 .gitignore');
+      rmSync(join(repoSens, 'samples'), { recursive: true, force: true });
+      rmSync(join(repoSens, 'secret.js'), { force: true });
+      rmSync(join(repoSens, 'ok.js'), { force: true });
+      rmSync(join(repoSens, 'exempt.js'), { force: true });
+      rmSync(join(repoSens, '.gitignore'), { force: true });
     }
   }
 
