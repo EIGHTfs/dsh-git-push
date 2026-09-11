@@ -1,6 +1,6 @@
 {
   "name": "dsh-git-push",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "DSH git 自动提交推送插件——统一函数入口架构（规则/审计/git/自身/侧边栏/评分/豁免/上下文/HTTP/测试十大总入口）",
   "type": "module",
   "main": "lib/index.js",
