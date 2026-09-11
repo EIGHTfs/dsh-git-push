@@ -82,6 +82,18 @@ rules:
     fixable: false
     mitigation: "提取常量：const TAX_RATE = 1.2; const MAX_LIMIT = 1000; 并加注释说明 1/2/3 等状态码含义"
 
+  - id: readability/magic-number-smart
+    name: "硬编码魔数检测（版本号豁免版）"
+    kind: "magic-number-smart"
+    category: "readability"
+    severity: "warning"
+    description: "检测硬编码魔数（\\b\\d{2,}\\b / \\b0x[0-9a-fA-F]+\\b / \\b\\d+\\.\\d+\\b），但自动豁免：版本号（v1.2.3/1.2.3/VERSION 常量）、日期时间（2026-09-12/时间戳/时间）、HTTP 状态码（100-504 清单）、常见合法常量（0/1/-1/60/100/1000/1024/3600/86400 等）、状态枚举（pending/completed 等字符串）；上下文关键字分流——magic_number_hints（timeout/retry/max/min/limit/size/count/port/interval/delay/duration/threshold/buffer/chunk）内的数字报魔数，legitimate_hints（version/date/year/month/day/hour/minute/second/http/status）内的数字豁免；同一数字文件内出现 ≥3 次强制标记"
+    magic_number_hints: ["timeout", "retry", "max", "min", "limit", "size", "count", "port", "interval", "delay", "duration", "threshold", "buffer", "chunk"]
+    legitimate_hints: ["version", "date", "year", "month", "day", "hour", "minute", "second", "http", "status"]
+    force_count: 3
+    fixable: true
+    mitigation: "提取命名常量并注释含义：const MAX_RETRY = 3; const API_TIMEOUT_MS = 30000; 版本号/日期/HTTP 状态码/常见常量/状态枚举自动豁免"
+
   - id: readability/max-nesting-depth
     name: "嵌套过深（缩进层级 > 3）"
     category: "readability"
