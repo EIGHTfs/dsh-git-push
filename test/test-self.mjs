@@ -10,6 +10,11 @@ import { fileURLToPath } from 'node:url';
 
 import { VERSION, readmeTemplate, yamlTemplate, versionInfo, helpSync } from '../lib/self/index.js';
 import { parseArgv, KNOWN_FLAGS, main, cmdVersion } from '../cli.mjs';
+import {
+  SOURCE_ROOT, SYNC_ENTRIES, SYNC_EXCLUDE, listSyncFiles, detectTargets, syncPlugin,
+} from '../scripts/sync-plugin.mjs';
+import { mkdtempSync, rmSync, existsSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const packageJson = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
@@ -124,4 +129,83 @@ test('cmdVersion：输出含 v + VERSION', () => {
 test('package.json：name 即 dsh-git-push（本体身份）', () => {
   assert.equal(packageJson.name, 'dsh-git-push');
   assert.ok(!/v2|重构|重建/.test(packageJson.description), 'description 不应含 v2/重构 措辞');
+});
+
+// ---------- 参数解析健壮性（原 test-framework）----------
+test('CLI：parseArgv 支持 --depth 与 --full', () => {
+  const { flags, positional } = parseArgv(['.', '--depth', '5']);
+  assert.equal(flags.depth, 5);
+  assert.equal(positional[0], '.');
+  const { flags: f2 } = parseArgv(['--full', '/tmp']);
+  assert.equal(f2.full, true);
+});
+
+test('CLI：未知参数报错（不走 HELP 静默）', () => {
+  const { error } = parseArgv(['--not-exist']);
+  assert.match(error, /未知参数/);
+});
+
+// ---------- 双副本同步与发布准备（原 test-plugin，归属自身总入口）----------
+test('同步：同步清单含入口与规则，排除 test/看板', () => {
+  const files = listSyncFiles(ROOT);
+  assert.ok(files.includes('package.json'));
+  assert.ok(files.includes('cli.mjs'));
+  assert.ok(files.includes('lib/index.js'));
+  assert.ok(files.some((f) => f.startsWith('lib/audit-rules/')));
+  assert.ok(!files.some((f) => f.startsWith('test/')), 'test 不应随插件发布');
+  assert.ok(!files.some((f) => f.includes('WORKBOARD')), '开发看板不应随插件发布');
+  assert.ok(!files.some((f) => f.includes('node_modules')));
+});
+
+test('同步：dry-run 不写文件（默认安全）', () => {
+  const target = join(ROOT, '.tmp-sync-test');
+  const r = syncPlugin({ source: ROOT, target, write: false });
+  assert.equal(r.ok, true);
+  assert.ok(r.written > 0);
+  assert.equal(existsSync(target), false, 'dry-run 不应创建目标目录');
+});
+
+test('同步：缺目标目录时报错不静默', () => {
+  const r = syncPlugin({ source: ROOT, target: '' });
+  assert.equal(r.ok, false);
+  assert.ok(r.error.includes('未指定目标'));
+});
+
+test('同步：真实写入到临时目录（幂等）', () => {
+  const target = join(ROOT, '.tmp-sync-write');
+  const r1 = syncPlugin({ source: ROOT, target, write: true });
+  assert.equal(r1.ok, true);
+  assert.ok(existsSync(join(target, 'package.json')));
+  const r2 = syncPlugin({ source: ROOT, target, write: true });
+  assert.equal(r2.written, 0, '第二次应全部一致（幂等）');
+  assert.ok(r2.skipped > 0);
+  // 清理
+  import('node:fs').then((fs) => fs.rmSync(target, { recursive: true, force: true }));
+});
+
+test('同步：常量声明齐全', () => {
+  assert.ok(SYNC_ENTRIES.includes('lib'));
+  assert.ok(SYNC_EXCLUDE.includes('node_modules'));
+});
+
+test('同步：detectTargets 对无 HOME 返回空数组（不崩）', () => {
+  assert.deepEqual(detectTargets(''), []);
+  assert.deepEqual(detectTargets('/no/such/home'), []);
+});
+
+// ---------- 推送准备（产物完整） ----------
+test('推送准备：package.json 有 name/version/exports/files/bin', () => {
+  const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
+  assert.equal(pkg.name, 'dsh-git-push');
+  assert.equal(pkg.version, VERSION);
+  assert.ok(pkg.exports['.']);
+  assert.ok(pkg.exports['./client']);
+  assert.ok(Array.isArray(pkg.files));
+  assert.ok(pkg.bin['git-sluice']);
+});
+
+test('推送准备：cordis.patch.yml 存在且含 insert 写法', () => {
+  const yml = readFileSync(join(ROOT, 'cordis.patch.yml'), 'utf8');
+  assert.ok(yml.includes('insert:'), '第三方 bundle patch 用 insert 顶层新建行');
+  assert.ok(yml.includes('dsh-git-push'));
 });
