@@ -232,7 +232,7 @@ test('checkSyncFsInFile：async 中的同步 fs 报、纯同步不报', () => {
   const viaPrefix = 'export async function f() {\n  const x = fs.readFileSync("a");\n}\n';
   assert.ok(checkSyncFsInFile({ file: 'a.mjs', text: viaPrefix }).length >= 1, 'fs. 前缀应报');
   const viaImport = 'import { readFileSync } from "node:fs";\nexport async function g() {\n  const x = readFileSync("a");\n}\n';
-  assert.ok(checkSyncFsInFile({ file: 'a.mjs', text: viaImport }).length >= 1, 'named import 后直调应报（修旧项目假阴性）');
+  assert.ok(checkSyncFsInFile({ file: 'a.mjs', text: viaImport }).length >= 1, 'named import 后直调应报');
   const plain = 'const x = fs.readFileSync("a");\n';
   assert.equal(checkSyncFsInFile({ file: 'a.mjs', text: plain }).length, 0, '非 async 上下文不报');
   const custom = 'export async function h() {\n  const x = readFileSync("a");\n}\n';

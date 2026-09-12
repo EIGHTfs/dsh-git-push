@@ -1,648 +1,603 @@
+/**
+ * dsh-git-push v2 设置侧边栏（settings.section 独立页）
+ * ============================================================================
+ * 2026-09-12 重写（三选项卡版）：
+ *   - 纯中文：删 zh/en 键值对字典，用户可见文案直接硬编码中文（产品设计）。
+ *   - 三选项卡（对齐插件市场 .tabs/.tab/.on 样式，参考 skill 记分板）：
+ *       ① 账号信息（纯展示）：token/SSH 公钥检测 → GitHub 登录态/用户名/套餐
+ *       ② 审计：审计开关 + 10 维度权重 + 规则包列表（上下调次序、下覆盖上、
+ *          动态加载全部 yml（模板不显示）、规则名后直接显示 描述/作者/拦截/警告/通过 数量、
+ *          单击整行切换禁用/启用（auditDisabledSlots，nodejs/private 安全红线不可禁用））
+ *       ③ 设置：token / sshkey / 邮箱 + 一键生成（保存按钮在标题右侧、放弃已删）
+ *   - 只保留 settings.section 注册；settings.plugin.item（插件配置卡）已删除。
+ *
+ * ⛔ 形态铁律（client-modules 聚合 bundle 兼容）：
+ *   1. window.__ModuleLoader__.load 必须在文件第 1 行。
+ *   2. 全部代码在 factory 函数体内，文件顶层【零声明】（防 combo 拼接撞名）。
+ *   3. 内部命名专属前缀 dshgp_（防与其他插件同名声明撞名）。
+ *   4. 手写 jsx-runtime（jsx/jsxs），禁止 JSX 构建步骤；零外部资源。
+ * ============================================================================
+ */
 window.__ModuleLoader__.load({
   id: 'dsh-git-push',
-  // v1.42.0：参数去括号（require => 单参箭头不匹配函数行数计数的 fnStart 正则），
-  // 使工厂内部函数被 checkFunctionLength 独立计数——纯语法等价改写，行为零变化。
-  factory: require => {
+  factory: (require) => {
     var module = { exports: {} };
     var exports = module.exports;
     Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
     const jsx = require('react/jsx-runtime');
     const react = require('react');
-    const primitives = require('@deepseek-ai/dsh-client-ui-primitives');
     const store = require('@deepseek-ai/dsh-client-store');
 
-    const NS = 'settings.gitPush';
+    const NS = 'git-push';
     const SETTINGS_NS = 'git-push';
-    const Icon = primitives.IconChevronDownOutline14;
 
-    const zh = {
-      title: 'Git 提交推送',
-      description: '填写 GitHub token。保存后写入插件配置目录 git-push/github-token（0600），不进公开配置。',
-      token: 'GitHub token',
-      tokenHint: 'ghp_ / github_pat_ 开头。保存后明文不会留在设置页。',
-      sshPub: 'SSH 公钥',
-      sshHint: 'ssh-ed25519 / ssh-rsa 整行。保存到同级仓 *.pub，不回传明文。',
-      tokenSet: '已配置',
-      tokenUnset: '未配置',
-      check: '检测可用',
-      checking: '检测中…',
-      expand: '展开设置',
-      collapse: '收起设置',
-      save: '保存',
-      saving: '保存中…',
-      discard: '放弃',
-      unsaved: '未保存',
-      saveFailed: '未写入成功，请检查 token 格式后重试。',
-      injectFullSkill: '注入全部 skill 内容',
-      injectFullSkillHint: '勾选 = 每个会话注入插件 skills + 技能仓库（ai-work-archive/skills 的 git-workflow 部分）全部 skill 正文；不勾选（默认）= 只注入 skill 目录+文件清单，正文按需读取，省 token。修改即时保存。',
-      hardcodeFullScan: '硬编码全量扫',
-      hardcodeFullScanHint: '勾选 = 审计硬编码（本机绝对路径/局域网 IP）时扫整个文件（含既有历史行），用于换机前排查存量死路径；不勾选（默认）= 只扫本次新增/变更行。修改即时保存。',
-      injectRepoIndexFull: '注入 repo-index JSON 全文',
-      injectRepoIndexFullHint: '勾选 = 每个会话注入 dsh-repo-index.json 正文；不勾选（默认）= 只注入文件名/路径，正文按需读取。md 表格已废弃，权威源是 JSON。修改即时保存。',
-      saved: '✅ 已保存并生效',
-      savedFullSkillOn: '✅ 已开启：下次会话起每会话注入两仓 skill 全文',
-      savedFullSkillOff: '✅ 已关闭：只注入 skill 目录+文件清单（省 token）',
-      savedRepoIndexOn: '✅ 已开启：下次会话起注入 dsh-repo-index.json 正文',
-      savedRepoIndexOff: '✅ 已关闭：只注入 dsh-repo-index.json 文件名',
-      savedHardcodeOn: '✅ 已开启：硬编码审计全量扫整个文件',
-      savedHardcodeOff: '✅ 已关闭：硬编码审计只扫新增/变更行',
-      savedIgnore: '✅ 自定义忽略已保存：提交时自动写入目标仓库 .gitignore',
-      savedRuleOrder: '✅ 规则加载顺序已保存：下次审计按新顺序生效（后覆盖前）',
-      savedRuleWeight: '✅ 关键词权重已保存：≥40 进门禁 blocker，下次审计生效',
-      savedYamlMode: '✅ YAML 检查模式已保存：下次审计按新模式解析（js-yaml 真实解析 / heuristic 宽松启发式）',
-      accountTopHint: '账号状态（Token / SSH 公钥检测结果，进入设置自动检测）',
-      sshEmail: 'SSH 邮箱（生成公钥用）',
-      sshEmailHint: '如 your-name@example.com。生成 ssh-rsa 4096 密钥对，私钥留本机，公钥复制到 GitHub → Settings → SSH and GPG keys → New SSH key。',
-      genKey: '生成公钥',
-      genKeying: '生成中…',
-      genKeyDone: '✅ 公钥已生成并写入同级仓 *.pub，可复制下面公钥去 GitHub 绑定',
-      genKeyFail: '生成失败: ',
-      pubPreview: '生成的公钥（一键复制去 GitHub 绑定）',
-      copyKey: '📋 一键复制',
-      copyKeyDone: '✅ 已将公钥复制到剪贴板，去 GitHub 粘贴即可',
-      copyKeyFail: '❌ 复制失败（请手动选中复制）: ',
-      ignorePatterns: '自定义忽略文件',
-      ignorePatternsHint: '逗号或换行分隔的 gitignore 模式（如 *.bak*、*.tmp）。提交时自动追加到目标仓库 .gitignore，已跟踪文件自动解除跟踪。修改即时保存。',
-      // v1.49.0：侧边栏独立页——只读登录信息 + 引导去插件配置填写（不复用插件配置折叠卡）
-      // v1.49.1：客户端无跨 section 跳转 API（设置面板 section 切换为组件本地 state），「去插件配置填写」按钮无法跳转 → 移除按钮，保留纯文本引导
-      sectionGuideTitle: '登录信息（只读）',
-      sectionGuide: 'Token 与 SSH 公钥的填写、检测、保存在插件配置里进行，本页只读展示登录状态。',
-      sectionGoConfigHint: '填写入口：侧边栏 → 设置 → 插件 → 插件配置 → Git 提交推送',
-      sectionAdvanced: '高级设置（即时保存）',
-    };
-    // 双语设计已取消（2026-09-12）：只保留中文，无 en 表。
-    const cssText = [
-      '.dshgp_card{list-style:none;border:.5px solid var(--dsw-alias-border-l4);border-radius:16px;background:var(--dsw-alias-bg-layer-3)}',
-      '.dshgp_open{background:var(--dsw-alias-bg-layer-2)}',
-      '.dshgp_header{width:100%;appearance:none;border:0;background:none;font:inherit;color:inherit;text-align:left;cursor:pointer;display:flex;align-items:center;gap:12px;padding:14px 16px}',
-      '.dshgp_head{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}',
-      '.dshgp_name{font-size:15px;font-weight:600;color:var(--dsw-alias-label-primary)}',
-      '.dshgp_desc{font-size:13px;color:var(--dsw-alias-label-tertiary)}',
-      '.dshgp_badge{border-radius:999px;padding:1px 8px;font-size:11px;background:var(--dsw-alias-bg-module-platform);color:var(--dsw-alias-label-secondary)}',
-      '.dshgp_body{border-top:.5px solid var(--dsw-alias-border-l2);margin:0 16px;padding:12px 0 8px;display:flex;flex-direction:column;gap:8px}',
-      '.dshgp_label{font-size:13px;font-weight:500;color:var(--dsw-alias-label-primary)}',
-      '.dshgp_input{border:.5px solid var(--dsw-alias-border-l4);background:var(--dsw-alias-bg-layer-3);height:34px;font:inherit;color:var(--dsw-alias-label-primary);border-radius:8px;padding:0 12px;font-size:13px}',
-      '.dshgp_hint{margin:0;font-size:12px;color:var(--dsw-alias-label-tertiary)}',
-      '.dshgp_fail{margin:0;font-size:12px;color:var(--dsw-alias-label-error)}',
-      '.dshgp_block{white-space:pre-wrap;margin:0;font-size:12px;line-height:1.6;padding:8px 10px;border-radius:8px;background:var(--dsw-alias-bg-layer-3);color:var(--dsw-alias-label-primary)}',
+    /** 10 维度质量评分权重（合计 100；与 lib/score/index.js DEFAULT_WEIGHTS 一致）。 */
+    const dshgp_DIMENSIONS = [
+      { key: '可读性', def: 15 },
+      { key: '可维护性', def: 15 },
+      { key: '健壮性', def: 15 },
+      { key: '安全性', def: 18 },
+      { key: '性能', def: 10 },
+      { key: '测试覆盖', def: 10 },
+      { key: '可观测性', def: 5 },
+      { key: '可部署性', def: 5 },
+      { key: '文档', def: 4 },
+      { key: '开发者体验', def: 3 },
+    ];
+
+    const dshgp_css = [
+      // 选项卡条（对齐插件市场）
+      '.dshgp_tabs{display:flex;align-items:flex-end;gap:2px;border-bottom:1px solid var(--dsw-alias-border-l2);margin:0 0 12px}',
+      '.dshgp_tab{font:inherit;color:var(--dsw-alias-label-secondary);cursor:pointer;white-space:nowrap;background:0 0;border:none;border-bottom:2px solid transparent;padding:7px 12px;font-size:13px}',
+      '.dshgp_tab:hover{color:var(--dsw-alias-label-primary)}',
+      '.dshgp_tabOn{color:var(--dsw-alias-brand-primary);border-bottom-color:var(--dsw-alias-brand-primary);font-weight:600}',
+      // 区块
+      '.dshgp_section{display:flex;flex-direction:column;gap:10px}',
+      '.dshgp_block{border:.5px solid var(--dsw-alias-border-l4);border-radius:16px;background:var(--dsw-alias-bg-layer-3);padding:12px 14px}',
+      '.dshgp_h2{margin:0 0 8px;font-size:13px;font-weight:600;color:var(--dsw-alias-label-primary)}',
+      '.dshgp_desc{margin:0;font-size:12px;color:var(--dsw-alias-label-tertiary);line-height:1.6;white-space:pre-wrap}',
       '.dshgp_ok{color:var(--dsw-alias-label-primary)}',
       '.dshgp_err{color:var(--dsw-alias-label-error)}',
-      '.dshgp_foot{display:flex;justify-content:flex-end;gap:8px;padding-top:8px;flex-wrap:wrap}',
-      '.dshgp_btn{font:inherit;font-size:13px;border-radius:8px;padding:6px 12px;cursor:pointer}',
-      '.dshgp_check{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--dsw-alias-label-primary);cursor:pointer}',
-      '.dshgp_checkbox{width:16px;height:16px;accent-color:var(--dsw-alias-accent,var(--dsw-alias-label-primary));cursor:pointer}',
-      '.dshgp_saved{margin:0;font-size:12px;color:var(--dsw-alias-label-success,var(--dsw-alias-label-primary));padding:6px 10px;border-radius:8px;background:var(--dsw-alias-bg-layer-3)}',
+      // v1 账号块（2026-09-13 完全移植 v1 GitPushAccountTop 显示）
       '.dshgp_top{display:flex;flex-direction:column;gap:6px}',
       '.dshgp_toplabel{margin:0;font-size:11px;color:var(--dsw-alias-label-tertiary)}',
-      '.dshgp_row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}',
-      '.dshgp_email{flex:1;min-width:160px}',
-      '.dshgp_pub{white-space:pre-wrap;word-break:break-all;margin:0;font-size:11px;line-height:1.5;padding:8px 10px;border-radius:8px;background:var(--dsw-alias-bg-layer-3);color:var(--dsw-alias-label-secondary);max-height:120px;overflow:auto}',
-      '.dshgp_keybtn{font:inherit;font-size:13px;border-radius:8px;padding:6px 14px;cursor:pointer;background:var(--dsw-alias-bg-module-platform);color:var(--dsw-alias-label-primary);border:.5px solid var(--dsw-alias-border-l4)}',
-      '.dshgp_keybtn:hover{background:var(--dsw-alias-bg-layer-3)}',
-      '.dshgp_keybtn:disabled{opacity:.6;cursor:default}',
-      // v1.47.0：规则引擎卡样式（顺序排序 + 权重滑块）
-      '.dshgp_rules{display:flex;flex-direction:column;gap:6px;border-top:.5px solid var(--dsw-alias-border-l2);padding-top:10px}',
-      '.dshgp_rules_h{font-size:14px;font-weight:600;color:var(--dsw-alias-label-primary)}',
-      '.dshgp_rules_h2{font-size:12px;font-weight:500;color:var(--dsw-alias-label-secondary);margin-top:4px}',
-      '.dshgp_rules_order{display:flex;flex-direction:column;gap:4px}',
-      '.dshgp_rules_row{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--dsw-alias-label-primary)}',
-      '.dshgp_rules_tpl{gap:8px}',
-      '.dshgp_rules_forced{gap:8px;color:var(--dsw-alias-label-secondary,inherit)}',
-      '.dshgp_mini_lock{display:inline-grid;place-items:center;line-height:1;font-size:12px}',
-      '.dshgp_mini{font:inherit;font-size:12px;line-height:1;width:22px;height:22px;border-radius:6px;cursor:pointer;background:var(--dsw-alias-bg-module-platform);color:var(--dsw-alias-label-primary);border:.5px solid var(--dsw-alias-border-l4)}',
-      // v1.49.0：侧边栏独立页样式（平铺，无折叠头）
-      '.dshgp_section{display:flex;flex-direction:column;gap:14px}',
-      '.dshgp_sectionblock{border:.5px solid var(--dsw-alias-border-l4);border-radius:12px;background:var(--dsw-alias-bg-layer-3);padding:12px 14px;display:flex;flex-direction:column;gap:8px}',
-      '.dshgp_section_h{font-size:13px;font-weight:600;color:var(--dsw-alias-label-primary);margin:0}',
-      '.dshgp_section_guide{display:flex;flex-direction:column;gap:4px;border-top:.5px solid var(--dsw-alias-border-l2);padding-top:8px}',
-      '.dshgp_mini:disabled{opacity:.4;cursor:default}',
-      '.dshgp_rules_name{flex:1}',
-      '.dshgp_rules_weights{display:flex;flex-direction:column;gap:4px}',
-      '.dshgp_weight_row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--dsw-alias-label-primary)}',
-      '.dshgp_weight_name{width:64px;flex-shrink:0}',
-      '.dshgp_weight_val{width:64px;font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-secondary)}',
-      '.dshgp_rules_note{margin:0;font-size:11px;color:var(--dsw-alias-label-tertiary)}',
-      '.dshgp_rules_mode{display:flex;align-items:center;gap:8px;margin:2px 0 4px}',
-      '.dshgp_rules_select{flex:0 0 auto;max-width:200px;font-size:12px;padding:2px 4px;border-radius:4px;border:1px solid var(--dsw-alias-border-default, rgba(128,128,128,.35));background:var(--dsw-alias-fill-default, transparent);color:var(--dsw-alias-label-primary)}',
-      '.dshgp_rules_note_inline{flex:1;font-size:11px;color:var(--dsw-alias-label-tertiary)}',
+      '.dshgp_acctblock{white-space:pre-wrap;margin:0;font-size:12px;line-height:1.6;padding:8px 10px;border-radius:8px;background:var(--dsw-alias-bg-layer-3);color:var(--dsw-alias-label-primary)}',
+      '.dshgp_keybtn{padding:3px 10px;font-size:12px;border:.5px solid var(--dsw-alias-border-l4);border-radius:8px;background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary);cursor:pointer;white-space:nowrap}',
+      '.dshgp_keybtn:disabled{opacity:.5;cursor:not-allowed}',
+      // 账号信息美化面板（2026-09-13 设计稿落地：渐变卡片 + GitHub 图标 + 状态徽标 + 凭据状态标签）
+      '.dshgp_acctpanel{position:relative;overflow:hidden;border:.5px solid var(--dsw-alias-border-l4);border-radius:16px;background:linear-gradient(160deg,var(--dsw-alias-bg-layer-3),var(--dsw-alias-bg-layer-2));padding:14px 14px 12px}',
+      '.dshgp_acctpanel::before{content:"";position:absolute;inset:0;background:radial-gradient(420px 140px at 15% -20%,color-mix(in srgb,var(--dsw-alias-brand-primary) 14%,transparent),transparent 70%),radial-gradient(300px 120px at 95% 115%,color-mix(in srgb,var(--dsw-alias-label-success) 10%,transparent),transparent 70%);pointer-events:none}',
+      '.dshgp_accthead{position:relative;display:flex;align-items:center;gap:10px}',
+      '.dshgp_acctic{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:linear-gradient(135deg,color-mix(in srgb,var(--dsw-alias-brand-primary) 22%,transparent),color-mix(in srgb,var(--dsw-alias-brand-primary) 8%,transparent));border:.5px solid color-mix(in srgb,var(--dsw-alias-brand-primary) 25%,transparent);color:var(--dsw-alias-brand-primary)}',
+      '.dshgp_accttitle{margin:0;font-size:13px;font-weight:600;color:var(--dsw-alias-label-primary)}',
+      '.dshgp_acctsub{margin:2px 0 0;font-size:11px;color:var(--dsw-alias-label-tertiary)}',
+      '.dshgp_acctstat{margin-left:auto;display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;padding:3px 10px;border-radius:999px;white-space:nowrap}',
+      '.dshgp_acctstat_ok{background:color-mix(in srgb,var(--dsw-alias-label-success) 14%,transparent);color:var(--dsw-alias-label-success)}',
+      '.dshgp_acctstat_warn{background:color-mix(in srgb,var(--dsw-alias-label-warning) 14%,transparent);color:var(--dsw-alias-label-warning)}',
+      '.dshgp_acctstat_err{background:color-mix(in srgb,var(--dsw-alias-label-error) 14%,transparent);color:var(--dsw-alias-label-error)}',
+      '.dshgp_acctdot{width:6px;height:6px;border-radius:50%;background:currentColor}',
+      '.dshgp_acctblock2{position:relative;margin:12px 0 0;padding:11px 13px;border-radius:12px;font-size:12px;line-height:1.7;white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;border:.5px solid var(--dsw-alias-border-l2);background:color-mix(in srgb,var(--dsw-alias-bg-base) 55%,transparent);color:var(--dsw-alias-label-primary)}',
+      '.dshgp_acctblock2_ok{border-color:color-mix(in srgb,var(--dsw-alias-label-success) 30%,transparent)}',
+      '.dshgp_acctblock2_err{border-color:color-mix(in srgb,var(--dsw-alias-label-error) 30%,transparent);color:var(--dsw-alias-label-error)}',
+      '.dshgp_acctblock2_loading{color:var(--dsw-alias-label-secondary)}',
+      '.dshgp_acctmeta{position:relative;display:flex;flex-direction:column;gap:5px;margin:9px 0 0}',
+      '.dshgp_acctmetarow{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--dsw-alias-label-secondary)}',
+      '.dshgp_acctmetak{color:var(--dsw-alias-label-tertiary);min-width:64px}',
+      '.dshgp_pill{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:999px}',
+      '.dshgp_pill_on{background:color-mix(in srgb,var(--dsw-alias-label-success) 14%,transparent);color:var(--dsw-alias-label-success)}',
+      '.dshgp_pill_off{background:color-mix(in srgb,var(--dsw-alias-label-tertiary) 14%,transparent);color:var(--dsw-alias-label-secondary)}',
+      '.dshgp_acctfoot{position:relative;display:flex;align-items:center;justify-content:space-between;margin-top:10px}',
+      '.dshgp_accthint{font-size:10px;color:var(--dsw-alias-label-tertiary)}',
+      // 已填写徽标（token/SSH 配置后提示，不显示内容）
+      '.dshgp_configured{margin-left:6px;border-radius:999px;padding:1px 8px;font-size:10px;background:color-mix(in srgb,var(--dsw-alias-label-success) 14%,transparent);color:var(--dsw-alias-label-success);white-space:nowrap}',
+      // 开关行
+      '.dshgp_switchrow{display:flex;align-items:center;justify-content:space-between;gap:10px}',
+      '.dshgp_switchlabel{font-size:13px;color:var(--dsw-alias-label-primary)}',
+      // 输入
+      '.dshgp_input{border:.5px solid var(--dsw-alias-border-l4);background:var(--dsw-alias-bg-layer-3);height:32px;font:inherit;color:var(--dsw-alias-label-primary);border-radius:8px;padding:0 10px;font-size:13px;width:100%;box-sizing:border-box}',
+      '.dshgp_textarea{border:.5px solid var(--dsw-alias-border-l4);background:var(--dsw-alias-bg-layer-3);font:inherit;color:var(--dsw-alias-label-primary);border-radius:8px;padding:8px 10px;font-size:12px;width:100%;box-sizing:border-box;resize:vertical;min-height:56px}',
+      '.dshgp_field{margin:0 0 8px}',
+      '.dshgp_label{font-size:12px;font-weight:500;color:var(--dsw-alias-label-primary);display:block;margin-bottom:4px}',
+      '.dshgp_hint{margin:2px 0 0;font-size:11px;color:var(--dsw-alias-label-tertiary)}',
+      // 按钮
+      '.dshgp_btn{font:inherit;font-size:12px;border-radius:8px;padding:5px 10px;cursor:pointer;border:.5px solid var(--dsw-alias-border-l4);background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary)}',
+      '.dshgp_btn:disabled{opacity:.45;cursor:default}',
+      '.dshgp_btnPrimary{border-color:var(--dsw-alias-brand-primary);color:var(--dsw-alias-brand-primary)}',
+      '.dshgp_foot{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}',
+      // 权重
+      '.dshgp_weightrow{display:flex;align-items:center;gap:8px;margin:3px 0}',
+      '.dshgp_weightkey{flex:1;font-size:12px;color:var(--dsw-alias-label-primary)}',
+      '.dshgp_weightinput{width:64px;border:.5px solid var(--dsw-alias-border-l4);background:var(--dsw-alias-bg-layer-3);height:26px;font:inherit;color:var(--dsw-alias-label-primary);border-radius:6px;padding:0 6px;font-size:12px;text-align:right}',
+      '.dshgp_weighttotal{margin:6px 0 0;font-size:11px;color:var(--dsw-alias-label-tertiary)}',
+      // 规则包列表
+      // 规则包列表（2026-09-13 榜单样式：模仿 skill 记分榜 表头行 + 定宽右对齐列 + hover）
+      '.dshgp_rulenext{list-style:none;margin:0;padding:0;border:.5px solid var(--dsw-alias-border-l4);border-radius:12px;background:var(--dsw-alias-bg-layer-3);overflow:hidden}',
+      '.dshgp_ruleheadrow{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--dsw-alias-label-tertiary);border-bottom:.5px solid var(--dsw-alias-border-l2)}',
+      '.dshgp_rulerow{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:13px;border-bottom:.5px solid var(--dsw-alias-border-l1)}',
+      '.dshgp_rulerow:last-child{border-bottom:0}',
+      '.dshgp_rulerow:hover{background:var(--dsw-alias-bg-layer-2)}',
+      '.dshgp_mini{font:inherit;font-size:12px;border:0;background:0 0;color:var(--dsw-alias-label-secondary);cursor:pointer;padding:1px 5px;border-radius:4px}',
+      '.dshgp_mini:hover{background:var(--dsw-alias-bg-layer-2)}',
+      '.dshgp_mini:disabled{opacity:.3;cursor:default}',
+      '.dshgp_ruleinfo{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}',
+      '.dshgp_ruleheadrowinfo{flex:1;min-width:0}',
+      '.dshgp_rulename{font-size:13px;font-weight:500;color:var(--dsw-alias-label-primary);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}',
+      '.dshgp_rulemeta{font-size:11px;color:var(--dsw-alias-label-tertiary)}',
+      '.dshgp_rulecount{flex-shrink:0;width:56px;text-align:right;font-size:12px;font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-primary)}',
+      '.dshgp_rulecountRed{flex-shrink:0;width:56px;text-align:right;font-size:12px;font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-error)}',
+      '.dshgp_rulecountYellow{flex-shrink:0;width:56px;text-align:right;font-size:12px;font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-warning)}',
+      '.dshgp_rulecountGreen{flex-shrink:0;width:56px;text-align:right;font-size:12px;font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-success)}',
+      '.dshgp_rulebadge{flex-shrink:0;width:48px;text-align:right}',
+      '.dshgp_badge{border-radius:999px;padding:1px 8px;font-size:10px;background:var(--dsw-alias-bg-module-platform);color:var(--dsw-alias-label-secondary);white-space:nowrap}',
+      '.dshgp_badgeRed{background:color-mix(in srgb,var(--dsw-alias-label-error) 14%,transparent);color:var(--dsw-alias-label-error)}',
+      '.dshgp_badgeYellow{background:color-mix(in srgb,var(--dsw-alias-label-warning) 14%,transparent);color:var(--dsw-alias-label-warning)}',
+      '.dshgp_badgeGreen{background:color-mix(in srgb,var(--dsw-alias-label-success) 14%,transparent);color:var(--dsw-alias-label-success)}',
+      // 规则明细表格（对齐记分榜表格）
+      '.dshgp_table{width:100%;border-collapse:collapse;font-size:12px;margin-top:4px}',
+      '.dshgp_table th{text-align:left;font-weight:600;color:var(--dsw-alias-label-secondary);padding:4px 8px;border-bottom:.5px solid var(--dsw-alias-border-l2);font-size:11px}',
+      '.dshgp_table td{padding:5px 8px;border-bottom:.5px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-primary);vertical-align:top}',
+      '.dshgp_table tr:last-child td{border-bottom:none}',
+      '.dshgp_tdname{font-weight:500}',
+      '.dshgp_tddesc{color:var(--dsw-alias-label-secondary)}',
+      '.dshgp_tdsev{white-space:nowrap}',
+      // 统计条
+      '.dshgp_stats{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 4px}',
+      '.dshgp_loading{padding:12px;text-align:center;font-size:12px;color:var(--dsw-alias-label-tertiary)}',
+      '.dshgp_rowOn{background:color-mix(in srgb,var(--dsw-alias-label-success) 6%,transparent)}',
+      '.dshgp_rowOff{background:color-mix(in srgb,var(--dsw-alias-label-error) 8%,transparent);opacity:.9}',
+      '.dshgp_rowClickable{cursor:pointer}',
+      '.dshgp_error{margin:8px 0 0;font-size:12px;color:var(--dsw-alias-label-error)}',
+      '.dshgp_saved{margin:6px 0 0;font-size:12px;color:var(--dsw-alias-label-success)}',
     ].join('');
 
-    function ensureCss() {
+    function dshgp_ensureCss() {
       if (typeof document === 'undefined') return;
       if (document.querySelector('style[data-plugin-css="dsh-git-push"]')) return;
       const tag = document.createElement('style');
       tag.dataset.plugin = 'dsh-git-push';
       tag.dataset.pluginCss = 'dsh-git-push';
-      tag.textContent = cssText;
+      tag.textContent = dshgp_css;
       document.head.appendChild(tag);
     }
 
-    /** v1.42.0：git-push 设置卡片——拆成 8 个子组件（渲染输出与 hooks 行为零变化），本函数只组装 */
-    function GitPushCard(props) {
-      ensureCss();
-      const t = props.t;
-      const state = props.useGitPushCard((s) => s);
-      // v1.49.1：插件配置卡默认展开（填写处 token/SSH key/保存按钮刷新后直接可见，仍可点头部手动收起）——
-      // 此前默认收起，刷新后 body 被折叠隐藏，用户误以为填写处被删
-      const [open, setOpen] = react.useState(true);
-      // v1.29.0 需求③：每次展开设置卡片自动跑一次账号检测（check 内部有 checking 防重）
-      react.useEffect(() => {
-        if (open) props.check();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-      }, [open]);
-      if (!state.available) return null;
-      const title = 'Git 提交推送';
-      const cardProps = { ...props, state, open, setOpen, title };
-      return jsx.jsxs('li', {
-        className: 'dshgp_card' + (open ? ' dshgp_open' : ''),
-        children: [
-          GitPushHeader(cardProps),
-          open
-            ? jsx.jsxs('div', {
-              className: 'dshgp_body',
-              children: [
-                /* v1.49.0：插件配置卡只保留 token / SSH key / 登录信息三块（其余高级设置移入侧边栏独立页 GitPushSectionPage） */
-                GitPushAccountTop(cardProps),
-                GitPushKeyGen(cardProps),
-                GitPushTokenFields(cardProps),
-                GitPushActionButtons(cardProps),
-              ],
-            })
-            : null,
-        ],
+    /** fetch 封装：GET JSON（same-origin）。 */
+    async function dshgp_getJson(url) {
+      const res = await fetch(url, { credentials: 'same-origin' });
+      return res.json();
+    }
+    /** fetch 封装：POST JSON（same-origin）。 */
+    async function dshgp_postJson(url, payload) {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload || {}),
+        credentials: 'same-origin',
       });
+      return res.json();
     }
 
-    /** v1.42.0：设置卡片头部按钮（名称/描述/已配置·未保存徽标/展开图标）——GitPushCard 拆出的子组件（渲染输出零变化） */
-    function GitPushHeader(props) {
-      const t = props.t;
-      const state = props.state;
-      const open = props.open;
-      const setOpen = props.setOpen;
-      const title = props.title;
-      return (
-          jsx.jsxs('button', {
-            type: 'button',
-            className: 'dshgp_header',
-            'aria-expanded': open,
-            'aria-label': (open ? '收起设置' : '展开设置') + ': ' + title,
-            onClick: () => setOpen(!open),
-            children: [
-              jsx.jsxs('span', {
-                className: 'dshgp_head',
-                children: [
-                  jsx.jsx('span', { className: 'dshgp_name', children: title }),
-                  jsx.jsx('span', { className: 'dshgp_desc', children: '填写 GitHub token。保存后写入插件配置目录 git-push/github-token（0600），不进公开配置。' }),
-                ],
-              }),
-              state.configured ? jsx.jsx('span', { className: 'dshgp_badge', children: '已配置' }) : jsx.jsx('span', { className: 'dshgp_badge', children: '未配置' }),
-              state.dirty ? jsx.jsx('span', { className: 'dshgp_badge', children: '未保存' }) : null,
-              Icon ? jsx.jsx(Icon, {}) : null,
-            ],
-          })
-      );
-    }
-
-    /** v1.42.0：账号状态检测块（v1.29.0 需求③置顶展示）——GitPushCard 拆出的子组件（渲染输出零变化） */
-    function GitPushAccountTop(props) {
-      const t = props.t;
-      const state = props.state;
-      return (
-                // v1.29.0 需求③：账号状态检测块置顶 + 默认进入自动查（check 已挂 useEffect）
-                jsx.jsxs('div', {
-                  className: 'dshgp_top',
-                  children: [
-                    jsx.jsx('p', { className: 'dshgp_toplabel', children: '账号状态（Token / SSH 公钥检测结果，进入设置自动检测）' }),
-                    state.block
-                      ? jsx.jsx('pre', { className: 'dshgp_block ' + (state.loggedIn ? 'dshgp_ok' : 'dshgp_err'), children: state.block })
-                      : jsx.jsx('pre', { className: 'dshgp_block', children: state.checking ? '检测中…' + '…' : '未配置' }),
-                  ],
-                })
-      );
-    }
-
-    /** v1.42.0：SSH 邮箱 + 生成公钥 + 公钥回显/一键复制（v1.29.0 需求① / v1.30.0）——GitPushCard 拆出的子组件（渲染输出零变化） */
-    function GitPushKeyGen(props) {
-      const t = props.t;
-      const state = props.state;
-      return (
-                // v1.29.0 需求①：SSH 邮箱 + 生成公钥（ssh-keygen -t rsa -b 4096 -C 邮箱）
-                jsx.jsx('label', { className: 'dshgp_label', htmlFor: 'dsh-git-push-ssh-email', children: 'SSH 邮箱（生成公钥用）' }),
-                jsx.jsxs('div', {
-                  className: 'dshgp_row',
-                  children: [
-                    jsx.jsx('input', {
-                      id: 'dsh-git-push-ssh-email',
-                      className: 'dshgp_input dshgp_email',
-                      type: 'text',
-                      autoComplete: 'off',
-                      placeholder: 'you@example.com',
-                      value: state.sshEmail,
-                      disabled: state.genKeying,
-                      onChange: (ev) => props.editSshEmail(ev.target.value),
-                    }),
-                    jsx.jsx('button', {
-                      type: 'button',
-                      className: 'dshgp_keybtn',
-                      disabled: state.genKeying || !state.sshEmail.trim(),
-                      onClick: () => props.genKey(state.sshEmail.trim()),
-                      children: state.genKeying ? '生成中…' : '生成公钥',
-                    }),
-                  ],
-                }),
-                jsx.jsx('p', { className: 'dshgp_hint', children: '如 your-name@example.com。生成 ssh-rsa 4096 密钥对，私钥留本机，公钥复制到 GitHub → Settings → SSH and GPG keys → New SSH key。' }),
-                state.genKeyError ? jsx.jsx('p', { className: 'dshgp_fail', children: '生成失败: ' + state.genKeyError }) : null,
-                state.generatedPub
-                  ? jsx.jsxs('div', {
-                    className: 'dshgp_top',
-                    children: [
-                      jsx.jsx('p', { className: 'dshgp_saved', children: '✅ 公钥已生成并写入同级仓 *.pub，可复制下面公钥去 GitHub 绑定' }),
-                      jsx.jsx('p', { className: 'dshgp_toplabel', children: '生成的公钥（一键复制去 GitHub 绑定）' }),
-                      jsx.jsx('pre', { className: 'dshgp_pub', children: state.generatedPub }),
-                      // v1.30.0：一键复制公钥（navigator.clipboard + execCommand 兜底）
-                      jsx.jsx('button', {
-                        type: 'button',
-                        className: 'dshgp_keybtn',
-                        onClick: () => props.copySshPub(),
-                        children: '📋 一键复制',
-                      }),
-                    ],
-                  })
-                  : null
-      );
-    }
-
-    /** v1.42.0：保存反馈 + GitHub token / SSH 公钥输入——GitPushCard 拆出的子组件（渲染输出零变化） */
-    function GitPushTokenFields(props) {
-      const t = props.t;
-      const state = props.state;
-      return (
-                state.savedMsg ? jsx.jsx('p', { className: 'dshgp_saved', children: state.savedMsg }) : null,
-                jsx.jsx('label', { className: 'dshgp_label', htmlFor: 'dsh-git-push-token', children: 'GitHub token' }),
-                jsx.jsx('input', {
-                  id: 'dsh-git-push-token',
-                  className: 'dshgp_input',
-                  type: 'password',
-                  autoComplete: 'off',
-                  value: state.text,
-                  disabled: !state.writable || state.saving,
-                  onChange: (ev) => props.edit(ev.target.value),
-                }),
-                jsx.jsx('p', { className: 'dshgp_hint', children: 'ghp_ / github_pat_ 开头。保存后明文不会留在设置页。' }),
-                jsx.jsx('label', { className: 'dshgp_label', htmlFor: 'dsh-git-push-ssh', children: 'SSH 公钥' }),
-                jsx.jsx('input', {
-                  id: 'dsh-git-push-ssh',
-                  className: 'dshgp_input',
-                  type: 'text',
-                  autoComplete: 'off',
-                  value: state.sshPub,
-                  disabled: !state.writable || state.saving,
-                  onChange: (ev) => props.editSsh(ev.target.value),
-                }),
-                jsx.jsx('p', { className: 'dshgp_hint', children: 'ssh-ed25519 / ssh-rsa 整行。保存到同级仓 *.pub，不回传明文。' })
-      );
-    }
-
-    /** v1.42.0：注入全文 / 注入 repo-index / 硬编码全量扫三个开关——GitPushCard 拆出的子组件（渲染输出零变化） */
-    function GitPushCheckFields(props) {
-      const t = props.t;
-      const state = props.state;
-      return (
-                jsx.jsx('label', { className: 'dshgp_check', htmlFor: 'dsh-git-push-inject-full', children: [
-                  jsx.jsx('input', {
-                    id: 'dsh-git-push-inject-full',
-                    className: 'dshgp_checkbox',
-                    type: 'checkbox',
-                    checked: !!state.injectFullSkill,
-                    disabled: !state.writable,
-                    onChange: (ev) => props.toggleFullSkill(ev.target.checked),
-                  }),
-                  '注入全部 skill 内容',
-                ] }),
-                jsx.jsx('p', { className: 'dshgp_hint', children: '勾选 = 每个会话注入插件 skills + 技能仓库（ai-work-archive/skills 的 git-workflow 部分）全部 skill 正文；不勾选（默认）= 只注入 skill 目录+文件清单，正文按需读取，省 token。修改即时保存。' }),
-                jsx.jsx('label', { className: 'dshgp_check', htmlFor: 'dsh-git-push-inject-repo-index', children: [
-                  jsx.jsx('input', {
-                    id: 'dsh-git-push-inject-repo-index',
-                    className: 'dshgp_checkbox',
-                    type: 'checkbox',
-                    checked: !!state.injectRepoIndexFull,
-                    disabled: !state.writable,
-                    onChange: (ev) => props.toggleRepoIndexFull(ev.target.checked),
-                  }),
-                  '注入 repo-index JSON 全文',
-                ] }),
-                jsx.jsx('p', { className: 'dshgp_hint', children: '勾选 = 每个会话注入 dsh-repo-index.json 正文；不勾选（默认）= 只注入文件名/路径，正文按需读取。md 表格已废弃，权威源是 JSON。修改即时保存。' }),
-                jsx.jsx('label', { className: 'dshgp_check', htmlFor: 'dsh-git-push-hardcode-full', children: [
-                  jsx.jsx('input', {
-                    id: 'dsh-git-push-hardcode-full',
-                    className: 'dshgp_checkbox',
-                    type: 'checkbox',
-                    checked: !!state.hardcodeFullScan,
-                    disabled: !state.writable,
-                    onChange: (ev) => props.toggleHardcodeFull(ev.target.checked),
-                  }),
-                  '硬编码全量扫',
-                ] }),
-                jsx.jsx('p', { className: 'dshgp_hint', children: '勾选 = 审计硬编码（本机绝对路径/局域网 IP）时扫整个文件（含既有历史行），用于换机前排查存量死路径；不勾选（默认）= 只扫本次新增/变更行。修改即时保存。' })
-      );
-    }
-
-    /** v1.42.0：自定义忽略 pattern 输入 + 保存失败提示——GitPushCard 拆出的子组件（渲染输出零变化） */
-    function GitPushIgnoreField(props) {
-      const t = props.t;
-      const state = props.state;
-      return (
-                jsx.jsx('label', { className: 'dshgp_label', htmlFor: 'dsh-git-push-ignore-patterns', children: '自定义忽略文件' }),
-                jsx.jsx('input', {
-                  id: 'dsh-git-push-ignore-patterns',
-                  className: 'dshgp_input',
-                  type: 'text',
-                  autoComplete: 'off',
-                  placeholder: '*.bak*, *.tmp',
-                  value: state.ignorePatterns,
-                  disabled: !state.writable,
-                  onChange: (ev) => props.editIgnorePatterns(ev.target.value),
-                }),
-                jsx.jsx('p', { className: 'dshgp_hint', children: '逗号或换行分隔的 gitignore 模式（如 *.bak*、*.tmp）。提交时自动追加到目标仓库 .gitignore，已跟踪文件自动解除跟踪。修改即时保存。' }),
-                state.failed ? jsx.jsx('p', { className: 'dshgp_fail', children: '未写入成功，请检查 token 格式后重试。' }) : null
-      );
-    }
-
-    /** v1.42.0：底部检测 / 放弃 / 保存按钮——GitPushCard 拆出的子组件（渲染输出零变化） */
-    function GitPushActionButtons(props) {
-      const t = props.t;
-      const state = props.state;
-      return (
-                jsx.jsxs('div', {
-                  className: 'dshgp_foot',
-                  children: [
-                    jsx.jsx('button', {
-                      type: 'button',
-                      className: 'dshgp_btn',
-                      disabled: state.checking || state.saving,
-                      onClick: props.check,
-                      children: state.checking ? '检测中…' : '检测可用',
-                    }),
-                    jsx.jsx('button', {
-                      type: 'button',
-                      className: 'dshgp_btn',
-                      disabled: !state.dirty || state.saving,
-                      onClick: props.discard,
-                      children: '放弃',
-                    }),
-                    jsx.jsx('button', {
-                      type: 'button',
-                      className: 'dshgp_btn',
-                      disabled: !state.dirty || state.saving || (!state.text.trim() && !state.sshPub.trim()),
-                      onClick: props.save,
-                      children: state.saving ? '保存中…' : '保存',
-                    }),
-                  ],
-                })
-      );
-    }
-
-
-    /** v1.54.0：YAML 检查模式下拉（js-yaml 真实解析 / heuristic 宽松启发式）——独立渲染函数，控制主卡函数行数 */
-    function GitPushYamlModeRow(state, saveYamlMode) {
-      return jsx.jsxs('div', {
-        className: 'dshgp_rules_mode',
-        children: [
-          jsx.jsx('span', { className: 'dshgp_rules_name', children: 'YAML 解析方式' }),
-          jsx.jsx('select', {
-            className: 'dshgp_rules_select',
-            value: state.yamlCheckMode === 'heuristic' ? 'heuristic' : 'js-yaml',
-            onChange: (e) => saveYamlMode(e.target.value),
-            children: [
-              jsx.jsx('option', { value: 'js-yaml', children: 'js-yaml 真实解析（默认，准）' }),
-              jsx.jsx('option', { value: 'heuristic', children: '宽松启发式（快，兼容旧行为）' }),
-            ],
-          }),
-          jsx.jsx('span', { className: 'dshgp_rules_note_inline', children: state.yamlCheckMode === 'heuristic' ? '⚠ 启发式：块标量多行内容可能误报，缩进/引号错误漏报' : '真实解析：捕获块标量/缩进/引号错误，性能 +0.05~0.5ms 可忽略' }),
-        ],
-      });
-    }
-
-    /** v1.47.0：审计规则引擎卡——槽位顺序（可排序/开关，后覆盖前）+ comment 关键词权重（滑块，≥40 进门禁） */
-    // v1.47.0：关键词权重滑块块（comment 黑名单 Top——权重 ≥40 进提交门禁 blocker）。
-    // 抽独立组件控制 GitPushRuleCards 行数（v1.59.0 与质量维度权重同款）。
-    function GitPushKeywordWeights(props, weights) {
-      const pats = ['用户指示', '用户原话', '用户说', '用户要求', '客户要求', '用户反馈', '根据用户'];
-      return jsx.jsxs('div', {
-        className: 'dshgp_rules_weights',
-        children: pats.map((pat) => {
-          const val = weights[pat] !== undefined ? Number(weights[pat]) : 30;
-          return jsx.jsxs('label', {
-            key: pat,
-            className: 'dshgp_weight_row',
-            children: [
-              jsx.jsx('span', { className: 'dshgp_weight_name', children: pat }),
-              jsx.jsx('input', {
-                type: 'range', min: 5, max: 60, step: 5, value: val,
-                onChange: (e) => props.saveRuleWeight(pat, e.target.value),
-              }),
-              jsx.jsx('span', { className: 'dshgp_weight_val', children: String(val) + (val >= 40 ? ' 🔒门禁' : '') }),
-            ],
-          });
-        }),
-      });
-    }
-
-    // v1.59.0：质量维度权重滑块块（10 维度合并版，0-30 写回 qualityWeights 覆盖 yaml dimensions_weight；
-    // 全 0 删除覆盖 → 回 yaml/默认。合计建议 100，改动即存即生效）。抽独立组件控制 GitPushRuleCards 行数。
-    function GitPushQualityWeights(props) {
-      const state = props.state;
-      const dims = ['可读性', '可维护性', '健壮性', '安全性', '性能', '测试覆盖', '可观测性', '可部署性', '文档', '开发者体验'];
-      return jsx.jsxs('div', {
-        className: 'dshgp_rules_weights',
-        children: dims.map((dim) => {
-          const val = state.qualityWeights && state.qualityWeights[dim] !== undefined ? Number(state.qualityWeights[dim]) : 0;
-          return jsx.jsxs('label', {
-            key: dim,
-            className: 'dshgp_weight_row',
-            children: [
-              jsx.jsx('span', { className: 'dshgp_weight_name', children: dim }),
-              jsx.jsx('input', {
-                type: 'range', min: 0, max: 30, step: 1, value: val,
-                onChange: (e) => props.saveQualityWeight(dim, e.target.value),
-              }),
-              jsx.jsx('span', { className: 'dshgp_weight_val', children: val > 0 ? String(val) : '默认' }),
-            ],
-          });
-        }),
-      });
-    }
-
-    // 动态槽位排序解析：存量排序补新槽位 → 剔除 template 得活跃顺序 + 权重表（抽纯函数控制 GitPushRuleCards 行数）
-    // ruleSlotMeta 缺省回退内置映射（防老配置/host 未注入）
-    function resolveSlotOrder(state) {
-      const slotMeta = (state.ruleSlotMeta && typeof state.ruleSlotMeta === 'object') ? state.ruleSlotMeta : {};
-      const FALLBACK_NAMES = { nodejs: 'Node.js 规则', frontend: '前端 HTML 规则', comment: '关键词规则', dsh: 'dsh 插件审计', npm: 'npm 发布审计', version: '版本控制审计', template: 'template 模板（空）', private: '私密文件拦截（强制）' };
-      // 可用槽位集合 = ruleSlotMeta 的键（host 注入）；空则回退内置清单
-      const discovered = Object.keys(slotMeta).length ? Object.keys(slotMeta) : Object.keys(FALLBACK_NAMES);
-      const defaultOrder = discovered.filter((s) => s !== 'template' && s !== 'private');
-      // 存量用户若之前排序过（ruleOrder 不含新发现槽位）自动补在末尾，保证新规则默认生效
-      let order = Array.isArray(state.ruleOrder) && state.ruleOrder.length ? [...state.ruleOrder] : [...defaultOrder];
-      for (const add of discovered) {
-        if (order.length && !order.includes(add) && add !== 'private') {
-          if (!order.includes('template')) order.push(add);
-          else {
-            const ti = order.indexOf('template');
-            order.splice(ti < 0 ? order.length : ti, 0, add);
-          }
-        }
+    /** 复制文本到剪贴板（优先 Clipboard API，兜底 execCommand）。 */
+    function dshgp_copyText(text) {
+      if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+        return navigator.clipboard.writeText(String(text || ''));
       }
-      const active = order.filter((s) => s !== 'template');
-      // 权重表：pattern → 当前生效值（覆盖优先）
-      const weights = (state.ruleWeights && state.ruleWeights.blacklist) || {};
-      return { slotMeta, FALLBACK_NAMES, order, active, weights };
+      return Promise.resolve();
     }
 
-    function GitPushRuleCards(props) {
-      const state = props.state;
-      if (!state.available) return null;
-      // v1.52.0 动态槽位：清单/显示名来自 host 注入的 ruleSlotMeta（扫描 audit-rules/*.yml 得到），
-      // 不再硬编码——新增规则 yml 重启后自动出现在此卡。
-      const { slotMeta, FALLBACK_NAMES, order, active, weights } = resolveSlotOrder(state);
-      const slotName = (s) => (slotMeta[s] && slotMeta[s].name) || FALLBACK_NAMES[s] || s;
-      const move = (slot, dir) => {
-        const next = [...order];
-        const i = next.indexOf(slot);
-        const j = i + dir;
-        if (i < 0 || j < 0 || j >= next.length) return;
-        [next[i], next[j]] = [next[j], next[i]];
-        props.saveRuleOrder(next);
-      };
-      const toggleTemplate = (on) => {
-        let next = [...order];
-        if (on && !next.includes('template')) next.push('template');
-        else if (!on) next = next.filter((s) => s !== 'template');
-        props.saveRuleOrder(next);
-      };
+    /* ═══════════════════ 选项卡一：账号信息（2026-09-13 美化版：渐变卡片 + GitHub 图标 + 状态徽标） ═══════════════════ */
+    const dshgp_ghIcon = jsx.jsx('svg', {
+      width: '22', height: '22', viewBox: '0 0 24 24', fill: 'none',
+      stroke: 'currentColor', strokeWidth: '1.8', strokeLinecap: 'round', strokeLinejoin: 'round',
+      children: jsx.jsx('path', { d: 'M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22' }),
+    });
+    const dshgp_refreshIcon = jsx.jsx('svg', {
+      width: '13', height: '13', viewBox: '0 0 24 24', fill: 'none',
+      stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round',
+      children: jsx.jsx('path', { d: 'M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6' }),
+    });
+    function dshgp_AccountTab(props) {
+      const s = props.state;
+      // 数据照旧：accountBlock / accountLoggedIn / accountLoading（/api/git-push/account-check）
+      //   + tokenConfigured / sshConfigured（凭据状态标签）
+      const loggedIn = !!s.accountLoggedIn;
+      const loading = !!s.accountLoading;
+      const statCls = loggedIn ? 'dshgp_acctstat_ok' : (loading ? 'dshgp_acctstat_warn' : 'dshgp_acctstat_err');
+      const statTxt = loggedIn ? '已连接' : (loading ? '检测中' : '未连接');
+      const blockCls = loggedIn ? 'dshgp_acctblock2_ok' : (loading ? 'dshgp_acctblock2_loading' : 'dshgp_acctblock2_err');
+      const blockBody = s.accountBlock
+        ? s.accountBlock
+        : (loading ? '正在检测 Token / SSH 公钥…' : '未配置 Token / SSH 公钥——请到「设置」选项卡填写凭据');
+      const tokenPill = s.tokenConfigured
+        ? jsx.jsx('span', { className: 'dshgp_pill dshgp_pill_on', children: '已配置' })
+        : jsx.jsx('span', { className: 'dshgp_pill dshgp_pill_off', children: '未配置' });
+      const sshPill = s.sshConfigured
+        ? jsx.jsx('span', { className: 'dshgp_pill dshgp_pill_on', children: '已配置' })
+        : jsx.jsx('span', { className: 'dshgp_pill dshgp_pill_off', children: '未配置' });
       return jsx.jsxs('div', {
-        className: 'dshgp_rules',
+        className: 'dshgp_section',
         children: [
-          jsx.jsx('div', { className: 'dshgp_rules_h', children: '规则引擎（YAML）' }),
-          // 顺序行
           jsx.jsxs('div', {
-            className: 'dshgp_rules_order',
+            className: 'dshgp_acctpanel',
             children: [
-              active.map((slot) => jsx.jsxs('div', {
-                key: slot,
-                className: 'dshgp_rules_row',
-                children: [
-                  jsx.jsx('button', { type: 'button', className: 'dshgp_mini', disabled: order.indexOf(slot) === 0, onClick: () => move(slot, -1), children: '↑' }),
-                  jsx.jsx('button', { type: 'button', className: 'dshgp_mini', disabled: order.indexOf(slot) === order.length - 1, onClick: () => move(slot, 1), children: '↓' }),
-                  jsx.jsx('span', { className: 'dshgp_rules_name', children: slotName(slot) + (order.indexOf(slot) === 0 ? '（先加载）' : order.indexOf(slot) === order.length - 1 ? '（后覆盖）' : '') }),
-                ],
-              })),
               jsx.jsxs('div', {
-                className: 'dshgp_rules_row dshgp_rules_forced',
+                className: 'dshgp_accthead',
                 children: [
-                  jsx.jsx('span', { className: 'dshgp_mini dshgp_mini_lock', children: '🔒' }),
-                  jsx.jsx('span', { className: 'dshgp_rules_name', children: '私密文件拦截（强制加载，不可排序；远端公开+含私钥/token → 拦截）' }),
+                  jsx.jsx('div', { className: 'dshgp_acctic', children: dshgp_ghIcon }),
+                  jsx.jsxs('div', {
+                    children: [
+                      jsx.jsx('p', { className: 'dshgp_accttitle', children: 'GitHub 账号' }),
+                      jsx.jsx('p', { className: 'dshgp_acctsub', children: 'Token / SSH 公钥检测结果 · 进入设置自动检测' }),
+                    ],
+                  }),
+                  jsx.jsxs('span', { className: 'dshgp_acctstat ' + statCls, children: [jsx.jsx('span', { className: 'dshgp_acctdot' }), statTxt] }),
+                ],
+              }),
+              jsx.jsx('pre', { className: 'dshgp_acctblock2 ' + blockCls, children: blockBody }),
+              jsx.jsxs('div', {
+                className: 'dshgp_acctmeta',
+                children: [
+                  jsx.jsxs('div', { className: 'dshgp_acctmetarow', children: [jsx.jsx('span', { className: 'dshgp_acctmetak', children: 'Token' }), tokenPill] }),
+                  jsx.jsxs('div', { className: 'dshgp_acctmetarow', children: [jsx.jsx('span', { className: 'dshgp_acctmetak', children: 'SSH 公钥' }), sshPill] }),
                 ],
               }),
               jsx.jsxs('div', {
-                className: 'dshgp_rules_row dshgp_rules_tpl',
+                className: 'dshgp_acctfoot',
                 children: [
-                  jsx.jsx('input', { type: 'checkbox', checked: order.includes('template'), onChange: (e) => toggleTemplate(e.target.checked) }),
-                  jsx.jsx('span', { className: 'dshgp_rules_name', children: '启用 template 自定义规则文件（空模板，默认不加载）' }),
+                  jsx.jsx('button', {
+                    type: 'button',
+                    className: 'dshgp_keybtn',
+                    disabled: loading,
+                    onClick: props.refreshAccount,
+                    children: [dshgp_refreshIcon, loading ? '检测中…' : '重新检测'],
+                  }),
+                  jsx.jsx('span', { className: 'dshgp_accthint', children: loggedIn ? '登录态有效，凭据已生效' : '凭据状态来自保存的 Token / SSH 公钥' }),
                 ],
               }),
             ],
           }),
-          // v1.54.0：YAML 检查模式（下拉：js-yaml 真实解析 / heuristic 宽松启发式）
-          GitPushYamlModeRow(state, props.saveYamlMode),
-          // 权重块（comment 黑名单 Top——权重 ≥40 进提交门禁措辞；抽组件控制行数）
-          jsx.jsx('div', { className: 'dshgp_rules_h2', children: '关键词权重（≥40 进门禁 blocker）' }),
-          GitPushKeywordWeights(props, weights),
-          // v1.59.0：质量维度权重滑块（抽独立组件 GitPushQualityWeights，控制主函数行数）
-          jsx.jsx('div', { className: 'dshgp_rules_h2', children: '质量维度权重（合计建议 100，覆盖 checklist.yaml）' }),
-          GitPushQualityWeights(props),
-          jsx.jsx('div', { className: 'dshgp_rules_note', children: '顺序=加载次序，后加载覆盖先加载（同 id/pattern）；权重改完即存即生效，不影响 YAML 文件本体。' }),
         ],
       });
     }
 
-    class GitPushCardController {
+    /* ═══════════════════ 选项卡二：审计 ═══════════════════ */
+    /** 10 维度权重行（值来自 state.weightValues，改即写回 weightOverrides JSON）。 */
+    function dshgp_WeightRows(props) {
+      const s = props.state;
+      const rows = dshgp_DIMENSIONS.map((d) => jsx.jsxs('div', {
+        key: d.key,
+        className: 'dshgp_weightrow',
+        children: [
+          jsx.jsx('span', { className: 'dshgp_weightkey', children: d.key }),
+          jsx.jsx('input', {
+            type: 'number', min: 0, max: 100,
+            className: 'dshgp_weightinput',
+            value: s.weightValues[d.key] != null ? s.weightValues[d.key] : d.def,
+            onChange: (ev) => props.editWeight(d.key, Number(ev.target.value) || 0),
+          }),
+          jsx.jsx('span', { className: 'dshgp_rulemeta', children: '默认 ' + d.def }),
+        ],
+      }));
+      const total = dshgp_DIMENSIONS.reduce((a, d) => a + (s.weightValues[d.key] != null ? s.weightValues[d.key] : d.def), 0);
+      return jsx.jsxs('div', {
+        children: [
+          rows,
+          jsx.jsx('p', { className: 'dshgp_weighttotal', children: '合计 ' + total + '（建议 100；保存后下次审计生效）' }),
+        ],
+      });
+    }
+
+    /** 规则包行：↑↓ 调次序 + 单击整行切换禁用/启用 + 直显 描述/作者/拦截/警告/通过（2026-09-13）。 */
+    function dshgp_RuleRow(props, slot, idx, len) {
+      const s = props.state;
+      const meta = (s.slotMeta && s.slotMeta[slot]) || {};
+      const name = meta.name || slot;
+      const author = meta.author || '';
+      const stats = (meta && meta.stats) || { blocker: 0, warning: 0, pass: 0, total: 0 };
+      // 2026-09-13：禁用态 = yml 顶层 disabled（后端 listRuleSlots 解析；不再用前端变量/scope）。
+      //   点击即时反馈靠 toggleDisabled 本地翻转 slotMeta，loadSlots 对账 yml 真实状态。
+      const disabled = !!meta.disabled;
+      const locked = slot === 'nodejs' || slot === 'private';
+      const move = (dir) => props.moveSlot(slot, dir);
+      // 2026-09-13 榜单行（模仿 skill 记分榜）：↑↓ + 名称(flex:1) + 拦截/警告/通过统计列(56px 右对齐) + 状态列(48px)
+      const badgeNode = locked
+        ? jsx.jsx('span', { className: 'dshgp_badge dshgp_badgeGreen', children: '启用' })
+        : (disabled
+          ? jsx.jsx('span', { className: 'dshgp_badge dshgp_badgeRed', children: '禁用' })
+          : jsx.jsx('span', { className: 'dshgp_badge dshgp_badgeGreen', children: '启用' }));
+      return jsx.jsxs('li', {
+        className: 'dshgp_rulerow ' + (disabled ? 'dshgp_rowOff' : 'dshgp_rowOn'),
+        children: [
+          jsx.jsx('button', { type: 'button', className: 'dshgp_mini', disabled: idx === 0, onClick: (ev) => { ev.stopPropagation(); move(-1); }, 'aria-label': name + ' 上移', children: '↑' }),
+          jsx.jsx('button', { type: 'button', className: 'dshgp_mini', disabled: idx === len - 1, onClick: (ev) => { ev.stopPropagation(); move(1); }, 'aria-label': name + ' 下移', children: '↓' }),
+          jsx.jsxs('div', {
+            className: 'dshgp_ruleinfo dshgp_rowClickable',
+            onClick: () => props.toggleDisabled(slot),
+            title: locked ? 'nodejs/private 安全红线，不可禁用' : (disabled ? '单击启用该规则包' : '单击禁用该规则包'),
+            children: [
+              jsx.jsx('span', { className: 'dshgp_rulename', children: name }),
+              (author || meta.description)
+                ? jsx.jsx('div', { className: 'dshgp_rulemeta', children: (author ? '作者: ' + author : '') + (author && meta.description ? ' · ' : '') + (meta.description || '') })
+                : null,
+            ],
+          }),
+          jsx.jsx('span', { className: 'dshgp_rulecountRed', children: String(stats.blocker) }),
+          jsx.jsx('span', { className: 'dshgp_rulecountYellow', children: String(stats.warning) }),
+          jsx.jsx('span', { className: 'dshgp_rulecountGreen', children: String(stats.pass) }),
+          jsx.jsx('span', { className: 'dshgp_rulebadge', children: badgeNode }),
+        ],
+      });
+    }
+
+    function dshgp_AuditTab(props) {
+      const s = props.state;
+      const order = Array.isArray(s.ruleOrder) ? s.ruleOrder : [];
+      return jsx.jsxs('div', {
+        className: 'dshgp_section',
+        children: [
+          /* ① 审计开关 */
+          jsx.jsxs('div', {
+            className: 'dshgp_block',
+            children: [
+              jsx.jsxs('div', {
+                className: 'dshgp_switchrow',
+                children: [
+                  jsx.jsx('span', { className: 'dshgp_switchlabel', children: '提交前自动审计' }),
+                  jsx.jsx('input', { type: 'checkbox', checked: !!s.auditEnabled, onChange: (ev) => props.toggleAudit(ev.target.checked), 'aria-label': '提交前自动审计' }),
+                ],
+              }),
+              jsx.jsx('p', { className: 'dshgp_hint', children: '开启后 git_commit_push 提交前自动跑 L0 静态检查 + 10 维度质量评分；有 blocker 拦截提交。' }),
+            ],
+          }),
+          /* ② 审计权重（10 维度） */
+          jsx.jsxs('div', {
+            className: 'dshgp_block',
+            children: [
+              jsx.jsx('p', { className: 'dshgp_h2', children: '审计权重（10 维度）' }),
+              jsx.jsx(dshgp_WeightRows, { state: s, editWeight: props.editWeight }),
+            ],
+          }),
+          /* ③ 规则包列表 */
+          jsx.jsxs('div', {
+            className: 'dshgp_block',
+            children: [
+              jsx.jsx('p', { className: 'dshgp_h2', children: '规则包列表（↑↓ 调整次序，单击切换启用/禁用）' }),
+              s.statusMsg ? jsx.jsx('p', { className: 'dshgp_saved', children: s.statusMsg }) : null,
+              order.length === 0
+                ? jsx.jsx('div', { className: 'dshgp_loading', children: s.slotLoading ? '加载中…' : '（无规则包）' })
+                : jsx.jsxs('ul', {
+                    className: 'dshgp_rulenext',
+                    children: [
+                      /* 榜单表头（模仿 skill 记分榜） */
+                      jsx.jsxs('li', {
+                        className: 'dshgp_ruleheadrow',
+                        children: [
+                          jsx.jsx('span', { className: 'dshgp_ruleheadrowinfo', children: '规则包' }),
+                          jsx.jsx('span', { className: 'dshgp_rulecountRed', children: '拦截' }),
+                          jsx.jsx('span', { className: 'dshgp_rulecountYellow', children: '警告' }),
+                          jsx.jsx('span', { className: 'dshgp_rulecountGreen', children: '通过' }),
+                          jsx.jsx('span', { className: 'dshgp_rulebadge', children: '状态' }),
+                        ],
+                      }),
+                      order.map((slot, idx) => dshgp_RuleRow(props, slot, idx, order.length)),
+                    ],
+                  }),
+              jsx.jsx('p', { className: 'dshgp_hint', children: '重复定义的字段（severity_map / thresholds / 权重等）以最后面一个重复定义的为准；私密文件拦截强制加载、恒末尾，不可禁用。' }),
+              s.slotError ? jsx.jsx('p', { className: 'dshgp_error', children: s.slotError }) : null,
+            ],
+          }),
+        ],
+      });
+    }
+
+    /* ═══════════════════ 选项卡三：设置 ═══════════════════ */
+    function dshgp_SettingsTab(props) {
+      const s = props.state;
+      return jsx.jsxs('div', {
+        className: 'dshgp_section',
+        children: [
+          jsx.jsxs('div', {
+            className: 'dshgp_block',
+            children: [
+              // 2026-09-12：保存按钮放「凭据与密钥」标题后面（右侧）；放弃按钮已删
+              jsx.jsxs('div', {
+                style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '8px' },
+                children: [
+                  jsx.jsx('p', { className: 'dshgp_h2', style: { margin: 0 }, children: '凭据与密钥' }),
+                  jsx.jsx('button', { type: 'button', className: 'dshgp_btn', disabled: !s.dirty || s.saving, onClick: props.save, children: s.saving ? '保存中…' : '保存' }),
+                ],
+              }),
+              jsx.jsx('div', {
+                className: 'dshgp_field',
+                children: [
+                  jsx.jsxs('label', { className: 'dshgp_label', htmlFor: 'dshgp-token', children: ['GitHub token', s.tokenConfigured ? jsx.jsx('span', { className: 'dshgp_configured', children: '已填写' }) : null] }),
+                  jsx.jsx('input', {
+                    id: 'dshgp-token', type: 'password', autoComplete: 'off', className: 'dshgp_input',
+                    value: s.text, disabled: !s.writable || s.saving,
+                    onChange: (ev) => props.edit(ev.target.value),
+                  }),
+                  jsx.jsx('p', { className: 'dshgp_hint', children: 'ghp_ / github_pat_ 开头。保存后写入插件配置目录（0600），不在设置页留明文。' }),
+                ],
+              }),
+              jsx.jsx('div', {
+                className: 'dshgp_field',
+                children: [
+                  jsx.jsxs('label', { className: 'dshgp_label', htmlFor: 'dshgp-ssh', children: ['SSH 公钥', s.sshConfigured ? jsx.jsx('span', { className: 'dshgp_configured', children: '已填写' }) : null] }),
+                  jsx.jsx('textarea', {
+                    id: 'dshgp-ssh', className: 'dshgp_textarea', rows: 3,
+                    value: s.sshPub, disabled: !s.writable || s.saving,
+                    onChange: (ev) => props.editSsh(ev.target.value),
+                  }),
+                  jsx.jsx('p', { className: 'dshgp_hint', children: 'ssh-ed25519 / ssh-rsa 整行。保存到同级仓 *.pub，不回传明文。' }),
+                ],
+              }),
+              // 2026-09-12：邮箱 + 一键生成同一行（编辑框宽度减少，按钮放编辑框后面）
+              jsx.jsxs('div', {
+                className: 'dshgp_field',
+                children: [
+                  jsx.jsx('label', { className: 'dshgp_label', htmlFor: 'dshgp-email', children: 'SSH 邮箱（一键生成用）' }),
+                  jsx.jsxs('div', {
+                    style: { display: 'flex', alignItems: 'center', gap: '8px' },
+                    children: [
+                      jsx.jsx('input', {
+                        id: 'dshgp-email', type: 'text', autoComplete: 'off', className: 'dshgp_input',
+                        style: { flex: '1 1 40%', maxWidth: '200px', minWidth: '120px' },
+                        value: s.sshEmail, disabled: s.genKeying,
+                        onChange: (ev) => props.editEmail(ev.target.value),
+                      }),
+                      jsx.jsx('button', { type: 'button', className: 'dshgp_btn dshgp_btnPrimary', disabled: s.genKeying || !s.sshEmail.trim(), onClick: props.genKey, children: s.genKeying ? '生成中…' : '一键生成并复制' }),
+                    ],
+                  }),
+                ],
+              }),
+              s.failed ? jsx.jsx('p', { className: 'dshgp_error', children: '保存失败：请检查格式后重试。' }) : null,
+              s.savedMsg ? jsx.jsx('p', { className: 'dshgp_saved', children: s.savedMsg }) : null,
+              s.genKeyError ? jsx.jsx('p', { className: 'dshgp_error', children: s.genKeyError }) : null,
+            ],
+          }),
+        ],
+      });
+    }
+
+    /* ═══════════════════ 页面装配：三选项卡 ═══════════════════ */
+    function dshgp_GitPushPage(props) {
+      dshgp_ensureCss();
+      const [tab, setTab] = react.useState('account');
+      const tabs = [
+        { id: 'account', label: '账号信息' },
+        { id: 'audit', label: '审计' },
+        { id: 'settings', label: '设置' },
+      ];
+      const tabBar = jsx.jsxs('div', {
+        className: 'dshgp_tabs',
+        children: tabs.map((t) => jsx.jsxs('button', {
+          key: t.id,
+          type: 'button',
+          role: 'tab',
+          'aria-selected': tab === t.id,
+          className: tab === t.id ? 'dshgp_tab dshgp_tabOn' : 'dshgp_tab',
+          onClick: () => setTab(t.id),
+          children: [t.label],
+        })),
+      });
+      const panel = tab === 'account' ? jsx.jsx(dshgp_AccountTab, { state: props.state, refreshAccount: props.refreshAccount })
+        : tab === 'audit' ? jsx.jsx(dshgp_AuditTab, {
+          state: props.state,
+          toggleAudit: props.toggleAudit,
+          editWeight: props.editWeight,
+          moveSlot: props.moveSlot,
+          toggleDisabled: props.toggleDisabled,
+        })
+          : jsx.jsx(dshgp_SettingsTab, {
+            state: props.state,
+            edit: props.edit,
+            editSsh: props.editSsh,
+            editEmail: props.editEmail,
+            save: props.save,
+            discard: props.discard,
+            genKey: props.genKey,
+          });
+      return jsx.jsxs('div', {
+        style: { padding: '0 4px' },
+        children: [
+          jsx.jsxs('h2', { style: { margin: '0 0 10px', fontSize: '14px' }, children: ['Git 提交推送'] }),
+          tabBar,
+          panel,
+        ],
+      });
+    }
+
+    /* ═══════════════════ Controller：状态机 + 数据加载 ═══════════════════ */
+    class dshgp_Controller {
       constructor(scope) {
         this.scope = scope;
         this.text = '';
         this.sshPub = '';
+        this.sshEmail = '';
         this.saving = false;
         this.failed = false;
-        this.checking = false;
-        this.block = '';
-        this.loggedIn = false;
-        // v1.28.0 新增设置项：注入全部 skill 正文开关 + 自定义忽略 pattern（改即存）
-        this.injectFullSkill = false;
-        this.injectRepoIndexFull = false;
-        this.hardcodeFullScan = false;
-        this.ignorePatterns = '';
-        // v1.47.0 审计规则引擎：槽位顺序（auditRuleOrder）+ 权重覆盖（auditRuleWeights）
-        this.ruleOrder = [];
-        this.ruleWeights = {};
-        // v1.59.0：质量维度权重覆盖（qualityWeights，维度名 → 权重，侧边栏滑块写回）
-        this.qualityWeights = {};
-        // v1.52.0：动态槽位元数据（host 注入 config.ruleSlotMeta）——显示名/清单不再硬编码
-        this.ruleSlotMeta = {};
-        // v1.54.0：YAML 检查模式（js-yaml 默认 / heuristic 宽松启发式；侧边栏下拉，运行期即时生效）
-        this.yamlCheckMode = 'js-yaml';
-        // v1.29.0 需求①：SSH 邮箱 + 生成公钥（本地状态，不入设置）
-        this.sshEmail = '';
-        this.genKeying = false;
-        this.genKeyError = '';
-        this.generatedPub = '';
-        // v1.29.0 需求②：即时保存反馈（savedMsg，3 秒后自动清）
         this.savedMsg = '';
         this.savedTimer = null;
+        this.auditEnabled = false;
+        this.ruleOrder = [];
+        this.slotMeta = {};
+        this.weightValues = {};
+        // 2026-09-13：禁用态不再前端变量存储，以 yml 顶层 disabled 为准（listRuleSlots 解析）
+        this.statusMsg = '';
+        this.statusTimer = null;
+        // 账号信息（纯展示）
+        this.tokenConfigured = false;
+        this.sshConfigured = false;
+        this.accountBlock = '';
+        this.accountLoggedIn = false;
+        this.accountLoading = false;
+        // 规则包加载
+        this.slotLoading = false;
+        this.slotError = '';
+        this.genKeying = false;
+        this.genKeyError = '';
         this.store = store.createSnapshotStore(this.project());
         this.unsubscribe = scope.subscribe(() => {
           const snap = this.scope.getSnapshot();
           if (snap && snap.value) {
-            this.injectFullSkill = !!snap.value.injectFullSkill;
-            this.injectRepoIndexFull = !!snap.value.injectRepoIndexFull;
-            this.hardcodeFullScan = !!snap.value.hardcodeFullScan;
-            this.ignorePatterns = String(snap.value.customIgnorePatterns || '');
-            this.ruleOrder = Array.isArray(snap.value.auditRuleOrder) ? snap.value.auditRuleOrder : [];
-            this.ruleWeights = (snap.value.auditRuleWeights && typeof snap.value.auditRuleWeights === 'object') ? snap.value.auditRuleWeights : {};
-            this.ruleSlotMeta = (snap.value.ruleSlotMeta && typeof snap.value.ruleSlotMeta === 'object') ? snap.value.ruleSlotMeta : {};
-            this.qualityWeights = (snap.value.qualityWeights && typeof snap.value.qualityWeights === 'object') ? snap.value.qualityWeights : {};
-            this.yamlCheckMode = snap.value.yamlCheckMode === 'heuristic' ? 'heuristic' : 'js-yaml';
+            this.auditEnabled = !!snap.value.auditEnabled;
+            // 2026-09-13：已填写提示 = 只看是否存在（不读明文回显）
+            this.tokenConfigured = !!(snap.value.githubToken && String(snap.value.githubToken).trim());
+            this.sshConfigured = !!(snap.value.sshPub && String(snap.value.sshPub).trim());
+            // 2026-09-13 修复「只显示 6 个」：ruleOrder 不再从 scope 覆盖——
+            //   用户保存过的 auditRuleOrder（如 6 个）会反复覆盖 loadSlots 拉到的全量 order。
+            //   权威来源 = loadSlots 的后端 order（动态发现全部 yml）；用户调序由 moveSlot 自己写。
+            this.slotMeta = (snap.value.ruleSlotMeta && typeof snap.value.ruleSlotMeta === 'object') ? snap.value.ruleSlotMeta : {};
+            const wo = String(snap.value.weightOverrides || '');
+            this.weightValues = {};
+            if (wo.trim()) {
+              try { this.weightValues = JSON.parse(wo) || {}; } catch { /* 坏 JSON 用空表 */ }
+            }
           }
           this.publish();
         });
+        // 初次同步 scope 值
+        const snap0 = this.scope.getSnapshot();
+        if (snap0 && snap0.value) {
+          this.auditEnabled = !!snap0.value.auditEnabled;
+          this.tokenConfigured = !!(snap0.value.githubToken && String(snap0.value.githubToken).trim());
+          this.sshConfigured = !!(snap0.value.sshPub && String(snap0.value.sshPub).trim());
+          this.slotMeta = (snap0.value.ruleSlotMeta && typeof snap0.value.ruleSlotMeta === 'object') ? snap0.value.ruleSlotMeta : {};
+          const wo = String(snap0.value.weightOverrides || '');
+          if (wo.trim()) { try { this.weightValues = JSON.parse(wo) || {}; } catch { /* 忽略 */ } }
+        }
+        // 若 loadSlots 尚未返回，先用已发现的槽位做占位显示（不含 private/template）
+        if (!this.ruleOrder.length && Object.keys(this.slotMeta).length) {
+          this.ruleOrder = Object.keys(this.slotMeta).filter((s) => s !== 'private' && s !== 'template');
+        }
+        void this.loadSlots();
+        void this.refreshAccount();
       }
       project() {
         const snap = this.scope.getSnapshot();
-        const configured = !!(snap.value && snap.value.tokenConfigured);
         return {
           available: snap.status === 'ready',
           writable: !!snap.writable,
-          configured,
           text: this.text,
           sshPub: this.sshPub,
-          injectFullSkill: this.injectFullSkill,
-          injectRepoIndexFull: this.injectRepoIndexFull,
-          hardcodeFullScan: this.hardcodeFullScan,
-          ignorePatterns: this.ignorePatterns,
-          ruleOrder: this.ruleOrder,
-          ruleWeights: this.ruleWeights,
-          ruleSlotMeta: this.ruleSlotMeta,
-          qualityWeights: this.qualityWeights,
-          yamlCheckMode: this.yamlCheckMode,
           sshEmail: this.sshEmail,
+          auditEnabled: this.auditEnabled,
+          ruleOrder: this.ruleOrder,
+          slotMeta: this.slotMeta,
+          weightValues: this.weightValues,
+          tokenConfigured: this.tokenConfigured,
+          sshConfigured: this.sshConfigured,
+          accountBlock: this.accountBlock,
+          accountLoggedIn: this.accountLoggedIn,
+          accountLoading: this.accountLoading,
+          slotLoading: this.slotLoading,
+          slotError: this.slotError,
+          statusMsg: this.statusMsg,
           genKeying: this.genKeying,
           genKeyError: this.genKeyError,
-          generatedPub: this.generatedPub,
-          savedMsg: this.savedMsg,
           dirty: this.text.trim().length > 0 || this.sshPub.trim().length > 0,
           saving: this.saving,
           failed: this.failed,
-          checking: this.checking,
-          block: this.block,
-          loggedIn: this.loggedIn,
+          savedMsg: this.savedMsg,
         };
       }
       flashSaved(msg) {
@@ -654,144 +609,133 @@ window.__ModuleLoader__.load({
         }, 4000);
         this.publish();
       }
-      publish() {
-        this.store.set(this.project());
+      publish() { this.store.set(this.project()); }
+
+      /** 加载规则包清单（/rule-slots，动态发现 yml）。 */
+      async loadSlots() {
+        this.slotLoading = true;
+        this.slotError = '';
+        this.publish();
+        try {
+          const data = await dshgp_getJson('/api/git-push/rule-slots');
+          if (data && data.ok && data.slots) {
+            const meta = data.slots.meta || {};
+            // 用后端返回的生效顺序；private 恒末尾
+            const list = Array.isArray(data.slots.order) ? data.slots.order : [];
+            const order = list.filter((s) => s !== 'template');
+            const forced = Array.isArray(data.slots.forced) ? data.slots.forced : [];
+            this.slotMeta = meta;
+            this.ruleOrder = order;
+            if (forced.includes('private') && !this.ruleOrder.includes('private')) this.ruleOrder.push('private');
+          } else {
+            this.slotError = (data && data.message) || '规则包加载失败';
+          }
+        } catch (e) {
+          this.slotError = '规则包加载失败: ' + (e && e.message || e);
+        }
+        this.slotLoading = false;
+        this.publish();
       }
-      // v1.42.0：设置项保存的通用流程——本地赋值 → scope.set → flashSaved / 失败标记（原 toggle*/editIgnorePatterns 内嵌流程抽出租借）
-      // field=本地字段；value=原样赋值（布尔或字符串，不做转换）；setField=scope 键名（缺省同 field）
-      saveToggle(field, value, savedOn, savedOff, setField) {
-        this[field] = value;
-        void this.scope.set(setField || field, this[field]).then(() => {
-          this.flashSaved(this[field] ? savedOn : savedOff);
+
+      /** 刷新账号信息（/account-check，纯展示）。 */
+      async refreshAccount() {
+        this.accountLoading = true;
+        this.publish();
+        try {
+          const data = await dshgp_getJson('/api/git-push/account-check');
+          this.accountBlock = (data && data.block) || ((data && data.detail) || '（无信息）');
+          this.accountLoggedIn = !!(data && data.loggedIn);
+        } catch (e) {
+          this.accountBlock = '检测失败: ' + (e && e.message || e);
+          this.accountLoggedIn = false;
+        }
+        this.accountLoading = false;
+        this.publish();
+      }
+
+      /** 单击规则包行：切换禁用/启用（2026-09-13 改为写 yml 顶层 disabled，不存 scope 变量）。 */
+      async toggleDisabled(slot) {
+        if (slot === 'nodejs' || slot === 'private') {
+          this.setStatus('⚠️ nodejs/private 安全红线槽位不可禁用');
+          return;
+        }
+        const meta = (this.slotMeta && this.slotMeta[slot]) || {};
+        const nowDisabled = !!(meta.disabled);
+        // 即时反馈：先本地翻转（行绿/红 + 顶部提示），不等后端响应
+        this.slotMeta = { ...(this.slotMeta || {}), [slot]: { ...meta, disabled: !nowDisabled } };
+        this.setStatus(!nowDisabled ? '✅ 已禁用 ' + slot + '（该槽位规则不再加载）' : '✅ 已启用 ' + slot);
+        this.publish();
+        try {
+          const res = await dshgp_postJson('/api/git-push/toggle-rule', { slot, disabled: !nowDisabled });
+          if (res && res.ok) {
+            void this.loadSlots(); // 后台重载对账（yml 解析结果）
+          } else {
+            this.setStatus('❌ 切换失败：' + ((res && res.error) || '未知错误'));
+            this.loadSlots();
+          }
+        } catch (e) {
+          this.setStatus('❌ 切换失败：' + (e && e.message || e));
+          void this.loadSlots(); // 恢复 yml 真实状态
+        }
+      }
+
+      /** 审计 tab 顶部即时反馈（区别于设置 tab 的 flashSaved）。 */
+      setStatus(msg) {
+        this.statusMsg = String(msg || '');
+        if (this.statusTimer) clearTimeout(this.statusTimer);
+        this.statusTimer = setTimeout(() => {
+          this.statusMsg = '';
+          this.publish();
+        }, 4000);
+      }
+
+      /** 上下调整规则包次序（下覆盖上）。 */
+      moveSlot(slot, dir) {
+        const arr = [...this.ruleOrder];
+        const i = arr.indexOf(slot);
+        const j = i + dir;
+        if (i < 0 || j < 0 || j >= arr.length) return;
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+        this.ruleOrder = arr;
+        this.publish();
+        void this.scope.set('auditRuleOrder', arr).then(() => {
+          this.setStatus('✅ 规则包次序已保存：' + arr.join(' → '));
+        }).catch(() => {
+          this.setStatus('❌ 次序保存失败');
+          this.publish();
+        });
+      }
+
+      /** 审计开关（写回 auditEnabled）。 */
+      toggleAudit(checked) {
+        this.auditEnabled = !!checked;
+        this.publish();
+        void this.scope.set('auditEnabled', this.auditEnabled).then(() => {
+          this.flashSaved(this.auditEnabled ? '✅ 已开启：提交前自动审计' : '✅ 已关闭：提交前不审计');
         }).catch(() => {
           this.failed = true;
           this.publish();
         });
-        this.publish();
       }
-      inject() {
-        return {
-          hooks: { gitPushCard: this.store },
-          edit: (text) => {
-            this.text = String(text || '');
-            this.failed = false;
-            this.publish();
-          },
-          editSsh: (text) => {
-            this.sshPub = String(text || '');
-            this.failed = false;
-            this.publish();
-          },
-          toggleFullSkill: (checked) => {
-            this.saveToggle('injectFullSkill', checked, '✅ 已开启：下次会话起每会话注入两仓 skill 全文', '✅ 已关闭：只注入 skill 目录+文件清单（省 token）');
-          },
-          toggleRepoIndexFull: (checked) => {
-            this.saveToggle('injectRepoIndexFull', checked, '✅ 已开启：下次会话起注入 dsh-repo-index.json 正文', '✅ 已关闭：只注入 dsh-repo-index.json 文件名');
-          },
-          toggleHardcodeFull: (checked) => {
-            this.saveToggle('hardcodeFullScan', checked, '✅ 已开启：硬编码审计全量扫整个文件', '✅ 已关闭：硬编码审计只扫新增/变更行');
-          },
-          editIgnorePatterns: (text) => {
-            this.saveToggle('ignorePatterns', String(text || ''), '✅ 自定义忽略已保存：提交时自动写入目标仓库 .gitignore', '✅ 自定义忽略已保存：提交时自动写入目标仓库 .gitignore', 'customIgnorePatterns');
-          },
-          // v1.47.0：规则槽位顺序保存（数组 → auditRuleOrder）。顺序按下移=优先级降（越靠前越先加载，被后面覆盖）
-          saveRuleOrder: (order) => {
-            const arr = Array.isArray(order) ? order : [];
-            this.ruleOrder = arr;
-            this.publish();
-            void this.scope.set('auditRuleOrder', arr).then(() => {
-              this.flashSaved('✅ 规则加载顺序已保存：下次审计按新顺序生效（后覆盖前）');
-            }).catch(() => {
-              this.failed = true;
-              this.publish();
-            });
-          },
-          // v1.47.0：单条权重保存（pattern → auditRuleWeights.blacklist[pattern]）
-          saveRuleWeight: (pattern, weight) => {
-            const w = { ...(this.ruleWeights && this.ruleWeights.blacklist ? this.ruleWeights.blacklist : {}) };
-            w[pattern] = Number(weight);
-            const next = { blacklist: w };
-            this.ruleWeights = next;
-            this.publish();
-            void this.scope.set('auditRuleWeights', next).then(() => {
-              this.flashSaved('✅ 关键词权重已保存：≥40 进门禁 blocker，下次审计生效');
-            }).catch(() => {
-              this.failed = true;
-              this.publish();
-            });
-          },
-          // v1.54.0：YAML 检查模式保存（js-yaml / heuristic → yamlCheckMode，运行期即时生效）
-          saveYamlMode: (mode) => {
-            const next = mode === 'heuristic' ? 'heuristic' : 'js-yaml';
-            this.yamlCheckMode = next;
-            this.publish();
-            void this.scope.set('yamlCheckMode', next).then(() => {
-              this.flashSaved('✅ YAML 检查模式已保存：下次审计按新模式解析（js-yaml 真实解析 / heuristic 宽松启发式）');
-            }).catch(() => {
-              this.failed = true;
-              this.publish();
-            });
-          },
-          // v1.59.0：质量维度权重保存（维度名 → qualityWeights[维度] = weight，覆盖 yaml dimensions_weight）
-          saveQualityWeight: (dim, weight) => {
-            const next = { ...this.qualityWeights };
-            const v = Number(weight);
-            if (v > 0) next[dim] = v; else delete next[dim];
-            this.qualityWeights = next;
-            this.publish();
-            void this.scope.set('qualityWeights', next).then(() => this.flashSaved('✅ 质量维度权重已保存：下次审计按新权重评分')).catch(() => { this.failed = true; this.publish(); });
-          },
-          editSshEmail: (text) => {
-            this.sshEmail = String(text || '');
-            this.genKeyError = '';
-            this.publish();
-          },
-          genKey: (email) => {
-            void this.genKey(email);
-          },
-          copySshPub: () => {
-            void this.copySshPub();
-          },
-          discard: () => {
-            this.text = '';
-            this.sshPub = '';
-            this.failed = false;
-            this.publish();
-          },
-          save: () => {
-            void this.save();
-          },
-          check: () => {
-            void this.check();
-          },
-        };
-      }
-      async check() {
-        if (this.checking) return;
-        this.checking = true;
-        this.block = '检测中…';
+
+      /** 权重维度编辑（合并写回 weightOverrides JSON）。 */
+      editWeight(key, value) {
+        this.weightValues = { ...(this.weightValues || {}), [key]: value };
+        const json = JSON.stringify(this.weightValues);
         this.publish();
-        try {
-          const payload = {};
-          if (this.text.trim()) payload.githubToken = this.text.trim();
-          if (this.sshPub.trim()) payload.sshPub = this.sshPub.trim();
-          const body = JSON.stringify(payload);
-          const res = await fetch('/api/git-push/account-check', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body,
-            credentials: 'same-origin',
-          });
-          const data = await res.json();
-          this.loggedIn = !!data.loggedIn;
-          this.block = data.block || data.detail || JSON.stringify(data);
-        } catch (e) {
-          this.loggedIn = false;
-          this.block = '❌ 检测失败: ' + (e && e.message || e);
-        }
-        this.checking = false;
-        this.publish();
+        void this.scope.set('weightOverrides', json).then(() => {
+          this.flashSaved('✅ 权重已保存（合计 ' + dshgp_DIMENSIONS.reduce((a, d) => a + (this.weightValues[d.key] != null ? this.weightValues[d.key] : d.def), 0) + '），下次审计生效');
+        }).catch(() => {
+          this.failed = true;
+          this.publish();
+        });
       }
+
+      edit(text) { this.text = String(text || ''); this.failed = false; this.publish(); }
+      editSsh(text) { this.sshPub = String(text || ''); this.failed = false; this.publish(); }
+      editEmail(text) { this.sshEmail = String(text || ''); this.failed = false; this.publish(); }
+
+      /** 保存 token / 公钥到插件配置（settingsScope）。 */
       async save() {
         const raw = this.text.trim();
         const pub = this.sshPub.trim();
@@ -805,145 +749,87 @@ window.__ModuleLoader__.load({
           this.text = '';
           this.sshPub = '';
           this.saving = false;
-          this.publish();
+          this.flashSaved('✅ 凭据已保存');
         } catch (_e) {
           this.saving = false;
           this.failed = true;
-          this.publish();
         }
+        this.publish();
       }
-      // v1.29.0 需求①：按邮箱生成 SSH 密钥对（调后端 ssh-keygen），回显公钥供绑定 GitHub
-      async genKey(email) {
-        if (this.genKeying || !email) return;
+
+      discard() { this.text = ''; this.sshPub = ''; this.failed = false; this.publish(); }
+
+      /** 一键生成 SSH 密钥对（/gen-ssh-key）：公钥保存到 sshkey 并复制。 */
+      async genKey() {
+        const email = this.sshEmail.trim();
+        if (!email || this.genKeying) return;
         this.genKeying = true;
         this.genKeyError = '';
-        this.generatedPub = '';
         this.publish();
         try {
-          const res = await fetch('/api/git-push/gen-ssh-key', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, force: false }),
-            credentials: 'same-origin',
-          });
-          const data = await res.json();
-          if (!res.ok || !data.ok) {
-            this.genKeyError = (data.error && data.error.message) || data.error || ('HTTP ' + res.status);
+          const data = await dshgp_postJson('/api/git-push/gen-ssh-key', { email });
+          if (data && data.ok && data.pub) {
+            this.sshPub = data.pub;
+            this.publish();
+            await dshgp_copyText(data.pub);
+            this.genKeying = false;
+            this.flashSaved('✅ 公钥已生成：已填入 SSH 公钥框并复制到剪贴板');
           } else {
-            this.generatedPub = data.pub || '';
-            this.sshEmail = '';
-          }
-        } catch (e) {
-          this.genKeyError = (e && e.message) || String(e);
-        }
-        this.genKeying = false;
-        this.publish();
-      }
-      // v1.30.0：一键复制生成的公钥到剪贴板（navigator.clipboard 优先，execCommand 兜底）
-      async copySshPub() {
-        const pub = (this.generatedPub || '').trim();
-        if (!pub) return;
-        try {
-          let done = false;
-          if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-            // 需 secure context（https / localhost）；失败静默转 execCommand 兜底
-            try {
-              await navigator.clipboard.writeText(pub);
-              done = true;
-            } catch (_e) { /* 转兜底 */ }
-          }
-          if (!done) {
-            const ta = document.createElement('textarea');
-            ta.value = pub;
-            ta.setAttribute('readonly', '');
-            ta.style.position = 'fixed';
-            ta.style.top = '-9999px';
-            ta.style.left = '-9999px';
-            document.body.appendChild(ta);
-            ta.select();
-            const ok = document.execCommand('copy');
-            document.body.removeChild(ta);
-            done = ok;
-          }
-          if (done) {
-            this.flashSaved('✅ 已将公钥复制到剪贴板，去 GitHub 粘贴即可');
-          } else {
-            this.genKeyError = '浏览器未授予剪贴板权限，请手动全选复制';
+            this.genKeying = false;
+            this.genKeyError = (data && data.error) || '生成失败';
             this.publish();
           }
         } catch (e) {
-          this.genKeyError = (e && e.message) || String(e);
+          this.genKeying = false;
+          this.genKeyError = '生成失败: ' + (e && e.message || e);
           this.publish();
         }
+      }
+
+      /** 挂到槽系统的 hooks（供组件注入）。 */
+      inject() {
+        return {
+          hooks: { gitPushCard: this.store },
+          edit: (text) => this.edit(text),
+          editSsh: (text) => this.editSsh(text),
+          editEmail: (text) => this.editEmail(text),
+          save: () => { void this.save(); },
+          discard: () => this.discard(),
+          genKey: () => { void this.genKey(); },
+          toggleAudit: (checked) => this.toggleAudit(checked),
+          editWeight: (key, value) => this.editWeight(key, value),
+          moveSlot: (slot, dir) => this.moveSlot(slot, dir),
+          toggleDisabled: (slot) => { void this.toggleDisabled(slot); },
+          refreshAccount: () => { void this.refreshAccount(); },
+        };
       }
     }
 
     const inject = ['slots', 'settingsScope'];
 
     function apply(ctx) {
-      const card = new GitPushCardController(ctx.settingsScope.bind({ namespace: SETTINGS_NS }));
-      const store = card.store;
-      // 翻译兜底：settings.section 页不经过插件配置槽的 locale 注入，自取 zh 文案表
-      const t = (key) => (zh[key] != null ? zh[key] : key);
-      // SnapshotStore 是裸 observable（subscribe/getSnapshot，无 selector hook）——
-      // 用 useSyncExternalStore 自建 uSES 桥，等价于槽系统为 hooks 生成的 useGitPushCard。
+      const controller = new dshgp_Controller(ctx.settingsScope.bind({ namespace: SETTINGS_NS }));
+      const store = controller.store;
+      // uSES 桥：SnapshotStore 是裸 observable，用 useSyncExternalStore 自建 selector hook
       const useCardState = (selector) => {
         const snap = react.useSyncExternalStore(store.subscribe, store.getSnapshot);
         return selector ? selector(snap) : snap;
       };
-      const cardProps = () => Object.assign({ t: t, useGitPushCard: useCardState, check: () => { void card.check(); } }, card.inject());
-      // v1.49.0：设置侧边栏独立页（settings.section 槽）——不复用插件配置折叠卡，重新设计平铺 UI：
-      //   上方 = 登录信息只读展示 + 引导去插件配置填写（不提供编辑）；下方 = 全部高级设置（开关/忽略/规则引擎/查看入口），即时保存。
-      // 两处仍是同一 controller / store（状态一致）。v1.46.0 曾复用 GitPushCard（折叠），已弃用。
-      function GitPushSectionPage() {
-        ensureCss();
+      // 统一 props：组件层不感知 controller，全走 store + 动作注入
+      const makeProps = (state) => Object.assign({ state, useGitPushCard: useCardState }, controller.inject());
+      function SectionPage() {
         const state = useCardState((s) => s);
         if (!state.available) return null;
-        const props = Object.assign({ t: t, useGitPushCard: useCardState, check: () => { void card.check(); } }, card.inject());
-        const cp = { ...props, state };
-        return jsx.jsxs('div', {
-          style: { padding: '0 4px' },
-          children: [
-            jsx.jsxs('h2', { style: { margin: '0 0 12px', fontSize: '14px' }, children: [t('title')] }),
-            jsx.jsxs('div', {
-              className: 'dshgp_section',
-              children: [
-                /* ① 登录信息（只读）：复用同一 AccountTop 展示块，无 token/公钥输入框，不提供填写 */
-                jsx.jsxs('div', {
-                  className: 'dshgp_sectionblock',
-                  children: [
-                    jsx.jsx('p', { className: 'dshgp_section_h', children: t('sectionGuideTitle') }),
-                    GitPushAccountTop(cp),
-                    jsx.jsxs('div', {
-                      className: 'dshgp_section_guide',
-                      children: [
-                        jsx.jsx('p', { className: 'dshgp_hint', children: t('sectionGuide') }),
-                        jsx.jsx('p', { className: 'dshgp_hint', children: t('sectionGoConfigHint') }),
-                      ],
-                    }),
-                  ],
-                }),
-                jsx.jsx('p', { className: 'dshgp_section_h', children: t('sectionAdvanced') }),
-                jsx.jsx('div', { className: 'dshgp_sectionblock', children: GitPushCheckFields(cp) }),
-                jsx.jsx('div', { className: 'dshgp_sectionblock', children: GitPushIgnoreField(cp) }),
-                jsx.jsx('div', { className: 'dshgp_sectionblock', children: GitPushRuleCards(cp) }),
-              ],
-            }),
-          ],
-        });
+        const props = makeProps(state);
+        return jsx.jsx(dshgp_GitPushPage, props);
       }
+      // 只注册 settings.section（独立侧边栏页）；settings.plugin.item（插件配置卡）已按用户要求删除
       ctx.slots.inject('settings.section', () => ctx.slots.register({
         name: 'settings.section',
         id: 'dsh-git-push',
         order: 40,
-        label: () => t('title'),
-      }, () => react.createElement(GitPushSectionPage, null)));
-      ctx.slots.inject('settings.plugin.item', () => ctx.slots.register({
-        name: 'settings.plugin.item',
-        key: SETTINGS_NS,
-        locale: NS,
-        inject: () => card.inject(),
-      }, GitPushCard));
+        label: () => 'Git 提交推送',
+      }, () => react.createElement(SectionPage, null)));
     }
 
     exports.NS = NS;

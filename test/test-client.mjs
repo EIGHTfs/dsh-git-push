@@ -138,7 +138,7 @@ test('模块描述：jsx=false、外链为空、默认配置已带出', () => {
   assert.equal(info.jsx, false);
   assert.deepEqual(info.externalResources, []);
   assert.equal(info.defaultConfig.auditEnabled, false);
-  assert.deepEqual(info.slots, ['settings.section', 'settings.plugin.item']);
+  assert.deepEqual(info.slots, ['settings.section']);
 });
 
 test('模块描述：不实现 viewer（0.1.8 决策）', () => {
@@ -156,9 +156,9 @@ test('client.js：DSH 模块加载器格式（2026-09-12 完全移植 v1 结构�
 });
 
 test('client.js：零外部资源（内联 CSS 无外链/url()/@import）', () => {
-  // v1 结构：cssText 字符串数组（非 INLINE_CSS 常量）；取数组元素拼起来检查
-  const cssMatch = /const cssText = \[([\s\S]*?)\n    \]\.join\(''\)/.exec(rootClientSrc);
-  assert.ok(cssMatch, '应能取到 cssText 数组');
+  // 三选项卡版：css 变量名 dshgp_css（字符串数组）；取数组元素拼起来检查
+  const cssMatch = /const dshgp_css = \[([\s\S]*?)\n(\s*)\]\.join\(''\)/.exec(rootClientSrc);
+  assert.ok(cssMatch, '应能取到 dshgp_css 数组');
   const css = cssMatch[1].split(',').join('\n');
   assert.deepEqual(collectExternalRefs(css), []);
   assert.ok(!css.includes('@import'));
@@ -167,25 +167,23 @@ test('client.js：零外部资源（内联 CSS 无外链/url()/@import）', () =
   assert.ok(!/['"`]https?:\/\//.test(rootClientSrc), '不应引用外部 URL');
 });
 
-test('client.js：审计相关开关默认关（v1 移植结构）', () => {
-  // v1 Controller 构造默认 false 的开关
-  for (const key of ['injectFullSkill', 'injectRepoIndexFull', 'hardcodeFullScan']) {
-    assert.ok(new RegExp(`this\.${key} = false`).test(rootClientSrc), `${key} 应默认 false`);
-  }
+test('client.js：审计相关开关默认关（2026-09-12 三选项卡版）', () => {
+  // 2026-09-12 三选项卡重写：v1 移植的注入/硬编码全量扫等开关已移出 client.js（纯展示/审计/设置三页）
+  // 保留的审计默认关：Controller 初始 auditEnabled=false
+  assert.ok(/this\.auditEnabled = false/.test(rootClientSrc), 'auditEnabled 应默认 false');
   assert.ok(!rootClientSrc.includes("'llmAudit'"), 'client.js 不应含 llmAudit（v2 不提供 LLM 深度审查）');
   assert.ok(!rootClientSrc.includes("'pushPermitEnabled'"), 'client.js 不应含 pushPermitEnabled（已移除 2026-09-11）');
 });
 
-test('client.js：设置项键（v1 移植：卡片读写键须在 Host Config）', () => {
-  // v1 卡片读写键（controller + inject 保存）
-  const v1Keys = ['githubToken', 'sshPub', 'auditRuleOrder', 'auditRuleWeights', 'qualityWeights', 'yamlCheckMode',
-    'injectFullSkill', 'injectRepoIndexFull', 'hardcodeFullScan', 'customIgnorePatterns'];
-  for (const k of v1Keys) {
-    assert.ok(rootClientSrc.includes(k), `client.js 缺 v1 字段引用 ${k}`);
+test('client.js：设置项键（2026-09-12 三选项卡：客户端写回键须在 Host Config）', () => {
+  // 三选项卡版 client.js 写回的键（settingsScope.set）：token/ssh/审计开关/规则次序/权重覆盖
+  const clientKeys = ['githubToken', 'sshPub', 'auditEnabled', 'auditRuleOrder', 'weightOverrides'];
+  for (const k of clientKeys) {
+    assert.ok(rootClientSrc.includes(k), `client.js 缺设置键引用 ${k}`);
   }
-  // 与 Host Config（lib/index.js）一致：卡片能写的键必须 Host 也有
+  // 与 Host Config（lib/index.js）一致：客户端能写的键 Host 必须也有
   const hostSrc = readFileSync(join(ROOT, 'lib/index.js'), 'utf8');
-  for (const k of ['githubToken', 'sshPub', 'auditRuleWeights', 'qualityWeights', 'yamlCheckMode', 'customIgnorePatterns']) {
+  for (const k of clientKeys) {
     assert.ok(hostSrc.includes(`${k}:`), `Host Config 缺 ${k}`);
   }
 });
@@ -196,8 +194,8 @@ test('client.js：不实施 viewer', () => {
 
 // 1.0.10 回归：ctx.get('ruleSlotMeta') 对未 inject 声明抛 "cannot get property without inject"
 // （vendor/cordis/lib 675 行）曾导致 apply 崩溃 → 设置侧边栏空白。修复：try/catch 兜底。
-// 本测试用 mock ctx（get 必抛错）执行根 client.js 的 apply，断言两个槽位仍注册成功。
-test('client.js apply：ctx.get 抛错不崩，settings.section/plugin.item 均注册（1.0.10 回归）', () => {
+// 2026-09-12：配置卡已删除，只保留 settings.section（三选项卡侧边栏页）。
+test('client.js apply：ctx.get 抛错不崩，settings.section 注册且渲染不崩（1.0.10 回归 + 三选项卡）', () => {
   // 捕获 ModuleLoader.load 的 factory
   let captured = null;
   const prevWindow = globalThis.window;
@@ -232,7 +230,7 @@ test('client.js apply：ctx.get 抛错不崩，settings.section/plugin.item 均�
   globalThis.window = prevWindow;
   assert.ok(captured, 'ModuleLoader.load 应被调用');
   const mod = captured.factory(req);
-  assert.deepEqual(mod.inject, ['slots', 'settingsScope'], 'inject 依赖声明（2026-09-12 双语取消：不再依赖 locale）');
+  assert.deepEqual(mod.inject, ['slots', 'settingsScope'], 'inject 依赖声明（2026-09-12 纯中文：不再依赖 locale）');
 
   // mock ctx：get 必抛（模拟 cordis 未 inject 行为）
   const registered = [];
@@ -253,24 +251,11 @@ test('client.js apply：ctx.get 抛错不崩，settings.section/plugin.item 均�
   };
   assert.doesNotThrow(() => mod.apply(ctx), 'apply 遇 ctx.get 抛错不得崩溃');
 
-  // 1.0.14 回归：GitPushCard 用 uSES 桥接（scope.use 不存在会崩），卡片/侧边栏必须能渲染
-  // 1.0.14 核心：GitPushCard 不得再调 scope.use()（不存在→TypeError→侧边栏空白）；
-  // uSES 桥接后渲染不得抛错（mock createElement 返回 __mock 元素，断渲染不崩即可）
-  const cardReg = registered.find((r) => r.slot === 'settings.plugin.item');
-  // v1 结构：inject() 返回 { hooks: { gitPushCard: store }, ...操作函数 }；
-  // 真实 DSH 槽系统把 hooks.gitPushCard 转成 useGitPushCard 再传给卡片——这里模拟
-  const injected = cardReg.desc.inject();
-  const gpStore = injected.hooks && injected.hooks.gitPushCard;
-  assert.ok(gpStore && typeof gpStore.getSnapshot === 'function', 'inject 应暴露 gitPushCard store');
-  const useGitPushCard = (selector) => {
-    const snap = gpStore.getSnapshot();
-    return selector ? selector(snap) : snap;
-  };
-  const cardProps = Object.assign({ t: (k) => k, useGitPushCard, check: () => {} }, injected);
-  assert.doesNotThrow(() => cardReg.desc.component(cardProps), '配置卡渲染不得抛错（hooks+uSES 桥接）');
+  // 2026-09-12 三选项卡：只注册 settings.section；settings.plugin.item 已删除
+  assert.ok(!registered.some((r) => r.slot === 'settings.plugin.item'), 'settings.plugin.item 不应注册（已删除）');
   const secReg = registered.find((r) => r.slot === 'settings.section');
-  const secEl = secReg.desc.component();
+  assert.ok(secReg, 'settings.section 应注册');
+  assert.equal(secReg.desc.id, 'dsh-git-push');
   assert.doesNotThrow(() => secReg.desc.component(), '侧边栏 section 渲染不得抛错');
   assert.ok(registered.some((r) => r.slot === 'settings.section' && r.desc.id === 'dsh-git-push'), 'settings.section 应注册');
-  assert.ok(registered.some((r) => r.slot === 'settings.plugin.item' && r.desc.key === 'git-push'), 'settings.plugin.item 应注册');
 });

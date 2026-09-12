@@ -1,8 +1,8 @@
 # git 工作流 skill（dsh-git-push 相关）
 
-> 2026-09-08 · v1.40.0 迁移：原 dsh-git-push-User/EIGHTfs/ 下的 git 工作流 skill（16 个 .md）整合入插件项目 skills/。
+> 2026-09-08 迁移：原 dsh-git-push-User/EIGHTfs/ 下的 git 工作流 skill（16 个 .md）整合入插件项目 skills/。
 > 依据 skill-repo-index：插件相关 skill 唯一位置 = 插件项目 skills/。
-> requirements 门禁清单：v1.x 为 lib/user-requirements.json；**v2 未移植**（见 WORKBOARD 旧验收项，提交门禁当前只做 L0 静态审计）。
+> requirements 门禁清单：lib/user-requirements.json；当前提交门禁只做 L0 静态审计。
 
 ## 来源
 

@@ -305,7 +305,7 @@ test('commitAndPush：缺 message 拦截', async () => {
   assert.match(r.error, /message 必填/);
 });
 
-// D13 开发者要求门禁（对齐 v1 commitPushPreflight：内置 user-requirements.json 存在时未核对拦截）
+// D13 开发者要求门禁（commitPushPreflight：内置 user-requirements.json 存在时未核对拦截）
 test('commitAndPush：开发者要求未核对 → 拦截（D13）', async () => {
   const r = await commitAndPush({ repoPath: repo, message: 'feat: 未核对要求', push: false });
   assert.equal(r.ok, false);
@@ -336,7 +336,7 @@ test('commitAndPush：真实 commit（不 push）', async () => {
   assert.ok(r.steps.includes('commit'));
 });
 
-test('commitAndPush：无变更跳过（对齐 v1 v1.18.1：非错误，成功跳过）', async () => {
+test('commitAndPush：无变更跳过（非错误，成功跳过）', async () => {
   const r = await commitAndPush({ repoPath: repo, message: 'nothing', push: false, requirementsConfirmed: true });
   assert.equal(r.ok, true, '无变更应为成功跳过而非错误');
   assert.equal(r.committed, false);
@@ -401,7 +401,7 @@ test('pushViaApi：完整 Git Data API 流程（mock）', async () => {
   assert.ok(fetchCalls.some((c) => c.url.includes('/git/refs')));
 });
 
-// D15：推送成功后维护 remote-tracking ref + 辅助 SSH remote + dsh- 项目自动打 tag（对齐 v1 commitPushAfterApiSuccess）
+// D15：推送成功后维护 remote-tracking ref + 辅助 SSH remote + dsh- 项目自动打 tag
 test('commitAndPush：推送成功后 remoteRef + aux remote + autoTag（dsh- 前缀，mock）', async () => {
   const repoD15 = join(tmp, 'dsh-demo');
   mkdirSync(repoD15);
@@ -569,7 +569,7 @@ test('commitAndPush：私有库豁免（private 不写 .gitignore 只扫描报�
   assert.ok(!existsSync(join(repo4, '.gitignore')), 'private 仓库不应写 .gitignore');
 });
 
-// 2026-09-11：force 强推参数（对齐 v1 commitPushDoPush force；pushViaApi 内容级短路需被 force 跳过）
+// 2026-09-11：force 强推参数（pushViaApi 内容级短路需被 force 跳过）
 test('pushViaApi：force=true 跳过内容级短路（remoteHead===headSha 仍建 commit）', async () => {
   runGit(['remote', 'set-url', 'origin', 'https://api.github.com/repos/octo/repo'], { cwd: repo });
   const headSha = runGit(['rev-parse', 'HEAD'], { cwd: repo }).stdout;

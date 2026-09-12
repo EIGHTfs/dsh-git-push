@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>账号信息面板 · 设计稿</title>
+<style>
+  :root {
+    /* 取自 DSH 主题变量（与真实界面一致） */
+    --bg-base: #0f1117;
+    --bg-layer-1: #14161d;
+    --bg-layer-2: #1a1d26;
+    --bg-layer-3: #20242e;
+    --border-l2: rgba(255,255,255,.06);
+    --border-l4: rgba(255,255,255,.12);
+    --label-primary: #e8eaf0;
+    --label-secondary: #a0a6b4;
+    --label-tertiary: #6b7280;
+    --success: #34d399;
+    --error: #f87171;
+    --warning: #fbbf24;
+    --brand: #58a6ff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px;
+    background: var(--bg-base);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    color: var(--label-primary);
+  }
+  .page-title { font-size: 13px; color: var(--label-tertiary); margin: 0 0 16px; }
+
+  /* ─────── 设计稿 1：账号信息面板（美化版） ─────── */
+  .panel {
+    max-width: 420px;
+    border: 1px solid var(--border-l4);
+    border-radius: 16px;
+    overflow: hidden;
+    background: linear-gradient(160deg, var(--bg-layer-3) 0%, var(--bg-layer-2) 100%);
+    position: relative;
+  }
+  .panel::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(420px 140px at 15% -20%, rgba(88,166,255,.14), transparent 70%),
+      radial-gradient(300px 120px at 95% 110%, rgba(52,211,153,.10), transparent 70%);
+    pointer-events: none;
+  }
+  .panel-head {
+    display: flex; align-items: center; gap: 12px;
+    padding: 16px 16px 0;
+    position: relative;
+  }
+  .icon-badge {
+    width: 40px; height: 40px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, rgba(88,166,255,.22), rgba(88,166,255,.08));
+    border: 1px solid rgba(88,166,255,.25);
+    color: var(--brand);
+    flex-shrink: 0;
+  }
+  .panel-title { margin: 0; font-size: 14px; font-weight: 600; }
+  .panel-sub { margin: 2px 0 0; font-size: 11px; color: var(--label-tertiary); }
+  .status-badge {
+    margin-left: auto;
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 10px; font-weight: 600;
+    padding: 3px 10px; border-radius: 999px;
+    white-space: nowrap;
+  }
+  .status-badge.ok   { background: rgba(52,211,153,.14); color: var(--success); }
+  .status-badge.warn { background: rgba(251,191,36,.14);  color: var(--warning); }
+  .status-badge.err  { background: rgba(248,113,113,.14); color: var(--error); }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .status-badge.ok .status-dot { background: var(--success); box-shadow: 0 0 6px var(--success); }
+  .status-badge.warn .status-dot { background: var(--warning); }
+  .status-badge.err .status-dot { background: var(--error); }
+
+  .block {
+    margin: 14px 16px 0;
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-size: 12px; line-height: 1.7;
+    white-space: pre-wrap;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    border: 1px solid var(--border-l2);
+    background: rgba(0,0,0,.25);
+  }
+  .block.ok  { color: var(--label-primary); border-color: rgba(52,211,153,.25); }
+  .block.err { color: var(--error); border-color: rgba(248,113,113,.25); }
+  .block.loading { color: var(--label-secondary); }
+
+  .meta-rows {
+    margin: 10px 16px 0;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .meta-row {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px; color: var(--label-secondary);
+  }
+  .meta-row .k { color: var(--label-tertiary); min-width: 64px; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px; font-weight: 600;
+    padding: 2px 8px; border-radius: 999px;
+  }
+  .pill.on  { background: rgba(52,211,153,.14); color: var(--success); }
+  .pill.off { background: rgba(120,120,130,.14); color: var(--label-secondary); }
+
+  .panel-foot {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px 16px; position: relative;
+  }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 500;
+    padding: 6px 14px; border-radius: 8px;
+    border: 1px solid var(--border-l4);
+    background: var(--bg-layer-3);
+    color: var(--label-primary); cursor: pointer;
+  }
+  .btn:hover { background: var(--bg-layer-2); }
+  .btn.primary {
+    background: var(--brand); border-color: transparent;
+    color: #0b0e14; font-weight: 600;
+  }
+  .foot-hint { font-size: 10px; color: var(--label-tertiary); }
+
+  /* ─────── 设计稿 2：账号信息面板（v1 原版，对照） ─────── */
+  .panel-v1 { margin-top: 28px; max-width: 420px; }
+  .cmp-label {
+    font-size: 11px; color: var(--label-tertiary);
+    margin: 0 0 6px; font-weight: 600;
+  }
+</style>
+</head>
+<body>
+  <p class="page-title">账号信息面板 · 设计稿（未登录 / 检测成功两种状态预览）</p>
+
+  <!-- 状态 A：已登录 -->
+  <p class="cmp-label">设计稿 A · GitHub 已连接</p>
+  <div class="panel">
+    <div class="panel-head">
+      <div class="icon-badge">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+        </svg>
+      </div>
+      <div>
+        <p class="panel-title">GitHub 账号</p>
+        <p class="panel-sub">Token / SSH 公钥检测结果 · 进入设置自动检测</p>
+      </div>
+      <span class="status-badge ok"><span class="status-dot"></span>已连接</span>
+    </div>
+    <div class="block ok">✅ 检测成功：GitHub 账号已登录
+  Username: EIGHTfs
+  Plan: Pro · 登录态 Token 有效
+  SSH 公钥指纹: SHA256:AbCdEfGh…（已绑定）</div>
+    <div class="meta-rows">
+      <div class="meta-row"><span class="k">Token</span><span class="pill on">已配置</span></div>
+      <div class="meta-row"><span class="k">SSH 公钥</span><span class="pill on">已绑定</span></div>
+    </div>
+    <div class="panel-foot">
+      <button class="btn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></svg>
+        重新检测
+      </button>
+      <span class="foot-hint">上次检测 刚刚</span>
+    </div>
+  </div>
+
+  <!-- 状态 B：未配置 / 检测中 -->
+  <p class="cmp-label" style="margin-top:24px">设计稿 B · 未配置 / 检测失败</p>
+  <div class="panel">
+    <div class="panel-head">
+      <div class="icon-badge">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+        </svg>
+      </div>
+      <div>
+        <p class="panel-title">GitHub 账号</p>
+        <p class="panel-sub">Token / SSH 公钥检测结果 · 进入设置自动检测</p>
+      </div>
+      <span class="status-badge err"><span class="status-dot"></span>未连接</span>
+    </div>
+    <div class="block err">❌ 检测失败：无法访问 api.github.com
+  Token 无效或已过期（请到「设置」选项卡更新凭据）
+  SSH 公钥未绑定</div>
+    <div class="meta-rows">
+      <div class="meta-row"><span class="k">Token</span><span class="pill off">未配置</span></div>
+      <div class="meta-row"><span class="k">SSH 公钥</span><span class="pill off">未绑定</span></div>
+    </div>
+    <div class="panel-foot">
+      <button class="btn primary">去设置填写凭据 →</button>
+      <span class="foot-hint">上次检测 刚刚</span>
+    </div>
+  </div>
+
+  <!-- v1 原版对照 -->
+  <p class="cmp-label" style="margin-top:24px">对照 · v1 原版（当前界面）</p>
+  <div class="panel-v1">
+    <div style="border:1px solid var(--border-l4);border-radius:16px;background:var(--bg-layer-3);padding:12px 14px;font-size:11px;color:var(--label-tertiary)">
+      账号状态（Token / SSH 公钥检测结果，进入设置自动检测）
+      <div style="margin-top:8px;font-size:12px;color:var(--label-secondary);font-family:monospace">未配置 Token / SSH 公钥</div>
+      <div style="margin-top:10px;text-align:right">
+        <button class="btn" style="padding:3px 10px;font-size:12px">重新检测</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

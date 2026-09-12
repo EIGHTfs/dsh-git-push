@@ -53,12 +53,12 @@ export function listSyncFiles(root = SOURCE_ROOT) {
 /**
  * 探测 DSH 插件目录。
  *
- * **两个位置都要同步**（旧项目最大教训：只同步 node_modules 导致改动看不到）：
+ * **两个位置都要同步**（最大教训：只同步 node_modules 导致改动看不到）：
  *   1) `<profile>/local-plugins/<插件名>`  ← **真实加载源**（profile 的 package.json
  *      写的是 `"dsh-git-push": "file:./local-plugins/dsh-git-push"`，DSH 加载这里）
  *   2) `<profile>/node_modules/<插件名>`   ← npm link 产物（部分运行路径会解析到这里）
  *
- * 旧项目 v1.46–v1.49 的 UI 改动「刷新看不到」，根因就是只 rsync 了 node_modules。
+ * 历史上 UI 改动「刷新看不到」，根因就是只 rsync 了 node_modules。
  * @param {string} [home] DSH_HOME（默认从环境变量推断）
  * @param {string} [pluginName] 插件名
  * @returns {string[]} 命中的目标目录（local-plugins 在前）

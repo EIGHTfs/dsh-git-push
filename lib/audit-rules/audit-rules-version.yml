@@ -1,4 +1,4 @@
-# 版本控制审计规则（v1.52.0 默认加载槽位）
+# 版本控制审计规则（默认加载槽位）
 # 权威源：skills/git-workflow-gitpush/versioning-rule.md（EIGHTfs 自研插件版本号规则，
 #   2026-08-20/21 确立，适用本机所有 dsh-* 自研插件 + gbmd 三组件）。
 # 落地为 yml 审计：versioning-rule 的「语义规则」（版本只在提交时变化 / 大版本换代判定）
@@ -59,7 +59,7 @@ rules:
     name: "git 版本标签格式（vX.Y.Z）"
     category: "version"
     severity: "warning"
-    description: "提交/打 tag 用 vX.Y.Z 规范格式（v1.2.0）；不带 v 前缀或非三段标签与发布工具约定不一致"
+    description: "提交/打 tag 用 vX.Y.Z 规范格式；不带 v 前缀或非三段标签与发布工具约定不一致"
     exts: ["md", "sh", "mjs", "yml"]
     patterns:
       - "tag\\s+v?[0-9]+\\.[0-9]+[^\\s\"]*"

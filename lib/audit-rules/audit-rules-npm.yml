@@ -1,7 +1,7 @@
-# npm 插件发布审计规则（v1.51.0 默认加载槽位）
+# npm 插件发布审计规则（默认加载槽位）
 # 依据：npm 官方 best practices（npm pack 内容判定 / package.json 字段契约）+ 本机 dsh 插件发布经验。
 # 目标文件：package.json / .npmrc —— 通过 exts 字段显式放行（json/npmrc 默认不在 styleCode，
-#   v1.51.0 起 styleRules regex 支持 per-rule exts，npm 规则只扫这两个类型，不误伤代码文件）。
+#   styleRules regex 支持 per-rule exts，npm 规则只扫这两个类型，不误伤代码文件）。
 # 语义：全部正则可执行；「缺某个字段」类检查（如缺 license/repository）正则无法表达，
 #   走缺失检测兜底（附 npm doctor / npm publish --dry-run 建议），或由人工在发布前核查。
 metadata:

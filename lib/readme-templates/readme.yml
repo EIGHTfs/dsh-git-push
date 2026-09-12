@@ -1,4 +1,4 @@
-# README 生成模板（yml 化，对齐旧版 v1.53.0）
+# README 生成模板（yml 化）
 # git_gen_readme 的 README 骨架模板——本体收进 yml 文件，改章节结构不再动代码。
 # 用法：
 #   - header：封面区（# 标题 + 引言），{{name}}/{{description}} 占位符原样保留

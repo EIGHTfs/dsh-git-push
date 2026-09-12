@@ -1,4 +1,4 @@
-# dsh 插件专属审计规则（v1.50.0 默认加载槽位）
+# dsh 插件专属审计规则（默认加载槽位）
 # 依据：DeepSeek Harness 官方文档（https://deepseekdocs.com/docs/learn/core/plugin-anatomy 等）
 #   ① 插件 = cordis 插件 + package.json dsh 字段（dsh.bundle.patch / dsh.client / dsh.profile.bundles）
 #   ② capability 安全：依赖必须静态声明（export const inject / static inject），未声明访问被 Proxy 拒绝
@@ -57,6 +57,23 @@ rules:
     description: "浏览器 client 半部无 Node 运行时；require('fs'/'path'/'os'/'child_process'/'net'/'http'(无 window)) 必然运行失败"
     patterns:
       - "require\\s*\\(\\s*['\"](?:node:)?(?:fs|path|os|child_process|net|dgram|tls|http|https|worker_threads|cluster)['\"]\\s*\\)"
+    # 2026-09-13 误报修复：本规则只查浏览器侧代码（crx/、client/、public/ 等）。
+    #   纯正则无法区分 server/ 与 client/ 目录（exts 只按扩展名），漏掉会误伤 Node 后端
+    #   require('fs'/'path') 等正常用法——exclude_paths 声明排除 Node 侧目录，
+    #   引擎按 relPath 前缀过滤（见 lib/audit/checks.js filterRulesByExt + runChecks）。
+    #   补充：crx/native-host/ 是浏览器扩展的 Node 原生宿主（host 半部），require 正常；
+    #   exts 限 JS 类排除 .sh/.py 等非 JS 文件（start.sh 内嵌 node -e 的 require 也正常）。
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx"]
+    exclude_paths:
+      - "server/"
+      - "test/"
+      - "tests/"
+      - "scripts/"
+      - "tool/"
+      - "tools/"
+      - "lib/"
+      - "utils/"
+      - "crx/native-host/"
     fixable: false
     mitigation: "浏览器侧改用 fetch/WebSocket/indexedDB 等 web API；Node 侧能力留在 host 半部经 RPC 暴露"
 

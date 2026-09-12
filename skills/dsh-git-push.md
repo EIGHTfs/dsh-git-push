@@ -1,6 +1,6 @@
 ---
 name: dsh-git-push
-description: dsh-git-push 插件手册（v1.x 架构：10 总入口 + 7 工具 + YAML 规则包 + 客户端设置 UI）。说明 git_scan / git_commit_push / code_audit / git_clone / git_remote_create / git_set_visibility / link_check 七个工具的调用方法，审计规则包（lib/audit-rules/*.yml 动态槽位）、豁免标记（dsh-skip-*）、质量评分（10 维度加权）、HTTP API 鉴权（Origin + confirm）、独立运行（git-sluice CLI）、官方 CLI 安装与客户端 UI 修复实录（2026-09-12：完全移植 v1 的 Controller+hooks+独立 section 页，修复 scope.use 崩溃与 Host 缺 settings.register 两个根因）。处理「提交推送代码」「扫描仓库状态」「审计代码」「规则包怎么加规则」「被审计拦截怎么豁免」「链接检查」「插件装了不生效」「设置侧边栏空白」「配置卡不出」「侧边栏没有 git-push」类请求时加载。
+description: dsh-git-push 插件手册（10 总入口 + 7 工具 + YAML 规则包 + 客户端设置 UI）。说明 git_scan / git_commit_push / code_audit / git_clone / git_remote_create / git_set_visibility / link_check 七个工具的调用方法，审计规则包（lib/audit-rules/*.yml 动态槽位）、豁免标记（dsh-skip-*）、质量评分（10 维度加权）、HTTP API 鉴权（Origin + confirm）、独立运行（git-sluice CLI）、官方 CLI 安装与客户端 UI 修复实录（2026-09-12：Controller+hooks+独立 section 页，修复 scope.use 崩溃与 Host 缺 settings.register 两个根因）。处理「提交推送代码」「扫描仓库状态」「审计代码」「规则包怎么加规则」「被审计拦截怎么豁免」「链接检查」「插件装了不生效」「设置侧边栏空白」「配置卡不出」「侧边栏没有 git-push」类请求时加载。
 whenToUse: 需要用插件做 git 提交推送 / 代码审计 / 规则包定制 / 报错排查时。
 ---
 
@@ -119,7 +119,7 @@ dsh plugin --profile web add /tmp/dsh-git-push-<版本>.tgz
 
 验证：`ls -la node_modules/dsh-git-push`（drwx=实体，lrwx=软链）+ `--dump-config` 应有 `id: dsh-git-push / enabled: true`。装完重启 DSH 才生效（dsh-restart-gate）。
 
-### 7.2 客户端 UI 修复实录（2026-09-12，v1.0.14）
+### 7.2 客户端 UI 修复实录（2026-09-12）
 
 **症状**：设置侧边栏有「Git 提交推送」入口，但点击无内容；插件配置无卡片。排查确认两个根因 + 一个隐藏坑：
 
@@ -127,15 +127,36 @@ dsh plugin --profile web add /tmp/dsh-git-push-<版本>.tgz
 2. **根因② `scope.use()` 不存在**——官方 `SettingsScope` 契约只有 `getSnapshot()/subscribe()/set()/mutate()/unset()`，无 `use()`。v2 曾误用 `scope.use()` → 渲染 TypeError → 侧边栏空白。修复：uSES 桥 `useSyncExternalStore(scope.subscribe, () => scope.getSnapshot())` 读 `snap.value`。
 3. **隐藏坑：pnpm 目录源=软链**——用户「重启后还是不行」→ 要求重装。实测 `add 目录` / `add file:目录` 装出来都是软链；`.tgz` 才是实体。重装为实体后正常。
 
-**最终修复 = 完全移植 v1（用户决策「算了v1是好的，你完全移植v1过来」）**：
+**最终修复 = 客户端重构（Controller + hooks + 独立 section 页）**：
 - client.js 换用 v1 验证过的实现：`GitPushCardController`（scope 订阅 → `store.createSnapshotStore(project())` → publish）+ `inject()` 返回 `{ hooks: { gitPushCard: store }, edit/toggle/save... }`（槽系统把 store 转成 `useGitPushCard` hook 注入卡片）
-- `settings.section` 用**独立 `GitPushSectionPage`**（v1.49 平铺 UI：登录只读 + 高级设置即时保存），不复用折叠卡（复用是反模式）
+- `settings.section` 用**独立 `GitPushSectionPage`**（平铺 UI：登录只读 + 高级设置即时保存），不复用折叠卡（复用是反模式）
 - `settings.plugin.item`：`key: SETTINGS_NS`（'git-push'）+ `inject: () => card.inject()`
 - Host Config 合并 v1 全量字段（githubToken/sshPub/injectFullSkill/hardcodeFullScan/injectRepoIndexFull/customIgnorePatterns/yamlCheckMode/auditRuleWeights/qualityWeights/ruleSlotMeta）+ 保留 v2 特有字段
 - 双语设计取消：去 en 表 + locale 依赖，只留中文
 - 测试适配 v1 结构（jsx-runtime 断言反转、Controller 默认值、槽系统 hooks 模拟渲染）；fallback schema 补 dict/any
 
 **验证**：`npm test` 430 全绿；真实 React 元素树卡片+section 均构建成功；GUI 实测设置侧边栏出现「Git 提交推送」。
+
+### 7.3 客户端 UI 三选项卡重写（2026-09-12）
+
+**用户决策**：删设置配置卡（`settings.plugin.item`），只保留侧边栏独立页（`settings.section`），页面重写为**三个大选项卡**（对齐插件市场 .tabs/.tab/.on，参考 skill 记分板）：
+
+1. **账号信息**（纯展示）：`GET /api/git-push/account-check` → GitHub 登录态/用户名/公钥指纹/套餐，`block` 文本直接展示。
+2. **审计**：① 审计开关（`auditEnabled`，settingsScope.set 即时保存）② 审计权重 10 维度（可读性/可维护性/健壮性/安全性/性能/测试覆盖/可观测性/可部署性/文档/开发者体验，默认合计 100；改即写 `weightOverrides` JSON）③ 规则包列表（`GET /api/git-push/rule-slots` 动态发现；↑↓ 调次序写 `auditRuleOrder`（下覆盖上）；单击展开 → `GET /api/git-push/rule-detail?slot=<名>` 显示拦截/警告/通过数量统计 + 规则表格（规则名/简介/级别/作者））。
+3. **设置**：GitHub token（写 `githubToken`）+ SSH 公钥（写 `sshPub`）+ 邮箱 + 一键生成（`POST /api/git-push/gen-ssh-key`，公钥填入 SSH 框并复制剪贴板）。
+
+**配套后端**：
+- `GET /api/git-push/rule-slots`：meta 增加 `author`（读 yml metadata）。
+- `GET /api/git-push/rule-detail?slot=<名>`：读单个 `audit-rules-<名>.yml` 的 rules 数组 → `{ meta, stats: { blocker, warning, pass, total }, rules: [{ id, name, category, severity, description, author }] }`。拦截=blocker|error，警告=warning，通过=其余（含无 severity）。
+
+**结构要点**：
+- 纯中文：删 zh/en 键值对字典，文案硬编码中文（产品设计）。
+- 只注册 `settings.section`；`settings.plugin.item` 已删除（`clientModuleInfo().slots` 同步为 `['settings.section']`）。
+- Controller 命名 `dshgp_*` 前缀防 combo 撞名；组件 `dshgp_AccountTab` / `dshgp_AuditTab` / `dshgp_SettingsTab` + `dshgp_GitPushPage` 装配。
+- 文件顶层零声明 + `load` 顶部（client-modules 聚合 bundle 兼容），详见 7.2 形态铁律。
+- 测试适配：`clientModuleInfo().slots` 断言删 plugin.item；`审计相关开关默认关` 改断言 `this.auditEnabled = false`；CSS 变量名 `dshgp_css`。
+
+**验证**：`npm test` 430 全绿；combo 拼接解析通过；apply 只注册 section（plugin.item=0）。
 
 ## 八、常见问题
 

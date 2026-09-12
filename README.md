@@ -1,248 +1,178 @@
 # dsh-git-push
 
-DSH（DeepSeek Harness）git 自动提交推送插件——统一函数入口架构（从零开发的独立实现）。
+DSH（DeepSeek Harness）git 提交推送与代码审计插件——提交前自动审计门禁，提交推送全链路自动化。
 
-> **状态**：开发中（v0.0.0 计划稿 → v0.1.0 框架 → 每完成一个入口递增第三位）
-> **基线**：`../dsh-git-push`（v1.60.1，存档+自检扫描用，五份外部审计报告已核对，问题清单见 §五）
-> **血缘**：本项目按统一函数入口架构从零开发，参考既有经验与五份外部报告的教训独立实现。
+![账号信息面板](assets/panel-account.png)
+
+> **公开仓库**：EIGHTfs/dsh-git-push（2026-09-13 转 public）｜全量测试 438 全绿（`npm test` 一条命令可复现）
+> **设计稿**：`doc/account-panel-design.html`（可独立浏览器打开预览账号面板）
 
 ## 目录
 
-- [架构设计](#架构设计)
-- [总入口清单](#总入口清单)
-- [统一问题对象](#统一问题对象)
-- [版本规划](#版本规划)
-- [问题清单（五份报告 → v2 自检）](#问题清单五份报告--v2-自检)
-- [链接判断规则设计](#链接判断规则设计)
-- [文件目录结构及作用](#文件目录结构及作用)
-- [设置项（侧边栏 / 插件配置）](#设置项侧边栏--插件配置)
+- [功能总览](#功能总览)
+- [一、提交推送](#一提交推送)
+- [二、代码审计](#二代码审计)
+- [侧边栏设置](#侧边栏设置)
 - [独立 CLI（git-sluice）](#独立-cligit-sluice)
+- [安装与要求](#安装与要求)
 - [版本列表](#版本列表)
 - [注意事项](#注意事项)
 
-## 架构设计
+## 功能总览
 
-**核心思想：统一函数入口 + 注册表扩展，加能力不破坏主入口。**
+插件围绕 DSH 日常开发的两个高频动作，分为**提交推送**与**代码审计**两大块：
 
-- **规则总入口（yml 管理）**：所有 yml 规则槽位（nodejs/npm/html/comment/dsh/private/structure/version/template 等）统一装载→解析→编译；**加字段=加函数，compileRule 主体永不修改**；每个字段函数自带 `dimensions` 维度绑定（支持一字段多维度）
-- **审计总入口**：`auditChanged`（变动，git diff）/ `auditFull`（全量，非 git 目录可查）；`auditWithScope` 统一调度；设置项控制扫描范围（`auditScanScope`：diff/full）、强度（`auditLevel`：quick 跳 AST 语义重检查 / standard 全量 / deep 扩展位）、规则包目录（`auditRuleset`：空=内置，指向含 `audit-rules-<名>.yml` 的目录即整体替换）
-- **git 总入口**：token / sshkey / 提交 / 推送 / clone / 建仓 / 可见性 / 版本历史 / 重建历史
-- **自身总入口**：版本控制（单一事实源）/ README 模板（独立，不走拦截 yml）/ yml 模板（规则模板 + 豁免速查）/ 独立运行能力（CLI，npm test 可复现）
-- **评分总入口**：10 维度加权（可读性 15 / 可维护性 15 / 健壮性 15 / 安全性 18 / 性能 10 / 测试覆盖 10 / 可观测性 5 / 可部署性 5 / 文档 4 / 开发者体验 3，合计 100），问题(dimensions) → 分维度计数 → 加权总分
-- **豁免总入口**：`dsh-skip-*` 注册表（每个豁免类型声明「能豁免哪些维度」），扫描问题输出自带 `exemptHint`
-- **上下文注入入口**：给 AI 会话注入环境（工作目录映射 / 工具路径 / skill 清单）
-- **HTTP API 入口**：鉴权（Origin 校验 / CSRF / 写操作确认）
-- **测试总入口**：`npm test` 一条命令可复现全绿，失败退出非 0
-- **侧边栏（设置 UI）**：复用既有 client.js 骨架改造
-
-## 总入口清单
-
-| # | 入口 | 职责 | 状态 |
-|---|------|------|------|
-| 1 | 规则总入口 | 所有 yml 字段解析 + yml 衍生新字段，编辑函数按字段指派 | ⏳ 规划 |
-| 2 | 审计总入口 | 变动/全量/非 git 目录，默认关闭，侧边栏开关 | ⏳ 规划 |
-| 3 | git 总入口 | token/sshkey/提交/推送/clone/建仓/可见性/历史 | ⏳ 规划 |
-| 4 | 自身总入口 | 版本控制/README 模板/yml 模板/CLI | ⏳ 规划 |
-| 5 | 侧边栏 | 设置 UI（复用旧 client.js） | ⏳ 规划 |
-| 6 | 评分总入口 | 10 维度加权 | ⏳ 规划 |
-| 7 | 豁免总入口 | dsh-skip-* 注册表 + exemptHint | ⏳ 规划 |
-| 8 | 上下文注入 | AI 会话环境注入 | ⏳ 规划 |
-| 9 | HTTP API | 鉴权端点 | ⏳ 规划 |
-| 10 | 测试总入口 | npm test 可复现 | ⏳ 规划 |
-
-## 统一问题对象
-
-```
-问题 = {
-  file, line,
-  rule, kind,
-  dimensions: ['可读性', '可维护性'],   // 字段函数里写绑定，支持一字段多维度
-  severity,                            // blocker / warning / info
-  exemptHint,                          // 怎么豁免（含位置语义：文件头=整文件 / 位置=单点）
-  scoreImpact,                         // 该问题对 10 维度评分的影响
-}
-```
-
-每个编译函数（字段函数）声明 `dimensions`——`func-lines` 字段 → `['可读性','可维护性']`，`empty-catch` → `['健壮性','可观测性']`。
-
-## 版本规划
-
-| 版本 | 内容 |
-|------|------|
-| **0.0.0** | README 文档（本文件）：开发计划 + 问题清单 + 链接规则设计 |
-| **0.1.0** | 功能框架搭建完毕能跑（目录结构 + 入口骨架 + npm test 绿） |
-| **1.1.x** | 每完成一个入口 commit 一次，第三位 +1（一次一入口） |
-| … | 全部入口完成后按实际功能跳版本 |
-
-**开发纪律**：每次提交**不推送**，提交前调用旧项目（`../dsh-git-push`）扫描本目录自检；旧项目发现的问题修复后再提交。
-
-## 问题清单（五份报告 → v2 自检）
-
-五份外部报告（code-quality-audit / code-analysis / 代码不足分析报告-实测版 / 代码不足分析-源码实测 / CODE-ANALYSIS-independent）已逐条实测核对。已证实问题转化为 v2 规则引擎的**内置自检规则**：
-
-| # | 已证实问题（来源） | v2 自检规则 | 规则槽位 |
-|---|---|---|---|
-| 1 | 死导入/未使用导出（execSync/commitAndPush/readdirSync/gitRaw） | `unused-import` / `unused-export` | nodejs |
-| 2 | 真空 catch / 静默吞错（readme-gen:166） | `empty-catch` | robustness |
-| 3 | 依赖未声明（js-yaml，三份报告都中） | `declared-dependency` | npm |
-| 4 | npm test 入口坏（三份报告都中） | `test-entry` | npm |
-| 5 | CLI 文档 vs 实现不一致（--depth，三份报告都中） | `cli-help-sync` | npm |
-| 6 | README/注释/工具数滞后（11 vs 12） | `doc-sync` | dsh |
-| 7 | HTTP 写端点无鉴权 | `http-auth` | dsh |
-| 8 | quality 规则自身假阴性（checkSyncInAsync 前缀匹配等） | `quality-rule-selfcheck` | dsh |
-| 9 | 同步 fs 204 处阻塞 | `sync-fs`（AST 全量） | performance |
-| 10 | 凭据卫生（origin 内嵌 token、/tmp PID） | `credential-in-url` / `tmp-symlink` | security |
-| 11 | 链接拼接错误（viewer 双协议前缀） | **`link-check`** | 新 kind |
-| 12 | 配置被忽略（githubOwner） | `config-ignored` | dsh |
-| 13 | 门禁链路漏接（requirementsConfirmed 只工具传） | `gateway-chain` | dsh |
-| 14 | 循环依赖（git-core⇆github-api） | `circular-import` | structure |
-| 15 | 文档措辞被自家拦截 | `docs-conversation` + **输出附带一键改写建议** | comment |
-
-**自检闭环**：v2 自己提交前跑一遍上面的 self-check = 等价于一次外部审计——「别人发现问题」→「自己每天发现」。
-
-## 链接判断规则设计
-
-**新规则 kind：`link-check`**——扫描项目内所有 URL，访问验证，报错扣分。
-
-```yaml
-- id: link/valid-url
-  kind: link-check
-  severity: warning
-  retries: 1
-  timeout_ms: 5000
-  flaky_domains:            # 不稳定的知名域名，网络错误扣分打折
-    - github.com
-    - api.github.com
-    - raw.githubusercontent.com
-    - npmjs.com
-  dimension: 文档            # 绑 10 维度
-  concurrent: 5
-```
-
-| 错误类型 | 基准扣分 | flaky 域名打折 | 绑定维度 |
-|---|---|---|---|
-| 404/403（连得上但目标不在） | 3 | 1.0（不打折） | 文档×3 |
-| DNS 解析失败 | 2 | 0.3 | 文档×2 |
-| 连接超时 | 1 | 0.2 | 文档×1 |
-| 网络层其他 | 1 | 0.2 | 文档×1 |
-
-**boundary（防误报核心）**：github 系列域名天然不稳 → flaky 域名网络错误扣分 ×0.2；DNS 失败且域名在 flaky 列表 → 只记 debug 不记分。**链接检查只跑 warning 不拦截**（网络不可靠，blocker 会造成假阳性拦截）。
-
-## 文件目录结构及作用
-
-（框架搭建后填充——0.1.0 起按实际模块更新本表并 commit）
-
-| 路径 | 作用 |
-|---|---|
-| `lib/` | 引擎模块（按总入口划分） |
-| `lib/audit-rules/` | yml 规则槽位 |
-| `test/` | 测试（test-<module>.mjs，npm test 可复现） |
-| `docs/` | 文档（本计划 / 看板 / 报告） |
-| `cli.mjs` | 独立 CLI（git-sluice） |
-
-## 设置项（侧边栏 / 插件配置）
-
-设置项三处同源保持同步：`lib/index.js` 的 `Config`（服务端 schema）、`lib/client/index.js` 的 `SETTINGS_SCHEMA`（纯逻辑 + 单测）、`client.js` 的 `SCHEMA` + 中文文案（浏览器侧内联，无法 import 服务端 ESM）。新增设置项必须三处同加，一致性由 test-client.mjs 断言守着。
-
-| 设置项 | 类型 | 默认 | 作用 |
-|---|---|---|---|
-| `auditEnabled` | boolean | false | 提交前自动审计门禁（关=只提交不审计） |
-| `hardcodeFullScan` | boolean | false | 硬编码全量扫（换机前排查存量死路径） |
-| `injectFullSkill` | boolean | false | 注入全部 skill 正文（默认只注目录+清单省 token） |
-| `injectRepoIndexFull` | boolean | false | 注入 repo-index 全文（默认只注文件名） |
-| `auditScanScope` | enum | diff | 扫描范围：diff=仅本次变动 / full=全量 |
-| `auditLevel` | enum | standard | 审计强度：见下节三档语义 |
-| `auditRuleset` | string | '' | 自定规则目录：空=内置规则包 |
-| `weightOverrides` | string | '' | 权重覆盖 JSON：如 `{"安全性":100}`，空=默认权重表 |
-| `commitMessage` | string | '' | 自动提交信息（留空则用调用方传入的 message） |
-
-### 审计强度三档（auditLevel）
-
-| 档位 | 检查范围 | 适用场景 |
+| 功能块 | 做什么 | 入口 |
 |---|---|---|
-| `quick` | 正则 / 凭据 / 路径 / 黑名单 / 空 catch / 同步 IO（**跳过 AST 与语义重检查**：函数行数、圈复杂度、嵌套深度、文件行数、重复串、语义规则、凭据文件、命名长度） | 大仓快速门禁、冒烟自检 |
-| `standard` | 全量（默认，与 v1.0.3 行为一致） | 日常提交前审计 |
-| `deep` | 当前与 standard 等效（全量）；为后续追加深度检查预留 | 需要最严格检查时 |
+| **提交推送** | token / SSH 密钥管理、提交、推送、clone、建仓、可见性切换、force 强推、版本历史 | `git_commit_push` 工具 / CLI / 侧边栏 |
+| **代码审计** | 提交前自动审计门禁、14 个规则槽位 96+ 条规则、10 维度质量评分、豁免机制、链接检查 | `code_audit` 工具 / CLI / 侧边栏 |
 
-流程：配置或工具参数（`code_audit` 的 `auditLevel`）→ `code_audit` / `git_commit_push` 传入 `auditWithScope({ auditLevel })` → `auditFull` / `auditChanged` → `auditFile(..., { level })` → `runChecks({ grouped }, { level })` 按档位跳过重检查。基础安全项（凭据、路径穿越、空 catch）在任何档位都不降级。
+## 一、提交推送
 
-### 自定规则包（auditRuleset）与动态槽位
+Git 全链路自动化，token / SSH 凭据管理 + 提交推送，无需手动敲 git 命令。
 
-规则槽位由目录文件驱动：目录里每个 `audit-rules-<名>.yml` 即一个槽位，放文件即生效、删文件即移除——「导入/导出/删除规则包」就是对该目录的文件操作，无需改代码。内置槽位 14 个（nodejs 36 / frontend 19 / npm 10 / version 8 / dsh 7 / comment 6 / folder 4 / i18n 3 / performance 2 / docs 1 / robustness 1 / structure 1 / template 1 / private 0 条私有拦截清单）。
+### 凭据管理
 
-流程：`auditRuleset` 指向目录 → `loadRuleFiles(order, { dir })` 从该目录装载（默认 `lib/audit-rules/`）→ 编译注册表认领字段 → 审计消费。指向不存在或空的目录会装载 0 条规则（`loaded.errors` 有记录），不会静默沿用内置规则包。
+- **Token**：GitHub token（`ghp_` / `github_pat_` 开头），保存即写入插件配置目录 `credentialsDir()/github-token`（**0600 权限**），不落 settings.yaml 明文
+- **SSH 公钥**：保存写入 `credentialsDir()/*.pub`（按类型 id_rsa.pub / id_ed25519.pub）；**一键生成密钥对**（邮箱 → `ssh-keygen` 4096 位，公钥自动填入并复制剪贴板，私钥只落本机）
+- **账号检测**：`GET /api/git-push/account-check` 在线校验（token 调 api.github.com + SSH 指纹 + 绑定关系），侧边栏账号面板实时显示登录态
 
-**槽位加载与合并语义**（细节全录见 `docs/DETAILS-EXEMPT-AND-RULES.md` §2）：
+### 提交推送能力
 
-- **发现**：`discoverRuleSlots()` 扫目录取 `audit-rules-<名>.yml`，槽位集合以**目录实际文件**为准（常量表只是排序偏好，非槽位清单）
-- **disabled（1.0.10，yml 声明式关闭）**：① **文件级**——yml 顶层 `disabled: true` → 整槽位默认不加载（内置 `audit-rules-i18n.yml` 已默认关闭：i18n 规则对纯中文零依赖 CLI 属可选能力，硬编码中文是产品设计而非缺陷，需要时删掉该行或环境变量显式列出即恢复）；② **规则级**——单条规则 `disabled: true` → 该条不编译（合并时过滤，无需删文件）；③ **强制加载**——环境变量 `DSH_GIT_PUSH_RULE_SLOTS` 显式列出的槽位无视 disabled 强制加载（用户明确要开）；④ **安全红线强制（不可关）**——`FORCE_LOAD_SLOTS`（nodejs/private 槽位）与 `isForceLoadRule`（`secret-*`/`cred*`/`security/*`/`npm/npmrc-authtoken`/`dsh/schema-secret-*` 规则）即使标 disabled 也强制加载——凭据/硬编码/私密拦截不允许被 yml 关闭；⑤ **强制槽位缺失兜底**——nodejs/private yml 文件丢失（被删/目录指向错误）时自动合并内置兜底规则集（`FORCE_LOAD_FALLBACK`：token/硬编码凭据/路径穿越 3 条 + 私密清单 12 条）并记入 errors（CLI/工具可感知），安全审计不断档、插件不崩
-- **顺序**：配置显式顺序优先（数组 / 逗号串 / 环境变量 `DSH_GIT_PUSH_RULE_SLOTS`）→ 未覆盖的按 `SLOT_ORDER_HINT` 偏好排（nodejs→frontend→npm→version→dsh→comment→structure→private→docs→template）→ 仍未列出的按文件名字典序；配置声明但文件不存在静默跳过；`template` 槽位默认不加载
-- **合并**：按顺序逐槽位装载，`rules` **后覆盖前**（同 id 后者胜）；`severity_map`/`thresholds` 对象合并；`metadata` 取第一个非空；`ignore` 追加；`private_files` 跨文件**追加**（private 槽位恒最后加载 → 清单累加不覆盖）
-- **容错**：单槽位 yml 解析失败记入 `errors` 不中断，其余槽位照常加载；非法正则由 `safeRe` 收集错误返回 null，该规则跳过不抛异常
-- **编译出口**：`ruleOut` 顶层只保留 `id/name/kind/severity/level/message/pattern/patterns/pathPattern/threshold/dimensions`，其余 yml 字段必须挂 `extra` 供检查器读取
-- **severity 映射**：yml `error` → 引擎级 `blocker`（拦截）；`warning` → `warning`；`info` → `pass`
-- **正则默认不区分大小写**：`safeRe` 默认加 `i`（`apiKey`/`API_KEY` 都命中）；要区分大小写写前缀 `(?-i)`
+| 能力 | 说明 |
+|---|---|
+| `git_commit_push` | 一键提交+推送（审计门禁默认开启；敏感文件自动 .gitignore；`--push/--no-push/--dry-run/--force/--req-confirm/--json`） |
+| 推送通道 | **api 通道**（Git Data API，blob→tree→commit→ref，分支免疫）优先，401 自动回退 **SSH 通道**（ssh.github.com:443） |
+| force 强推 | API 通道重建 commit 去旧 parent / SSH 通道 `git push --force` |
+| clone / 建仓 | `cloneViaApi`（trees+blobs 写文件转 git 仓）/ `ensureRemoteRepo`（建仓+设 origin） |
+| 可见性 | `setVisibility` PATCH 切换 public/private |
+| 网络硬闸 | 只允许 api.github.com（`githubFetch` 拒绝非该域名，不跟随 302） |
 
-### 权重覆盖（weightOverrides）
+### 提交前自动门禁
 
-评分默认 10 维度权重表（合计 100，见「架构设计」）。`weightOverrides` 传 JSON（如 `{"安全性":100}`）→ `scoreQuality(findings, weights)` 与默认表合并（未指定维度保持默认）→ 输出 `quality.dims`（0-10 原始维度得分）与总分随之变化。JSON 非法时回退默认权重，不中断审计。
+提交推送前自动跑代码审计（见下节）：**有 blocker 拦截提交**（退出码 2），warning 只提示不拦截。审计通过才执行 commit + push。
 
-**最终得分公式（用户 2026-09-11 权威）：`最终得分 = Σ(维度得分 × 权重) / Σ权重 × 10`**（满分 100；维度得分 = 10 - 该维度问题计数，warning 扣 1 / blocker 扣 2，下限 0）。侧边栏 10 维度滑块（min 0 / max 100 / step 1）逐维写回 weightOverrides JSON，改完即生效。
+## 二、代码审计
+
+提交前自动审计 + 独立全量扫描，规则可扩展，质量可评分。
+
+### 审计入口
+
+- `auditChanged`：变动范围（git diff）——提交前默认
+- `auditFull`：全量扫描（非 git 目录可查）
+- `code_audit` 工具 / `git-sluice audit` CLI：强度、规则包、权重全覆盖
+
+### 规则引擎（yml 管理）
+
+规则槽位由目录文件驱动：目录里每个 `audit-rules-<名>.yml` 即一个槽位，**放文件即生效、删文件即移除**，无需改代码。内置 14 个槽位：
+
+| 槽位 | 规则数 | 检查内容 |
+|---|---|---|
+| nodejs | 36 | 凭据硬编码 / 路径穿越 / 魔数 / 依赖 / 异步等 |
+| frontend | 19 | 前端安全 / a11y / 依赖 |
+| npm | 10 | 依赖声明 / npmrc 凭据 / 测试入口 |
+| version | 8 | 版本号规范 |
+| dsh | 7 | DSH 插件契约 / 注入通道 |
+| comment | 6 | 注释措辞 / 对话残留 |
+| folder | 4 | 目录总数 / 单目录文件数 / 解包特征 / .gitignore |
+| i18n | 3 | 硬编码文案 / 插值 / 语言包 |
+| performance | 2 | memory-bomb / busy-wait |
+| docs / robustness / structure / template / private | 各 0-4 | 链接检查 / 写前 mkdir / 循环依赖 / 规则模板 / 私密文件拦截 |
+
+**加规则 = 放文件**；**加字段类型（新 kind）才需加函数**（compilers.js 注册制：`registerCompiler(kind, detect, compile)`，加字段=加函数+注册一行，`compileRule` 主体永不修改）。
+
+### 10 维度质量评分
+
+可读性 / 可维护性 / 健壮性 / 安全性 / 性能 / 测试覆盖 / 可观测性 / 可部署性 / 文档 / 开发者体验，默认合计 100，可在侧边栏调权重（`weightOverrides` JSON）。
+
+- 单维度评分对数衰减防零分塌陷：`max(0.1, 10 - k*ln(1+errorCount))`，k 按维度分级（安全性 1.8 衰减最快）
+- 总分 = Σ(维度得分×权重)/Σ权重×10；A/B/C/D/E 五档
+
+### 审计强度三档
+
+| 档位 | 检查范围 |
+|---|---|
+| `quick` | 正则 / 凭据 / 路径 / 黑名单 / 空 catch / 同步 IO（跳 AST 与语义重检查） |
+| `standard` | 全量（默认） |
+| `deep` | 当前与 standard 等效，为深度检查预留 |
+
+### 豁免机制
+
+`dsh-skip-*` 注册表（文件头=整文件 / 行内=单点），每个豁免类型声明「能豁免哪些维度」。安全红线不可豁免：`secret-*` / `cred*` / `security/*` 类规则即使标 disabled 也强制加载。
+
+### 链接检查
+
+扫描 md/文本中的 URL 并访问验证（404/403→-3、DNS→-2、超时→-1 分级扣分），只 warning 永不 blocker（网络不可靠防假阳性拦截）。
+
+## 侧边栏设置
+
+设置 → 侧边栏 → **Git 提交推送**，三选项卡（对齐插件市场样式）：
+
+- **账号信息**：渐变卡片 + GitHub 图标 + 状态徽标（已连接/检测中/未连接）+ 检测结果块 + Token/SSH 凭据状态标签 + `⟳ 重新检测`
+- **审计**：审计开关 + 10 维度权重编辑 + 规则包列表（↑↓ 调次序、单击展开规则表格）
+- **设置**：GitHub token + SSH 公钥 + 邮箱 + 一键生成并复制
+
+设置项以 `lib/index.js` 的 `Config` 为单一事实源，`settingsScope` 读写。凭据保存**同时写插件配置目录**（见「凭据管理」）。
 
 ## 独立 CLI（git-sluice）
 
-脱离 DSH 独立运行（零第三方依赖，仅需 Node ≥18 与本机 git）。`git-sluice self-check` 做版本一致性 + `HELP ↔ parseArgv` 机器比对（选项白名单必须与 HELP 文本一致）。
+脱离 DSH 独立运行（零第三方依赖，仅需 Node ≥18 与本机 git）。
 
 ```
 git-sluice version              查看版本
-git-sluice ruleset [槽位...]    编译规则包并输出统计（默认全部槽位）
+git-sluice ruleset [槽位...]    编译规则包并输出统计
 git-sluice scan <root> [--depth N]   全量扫描目录（非 git 目录可查）
 git-sluice audit <root> [--full] [--level quick|standard|deep] [--ruleset <目录>] [--weights <JSON>]
-                                审计目录（默认 diff 范围）
 git-sluice commit <repo> -m <msg> [--push|--no-push] [--dry-run] [--force] [--req-confirm] [--json]
-                                审计门禁 → 提交（默认只 commit 不 push；--push 推远端；--force 强推覆盖远端历史）
 git-sluice link-check <路径>    检查 md/文本中的链接有效性（只 warning）
-git-sluice yaml-template        输出规则 yml 模板（含 kind + dimensions 示范）
-git-sluice readme-template      输出 README 模板（{{name}} {{version}} 占位符）
+git-sluice yaml-template        输出规则 yml 模板
+git-sluice readme-template      输出 README 模板
 git-sluice self-check           版本一致性 + HELP↔parseArgv 机器比对
 ```
 
-`audit` 参数与服务端设置项对应：`--full` ↔ `auditScanScope=full`、`--level` ↔ `auditLevel`（非法取值直接报错，不静默降级）、`--ruleset` ↔ `auditRuleset`（自定规则目录）、`--weights` ↔ `weightOverrides`（非法 JSON 回退默认权重表并提示）。
+`audit` 参数与服务端设置对应：`--full` ↔ `auditScanScope=full`、`--level` ↔ `auditLevel`、`--ruleset` ↔ `auditRuleset`、`--weights` ↔ `weightOverrides`。
+
+## 安装与要求
+
+- **环境**：DSH（DeepSeek Harness）｜Node ≥18 ｜本机 git
+- **安装**：`dsh plugin add EIGHTfs/dsh-git-push`（仓库已声明 `dsh.bundle`，可安装）
+- **测试**：`npm test` 一条命令复现全绿（438 断言，0 失败）
 
 ## 版本列表
 
 | 版本 | 说明 |
 |---|---|
-| **1.0.14**（当前 · 客户端完全移植 v1） | **设置 UI 完全移植 v1（2026-09-12）**：client.js 换用 v1 验证过的完整实现——GitPushCardController（scope 订阅→createSnapshotStore→uSES 桥）+ `inject()` 返回 `hooks.gitPushCard` + 操作函数（槽系统自动生成 useGitPushCard）+ **独立 GitPushSectionPage 侧边栏页**（不复用折叠卡，v1.49 平铺 UI）；修复 v2 此前 `scope.use()`（官方 SettingsScope 契约无此方法→渲染 TypeError→侧边栏空白）与 Host 缺 settings.register（配置卡交集为空）两个根因。配套：Host Config 合并 v1 全量字段（githubToken/sshPub/injectFullSkill/hardcodeFullScan/injectRepoIndexFull/customIgnorePatterns/yamlCheckMode/auditRuleWeights/qualityWeights/ruleSlotMeta）；双语设计取消（去 en 表 + locale 依赖，只保留中文）；fallback schema 补 dict/any；测试断言适配 v1 结构（jsx-runtime/Controller/hooks）｜全量 430 全绿 |
-| **1.0.13**（文件健康度矩阵评分规则） | **新规则 kind（2026-09-12）**：新增 `file-health` 编译函数（compilers.js 注册制，验证「加字段=加函数+注册一行」）与 `audit-rules-filehealth.yml` 新槽位——用户提供《文件健康度矩阵评分算法》落地：① 三维独立分级：行数（≤200/400/800/1500）、大小 KB（≤30/100/300/1000）、单行最大长度（≤120/200/300/500）→ 0~4 级；② 加权等级 = 行数×0.40 + 大小×0.35 + 行长×0.25；③ 扣分按表（0/1.0/2.5/4.5/7.0）线性插值；④ score = max(0.1, 10-penalty)，score≥9 健康不报 / <9 warning / <5 blocker；⑤ 豁免：*.generated.* / *.min.* / locales/ 整文件跳过，constants/ 行数豁免（大小/行长仍评），routes/ 行数阈值放宽；⑥ 诊断 message 含三维等级/得分/优先处理维度；⑦ 参数可覆盖（权重/边界/扣分表/阈值）。实测：v2 自身 13 文件报出 0 blocker，最差 lib/audit/checks.js 与 lib/git/index.js 7.4/10（正是分析指出的 900+ 行大文件）。新增 test-file-health.mjs 8 条｜全量 429 全绿 |
-| **1.0.12**（客户端结构拆分 ≤400 行） | **结构拆分（2026-09-12）**：client.js 从 452 行压到 391 行、工厂函数 187 语句 → 约 12 语句，消除 readability/max-function-length（工厂 406 行）与 readability/max-file-length（452>400）两个审计项——① 工厂只留 require 骨架（react 经模块级 reactRef 供顶层组件使用）② 数据常量/纯函数（zh/DIM_WEIGHTS/SCHEMA/INLINE_CSS/fallbackNames/resolveSlotOrder/apiPost）全提模块顶层 ③ RuleEngineCard 逻辑段独立为 ruleEngineActions()（卡内只留渲染）④ GitPushCard 的设置项行渲染独立为 schemaRow() ⑤ 头注释/空行/INLINE_CSS 压缩。行为零变化：端到端装载 + apply 两槽位注册 + 421 全绿；测试断言同步 reactRef 变量名。「加 yml 规则是否要加函数」答案：**加规则文件/规则条目不需要**（放 audit-rules-<名>.yml 即自动成为槽位，loader 动态发现）；**加新字段类型（新 kind 检查方式）才需要**——compilers.js 注册制（registerCompiler(kind, detect, compile)，加字段=加函数+注册一行） |
-| **1.0.11**（修复设置侧边栏空白） | **bug 修复（2026-09-12）**：`apply()` 内 `ctx.get('ruleSlotMeta')` 对未 inject 声明的属性抛 `cannot get property "ruleSlotMeta" without inject`（vendor/cordis/lib 675 行）→ apply 崩溃 → settings.section / settings.plugin.item 均未注册 → **设置侧边栏空白**。修复：try/catch 兜底安全读取（props.slotMeta 才是权威来源，ctx.get 仅尽力）。新增回归测试（mock ctx.get 必抛错 → 断言两槽位仍注册成功）｜全量 421 全绿。v1 无此问题（无该行） |
-| **1.0.10**（规则 disabled 机制 + 安全红线强制加载 + 缺失兜底） | **yml 声明式关闭规则 + 安全红线保护（2026-09-13）**：① **文件级 disabled**——yml 顶层 `disabled: true` → 整槽位默认不加载（内置 `audit-rules-i18n.yml` 已默认关闭：i18n 规则对纯中文零依赖 CLI 属可选能力，硬编码中文是产品设计而非缺陷）；② **规则级 disabled**——单条规则 `disabled: true` → 该条不编译（合并时过滤，无需删文件）；③ **强制加载**——环境变量 `DSH_GIT_PUSH_RULE_SLOTS` 显式列出的槽位无视 disabled 强制启用（用户明确要开）；④ **安全红线强制（FORCE_LOAD_SLOTS / isForceLoadRule）**：nodejs 槽位（凭据/硬编码/路径穿越）与 private 槽位（私密文件拦截）不可被 disabled 关闭——即使 yml 标 `disabled: true` 也强制加载（`secret-*`/`cred*`/`security/*`/`npm/npmrc-authtoken`/`dsh/schema-secret-*` 类规则条目同理）；⑤ **强制槽位文件缺失内置兜底（FORCE_LOAD_FALLBACK）**：nodejs/private yml 被删或 auditRuleset 目录指向错误时，用编译期嵌入的最小安全规则集（凭据 token/硬编码凭据/路径穿越 3 条 + 私密清单 12 条）合并进规则集并记入 errors（CLI/工具可感知「规则包不完整」，建议恢复文件）——安全审计不断档、插件不崩、不静默降级；⑥ 新增回归测试 2 条（disabled 机制 + 强制加载/缺失兜底）｜全量 420 全绿 |
-| **1.0.9**（误报清理：语义豁免 + exts 过滤 + patch 语义检查） | **按 dsh-skill-scoreboard 实测的 8 类真实误报逐条修复（2026-09-13）**：① **npm/undeclared-js-yaml 全仓证据**：规则语义=「import 了 js-yaml 但未声明依赖」，此前文件级 fallback 把零依赖插件（全仓无 js-yaml 引用）的 package.json 误报 blocker——新增 `detectRepoJsYamlImport`（auditFull/auditChanged 双通道全仓扫描 import/require 证据），无引用不报，有引用照报（depProj 对照测试证明规则未变哑）；② **timeout-on-external-api 同调用识别**：纯 regex 匹配 `fetch(` 看不到同调用内 `AbortSignal.timeout(30000)`/`AbortController`/`timeout:` → `hasExternalCallTimeout`（行内联超时 / 后续 12 行括号闭合区间超时）语义豁免，真无超时仍报；③ **client-module-loader-id 契约语义**：pattern 匹配的是正确写法 `window.__ModuleLoader__.load({id,factory})` 本身（规则写反）→ 改为「文件已按统一契约注册即通过」，缺契约的 client 半部才报；④ **concat-in-t 词边界**：`(?<![A-Za-z])` 排除 `split('{'+...` 的 `t(`（方法名尾字母）误匹配；⑤ **mkdir-before-write 函数级识别**：命中行同函数（前 60 行函数起点 → 后 20 行）含 `mkdir(Sync)/ensureDataDir/recursive:true` 即豁免——saveData 先 ensureDataDir 再写的常规安全写法不再误报；⑥ **patch-insert-unique-id 语义化 + exts 限定**：旧「命中 insert: 即提示」把纯 insert（只新建不覆盖）误报 duplicate-id——改为新 kind `patch-insert`（checkPatchInsert 解析 insert 块内 id 与顶层覆盖行 id 求交集，同 id 才报），且规则声明 `exts: [yml, yaml]`；⑦ **exts 过滤机制落地**（新引擎能力）：`filterRulesByExt` 在 runChecks 入口按当前文件扩展名裁剪声明了 exts 的规则——README 等 md 文件的 insert 示例代码块不再命中 yml-only 规则；⑧ **semantic 只对代码文件报**：checkSemantic 加 CODE_EXTS 门控，.gitignore/.npmignore/README 等非代码文件不再被安全/a11y/dependency 占位 notice 轰炸（7 文件 × 4 规则空报 → 0）；⑨ **version 路径上下文豁免**：`isVersionInPathContext`——安装路径/文件名里的 `dsh-v0.1.2-alpha.4`（如 README 数据示例的 DSH runtime 目录）不再触发 version/embedded-major-zero 与 readme-zero-title，README 版本记录标题仍报；⑩ 新增 `test/test-false-positive-fixes.mjs` 10 条回归测试（含正反对照：真风险仍报、误报场景不报）｜全量 418 全绿，dsh-skill-scoreboard 实测 blocker 4→0、目标误报规则全清零 |
-| **1.0.8**（扫描智能提示 + 评分对数衰减） | **两处智能升级**：① **扫描智能提示（test 路径/文件名豁免告知）**：审计扫描出 warning/blocker 时，若文件路径或文件名带 test 特征（`test|tests|__tests__|spec` 目录段，或 `.test.js`/`.spec.ts` 等文件名）→ message 末尾自动附加「测试目录/文件可在对应目录放 0 字节 .test 空文件整目录豁免扫描」提示（1.0.6 .test 豁免机制的智能引导：只告知不自动豁免，是否豁免由用户在对应目录放 .test 空文件决定；幂等——已含 .test 提示不重复）；② **评分对数衰减（防零分塌陷，用户 2026-09-12 YAML「代码质量评分规则（防零分塌陷版）」）**：单维度评分从线性扣分（10-count，10 个错误和 100 个错误都归 0）改为 **`max(0.1, 10 - k*ln(1+errorCount))`**——错误少扣分明显、错误多扣分趋缓但永不归零，保留「有多烂」的区分度；**k 按维度分级**：安全性 1.8（衰减最快，安全问题更严重）/ 性能 1.3 / 测试覆盖·可观测性·可部署性 1.2 / 文档·开发者体验 1.0 / 其余 1.5；floor=0.1 保留微弱区分度；总分公式不变（Σ(维度得分×权重)/Σ权重×10）；**新增 E 档**（总分 <40，原 A/B/C/D 四档 → A/B/C/D/E 五档）；用户 YAML 示例数值逐一验证一致（count=1→8.96、5→7.31、10→6.40、50→4.11、100→3.07）｜ test-smart-hint.mjs 9 例 + test-quality.mjs 36 例，全量 408 全绿 |
-| **1.0.7**（硬编码魔数检测·版本号豁免版） | **魔数检测智能升级（整合进原有 audit-rules-nodejs.yml，kind=magic-number-smart）**：检测 `\b\d{2,}\b` / `\b0x[0-9a-fA-F]+\b` / `\b\d+\.\d+\b`，但**自动豁免**五类：① 版本号（v1.2.3 / 1.2.3 / VERSION 常量 / version 上下文）② 日期时间（2026-09-12 / 时间戳 / 时间 / year~time 上下文）③ HTTP 状态码（100-504 清单，http/status 上下文）④ 常见合法常量（0/1/-1/60/100/1000/1024/3600/86400/65535 等）⑤ 状态枚举（pending/completed 等字符串）；**上下文关键字分流**：magic_number_hints（timeout/retry/max/min/limit/size/count/port/interval/delay/duration/threshold/buffer/chunk，前缀匹配兼容 maxRetry/max_count 组合词）内数字报魔数，legitimate_hints（version/date/year/month/day/hour/minute/second/http/status）内数字豁免；**同一数字文件内出现 ≥3 次强制标记**（跨行合并 1 条，重复计数按 1 个算——scoring_impact 可维护性）；与既有 readability/magic-number（纯 regex 快速版）并存，纯 regex 无法豁免版本号/日期的痛点由 smart 版补齐；实测：`timeout=30000`/`limit=100` 命中、`VERSION="1.2.3"`/`status===404`/`KB=1024` 豁免、`777×3` 合并 1 条 ｜ test-magic-number.mjs 5 例 + auditFull 集成实测 |
-| **1.0.6**（规则机制 .test 豁免 + 按钮绑定交叉比对） | **规则引擎两项机制升级**：① **.test 空文件豁免**（整目录扫描跳过）：目录放 0 字节 `.test` 空文件 → 审计（collectTextFiles）与敏感扫描（scanSensitiveFiles）**双通道整目录跳过**（含子目录），比 .samples「照常出结果不拦截」更强——.samples 出结果只不拦截，.test 完全跳过；防逃逸（非空 .test 文件不豁免）；② **button-bind 交叉比对 kind**（按钮事件归属）：同文件交叉比对 HTML 按钮（innerHTML/outerHTML/insertAdjacentHTML 赋值 chunk + 模板字符串 chunk + createElement('button'/'input')）与 JS 绑定证据（addEventListener/onclick/onChange 赋值 + jQuery `$("#id")`/`$(".cls")` + `querySelectorAll("button[data-x]")` 属性选择器 + `.closest()` 事件委托）——识别出绑定即不报，识别出事件委托（addEventListener('click') 或 .closest()）整文件豁免；油猴脚本（HTML 在 JS 字符串、事件 addEventListener/委托绑定）不再误报「按钮无事件」；扩展场景（popup.html 按钮在 popup.js 绑定）forms/button-missing-event 降级 info；③ **7 条 button/* 规则**：inline-binding-in-string（JS 字符串内联绑定，负向后瞻排除 `.on(` 方法链）/ unbound（无绑定）/ create-element-binding（createElement 绑定）/ event-delegation-detected（事件委托）/ dynamic-selector（querySelector+拼接等动态选择器）/ wrapped-binding / csp-compatible（CSP 兼容 info）｜实测 gamebanana-mods-downloader：unbound=0 误报 0、button/* 8 条 info 均不阻断 |
-| **1.0.5**（侧边栏账号卡） | **侧边栏账号/SSH 能力补齐（对齐 v1 账号区）+ Origin 同源放行 + 评分公式定稿**：① **侧边栏账号卡**（client.js）：`AccountCheckCard`（填 GitHub Token / SSH 公钥 → POST `/api/git-push/account-check` 在线校验账号状态）+ `AccountKeyGenCard`（填邮箱 → POST `/api/git-push/gen-ssh-key` 生成 ssh-rsa 4096 密钥对，公钥整行回显 + 一键复制；私钥只落本机插件配置目录）；React 状态本地化（token/公钥仅浏览器内存，关闭即消失，不进配置）；两组件均 ≤50 行防 func-lines；② **Origin 同源放行（D35 升级）**：checkOrigin 新增第 4 参 `host`——写请求 Origin 主机 ≡ 请求 Host 头即同源放行（局域网 GUI 10.10.10.4 下侧边栏按钮 POST 不再 403），跨站 Origin 仍拒、本机回环白名单兜底，CSRF 防护语义不削弱；③ **评分公式定稿（用户权威公式）**：`最终得分 = Σ(维度得分×权重)/Σ权重×10`，`quality.dims` 存 0-10 原始维度得分，侧边栏 10 维度滑块逐维写回 weightOverrides JSON（修复 saveDimWeights 未传 props 的接线 bug，滑块此前改值不生效）；④ **账号/SSH 工具与端点（D34 补齐）**：工具 `git_account_check` / `git_gen_ssh_key` + HTTP 端点 `/api/git-push/account-check`、`/api/git-push/gen-ssh-key`（maskToken/readSshPub/persistSshPub/checkGithubAccount/generateSshKey/formatGithubAccountBlock 迁入 lib/git/index.js）+ test-account-ssh.mjs 13 例 + test-http.mjs Origin 同源 4 例；⑤ **敏感扫描修复（2026-09-12）**：只认真实硬编码凭据——`account: '账号检查'` 等 UI 文案键名不再误判（username 键组移除 account + 值含中文即排除，实测 client.js 由误判 → 0 命中）；扫描到敏感文件**只报告不改动 .gitignore/不解除跟踪**（基线 node_modules 与自定义忽略照常写）｜394 全绿 |
-| **1.0.4**（规则引擎加固 + 侧边栏配置面） | **规则引擎 + 配置面双线**：① **regex 子模式**：patterns 支持对象子模式 `{id, pattern, message}`，命中输出 per-pattern 专属 message；② **performance 槽位**（新）：memory-bomb 7 子模式（全量读入/循环内 push/链式 push/数组展开/无限循环/execSync/大对象序列化）+ busy-wait，push 宽正则 91 假阳性 → 精确子模式降噪；③ **同形字符防再犯（G3）**：lib/rule/homoglyph.js 西里尔/希腊→ASCII 映射表（28 项）+ compileRule 入口拦截 kind/id 同形（с→c/д→d），静默失效 → 显式报错；④ **规则字段全认领（G6）**：旧项目 29 字段逐一核对，scoring→threshold 兜底 / action / suggestions / examples / minLines 走 extra 透传，blacklist 阈值 40→60 真实生效；⑤ **private 槽位**（T1-T33 考古验收）：loader 合并顶层 private_files 13 条 + lib/audit/glob.js（**/*/{a,b} 零依赖 glob→RegExp）+ checkPrivateFiles（git ls-files 全量 × 分级 public→blocker / private→warning），auditFull/auditChanged 双路径接线；⑥ **侧边栏三项（G7）**：审计强度 quick/standard/deep（quick 跳 AST/语义重检查）+ 自定规则目录 auditRuleset（放 yml 即整体替换规则包）+ 权重覆盖 weightOverrides（JSON），三处同步（Config / SETTINGS_SCHEMA / client.js 内联）；⑦ i18n 降噪新增 dsh-skip-i18n 豁免标记；⑧ dual-scan 补旧项目 full-scan 通道；⑨ **真实接线修复（装后实测）**：apply 四段注册 API 全错且静默失效（工具用 `ctx.tools.define`、注入 callback 返回对象而非调 `section()`、HTTP 用 `ctx.http.route`、虚构 `ctx.inject(['slots'])`）→ 全部改为真实 API（`ctx.inject(['tools'])`→`get('tools').register(defineTool(...))` / `systemPrompt.section({name,order,text})` / `webServer.register({kind:'prefix'})`），新增独立接线层 `lib/plugin/index.js` 并以 mock ctx 单测断言「真 API 被调用」；⑩ **git_gen_readme 迁移**（工具 7→8）：`lib/readme-gen/index.js`（模板优先级 template/README.md > readme.yml > 内置兜底；版本表 git log 版本号聚合，补丁并入主版本）+ `lib/readme-templates/readme.yml`；⑪ **.samples 目录豁免**：目录放 0 字节 `.samples` 空文件 → 整目录照常出审计/敏感扫描结果但不构成提交推送拦截（blocker 不算门禁、敏感文件不写 .gitignore）；⑫ **CLI commit 子命令 + force 强推**（对齐 v1 CLI）：`git-sluice commit <repo> -m <msg>`（复用 commitWithAudit，审计独立调用；--push/--no-push/--dry-run/--force/--req-confirm/--json），工具 git_commit_push 与 pushViaSsh 同步支持 force（覆盖远端历史）｜373 全绿 | **regex 子模式 + performance 槽位**：① patterns 支持对象子模式 `{id, pattern, message}`（文档 §13 承诺兑现），命中输出 per-pattern 专属 message；② 新槽位 performance：memory-bomb（7 子模式：全量读入/循环内 push/链式 push/数组展开/无限循环/execSync/大对象序列化）+ busy-wait；③ push 误报降噪：`\.push` 宽正则（91 假阳性）→ 循环内 push + 链式 push 精确子模式；④ test/ 自动豁免补 performance（测试 fixture 含危险模式样本做断言）｜323 全绿 |
-| **1.0.3**（规则包对齐） | **旧项目规则包全量复制 + 3 新槽位 + 同名函数扩展**：① 复制旧项目 9 槽位 86 条规则（nodejs/frontend/npm/version/dsh/comment/structure/private/template），v2 规则从 12 条 → 96 条；② 新槽位 **robustness**（mkdir-before-write 写文件目录保障）、**folder**（文件夹数量审计 4 条：目录总数/单目录文件数/解包特征/.gitignore 覆盖，目录级检查器挂 auditFull）、**i18n**（国际化审计 3 条：硬编码文案 t() 包裹/插值/语言包分文件）；③ 新 kind 按「同名函数 + 注册一行」铁律：**blacklist**（comment 槽位黑名单加分制，24 黑名单+22 白名单+6 附加特征）+ **folder** + **npm-json**（两条旧「命中即提示」死规则改为 JSON 结构化真判定）+ **npm-json**（files 含 lib / js-yaml 已声明依赖即不报）；④ 修复测试暴露的真缺陷：`dsh-skip-sensitive` 对 regex 宽声明的安全类规则豁免失效（17 条假阳性）、func-lines/max-lines 识别中文「函数」名（旧项目 34 条规则误归类）、detectionMethod 顶层展开读取（test-file/locale-file 三处 `rule.extra?` 失效）；⑤ 保留 v2 独有能力（secret-aws-access-key 等合并回 nodejs 槽位防覆盖丢失）；⑥ skill 文档措辞中性化（去除文档中的对话措辞残留，符合 comment 审计规则）+ 新增 docs/DETAILS-EXEMPT-AND-RULES.md 细节权威；⑦ 测试 315→320 断言全绿（含 5 个新 kind 编译断言）｜双扫描 0 blocker（旧项目扫描 v2 区 0 blocker） |
-| **1.0.2**（修 bug） | **测试按入口重组 + 审计健壮性加固**：① 测试一脚本对一入口（test-framework 溶解归位：注册表/装载→规则、评分→评分、豁免→豁免、CLI/同步/打包→自身，test-cli 更名 test-self）；② **G9 匹配器空值崩溃**（`checkRegexRules`/`checkPathRegexRules` 收 `rules=undefined` 抛 `rules is not iterable`）→ `rules \|\| []`；③ **G10 重复串死检测**（tokenizer 产出 `str`/`tmpl`，检查器却过滤 `string`/`number` → 永不命中）→ 按实际类型名收集 + `tmpl` 入列 + 去引号；④ **G11 重复串泛滥**（修复后自审 343 条，多为文档数字/域名词汇）→ 排除 `num`/纯标识符/dotfile/短期望词 + 文档/测试目录豁免 maintainability 检查；⑤ **G12 `node_modules.orig` 入 .gitignore**：`ensureGitignore` 基线忽略 `node_modules/`+`node_modules.orig/`，扫描器跳过该目录（用户定稿）；⑥ 提取 `HINT_QUALITY`/`MSG_REPO_REQUIRED` 常量消除重复字面量；⑦ 审计入口测试 13→33 断言（315 总全绿） |
-| **1.0.1**（修 bug） | **六个真实缺陷修复**：① `summarize` 漏统 error 级（出现「0 blocker 0 warning 但 total=3」矛盾统计）→ error 归拦截级 + notice 单列；② **9 个 kind 死桶**（编译后无人消费，旧项目被批评的同一问题）→ 补 `checkNameLengthAst`/`checkComplexityAst`/`checkNestingDepthAst`/`checkFileLines`/`checkRepeatedStringsAst` 5 个 AST 检查器 + `credential-file`/`min-length`/`max-complexity`/`max-depth`/`max-lines`/`repeated-string`/`min-occurrences`/`semantic` 全接线；③ `[FUNC]-` 规则被 `regex` 抢走（detect 前缀 `/^[FUNC]-/` 是字符集非字面量）→ `/^(\[FUNC\]\|secret)-/`；④ **豁免完全失效**——`checks`/`exempt` 读的键名与编译产出 kind 不一致（`secret` vs `[FUNC]`），全仓统一；⑤ 槽位仍半硬编码（`RULE_SLOTS` 当默认基准）→ 纯动态发现 + `SLOT_ORDER_HINT` 仅排序偏好，放 yml 即生效；⑥ 同步漏真实加载源（只同步 `node_modules/`）→ `detectTargets` 双目标（`local-plugins/` 优先 + `node_modules/`），修旧项目「改动刷新看不到」根因；另加 `capSeverity` 规则 severity 上限约束（规则声明 warning 不得被检查器升为 blocker）｜278 断言全绿 |
-| **1.0.0**（首发） | **DSH 插件接线完成**：lib/index.js（apply + 7 工具注册 + HTTP 鉴权分发 + Config schema）+ client.js（DSH 客户端插件，手写 createElement/零外部资源/开关默认关）+ scripts/sync-plugin.mjs（双副本同步，默认 dry-run）+ cordis.patch.yml + scanRepos；test-plugin 25 + test-client 21 断言（263 总全绿） |
-| **0.2.0** | **链接判断落地**：lib/link-check/index.js（extractLinks 去重去占位符 / gradeResult 分级：404·403→-3、DNS→-2、超时·5xx→-1 / flaky 域名网络错误 ×0.2 / probeLinks 并发受限 / checkLinks 统一问题对象，**只 warning 永不 blocker**）+ audit-rules-docs.yml 槽位（link-check kind）+ CLI `link-check <路径>`；test-link-check 24 断言（233 总全绿） |
-| **0.1.7** | **上下文注入 + HTTP 总入口落地**：lib/http/index.js 纯函数鉴权（checkOrigin 同源判定忽略端口/路径 → 无 Origin/跨源 403、checkWriteConfirm 破坏性操作缺 confirm → 400、checkBodySize 5MB → 413、authPipeline、routeRequest 路由分发、readJsonBody 流式 413 防护）+ lib/context/index.js（createEnvInjectionText/parseEnvInjection/isWithinRoot 防目录穿越）；test-http 30 + test-context 7 断言（190 总全绿）+ 旧项目扫描 0 blocker |
-| **0.1.6** | **豁免总入口落地**：exemptForFinding 注册表驱动统一消费（7 标记全接入，blocked/lineLevel/hint 声明式）+ 位置语义（文件头前 3 行=整文件 / sensitive/func-length/residue 行内单点）+ residue/style 仅代码文件生效 + audit-rules-*.yml 规则定义文件自动豁免自举命中（修复 §2.5 记录的 6 个 debugger 假阳性）；test-exempt 25 断言（153 总全绿）+ v2 自审 0 blocker（98/100 A）+ 旧项目扫描 0 blocker |
-| **0.1.5** | **评分总入口落地**：lib/score/ast.js 轻量 tokenizer（字符串/模板/注释感知）+ AST 质量检查器（checkSyncFs 修 named-import 假阴性、checkEmptyCatchAst 修多行空块、checkFuncLinesAst 精确行数）+ runChecks 接入（func-lines 行数+语句密度互补）+ scoreQuality weights 覆盖；test-quality 31 断言（128 总全绿）+ 旧项目扫描 0 blocker |
-| **0.1.4** | **自身总入口落地**：VERSION 单一事实源 + versionInfo 机器校验（scripts/scan-version.mjs，三处一致）/ readmeTemplate（{{name}} {{version}} {{versionTable}} 占位符渲染）/ yamlTemplate（kind+dimensions 示范）/ helpSync（HELP↔parseArgv 机器比对，防 --depth 类回归）/ parseArgv --depth 缺值报错 / CLI 新增 yaml-template/readme-template/self-check 子命令；test-cli 18 断言（97 总全绿）+ 旧项目扫描 0 blocker |
-| **0.1.3** | **git 总入口落地**：runGit（数组参数零注入）/ resolveToken（三层：显式→env→配置目录/项目 token，格式校验）/ commitAndPush（预检+敏感文件自动 .gitignore+add+commit+push）/ pushViaApi（Git Data API blob→tree→commit→ref，分支免疫，401→pushViaSsh 回退 ssh.github.com:443）/ cloneViaApi（trees+blobs 写文件转 git 仓）/ ensureRemoteRepo（建仓+设 origin，dryRun）/ setVisibility（PATCH）/ githubFetch（api.github.com 硬闸拒 302）+ parseGithubOwnerRepo + isBadCredentials；test-git 35 断言（79 总全绿）+ 旧项目扫描 0 blocker |
-| **0.1.2** | **审计总入口落地**：collector（gitignore 感知 + collectChangedFiles 变动收集）/ checks 全部检查器（regex/path-regex/func-lines 含单行多语句识别/empty-catch）/ auditFile 豁免接线 / auditFull（非 git 可查）/ auditChanged 真 git diff（git status --porcelain，删除文件跳过）/ 统一问题对象 + exemptHint；44 测试全绿 + 旧项目扫描 0 blocker；修 §2.5 patterns→RegExp 卡点 |
-| **0.1.1** | **规则总入口落地**：13 编译函数注册（credential-ref/file/secret/func-lines/6 数值/regex/path-regex/semantic）+ 三统一（kind kebab-case ↔ 函数 ↔ 字段）+ dimensions 声明（一字段多维度）+ 首个 yml 槽位 audit-rules-nodejs.yml（11 条规则示范）+ 未知规则报错不静默；31 测试全绿 |
-| **0.1.0** | **功能框架搭建完毕能跑**：8 入口骨架（规则/审计/git/自身/评分/豁免/上下文）+ cli.mjs 最小可用（version/ruleset/scan/audit + --depth/--full 解析）+ scripts/check.mjs 全量语法检查 + test/test-framework.mjs 16 断言全绿；详细任务看板 docs/WORKBOARD-v2.md（每入口含思路与验收标准） |
-| **0.0.0** | **README 文档（开发计划）**：10 总入口架构确定、统一问题对象确定、版本规范确定、15 条自检问题清单（五份报告已核对）、链接判断规则设计（flaky 域名扣分打折） |
+| **1.1.0**（当前） | **侧边栏三选项卡**（账号信息 / 审计 / 设置）+ **账号面板美化**（渐变卡片 + GitHub 图标 + 状态徽标，设计稿 doc/account-panel-design.html）+ **凭据落盘修复**（persistGithubToken 写插件配置目录 0600 + persistSshPub 写 *.pub，不再只靠 settings.yaml 明文）+ 审计规则包列表（rule-slots meta author + rule-detail 端点）｜438 全绿 |
+| **1.0.14** | 客户端重构（Controller + hooks + 独立 section 页）；修复 scope.use 渲染 TypeError 与 Host 缺 settings.register 两根因；双语取消（纯中文）｜430 全绿 |
+| **1.0.13** | 文件健康度矩阵评分规则（kind=file-health，三维分级加权）｜429 全绿 |
+| **1.0.12** | client.js 结构拆分 ≤400 行（消除 max-function/file-length）｜421 全绿 |
+| **1.0.11** | 修复设置侧边栏空白（apply 崩溃根因）｜421 全绿 |
+| **1.0.10** | 规则 disabled 机制 + 安全红线强制加载 + 缺失兜底｜420 全绿 |
+| **1.0.9** | 8 类真实误报语义修复（npm-json 全仓证据 / timeout 同调用识别 / loader 契约 / exts 过滤等）+ 10 条回归｜418 全绿 |
+| **1.0.8** | 扫描智能提示 + 评分对数衰减（防零分塌陷）｜408 全绿 |
+| **1.0.7** | 硬编码魔数检测（版本号/日期/状态码豁免版）｜— |
+| **1.0.6** | .test 空文件豁免 + button-bind 按钮事件交叉比对｜— |
+| **1.0.5** | 侧边栏账号卡（账号检查/SSH 密钥生成）+ Origin 同源放行 + 评分公式定稿｜394 全绿 |
+| **1.0.4** | 规则引擎加固 + 侧边栏配置面：regex 子模式 / performance 槽位 / private 槽位 / 审计强度三档 / 真实接线修复（apply 四段 API 全错→真实 API）｜373 全绿 |
+| **1.0.3** | 规则包扩充：9 槽位 86 条 + robustness/folder/i18n 新槽位｜320 全绿 |
+| **1.0.2** | 审计健壮性加固（G9-G12：匹配器空值 / 重复串死检测等）｜315 全绿 |
+| **1.0.1** | 六个真实缺陷修复（死桶 / 豁免失效 / 槽位半硬编码等）｜278 全绿 |
+| **1.0.0** | DSH 插件接线完成（apply + 7 工具 + HTTP 鉴权 + client）｜263 全绿 |
+| **0.2.0** | 链接判断落地（link-check kind，分级扣分，flaky 域名打折）｜233 全绿 |
+| **0.1.7** | 上下文注入 + HTTP 总入口（Origin 校验 / CSRF / 5MB 限制）｜190 全绿 |
+| **0.1.6** | 豁免总入口（dsh-skip-* 注册表驱动全消费）｜153 全绿 |
+| **0.1.5** | 评分总入口（AST 质量检查器 + 权重覆盖）｜128 全绿 |
+| **0.1.4** | 自身总入口（VERSION 单一事实源 / README 模板 / helpSync）｜97 全绿 |
+| **0.1.3** | git 总入口（resolveToken 三层探测 / pushViaApi / cloneViaApi / 建仓）｜79 全绿 |
+| **0.1.2** | 审计总入口（auditChanged / auditFull / 豁免接线）｜44 全绿 |
+| **0.1.1** | 规则总入口（13 编译函数 + 首个 yml 槽位）｜31 全绿 |
+| **0.1.0** | 功能框架搭建完毕能跑（8 入口骨架 + CLI + 测试）｜16 全绿 |
+| **0.0.0** | README 文档（开发计划） |
 
 ## 注意事项
 
-- **开发中不推送、不发布**；每次提交前用旧项目（`../dsh-git-push`）扫描自检
+- **审计默认关闭**：提交前自动审计默认不开，由侧边栏开启
 - **规则加载器铁律**：加字段 = 加函数 + 注册一行，`compileRule` 主体永不修改
-- **命名格式统一**：一个功能一个根词，各层（函数/服务字段/工具/路由/yml 段）只做格式转换，对外 API 与函数名完全一致、无别名
-- **审计默认关闭**：审计功能默认不开，由侧边栏设置开启（本项目自身开发中保持一致开启）
+- **命名格式统一**：一个功能一个根词，各层只做格式转换，对外 API 与函数名完全一致
 - **npm 发布完整性**：dependencies（js-yaml 等）显式声明，files 白名单含 cli.mjs，npm test 一条命令可复现
+- **凭据卫生**：token 只写插件配置目录 0600；测试用占位符（`ghp_testtokenplaceholder123`），无真实凭据入库

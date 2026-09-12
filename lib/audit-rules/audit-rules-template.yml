@@ -27,7 +27,7 @@ rules:
   #     bad: "错误示例"
   #     good: "正确示例"
 
-  # ----- v1.55.0 目录结构校验（kind: path-regex——对文件路径跑正则，如复数目录名） -----
+  # ----- 目录结构校验（kind: path-regex——对文件路径跑正则，如复数目录名） -----
   # - id: structure/dir-singular
   #   name: "目录命名统一单数"
   #   category: "maintainability"
@@ -35,14 +35,14 @@ rules:
   #   kind: "path-regex"
   #   pattern: "(?:^|/)(tools|tests|scripts|configs|libs|logs)/"
 
-  # ----- v1.56.0 嵌套深度（kind: max-depth——缩进层级超阈值） -----
+  # ----- 嵌套深度（kind: max-depth——缩进层级超阈值） -----
   # - id: readability/max-nesting-depth
   #   name: "嵌套过深"
   #   category: "readability"
   #   severity: "warning"
   #   max_depth: 3
 
-  # ----- v1.58.0 重复硬编码字符串（kind: repeated-string——字面量出现数 + 白名单豁免） -----
+  # ----- 重复硬编码字符串（kind: repeated-string——字面量出现数 + 白名单豁免） -----
   # - id: security/no-repeated-hardcoded-literals
   #   name: "检测重复出现的硬编码文本"
   #   category: "security"
@@ -88,7 +88,7 @@ output:
   include_code_snippets: true
 
 # ============================================================
-# 注释豁免标记速查（v1.60.0 起 — 每种拦截类型可独立豁免）
+# 注释豁免标记速查（每种拦截类型可独立豁免）
 # ============================================================
 # 位置语义：写在「文件头注释（前 3 行）」= 整个文件豁免该拦截类型；
 # 写在「对应位置注释」= 只豁免该位置（secret 支持行尾单行）。

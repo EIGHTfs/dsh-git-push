@@ -42,7 +42,7 @@ generatedBy: deepseek-official/deepseek-v4-flash + EIGHTfs 2026-08-20（补充�
 - **1.1.0（Y+1）**：**仅当「已知 bug 已全部修完」** 才允许（不是改了点东西就升 1.1.0）
 - **阶段**：当前处于 1.0.x（修 bug 集），1.1.0 是「已知 bug 清零」里程碑
 - **提交纪律**（本项目）：commit msg 格式 `<版本> <入口名>：做了什么`；本地 master 提交，**不推送远端**（除非用户另行授权）
-- **验证门槛**（本项目每次提交前）：npm test 全绿 + 双扫描（v2 自审 + 旧项目扫描）0 blocker + README/WORKBOARD 版本行同步
+- **验证门槛**（本项目每次提交前）：npm test 全绿 + 双扫描 0 blocker + README/WORKBOARD 版本行同步
 
 ### 正反例
 

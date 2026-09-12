@@ -22,13 +22,13 @@ generatedBy: grok-4.6 · 2026-09-07
 
 ## 二、已修掉的反面教材（历史记录）
 
-1. **`git_rebuild_history` `fresh` 把 `package.json` 改成 1.0.0**（v1.x 历史；**v2 无 git_rebuild_history 工具**，重建历史能力未移植，见 WORKBOARD）  
+1. **`git_rebuild_history` `fresh` 把 `package.json` 改成 1.0.0**（历史遗留；当前无 git_rebuild_history 工具，重建历史能力未实现，见 WORKBOARD）  
    教训：「版本不变、覆盖旧提交」= 只重建历史，不是改版本号。fresh 版本号应保持当前 `package.json`。
-2. **`force: true` 不推远端**（v1.x；v2 提交纪律为「不推送」+ 显式授权，force 场景待 design）  
+2. **`force: true` 不推远端**（提交纪律为「不推送」+ 显式授权，force 场景待 design）  
    教训：工具描述写「强制推送」，实现只打 backup tag + 改本地。已授权覆盖远端时必须 force push。
 3. **`git rm -rf .git` 删不掉 `.git` 目录**  
    教训：从索引删路径 ≠ 重建仓库。正确姿势：`checkout --orphan` 保留 remote / backup tag。
-4. **`pushViaApi` 写死 `force: false`**（v1.x `lib/core.js`；v2 在 `lib/git/index.js`）  
+4. **`pushViaApi` 写死 `force: false`**（原 `lib/core.js`；现 `lib/git/index.js`）  
    教训：非快进更新必失败。force 场景必须允许 PATCH `force: true`。
 
 ## 三、流程

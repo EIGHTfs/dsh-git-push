@@ -1,5 +1,5 @@
-# 目录结构规范（本地定制版，v1.55.0）
-# 依据：DeepSeek《项目目录结构规范（最小通用版）v1.0》+ 2026-09-09 本地逐条取舍讨论。
+# 目录结构规范（本地定制版）
+# 依据：DeepSeek《项目目录结构规范（最小通用版）v1.0》+ 本地逐条取舍讨论。
 # 定位：本项目（DSH 插件 / 纯 JS + ESM + 无编译）的目录结构约定——
 #   不是照搬通用规范，而是「取最小集 + 按需扩展 + 统一单数」。
 # 执行：path-regex 规则校验「新增/变更文件的路径」是否违反单数命名（warning 提醒不拦截）；
@@ -16,7 +16,7 @@ metadata:
 decisions:
   - item: "src/"
     keep: false
-    reason: "纯 JS + ESM + 无编译，src/ 无收益（不编译就不需要源码/产物分离）；v1.42.0 已模块化拆分，lib/ 即源码"
+    reason: "纯 JS + ESM + 无编译，src/ 无收益（不编译就不需要源码/产物分离）；已模块化拆分，lib/ 即源码"
   - item: "lib/"
     keep: true
     reason: "DSH 插件生态惯例，lib/ 即核心代码目录（33 个功能模块）；与规范『lib/ 只放第三方适配』语义错位但保留——插件场景下 lib/ 就是 src/"
@@ -86,10 +86,10 @@ directory_roles:
       - "audit.js           - 审计引擎（L0 静态 + 规则执行）"
       - "rule-packs.js      - YAML 规则装载/编译"
       - "audit-rules/       - 规则数据（nodejs/frontend/comment/dsh/npm/version/template/private/structure）"
-      - "readme-templates/  - README 模板 yml（v1.53.0）"
+      - "readme-templates/  - README 模板 yml"
       - "plugin-*.js        - 装配层（host 等价：工具注册/HTTP/设置/审计服务接线）"
       - "client.js viewer.js- 客户端 UI（DSH 命名空间内）"
-    dependencies: "模块间单向依赖、无环（v1.42.0 拆分时保证）；装配层依赖业务模块，业务模块不依赖装配层"
+    dependencies: "模块间单向依赖、无环（拆分时保证）；装配层依赖业务模块，业务模块不依赖装配层"
 
   - name: "test/"
     role: "自动化测试（纯函数级单测）"

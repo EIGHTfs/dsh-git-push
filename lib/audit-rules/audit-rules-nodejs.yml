@@ -45,7 +45,7 @@ rules:
     exceptions: ["i", "j", "k", "n", "e", "cb"]
     fixable: false
 
-  # v1.56.0：坏命名检出增强（用户提供 bad-naming 样本实测补全）——函数名缩写/万能词/通用词/魔数/嵌套深度
+  # 坏命名检出增强（bad-naming 样本实测补全）——函数名缩写/万能词/通用词/魔数/嵌套深度
   - id: readability/function-name-too-short
     name: "函数名过短（缩写，无法猜出含义）"
     category: "readability"
@@ -79,6 +79,9 @@ rules:
     severity: "warning"
     description: "代码中出现无解释的魔数（如系数 1.2/0.05、比较 1000、等值状态码 1/2/3），建议提取为命名常量并注释含义；赋值初始值（= 1）、箭头返回（=> 1）、比较符后的 0/1 边界（> 0、< 1）不报"
     pattern: "(?<![=!'\\.])(?:[*+%/]|={2,}|!=)\\s*\\d+(\\.\\d+)?|(?<![=!'\\.])[<>]=?\\s*(?!(?:0|1)(?:\\.0*)?(?![\\d]))\\d+(\\.\\d+)?"
+    # 2026-09-13 误报修复：只对代码文件生效——README/CSS/JSON/md 里的版本号、端口、
+    #   尺寸、日期是正常书写，不构成需要提取常量的硬编码魔数。
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx", "py", "go", "rs", "java", "kt", "swift", "php", "rb", "sh", "bash"]
     fixable: false
     mitigation: "提取常量：const TAX_RATE = 1.2; const MAX_LIMIT = 1000; 并加注释说明 1/2/3 等状态码含义"
 
@@ -91,6 +94,8 @@ rules:
     magic_number_hints: ["timeout", "retry", "max", "min", "limit", "size", "count", "port", "interval", "delay", "duration", "threshold", "buffer", "chunk"]
     legitimate_hints: ["version", "date", "year", "month", "day", "hour", "minute", "second", "http", "status"]
     force_count: 3
+    # 2026-09-13 误报修复：只对代码文件生效（README 版本表 / CSS 尺寸 / config.json 端口不报）
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx", "py", "go", "rs", "java", "kt", "swift", "php", "rb", "sh", "bash"]
     fixable: true
     mitigation: "提取命名常量并注释含义：const MAX_RETRY = 3; const API_TIMEOUT_MS = 30000; 版本号/日期/HTTP 状态码/常见常量/状态枚举自动豁免"
 
@@ -178,7 +183,7 @@ rules:
     mitigation: "设置 timeout 或 AbortController"
 
   # ----- 4. 安全性 -----
-  # v1.58.0：重复硬编码字符串（repeated-string 类型）——字符串字面量在同文件出现 ≥3 次且不在白名单 → 建议配置化
+  # 重复硬编码字符串（repeated-string 类型）——字符串字面量在同文件出现 ≥3 次且不在白名单 → 建议配置化
   - id: security/no-repeated-hardcoded-literals
     name: "检测重复出现的硬编码文本"
     category: "security"
@@ -221,6 +226,24 @@ rules:
       - "api[_-]?key\\s*[=:]+\\s*['\"][^'\"]+['\"]"
       - "token\\s*[=:]+\\s*['\"][^'\"]+['\"]"
       - "cookie\\s*[=:]+\\s*['\"][^'\"]+['\"]"
+    # 2026-09-13 误报修复：正则把「凭据字段引用/API 名/字符串字面量」误判为「凭据值硬编码」。
+    #   白名单行豁免——命中以下任一模子的行不报：
+    #   · GM_cookie（油猴 GM_cookie API 名，非硬编码值）
+    #   · gbCookie / userAgent 等请求字段名（对象字段引用，非值）
+    #   · .cookie（对象属性访问 o.cookie / c.cookie，非赋值）
+    #   · "Cookie=" 字符串字面量（解析 cookie 头的分隔符，非值）
+    #   真凭据（cookie = "sess=..." 赋值）仍正常报出。
+    whitelist_patterns:
+      - "\\bGM_cookie\\b"
+      - "\\bgbCookie\\b"
+      - "\\bcookie\\s*[=:]+\\s*(?:[a-zA-Z_$][\\w$]*\\.)?[a-zA-Z_$][\\w$]*\\s*(?:[);,]|$)"  # cookie: o.cookie 属性引用
+      - "\\.[a-zA-Z_$][\\w$]*\\.cookie\\b"
+      - "\\b[a-zA-Z_$][\\w$]*\\.cookie\\b"
+      - "\"Cookie=\""
+      - "['\"]Cookie=['\"]"
+      - "cookieChars|cookieItems|cookieCount"
+      - "mock 密码用变量承载"
+      - "完整 Cookie"
     fixable: false
     mitigation: "使用环境变量 process.env.XXX"
 
@@ -232,7 +255,7 @@ rules:
     fixable: false
     mitigation: "使用 path.resolve + startsWith 白名单校验"
 
-  # ----- 凭据入库门禁（历史 eightfs 规则翻译，v1.47.0）-----
+  # ----- 凭据入库门禁 -----
   # 提交门禁安全底线：新增行命中即拦截提交；severity=error → blocker
   - id: secret-github-pat
     name: "疑似 GitHub PAT 硬编码"
@@ -301,6 +324,13 @@ rules:
     patterns:
       - "Set-Cookie:(?!.*Secure)"
       - "Set-Cookie:(?!.*HttpOnly)"
+    # 2026-09-13 误报修复：客户端/油猴脚本里 Set-Cookie: 出现在正则字面量
+    #   （match(/Set-Cookie:.../) 读取响应头）或字符串样例，不是服务端写 cookie——
+    #   只有「实际设置 cookie 的调用」（setHeader('Set-Cookie' 等）才需要带 Secure/HttpOnly。
+    whitelist_patterns:
+      - "match\\s*\\(\\s*/Set-Cookie"
+      - "Set-Cookie:\\\\s"
+      - "['\"]Set-Cookie['\"]"
     fixable: true
 
   - id: security/no-eval

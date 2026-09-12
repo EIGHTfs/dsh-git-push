@@ -203,6 +203,42 @@ test('HTTP：tools 端点列出工具', async () => {
   assert.equal(r.body.tools.length, listTools().length);
 });
 
+test('HTTP：rule-slots 端点动态发现全部 yml（模板不入 order）+ disabled 标记来自配置', async () => {
+  const cfg = { auditRuleOrder: [], auditDisabledSlots: ['comment'] };
+  const r = await handleHttp({ method: 'GET', url: '/api/git-push/rule-slots' }, { workspaceRoot: ROOT }, cfg);
+  assert.equal(r.status, 200);
+  const slots = r.body.slots;
+  assert.ok(slots.order.length >= 14, `order 应含全部非模板槽位（${slots.order.length}）`);
+  assert.ok(!slots.order.includes('template'), '模板不应进入 order（模板不显示）');
+  assert.equal(slots.meta.comment.disabled, true, 'comment 应带 disabled 标记');
+  assert.equal(slots.meta.nodejs.disabled, false, 'nodejs 安全红线不可禁用');
+  assert.ok(slots.meta.nodejs.stats, 'meta 应带 stats（前端免展开直显）');
+  assert.ok(slots.meta.nodejs.stats.blocker > 0, 'nodejs stats 应有拦截数');
+  // 并发：同时请求 rule-detail 不应再被前端依赖（仅保留端点）
+  const detail = await handleHttp({ method: 'GET', url: '/api/git-push/rule-detail?slot=nodejs' }, { workspaceRoot: ROOT }, cfg);
+  assert.equal(detail.status, 200, 'rule-detail 端点保留（向后兼容）');
+});
+
+test('HTTP：account-check 用配置的 cfg.githubToken（不落回配置文件旧凭据）', async () => {
+  // 隔离 DSH_HOME：目录为空 → resolveToken() 读不到任何文件 token；
+  // 若端点没接 cfg.githubToken，这里会落到「无凭据」分支，不会出现 Bad credentials。
+  const prev = process.env.DSH_HOME;
+  const home = mkdtempSync(join(tmpdir(), 'vp-acc-'));
+  process.env.DSH_HOME = home;
+  try {
+    // cfg.githubToken 显式给出（无效格式的值也会按「检测失败/Bad credentials」返回，但不会读文件）
+    const cfg = { githubToken: 'ghp_testtokenplaceholder123' };
+    const r = await handleHttp({ method: 'GET', url: '/api/git-push/account-check' }, { workspaceRoot: ROOT }, cfg);
+    assert.equal(r.status, 200);
+    assert.equal(r.body.cred.hasToken, true, 'cfg.githubToken 应作为 token 传入（hasToken=true）');
+    assert.equal(r.body.cred.tokenMasked.includes('ghp_testtokenplaceholder123') === false, true, 'token 应脱敏');
+    assert.ok(r.body.block, '应有可读块');
+  } finally {
+    if (prev === undefined) delete process.env.DSH_HOME; else process.env.DSH_HOME = prev;
+    try { rmSync(home, { recursive: true, force: true }); } catch { /* noop */ }
+  }
+});
+
 // ---------- 双副本同步 ----------
 
 // ---------- 1.0.4：package.json 的 dsh 装载契约（缺失→插件装上即失效） ----------
@@ -244,7 +280,7 @@ test('commitWithAudit：非 git 仓库不崩且带审计摘要', async () => {
   assert.equal(r.blocked, undefined, '放行路径不设 blocked（仅拦截时 blocked=true）');
 });
 
-// D16 commitMany：批量提交（对齐 v1 commitMany；不含审计门禁）
+// D16 commitMany：批量提交（不含审计门禁）
 test('commitMany：逐仓返回结果数组（含非 git 仓库错误）', async () => {
   const results = await commitMany({
     repos: [ROOT, '/nonexistent-abc'],

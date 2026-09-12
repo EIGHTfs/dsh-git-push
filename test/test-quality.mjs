@@ -39,7 +39,7 @@ test('sync-fs：fs 前缀调用在 async 函数内命中', () => {
   assert.equal(hits[0].via, 'fs-prefix');
 });
 
-test('sync-fs：named import 直调在 async 内命中（旧项目假阴性）', () => {
+test('sync-fs：named import 直调在 async 内命中', () => {
   const hits = checkSyncFs('import { readFileSync, writeFileSync } from "node:fs";\nasync function a() { readFileSync("x"); }');
   assert.equal(hits.length, 1);
   assert.equal(hits[0].call, 'readFileSync');
@@ -82,7 +82,7 @@ test('empty-catch：单行空 catch 命中', () => {
   assert.equal(hits.length, 1);
 });
 
-test('empty-catch：多行空 catch 命中（旧项目假阴性）', () => {
+test('empty-catch：多行空 catch 命中', () => {
   const hits = checkEmptyCatchAst('try {\n  a();\n} catch (e) {\n\n}');
   assert.equal(hits.length, 1);
 });
@@ -148,10 +148,10 @@ test('坏样本文件：三类质量检查 100% 检出（同 fixture 锚定）',
   const bad = [
     'import { readFileSync } from "node:fs";',
     'async function load() {',
-    '  const s = readFileSync("/etc/passwd");', // named-import sync（旧项目漏）
+    '  const s = readFileSync("/etc/passwd");', // named-import sync
     '  try {',
     '    fs.readdirSync(".");',                 // fs-prefix sync
-    '  } catch (err) {',                        // 多行空 catch（旧项目漏）
+    '  } catch (err) {',                        // 多行空 catch
     '    ',
     '  }',
     '}',

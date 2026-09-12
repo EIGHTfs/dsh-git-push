@@ -214,6 +214,6 @@ test('常量：写/读方法集合正确', () => {
   assert.ok(READ_METHODS.has('OPTIONS'));
 });
 
-test('常量：5MB 上限精确（旧项目 A5 教训）', () => {
+test('常量：5MB 上限精确', () => {
   assert.equal(MAX_BODY_BYTES, 5 * 1024 * 1024);
 });

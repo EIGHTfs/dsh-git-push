@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 
 import '../lib/rule/compilers.js'; // 副作用导入：注册编译函数
 import { registerCompiler, compileRule, compileAllRules, RULE_COMPILERS } from '../lib/rule/registry.js';
-import { loadRuleFiles, RULE_SLOTS, resolveSlotOrder, discoverRuleSlots } from '../lib/rule/loader.js';
+import { loadRuleFiles, RULE_SLOTS, resolveSlotOrder, discoverRuleSlots, setSlotDisabled } from '../lib/rule/loader.js';
 import { safeRe } from '../lib/rule/compilers.js';
 
 test('注册表：编译函数已注册（含 credential-ref / credential-file / [FUNC]）', () => {
@@ -101,11 +101,11 @@ test('装载：nodejs 槽位 yml 已落地，编译全部成功', () => {
   assert.equal(r.files.length, 1, 'nodejs 文件应成功加载');
 });
 
-test('装载：nodejs 槽位全量编译（1.0.3 复制旧项目 34 条 + v2 独有能力）', () => {
+test('装载：nodejs 槽位全量编译（34 条 + 独有能力）', () => {
   const r = loadRuleFiles(['nodejs']);
   const ctx = { errors: [] };
   const compiled = compileAllRules(r.merged.rules, ctx);
-  assert.ok(compiled.length >= 34, `编译 ${compiled.length} 条（应 ≥ 旧项目 34 条）`);
+  assert.ok(compiled.length >= 34, `编译 ${compiled.length} 条（应 ≥ 34 条）`);
   assert.equal(ctx.errors.length, 0, `errors: ${ctx.errors.join('; ')}`);
   for (const c of compiled) {
     assert.ok(Array.isArray(c.dimensions) && c.dimensions.length > 0, `${c.id} 缺 dimensions`);
@@ -118,7 +118,7 @@ test('编译统计：关键 kind 齐全 + 全部带维度（1.0.3 规则包扩�
   const compiled = compileAllRules(r.merged.rules, { errors: [] });
   const byKind = {};
   for (const c of compiled) byKind[c.kind] = (byKind[c.kind] || 0) + 1;
-  // 关键 kind 必须存在（1.0.3 契约：旧项目规则全接线 + v2 独有能力保留）
+  // 关键 kind 必须存在（规则全接线 + 独有能力保留）
   assert.ok(byKind['[FUNC]'] >= 1, '[FUNC] 应有 secret-* 规则');
   assert.ok(byKind['credential-file'] >= 1, 'credential-file 应有');
   assert.ok(byKind['func-lines'] >= 1, 'func-lines 应有（中文「函数」识别）');
@@ -303,7 +303,10 @@ test('1.0.3：npm-json kind 编译（结构化判定取代弱 pattern）', () =>
 });
 
 test('1.0.3：i18n 槽位编译（国际化审计 3 条）', () => {
-  const r = loadRuleFiles(['i18n']);
+  // 2026-09-13（yml 为准）：i18n 默认 disabled → 临时删 disabled 行（启用），测完写回（还原禁用）
+  setSlotDisabled('i18n', false); // 启用
+  let r;
+  try { r = loadRuleFiles(); } finally { setSlotDisabled('i18n', true); } // 还原禁用
   const compiled = compileAllRules(r.merged.rules, { errors: [] });
   assert.ok(compiled.length >= 3, `i18n 槽位应 ≥3 条（得 ${compiled.length}）`);
   assert.ok(compiled.some((c) => c.id === 'i18n/hardcoded-user-visible'), '硬编码文案规则');

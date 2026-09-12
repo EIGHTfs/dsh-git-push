@@ -58,7 +58,7 @@ rules:
         weight: 15
       - pattern: "人工要求"
         weight: 25
-      # ----- 历史提交门禁措辞保留（v1.47.0 从 eightfs JSON 翻译；权重 40 与「用户指示/用户原话」同档进门禁）-----
+      # ----- 历史提交门禁措辞保留（权重 40 与「用户指示/用户原话」同档进门禁）-----
       - pattern: "用户要求"
         weight: 40
       - pattern: "用户说"
@@ -152,7 +152,7 @@ rules:
       - "建议将对话元数据迁移到 Git commit message 或外部文档"
       - "若注释确实需要保留，可改为 `// NOTE: ...` 格式并增加业务上下文"
 
-  # ----- 文档对话残留门禁（v1.47.0 从 eightfs JSON 翻译；doc-conversation 类，blocker）-----
+  # ----- 文档对话残留门禁（doc-conversation 类，blocker）-----
   - id: conv-session-ref
     name: "文档引用会话"
     category: "documentation"

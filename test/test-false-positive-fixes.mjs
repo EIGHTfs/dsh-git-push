@@ -19,7 +19,7 @@ import { tmpdir } from 'node:os';
 import '../lib/rule/compilers.js';
 import { auditFull } from '../lib/audit/index.js';
 import { checkPatchInsert, filterRulesByExt, checkSemantic, runChecks, groupByKind } from '../lib/audit/checks.js';
-import { loadRuleFiles, isForceLoadRule, FORCE_LOAD_FALLBACK } from '../lib/rule/loader.js';
+import { loadRuleFiles, isForceLoadRule, FORCE_LOAD_FALLBACK, setSlotDisabled } from '../lib/rule/loader.js';
 import { compileAllRules } from '../lib/rule/registry.js';
 import { isVersionInPathContext, hasExternalCallTimeout, hasMkdirInSameFunction, detectRepoJsYamlImport } from '../lib/audit/index.js';
 
@@ -131,7 +131,12 @@ test('④ concat-in-t：split(\'{\'+\'k\' 的 t( 不误匹配（词边界）', (
 
 import { checkRegexRules } from '../lib/audit/checks.js';
 function checkRegexRulesSafe() {
-  const loaded = loadRuleFiles(['i18n']);
+  // 2026-09-13（yml 为准）：参数显式列出不再强制加载 → 临时删 i18n 的 disabled 行（启用），测完写回（还原禁用）
+  const orig = loadRuleFiles([]);
+  setSlotDisabled('i18n', false); // 启用
+  let loaded;
+  try { loaded = loadRuleFiles(); } finally { setSlotDisabled('i18n', true); } // 还原禁用
+  void orig;
   const compiled = compileAllRules(loaded.merged.rules, { errors: [] });
   const g = groupByKind(compiled);
   const findings = checkRegexRules({ file: 'x.js', text: "const s = t('a' + b);\n", rules: g['regex'] });
@@ -203,15 +208,16 @@ test('detectRepoJsYamlImport：import/require 证据识别', async () => {
   assert.equal(detectRepoJsYamlImport(clean), false, '无 js-yaml 引用不应识别');
 });
 
-test('disabled 机制：文件级默认关 i18n / 显式列出强制加载 / 规则级单条过滤', () => {
+test('disabled 机制：文件级默认关 i18n / 仅环境变量显式列出强制加载 / 规则级单条过滤', () => {
   // ① 文件级：i18n yml 顶层 disabled:true → 默认 loadRuleFiles 不加载 i18n 规则
   const def = loadRuleFiles();
   assert.equal(def.merged.rules.filter((r) => /^i18n\//.test(r.id || '')).length, 0,
     'i18n 槽位默认 disabled 不应加载');
-  // ② 显式列出（参数或环境变量）→ 强制加载
+  // ② 2026-09-13（yml 为准）：参数显式列出 **不再**强制加载（auditRuleOrder 是顺序不是强制名单）；
+  //    只有环境变量 DSH_GIT_PUSH_RULE_SLOTS 才是强制名单。
   const exp = loadRuleFiles(['i18n']);
-  assert.ok(exp.merged.rules.filter((r) => /^i18n\//.test(r.id || '')).length > 0,
-    '显式列出 i18n 应强制加载');
+  assert.equal(exp.merged.rules.filter((r) => /^i18n\//.test(r.id || '')).length, 0,
+    '参数显式列出不再强制加载（yml disabled 为准）');
   const prev = process.env.DSH_GIT_PUSH_RULE_SLOTS;
   process.env.DSH_GIT_PUSH_RULE_SLOTS = 'i18n';
   try {
@@ -299,3 +305,22 @@ test('强制加载：安全红线（nodejs 槽位/secret/cred/security 规则）
     try { rmSync(missDir, { recursive: true, force: true }); } catch { /* noop */ }
   }
 });
+
+test('UI 禁用槽位（auditDisabledSlots）：普通槽位整包过滤 / nodejs-private 安全红线不可禁用', () => {
+  // ① 禁用 comment：规则数减少（comment 槽位规则全部不加载）
+  const base = loadRuleFiles();
+  const ui = loadRuleFiles(null, { disabledSlots: ['comment'] });
+  assert.ok(base.merged.rules.length > ui.merged.rules.length, '禁用 comment 后规则数应减少');
+  // ② 禁用 nodejs/private（安全红线 FORCE_LOAD_SLOTS）：规则与私密清单不受影响
+  const forceNodejs = loadRuleFiles(null, { disabledSlots: ['nodejs'] });
+  assert.ok(forceNodejs.merged.rules.length >= base.merged.rules.length - 10,
+    `禁用 nodejs 不应清空规则（${forceNodejs.merged.rules.length} vs ${base.merged.rules.length}）`);
+  const forcePrivate = loadRuleFiles(null, { disabledSlots: ['private'] });
+  assert.ok(forcePrivate.merged.private_files.length > 0, '禁用 private 后私密清单仍应保留（安全红线）');
+  // ③ 空数组 / 非数组：不崩、等同不传
+  const empty = loadRuleFiles(null, { disabledSlots: [] });
+  assert.equal(empty.merged.rules.length, base.merged.rules.length, '空禁用数组应等同默认');
+  const weird = loadRuleFiles(null, { disabledSlots: 'comment' });
+  assert.equal(weird.merged.rules.length, base.merged.rules.length, '非数组禁用值应忽略');
+});
+

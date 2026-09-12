@@ -2,7 +2,7 @@
 // dsh-skip-residue: 测试 fixture 含 debugger 关键词样本（规则定义示范文本）
 /**
  * 豁免总入口测试（0.1.6）：7 标记全消费 + 位置语义（文件头整文件 / 行内单点）逐类验证。
- * 场景对照：旧项目 12 个豁免场景（文件头 sensitive/size/func-length/syntax/quality/residue/style
+ * 场景对照：12 个豁免场景（文件头 sensitive/size/func-length/syntax/quality/residue/style
  * + 行尾 sensitive/residue/func-length 单点 + 豁免不越权 + 未豁免照常报）。
  */
 import { test } from 'node:test';
@@ -210,7 +210,7 @@ test('exemptHintFor：未知 kind 给默认敏感提示', () => {
   assert.ok(exemptHintFor('unknown-kind').includes('dsh-skip-sensitive'));
 });
 
-// ---------- 12 场景计数（对照旧项目场景矩阵） ----------
+// ---------- 12 场景计数 ----------
 test('场景矩阵：整文件 8 标记 + 行级 4 标记 = 12+ 场景全覆盖', () => {
   const headerMarkers = ['dsh-skip-sensitive', 'dsh-skip-size', 'dsh-skip-func-length', 'dsh-skip-syntax', 'dsh-skip-quality', 'dsh-skip-residue', 'dsh-skip-style', 'dsh-skip-i18n'];
   const lineMarkers = Object.entries(EXEMPT_MARKERS).filter(([, m]) => m.lineLevel).map(([k]) => k);
