@@ -1,0 +1,159 @@
+# 目录结构规范（本地定制版，v1.55.0）
+# 依据：DeepSeek《项目目录结构规范（最小通用版）v1.0》+ 2026-09-09 本地逐条取舍讨论。
+# 定位：本项目（DSH 插件 / 纯 JS + ESM + 无编译）的目录结构约定——
+#   不是照搬通用规范，而是「取最小集 + 按需扩展 + 统一单数」。
+# 执行：path-regex 规则校验「新增/变更文件的路径」是否违反单数命名（warning 提醒不拦截）；
+#   目录缺失/依赖方向等结构性约定由人/AI 遵守（详见 directory_roles 与 dependency_rules）。
+metadata:
+  name: 目录结构规范（本地定制版）
+  author: EIGHTfs
+  version: "1.0.0"
+  description: "dsh-git-push 目录结构取舍结论：lib/ 平铺即源码（不引入 src/）、docs/ skills/ 保留、无 script/config/dist/log 空目录；统一单数命名（tool/ test/ doc/，不用 tools/ tests/ docs/）"
+
+# ============================================================
+# 一、取舍结论（2026-09-09 逐条讨论后定稿）
+# ============================================================
+decisions:
+  - item: "src/"
+    keep: false
+    reason: "纯 JS + ESM + 无编译，src/ 无收益（不编译就不需要源码/产物分离）；v1.42.0 已模块化拆分，lib/ 即源码"
+  - item: "lib/"
+    keep: true
+    reason: "DSH 插件生态惯例，lib/ 即核心代码目录（33 个功能模块）；与规范『lib/ 只放第三方适配』语义错位但保留——插件场景下 lib/ 就是 src/"
+  - item: "tool/ 独立目录"
+    keep: false
+    reason: "cli.mjs 留根级（package.json bin 指向）+ lib/plugin-tools.js 单文件（9 工具 286 行）够用；到 30+ 工具再拆 tool/"
+  - item: "test/ 分层（unit/integration/e2e/fixture）"
+    keep: false
+    reason: "纯函数级单测无 unit/integration 实质分界；14 个 test-<module>.mjs 平铺，找测试=找模块；fixture 多了再收 test/fixture/"
+  - item: "doc/ 单数"
+    keep: false
+    reason: "现有 docs/（复数）已建立索引习惯，改名纯成本；新增目录一律单数，存量 docs/ 作为历史约定保留"
+  - item: "script/ config/ dist/ log/"
+    keep: false
+    reason: "无构建步骤（源码即产物）；配置走 settings 机制 + lib/ 内 yml 规则数据（audit-rules/ readme-templates/ 同源部署，不抽顶层）"
+  - item: "skills/"
+    keep: true
+    reason: "DSH 插件特性：注入给 AI 的手册（dsh-git-push.md / dsh-git-push-functions.md / git-workflow-gitpush/），通用规范未覆盖"
+  - item: "client/ 独立目录（fullstack 场景）"
+    keep: false
+    reason: "DSH 客户端插件必须挂固定命名空间，不能自由放 client/；前端在 lib/client.js + lib/viewer.js 内"
+
+# ============================================================
+# 二、核心原则
+# ============================================================
+principles:
+  - "一致性优先于花哨：同类文件放同目录，同目录命名风格统一"
+  - "统一单数：所有功能目录用单数（tool/、test/、doc/、lib/），不用复数（tools/、tests/、docs/、libs/）"
+  - "工具与源码同库：cli.mjs 根级 + lib/plugin-tools.js 注册 agent 工具，不建空 tool/ 目录"
+  - "规则数据随代码：audit-rules/*.yml、readme-templates/*.yml 放 lib/ 子目录（files 白名单 + 相对路径解析依赖）"
+  - "最小可用：不预设未来需求，目录按需添加"
+
+# ============================================================
+# 三、目录清单（单数标准 + 复数禁止）
+# ============================================================
+naming:
+  standard_singular:
+    - "lib/"        # 核心代码（本项目语义：即 src/）
+    - "test/"       # 测试（test-<module>.mjs 平铺）
+    - "doc/"        # 文档标准名（本项目存量用 docs/，新目录用 doc/）
+    - "tool/"       # 工具标准名（当前未建独立目录，cli.mjs 根级 + lib/plugin-tools.js）
+    - "script/"     # 运维脚本（当前无）
+    - "config/"     # 非代码配置（当前无，配置走 settings）
+    - "dist/"       # 构建产物（当前无）
+    - "log/"        # 日志（当前无）
+  forbidden_plural:
+    - "tools/"
+    - "tests/"
+    - "libs/"
+    - "docs/"       # 存量例外：现有 docs/ 保留不报；新目录禁止再建复数 docs/
+    - "scripts/"
+    - "configs/"
+  allowed_legacy:
+    - "docs/"       # 历史约定（任务清单/检查清单所在），不再新增兄弟复数目录
+
+# ============================================================
+# 四、各目录职责（本地实际）
+# ============================================================
+directory_roles:
+  - name: "lib/"
+    role: "全部业务代码（平级模块化，等价规范 src/core + src/host + src/shared 合并）"
+    contents:
+      - "core.js            - 门面 re-export（13 模块，0 import，等价 shared 无依赖层）"
+      - "git-core.js        - git 基础执行"
+      - "github-api.js      - GitHub API 访问（Git Data API / SSH 回退）"
+      - "commit-push.js     - 提交推送编排"
+      - "audit.js           - 审计引擎（L0 静态 + 规则执行）"
+      - "rule-packs.js      - YAML 规则装载/编译"
+      - "audit-rules/       - 规则数据（nodejs/frontend/comment/dsh/npm/version/template/private/structure）"
+      - "readme-templates/  - README 模板 yml（v1.53.0）"
+      - "plugin-*.js        - 装配层（host 等价：工具注册/HTTP/设置/审计服务接线）"
+      - "client.js viewer.js- 客户端 UI（DSH 命名空间内）"
+    dependencies: "模块间单向依赖、无环（v1.42.0 拆分时保证）；装配层依赖业务模块，业务模块不依赖装配层"
+
+  - name: "test/"
+    role: "自动化测试（纯函数级单测）"
+    contents:
+      - "test-<module>.mjs   - 按被测模块命名（audit/core/rule-packs/cli/quality/viewer... 11 套件 476 断言）"
+    dependencies: "对应 lib/ 模块结构"
+
+  - name: "docs/"
+    role: "文档（存量复数，历史约定保留）"
+    contents:
+      - "任务清单 / code-quality-checklist.yaml / 方案模板"
+    dependencies: "无"
+
+  - name: "skills/"
+    role: "注入给 AI 的手册（DSH 插件特性）"
+    contents:
+      - "dsh-git-push.md / dsh-git-push-functions.md / task-completion-report.md / git-workflow-gitpush/"
+    dependencies: "无"
+
+# ============================================================
+# 五、根目录文件
+# ============================================================
+root_files:
+  - name: "package.json"
+    required: true
+    description: "项目元信息与依赖（files 白名单：lib/skills/docs/cordis.patch.yml）"
+  - name: "README.md"
+    required: true
+    description: "项目说明（含版本记录表）"
+  - name: ".gitignore"
+    required: true
+    description: "忽略规则"
+  - name: "cli.mjs"
+    required: true
+    description: "CLI 入口（package.json bin: git-sluice）"
+  - name: "cordis.patch.yml"
+    required: true
+    description: "DSH 插件配置（插件根）"
+  - name: ".env.example"
+    required: false
+    description: "环境变量模板（当前无，配置走 settings）"
+
+# ============================================================
+# 六、依赖方向规则（已满足，防未来破坏）
+# ============================================================
+dependency_rules:
+  - "core.js（门面） → 各业务模块（git-core/github-api/repo-scan/...）"
+  - "plugin-*.js（装配层） → 业务模块（单向，业务模块不依赖装配层）"
+  - "audit.js → rule-packs.js → audit-rules/*.yml（规则数据单向）"
+  - "禁止: 业务模块 → 装配层（plugin-*）；装配层只在注册/接线时引用业务模块"
+  - "禁止: 规则 yml 依赖代码；代码引擎不得依赖具体规则内容（数据驱动）"
+
+# ============================================================
+# 七、机器执行：单数命名校验（path-regex，warning 提醒不拦截）
+# ============================================================
+# kind: path-regex——对新增/变更文件的路径匹配；命中复数目录名 → warning。
+# 注意：docs/ 是存量允许例外（allowed_legacy），不在此拦截。
+rules:
+  - id: structure/dir-singular
+    name: "目录命名统一单数（复数禁止）"
+    category: "maintainability"
+    severity: "warning"
+    kind: "path-regex"
+    description: "功能目录统一单数（tool/ test/ doc/ lib/），复数（tools/ tests/ docs/ scripts/ configs/ libs/）违反一致性原则"
+    pattern: "(?:^|/)(tools|tests|scripts|configs|libs|logs)/"
+    fixable: false
+    mitigation: "目录改单数：tools/→tool/、tests/→test/、scripts/→script/、configs/→config/、libs/→lib/、logs/→log/"

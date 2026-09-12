@@ -112,7 +112,7 @@ test('组件：enum 渲染选项齐全', () => {
   const react = mockReact();
   createSettingsCard(react, {});
   const opts = react.calls.filter((c) => c.type === 'option').map((c) => c.props.value);
-  assert.deepEqual(opts.sort(), ['diff', 'full']);
+  assert.deepEqual(opts.sort(), ['deep', 'diff', 'full', 'quick', 'standard']);
 });
 
 test('源码：不含 JSX 语法（无 <Tag> 形式）', () => {

@@ -1,0 +1,58 @@
+# dsh-skip-sensitive: 规则定义文件含符号示范文本（fs.readFileSync / push / while 等）
+# dsh-skip-residue: 规则定义文件含 console/while(true) 模式串示范（规则定义本身）
+# dsh-git-push 审计规则（performance 槽位，1.0.4 beta）
+# 性能审计：内存爆炸 / 无界增长等高成本代码模式（子模式规则示范，文档 §13）。
+# 规则类型由编译函数按字段自动指派；patterns 条目支持对象子模式（id/pattern/message）。
+# dimensions：10 维度绑定，支持一字段多维度。
+metadata:
+  name: "性能审计规则（memory-bomb 示范落地）"
+  version: "1.0.4"
+
+rules:
+  # ── 内存爆炸检测（文档 §13 示例规则落地：子模式 + per-pattern message）──
+  - id: performance/memory-bomb
+    name: "检测可能导致内存爆炸的代码"
+    category: "performance"
+    severity: "warning"
+    description: "短时间内占用大量内存的代码模式"
+    patterns:
+      - id: full-file-read
+        pattern: "fs\\.(readFileSync|readFile)\\s*\\("
+        message: "全量读入文件可能占用大量内存，建议用流式处理"
+      - id: unbounded-push
+        pattern: "(for|while)\\s*\\([^)]*\\)\\s*\\{[^}]*\\.push\\s*\\([^)]*\\)"
+        message: "循环内 push 无界累积（可能内存增长失控），检查是否有清理机制或上限"
+      - id: chained-push
+        pattern: "\\.push\\s*\\([^)]*\\)\\s*\\.push"
+        message: "链式 push 连续追加（警惕无界累积），确认有上限控制"
+      - id: array-spread
+        pattern: "\\[\\s*\\.\\.\\.\\w+\\s*,\\s*\\.\\.\\.\\w+\\s*\\]"
+        message: "展开多个大数组会一次性创建新数组"
+      - id: infinite-loop
+        pattern: "while\\s*\\(\\s*true\\s*\\)"
+        message: "无限循环需确认有 break 条件和内存控制"
+      - id: exec-sync
+        pattern: "execSync\\s*\\("
+        message: "execSync 输出全部进内存，建议用 spawn + 流"
+      - id: json-stringify-large
+        pattern: "JSON\\.stringify\\s*\\([^)]{50,}\\)"
+        message: "大对象序列化会瞬间产生等量字符串"
+    fixable: false
+    mitigation: |
+      - 大文件用 fs.createReadStream 流式处理
+      - 数组累积加 maxLength 上限，超出时丢弃旧数据
+      - 缓存加 TTL 或 LRU 淘汰机制
+      - 递归加深度限制
+      - 子进程用 spawn + 流式读取
+
+  # ── 无界循环 / 高 CPU 轮询（性能补充）──
+  - id: performance/busy-wait-loop
+    name: "忙等待循环（高 CPU 空转）"
+    category: "performance"
+    severity: "warning"
+    description: "while 空循环 / 同步轮询会占满 CPU 核心，建议用 setTimeout/async 等待"
+    patterns:
+      - "while\\s*\\(\\s*[^)]*true[^)]*\\s*\\)\\s*\\{\\s*\\}"
+      - "for\\s*\\([^)]*;[^)]*;[^)]*\\)\\s*\\{\\s*\\}"
+    fixable: false
+    mitigation: "等待用 setTimeout / async sleep，轮询加间隔与超时"

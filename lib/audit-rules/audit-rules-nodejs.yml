@@ -1,15 +1,355 @@
-# dsh-skip-sensitive: 规则定义文件含凭据正则示范文本（AKIA/token 等非真实凭据）
-# dsh-skip-residue: 规则定义文件含 debugger/console 模式串示范（style-debugger 规则定义本身）
-# dsh-skip-style: 规则定义文件含 style-* 规则定义示范
-# dsh-git-push 审计规则（nodejs 槽位）
-# 规则类型由编译函数按字段自动指派（显式 kind 可选，写法见各规则）。
-# dimensions：10 维度绑定（可读性/可维护性/健壮性/安全性/性能/测试覆盖/可观测性/可部署性/文档/开发者体验），支持一字段多维度。
+# ============================================================
+# Node.js 后端代码审计规则集
+# 作者：DeepSeek
+# 版本：1.0.0
+# 适用：Node.js / JavaScript / TypeScript 后端项目
+# 描述：基于优秀代码评估标准转换的自动化审计规则
+# 最后更新：2026-09-08
+# ============================================================
+
 metadata:
-  name: "nodejs 审计规则（v2 示范槽位）"
-  version: "0.0.0"
+  name: "Node.js 后端审计规则集"
+  version: "1.0.0"
+  language: "javascript"
+  author: "DeepSeek"
+  description: "覆盖命名规范、代码结构、安全性、健壮性、性能、测试、依赖等维度"
+  last_updated: "2026-09-08"
 
 rules:
-  # ── 凭据类（id 前缀 credref- / credfile- / secret- 自动指派）──
+  # ----- 1. 可读性 -----
+  - id: readability/function-name-camelcase
+    name: "函数名使用 camelCase"
+    category: "readability"
+    severity: "warning"
+    description: "函数名应使用 camelCase 命名规范"
+    pattern: "^[a-z][a-zA-Z0-9]*$"
+    fixable: false
+    examples:
+      bad: "function get_user_by_id() {}"
+      good: "function getUserById() {}"
+
+  - id: readability/variable-name-camelcase
+    name: "变量名使用 camelCase"
+    category: "readability"
+    severity: "warning"
+    description: "变量名应使用 camelCase，避免使用缩写或拼音"
+    pattern: "^[a-z][a-zA-Z0-9]*$"
+    fixable: false
+
+  - id: readability/variable-min-length
+    name: "变量名长度不少于 2 个字符"
+    category: "readability"
+    severity: "warning"
+    description: "过短的变量名（如 a, b, x）降低代码可读性"
+    min_length: 2
+    exceptions: ["i", "j", "k", "n", "e", "cb"]
+    fixable: false
+
+  # v1.56.0：坏命名检出增强（用户提供 bad-naming 样本实测补全）——函数名缩写/万能词/通用词/魔数/嵌套深度
+  - id: readability/function-name-too-short
+    name: "函数名过短（缩写，无法猜出含义）"
+    category: "readability"
+    severity: "warning"
+    description: "函数名 ≤2 字符是缩写（如 gU），无法从名字猜出含义"
+    pattern: "\\bfunction\\s+[a-zA-Z_$][a-zA-Z0-9_$]{0,1}\\s*\\("
+    fixable: false
+    mitigation: "函数名用有含义的完整单词：getUser / sumArray / buildReport"
+
+  - id: readability/vague-function-name
+    name: "函数名万能词（doIt/handle/process 等）"
+    category: "readability"
+    severity: "warning"
+    description: "doIt/handle/process/run/do/exec/doEverything 等万能动词函数名无法表达具体职责，应从名字看出做什么"
+    pattern: "\\bfunction\\s+(doIt|doItAll|doEverything|handle|process|run|do|exec|deal|make|thing)\\b\\s*\\("
+    fixable: false
+    mitigation: "换成具体动作：doIt→submitOrder、handle→handleOrderCancellation、process→parsePayload"
+
+  - id: readability/vague-variable-name
+    name: "变量名通用词（data/obj/flag/tmp 等）"
+    category: "readability"
+    severity: "warning"
+    description: "data/obj/flag/tmp/temp/val/value/item/thing 等通用词变量名信息量低，看不出具体内容"
+    pattern: "\\b(?:const|let|var)\\s+(data|obj|object|flag|tmp|temp|val|value|item|thing|stuff|res|result)\\b"
+    fixable: false
+    mitigation: "用内容命名：data→userList、flag→isAdmin、tmp→tempFile"
+
+  - id: readability/magic-number
+    name: "魔数散落（魔法数字）"
+    category: "readability"
+    severity: "warning"
+    description: "代码中出现无解释的魔数（如系数 1.2/0.05、比较 1000、等值状态码 1/2/3），建议提取为命名常量并注释含义；赋值初始值（= 1）、箭头返回（=> 1）、比较符后的 0/1 边界（> 0、< 1）不报"
+    pattern: "(?<![=!'\\.])(?:[*+%/]|={2,}|!=)\\s*\\d+(\\.\\d+)?|(?<![=!'\\.])[<>]=?\\s*(?!(?:0|1)(?:\\.0*)?(?![\\d]))\\d+(\\.\\d+)?"
+    fixable: false
+    mitigation: "提取常量：const TAX_RATE = 1.2; const MAX_LIMIT = 1000; 并加注释说明 1/2/3 等状态码含义"
+
+  - id: readability/max-nesting-depth
+    name: "嵌套过深（缩进层级 > 3）"
+    category: "readability"
+    severity: "warning"
+    description: "代码缩进嵌套超过 3 层（如 for→for→if→if），可读性灾难，应提前 return 或抽函数"
+    max_depth: 3
+    fixable: false
+
+  - id: readability/max-function-length
+    name: "函数长度不超过 50 行"
+    category: "readability"
+    severity: "warning"
+    description: "过长的函数难以理解和维护"
+    max_lines: 50
+    fixable: true
+
+  - id: readability/max-file-length
+    name: "文件总行数不超过 400 行"
+    category: "readability"
+    severity: "warning"
+    description: "单文件超过 400 行时应拆分模块（存量超大文件为已知债务，仅提醒不拦截；D1 重构已拆分核心文件）"
+    max_lines: 400
+    fixable: false
+
+  # ----- 2. 可维护性 -----
+  - id: maintainability/no-duplicate-code
+    name: "检测重复代码块"
+    category: "maintainability"
+    severity: "warning"
+    description: "同一段逻辑在多处重复，建议抽取为公共函数"
+    min_lines: 5
+    min_occurrences: 3
+    fixable: true
+
+  - id: maintainability/max-cyclomatic-complexity
+    name: "圈复杂度不超过 10"
+    category: "maintainability"
+    severity: "warning"
+    description: "过高的圈复杂度表示函数逻辑分支过多"
+    max_complexity: 10
+    fixable: false
+
+  # ----- 3. 健壮性 -----
+  - id: robustness/no-sync-fs
+    name: "禁止在异步函数中使用同步 IO"
+    category: "robustness"
+    severity: "warning"
+    description: "同步 IO 会阻塞事件循环"
+    patterns:
+      - "fs\\.(readFileSync|writeFileSync|statSync|existsSync|readdirSync|mkdirSync|rmSync|unlinkSync|renameSync|copyFileSync|appendFileSync)\\s*\\("
+      - "(require\\([\"']fs[\"']\\)|from\\s+[\"']node:?fs[\"'])\\s*\\.(readFileSync|writeFileSync|statSync|existsSync|readdirSync|mkdirSync|rmSync|unlinkSync|renameSync|copyFileSync|appendFileSync)\\s*\\("
+    fixable: true
+    mitigation: "改用 fs.promises.xxx + await"
+
+  - id: robustness/no-empty-catch
+    name: "禁止空的 catch 块"
+    category: "robustness"
+    severity: "warning"
+    description: "空的 catch 块会静默吞掉错误"
+    pattern: "catch\\s*\\([^)]*\\)\\s*\\{\\s*\\}"
+    fixable: true
+    mitigation: "至少添加 console.error(e)"
+
+  - id: robustness/input-validation-required
+    name: "外部输入必须验证"
+    category: "robustness"
+    severity: "warning"
+    description: "用户输入可能包含恶意数据"
+    patterns:
+      - "req\\.(params|query|body)"
+      - "ctx\\.(params|query|body)"
+    fixable: false
+
+  - id: robustness/timeout-on-external-api
+    name: "外部 API 调用必须设置超时"
+    category: "robustness"
+    severity: "warning"
+    description: "外部请求无超时设置会导致请求永久挂起"
+    patterns:
+      - "(fetch|axios\\.|got\\.|request\\.)\\s*\\("
+    fixable: false
+    mitigation: "设置 timeout 或 AbortController"
+
+  # ----- 4. 安全性 -----
+  # v1.58.0：重复硬编码字符串（repeated-string 类型）——字符串字面量在同文件出现 ≥3 次且不在白名单 → 建议配置化
+  - id: security/no-repeated-hardcoded-literals
+    name: "检测重复出现的硬编码文本"
+    category: "security"
+    severity: "warning"
+    description: "如果一个字符串（路径、域名、用户名、token、端口、URL 等）在代码中重复出现 3 次或以上，建议提取为常量或配置变量"
+    fixable: true
+    min_occurrences: 3
+    ignore_patterns:
+      - "^\\d+$"
+      - "^(true|false|null|undefined)$"
+      - "^[{}[\\]]$"
+      - "^[+\\-*/=]$"
+      - "^['\"`]$"
+      - "^\\s*$"
+      - "^\\\\n$"
+      - "^\\d+\\.\\d+$"
+      - "^\\.(json|txt|log|md|yaml|yml|html|css|js|mjs|ts|png|jpg|jpeg|gif|svg)$"
+      - "^utf-?8$"
+      - "^utf-?16le?$"
+    ignore_values:
+      - "0"
+      - "1"
+      - "-1"
+      - "true"
+      - "false"
+      - "null"
+      - "undefined"
+      - "''"
+      - '""'
+    mitigation: "提取为常量（UPPER_SNAKE_CASE）放入 config/constant.js 或通过环境变量注入"
+
+  - id: security/no-hardcoded-credentials
+    name: "禁止硬编码凭据"
+    category: "security"
+    severity: "error"
+    description: "凭据不应硬编码在源代码中"
+    patterns:
+      - "password\\s*[=:]+\\s*['\"][^'\"]+['\"]"
+      - "secret\\s*[=:]+\\s*['\"][^'\"]+['\"]"
+      - "api[_-]?key\\s*[=:]+\\s*['\"][^'\"]+['\"]"
+      - "token\\s*[=:]+\\s*['\"][^'\"]+['\"]"
+      - "cookie\\s*[=:]+\\s*['\"][^'\"]+['\"]"
+    fixable: false
+    mitigation: "使用环境变量 process.env.XXX"
+
+  - id: security/no-path-traversal
+    name: "路径穿越防护"
+    category: "security"
+    severity: "error"
+    description: "直接使用用户输入作为文件路径存在目录遍历风险"
+    fixable: false
+    mitigation: "使用 path.resolve + startsWith 白名单校验"
+
+  # ----- 凭据入库门禁（历史 eightfs 规则翻译，v1.47.0）-----
+  # 提交门禁安全底线：新增行命中即拦截提交；severity=error → blocker
+  - id: secret-github-pat
+    name: "疑似 GitHub PAT 硬编码"
+    category: "security"
+    severity: "error"
+    description: "疑似 GitHub Personal Access Token 硬编码，请确认是否真实凭据"
+    pattern: "\\bghp_[A-Za-z0-9]{20,}\\b"
+    fixable: false
+  - id: secret-openai-key
+    name: "疑似 API key 硬编码"
+    category: "security"
+    severity: "error"
+    description: "疑似 OpenAI/API key 硬编码，请确认是否真实凭据"
+    pattern: "\\bsk-(proj-)?[A-Za-z0-9-]{16,}\\b"
+    fixable: false
+  - id: secret-keyvalue
+    name: "疑似敏感信息键值对"
+    category: "security"
+    severity: "error"
+    description: "疑似敏感信息（键值对）硬编码，请确认（值捕获组供占位符/假值豁免）"
+    pattern: "\\b(api[_-]?key|api[_-]?secret|secret|password|passwd|client[_-]?secret|access[_-]?token|auth[_-]?token|private[_-]?key|bearer|cookie|session[_-]?key)\\b\\s*[:=]\\s*[\"']([^\"'\\s]{8,})[\"']"
+    fixable: false
+    mitigation: "使用环境变量 process.env.XXX"
+  - id: secret-email
+    name: "真实邮箱入库（隐私泄漏）"
+    category: "security"
+    severity: "error"
+    description: "疑似真实个人邮箱硬编码/入库（隐私信息），请确认——示例域（example.com）、GitHub 匿名邮箱（users.noreply.github.com）、SSH 地址（git@github.com / git@ssh.github.com）、GitHub token 前缀用户名（ghp_/gho_/ghu_/ghs_/ghr_/github_pat_ 开头的用户名 + github.com 域；token 本体由 secret-github-pat 规则拦截）、本地虚拟域（.local/.lan/.internal/.test）豁免；真实邮箱（如 QQ 号@qq.com 等）一旦进公开仓库可被爬取，招致营销骚扰/社工"
+    pattern: "\\b(?!git@(?:ssh\\.)?github\\.com\\b|(?:gh[opsur]_|github_pat_)[A-Za-z0-9_]+@github\\.com\\b)[A-Za-z0-9._%+-]+@(?!example\\.com\\b|users\\.noreply\\.github\\.com\\b|[A-Za-z0-9-]+\\.(?:local|lan|internal|test|invalid|localhost)\\b)[A-Za-z0-9-]+\\.[A-Za-z]{2,}\\b"
+    fixable: false
+    mitigation: "真实邮箱不写进代码/文档；示例一律用 your-name@example.com 占位；GitHub 匿名邮箱 users.noreply.github.com 豁免（git 提交默认 author）；已入库的用 git filter 清历史"
+  - id: credfile-common
+    name: "凭据/密钥文件入库"
+    category: "security"
+    severity: "error"
+    description: "凭据/密钥文件出现在变更中，禁止提交"
+    path_pattern: "(^|[\\\\/])(\\.credentials[^\\\\/]*|\\.env|\\.env\\.[a-z]+|github-token|data[\\\\/]sensitive[\\\\/][^\\\\/]*|\\.dsh[\\\\/]git-push[\\\\/])"
+    fixable: false
+  - id: credfile-token-private
+    name: "敏感目录入库"
+    category: "security"
+    severity: "error"
+    description: "敏感配置/私钥目录入库，禁止提交"
+    path_pattern: "(^|[\\\\/])(data[\\\\/]sensitive[\\\\/]|dsh-private-configs[\\\\/]|\\.ssh[\\\\/]|private)[\\\\/][^\\\\/]*"
+    fixable: false
+  - id: credref-legacy-path
+    name: "文档引用旧凭据位置"
+    category: "security"
+    severity: "warning"
+    description: "文档含旧凭据位置引用：凭据统一存插件配置目录（DSH_HOME/git-push/，0600 权限）"
+    pattern: "(\\.ssh[\\\\/]credentials|data[\\\\/]sensitive[\\\\/]|credentials\\.md|sudo-key|git-rescue[\\\\/]token)"
+    fixable: false
+  - id: credref-plain-secret
+    name: "文档疑似凭据明文"
+    category: "security"
+    severity: "warning"
+    description: "文档疑似含凭据明文：凭据统一存插件配置目录，不在文档写明文"
+    pattern: "(密码|password|passwd|token|cookie|账号)\\s*[:：=]\\s*['\"]?[A-Za-z0-9_@.\\-]{6,}['\"]?"
+    fixable: false
+
+  - id: security/cookie-secure-flag
+    name: "Cookie 必须包含 Secure 和 HttpOnly"
+    category: "security"
+    severity: "error"
+    description: "生产环境 Cookie 必须带 Secure 和 HttpOnly"
+    patterns:
+      - "Set-Cookie:(?!.*Secure)"
+      - "Set-Cookie:(?!.*HttpOnly)"
+    fixable: true
+
+  - id: security/no-eval
+    name: "禁止使用 eval"
+    category: "security"
+    severity: "error"
+    description: "eval 执行任意代码，存在严重安全风险"
+    patterns:
+      - "eval\\s*\\("
+      - "new Function\\s*\\("
+    fixable: false
+
+  # ----- 5. 性能 -----
+  - id: performance/no-o-n-squared
+    name: "避免 O(n²) 循环嵌套"
+    category: "performance"
+    severity: "warning"
+    description: "嵌套循环可能导致性能问题"
+    patterns:
+      - "for\\s*\\([^)]*\\)\\s*{[^}]*for\\s*\\("
+    fixable: false
+
+  - id: performance/no-json-full-save
+    name: "禁止频繁全量 JSON 写盘"
+    category: "performance"
+    severity: "info"
+    description: "大对象频繁 JSON.stringify 消耗 CPU 和磁盘 IO"
+    patterns:
+      - "JSON\\.stringify\\s*\\([^)]+\\)\\s*,\\s*['\"]?.*\\.json['\"]?"
+    fixable: false
+    mitigation: "使用增量写入或内存缓存"
+
+  - id: performance/config-cache-needed
+    name: "配置文件应使用内存缓存"
+    category: "performance"
+    severity: "info"
+    description: "频繁 readFileSync 读取 config 影响性能"
+    patterns:
+      - "readFileSync\\s*\\(\\s*['\"].*config.*\\.json['\"]"
+    fixable: false
+    mitigation: "添加 TTL 缓存，如 5 秒刷新"
+
+  # ----- 6. 测试 -----
+  - id: testing/test-file-exists
+    name: "核心文件应有对应测试"
+    category: "testing"
+    severity: "warning"
+    description: "关键模块应有 .test.js 文件"
+    fixable: false
+
+  # ----- 7. 依赖 -----
+  - id: dependency/known-vulnerability
+    name: "无已知漏洞依赖"
+    category: "dependency"
+    severity: "error"
+    description: "npm audit 不应有 critical/high 漏洞"
+    fixable: false
+
+# ----- 严重级别映射 -----
+
+  # ── v2 独有能力（1.0.3 合并自原 v2 示范槽位，防旧包覆盖丢失）──
   - id: secret-aws-access-key
     name: "AWS Access Key 疑似泄露"
     category: "security"
@@ -25,73 +365,30 @@ rules:
     patterns:
       - "\\btoken\\s*=\\s*['\"][^'\"]{12,}['\"]"
       - "\\bapi[_-]?key\\s*=\\s*['\"][^'\"]{12,}['\"]"
+severity_map:
+  error: "error"
+  warning: "warning"
+  info: "info"
 
-  - id: credfile-key-file
-    name: "私钥文件路径"
-    category: "security"
-    severity: "error"
-    description: "检测私钥/证书类文件名"
-    path_pattern: "(id_rsa|id_ed25519|\\.pem|\\.key)$"
+# ----- 阈值 -----
+thresholds:
+  max_warnings: 20
+  max_errors: 0
+  max_info: 50
 
-  # ── 函数行数（字段 max_lines + 名字含 function 自动指派）──
-  - id: func-lines
-    name: "单函数超长"
-    category: "readability"
-    severity: "warning"
-    description: "单函数超过 50 行难读，应拆分"
-    max_lines: 50
+# ----- 忽略规则 -----
+ignore:
+  - pattern: "**/*.{test,spec}.{js,ts}"
+    rules: ["*"]
+  - pattern: "**/vendor/**/*.js"
+    rules: ["*"]
+  - pattern: "**/dist/**/*.js"
+    rules: ["*"]
+  - pattern: "**/legacy/**/*.js"
+    rules: ["readability/*", "maintainability/*"]
 
-  # ── 数值阈值类（按字段名自动拆分）──
-  - id: style-min-length
-    name: "标识符过短"
-    category: "readability"
-    severity: "warning"
-    description: "变量/参数名过短降低可读性"
-    min_length: 2
-
-  - id: style-max-complexity
-    name: "圈复杂度超标"
-    category: "maintainability"
-    severity: "warning"
-    description: "函数圈复杂度超过 10"
-    max_complexity: 10
-
-  - id: style-repeated-string
-    name: "重复硬编码字符串"
-    category: "maintainability"
-    severity: "warning"
-    description: "相同字符串字面量出现 3 次以上应提取常量"
-    min_occurrences: 3
-    ignore_values: ["", " ", "0", "1", "true", "false", "null", "undefined"]
-
-  # ── 正则类（pattern/patterns 自动指派）──
-  - id: style-debugger
-    name: "debugger 残留"
-    category: "residue"
-    severity: "error"
-    description: "生产代码不应残留 debugger 语句"
-    pattern: "\\bdebugger\\s*;?"
-
-  - id: style-console-log
-    name: "console.log 输出"
-    category: "residue"
-    severity: "warning"
-    description: "console.log 输出到 stdout，确认是否需要保留"
-    pattern: "\\bconsole\\.(log|debug)\\("
-
-  # ── 路径正则（path_pattern + 显式 kind 也可）──
-  - id: path-private-key-location
-    kind: path-regex
-    name: "私钥文件不得提交"
-    category: "security"
-    severity: "error"
-    description: "私钥文件路径禁止出现在版本库（路径级校验）"
-    path_pattern: ".*\\.(pem|key|p12)$"
-
-  # ── 语义规则（无 pattern 无数值，靠 category/name 关键词）──
-  - id: testing-test-file-missing
-    name: "核心模块应有测试文件"
-    category: "testing"
-    severity: "warning"
-    description: "lib 下核心模块应配套 test-<name>.mjs"
-    detection_method: "test-file-exists"
+# ----- 输出 -----
+output:
+  format: "json"
+  include_suggestions: true
+  include_fix_instructions: true

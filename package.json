@@ -1,6 +1,6 @@
 {
   "name": "dsh-git-push",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "DSH git 自动提交推送插件——统一函数入口架构（规则/审计/git/自身/侧边栏/评分/豁免/上下文/HTTP/测试十大总入口）",
   "type": "module",
   "main": "lib/index.js",
@@ -19,6 +19,25 @@
   ],
   "bin": {
     "git-sluice": "./cli.mjs"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-settings-plugins",
+        "@deepseek-ai/dsh-client-ui-settings",
+        "@deepseek-ai/dsh-client-locale"
+      ]
+    },
+    "skills": [
+      "./skills/dsh-git-push.md",
+      "./skills/dsh-git-push-functions.md",
+      "./skills/task-completion-report.md",
+      "./skills/git-workflow-gitpush/versioning-rule.md"
+    ]
   },
   "license": "UNLICENSED",
   "private": true,

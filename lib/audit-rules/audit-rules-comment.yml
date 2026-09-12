@@ -1,0 +1,213 @@
+# ============================================================
+# 注释关键词检测规则集（AI 用户交流注释识别）
+# 作者：DeepSeek
+# 版本：1.0.0
+# 适用：所有 JavaScript / TypeScript / HTML 文件
+# 描述：检测代码中残留的 AI 用户交流注释
+# 最后更新：2026-09-08
+# ============================================================
+
+metadata:
+  name: "注释质量检测规则（AI 交流注释识别）"
+  version: "1.0.0"
+  language: "all"
+  author: "DeepSeek"
+  description: "检测『用户指示 2』『用户原话』等 AI 协作残留注释"
+  last_updated: "2026-09-08"
+
+rules:
+  - id: documentation/comment-suspicious-detection
+    name: "检测 AI 用户交流可疑注释"
+    category: "documentation"
+    severity: "info"
+    description: "检测代码中残留的 AI 用户交流注释"
+    fixable: true
+    action: "建议在 PR 前清理，或将关键信息移至 git commit message"
+
+    # ----- 黑名单（可疑关键词，命中加分） -----
+    blacklist:
+      - pattern: "用户指示"
+        weight: 40
+      - pattern: "用户原话"
+        weight: 40
+      - pattern: "用户反馈"
+        weight: 35
+      - pattern: "根据用户"
+        weight: 30
+      - pattern: "客户要求"
+        weight: 30
+      - pattern: "用户说"
+        weight: 25
+      - pattern: "原话"
+        weight: 20
+      - pattern: "指示"
+        weight: 15
+      - pattern: "用户要求"
+        weight: 30
+      - pattern: "User request"
+        weight: 30
+      - pattern: "require user"
+        weight: 25
+      - pattern: "根据要求"
+        weight: 20
+      - pattern: "User feedback"
+        weight: 30
+      - pattern: "AI 说"
+        weight: 20
+      - pattern: "机器说"
+        weight: 15
+      - pattern: "人工要求"
+        weight: 25
+      # ----- 历史提交门禁措辞保留（v1.47.0 从 eightfs JSON 翻译；权重 40 与「用户指示/用户原话」同档进门禁）-----
+      - pattern: "用户要求"
+        weight: 40
+      - pattern: "用户说"
+        weight: 40
+      - pattern: "用户约定"
+        weight: 40
+      - pattern: "用户规定"
+        weight: 40
+      - pattern: "用户明确"
+        weight: 40
+      - pattern: "用户拍板"
+        weight: 40
+      - pattern: "用户："
+        weight: 40
+      - pattern: "用户(同意|许可|确认|约定|指定|已定调|拍板|让我|要求我|跟我说)"
+        weight: 40
+
+    # ----- 白名单（业务保护词，命中降分） -----
+    whitelist:
+      - pattern: "用户ID"
+        penalty: 30
+      - pattern: "用户登录"
+        penalty: 25
+      - pattern: "用户状态"
+        penalty: 20
+      - pattern: "用户权限"
+        penalty: 25
+      - pattern: "用户角色"
+        penalty: 20
+      - pattern: "用户信息"
+        penalty: 15
+      - pattern: "用户数据"
+        penalty: 15
+      - pattern: "用户配置"
+        penalty: 15
+      - pattern: "用户设置"
+        penalty: 15
+      - pattern: "用户会话"
+        penalty: 20
+      - pattern: "用户认证"
+        penalty: 25
+      - pattern: "用户验证"
+        penalty: 20
+      - pattern: "用户注册"
+        penalty: 20
+      - pattern: "用户密码"
+        penalty: 25
+      - pattern: "用户邮箱"
+        penalty: 20
+      - pattern: "用户名"
+        penalty: 15
+      - pattern: "用户头像"
+        penalty: 15
+      - pattern: "用户组"
+        penalty: 15
+      - pattern: "用户表"
+        penalty: 15
+      - pattern: "用户服务"
+        penalty: 15
+      - pattern: "用户模块"
+        penalty: 15
+      - pattern: "用户旅程"
+        penalty: 15
+
+    # ----- 附加特征（额外加分项） -----
+    additional_features:
+      - name: "数字编号"
+        pattern: "\\b\\d+\\b"
+        weight: 20
+      - name: "引号块（可能是用户原话）"
+        pattern: "['\"“”『』]"
+        weight: 20
+      - name: "注释前一行是空行或仅注释"
+        weight: 10
+      - name: "注释后一行是代码（修改点）"
+        weight: 10
+      - name: "注释长度 < 50 字符"
+        weight: 10
+      - name: "否定词（不要、删除、去掉）"
+        pattern: "不要|删除|去掉|移除|禁止|避免"
+        weight: 5
+
+    # ----- 评分阈值 -----
+    scoring:
+      threshold_suspicious: 60
+      threshold_highly_suspicious: 80
+      max_score: 100
+
+    # ----- 输出建议 -----
+    suggestions:
+      - "建议将对话元数据迁移到 Git commit message 或外部文档"
+      - "若注释确实需要保留，可改为 `// NOTE: ...` 格式并增加业务上下文"
+
+  # ----- 文档对话残留门禁（v1.47.0 从 eightfs JSON 翻译；doc-conversation 类，blocker）-----
+  - id: conv-session-ref
+    name: "文档引用会话"
+    category: "documentation"
+    severity: "error"
+    description: "文档含会话/对话引用措辞，公开文档应只写做了什么"
+    pattern: "(本会话|本次会话|本对话|开发会话|session-[0-9a-f]{8,})"
+    fixable: false
+  - id: conv-user-decision
+    name: "文档引用用户决策"
+    category: "documentation"
+    severity: "error"
+    description: "文档含「用户同意/要求我」类沟通记录，公开文档应改写"
+    pattern: "用户(同意|许可|确认|约定|指定|已定调|拍板|让我|要求我|跟我说)"
+    fixable: false
+  - id: conv-ai-permit
+    name: "文档 AI 承诺措辞"
+    category: "documentation"
+    severity: "error"
+    description: "文档含 AI 承诺类沟通记录，公开文档应改写"
+    pattern: "我(同意|许可|确认|答应|承诺|已按你)"
+    fixable: false
+  - id: conv-negotiate
+    name: "文档协商措辞"
+    category: "documentation"
+    severity: "error"
+    description: "文档含协商讨论记录，公开文档应改写"
+    pattern: "我们(商量|讨论|约定|沟通|说好|议定)"
+    fixable: false
+  - id: conv-log
+    name: "文档对话记录引用"
+    category: "documentation"
+    severity: "error"
+    description: "文档引用对话/聊天记录，公开文档应改写"
+    pattern: "(对话记录|聊天记录|沟通记录|对话内容|聊天内容)"
+    fixable: false
+
+# ----- 严重级别 -----
+severity_map:
+  info: "info"
+
+# ----- 阈值 -----
+thresholds:
+  max_info: 30
+
+# ----- 忽略规则 -----
+ignore:
+  - pattern: "**/*.{test,spec}.{js,ts,jsx,tsx}"
+    rules: ["*"]
+  - pattern: "**/vendor/**/*"
+    rules: ["*"]
+  - pattern: "**/dist/**/*"
+    rules: ["*"]
+
+# ----- 输出 -----
+output:
+  format: "json"
+  include_suggestions: true
+  include_fix_instructions: true

@@ -16,8 +16,10 @@ import { collectTextFiles, collectChangedFiles, isGitRepo, readText } from '../l
 import {
   checkEmptyCatch, checkRegexRules, checkPathRegexRules, checkFuncLines, checkSyncFsInFile,
   checkCredentialFiles, checkMinLength, checkComplexity, checkDepth, checkMaxLines,
-  checkRepeated, checkSemantic, groupByKind, runChecks, capSeverity,
+  checkRepeated, checkSemantic, groupByKind, runChecks, capSeverity, checkPrivateFiles,
 } from '../lib/audit/checks.js';
+import { globToRegex, globMatch } from '../lib/audit/glob.js';
+import { loadRuleFiles } from '../lib/rule/loader.js';
 import { CODE_EXTS } from '../lib/audit/index.js';
 
 let fixture = '';
@@ -168,6 +170,27 @@ test('checkRegexRules：命中报 + 未命中不报 + source 标注', () => {
   assert.equal(miss.length, 0);
 });
 
+test('checkRegexRules：子模式（subPatterns）命中输出专属 message（文档 §13）', () => {
+  const rules = [{
+    id: 'performance/memory-bomb', kind: 'regex', severity: 'warning',
+    message: '规则级 message',
+    subPatterns: [
+      { regex: /fs\.readFileSync\s*\(/, message: 'per-a 全量读入' },
+      { regex: /\.push\s*\(/, message: 'per-b 无界 push' },
+    ],
+    dimensions: ['性能'],
+  }];
+  const hit = checkRegexRules({ file: 'a.js', text: 'const x = fs.readFileSync("/b");', rules });
+  assert.equal(hit.length, 1, '应命中 1 条');
+  assert.equal(hit[0].message, 'per-a 全量读入', '子模式专属 message 优先');
+  const hit2 = checkRegexRules({ file: 'a.js', text: 'arr.push(1);', rules });
+  assert.equal(hit2[0].message, 'per-b 无界 push');
+  // 无 subPatterns 的旧结构仍走规则级 message（向后兼容）
+  const legacy = [{ id: 'r9', kind: 'regex', severity: 'warning', patterns: [/TODO/], message: '旧结构', dimensions: ['可读性'] }];
+  const lHit = checkRegexRules({ file: 'a.js', text: '// TODO fix', rules: legacy });
+  assert.equal(lHit[0].message, '旧结构');
+});
+
 test('checkRegexRules：空规则数组返回空（不崩溃）', () => {
   assert.deepEqual(checkRegexRules({ file: 'a.js', text: 'x', rules: [] }), []);
   assert.deepEqual(checkRegexRules({ file: 'a.js', text: 'x', rules: undefined }), []);
@@ -307,4 +330,70 @@ test('summarize：缺 severity 字段按 warning 计（不丢统计）', () => {
   const s = summarize([{}, { severity: undefined }]);
   assert.equal(s.warning, 2);
   assert.equal(s.total, 2);
+});
+
+
+
+// ---------- 1.0.4：private 槽位（T1-T33 考古验收） ----------
+test('globToRegex：** 跨层 / * 单层 / {a,b} 分支 / 特殊字符转义', () => {
+  assert.equal(globMatch('**/id_ed25519', 'id_ed25519'), true, '**/ 应匹配根级');
+  assert.equal(globMatch('**/id_ed25519', 'a/b/id_ed25519'), true, '**/ 应匹配任意深度');
+  assert.equal(globMatch('**/*.key', 'x.key'), true);
+  assert.equal(globMatch('**/*.key', 'a/b/x.key'), true);
+  assert.equal(globMatch('**/.env.*', '.env.local'), true);
+  assert.equal(globMatch('**/*@*.{md,txt,js}', 'me@x.com.txt'), true, '{a,b} 分支应工作');
+  assert.equal(globMatch('**/id_ed25519', 'normal.js'), false, '普通文件不应误报');
+  assert.equal(globMatch('*.key', 'a/b/x.key'), false, '单星不跨层级');
+  assert.equal(globMatch('**/data/sensitive/**', 'data/sensitive/secret/k.txt'), true);
+});
+
+test('checkPrivateFiles：public→blocker / private→warning / 未跟踪不报', () => {
+  const root = mkdtempSync(join(tmpdir(), 'priv-'));
+  try {
+    execFileSync('git', ['init', '-q'], { cwd: root });
+    writeFileSync(join(root, 'id_ed25519'), 'x');
+    writeFileSync(join(root, 'normal.js'), 'y');
+    execFileSync('git', ['add', '-A'], { cwd: root });
+    execFileSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', 'init'], { cwd: root });
+    const pfs = ['**/id_ed25519'];
+    const pub = checkPrivateFiles({ root, visibility: 'public', privateFiles: pfs });
+    assert.equal(pub.length, 1, 'public 应命中私密文件');
+    assert.equal(pub[0].severity, 'blocker', 'public → blocker');
+    assert.ok(/禁止推送/.test(pub[0].message), 'blocker 文案应含禁止推送');
+    const priv = checkPrivateFiles({ root, visibility: 'private', privateFiles: pfs });
+    assert.equal(priv[0].severity, 'warning', 'private → warning');
+    assert.equal(priv[0].file, 'id_ed25519');
+    const none = checkPrivateFiles({ root, visibility: 'public', privateFiles: [] });
+    assert.equal(none.length, 0, '无清单不报');
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('loader：private_files 顶层字段跨文件合并（后覆盖前追加）', () => {
+  const loaded = loadRuleFiles();
+  const pf = loaded.merged.private_files || [];
+  assert.ok(pf.length >= 12, `private.yml 清单应合并 ≥12 条（实际 ${pf.length}）`);
+  assert.ok(pf.includes('**/id_ed25519'), '清单含 id_ed25519');
+  assert.ok(pf.includes('**/.env') && pf.includes('**/.env.*'), '清单含 .env 族');
+});
+
+
+
+// ---------- 1.0.4：G7-S4 审计强度三档（quick 跳过 AST/语义；standard/deep 全量） ----------
+test('auditLevel：quick 比 standard 少跑 AST/语义检查（findings 更少）', () => {
+  const quick = auditFull('.', { auditLevel: 'quick' });
+  const std = auditFull('.', { auditLevel: 'standard' });
+  assert.ok(quick.findings.length <= std.findings.length, `quick(${quick.findings.length}) 应 ≤ standard(${std.findings.length})`);
+  // quick 仍保留正则/黑名单/凭据类（基础安全不因强度降级）
+  const quickDims = new Set(quick.findings.flatMap((f) => f.dimensions || []));
+  assert.ok(!quickDims.has('可维护性') || quick.findings.length < std.findings.length,
+    'quick 若含可维护性维度则数量应明显少于 standard');
+});
+
+test('auditLevel：deep 与 standard 全量等价（当前引擎无第三档内容，留扩展位）', () => {
+  const std = auditFull('.', { auditLevel: 'standard' });
+  const deep = auditFull('.', { auditLevel: 'deep' });
+  assert.equal(deep.findings.length, std.findings.length, 'deep 与 standard 数量一致');
+  assert.equal(deep.summary.blocker, std.summary.blocker);
 });

@@ -1,0 +1,22 @@
+# dsh-skip-sensitive: 规则定义文件含符号示范文本（fs.writeFile 等非真实数据）
+# dsh-skip-residue: 规则定义文件含 debugger/console 模式串示范（规则定义本身）
+# dsh-git-push 审计规则（robustness 槽位，1.0.3）
+# 规则类型由编译函数按字段自动指派（pattern/patterns → regex kind）。
+# dimensions：10 维度绑定，支持一字段多维度。
+metadata:
+  name: "健壮性审计规则（写文件目录保障等）"
+  version: "1.0.3"
+
+rules:
+  # ── 写文件前确保父目录存在（mkdir-before-write，用户素材）──
+  - id: robustness/mkdir-before-write
+    name: "写文件前必须确保目录存在"
+    category: "robustness"
+    severity: "warning"
+    description: "直接 writeFile 而不 mkdir 父目录，会导致 ENOENT 错误"
+    patterns:
+      - "fs\\.(writeFile|writeFileSync|appendFile|appendFileSync|createWriteStream)\\s*\\("
+    # 豁免场景：目录通常已存在的常见情况
+    exceptions:
+      - "目标目录为项目根目录"
+      - "目标目录已被显式创建"

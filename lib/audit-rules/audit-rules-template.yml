@@ -1,0 +1,108 @@
+# ============================================================
+# 审计规则纯模板（自定义规则入口）
+# 作者：DeepSeek
+# 版本：1.0.0
+# 描述：空白模板，用于自定义添加审计规则
+# 最后更新：2026-09-08
+# ============================================================
+
+metadata:
+  name: "自定义审计规则集"
+  version: "1.0.0"
+  language: "all"
+  author: "DeepSeek"
+  description: "根据项目需求自定义填充规则"
+  last_updated: "2026-09-08"
+
+rules:
+  # ----- 示例规则（请替换为你的规则） -----
+  # - id: category/rule-name
+  #   name: "规则显示名称"
+  #   category: "category"
+  #   severity: "warning"  # error | warning | info
+  #   description: "规则详细说明"
+  #   pattern: "^正则表达式$"
+  #   fixable: true
+  #   examples:
+  #     bad: "错误示例"
+  #     good: "正确示例"
+
+  # ----- v1.55.0 目录结构校验（kind: path-regex——对文件路径跑正则，如复数目录名） -----
+  # - id: structure/dir-singular
+  #   name: "目录命名统一单数"
+  #   category: "maintainability"
+  #   severity: "warning"
+  #   kind: "path-regex"
+  #   pattern: "(?:^|/)(tools|tests|scripts|configs|libs|logs)/"
+
+  # ----- v1.56.0 嵌套深度（kind: max-depth——缩进层级超阈值） -----
+  # - id: readability/max-nesting-depth
+  #   name: "嵌套过深"
+  #   category: "readability"
+  #   severity: "warning"
+  #   max_depth: 3
+
+  # ----- v1.58.0 重复硬编码字符串（kind: repeated-string——字面量出现数 + 白名单豁免） -----
+  # - id: security/no-repeated-hardcoded-literals
+  #   name: "检测重复出现的硬编码文本"
+  #   category: "security"
+  #   severity: "warning"
+  #   min_occurrences: 3
+  #   ignore_patterns: ["^\\d+$", "^utf-?8$"]
+  #   ignore_values: ["0", "1", "true", "false", "null", "undefined", "''", "\"\""]
+
+  # ----- 空规则占位（启动时无检查） -----
+  - id: placeholder/example
+    name: "示例规则（可删除）"
+    category: "placeholder"
+    severity: "info"
+    description: "请替换为实际规则"
+    pattern: "^$"
+    fixable: false
+
+# ----- 严重级别映射（可自定义） -----
+severity_map:
+  error: "error"
+  warning: "warning"
+  info: "info"
+
+# ----- 阈值配置（按需调整） -----
+thresholds:
+  max_warnings: 20
+  max_errors: 0
+  max_info: 50
+
+# ----- 忽略规则（按需调整） -----
+ignore:
+  - pattern: "**/node_modules/**/*"
+    rules: ["*"]
+  - pattern: "**/dist/**/*"
+    rules: ["*"]
+  - pattern: "**/*.{test,spec}.js"
+    rules: ["*"]
+
+# ----- 输出配置（按需调整） -----
+output:
+  format: "json"
+  include_suggestions: true
+  include_code_snippets: true
+
+# ============================================================
+# 注释豁免标记速查（v1.60.0 起 — 每种拦截类型可独立豁免）
+# ============================================================
+# 位置语义：写在「文件头注释（前 3 行）」= 整个文件豁免该拦截类型；
+# 写在「对应位置注释」= 只豁免该位置（secret 支持行尾单行）。
+#
+#   dsh-skip-sensitive   → 豁免敏感内容（secret/凭据/隐私措辞）——行尾=单行 / 文件头=整文件
+#   dsh-skip-size        → 豁免二进制/大文件检查（只能写文件头——文件大小是整文件属性）
+#   dsh-skip-func-length → 豁免函数长度检查（文件头=全文件；函数定义行尾=单函数）
+#   dsh-skip-syntax      → 豁免语法/JSON/YAML 解析（只能写文件头）
+#   dsh-skip-quality     → 豁免质量评分（func-lines/silent-catch/sync-in-async）（文件头）
+#   dsh-skip-residue     → 豁免残留类（debugger/todo/console）（行尾=单行 / 文件头=整文件）
+#   dsh-skip-style       → 豁免全部 styleRules（文件头）
+#
+# 示例：
+#   // dsh-skip-sensitive       （行尾=本行不做敏感扫描）
+#   /** dsh-skip-size */        （文件头=本文件不报大文件）
+#   function x() { ... } // dsh-skip-func-length （函数定义行尾=跳过该函数长度检查）
+  include_fix_instructions: true

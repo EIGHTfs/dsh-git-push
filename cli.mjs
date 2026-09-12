@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// dsh-skip-i18n: CLI 输出硬编码中文为产品行为（无 i18n 需求）
 /**
  * dsh-git-push 独立 CLI（git-sluice）
  * 不依赖 DSH 运行时，可独立运行。命名/参数与 lib 函数完全一致（外部 API 与函数名一致）。
@@ -13,7 +14,7 @@ import { collectTextFiles, readText } from './lib/audit/collector.js';
 import { readFileSync } from 'node:fs';
 
 /** parseArgv 认识的选项白名单（cli-help-sync 机器比对基准，必须与 HELP 文本一致）。 */
-export const KNOWN_FLAGS = ['--depth', '--full'];
+export const KNOWN_FLAGS = ['--depth', '--full', '--level', '--ruleset', '--weights'];
 
 const HELP = `git-sluice v${VERSION} — dsh-git-push 引擎独立 CLI（脱离 DSH 运行）
 
@@ -21,7 +22,8 @@ const HELP = `git-sluice v${VERSION} — dsh-git-push 引擎独立 CLI（脱离 
   git-sluice version              查看版本
   git-sluice ruleset [槽位...]    编译规则包并输出统计（默认全部槽位）
   git-sluice scan <root> [--depth N]   全量扫描目录（非 git 目录可查）
-  git-sluice audit <root>         审计目录（默认 diff 范围；--full 走全量）
+  git-sluice audit <root> [--full] [--level quick|standard|deep] [--ruleset <目录>] [--weights <JSON>]
+                                  审计目录（默认 diff 范围；--full=全量；--level=强度；--ruleset=自定规则目录；--weights=权重覆盖 JSON）
   git-sluice link-check <路径>    检查 md/文本中的链接有效性（只 warning，flaky 域名打折）
   git-sluice yaml-template        输出规则 yml 模板（含 kind + dimensions 示范）
   git-sluice readme-template      输出 README 模板（{{name}} {{version}} 占位符）
@@ -34,7 +36,7 @@ import './lib/rule/compilers.js';
 
 /** 参数解析：白名单必须与 HELP 文本完全一致（cli-help-sync 自检）。 */
 export function parseArgv(argv) {
-  const flags = { depth: undefined, full: false };
+  const flags = { depth: undefined, full: false, level: undefined, ruleset: undefined, weights: undefined };
   const positional = [];
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -43,7 +45,15 @@ export function parseArgv(argv) {
       if (v === undefined || v.startsWith('--')) return { error: `--depth 缺值（用法: --depth N）` };
       flags.depth = Number(v);
     } else if (a === '--full') flags.full = true;
-    else if (a.startsWith('--')) return { error: `未知参数: ${a}` };
+    else if (a === '--level' || a === '--ruleset' || a === '--weights') {
+      const v = argv[++i];
+      if (v === undefined || v.startsWith('--')) return { error: `${a} 缺值` };
+      if (a === '--level') {
+        if (!['quick', 'standard', 'deep'].includes(v)) return { error: `--level 取值须为 quick|standard|deep（收到 ${v}）` };
+        flags.level = v;
+      } else if (a === '--ruleset') flags.ruleset = v;
+      else flags.weights = v;
+    } else if (a.startsWith('--')) return { error: `未知参数: ${a}` };
     else positional.push(a);
   }
   return { flags, positional };
@@ -86,9 +96,18 @@ export function cmdScan(root, flags) {
 
 /** 子命令：audit — 审计目录。 */
 export function cmdAudit(root, flags) {
-  const res = auditWithScope(root, { scope: flags.full ? 'full' : 'diff' });
-  const q = scoreQuality(res.findings);
-  console.log(`审计 ${root}（scope=${res.scope}）`);
+  const level = flags.level || 'standard';
+  let weights = {};
+  if (flags.weights) {
+    try { weights = JSON.parse(flags.weights); } catch { console.error('--weights 非法 JSON，已回退默认权重表'); }
+  }
+  const res = auditWithScope(root, {
+    scope: flags.full ? 'full' : 'diff',
+    auditLevel: level,
+    rulesetDir: flags.ruleset || '',
+  });
+  const q = scoreQuality(res.findings, weights);
+  console.log(`审计 ${root}（scope=${res.scope}, level=${level}${flags.ruleset ? ', ruleset=' + flags.ruleset : ''}）`);
   console.log(`  summary: ${JSON.stringify(res.summary)}`);
   console.log(`  quality: ${q.score}/100（${q.level}）`);
 }

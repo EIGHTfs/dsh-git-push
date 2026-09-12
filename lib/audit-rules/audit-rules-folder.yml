@@ -1,0 +1,75 @@
+# dsh-skip-sensitive: 规则定义文件含符号示范文本（package/ dist/ 等非真实数据）
+# dsh-skip-residue: 规则定义文件含 debugger/console 模式串示范（规则定义本身）
+# dsh-git-push 审计规则（folder 槽位，1.0.3）
+# 目录级审计规则：由 checkFolderRules 在 auditFull 目录层消费（非文件行级）。
+# 字段：threshold / exclude_dirs / signatures / required_patterns 由 folder 编译函数认领。
+metadata:
+  name: "文件夹数量审计规则（防止解包/依赖/构建产物入库）"
+  version: "1.0.0"
+
+rules:
+  # ----- 规则 1：目录总数异常（正常项目源码目录 ≤ 30）-----
+  - id: folder/total-count
+    name: "项目源码目录总数异常"
+    category: "folder"
+    severity: "warning"
+    description: "正常项目源码目录（不含 node_modules/.git/dist 等）应 ≤ 30 个，超过可能是解包产物混入"
+    threshold: 30
+    exclude_dirs:
+      - "node_modules"
+      - ".git"
+      - ".svn"
+      - "dist"
+      - "build"
+      - "out"
+      - "coverage"
+      - "__pycache__"
+      - ".next"
+      - ".nuxt"
+      - "vendor"
+      - ".dsh"
+    message: "项目源码目录数 {count} 超过阈值 {threshold}，可能混入解包产物"
+
+  # ----- 规则 2：单目录文件数量异常（> 500 极可能是依赖/解包）-----
+  - id: folder/file-count-per-dir
+    name: "单目录文件数量异常"
+    category: "folder"
+    severity: "warning"
+    description: "单个目录下文件数量 > 500，极可能是解包产物或依赖目录"
+    threshold: 500
+    exclude_dirs:
+      - "node_modules"
+      - ".git"
+      - "dist"
+    message: "目录 {path} 包含 {count} 个文件，超过阈值 {threshold}，疑似解包产物"
+
+  # ----- 规则 3：解包产物特征目录（package/package.json、dist/、build/、.tgz 等）-----
+  - id: folder/unpacked-artifact-signature
+    name: "检测解包产物特征目录"
+    category: "folder"
+    severity: "error"
+    description: "检测 tar 解包后的典型目录结构（package/ + package.json、dist/、build/、临时构建目录）"
+    signatures:
+      - pattern: "package/package.json"
+        message: "检测到 tar 解包产物：package/ 子目录含 package.json"
+      - pattern: "dist/**"
+        message: "检测到构建产物目录 dist/ 被提交"
+      - pattern: "build/**"
+        message: "检测到构建产物目录 build/ 被提交"
+      - pattern: "**/.tmp-build/**"
+        message: "检测到临时构建目录 .tmp-build/ 被提交"
+
+  # ----- 规则 4：.gitignore 未覆盖常见产物目录 -----
+  - id: folder/gitignore-missing-artifacts
+    name: ".gitignore 未覆盖产物目录"
+    category: "folder"
+    severity: "warning"
+    description: "常见产物目录（node_modules/dist/build/coverage 等）应出现在 .gitignore 中"
+    required_patterns:
+      - "node_modules"
+      - "dist"
+      - "build"
+      - "coverage"
+      - "*.log"
+      - ".env"
+    message: ".gitignore 中缺少必要忽略项：{missing}"

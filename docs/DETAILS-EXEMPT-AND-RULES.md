@@ -1,5 +1,7 @@
 # 细节补充：豁免注释与规则 yml 用法全录（dsh-git-push v2）
 
+<!-- dsh-skip-i18n: 本文含规则 yml 示范文案（description/message 示例），非真实用户界面文案 -->
+
 > 本文是 **WORKBOARD-v2.md 的细节补充**，专记「使用者/接手 AI 写代码时最常问的两件事」：
 > ① 想让某处代码不报警告，豁免注释怎么写、写哪；
 > ② 想加一条审计规则，yml 文件怎么写、字段怎么用、会被哪个编译函数认领。
@@ -76,6 +78,7 @@ audit 消费时对 `audit-rules-*.yml` 路径跳过 residue 类豁免（规则�
 | version | `lib/audit-rules/audit-rules-version.yml` | 8 |
 | dsh | `lib/audit-rules/audit-rules-dsh.yml` | 7 |
 | comment | `lib/audit-rules/audit-rules-comment.yml` | 6 |
+| i18n | `lib/audit-rules/audit-rules-i18n.yml` | 3 |
 | folder | `lib/audit-rules/audit-rules-folder.yml` | 4 |
 | docs | `lib/audit-rules/audit-rules-docs.yml` | 1 |
 | robustness | `lib/audit-rules/audit-rules-robustness.yml` | 1 |
@@ -128,7 +131,7 @@ output:
 ### 2.3 字段 → 编译函数认领表（lib/rule/compilers.js 全部注册）
 
 > 一个规则**不用写 kind**——按字段自动探测（也可显式 `kind:` 抢跑）。
-> 认领顺序：显式 kind → 注册表顺序（凭据→函数→数值→正则→链接→语义→黑名单→目录）。
+> 认领顺序：显式 kind → 注册表顺序（凭据→函数→数值→正则→链接→语义→黑名单→目录→npm 结构化）。
 
 | 编译 kind | 认领条件（detect 探测字段 / id） | 编译产物关键字段 | 维度 |
 |---|---|---|---|
@@ -142,12 +145,14 @@ output:
 | `max-depth` | `max_depth` 存在 | threshold | 可维护 |
 | `min-occurrences` | `min_occurrences` 存在且无 ignore 字段 | threshold | 可维护 |
 | `repeated-string` | `min_occurrences` + ignore_patterns/ignore_values | threshold + ignorePatterns + ignoreValues | 可维护+可读 |
-| `regex` | `pattern`/`patterns` 字符串 | pattern / patterns + exts（可选限定扩展名） | 可读性 |
+| `regex` | `pattern`/`patterns` 字符串 **或对象子模式 `{id,pattern,message}`** | pattern / patterns + subPatterns[]（{regex,message}）+ exts | 可读性 |
 | `path-regex` | `kind==='path-regex'` 或 `path_pattern`（非 credfile） | pathPattern | 可读+可维护 |
 | `link-check` | `kind==='link-check'` 或 (flaky_hosts + status_dead) | statusDead/statusTransient/flakyHosts/score*/timeoutMs/concurrency/maxLinks | 文档+可维护 |
 | `semantic` | detection_method / category security|accessibility / 名含测试等关键词 / id 含 testing|dependency | detectionMethod | 健壮性 |
 | `blacklist` | `blacklist` 数组非空 | blacklist[]（{pattern,weight}）+ whitelist[] | 文档 |
 | `folder` | category==='folder' 或 (threshold + exclude_dirs/signatures/required_patterns) | threshold + excludeDirs + signatures + requiredPatterns | 可维护+可部署 |
+| `npm-json` | 显式 kind==='npm-json'（package.json 结构化判定） | detectionMethod / 结构化条件 | 可部署性 |
+| `i18n` | 槽位 i18n 规则（pattern→regex / detection_method→semantic） | hardcoded-user-visible / concat-in-t / locale-file-missing | 文档+可维护 |
 
 ### 2.4 正则类 vs 数值类：加一条规则的两种写法
 
@@ -295,3 +300,258 @@ cd ../dsh-git-push && node cli.mjs audit ../dsh-git-push-v2 --json
 | `pushPermitEnabled` | **false** | AI 回复推送许可默认关（回复含「任务完成」才触发） |
 
 > 侧边栏零外部资源、无 JSX（手写 createElement）、配置即时生效、无 viewer。
+
+---
+
+## 十、扫描输出 → 豁免方法速查（给用户看的豁免指引）
+
+> 目的：AI 把扫描 findings 汇报给用户时，**每条问题都附「被哪条规则拦 → 怎么豁免」**，
+> 让用户不困惑、可自助豁免（豁免只影响提醒，不掩盖硬问题——敏感/语法/大文件不豁免）。
+
+### 10.1 正则/残留类 → 两种豁免姿势
+
+| finding 的 rule/kind | 被谁拦截 | 豁免方法（写哪） |
+|---|---|---|
+| `[FUNC]`(secret-*) / `credential-ref-*` / `credential-file-*` / 私钥路径 | **dsh-skip-sensitive** | 行尾 `// dsh-skip-sensitive`（仅本行）或文件头（整文件） |
+| `func-lines` 函数过长 | **dsh-skip-func-length** | 函数定义行行尾（单函数）或文件头（整文件） |
+| debugger / todo / console 残留（regex 类） | **dsh-skip-residue** | 行尾（本行）或文件头（整文件） |
+| style-* 数值风格（min-length/max-lines/max-complexity/max-depth/…） | **dsh-skip-style** | 只能文件头 |
+| sync-fs / empty-catch / func-lines（质量类） | **dsh-skip-quality** | 只能文件头 |
+| binary / large-file | **dsh-skip-size** | 只能文件头 |
+| syntax / json-parse / yaml-parse | **dsh-skip-syntax** | 只能文件头 |
+
+### 10.2 测试/脚本自动豁免（不用写标记）
+
+| 文件位置 | 自动豁免的规则 |
+|---|---|
+| `test/**` | residue / console-log / sync-fs / empty-catch |
+| `scripts/**`、`cli.mjs` | residue / console-log / sync-fs |
+
+### 10.3 汇报话术模板
+
+```
+⚠️ 警告（rule=xxx，kind=yyy）：<message>
+   豁免：<该 kind 对应标记>（文件头=整文件 / 行尾=单点）——若确属刻意写法可加，否则建议修复
+```
+
+> 每 finding 已自带 `exemptHint`，AI 汇报时直接引用即可，无需查表。
+
+---
+
+## 十一、审计功能默认关（用户侧说明）
+
+| 开关 | 位置 | 默认 | 说明 |
+|---|---|---|---|
+| 审计开关 `auditEnabled` | 设置 → 侧边栏 → 审计开关 | **关** | 开启后提交前自动审计（默认关，本机一致开由用户显式打开） |
+| 推送许可 `pushPermitEnabled` | 设置 → 侧边栏 → AI 回复推送许可 | **关** | 回复含「任务完成」才自动提交推送 |
+
+> 两条默认关是**产品决策**：不在用户不知情时自动拦截提交 / 自动推送。
+> 需要自动审计的部署，在侧边栏打开即可，配置即时生效（无需重启）。
+
+---
+
+## 十二、10 维度字段绑定（问题字段 ↔ 维度）
+
+> 设计：**所有问题都归入 10 个维度**；每个 yml 字段在**对应编译函数里写维度绑定**，
+> 支持**一个字段绑定多个维度**（如 repeated-string → 可维护性+可读性）。
+
+### 12.1 绑定位置 = 编译函数（compilers.js），不是 yml
+
+| kind | 维度绑定（compilers.js 内声明） |
+|---|---|
+| credential-ref / credential-file / `[FUNC]` | 安全性 |
+| func-lines | 可读性 + 可维护性 |
+| min-length | 可读性 |
+| max-lines | 可读性 + 可维护性 |
+| max-complexity | 可维护性 |
+| max-depth | 可维护性 |
+| min-occurrences | 可维护性 |
+| repeated-string | 可维护性 + 可读性 |
+| regex | 可读性 |
+| path-regex | 可读性 + 可维护性 |
+| link-check | 文档 + 可维护性 |
+| semantic | 健壮性 |
+| blacklist | 文档 |
+| folder | 可维护性 + 可部署性 |
+
+### 12.2 为什么绑定写在字段函数里
+
+- **yml 保持纯数据**：规则作者不用懂维度，只管写 pattern/阈值；
+- **一处声明全链生效**：编译产物直接带 `dimensions[]`，评分 `countByDimension` 直接消费；
+- **加新字段 = 加函数 + 注册一行**（compileRule 主体永不改）。
+
+---
+
+## 十三、示例规则：performance/memory-bomb（内存爆炸检测）
+
+> 完整规则定义（含子模式级 message + mitigation），可直接落进任意槽位 yml。
+> **已兑现（1.0.4）**：本示例已落地为 `lib/audit-rules/audit-rules-performance.yml`，
+> regex 编译器支持对象子模式（patterns 条目可为 `{id, pattern, message}`），
+> 命中时输出 per-pattern 专属 message（详见 §2.3 认领表 subPatterns 行）。
+
+```yaml
+- id: performance/memory-bomb
+  name: "检测可能导致内存爆炸的代码"
+  category: "performance"
+  severity: "warning"
+  description: "短时间内占用大量内存的代码模式"
+  patterns:
+    - id: full-file-read
+      pattern: "fs\\.(readFileSync|readFile)\\s*\\("
+      message: "全量读入文件可能占用大量内存，建议用流式处理"
+    - id: unbounded-push
+      pattern: "\\.push\\s*\\("
+      message: "检查 push 是否有清理机制或上限控制"
+    - id: array-spread
+      pattern: "\\[\\s*\\.\\.\\.\\w+\\s*,\\s*\\.\\.\\.\\w+\\s*\\]"
+      message: "展开多个大数组会一次性创建新数组"
+    - id: infinite-loop
+      pattern: "while\\s*\\(\\s*true\\s*\\)"
+      message: "无限循环需确认有 break 条件和内存控制"
+    - id: exec-sync
+      pattern: "execSync\\s*\\("
+      message: "execSync 输出全部进内存，建议用 spawn + 流"
+    - id: json-stringify-large
+      pattern: "JSON\\.stringify\\s*\\([^)]{50,}\\)"
+      message: "大对象序列化会瞬间产生等量字符串"
+  fixable: false
+  mitigation: |
+    - 大文件用 fs.createReadStream 流式处理
+    - 数组累积加 maxLength 上限，超出时丢弃旧数据
+    - 缓存加 TTL 或 LRU 淘汰机制
+    - 递归加深度限制
+    - 子进程用 spawn + 流式读取
+```
+
+### 13.1 检测方式对比（为什么正则为主、AST 补充）
+
+| 检测方式 | 能检测什么 | 局限 |
+|---|---|---|
+| 正则扫描 | 可疑模式（push、while true、readFileSync） | 误报多，无法判断实际内存量 |
+| AST 分析 | 循环内分配、递归缺终止、闭包捕获 | 需要解析器，实现复杂 |
+| 动态监控 | 真实内存增长、泄漏、OOM | 需要运行环境，无法静态发现 |
+| 压力测试 | 高并发下的内存峰值 | 需要测试基础设施 |
+
+### 13.2 AST 补充检测思路（@babel/parser，将来扩展 semantic kind 用）
+
+```js
+// 用 @babel/parser 检测：
+// 1. 循环内是否有内存分配  2. 递归函数是否有终止条件  3. 闭包是否捕获大对象
+traverse(ast, {
+  // 检测循环内 push
+  CallExpression(path) {
+    const isPush = path.node.callee.property?.name === 'push'
+    const insideLoop = path.findParent(p =>
+      p.isForStatement() || p.isWhileStatement() || p.isForOfStatement()
+    )
+    if (isPush && insideLoop) {
+      console.warn(`⚠️ 循环内 push（第 ${path.node.loc.start.line} 行），检查是否有上限`)
+    }
+  },
+  // 检测递归调用
+  FunctionDeclaration(path) {
+    const fnName = path.node.id?.name
+    if (!fnName) return
+    let isRecursive = false
+    path.traverse({
+      CallExpression(inner) {
+        if (inner.node.callee.name === fnName) isRecursive = true
+      }
+    })
+    if (isRecursive) {
+      const hasBaseCase = path.node.body.body.some(stmt =>
+        stmt.type === 'IfStatement' && stmt.alternate?.type === 'ReturnStatement'
+      )
+      if (!hasBaseCase) {
+        console.error(`🔴 递归函数 ${fnName}（第 ${path.node.loc.start.line} 行）缺少终止条件`)
+      }
+    }
+  }
+})
+```
+
+---
+
+## 十四、待办设计：git push 通道自主选择（AI 填参数，去掉默认 api 硬推）
+
+> **决策记录（2026-09-10，仅设计不实施）**：原设计「所有功能默认 api.github.com + 401 自动回退 SSH」改为
+> **AI 填参数自主选择通道**，不保留隐式默认主通道。
+
+### 14.1 目标签名（将来 commitAndPush 增加 transport）
+
+```
+commitAndPush({ repoPath, message, push?, dryRun?, token?, transport: 'api'|'ssh'|'auto' })
+```
+
+| transport | 行为 |
+|---|---|
+| `api` | 只走 Git Data API（api.github.com），失败即失败，不自动回退（AI 显式选 API = 认定 token 可用） |
+| `ssh` | 只走 SSH（ssh.github.com:443），失败即失败，不自动回退 |
+| `auto` | AI 未指定时兜底：先 API，401/失败再回退 SSH（保留旧行为但仅为显式兜底，非默认主通道） |
+
+### 14.2 需要同步改的点（清单）
+
+1. `lib/git/index.js`：`commitAndPush` 加 `transport` 参数 + 分支逻辑；`pushViaApi` 去掉内部 401→SSH 回退（上移到 auto 分支）；文件头注释「默认 api 硬闸」改「通道由 AI 选择」
+2. `lib/index.js`：工具 schema `git_commit_push` 加 `transport` 参数并透传；description 去掉「默认 api」
+3. **相关 skill**：`skills/dsh-git-push.md`（git_commit_push 行加 transport、git_clone/git_remote_create 的「走 api.github.com」改「通道按参数」）、`skills/dsh-git-push-functions.md`（L57/L68/L180 的「只走 api.github.com」同步改）
+4. 测试：test-git.mjs 补 transport 三分支断言
+5. 本板 §五 token 探测不变（token 与通道解耦：api 用 token，ssh 用私钥）
+
+> 说明：本清单是**设计备忘**，实施时机由开发者决定，不在本次落码。
+
+---
+
+## 十五、设计：单次硬编码提醒（复用第三等级 info，2026-09-10 确立 4 项）
+
+> **背景**：repeated-string 现在只对「重复 ≥ min_occurrences 的硬编码值」出 warning。
+> 新增设计：**单次出现的硬编码值也扫**，不警告、只「提醒」——提示该硬编码值
+> 是否需要转成变量/配置文件/常量。正好利用 severity 第三级 **info**（单列、不拦门禁）。
+
+### 15.1 四项设计决策（2026-09-10 已确认）
+
+| # | 决策点 | 定案 |
+|---|---|---|
+| 1 | 触发范围 | **路径 + 纯数字**（URL/域名/端口/绝对路径/`:8080`/`127.0.0.1` 等值型特征 + 纯数字字面量放开 `num` 类型） |
+| 2 | 档位边界 | **可配置阈值**（yml 加 `min_remind` 字段：`count ≥ min_remind` → info 提醒；`count ≥ min_occurrences` → warning 警告） |
+| 3 | 评分影响 | **计 0 分**（提醒不进评分、不进 blocker/warning 统计，仅单列展示） |
+| 4 | 实现形态 | **同 kind 双档恒开**（repeated-string 检查器同时产 warning + info，不加开关字段） |
+
+### 15.2 目标设计（将来实施）
+
+**切换逻辑（checkRepeated 内）**：
+```
+对每个硬编码字面量命中：
+  count ≥ min_occurrences（默认 3）→ severity='warning'，scoreImpact=1（原行为不变）
+  min_remind ≤ count < min_occurrences → severity='info'，scoreImpact=0（新增提醒档）
+```
+- 范围放宽：`checkRepeatedStringsAst` 对应处放开 `num`（纯数字）与路径/URL 类值型特征；
+  仍排除：纯标识符、dotfile、2-4 字汉字维度词、`len<4` 短串（噪音过滤基线保留）
+- `countByDimension`：`info`/`notice` 计 0（当前非 blocker 一律计 1，需加 severity 分支）
+- `summarize`：info 已单列 notice（无需改）
+- **评分盲点预警**：放开 num 会把大量数字字面量计入计数——`count=1` 的纯数字若全提醒会噪音爆炸，
+  实施时建议对纯数字再设长度/语义过滤（如仅提醒 `≥4 位` 或含小数/科学计数，`1/2/3` 等小整数仍忽略）
+
+### 15.3 yml 字段（min_remind，repeated-string 编译函数认领）
+
+```yaml
+- id: security/no-repeated-hardcoded-literals
+  name: "检测重复硬编码 + 单次硬编码提醒"
+  category: "security"
+  severity: "warning"
+  description: "重复 ≥ min_occurrences 警告（建议配置化）；单次硬编码（路径/纯数字）info 提醒（是否转常量/配置）"
+  min_occurrences: 3          # warning 阈值（现有）
+  min_remind: 1               # 新增：info 提醒阈值（count≥1 即提醒单次硬编码）
+  ignore_patterns: [ ... ]    # 现有 ignore 逻辑对两档同时生效
+```
+
+### 15.4 修改面清单（涉及文件）
+
+1. `lib/audit-rules/audit-rules-nodejs.yml`：`no-repeated-hardcoded-literals` 加 `min_remind: 1`
+2. `lib/rule/compilers.js`：repeated-string 编译函数增加 `min_remind` 字段透传（extra.remindThreshold）
+3. `lib/audit/checks.js`：`checkRepeated` 切双档（≥min_occurrences→warning；min_remind≤count<min_occurrences→info，scoreImpact=0）
+4. `lib/score/ast.js`：`checkRepeatedStringsAst` 放开 num/路径类筛选（按 15.2 噪音控制）
+5. `lib/score/index.js`：`countByDimension` info/notice 计 0
+6. `test/test-quality.mjs` / `test/test-rule-packs.mjs`：补双档断言
+7. skill `skills/dsh-git-push.md` repeated-string 描述同步
+
+> 说明：本清单是**设计备忘**，实施时机由开发者决定，不在本次落码。

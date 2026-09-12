@@ -1,5 +1,6 @@
 /**
  * dsh-git-push 客户端插件（DSH 侧边栏，1.0.0）
+ * dsh-skip-i18n: 插件为中文零依赖 CLI（无 i18n 框架需求），用户可见文案硬编码为产品设计
  *
  * 形态：DSH 客户端模块加载器入口（`__ModuleLoader__.load({ id, factory })`）。
  * 与 lib/client/index.js（纯逻辑/可单测）的关系：本文件是**浏览器侧适配层**，
@@ -37,6 +38,12 @@ window.__ModuleLoader__.load({
       injectFullSkillHint: '默认只注目录+清单，正文按需读取省 token',
       auditScanScope: '审计扫描范围',
       auditScanScopeHint: 'diff=仅本次变动；full=全量',
+      auditLevel: '审计强度',
+      auditLevelHint: 'quick=只跑 regex/黑名单；standard=默认全量；deep=+AST 语义检查',
+      auditRuleset: '自定规则目录',
+      auditRulesetHint: '空=内置规则包；指向放有 audit-rules-<名>.yml 的目录即整体替换',
+      weightOverrides: '权重覆盖 JSON',
+      weightOverridesHint: '如 {"安全性":100}；空=默认权重表',
     };
 
     /** 设置项（与服务端 lib/client/index.js SETTINGS_SCHEMA 一致）。 */
@@ -47,6 +54,9 @@ window.__ModuleLoader__.load({
       { key: 'hardcodeFullScan', type: 'boolean', default: false },
       { key: 'injectFullSkill', type: 'boolean', default: false },
       { key: 'auditScanScope', type: 'enum', values: ['diff', 'full'], default: 'diff' },
+      { key: 'auditLevel', type: 'enum', values: ['quick', 'standard', 'deep'], default: 'standard' },
+      { key: 'auditRuleset', type: 'string', default: '' },
+      { key: 'weightOverrides', type: 'string', default: '' },
     ];
 
     const INLINE_CSS = '.dsh-git-push-row{display:flex;align-items:center;gap:8px}'
@@ -63,6 +73,13 @@ window.__ModuleLoader__.load({
           return h('label', { key: item.key, className: 'dsh-git-push-row' }, [
             h('select', { key: 'i', value: config[item.key] ?? item.default, onChange: (e) => setKey(item.key)(e.target.value) },
               item.values.map((v) => h('option', { key: v, value: v }, v))),
+            h('span', { key: 'l' }, zh[item.key] || item.key),
+          ]);
+        }
+        if (item.type === 'string') {
+          return h('label', { key: item.key, className: 'dsh-git-push-row' }, [
+            h('input', { key: 'i', type: 'text', value: config[item.key] ?? item.default ?? '',
+              onChange: (e) => setKey(item.key)(e.target.value) }),
             h('span', { key: 'l' }, zh[item.key] || item.key),
           ]);
         }

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// dsh-skip-i18n: CLI 输出硬编码中文为产品行为（无 i18n 需求）
 /**
  * scan-version.mjs — 版本一致性校验（自身总入口 0.1.4）
  *

@@ -135,3 +135,34 @@ test('HTTP：tools 端点列出工具', async () => {
 });
 
 // ---------- 双副本同步 ----------
+
+// ---------- 1.0.4：package.json 的 dsh 装载契约（缺失→插件装上即失效） ----------
+const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
+
+test('契约：package.json 有 dsh 段（bundle.patch + client.inject + skills）', () => {
+  assert.ok(pkg.dsh, 'dsh 段必须存在——缺了 bundle patch 不读、client.js 不加载、skills 不注入');
+  assert.equal(pkg.dsh.bundle?.patch, './cordis.patch.yml', 'bundle.patch 指向 cordis.patch.yml');
+  assert.ok(existsSync(join(ROOT, pkg.dsh.bundle.patch)), 'patch 文件必须真实存在');
+  assert.equal(pkg.dsh.client?.platform, 'web', 'client.platform 应为 web');
+});
+
+test('契约：client.inject 含设置 UI / 插件配置 / 语言包三件套', () => {
+  const inject = pkg.dsh.client?.inject || [];
+  for (const dep of ['@deepseek-ai/dsh-client-ui-settings-plugins', '@deepseek-ai/dsh-client-ui-settings', '@deepseek-ai/dsh-client-locale']) {
+    assert.ok(inject.includes(dep), `client.inject 缺 ${dep}`);
+  }
+});
+
+test('契约：有 client.js 就必须声明 client.inject（否则侧边栏永不加载）', () => {
+  assert.ok(existsSync(join(ROOT, 'client.js')), '本仓有 client.js');
+  assert.ok(Array.isArray(pkg.dsh.client?.inject) && pkg.dsh.client.inject.length > 0,
+    'client.js 存在时 client.inject 不能为空');
+});
+
+test('契约：dsh.skills 每条路径都真实存在（防列了不存在的文件）', () => {
+  const skills = pkg.dsh.skills || [];
+  assert.ok(skills.length > 0, 'dsh.skills 不能为空');
+  for (const rel of skills) {
+    assert.ok(existsSync(join(ROOT, rel)), `dsh.skills 列了不存在的文件: ${rel}`);
+  }
+});

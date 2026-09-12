@@ -1,6 +1,6 @@
 ---
 name: git-project-read-history
-description: 进入 git 项目目录读提交历史（接手/了解/排查 git 项目第一动作）。任何需要「了解这个项目在干什么/最近改了什么/项目脉络」的场景，先进项目目录用 git log 读提交历史，再决定下一步。处理「进入git项目的目录读提交历史」「看下这个项目提交历史」「接手项目先看提交」「这个仓库最近改了啥」类请求时加载；与 git-commits-viewer（网页查看器）、git_scan（全仓扫描）、dsh-repo-index（仓库地址权威源）配套。
+description: 进入 git 项目目录读提交历史（接手/了解/排查 git 项目第一动作）。任何需要「了解这个项目在干什么/最近改了什么/项目脉络」的场景，先进项目目录用 git log 读提交历史，再决定下一步。处理「进入git项目的目录读提交历史」「看下这个项目提交历史」「接手项目先看提交」「这个仓库最近改了啥」类请求时加载；与 git-commits-viewer（外部插件网页查看器）、git_scan（全仓扫描）、dsh-repo-index（仓库地址权威源）配套。
 whenToUse: 用户要求进入 git 项目目录读提交历史；需要快速了解一个 git 项目最近动态/脉络/交接接手；排查项目当前状态前先看历史；输出里要引用某项目提交记录时。
 generatedBy: user-request 2026-08-23
 ---
@@ -72,7 +72,7 @@ git show --stat <短哈希>
 
 ## 六、配套
 
-- `git-commits-viewer`：网页查看器（4000 端口，可视化提交/diff），CLI 读历史的信息补充
+- `git-commits-viewer`：外部独立插件（非本插件内置），网页查看器（4000 端口，可视化提交/diff），CLI 读历史的信息补充
 - `git_scan`：一键盘点所有仓库状态（未提交变更/最近活动），读历史前的总览
 - `dsh-repo-index`：仓库地址权威源
 - `verify-before-diagnose`：排查项目先实测（读历史是实测第一步）
