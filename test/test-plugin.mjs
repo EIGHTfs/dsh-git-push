@@ -29,7 +29,7 @@ test('入口：Config schema 含关键开关且默认关', () => {
   // 作为函数调用返回带默认值的配置对象（schemastery 真实语义）
   const cfg = Config({});
   assert.equal(cfg.auditEnabled, false, 'auditEnabled 默认关');
-  assert.equal(cfg.pushPermitEnabled, undefined, 'pushPermitEnabled 已移除（2026-09-11 用户要求全删）');
+  assert.equal(cfg.pushPermitEnabled, undefined, 'pushPermitEnabled 已移除（2026-09-11 约定全删）');
   assert.equal(cfg.enabled, true, 'enabled 默认开');
   assert.ok(fields.some((d) => String(d).includes('审计')), 'schema 含审计开关描述');
 });

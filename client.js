@@ -348,6 +348,20 @@ window.__ModuleLoader__.load({
               jsx.jsx('p', { className: 'dshgp_hint', children: '开启后 git_commit_push 提交前自动跑 L0 静态检查 + 10 维度质量评分；有 blocker 拦截提交。' }),
             ],
           }),
+          /* ①.5 代码禁用户沟通词开关（控制 comment 槽位启停，2026-09-13） */
+          jsx.jsxs('div', {
+            className: 'dshgp_block',
+            children: [
+              jsx.jsxs('div', {
+                className: 'dshgp_switchrow',
+                children: [
+                  jsx.jsx('span', { className: 'dshgp_switchlabel', children: '代码禁用户沟通词（命中 Block 提交）' }),
+                  jsx.jsx('input', { type: 'checkbox', checked: !((s.slotMeta && s.slotMeta['comment']) || {}).disabled, onChange: () => props.toggleDisabled('comment'), 'aria-label': '代码禁用户沟通词' }),
+                ],
+              }),
+              jsx.jsx('p', { className: 'dshgp_hint', children: '代码注释/文档出现沟通残留措辞（见 comment 规则包黑名单）→ blocker 拦截提交；白名单业务词（用户ID/用户登录等）自动豁免。' }),
+            ],
+          }),
           /* ② 审计权重（10 维度） */
           jsx.jsxs('div', {
             className: 'dshgp_block',
@@ -823,7 +837,7 @@ window.__ModuleLoader__.load({
         const props = makeProps(state);
         return jsx.jsx(dshgp_GitPushPage, props);
       }
-      // 只注册 settings.section（独立侧边栏页）；settings.plugin.item（插件配置卡）已按用户要求删除
+      // 只注册 settings.section（独立侧边栏页）；settings.plugin.item（插件配置卡）已删除
       ctx.slots.inject('settings.section', () => ctx.slots.register({
         name: 'settings.section',
         id: 'dsh-git-push',

@@ -10,6 +10,7 @@ import '../lib/rule/compilers.js'; // 副作用导入：注册编译函数
 import { registerCompiler, compileRule, compileAllRules, RULE_COMPILERS } from '../lib/rule/registry.js';
 import { loadRuleFiles, RULE_SLOTS, resolveSlotOrder, discoverRuleSlots, setSlotDisabled } from '../lib/rule/loader.js';
 import { safeRe } from '../lib/rule/compilers.js';
+import { checkBlacklist } from '../lib/audit/checks.js';
 
 test('注册表：编译函数已注册（含 credential-ref / credential-file / [FUNC]）', () => {
   const kinds = RULE_COMPILERS.map((e) => e.kind);
@@ -271,15 +272,42 @@ test('发现槽位：空目录不崩溃', () => {
 });
 
 // ---------- 1.0.3 新 kind：blacklist / folder / npm-json / i18n（同名函数 + 注册一行） ----------
-test('1.0.3：blacklist kind 编译（comment 槽位黑名单加分制）', () => {
+test('1.0.3：blacklist kind 编译（comment 槽位，2026-09-13 取消分数制：白名单豁免 + 黑名单直拦）', () => {
   const r = loadRuleFiles(['comment']);
   const compiled = compileAllRules(r.merged.rules, { errors: [] });
   const bl = compiled.filter((c) => c.kind === 'blacklist');
   assert.ok(bl.length >= 1, 'comment 槽位应有 blacklist 规则');
   const rule = bl[0];
+  assert.equal(rule.severity, 'blocker', '用户沟通词规则 severity 应为 blocker（拦截提交）');
   assert.ok(Array.isArray(rule.blacklist) && rule.blacklist.length > 0, 'blacklist 数组应编译');
-  assert.ok(rule.blacklist.some((b) => b.weight > 0), 'blacklist 条目应带 weight');
+  assert.ok(rule.blacklist.every((b) => b.pattern && b.weight === undefined), 'blacklist 应只含 pattern（weight 已删除，无分数制）');
   assert.ok(Array.isArray(rule.whitelist) && rule.whitelist.length > 0, 'whitelist 应编译');
+  assert.ok(rule.whitelist.every((w) => w.pattern && w.penalty === undefined), 'whitelist 应只含 pattern（penalty 已删除）');
+  assert.equal(rule.scoring, undefined, 'scoring 分数制应删除');
+  assert.ok(!rule.additionalFeatures || rule.additionalFeatures.length === 0, 'additional_features 分数制应删除（当前为空数组）');
+});
+
+// 2026-09-13 约定：关键词取消分数制——白名单命中不拦截，黑名单命中直接拦截（专项测试）
+test('blacklist blocker 模式：黑名单命中即拦 / 白名单命中整行豁免', () => {
+  const r = loadRuleFiles(['comment']);
+  const compiled = compileAllRules(r.merged.rules, { errors: [] });
+  const rule = compiled.find((c) => c.kind === 'blacklist');
+  assert.ok(rule, '应有 blacklist 规则');
+  const block = (text) => {
+    const f = checkBlacklist({ file: 'x.js', text, rules: [rule] });
+    return f.length > 0 && f[0].severity === 'blocker';
+  };
+  // 黑名单命中 → 拦截
+  assert.equal(block('// 用户说：这里要改\n'), true, '用户说 应拦截');
+  assert.equal(block('// 用户要求改这里\n'), true, '用户要求 应拦截');
+  assert.equal(block('// 用户原话固化的规则\n'), true, '用户原话 应拦截');
+  // 白名单命中 → 整行豁免（不拦截）
+  assert.equal(block('// 校验用户ID与用户角色\n'), false, '用户ID 白名单应豁免');
+  assert.equal(block('// 用户登录成功后跳转\n'), false, '用户登录 白名单应豁免');
+  // 黑名单 + 白名单同行 → 白名单整行豁免
+  assert.equal(block('// 用户原话固化，用户ID校验通过\n'), false, '黑名单+白名单同行应整行豁免');
+  // 正常业务注释 → 放行
+  assert.equal(block('// 正常业务注释\n'), false, '正常注释应放行');
 });
 
 test('1.0.3：folder kind 编译（目录级审计 4 条）', () => {

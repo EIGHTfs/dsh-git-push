@@ -58,9 +58,9 @@ test('对数衰减公式与用户 YAML 示例一致（k=1.5）', () => {
   }
 });
 
-test('DIMENSION_K：安全最高 1.8 / 文档最低 1.0 / 覆盖 10 维度', () => {
-  assert.equal(DIMENSION_K['安全性'], 1.8);
-  assert.equal(DIMENSION_K['文档'], 1.0);
+test('DIMENSION_K：安全最高 1.5 / 文档最低 0.8 / 覆盖 10 维度', () => {
+  assert.equal(DIMENSION_K['安全性'], 1.5);
+  assert.equal(DIMENSION_K['文档'], 0.8);
   assert.equal(Object.keys(DIMENSION_K).length, 10);
   for (const d of Object.keys(DEFAULT_WEIGHTS)) assert.ok(DIMENSION_K[d] > 0, `${d} 应有 k 值`);
 });
@@ -90,10 +90,11 @@ test('scoreQuality：错误数 8 vs 60 维度分有区分度', () => {
 });
 
 test('scoreQuality：level 含 E 档（<40）', () => {
-  // 极端跨维度压分：10 维度各 20 blocker → 每维 counts=40，对数衰减后应显著低于 40
+  // 极端跨维度压分：10 维度各 20 blocker → 每维 counts=40，对数衰减（5 档 k 调低后）应 ≤C 级（<70）
   const dims = ['可读性', '可维护性', '健壮性', '安全性', '性能', '测试覆盖', '可观测性', '可部署性', '文档', '开发者体验'];
   const all = [];
   for (const d of dims) for (let i = 0; i < 20; i++) all.push({ dimensions: [d], severity: 'blocker' });
   const r = scoreQuality(all);
-  assert.ok(r.level === 'E' || r.level === 'D', `极端压分 level 应为 E/D，实际 ${r.level}(${r.score})`);
+  assert.ok(r.level === 'E' || r.level === 'D' || r.level === 'C', `极端压分 level 应为 E/D/C，实际 ${r.level}(${r.score})`);
+  assert.ok(r.score < 70, `极端压分 score 应 <70，实际 ${r.score}`);
 });

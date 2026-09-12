@@ -214,12 +214,12 @@ test('scoreQuality：qualityWeights 覆盖生效（权重可调）', () => {
 });
 
 test('scoreQuality：对数衰减（防零分塌陷）+ 权重占比生效', () => {
-  // 单维度 60 个错误（30 blocker）：线性扣分会归 0；对数衰减 k=1.3 → max(0.1, 10-1.3*ln(61))≈4.66
+  // 单维度 60 个错误（30 blocker）：线性扣分会归 0；对数衰减 k=1.1（性能档）→ max(0.1, 10-1.1*ln(61))≈5.48
   const heavy = [];
   for (let i = 0; i < 30; i++) heavy.push({ dimensions: ['性能'], severity: 'blocker' });
   const rh = scoreQuality(heavy);
   assert.ok(rh.score > 90 && rh.score <= 99, `60 错误性能维对数衰减不归零，实际 ${rh.score}`);
-  assert.ok(rh.dims['性能'] >= 0.1 && rh.dims['性能'] < 5, `dims 保留微弱区分度，实际 ${rh.dims['性能']}`);
+  assert.ok(rh.dims['性能'] >= 0.1 && rh.dims['性能'] < 6.5, `dims 保留微弱区分度，实际 ${rh.dims['性能']}`);
   // 8 个错误 vs 60 个错误应有维度分差（对数衰减关键特性；总分取整后可能相同，比 dims）
   const light = [];
   for (let i = 0; i < 4; i++) light.push({ dimensions: ['健壮性'], severity: 'blocker' }); // counts=8
