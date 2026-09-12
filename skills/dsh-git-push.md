@@ -1,6 +1,6 @@
 ---
 name: dsh-git-push
-description: dsh-git-push 插件手册（v1.x 架构：10 总入口 + 7 工具 + YAML 规则包）。说明 git_scan / git_commit_push / code_audit / git_clone / git_remote_create / git_set_visibility / link_check 七个工具的调用方法，审计规则包（lib/audit-rules/*.yml 动态槽位）、豁免标记（dsh-skip-*）、质量评分（10 维度加权）、HTTP API 鉴权（Origin + confirm）、独立运行（git-sluice CLI）与双副本同步。处理「提交推送代码」「扫描仓库状态」「审计代码」「规则包怎么加规则」「被审计拦截怎么豁免」「链接检查」「插件装了不生效」类请求时加载。
+description: dsh-git-push 插件手册（v1.x 架构：10 总入口 + 7 工具 + YAML 规则包 + 客户端设置 UI）。说明 git_scan / git_commit_push / code_audit / git_clone / git_remote_create / git_set_visibility / link_check 七个工具的调用方法，审计规则包（lib/audit-rules/*.yml 动态槽位）、豁免标记（dsh-skip-*）、质量评分（10 维度加权）、HTTP API 鉴权（Origin + confirm）、独立运行（git-sluice CLI）、官方 CLI 安装与客户端 UI 修复实录（2026-09-12：完全移植 v1 的 Controller+hooks+独立 section 页，修复 scope.use 崩溃与 Host 缺 settings.register 两个根因）。处理「提交推送代码」「扫描仓库状态」「审计代码」「规则包怎么加规则」「被审计拦截怎么豁免」「链接检查」「插件装了不生效」「设置侧边栏空白」「配置卡不出」「侧边栏没有 git-push」类请求时加载。
 whenToUse: 需要用插件做 git 提交推送 / 代码审计 / 规则包定制 / 报错排查时。
 ---
 
@@ -14,7 +14,7 @@ whenToUse: 需要用插件做 git 提交推送 / 代码审计 / 规则包定制 
 | 工具 | 参数 | 说明 |
 |---|---|---|
 | `git_scan` | `root?`, `paths?`, `extraReposFile?` | 扫描全部 git 仓库 → 分支/remote/未提交变更数/最近活动 |
-| `git_commit_push` | `repo`(必填), `message`(必填), `push?`, `dryRun?`, `audit?`(默认 true), `llmAudit?`, `requirementsConfirmed?` | **先审计** → `git add -A` → commit → push；审计有 blocker 时拦截 |
+| `git_commit_push` | `repo`(必填), `message`(必填), `push?`, `dryRun?`, `audit?`(默认 true), `requirementsConfirmed?` | **先审计** → `git add -A` → commit → push；审计有 blocker 时拦截 |
 | `code_audit` | `repo`, `scope?`, `llm?`, `ruleset?`, `auditLevel?`, `weights?` | 审计仓库：L0 静态检查 + 10 维度质量评分；`scope=full` 全量；`ruleset` 指向自定规则目录（整体替换规则包）；`auditLevel=quick/standard/deep` 控强度；`weights` JSON 覆盖权重 |
 | `git_clone` | `target`(必填), `dest?`, `branch?` | 经 `api.github.com` Git Data API 克隆（不跟随 302、不直连 codeload） |
 | `git_remote_create` | `repo`, `visibility?`(默认 private), `dryRun?` | 按目录名建远程仓库并设 origin（走 api.github.com） |
@@ -103,20 +103,45 @@ node cli.mjs self-check       # 自身完整性
 
 `package.json` 的 `bin.git-sluice` 指向 `cli.mjs`。
 
-## 七、双副本同步（改动不生效先查这里）
+## 七、安装与客户端 UI（官方 CLI + 2026-09-12 修复实录）
 
-DSH 加载插件的真实位置是 **`<profile>/local-plugins/<插件名>`**（profile 的 `package.json` 写的是 `file:./local-plugins/dsh-git-push`），`node_modules/<插件名>` 是 npm link 产物。**两处都要同步**，否则 UI/行为改动刷新看不到。
+### 7.1 安装（官方 CLI，不再手动三步曲）
 
 ```bash
-node scripts/sync-plugin.mjs          # dry-run（默认，只打印差异）
-node scripts/sync-plugin.mjs --write  # 真同步（两处目标都写）
+export DSH_HOME="<你的 DSH 实例 .dsh 目录>"
+# 开发期（改码重启即生效，node_modules 是软链）
+dsh plugin --profile web add link:/绝对/路径/dsh-git-push-v2
+# 用户要求实体安装（怀疑软链 / 换机分发）——pnpm 目录源都是软链，唯一实体是 .tgz
+dsh plugin --profile web remove dsh-git-push && rm -f node_modules/dsh-git-push
+cd <源码> && pnpm pack --pack-destination /tmp/
+dsh plugin --profile web add /tmp/dsh-git-push-<版本>.tgz
 ```
+
+验证：`ls -la node_modules/dsh-git-push`（drwx=实体，lrwx=软链）+ `--dump-config` 应有 `id: dsh-git-push / enabled: true`。装完重启 DSH 才生效（dsh-restart-gate）。
+
+### 7.2 客户端 UI 修复实录（2026-09-12，v1.0.14）
+
+**症状**：设置侧边栏有「Git 提交推送」入口，但点击无内容；插件配置无卡片。排查确认两个根因 + 一个隐藏坑：
+
+1. **根因① Host 缺 `settings.register`**——官方契约：配置卡 = Host 注册命名空间 ∩ client 卡片 key 的交集。Host 没 `settingsCtx.settings.register('git-push', Config)` 时交集为空 → 不出卡。修复：apply() 里 `ctx.inject(['settings'])` + `settings.register('git-push', Config, { base: defaultConfig() })` + `scope.watch` 同步。
+2. **根因② `scope.use()` 不存在**——官方 `SettingsScope` 契约只有 `getSnapshot()/subscribe()/set()/mutate()/unset()`，无 `use()`。v2 曾误用 `scope.use()` → 渲染 TypeError → 侧边栏空白。修复：uSES 桥 `useSyncExternalStore(scope.subscribe, () => scope.getSnapshot())` 读 `snap.value`。
+3. **隐藏坑：pnpm 目录源=软链**——用户「重启后还是不行」→ 要求重装。实测 `add 目录` / `add file:目录` 装出来都是软链；`.tgz` 才是实体。重装为实体后正常。
+
+**最终修复 = 完全移植 v1（用户决策「算了v1是好的，你完全移植v1过来」）**：
+- client.js 换用 v1 验证过的实现：`GitPushCardController`（scope 订阅 → `store.createSnapshotStore(project())` → publish）+ `inject()` 返回 `{ hooks: { gitPushCard: store }, edit/toggle/save... }`（槽系统把 store 转成 `useGitPushCard` hook 注入卡片）
+- `settings.section` 用**独立 `GitPushSectionPage`**（v1.49 平铺 UI：登录只读 + 高级设置即时保存），不复用折叠卡（复用是反模式）
+- `settings.plugin.item`：`key: SETTINGS_NS`（'git-push'）+ `inject: () => card.inject()`
+- Host Config 合并 v1 全量字段（githubToken/sshPub/injectFullSkill/hardcodeFullScan/injectRepoIndexFull/customIgnorePatterns/yamlCheckMode/auditRuleWeights/qualityWeights/ruleSlotMeta）+ 保留 v2 特有字段
+- 双语设计取消：去 en 表 + locale 依赖，只留中文
+- 测试适配 v1 结构（jsx-runtime 断言反转、Controller 默认值、槽系统 hooks 模拟渲染）；fallback schema 补 dict/any
+
+**验证**：`npm test` 430 全绿；真实 React 元素树卡片+section 均构建成功；GUI 实测设置侧边栏出现「Git 提交推送」。
 
 ## 八、常见问题
 
 | 现象 | 原因 / 处理 |
 |---|---|
-| 装了插件但设置侧边栏没有 | 只同步了 `node_modules/`，漏了 `local-plugins/`；见第七节 |
+| 设置了侧边栏没有「Git 提交推送」 | ① `--dump-config` 确认插件节点 enabled: true；② client.js 不得调用 `scope.use()`（官方 SettingsScope 无此方法，渲染 TypeError 致空白）；③ Host 必须 `settings.register('git-push', Config)`（配置卡=交集）；见 7.2 |
 | 规则改了不生效 | 槽位是动态发现，确认 yml 文件名是 `audit-rules-<名>.yml` 且放在 `lib/audit-rules/` |
 | 新规则被更宽的规则抢走 | 注册表**有序匹配**，宽泛的 detect（如 `regex`）要排在专用 detect 之后，或把 detect 条件写精确 |
 | 审计报「0 blocker 0 warning 但 total > 0」 | error 级问题也计入拦截级；看 findings 的 severity 字段 |

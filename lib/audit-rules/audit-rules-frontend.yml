@@ -93,16 +93,16 @@ rules:
 
   # ----- 3. 表单与交互 -----
   - id: forms/button-missing-event
-    name: "按钮缺少事件绑定"
+    name: "HTML 按钮未发现 inline 事件（提示，非阻断）"
     category: "forms"
-    severity: "error"
-    description: "管理界面中的按钮若无事件，功能不可用"
+    severity: "info"
+    description: "独立 HTML 文件的按钮没有 inline onclick——但油猴/扩展脚本的按钮常在 JS 字符串里、事件用 addEventListener 绑定，本规则不构成误报阻断；真实绑定证据走 button/unbound 交叉比对"
     detection_method: "静态正则 + Puppeteer 动态检测"
     patterns:
       - "<button\\s+(?![^>]*\\bon(click|submit|tap)\\s*=)[^>]*>"
       - "<input\\s+[^>]*type\\s*=\\s*['\"](button|submit)['\"](?![^>]*\\bonclick\\s*=)[^>]*>"
     fixable: false
-    mitigation: "添加 onclick 或 @click 事件"
+    mitigation: "独立 HTML：添加 onclick 或 @click；油猴/扩展：用 addEventListener 绑定（见 button/unbound）"
 
   - id: forms/input-validation-missing
     name: "输入框缺少 required 或 aria-required"
@@ -197,6 +197,81 @@ rules:
     patterns:
       - "\\{\\s*([a-zA-Z0-9_]+)\\.map\\s*\\([^)]*\\)\\s*=>\\s*<[^>]*>"
     fixable: true
+
+  # ----- 7. 按钮事件绑定（油猴脚本/浏览器扩展交叉比对，1.0.5）-----
+  # 场景：HTML 以字符串内嵌 JS（innerHTML=/insertAdjacentHTML/模板字符串/createElement），
+  # 事件在 JS 里用 addEventListener/onclick= 绑定——不能只看 HTML 字符串里有没有 inline onclick。
+  # unbound / create-element-binding 为交叉比对型（kind: button-bind，无 patterns），
+  # 由 checkButtonBindings 同文件提取 HTML 按钮 ↔ JS 绑定证据后比对判定。
+  - id: button/inline-binding-in-string
+    name: "HTML 字符串中的 inline onclick（建议改）"
+    category: "button"
+    severity: "info"
+    description: "油猴脚本 HTML 字符串里写 onclick 通常无法访问闭包作用域且违反 CSP，建议改 addEventListener"
+    patterns:
+      - "<button[^>]*\\sonclick\\s*="
+      - "<input[^>]*type\\s*=\\s*['\"](button|submit)['\"][^>]*\\sonclick\\s*="
+    fixable: true
+    mitigation: "移除字符串里的 onclick，改用 addEventListener 或事件委托"
+
+  - id: button/unbound
+    name: "按钮可能未绑定事件（交叉比对）"
+    category: "button"
+    severity: "warning"
+    description: "HTML 字符串中有按钮，但同文件 JS 中找不到对应绑定证据（addEventListener/onclick=/选择器引用）——若通过事件委托或封装函数绑定请加豁免标记"
+    fixable: false
+    mitigation: "确认是否需要绑定；事件委托/封装函数绑定请加豁免标记"
+
+  - id: button/create-element-binding
+    name: "createElement 创建的按钮应显式绑定"
+    category: "button"
+    severity: "warning"
+    description: "用 createElement('button'/'input') 创建按钮但同文件无 addEventListener/onclick 绑定痕迹，则为未绑定"
+    fixable: false
+    mitigation: "在 appendChild 前调用 btn.addEventListener('click', fn)"
+
+  - id: button/event-delegation-detected
+    name: "检测到事件委托模式"
+    category: "button"
+    severity: "info"
+    description: "父级监听 click、经 e.target 分发——油猴动态插入内容的常见绑定方式，button/unbound 应将其视为已覆盖"
+    patterns:
+      - "document\\.(?:body|documentElement|querySelector\\s*\\([^)]*\\))\\s*\\.addEventListener\\s*\\(\\s*['\"]click['\"]"
+      - "e\\.target\\.(id|classList|matches|closest|dataset)"
+    fixable: false
+    mitigation: "事件委托已覆盖子按钮；如需细粒度检查请人工确认"
+
+  - id: button/dynamic-selector
+    name: "检测动态选择器拼装"
+    category: "button"
+    severity: "info"
+    description: "选择器通过字符串拼接/模板动态生成，静态无法解析——交叉比对可能漏报"
+    patterns:
+      - "querySelector\\s*\\(\\s*['\"][^'\"]*['\"]\\s*\\+"
+      - "getElementById\\s*\\(\\s*['\"][^'\"]*['\"]\\s*\\+"
+      - "(?:querySelector|querySelectorAll|getElementById)\\s*\\(\\s*`[^`]*\\$\\{"
+    fixable: false
+    mitigation: "动态选择器需运行时检测；建议改用固定 id 便于静态分析"
+
+  - id: button/wrapped-binding
+    name: "检测封装函数绑定"
+    category: "button"
+    severity: "info"
+    description: "通过自定义函数绑定事件（bindClick('btn-id', fn)），交叉比对可能漏报"
+    patterns:
+      - "(?<![\\w.])(?:bind|on|add|attach)\\w*\\s*\\(\\s*['\"][^'\"]+['\"]\\s*,"
+    fixable: false
+    mitigation: "封装函数需人工确认其内部是否调用了 addEventListener"
+
+  - id: button/csp-compatible
+    name: "事件绑定应符合油猴脚本 CSP 要求"
+    category: "security"
+    severity: "warning"
+    description: "inline 事件属性（onclick= 等）在油猴脚本环境可能受限"
+    patterns:
+      - "on(click|change|input|submit)\\s*=\\s*['\"]"
+    fixable: true
+    mitigation: "移除 inline 事件属性，改用 addEventListener"
 
 # ----- 严重级别映射 -----
 severity_map:

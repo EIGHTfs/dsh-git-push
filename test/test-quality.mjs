@@ -213,18 +213,26 @@ test('scoreQuality：qualityWeights 覆盖生效（权重可调）', () => {
   assert.equal(r.weights['安全性'], 0);
 });
 
-test('scoreQuality：level 分级与单维度扣分上限（权重占比生效）', () => {
-  // 单维度全扣：性能权重 10% → 全扣后 90 分（验证权重覆盖生效，非 bug）
+test('scoreQuality：对数衰减（防零分塌陷）+ 权重占比生效', () => {
+  // 单维度 60 个错误（30 blocker）：线性扣分会归 0；对数衰减 k=1.3 → max(0.1, 10-1.3*ln(61))≈4.66
   const heavy = [];
   for (let i = 0; i < 30; i++) heavy.push({ dimensions: ['性能'], severity: 'blocker' });
-  assert.equal(scoreQuality(heavy).score, 90);
-  // 跨维度压分：10 维度各 3 个 blocker → 每维 counts=6，分数显著下降
+  const rh = scoreQuality(heavy);
+  assert.ok(rh.score > 90 && rh.score <= 99, `60 错误性能维对数衰减不归零，实际 ${rh.score}`);
+  assert.ok(rh.dims['性能'] >= 0.1 && rh.dims['性能'] < 5, `dims 保留微弱区分度，实际 ${rh.dims['性能']}`);
+  // 8 个错误 vs 60 个错误应有维度分差（对数衰减关键特性；总分取整后可能相同，比 dims）
+  const light = [];
+  for (let i = 0; i < 4; i++) light.push({ dimensions: ['健壮性'], severity: 'blocker' }); // counts=8
+  const rl = scoreQuality(light);
+  assert.ok(rl.dims['健壮性'] > rh.dims['性能'], `错误少维度分应更高：${rl.dims['健壮性']} > ${rh.dims['性能']}`);
+  // 跨维度压分：10 维度各 3 个 blocker → 每维 counts=6，分数显著下降（对数衰减后不减到 0）
   const dims = ['可读性', '可维护性', '健壮性', '安全性', '性能', '测试覆盖', '可观测性', '可部署性', '文档', '开发者体验'];
   const all = [];
   for (const d of dims) for (let i = 0; i < 3; i++) all.push({ dimensions: [d], severity: 'blocker' });
   const r = scoreQuality(all);
-  assert.ok(r.score < 70, `跨维度 blocker 应 <70，实际 ${r.score}`);
-  assert.ok(r.level === 'D' || r.level === 'C');
+  assert.ok(r.score < 85, `跨维度 blocker 应 <85，实际 ${r.score}`);
+  assert.ok(r.score > 0, `对数衰减不归零，实际 ${r.score}`);
+  assert.ok(r.level === 'D' || r.level === 'C' || r.level === 'B');
 });
 
 test('scoreQuality：dimensions 汇总齐全（10 键）', () => {

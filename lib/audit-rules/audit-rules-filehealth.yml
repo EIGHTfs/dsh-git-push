@@ -1,0 +1,39 @@
+# ============================================================
+# 文件健康度矩阵评分规则集
+# 作者：DeepSeek
+# 版本：1.0.0
+# 适用：所有源代码文件（豁免见下）
+# 描述：行数 + 大小 + 行长 三维独立分级，矩阵组合后扣分
+# 最后更新：2026-09-12
+# 算法来源：用户提供《文件健康度矩阵评分算法》1.0.0
+# ============================================================
+
+metadata:
+  name: "文件健康度矩阵评分规则集"
+  version: "1.0.0"
+  author: "DeepSeek"
+  description: "单文件健康度评估（行数40% + 大小35% + 行长25%），score<9 提示、<5 blocker"
+  last_updated: "2026-09-12"
+
+rules:
+  # ----- 文件健康度矩阵评分（kind: file-health） -----
+  - id: maintainability/file-health
+    name: "文件健康度矩阵评分（行数/大小/行长三维）"
+    category: "maintainability"
+    kind: "file-health"
+    severity: "warning"
+    description: "按文件健康度矩阵算法评估：三维独立分级（行数≤200/400/800/1500；大小KB≤30/100/300/1000；行长≤120/200/300/500），加权等级=行数×0.40+大小×0.35+行长×0.25，按扣分表（0/1.0/2.5/4.5/7.0）线性插值，score=max(0.1, 10-penalty)；score≥9 健康，<9 提示拆分，<5 blocker。豁免：*.generated.* / *.min.* / locales/ 整文件跳过；constants/ 行数豁免（大小/行长仍评）；routes/ 行数阈值放宽"
+    dimensions:
+      - 可维护性
+      - 可读性
+    # 参数（缺省即内置默认值；可按需覆盖）
+    # weight_lines: 0.40
+    # weight_size: 0.35
+    # weight_line_length: 0.25
+    # base_score: 10
+    # lines_levels: [200, 400, 800, 1500]
+    # size_levels: [30, 100, 300, 1000]
+    # line_length_levels: [120, 200, 300, 500]
+    # level_penalties: [0, 1.0, 2.5, 4.5, 7.0]
+    # warn_score: 9
+    # block_score: 5

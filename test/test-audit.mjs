@@ -159,6 +159,18 @@ test('auditChanged：删除的文件跳过（status D 无可读内容）', () =>
   assert.equal(cleanHits.length, 0, '删除文件不应产出 findings');
   assert.ok(res.files <= 1);
 });
+
+test('auditChanged：二进制文件（png）变动不进入审计（1.0.13 误报修复）', () => {
+  // 造一个 png 改动 + 一个文本改动；PNG 不得被 UTF-8 读入触发 regex 乱码误报
+  const pngPath = join(gitRepo, 'icon.png');
+  writeFileSync(pngPath, Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x01, 0x02]));
+  const textPath = join(gitRepo, 'bin-audit.txt');
+  writeFileSync(textPath, 'const ok = 1;');
+  const res = auditWithScope(gitRepo, { scope: 'diff' });
+  const pngHits = res.findings.filter((f) => f.file.includes('icon.png'));
+  assert.equal(pngHits.length, 0, 'PNG 变动不应产出 findings（二进制不进文本审计）');
+  assert.ok(res.findings.some((f) => f.file.includes('bin-audit.txt')) || res.files >= 1, '文本变动应仍被审计');
+});
 /* ───────────────── 检查器逐类覆盖（审计总入口全功能） ───────────────── */
 
 test('checkRegexRules：命中报 + 未命中不报 + source 标注', () => {

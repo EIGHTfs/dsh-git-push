@@ -25,11 +25,11 @@ function mockReact() {
 }
 
 // ---------- 默认关（关键安全默认） ----------
-test('默认关：审计开关/推送许可/LLM/全量扫 全部默认 false', () => {
+test('默认关：审计开关/LLM/全量扫 全部默认 false', () => {
   const c = defaultConfig();
   assert.equal(c.auditEnabled, false);
-  assert.equal(c.pushPermitEnabled, false);
-  assert.equal(c.llmAudit, false);
+  assert.equal(c.pushPermitEnabled, undefined, 'pushPermitEnabled 已移除（2026-09-11）');
+  assert.equal(c.llmAudit, undefined, 'llmAudit 已移除（v2 不提供 LLM 深度审查）');
   assert.equal(c.hardcodeFullScan, false);
   assert.equal(c.injectFullSkill, false);
   assert.equal(c.injectRepoIndexFull, false);
@@ -148,37 +148,129 @@ test('模块描述：不实现 viewer（0.1.8 决策）', () => {
 // ---------- 根 client.js（DSH 客户端插件适配层，1.0.0） ----------
 const rootClientSrc = readFileSync(join(ROOT, 'client.js'), 'utf8');
 
-test('client.js：DSH 模块加载器格式 + 手写 createElement 无 JSX', () => {
+test('client.js：DSH 模块加载器格式（2026-09-12 完全移植 v1 结构）', () => {
   assert.ok(rootClientSrc.includes('__ModuleLoader__.load'), '应为 DSH 客户端模块入口');
   assert.ok(rootClientSrc.includes("id: 'dsh-git-push'"));
-  assert.ok(rootClientSrc.includes('react.createElement') || rootClientSrc.includes('const h = react.createElement'));
-  assert.ok(!/jsx-runtime/.test(rootClientSrc), '不应依赖 jsx-runtime');
+  // v1 验证过的结构：jsx-runtime（jsx.jsx/jsxs）+ Controller + card.inject hooks 模式
+  assert.ok(rootClientSrc.includes('jsx-runtime') || rootClientSrc.includes('react.createElement'), 'v1 结构：jsx-runtime 或手写 createElement');
 });
 
 test('client.js：零外部资源（内联 CSS 无外链/url()/@import）', () => {
-  // 取源码里 INLINE_CSS 常量文本做实际检查（注释中提及 url() 属说明文字）
-  const cssMatch = /const INLINE_CSS = ([\s\S]*?);\n/.exec(rootClientSrc);
-  assert.ok(cssMatch, '应能取到 INLINE_CSS 常量');
-  assert.deepEqual(collectExternalRefs(cssMatch[1]), []);
-  assert.ok(!cssMatch[1].includes('@import'));
-  assert.ok(!cssMatch[1].includes('url('));
+  // v1 结构：cssText 字符串数组（非 INLINE_CSS 常量）；取数组元素拼起来检查
+  const cssMatch = /const cssText = \[([\s\S]*?)\n    \]\.join\(''\)/.exec(rootClientSrc);
+  assert.ok(cssMatch, '应能取到 cssText 数组');
+  const css = cssMatch[1].split(',').join('\n');
+  assert.deepEqual(collectExternalRefs(css), []);
+  assert.ok(!css.includes('@import'));
+  assert.ok(!css.includes('url('));
   // 源码整体不应出现真实外链字符串
   assert.ok(!/['"`]https?:\/\//.test(rootClientSrc), '不应引用外部 URL');
 });
 
-test('client.js：开关默认关（与服务端 schema 一致）', () => {
-  for (const key of ['auditEnabled', 'pushPermitEnabled', 'llmAudit', 'hardcodeFullScan', 'injectFullSkill']) {
-    assert.ok(new RegExp(`key: '${key}', type: 'boolean', default: false`).test(rootClientSrc), `${key} 应默认 false`);
+test('client.js：审计相关开关默认关（v1 移植结构）', () => {
+  // v1 Controller 构造默认 false 的开关
+  for (const key of ['injectFullSkill', 'injectRepoIndexFull', 'hardcodeFullScan']) {
+    assert.ok(new RegExp(`this\.${key} = false`).test(rootClientSrc), `${key} 应默认 false`);
   }
+  assert.ok(!rootClientSrc.includes("'llmAudit'"), 'client.js 不应含 llmAudit（v2 不提供 LLM 深度审查）');
+  assert.ok(!rootClientSrc.includes("'pushPermitEnabled'"), 'client.js 不应含 pushPermitEnabled（已移除 2026-09-11）');
 });
 
-test('client.js：设置项与服务端 SETTINGS_SCHEMA 键一致', () => {
-  const serverKeys = SETTINGS_SCHEMA.map((s) => s.key).filter((k) => !['commitMessage', 'injectRepoIndexFull'].includes(k));
-  for (const k of serverKeys) {
-    assert.ok(rootClientSrc.includes(`'${k}'`), `client.js 缺设置项 ${k}`);
+test('client.js：设置项键（v1 移植：卡片读写键须在 Host Config）', () => {
+  // v1 卡片读写键（controller + inject 保存）
+  const v1Keys = ['githubToken', 'sshPub', 'auditRuleOrder', 'auditRuleWeights', 'qualityWeights', 'yamlCheckMode',
+    'injectFullSkill', 'injectRepoIndexFull', 'hardcodeFullScan', 'customIgnorePatterns'];
+  for (const k of v1Keys) {
+    assert.ok(rootClientSrc.includes(k), `client.js 缺 v1 字段引用 ${k}`);
+  }
+  // 与 Host Config（lib/index.js）一致：卡片能写的键必须 Host 也有
+  const hostSrc = readFileSync(join(ROOT, 'lib/index.js'), 'utf8');
+  for (const k of ['githubToken', 'sshPub', 'auditRuleWeights', 'qualityWeights', 'yamlCheckMode', 'customIgnorePatterns']) {
+    assert.ok(hostSrc.includes(`${k}:`), `Host Config 缺 ${k}`);
   }
 });
 
 test('client.js：不实施 viewer', () => {
   assert.ok(!rootClientSrc.includes('viewer'));
+});
+
+// 1.0.10 回归：ctx.get('ruleSlotMeta') 对未 inject 声明抛 "cannot get property without inject"
+// （vendor/cordis/lib 675 行）曾导致 apply 崩溃 → 设置侧边栏空白。修复：try/catch 兜底。
+// 本测试用 mock ctx（get 必抛错）执行根 client.js 的 apply，断言两个槽位仍注册成功。
+test('client.js apply：ctx.get 抛错不崩，settings.section/plugin.item 均注册（1.0.10 回归）', () => {
+  // 捕获 ModuleLoader.load 的 factory
+  let captured = null;
+  const prevWindow = globalThis.window;
+  globalThis.window = { __ModuleLoader__: { load: ({ id, factory }) => { captured = { id, factory }; } } };
+  const reactMock = {
+    createElement: () => ({ __mock: 'el' }),
+    useState: (init) => [typeof init === 'function' ? init() : init, () => {}],
+    useEffect: () => {},
+    // 1.0.14：GitPushCard 用 uSES 桥接读取 settings 快照（scope.use 不存在）
+    useSyncExternalStore: (subscribe, getSnapshot) => getSnapshot(),
+  };
+  const req = (name) => {
+    if (name === 'react') return reactMock;
+    // v1 结构依赖（2026-09-12 完全移植 v1）：jsx-runtime / primitives / store
+    if (name === 'react/jsx-runtime') return { jsx: reactMock.createElement, jsxs: reactMock.createElement };
+    if (name === '@deepseek-ai/dsh-client-ui-primitives') return { IconChevronDownOutline14: 'icon-mock' };
+    if (name === '@deepseek-ai/dsh-client-store') return {
+      createSnapshotStore: (initial) => {
+        let value = initial;
+        const listeners = new Set();
+        return {
+          getSnapshot: () => value,
+          set: (v) => { value = v; listeners.forEach((l) => l()); },
+          subscribe: (l) => { listeners.add(l); return () => listeners.delete(l); },
+        };
+      },
+    };
+    throw new Error('require: ' + name);
+  };
+  // 执行根 client.js 顶层（触发 ModuleLoader.load）
+  new Function('require', 'window', rootClientSrc)(req, globalThis.window);
+  globalThis.window = prevWindow;
+  assert.ok(captured, 'ModuleLoader.load 应被调用');
+  const mod = captured.factory(req);
+  assert.deepEqual(mod.inject, ['slots', 'settingsScope'], 'inject 依赖声明（2026-09-12 双语取消：不再依赖 locale）');
+
+  // mock ctx：get 必抛（模拟 cordis 未 inject 行为）
+  const registered = [];
+  const scopeMock = {
+    // 官方 SettingsScope 契约：getSnapshot/subscribe/set（无 use()——1.0.14 修复点）
+    getSnapshot: () => ({ status: 'ready', value: { auditEnabled: false, auditScanScope: 'diff', auditLevel: 'standard', auditRuleset: '', auditRuleOrder: ['nodejs'], weightOverrides: '' } }),
+    subscribe: () => () => {},
+    set: async () => {}, mutate: async () => {}, unset: async () => {},
+  };
+  const ctx = {
+    effect: () => {},
+    get: () => { throw new Error('cannot get property "ruleSlotMeta" without inject'); },
+    slots: {
+      register: (desc, component) => ({ ...desc, component }),
+      inject: (name, registerFn) => { registered.push({ slot: name, desc: registerFn() }); },
+    },
+    settingsScope: { bind: () => scopeMock },
+  };
+  assert.doesNotThrow(() => mod.apply(ctx), 'apply 遇 ctx.get 抛错不得崩溃');
+
+  // 1.0.14 回归：GitPushCard 用 uSES 桥接（scope.use 不存在会崩），卡片/侧边栏必须能渲染
+  // 1.0.14 核心：GitPushCard 不得再调 scope.use()（不存在→TypeError→侧边栏空白）；
+  // uSES 桥接后渲染不得抛错（mock createElement 返回 __mock 元素，断渲染不崩即可）
+  const cardReg = registered.find((r) => r.slot === 'settings.plugin.item');
+  // v1 结构：inject() 返回 { hooks: { gitPushCard: store }, ...操作函数 }；
+  // 真实 DSH 槽系统把 hooks.gitPushCard 转成 useGitPushCard 再传给卡片——这里模拟
+  const injected = cardReg.desc.inject();
+  const gpStore = injected.hooks && injected.hooks.gitPushCard;
+  assert.ok(gpStore && typeof gpStore.getSnapshot === 'function', 'inject 应暴露 gitPushCard store');
+  const useGitPushCard = (selector) => {
+    const snap = gpStore.getSnapshot();
+    return selector ? selector(snap) : snap;
+  };
+  const cardProps = Object.assign({ t: (k) => k, useGitPushCard, check: () => {} }, injected);
+  assert.doesNotThrow(() => cardReg.desc.component(cardProps), '配置卡渲染不得抛错（hooks+uSES 桥接）');
+  const secReg = registered.find((r) => r.slot === 'settings.section');
+  const secEl = secReg.desc.component();
+  assert.doesNotThrow(() => secReg.desc.component(), '侧边栏 section 渲染不得抛错');
+  assert.ok(registered.some((r) => r.slot === 'settings.section' && r.desc.id === 'dsh-git-push'), 'settings.section 应注册');
+  assert.ok(registered.some((r) => r.slot === 'settings.plugin.item' && r.desc.key === 'git-push'), 'settings.plugin.item 应注册');
 });

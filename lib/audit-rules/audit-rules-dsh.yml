@@ -76,9 +76,9 @@ rules:
     name: "patch insert 行 id 应与被覆盖行区分"
     category: "dsh"
     severity: "warning"
+    kind: "patch-insert"
     description: "cordis.patch.yml 中 insert 新建的行若与后续按 id 覆盖行同 id 会 duplicate-id 双挂；insert 行 id 应唯一（除非刻意二次配置，需确认覆盖语义）"
-    patterns:
-      - "insert\\s*:\\s*$"
+    exts: ["yml", "yaml"]
     fixable: false
     mitigation: "insert 行与按 id 覆盖行避免同 id；核对 dsh web --dump-config 组合树"
 

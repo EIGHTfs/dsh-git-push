@@ -11,10 +11,13 @@ import { auditWithScope } from './lib/audit/index.js';
 import { scoreQuality } from './lib/score/index.js';
 import { checkLinks, sumLinkPenalty } from './lib/link-check/index.js';
 import { collectTextFiles, readText } from './lib/audit/collector.js';
-import { readFileSync } from 'node:fs';
+import { commitWithAudit } from './lib/commit-push.js';
+import { readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
 
-/** parseArgv 认识的选项白名单（cli-help-sync 机器比对基准，必须与 HELP 文本一致）。 */
-export const KNOWN_FLAGS = ['--depth', '--full', '--level', '--ruleset', '--weights'];
+/** parseArgv 认识的选项白名单（cli-help-sync 机器比对基准，必须与 HELP 文本一致。
+ * 注：-m 是单横线别名（helpSync 只比对 -- 双横线），不列入本表。 */
+export const KNOWN_FLAGS = ['--depth', '--full', '--level', '--ruleset', '--weights', '--push', '--no-push', '--dry-run', '--force', '--req-confirm', '--json'];
 
 const HELP = `git-sluice v${VERSION} — dsh-git-push 引擎独立 CLI（脱离 DSH 运行）
 
@@ -24,6 +27,8 @@ const HELP = `git-sluice v${VERSION} — dsh-git-push 引擎独立 CLI（脱离 
   git-sluice scan <root> [--depth N]   全量扫描目录（非 git 目录可查）
   git-sluice audit <root> [--full] [--level quick|standard|deep] [--ruleset <目录>] [--weights <JSON>]
                                   审计目录（默认 diff 范围；--full=全量；--level=强度；--ruleset=自定规则目录；--weights=权重覆盖 JSON）
+  git-sluice commit <repo> -m <msg> [--push|--no-push] [--dry-run] [--force] [--req-confirm] [--json]
+                                  审计门禁 → 提交（默认只 commit 不 push；--push 推远端；--force 强推覆盖远端历史；--req-confirm 显式核对开发者要求）
   git-sluice link-check <路径>    检查 md/文本中的链接有效性（只 warning，flaky 域名打折）
   git-sluice yaml-template        输出规则 yml 模板（含 kind + dimensions 示范）
   git-sluice readme-template      输出 README 模板（{{name}} {{version}} 占位符）
@@ -36,7 +41,7 @@ import './lib/rule/compilers.js';
 
 /** 参数解析：白名单必须与 HELP 文本完全一致（cli-help-sync 自检）。 */
 export function parseArgv(argv) {
-  const flags = { depth: undefined, full: false, level: undefined, ruleset: undefined, weights: undefined };
+  const flags = { depth: undefined, full: false, level: undefined, ruleset: undefined, weights: undefined, push: undefined, dryRun: false, force: false, reqConfirm: false, message: undefined, json: false };
   const positional = [];
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -45,15 +50,22 @@ export function parseArgv(argv) {
       if (v === undefined || v.startsWith('--')) return { error: `--depth 缺值（用法: --depth N）` };
       flags.depth = Number(v);
     } else if (a === '--full') flags.full = true;
-    else if (a === '--level' || a === '--ruleset' || a === '--weights') {
+    else if (a === '--level' || a === '--ruleset' || a === '--weights' || a === '-m') {
       const v = argv[++i];
       if (v === undefined || v.startsWith('--')) return { error: `${a} 缺值` };
       if (a === '--level') {
         if (!['quick', 'standard', 'deep'].includes(v)) return { error: `--level 取值须为 quick|standard|deep（收到 ${v}）` };
         flags.level = v;
       } else if (a === '--ruleset') flags.ruleset = v;
-      else flags.weights = v;
-    } else if (a.startsWith('--')) return { error: `未知参数: ${a}` };
+      else if (a === '--weights') flags.weights = v;
+      else flags.message = v;
+    } else if (a === '--push') flags.push = true;
+    else if (a === '--no-push') flags.push = false;
+    else if (a === '--dry-run') flags.dryRun = true;
+    else if (a === '--force') flags.force = true;
+    else if (a === '--req-confirm') flags.reqConfirm = true;
+    else if (a === '--json') flags.json = true;
+    else if (a.startsWith('--')) return { error: `未知参数: ${a}` };
     else positional.push(a);
   }
   return { flags, positional };
@@ -110,6 +122,33 @@ export function cmdAudit(root, flags) {
   console.log(`审计 ${root}（scope=${res.scope}, level=${level}${flags.ruleset ? ', ruleset=' + flags.ruleset : ''}）`);
   console.log(`  summary: ${JSON.stringify(res.summary)}`);
   console.log(`  quality: ${q.score}/100（${q.level}）`);
+}
+
+/** 子命令：commit — 审计门禁 → 提交（默认只 commit 不 push；--push 推远端；--force 强推）。 */
+export async function cmdCommit(root, flags) {
+  const repo = root || '';
+  if (!repo || !existsSync(join(repo, '.git'))) { console.error(`不是 git 仓库: ${repo || '(空)'}`); return 1; }
+  if (!String(flags.message || '').trim()) { console.error('缺少 -m <commit message>'); return 1; }
+  // 审计门禁：blocker 拦截（v2 审计独立调用——与 DSH 工具 git_commit_push 同一实现 commitWithAudit）
+  const result = await commitWithAudit({
+    repoPath: repo,
+    message: flags.message,
+    push: flags.push === true,
+    dryRun: flags.dryRun === true,
+    requirementsConfirmed: flags.reqConfirm === true,
+    force: flags.force === true,
+  });
+  if (result.blocked) {
+    console.error(`审计拦截（${result.error || 'blocker'}），提交中止：`);
+    if (result.audit) console.error(`  summary: ${JSON.stringify(result.audit.summary)}`);
+    return 2;
+  }
+  if (flags.json) console.log(JSON.stringify(result, null, 2));
+  else {
+    if (!result.ok && result.error) console.error(`提交失败: ${typeof result.error === 'string' ? result.error : JSON.stringify(result.error)}`);
+    console.log(JSON.stringify(result, null, 2).slice(0, 2000));
+  }
+  return result.ok ? 0 : 2;
 }
 
 /** 子命令：link-check — 检查文本文件的链接有效性（只 warning，不拦提交）。 */
@@ -182,6 +221,11 @@ export function main(argv = process.argv.slice(2)) {
     const { flags, positional, error } = parseArgv(rest);
     if (error) return console.error(error);
     return cmdAudit(positional[0] || '.', flags);
+  }
+  if (cmd === 'commit') {
+    const { flags, positional, error } = parseArgv(rest);
+    if (error) return console.error(error);
+    return cmdCommit(positional[0] || '', flags);
   }
   if (cmd === 'link-check') return cmdLinkCheck(rest[0] || '.');
   if (cmd === 'yaml-template') return cmdYamlTemplate();

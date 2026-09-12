@@ -16,6 +16,8 @@ import {
   scanSensitiveFiles, ensureGitignore, readmeCheckHint,
   commitAndPush, pushViaSsh, pushViaApi, cloneViaApi, ensureRemoteRepo, setVisibility,
 } from '../lib/git/index.js';
+import { gitRaw } from '../lib/git/index.js';
+import { commitWithAudit } from '../lib/commit-push.js';
 
 let tmp = '';
 let repo = '';
@@ -179,25 +181,57 @@ test('isBadCredentials：401 / Bad credentials 判定', () => {
 
 /* ───────────────────────── 敏感文件 .gitignore ───────────────────────── */
 
-test('scanSensitiveFiles：扫描 .env / token 文件', () => {
+test('scanSensitiveFiles：扫描 .env / token 文件（文件名黑名单 + 内容级）', () => {
   writeFileSync(join(repo, '.env'), 'KEY=1\n');
   writeFileSync(join(repo, 'secret.pem'), 'x\n');
+  // 内容级：硬编码密码应被检出
+  writeFileSync(join(repo, 'app.js'), 'const password = "hunter2secret";\n');
   const found = scanSensitiveFiles(repo);
-  assert.ok(found.includes('.env'));
-  assert.ok(found.includes('secret.pem'));
+  const paths = found.map((h) => h.path);
+  assert.ok(paths.includes('.env'), `.env 应命中（实际: ${paths.join(',')}）`);
+  assert.ok(paths.includes('secret.pem'), `secret.pem 应命中（实际: ${paths.join(',')}）`);
+  assert.ok(paths.includes('app.js'), `app.js 内容级应命中（实际: ${paths.join(',')}）`);
+  const appHit = found.find((h) => h.path === 'app.js');
+  assert.ok(appHit && appHit.fields.includes('password'), 'app.js 应标记 password 字段');
   rmSync(join(repo, '.env'), { force: true });
   rmSync(join(repo, 'secret.pem'), { force: true });
+  rmSync(join(repo, 'app.js'), { force: true });
 });
 
-test('ensureGitignore：追加敏感文件到 .gitignore（幂等）', () => {
+test('scanSensitiveFiles：占位符 / 示例 / 豁免注释不误报', () => {
+  writeFileSync(join(repo, 'ok.js'), 'const password = "your_password";\n');
+  writeFileSync(join(repo, 'ok2.js'), '// 例如 password = "demo123"\n');
+  writeFileSync(join(repo, 'exempt.js'), 'const token = "abc12345"; // dsh-skip-sensitive\n');
+  const found = scanSensitiveFiles(repo);
+  const paths = found.map((h) => h.path);
+  assert.ok(!paths.includes('ok.js'), '占位符值不应误报');
+  assert.ok(!paths.includes('ok2.js'), '示例行不应误报');
+  assert.ok(!paths.includes('exempt.js'), '行尾豁免注释不应误报');
+  for (const f of ['ok.js', 'ok2.js', 'exempt.js']) rmSync(join(repo, f), { force: true });
+});
+
+test('ensureGitignore：敏感文件只报告不写 .gitignore（2026-09-12 用户指令）', () => {
   writeFileSync(join(repo, '.env'), 'KEY=1\n');
   const r1 = ensureGitignore(repo);
-  assert.ok(r1.added >= 1);
+  assert.ok(r1.files.includes('.env'), 'files 应报告 .env');
   const gi = readFileSync(join(repo, '.gitignore'), 'utf8');
-  assert.ok(gi.includes('/.env'));
+  assert.ok(!gi.includes('.env'), '敏感文件不写 .gitignore');
+  // 敏感文件不再写盘，基线与自定义照常（基线幂等）
+  assert.ok(gi.includes('node_modules/'), '基线忽略照常写');
   const r2 = ensureGitignore(repo);
-  assert.equal(r2.added, 0, '二次调用不重复写');
+  assert.equal(r2.baseline, 0, '二次调用基线不重复写');
   rmSync(join(repo, '.env'), { force: true });
+  rmSync(join(repo, '.gitignore'), { force: true });
+});
+
+test('ensureGitignore：customIgnorePatterns 追加自定义忽略', () => {
+  const r1 = ensureGitignore(repo, { customIgnorePatterns: '*.bak*,*.orig' });
+  assert.ok(r1.custom >= 2, `custom 应补入 2 条（实际 ${r1.custom}）`);
+  const gi = readFileSync(join(repo, '.gitignore'), 'utf8');
+  assert.ok(gi.includes('*.bak*'));
+  assert.ok(gi.includes('*.orig'));
+  const r2 = ensureGitignore(repo, { customIgnorePatterns: '*.bak*,*.orig' });
+  assert.equal(r2.custom, 0, '自定义忽略幂等');
   rmSync(join(repo, '.gitignore'), { force: true });
 });
 
@@ -229,6 +263,25 @@ test('ensureGitignore：node_modules.orig 目录不参与敏感文件扫描', ()
   rmSync(join(repo, '.gitignore'), { force: true });
 });
 
+test('ensureGitignore：.samples 目录豁免——敏感文件一律不写 .gitignore、照常报告', () => {
+  // fixtures/.samples 空文件 = 豁免标记：目录内假 token 照常报告，但不进 .gitignore
+  mkdirSync(join(repo, 'fixtures'), { recursive: true });
+  writeFileSync(join(repo, 'fixtures', '.samples'), '');
+  writeFileSync(join(repo, 'fixtures', 'secret.js'), 'const apiKey = "sk-test-abcdef1234567890abcdef";\n');
+  writeFileSync(join(repo, 'real.js'), 'const apiKey = "sk-test-abcdef1234567890abcdef";\n');
+  const r = ensureGitignore(repo);
+  assert.ok(r.files.includes('fixtures/secret.js'), '豁免目录敏感文件照常报告');
+  assert.ok(r.files.includes('real.js'), '非豁免敏感文件照常报告');
+  assert.equal(r.sampleExempted, 1, 'sampleExempted 计数 = 1');
+  const gi = readFileSync(join(repo, '.gitignore'), 'utf8');
+  // 2026-09-12 用户指令：扫描到敏感文件不改动 git 忽略——豁免与非豁免都不写 .gitignore
+  assert.ok(!gi.includes('fixtures/secret.js'), '豁免目录文件不写 .gitignore');
+  assert.ok(!gi.includes('real.js'), '非豁免文件也不写 .gitignore（只报告）');
+  rmSync(join(repo, 'fixtures'), { recursive: true, force: true });
+  rmSync(join(repo, 'real.js'), { force: true });
+  rmSync(join(repo, '.gitignore'), { force: true });
+});
+
 test('readmeCheckHint：有/无 README 区分', () => {
   const without = readmeCheckHint(repo);
   assert.equal(without.hasReadme, false);
@@ -240,42 +293,61 @@ test('readmeCheckHint：有/无 README 区分', () => {
 
 /* ───────────────────────── commitAndPush ───────────────────────── */
 
-test('commitAndPush：非 git 仓库拦截', () => {
-  const r = commitAndPush({ repoPath: join(tmp, 'not-repo'), message: 'x' });
+test('commitAndPush：非 git 仓库拦截', async () => {
+  const r = await commitAndPush({ repoPath: join(tmp, 'not-repo'), message: 'x', requirementsConfirmed: true });
   assert.equal(r.ok, false);
   assert.match(r.error, /非 git 仓库/);
 });
 
-test('commitAndPush：缺 message 拦截', () => {
-  const r = commitAndPush({ repoPath: repo, message: '' });
+test('commitAndPush：缺 message 拦截', async () => {
+  const r = await commitAndPush({ repoPath: repo, message: '', requirementsConfirmed: true });
   assert.equal(r.ok, false);
   assert.match(r.error, /message 必填/);
 });
 
-test('commitAndPush：dryRun 不写', () => {
-  const r = commitAndPush({ repoPath: repo, message: 'dry', dryRun: true });
+// D13 开发者要求门禁（对齐 v1 commitPushPreflight：内置 user-requirements.json 存在时未核对拦截）
+test('commitAndPush：开发者要求未核对 → 拦截（D13）', async () => {
+  const r = await commitAndPush({ repoPath: repo, message: 'feat: 未核对要求', push: false });
+  assert.equal(r.ok, false);
+  assert.equal(r.blocked, true);
+  assert.equal(r.code, 'USER_REQUIREMENTS');
+  assert.match(r.error, /开发者特殊要求未核对/);
+  assert.ok(r.requirements && r.requirements.found, '应带要求清单');
+  assert.ok(r.requirements.items.length > 0, '清单应有条目');
+});
+
+test('commitAndPush：开发者要求核对 → 放行（D13）', async () => {
+  const r = await commitAndPush({ repoPath: repo, message: 'feat: 已核对要求', push: false, requirementsConfirmed: true });
+  assert.equal(r.ok, true, 'requirementsConfirmed:true 应放行');
+});
+
+test('commitAndPush：dryRun 不写', async () => {
+  const r = await commitAndPush({ repoPath: repo, message: 'dry', dryRun: true, requirementsConfirmed: true });
   assert.equal(r.ok, true);
   assert.equal(r.dryRun, true);
 });
 
-test('commitAndPush：真实 commit（不 push）', () => {
+test('commitAndPush：真实 commit（不 push）', async () => {
   writeFileSync(join(repo, 'new.js'), 'const n = 1;\n');
-  const r = commitAndPush({ repoPath: repo, message: 'add new.js', push: false });
+  const r = await commitAndPush({ repoPath: repo, message: 'add new.js', push: false, requirementsConfirmed: true });
   assert.equal(r.ok, true);
   assert.equal(r.pushed, false);
   assert.match(r.commitSha, /^[0-9a-f]{40}$/);
   assert.ok(r.steps.includes('commit'));
 });
 
-test('commitAndPush：无变更拦截', () => {
-  const r = commitAndPush({ repoPath: repo, message: 'nothing' });
-  assert.equal(r.ok, false);
-  assert.match(r.error, /无变更/);
+test('commitAndPush：无变更跳过（对齐 v1 v1.18.1：非错误，成功跳过）', async () => {
+  const r = await commitAndPush({ repoPath: repo, message: 'nothing', push: false, requirementsConfirmed: true });
+  assert.equal(r.ok, true, '无变更应为成功跳过而非错误');
+  assert.equal(r.committed, false);
+  assert.match(r.message, /无变更/);
+  assert.equal(r.push.pushed, false);
+  assert.match(r.push.reason, /无变更/);
 });
 
-test('commitAndPush：敏感文件自动入 .gitignore 再提交', () => {
+test('commitAndPush：敏感文件自动入 .gitignore 再提交', async () => {
   writeFileSync(join(repo, '.env'), 'SECRET=1\n');
-  const r = commitAndPush({ repoPath: repo, message: 'add .env', push: false });
+  const r = await commitAndPush({ repoPath: repo, message: 'add .env', push: false, requirementsConfirmed: true });
   assert.equal(r.ok, true);
   assert.ok(r.steps.includes('敏感文件 .gitignore'));
   assert.ok(existsSync(join(repo, '.gitignore')));
@@ -329,6 +401,52 @@ test('pushViaApi：完整 Git Data API 流程（mock）', async () => {
   assert.ok(fetchCalls.some((c) => c.url.includes('/git/refs')));
 });
 
+// D15：推送成功后维护 remote-tracking ref + 辅助 SSH remote + dsh- 项目自动打 tag（对齐 v1 commitPushAfterApiSuccess）
+test('commitAndPush：推送成功后 remoteRef + aux remote + autoTag（dsh- 前缀，mock）', async () => {
+  const repoD15 = join(tmp, 'dsh-demo');
+  mkdirSync(repoD15);
+  runGit(['init', '-q'], { cwd: repoD15 });
+  runGit(['config', 'user.email', 't@v2.local'], { cwd: repoD15 });
+  runGit(['config', 'user.name', 'v2 test'], { cwd: repoD15 });
+  writeFileSync(join(repoD15, 'package.json'), JSON.stringify({ name: 'dsh-demo', version: '0.3.0' }));
+  writeFileSync(join(repoD15, 'b.js'), 'const ok = 2;\n');
+  runGit(['add', '-A'], { cwd: repoD15 });
+  runGit(['commit', '-q', '-m', 'init'], { cwd: repoD15 });
+  // pushViaApi 解析 origin 需要 owner 段
+  runGit(['remote', 'add', 'origin', 'https://api.github.com/repos/octo/dsh-demo'], { cwd: repoD15 });
+  runGit(['checkout', '-q', '-b', 'main'], { cwd: repoD15 });
+  const treeSha15 = 'e'.repeat(40);
+  const commitSha15 = 'f'.repeat(40);
+  mockFetch([
+    { match: (u, m) => m === 'GET' && u.endsWith('/repos/octo/dsh-demo'), status: 200, body: { default_branch: 'main' } },
+    { match: (u) => u.includes('/git/ref/heads/'), status: 404, body: {} },
+    { match: (u) => u.includes('/git/trees/'), status: 200, body: { tree: [] } },
+    { match: (u, m) => m === 'POST' && u.includes('/git/blobs'), status: 201, body: { sha: 'b'.repeat(40) } },
+    { match: (u, m) => m === 'POST' && u.includes('/git/trees'), status: 201, body: { sha: treeSha15 } },
+    { match: (u, m) => m === 'POST' && u.includes('/git/commits'), status: 201, body: { sha: commitSha15 } },
+    { match: (u, m) => m === 'POST' && u.includes('/git/refs'), status: 201, body: { ref: 'refs/heads/main' } },
+    // autoTag：GET tags/v0.3.0 → 404（不存在）→ POST refs → 201
+    { match: (u, m) => m === 'GET' && u.includes('/git/ref/tags/v0.3.0'), status: 404, body: {} },
+    // fetchRemoteHeads（commits 列表）
+    { match: (u) => u.includes('/commits?'), status: 200, body: [{ sha: commitSha15, commit: { message: 'init', author: { date: '2026-01-01' } } }] },
+  ]);
+  const r = await commitAndPush({ repoPath: repoD15, message: 'add b.js', push: true, token: 'ghp_d15', requirementsConfirmed: true });
+  assert.equal(r.ok, true, `应推送成功（实际: ${JSON.stringify(r)?.slice(0, 400)}）`);
+  assert.equal(r.pushed, true);
+  // ① remote-tracking ref 已更新
+  assert.match(r.push.remoteRef, /refs\/remotes\/origin\/main = /, `remoteRef 应已更新（实际: ${r.push.remoteRef}）`);
+  const refCheck = runGit(['rev-parse', 'refs/remotes/origin/main'], { cwd: repoD15 });
+  assert.ok(refCheck.ok && /^[0-9a-f]{40}$/.test(refCheck.stdout), '本地 refs/remotes/origin/main 应可解析');
+  // ② 辅助 SSH remote 已确保
+  assert.ok(r.push.auxRemote, 'auxRemote 应有记录');
+  const auxUrl = runGit(['remote', 'get-url', 'github-ssh'], { cwd: repoD15 });
+  assert.equal(auxUrl.stdout, 'ssh://git@ssh.github.com:443/octo/dsh-demo.git');
+  // ③ dsh- 前缀项目自动打 tag（v0.3.0）；资源许可下应发起 GET tags + POST refs
+  assert.ok(r.autoTag, 'autoTag 应有结果');
+  assert.equal(r.autoTag.ok, true, `autoTag 应成功（实际: ${JSON.stringify(r.autoTag)}）`);
+  assert.equal(r.autoTag.tag, 'v0.3.0');
+});
+
 test('pushViaSsh：无私钥 → 失败 reason', () => {
   const r = pushViaSsh({ repoPath: repo });
   assert.equal(r.ok, false);
@@ -359,11 +477,26 @@ test('cloneViaApi：完整 mock 流程（tree + blob 写文件）', async () => 
   assert.ok(runGit(['rev-parse', 'HEAD'], { cwd: dest }).ok, 'clone 后是 git 仓库');
 });
 
+test('cloneViaApi：非空目标目录拒绝覆盖', async () => {
+  const dest = join(tmp, 'cloned-nonempty');
+  mkdirSync(dest, { recursive: true });
+  writeFileSync(join(dest, 'existing.txt'), 'do not clobber\n');
+  mockFetch([{ match: () => true, status: 200, body: { default_branch: 'main' } }]);
+  const r = await cloneViaApi({ target: 'o/r', dest, token: 'ghp_clone' });
+  assert.equal(r.ok, false);
+  assert.match(r.error, /非空/);
+  assert.ok(existsSync(join(dest, 'existing.txt')), '已有文件不被覆盖');
+});
+
 test('ensureRemoteRepo：已存在 → 不重复创建', async () => {
-  mockFetch([{ match: (u, m) => m === 'GET' && u.endsWith('/repos/repo'), status: 200, body: { name: 'repo' } }]);
+  mockFetch([
+    { match: (u, m) => m === 'GET' && u.endsWith('/user'), status: 200, body: { login: 'EIGHTfs' } },
+    { match: (u, m) => m === 'GET' && u.endsWith('/repos/EIGHTfs/repo'), status: 200, body: { name: 'repo' } },
+  ]);
   const r = await ensureRemoteRepo({ repoPath: repo, token: 'ghp_x' });
   assert.equal(r.ok, true);
   assert.equal(r.exists, true);
+  assert.equal(r.owner, 'EIGHTfs', 'owner 应从 /user 解析');
 });
 
 test('ensureRemoteRepo：mock 创建成功 + 设 origin', async () => {
@@ -371,14 +504,18 @@ test('ensureRemoteRepo：mock 创建成功 + 设 origin', async () => {
   mkdirSync(repo2);
   runGit(['init', '-q'], { cwd: repo2 });
   mockFetch([
-    { match: (u, m) => m === 'GET' && u.endsWith('/repos/repo2'), status: 404, body: {} }, // GET 不存在
+    { match: (u, m) => m === 'GET' && u.endsWith('/user'), status: 200, body: { login: 'EIGHTfs' } },
+    { match: (u, m) => m === 'GET' && u.endsWith('/repos/EIGHTfs/repo2'), status: 404, body: {} }, // GET 不存在
     { match: (u, m) => m === 'POST' && u.endsWith('/user/repos'), status: 201, body: { name: 'repo2', private: true } },
   ]);
   const r = await ensureRemoteRepo({ repoPath: repo2, visibility: 'private', token: 'ghp_y' });
   assert.equal(r.ok, true);
   assert.equal(r.created, true);
   assert.equal(r.visibility, 'private');
+  assert.equal(r.owner, 'EIGHTfs');
   assert.ok(fetchCalls.some((c) => c.method === 'POST' && c.url.endsWith('/user/repos')));
+  // origin 必须带 owner 段（否则 pushViaApi 无法解析）
+  assert.ok(r.origin.endsWith('/repos/EIGHTfs/repo2'), `origin 应含 owner 段: ${r.origin}`);
 });
 
 test('ensureRemoteRepo：dryRun 不创建', async () => {
@@ -412,7 +549,87 @@ test('commitAndPush：push=true 但网络失败 → 明确 error（API+SSH 都�
   runGit(['remote', 'add', 'origin', 'octo/repo3'], { cwd: repo3 });
   writeFileSync(join(repo3, 'f.js'), 'const f = 1;\n');
   mockFetch([{ match: () => true, status: 401, body: { message: 'Bad credentials' } }]);
-  const r = await commitAndPush({ repoPath: repo3, message: 'push attempt', push: true, token: 'ghp_bad' });
+  const r = await commitAndPush({ repoPath: repo3, message: 'push attempt', push: true, token: 'ghp_bad', requirementsConfirmed: true });
   assert.equal(r.ok, false);
   assert.match(r.error, /推送失败/);
+});
+
+test('commitAndPush：私有库豁免（private 不写 .gitignore 只扫描报告）', async () => {
+  const repo4 = join(tmp, 'repo4');
+  mkdirSync(repo4);
+  runGit(['init', '-q'], { cwd: repo4 });
+  runGit(['config', 'user.email', 't@v2.local'], { cwd: repo4 });
+  runGit(['config', 'user.name', 'v2 test'], { cwd: repo4 });
+  runGit(['remote', 'add', 'origin', 'octo/repo4'], { cwd: repo4 });
+  writeFileSync(join(repo4, '.env'), 'SECRET=1\n');
+  mockFetch([{ match: (u, m) => m === 'GET' && u.endsWith('/repos/octo/repo4'), status: 200, body: { private: true } }]);
+  const r = await commitAndPush({ repoPath: repo4, message: 'private push', push: false, token: 'ghp_priv', requirementsConfirmed: true });
+  assert.equal(r.ok, true);
+  assert.ok(r.steps.some((s) => s.includes('private-exempt')), `steps 应含 private-exempt（实际: ${r.steps.join(',')}）`);
+  assert.ok(!existsSync(join(repo4, '.gitignore')), 'private 仓库不应写 .gitignore');
+});
+
+// 2026-09-11：force 强推参数（对齐 v1 commitPushDoPush force；pushViaApi 内容级短路需被 force 跳过）
+test('pushViaApi：force=true 跳过内容级短路（remoteHead===headSha 仍建 commit）', async () => {
+  runGit(['remote', 'set-url', 'origin', 'https://api.github.com/repos/octo/repo'], { cwd: repo });
+  const headSha = runGit(['rev-parse', 'HEAD'], { cwd: repo }).stdout;
+  const treeSha = 't'.repeat(40);
+  const commitSha = 'c'.repeat(40);
+  // remoteHead === 本地 headSha：非 force 会命中「无新提交可推送」短路；force 必须继续走建 commit。
+  mockFetch([
+    { match: (u, m) => m === 'GET' && u.endsWith('/repos/octo/repo'), status: 200, body: { default_branch: 'main' } },
+    { match: (u) => u.includes('/git/ref/heads/main'), status: 200, body: { object: { sha: headSha } } },
+    { match: (u) => u.includes('/git/commits/') && u.includes('HEAD'), status: 200, body: { object: { sha: headSha } } },
+    { match: (u, m) => m === 'POST' && u.includes('/git/blobs'), status: 201, body: { sha: 'b'.repeat(40) } },
+    { match: (u, m) => m === 'POST' && u.includes('/git/trees'), status: 201, body: { sha: treeSha } },
+    { match: (u, m) => m === 'POST' && u.includes('/git/commits'), status: 201, body: { sha: commitSha } },
+    { match: (u, m) => m === 'PATCH' && u.includes('/git/refs/heads/main'), status: 200, body: { ref: 'refs/heads/main', object: { sha: commitSha } } },
+  ]);
+  const rForce = await pushViaApi({ repoPath: repo, token: 'ghp_force', branch: 'main', force: true });
+  assert.equal(rForce.ok, true, `force 推送应成功（实际 error: ${rForce.reason || '-'}）`);
+  assert.equal(rForce.pushed, true, 'force 推送应 pushed=true');
+  assert.ok(fetchCalls.some((c) => c.method === 'POST' && c.url.includes('/git/commits')), 'force 时应建 commit（跳过短路）');
+  assert.ok(fetchCalls.some((c) => c.method === 'PATCH' && c.url.includes('/git/refs/heads/main')), 'force 时应 PATCH ref（覆盖远端历史）');
+  // 对照组：非 force 同场景命中短路，不建 commit。
+  const rNoForce = await pushViaApi({ repoPath: repo, token: 'ghp_noforce', branch: 'main', force: false });
+  assert.equal(rNoForce.pushed, false, '非 force 同场景应「无新提交可推送」短路');
+  assert.match(rNoForce.reason, /无新提交/, `非 force 短路原因（实际: ${rNoForce.reason}）`);
+});
+
+test('commitWithAudit：force 参数透传到 commitAndPush（返回含 force 语义的步骤）', async () => {
+  // 非 git 仓库走不到 push，无法观察 force；改验证 commitWithAudit 不再吞掉 force（签名存在 + push=false 时步骤正常）
+  const root2 = join(tmpdir(), `gp-cwa-force-${Date.now()}`);
+  mkdirSync(root2);
+  const r = await commitWithAudit({ repoPath: root2, message: 'force test', push: false, dryRun: true, requirementsConfirmed: true, force: true });
+  assert.equal(r.ok, false, '非 git 仓库应 ok:false（force 不改变预检语义）');
+  assert.match(r.error || '', /非 git 仓库/, `error 应为非 git 仓库（实际: ${r.error}）`);
+  rmSync(root2, { recursive: true, force: true });
+});
+
+// 2026-09-11：gitRaw buffer 通道——防 pushViaApi blob 损坏回归（runGit utf8+trim 丢末尾换行）
+test('gitRaw：buffer 通道保留 blob 原始字节（含末尾换行/非 UTF-8 字节）', () => {
+  const dir = join(tmpdir(), `gp-gitraw-${Date.now()}`);
+  mkdirSync(dir);
+  try {
+    runGit(['init', '-b', 'master'], { cwd: dir });
+    writeFileSync(join(dir, 'a.txt'), '你好\n第二行\n');           // 末尾换行 + UTF-8 中文
+    writeFileSync(join(dir, 'b.bin'), Buffer.from([0x00, 0xff, 0xfe, 0x0a])); // 非 UTF-8 原始字节
+    runGit(['add', '-A'], { cwd: dir });
+    runGit(['-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-m', 'init'], { cwd: dir });
+    // a.txt：gitRaw 读回必须保留末尾换行（runGit 的 trim 会丢）
+    const shaA = runGit(['rev-parse', 'HEAD:a.txt'], { cwd: dir }).stdout;
+    const bufA = gitRaw(['cat-file', 'blob', shaA], { cwd: dir });
+    assert.equal(bufA.status, 0, 'gitRaw 应成功');
+    assert.equal(bufA.stdout.toString('utf8'), '你好\n第二行\n', 'gitRaw 应完整保留文本（含末尾换行）');
+    // b.bin：gitRaw 读回必须与原始字节完全一致（runGit utf8 解码会损坏 0xff/0xfe）
+    const shaB = runGit(['rev-parse', 'HEAD:b.bin'], { cwd: dir }).stdout;
+    const bufB = gitRaw(['cat-file', 'blob', shaB], { cwd: dir });
+    assert.equal(bufB.status, 0, 'gitRaw 二进制也应成功');
+    assert.deepEqual([...bufB.stdout], [0x00, 0xff, 0xfe, 0x0a], 'gitRaw 二进制字节应逐一一致');
+    // 对照：runGit 读同一 blob 会丢末尾换行（旧 bug 语义——pushViaApi 曾因它损坏 17/109 文件）
+    const oldWay = runGit(['cat-file', 'blob', shaA], { cwd: dir });
+    assert.notEqual(oldWay.stdout, '你好\n第二行\n', 'runGit(utf8+trim) 应有损（证明 gitRaw 必要）');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });

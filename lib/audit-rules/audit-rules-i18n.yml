@@ -3,6 +3,10 @@
 # 国际化审计：用户可见文案禁止硬编码（须 t('key') 包裹）、语言包文件分语言输出。
 # 规则类型由编译函数按字段自动指派（pattern/patterns → regex kind；detection_method → semantic）。
 # dimensions：10 维度绑定（文档/可维护性）。
+# ⚙️ 默认关闭（disabled: true，1.1.0）：i18n 规则对纯中文零依赖 CLI/插件属「可选国际化」，
+#   硬编码中文是产品设计而非缺陷（见 dsh-skip-i18n 标记），默认不加载避免噪音；
+#   需要时删掉本行，或环境变量 DSH_GIT_PUSH_RULE_SLOTS 显式列出 i18n 强制启用。
+disabled: true
 metadata:
   name: "国际化审计规则（i18n 六条转规则）"
   version: "1.0.0"
@@ -26,7 +30,7 @@ rules:
     category: "i18n"
     severity: "warning"
     description: "动态内容应使用插值 t('key', { name, count })，禁止在 t() 参数内拼接多语言句子"
-    pattern: "t\\s*\\(\\s*['\"][^'\"]*['\"]\\s*\\+"
+    pattern: "(?<![A-Za-z])t\\s*\\(\\s*['\"][^'\"]*['\"]\\s*\\+"
     fixable: false
     mitigation: "改为 t('key', { name, count })"
 
