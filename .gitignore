@@ -1,0 +1,6 @@
+node_modules/
+.tmp-build/
+.tmp-run/
+dist/
+*.log
+.DS_Store
