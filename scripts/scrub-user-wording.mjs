@@ -46,6 +46,9 @@ const WORDING_REWRITES = [
   { re: /(\d{4}-\d{2}-\d{2}) 用户要求/g, fn: (m, d) => `${d}` },
   { re: /(\d{4}-\d{2}-\d{2}) 用户原话：/g, fn: (m, d) => `${d}：` },
   { re: /(\d{4}-\d{2}-\d{2}) 用户约定：/g, fn: (m, d) => `${d}：` },
+  { re: /(\d{4}-\d{2}-\d{2}) 用户确立/g, fn: (m, d) => `${d}` },
+  { re: /(\d{4}-\d{2}-\d{2}) 用户确认/g, fn: (m, d) => `${d}` },
+  { re: /(\d{4}-\d{2}-\d{2}) 用户同意/g, fn: (m, d) => `${d}` },
   // 3) 措辞 + 「内容」 → 「内容」（引号内容保留）
   { re: /用户原话[：:]?「/g, fn: () => '「' },
   { re: /用户原话「/g, fn: () => '「' },
@@ -61,6 +64,10 @@ const WORDING_REWRITES = [
   { re: /用户规定[：:]?/g, fn: () => '' },
   { re: /用户明确[：:]?/g, fn: () => '' },
   { re: /用户拍板[：:]?/g, fn: () => '' },
+  { re: /用户确立[：:]?/g, fn: () => '' },
+  { re: /用户确认[：:]?/g, fn: () => '' },
+  { re: /用户同意[：:]?/g, fn: () => '' },
+  { re: /用户许可[：:]?/g, fn: () => '' },
   { re: /用户说[：:]?/g, fn: () => '' },
   { re: /用户：/g, fn: () => '' },
 ];
@@ -100,6 +107,19 @@ function codeCommentRanges(text, syn) {
   let i = 0;
   while (i < n) {
     const ch = text[i];
+    // 正则字面量：整体跳过（/…/flags）——否则其中的引号（如 ['"]）会把字符串配对搞乱，
+    // 吞掉后续注释起点（真实事故：plugin-gate.js 块注释因此漏识别）
+    if (ch === '/' && text[i + 1] !== '/' && text[i + 1] !== '*') {
+      let j = i + 1;
+      let closed = false;
+      while (j < n) {
+        if (text[j] === '\\') { j += 2; continue; }
+        if (text[j] === '/') { closed = true; break; }
+        if (text[j] === '\n') break; // 正则须单行内闭合
+        j++;
+      }
+      if (closed) { i = j + 1; continue; }
+    }
     // 字符串字面量：整体跳过
     if (ch === '"' || ch === "'" || ch === '`') {
       const q = ch;
