@@ -181,8 +181,11 @@ test('client.js：设置项键（2026-09-12 三选项卡：客户端写回键须
   for (const k of clientKeys) {
     assert.ok(rootClientSrc.includes(k), `client.js 缺设置键引用 ${k}`);
   }
-  // 与 Host Config（lib/index.js）一致：客户端能写的键 Host 必须也有
-  const hostSrc = readFileSync(join(ROOT, 'lib/index.js'), 'utf8');
+  // 与 Host Config 一致：客户端能写的键 Host 必须也有。
+  // 1.1.4 起 Config 定义在 lib/app/schema.js（入口 lib/index.js 只做再导出），
+  // 故两处都读——免得下次再挪位置又把测试改一遍。
+  const hostSrc = ['lib/app/schema.js', 'lib/index.js']
+    .map((f) => readFileSync(join(ROOT, f), 'utf8')).join('\n');
   for (const k of clientKeys) {
     assert.ok(hostSrc.includes(`${k}:`), `Host Config 缺 ${k}`);
   }

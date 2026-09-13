@@ -346,7 +346,20 @@ rules:
     category: "security"
     severity: "warning"
     description: "文档疑似含凭据明文：凭据统一存插件配置目录，不在文档写明文"
+    # 2026-09-14 误报修复：pattern 只做「正则初筛」，命中后必须经 AST 精筛确认（astConfirmKind）。
+    #   旧写法只有 pattern、没有精筛，导致下列**非凭据明文**场景全被报出（实测 5/5 误报）：
+    #     - 类型/存在性检查：`typeof cfg.githubToken === 'string'`——旧 pattern 的 `[:：=]`
+    #       会命中 `===` 的第 3 个 `=`，再把被比较的字符串字面量 `'string'` 当成明文凭据；
+    #       又因 safeRe 默认带 i 标志，`githubToken` 的大写 T 也照样命中。
+    #     - 字段透传/引用：`cfg.githubToken = next.githubToken`（右侧是变量，不是字面量）
+    #     - 类型注解：JSDoc `@returns {{token: string}}`、`{ token: string }`
+    #   credential-value 精筛（lib/ast/credential.js 的 checkCredentialRefAst）在 token 级
+    #   只认「凭据语义标识符 + 严格 `=` 或对象字段 `:` + 右侧**字符串字面量** + 非占位符」，
+    #   上面三类天然落空；真明文（`password: "hunter2xyz"`）照报。
+    #   判据只有一份：同一函数也被 no-hardcoded-credentials 使用，不会出现两规则自相矛盾。
     pattern: "(密码|password|passwd|token|cookie|账号)\\s*[:：=]\\s*['\"]?[A-Za-z0-9_@.\\-]{6,}['\"]?"
+    astConfirm: true
+    astConfirmKind: "credential-value"
     fixable: false
 
   - id: security/cookie-secure-flag

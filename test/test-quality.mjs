@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { tokenize, checkSyncFs, checkEmptyCatchAst, checkFuncLinesAst } from '../lib/score/ast.js';
+import { tokenize, checkSyncFs, checkEmptyCatchAst, checkFuncLinesAst } from '../lib/ast/index.js';
 import { DEFAULT_WEIGHTS, DIMENSION_ORDER, countByDimension, scoreQuality } from '../lib/score/index.js';
 import { checkSyncFsInFile, checkEmptyCatch } from '../lib/audit/checks.js';
 

@@ -15,6 +15,8 @@ rules:
     severity: "warning"
     description: "正常项目源码目录（不含 node_modules/.git/dist 等）应 ≤ 30 个，超过可能是解包产物混入"
     threshold: 30
+    # 排除项在遍历时剪枝（不含其子目录）——见 lib/checks/folder.js 的 excludedNames。
+    # .trash：安全删除约定的回收站（gitignore），是回收站不是源码，计入会虚增目录数。
     exclude_dirs:
       - "node_modules"
       - ".git"
@@ -28,6 +30,7 @@ rules:
       - ".nuxt"
       - "vendor"
       - ".dsh"
+      - ".trash"
     message: "项目源码目录数 {count} 超过阈值 {threshold}，可能混入解包产物"
 
   # ----- 规则 2：单目录文件数量异常（> 500 极可能是依赖/解包）-----
@@ -41,6 +44,12 @@ rules:
       - "node_modules"
       - ".git"
       - "dist"
+      - "build"
+      - "out"
+      - "coverage"
+      - "__pycache__"
+      - ".dsh"
+      - ".trash"
     message: "目录 {path} 包含 {count} 个文件，超过阈值 {threshold}，疑似解包产物"
 
   # ----- 规则 3：解包产物特征目录（package/package.json、dist/、build/、.tgz 等）-----

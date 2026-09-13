@@ -12,7 +12,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { checkPlaceholderCredentialAst, isMeaningfulCredentialValue } from '../lib/score/ast.js';
+import { checkPlaceholderCredentialAst, isMeaningfulCredentialValue } from '../lib/ast/index.js';
 import { loadRuleFiles } from '../lib/rule/loader.js';
 import { compileAllRules } from '../lib/rule/registry.js';
 import { filterRulesByExt } from '../lib/audit/checks.js';

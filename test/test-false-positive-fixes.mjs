@@ -324,3 +324,43 @@ test('UI 禁用槽位（auditDisabledSlots）：普通槽位整包过滤 / nodej
   assert.equal(weird.merged.rules.length, base.merged.rules.length, '非数组禁用值应忽略');
 });
 
+
+/* ───────── 1.1.4 误报修复：credref-plain-secret 把非凭据当明文 ───────── */
+
+test('credref-plain-secret：类型检查/字段透传/类型注解不报，真明文照报（1.1.4 误报修复）', () => {
+  // 走真实管线：yml 规则定义 → compileAllRules 编译 → groupByKind 分桶
+  // （直接用 yml 原始规则会拿不到编译后的 RegExp，测的就不是真实路径了）
+  const raw = loadRuleFiles().merged.rules.filter((r) => r.id === 'credref-plain-secret');
+  assert.equal(raw.length, 1, '应加载到 credref-plain-secret 规则');
+  const compiled = compileAllRules(raw, { errors: [] }).filter((r) => r.id === 'credref-plain-secret');
+  assert.equal(compiled.length, 1, 'credref-plain-secret 应编译成功');
+  assert.equal(compiled[0].astConfirmKind, 'credential-value',
+    '规则必须声明 credential-value 精筛，否则退化为纯正则初筛会大量误报');
+  assert.ok(compiled[0].pattern instanceof RegExp, 'pattern 应已编译为 RegExp');
+  const run = (text, ext = '.js') => {
+    const file = `x${ext}`;
+    return runChecks({ file, relPath: file, text, grouped: groupByKind(compiled) });
+  };
+  // ① 不该报：类型/存在性检查——旧 pattern 的 `[:：=]` 会命中 `===` 的第 3 个 `=`，
+  //    再把被比较的 `'string'` 当成明文凭据（safeRe 默认带 i，大写 T 照样命中）
+  assert.equal(run("if (typeof init.githubToken === 'string') cfg.githubToken = init.githubToken;").length, 0,
+    '类型检查不应报');
+  // ② 不该报：字段透传（右侧是变量）
+  assert.equal(run('cfg.githubToken = next.githubToken;').length, 0, '字段透传不应报');
+  // ③ 不该报：默认值取自配置（右侧是表达式）
+  assert.equal(run("token = options.token || '';").length, 0, '表达式默认值不应报');
+  // ④ 不该报：JSDoc / 对象字面量的类型注解
+  assert.equal(run(' * @returns {{token: string, source: string}}').length, 0, 'JSDoc 类型注解不应报');
+  assert.equal(run('const b = { token: string };').length, 0, '对象字段类型注解不应报');
+  // ⑤ 照报：真明文（赋值 / 对象字段两种形态）
+  assert.equal(run('const password = "hunter2xyz";').length, 1, '真明文赋值应报');
+  assert.equal(run("const cfg = { token: 'ghp_a1b2c3d4e5f6g7h8i9j0' };").length, 1, '对象字段真明文应报');
+  assert.equal(run('cookie: "abcdef123456"').length, 1, '真明文 cookie 应报');
+  // ⑥ 照报：markdown 行内代码段里的真明文
+  //    （`token: "..."` 的反引号被分词器当模板定界符，整段合成 tmpl token，
+  //     若不做内部兜底会漏报——文档里最常见的写法恰恰是行内代码段）
+  assert.equal(run('示例：`password: "hunter2xyz"`', '.md').length, 1, '行内代码段里的真明文应报');
+  // ⑦ 不该报：占位符/掩码仍是占位符（判据共用 isMeaningfulCredentialValue）
+  assert.equal(run("const token = 'your-token-here';").length, 0, '占位符不应报');
+  assert.equal(run("const token = 'CHANGE_ME';").length, 0, 'CHANGE_ME 不应报');
+});

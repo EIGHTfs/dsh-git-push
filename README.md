@@ -4,7 +4,7 @@ DSH（DeepSeek Harness）git 提交推送与代码审计插件——提交前自
 
 ![账号信息面板](assets/panel-account.png)
 
-> **公开仓库**：EIGHTfs/dsh-git-push（2026-09-13 转 public）｜全量测试 453 全绿（`npm test` 一条命令可复现）
+> **公开仓库**：EIGHTfs/dsh-git-push（2026-09-13 转 public）｜全量测试 459 全绿（`npm test` 一条命令可复现）
 > **界面模拟页**：`assets/preview.html`（单文件自包含，双击即可打开；跑的是真实 `client.js` + 假数据，三选项卡全部可点）
 
 ## 目录
@@ -83,23 +83,76 @@ Git 全链路自动化，token / SSH 凭据管理 + 提交推送，无需手动�
 
 ### 代码架构：lib/ 各文件夹各司其职
 
-改审计逻辑前先分清三层，避免在错误的层里打补丁（尤其不要用「跳过某类行」的补丁去修误报）：
+`lib/` 下**每个文件夹只负责一件事**，改审计逻辑前先分清所属层，避免在错误的层里打补丁
+（尤其不要用「跳过某类行」的补丁去修误报）：
 
 | 层 | 位置 | 职责 |
 |---|---|---|
 | ① 规则声明 | `lib/audit-rules/*.yml` | 阈值 / severity / 豁免清单 / 上下文关键字 / `astConfirm` 开关——**改阈值先改 yml，不改代码** |
-| ② 具体实现 | `lib/score/ast.js` | **token 级精准判断**：轻量 tokenizer（区分 ident / num / str / tmpl / comment）→ 括号平衡 → 判定 |
-| ② 具体实现 | `lib/audit/collector.js` | 采集文本文件（.gitignore 过滤、二进制跳过、`.test` 目录豁免） |
-| ② 具体实现 | `lib/audit/glob.js` | glob → 正则转换（忽略规则匹配） |
-| ② 具体实现 | `lib/audit/index.js` | 审计入口与豁免消费（文件头 `dsh-skip-*` 整文件免疫） |
-| ② 具体实现 | `lib/rule/*.js` | 规则加载 / 编译 / 注册（yml → 编译后规则对象） |
-| ③ 调用包装 | `lib/audit/checks.js` | **只做调用**：把实现结果转成统一 finding（`file/line/rule/severity/message/dimensions/exemptHint/scoreImpact`），不重复造检查逻辑 |
-| ③ 评分 | `lib/score/index.js` | 10 维度对数衰减评分 + 权重 |
-| ③ 呈现 / 交互 | `lib/client/` · `lib/exporter` 等 | 侧边栏 UI、审计面板、规则包列表 |
+| ② 具体实现（AST） | `lib/ast/*.js` | **token 级精准判断**：轻量 tokenizer（区分 ident / num / str / tmpl / comment）→ 括号平衡 → 判定 |
+| ③ 调用包装 | `lib/checks/*.js` | **把判定转成 finding**：统一 `file/line/rule/severity/message/dimensions/exemptHint/scoreImpact`，不重复造检查逻辑 |
+| ④ 编排调度 | `lib/audit/*.js` | 采集文件（`collector.js`）、glob 转换（`glob.js`）、单文件审计（`audit-file.js`）、豁免消费与汇总（`finding.js`/`slot.js`）、入口编排（`orchestrate.js`）；`index.js` 只做再导出 |
+| — 插件入口 | `lib/app/*.js` | 宿主接线：配置 schema（含 schemastery 兜底）、工具声明、注入文本、工具与 HTTP 处理、`apply` 注册编排（`lib/index.js` 只做再导出） |
+| — 规则编译器 | `lib/rule/compilers/*.js` | yml 字段类型 → 编译函数（注册制，按维度分模块；`compilers.js` 只做引用） |
+| — git 能力 | `lib/git/*.js` | 命令执行 / 凭据 / GitHub API / 传输（SSH+API）/ 提交推送 / 克隆 / 仓库与可见性 / 账号校验 |
+| — 规则装载 | `lib/rule/*.js` | 规则加载 / 编译 / 注册（yml → 编译后规则对象） |
+| — 评分 | `lib/score/index.js` | 10 维度对数衰减评分 + 权重（**本目录只放评分，不含 AST**） |
+| — 呈现 / 交互 | `lib/client/` | 侧边栏 UI、审计面板、规则包列表 |
 
-**检查器标准样式 = 薄包装**（本文件里 `checkEmptyCatch` → 调 `checkEmptyCatchAst`、`checkMagicNumberSmart` → 调 `checkMagicNumberSmartAst`）。
+**为什么拆这么细**：原先 `lib/score/ast.js`（1029 行）与 `lib/audit/checks.js`（1259 行）把「评分」「实现」「调用」「调度」全混在一起——
+`lib/score/` 本应只管评分权重，却装着全部 AST 实现；`checks.js` 本应只做调用，却塞了 25 个检查实现。拆分后每个文件只做一件事，
+新增检查时「实现写哪、调用写哪、调度写哪」一眼可见。
 
-⛔ **反模式**：在 `lib/audit/checks.js` 里自己写正则/逐行扫描重新实现一遍检查逻辑。逐行文本无法区分代码与注释/字符串，必然误报——历史教训：magic-number 曾在 checks.js 里逐行扫，导致注释里的版本号（`// v1.8.0`）、CSS 字号、i18n 字典值全被误报为魔数。**新检查一律写在 `lib/score/ast.js`**。
+1.1.4 把这套「实现归位到各文件夹」的规则推广到另外五处同类问题：`lib/git/index.js`（1036 行）
+拆成 12 个能力模块 + 35 行出口，`lib/rule/compilers.js`（459 行）拆成 10 个编译器模块 + 17 行出口，
+`lib/audit/index.js`（482 行）拆成 6 个编排模块 + 32 行出口，`lib/index.js`（683 行）拆成 `lib/app/` 8 个模块 + 24 行出口。
+**入口文件从此只做再导出、不含实现**——新增能力改对应模块即可，入口不再随功能增长而膨胀。
+
+⛔ **替代手改的硬约束**：这类拆分靠人眼搬运极易静默丢代码（实测踩过：注册表类文件里大量匿名
+`registerCompiler('kind', ...)` 语句被误并进上一个声明的正文；`Schema = makeFallbackSchema()` 这类
+顶层语句被排到使用它的 `Config` 之后导致运行期崩溃）。拆分后有四项必查，缺一不可：
+
+1. **导出面逐项比对**——拆前后 `Object.keys(module)` 集合与顺序必须一致；
+2. **双态行为对比**——用同一探针先跑拆分后、再把原文件还原跑一次，`diff` 必须为空；
+3. **裸副作用 import 保留**——如 `lib/audit/index.js` 的 `import '../rule/compilers.js'` 是编译器注册的
+   唯一触发点，丢了不报错但检查项全不出，属于「静默失效」，比崩溃更难查；
+4. **全量测试**——测试数不能变少（变少即说明有测试文件加载失败）。
+
+#### ② `lib/ast/`：具体实现（token 级）
+
+| 模块 | 职责 |
+|---|---|
+| `tokenizer.js` | 分词器 + 按文本内容的 LRU 缓存（全部 token 级检查的公共底座） |
+| `brace.js` | 括号配对、区间包含判定（供复杂度/嵌套/函数行数复用） |
+| `control-flow.js` | 同步 fs 调用、空 catch、圈复杂度、嵌套深度 |
+| `size.js` | 函数长度、文件长度、重复字符串 |
+| `naming.js` | 标识符长度、函数名过短（含 i18n 缩写豁免）、受控小文件读取 |
+| `code-lines.js` | 判断某行是否「真在代码里」、取出代码中的字符串字面量 |
+| `magic-number.js` | 硬编码魔数（豁免版本号/日期/HTTP 状态码/命名常量） |
+| `credential.js` | 凭据值判定、前缀型密钥串的占位符精筛 |
+| `index.js` | 统一出口（只做再导出，不含实现） |
+
+#### ③ `lib/checks/`：调用包装
+
+| 模块 | 职责 |
+|---|---|
+| `common.js` | 公共设施（豁免提示、severity 封顶、各 astConfirm 精筛集合的取值函数） |
+| `dispatch.js` | **调度 `runChecks`——只写引用**：按 kind 依次调用各检查器并汇总，不含任何检查逻辑 |
+| `filter.js` | 规则作用域过滤（`exts` / `exclude_paths`）——yml 声明的作用域唯一落地点 |
+| `regex.js` | 正则类规则（含 astConfirm 精筛消费） |
+| `structural.js` | 结构类（函数长度/复杂度/嵌套/文件行数/同步 fs/空 catch） |
+| `semantic.js` | 语义类（yml 声明的语义检查、patch insert） |
+| `npm-json.js` · `folder.js` · `credential-file.js` · `private.js` · `button-bind.js` · `magic-number.js` · `file-health.js` | 各自对象的检查器 |
+| `index.js` | 统一出口（只做再导出） |
+
+`lib/audit/checks.js` 已退化为**纯引用文件**（`export * from '../checks/index.js'`，17 行），保留它只为让原有调用方
+（`lib/audit/index.js` 与各测试）导入路径稳定。
+
+**检查器标准样式 = 薄包装**（`checkEmptyCatch` → 调 `checkEmptyCatchAst`、`checkMagicNumberSmart` → 调 `checkMagicNumberSmartAst`）。
+
+⛔ **反模式**：在检查器里自己写正则/逐行扫描重新实现一遍检查逻辑。逐行文本无法区分代码与注释/字符串，必然误报——
+历史教训：magic-number 曾在调用层逐行扫，导致注释里的版本号（`// v1.8.0`）、CSS 字号、i18n 字典值全被误报为魔数。
+**新检查一律写在 `lib/ast/`**（token 级实现），再在 `lib/checks/` 加薄包装，最后在 `dispatch.js` 加一行调度。
 
 #### 两层判定：正则初筛 → AST 精准判断
 
@@ -119,8 +172,8 @@ pattern 扫全文          makeCodeLineFilter(text, 候选行)
 | 实现方式 | 位置 | 例子 |
 |---|---|---|
 | 正则初筛 + AST 精筛 | yml 的 `astConfirm: true` + `makeCodeLineFilter` | `readability/magic-number` |
-| 纯 token 级（无需正则） | `lib/score/ast.js` | `checkMagicNumberSmartAst` / `checkSyncFs` / `checkEmptyCatchAst` / `checkComplexityAst` / `checkNestingDepthAst` / `checkNameLengthAst` / `checkFuncLinesAst` / `checkRepeatedStringsAst` |
-| 纯正则（本质是文本特征） | `lib/audit/checks.js` 的 `checkRegexRules` | 凭据硬编码、路径穿越、对话残留、黑名单 |
+| 纯 token 级（无需正则） | `lib/ast/`（各模块，见上表） | `checkMagicNumberSmartAst` / `checkSyncFs` / `checkEmptyCatchAst` / `checkComplexityAst` / `checkNestingDepthAst` / `checkNameLengthAst` / `checkFuncLinesAst` / `checkRepeatedStringsAst` |
+| 纯正则（本质是文本特征） | `lib/checks/regex.js` 的 `checkRegexRules` | 凭据硬编码、路径穿越、对话残留、黑名单 |
 
 
 ### 10 维度质量评分
@@ -156,9 +209,9 @@ pattern 扫全文          makeCodeLineFilter(text, 候选行)
 
 ### 正则初筛 → AST 精筛（`astConfirmKind`）
 
-审计的每条规则（`lib/audit-rules/*.yml`）先跑**正则初筛**拿到候选行，再由 `lib/score/ast.js` 里的 **AST 实现**做语义确认——正则快但看的是字符，AST 慢但看的是结构，两层配合才能既不漏报又不误报。
+审计的每条规则（`lib/audit-rules/*.yml`）先跑**正则初筛**拿到候选行，再由 `lib/ast/` 里的 **AST 实现**做语义确认——正则快但看的是字符，AST 慢但看的是结构，两层配合才能既不漏报又不误报。
 
-规则通过 `astConfirmKind` 声明「这条规则命中后还要精筛什么」，`lib/audit/checks.js` 按名字分派到对应 AST 实现（yml 是规则、ast.js 是实现、checks.js 是调用，三层各司其职）：
+规则通过 `astConfirmKind` 声明「这条规则命中后还要精筛什么」，`lib/checks/regex.js` 按名字分派到对应 AST 实现（yml 是规则、`lib/ast/` 是实现、`lib/checks/` 是调用，各层各司其职）：
 
 | `astConfirmKind` | AST 实现 | 精筛语义 | 豁免（不报）的例子 |
 |---|---|---|---|
@@ -176,7 +229,7 @@ pattern 扫全文          makeCodeLineFilter(text, 候选行)
 
 | 环节 | 做法 | 效果 |
 |---|---|---|
-| 分词结果缓存 | `lib/score/ast.js` 对 `tokenize()` 结果做 LRU 缓存（上限 512 份） | 同一文件被 5 处检查重复分词 → 只算 1 次；单文件 139ms → 42ms |
+| 分词结果缓存 | `lib/ast/tokenizer.js` 对 `tokenize()` 结果做 LRU 缓存（上限 512 份） | 同一文件被 5 处检查重复分词 → 只算 1 次；单文件 139ms → 42ms |
 | 文件数上限 | 新增配置 `maxScanFiles`（默认 3000，`0` = 不限） | 29921 文件不再全量硬扫 |
 | 变动文件优先 | 截断时先纳入 `git status` 里的变动文件，再按顺序补足到上限 | 正要提交的内容**不会被截断漏审** |
 | 截断告知 | 超限时产出一条 `audit/scan-truncated` 说明（`severity: notice`、`scoreImpact: 0`） | 明确告知「只审了多少 / 总数多少」，且**不扣分** |
@@ -212,7 +265,7 @@ node assets/preview-gen.mjs
   - 拦截/警告/通过 三列显示**最近一次审计的实际命中数**（未审计时回落为规则条数口径）
 - **设置**：GitHub token + SSH 公钥 + 邮箱 + 一键生成并复制
 
-设置项以 `lib/index.js` 的 `Config` 为单一事实源，`settingsScope` 读写。凭据保存**同时写插件配置目录**（见「凭据管理」）。
+设置项以 `lib/app/schema.js` 的 `Config` 为单一事实源（`lib/index.js` 只再导出），`settingsScope` 读写。凭据保存**同时写插件配置目录**（见「凭据管理」）。
 
 ## 独立 CLI（git-sluice）
 
@@ -236,13 +289,14 @@ git-sluice self-check           版本一致性 + HELP↔parseArgv 机器比对
 
 - **环境**：DSH（DeepSeek Harness）｜Node ≥18 ｜本机 git
 - **安装**：`dsh plugin add EIGHTfs/dsh-git-push`（仓库已声明 `dsh.bundle`，可安装）
-- **测试**：`npm test` 一条命令复现全绿（453 断言，0 失败）
+- **测试**：`npm test` 一条命令复现全绿（459 断言，0 失败）
 
 ## 版本列表
 
 | 版本 | 说明 |
 |---|---|
-| **1.1.3**（当前） | **规则作用域字段统一收口**（`exts` 与 `astConfirmKind` 原先各编译器手抄透传，16 个里 10 个漏传 → yml 声明被静默忽略；改为 `compileAllRules` 单点收口，新增编译器自动具备）+ **规则包作用域修复**（`frontend` 包 20 条 HTML 规则、`comment` 包 6 条声明 `exts`：HTML 规则不再跑在 `.mjs`/`.json` 上——正文里生成网页的 HTML 模板字符串曾被当真实网页报「内联脚本」）+ **前缀型密钥占位符精筛**（新增 `astConfirmKind: placeholder-credential`：剥掉 `ghp_`/`sk-`/`AKIA` 前缀后判占位符，文档示例与演示假数据不再被报成凭据泄漏；真密钥形状照报）+ **大仓性能降级**（`maxScanFiles` 默认 3000 + 变动文件优先截断 + `audit/scan-truncated` 说明不扣分；29921 文件不再硬扫）+ **分词 LRU 缓存**（单文件 139ms → 42ms，`lib/score/ast.js`）+ **注入开发者要求清单子开关**（挂审计开关下、审计关时置灰并自动关闭）+ **界面模拟页 `assets/preview.html`**（单文件自包含、跑真实 client.js、全部可点）+ 修复审计页规则行列表缺 `key` 告警与子开关动作未在 `inject()` 暴露导致的点击报错｜453 全绿 |
+| **1.1.4**（当前） | **实现按职责拆分到各文件夹（六处）**：`lib/score/ast.js`（1029 行，AST 实现错放在评分目录）→ `lib/ast/*`（8 模块 + 出口）；`lib/audit/checks.js`（1259 行，25 个检查实现混在调用层）→ `lib/checks/*`（13 模块，含纯调度 `dispatch.js`）；`lib/git/index.js`（1036 行）→ `lib/git/*`（12 模块，最大 173 行）；`lib/rule/compilers.js`（459 行）→ `lib/rule/compilers/*`（10 模块）；`lib/audit/index.js`（482 行）→ `lib/audit/*`（6 模块：finding/slot/repo-level/file-context/audit-file/orchestrate）；`lib/index.js`（683 行，宿主 main 入口）→ `lib/app/*`（8 模块：schema/constants/slot-stats/tools/inject-text/tool-call/http-handlers/apply）——**六处入口文件全部退化为纯再导出（17-35 行），不含实现**，导出名与顺序逐项比对一致，调用方零改动；每处均做双态行为对比（还原原文件重跑同一探针、`diff` 为空）+ 全量测试 + 未受影响文件审计结果逐条一致 + 修复目录级审计两处误报（排除目录原只按目录名过滤、不剪枝递归 → `node_modules/pkg-a` 等子目录被计入源码目录数，任何带依赖的仓库恒定超阈值；`.trash` 回收站被计入目录数；+ 5 条回归测试锁住剪枝语义）+ **凭据明文规则误报修复**（`credref-plain-secret` 原先只有正则初筛：`[:：=]` 会命中 `token === 'string'` 的第 3 个 `=`，把被比较的 `'string'` 当成明文凭据，类型检查/字段透传/类型注解共 13 处误报全中；接入既有 `astConfirmKind: credential-value` 精筛（只认「凭据标识符 + 严格 `=` 或字段 `:` + 右侧非占位字符串字面量」）；同时补回该精筛带出的漏报——markdown 行内代码段的反引号被分词器当模板定界符、整段合成一个 token，导致 `` `password: "..."` `` 不再报，已在 `checkCredentialRefAst` 内加行内代码段兜底（判据仍是同一函数，不新增第二套）+ 1 条 7 项断言的回归测试）｜459 全绿 |
+| **1.1.3** | **规则作用域字段统一收口**（`exts` 与 `astConfirmKind` 原先各编译器手抄透传，16 个里 10 个漏传 → yml 声明被静默忽略；改为 `compileAllRules` 单点收口，新增编译器自动具备）+ **规则包作用域修复**（`frontend` 包 20 条 HTML 规则、`comment` 包 6 条声明 `exts`：HTML 规则不再跑在 `.mjs`/`.json` 上——正文里生成网页的 HTML 模板字符串曾被当真实网页报「内联脚本」）+ **前缀型密钥占位符精筛**（新增 `astConfirmKind: placeholder-credential`：剥掉 `ghp_`/`sk-`/`AKIA` 前缀后判占位符，文档示例与演示假数据不再被报成凭据泄漏；真密钥形状照报）+ **大仓性能降级**（`maxScanFiles` 默认 3000 + 变动文件优先截断 + `audit/scan-truncated` 说明不扣分；29921 文件不再硬扫）+ **分词 LRU 缓存**（单文件 139ms → 42ms，`lib/ast/tokenizer.js`）+ **注入开发者要求清单子开关**（挂审计开关下、审计关时置灰并自动关闭）+ **界面模拟页 `assets/preview.html`**（单文件自包含、跑真实 client.js、全部可点）+ 修复审计页规则行列表缺 `key` 告警与子开关动作未在 `inject()` 暴露导致的点击报错｜453 全绿 |
 | **1.1.2** | **规则包列表交互改版**（悬停浮层显示详情、启停只点行尾按钮、启用绿底/禁用红底 + 左侧色条）+ **8 类审计误报修复**（npm license/repository/files 结构化判定、gitignore 只报实际存在产物、memory-bomb 受控小文件豁免、function-name-too-short i18n 缩写豁免、**嵌套函数复杂度不再累加外层**、**单行海量语句改用密度判定**、**凭据类型检查/字段透传不再算硬编码**、**私有包 peer 写 `*` 不再报**）+ 新增 `astConfirmKind` 具名精筛机制（small-file-read / short-func-name / credential-value）+ tokenizer 补多字符运算符切分（`?.` 不再被当三元、`\|\|`/`??` 正确计入分支）｜446 全绿 |
 | **1.1.1** | 用户沟通词 blocker 规则（取消分数制 / 白名单豁免 / 黑名单直拦）+ 审计选项卡开关 + 测试目录豁免 + k 系数 5 档调低｜439 全绿 |
 | **1.1.0** | **侧边栏三选项卡**（账号信息 / 审计 / 设置）+ **账号面板美化**（渐变卡片 + GitHub 图标 + 状态徽标，设计稿 doc/account-panel-design.html）+ **凭据落盘修复**（persistGithubToken 写插件配置目录 0600 + persistSshPub 写 *.pub，不再只靠 settings.yaml 明文）+ 审计规则包列表（rule-slots meta author + rule-detail 端点）｜438 全绿 |
