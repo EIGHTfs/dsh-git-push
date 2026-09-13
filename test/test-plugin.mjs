@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 import { execSync } from 'node:child_process';
 
-import { name, GIT_PUSH_SETTINGS_NS, Config, apply, callTool, handleHttp, listTools } from '../lib/index.js';
+import { name, GIT_PUSH_SETTINGS_NS, Config, apply, callTool, handleHttp, listTools, listRuleSlots } from '../lib/index.js';
 import { setDefineToolOverride } from '../lib/plugin/index.js';
 import { listSyncFiles, syncPlugin, detectTargets, SYNC_ENTRIES, SYNC_EXCLUDE } from '../scripts/sync-plugin.mjs';
 import { VERSION } from '../lib/self/index.js';
@@ -213,7 +213,21 @@ test('HTTP：rule-slots 端点动态发现全部 yml（模板不入 order）+ di
   assert.equal(slots.meta.comment.disabled, true, 'comment 应带 disabled 标记');
   assert.equal(slots.meta.nodejs.disabled, false, 'nodejs 安全红线不可禁用');
   assert.ok(slots.meta.nodejs.stats, 'meta 应带 stats（前端免展开直显）');
-  assert.ok(slots.meta.nodejs.stats.blocker > 0, 'nodejs stats 应有拦截数');
+  // 形状断言：stats 四列必须是数字且 total 有值。
+  //   原断言 `blocker > 0` 依赖「本仓最近一次审计恰好命中 nodejs 拦截」——那是仓库状态，
+  //   不是代码性质：误报清零后该槽位合法为 0，测试即误报失败（且依赖测试执行顺序）。
+  const st = slots.meta.nodejs.stats;
+  for (const k of ['blocker', 'warning', 'pass', 'total']) {
+    assert.equal(typeof st[k], 'number', `stats.${k} 应为数字`);
+  }
+  assert.ok(st.total > 0, 'nodejs 槽位规则数应大于 0');
+  assert.ok(['audit', 'rules'].includes(st.source), 'stats.source 应为 audit 或 rules');
+  // 命中数口径（确定性）：直接注入 hitStats，验证按槽位透传 + source 切到 audit
+  const injected = listRuleSlots([], [], { nodejs: { blocker: 7, warning: 3, pass: 11 } });
+  assert.equal(injected.meta.nodejs.stats.source, 'audit', '有命中数时 source 应为 audit');
+  assert.equal(injected.meta.nodejs.stats.blocker, 7, 'audit 口径应透传 blocker');
+  assert.equal(injected.meta.nodejs.stats.warning, 3, 'audit 口径应透传 warning');
+  assert.equal(injected.meta.nodejs.stats.pass, 11, 'audit 口径应透传 pass');
   // 并发：同时请求 rule-detail 不应再被前端依赖（仅保留端点）
   const detail = await handleHttp({ method: 'GET', url: '/api/git-push/rule-detail?slot=nodejs' }, { workspaceRoot: ROOT }, cfg);
   assert.equal(detail.status, 200, 'rule-detail 端点保留（向后兼容）');

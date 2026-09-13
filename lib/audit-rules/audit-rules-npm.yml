@@ -47,12 +47,15 @@ rules:
     category: "npm"
     severity: "error"
     description: "dependencies/peerDependencies 用 \"*\" 或 ^0.x 让安装解析到不可控版本；发布插件应锁定可复现的范围（^x.y.z），peer 用符合实际装载的版本"
-    exts: ["json"]
-    patterns:
-      - "\"(?:dependencies|peerDependencies|devDependencies|optionalDependencies)\"\\s*:\\s*\\{[^}]*\"\\*\""
-      - "\"[a-zA-Z@][^\"@]*(?:@[0-9]+)?\"\\s*:\\s*\"\\*\""
+    # kind: npm-json → 结构化判定（真实解析 package.json，不靠正则命中）：
+    #   ① 只查会随包发布的字段（dependencies/peerDependencies/optionalDependencies），
+    #      devDependencies 不发布、不在管辖内；
+    #   ② **private: true 的本地私有插件整体豁免**——私有包不发布、依赖由宿主提供，
+    #      peer 写 "*" 恰是「由宿主装载」的正确声明；写死版本反而与宿主实际装载版本冲突。
+    #   公开包仍严格报 * / x / latest / ^0.x。实现见 checks.js starRangeDeps。
+    kind: "npm-json"
     fixable: true
-    mitigation: "改为精确范围（如 ^4.1.0）；对照实际安装版本（npm ls js-yaml）"
+    mitigation: "改为精确范围（如 ^4.1.0）；对照实际安装版本（npm ls js-yaml）；私有本地插件无需改（本规则已豁免）"
   - id: npm/undeclared-js-yaml
     name: "import 了 js-yaml 但未声明依赖"
     category: "npm"

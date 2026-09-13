@@ -93,6 +93,11 @@ window.__ModuleLoader__.load({
       // 开关行
       '.dshgp_switchrow{display:flex;align-items:center;justify-content:space-between;gap:10px}',
       '.dshgp_switchlabel{font-size:13px;color:var(--dsw-alias-label-primary)}',
+      /* 子开关：缩进显示从属关系；父开关关闭时整体置灰且不可点 */
+      '.dshgp_subswitch{padding-left:18px;margin-top:2px}',
+      '.dshgp_subswitchOff{opacity:.45}',
+      '.dshgp_subswitchOff .dshgp_switchlabel{cursor:not-allowed}',
+      '.dshgp_subswitchOff input{cursor:not-allowed}',
       // 输入
       '.dshgp_input{border:.5px solid var(--dsw-alias-border-l4);background:var(--dsw-alias-bg-layer-3);height:32px;font:inherit;color:var(--dsw-alias-label-primary);border-radius:8px;padding:0 10px;font-size:13px;width:100%;box-sizing:border-box}',
       '.dshgp_textarea{border:.5px solid var(--dsw-alias-border-l4);background:var(--dsw-alias-bg-layer-3);font:inherit;color:var(--dsw-alias-label-primary);border-radius:8px;padding:8px 10px;font-size:12px;width:100%;box-sizing:border-box;resize:vertical;min-height:56px}',
@@ -353,6 +358,7 @@ window.__ModuleLoader__.load({
         children: disabled ? '禁用' : '启用',
       });
       return jsx.jsxs('li', {
+        key: slot,
         className: 'dshgp_rulerow ' + (disabled ? 'dshgp_rowOff' : 'dshgp_rowOn'),
         children: [
           jsx.jsx('button', { type: 'button', className: 'dshgp_mini', disabled: idx === 0, onClick: (ev) => { ev.stopPropagation(); move(-1); }, 'aria-label': name + ' 上移', children: '↑' }),
@@ -390,6 +396,24 @@ window.__ModuleLoader__.load({
                 ],
               }),
               jsx.jsx('p', { className: 'dshgp_hint', children: '开启后 git_commit_push 提交前自动跑 L0 静态检查 + 10 维度质量评分；有 blocker 拦截提交。' }),
+              /* 子开关：注入开发者要求清单（父开关关闭时置灰不可用、不生效） */
+              jsx.jsxs('div', {
+                className: 'dshgp_switchrow dshgp_subswitch' + (s.auditEnabled ? '' : ' dshgp_subswitchOff'),
+                children: [
+                  jsx.jsx('span', { className: 'dshgp_switchlabel', children: '↳ 注入开发者要求清单到系统提示词' }),
+                  jsx.jsx('input', {
+                    type: 'checkbox',
+                    checked: !!s.injectRequirements,
+                    disabled: !s.auditEnabled,
+                    onChange: (ev) => props.toggleInjectRequirements(ev.target.checked),
+                    'aria-label': '注入开发者要求清单到系统提示词',
+                    title: s.auditEnabled ? '' : '需先开启「提交前自动审计」',
+                  }),
+                ],
+              }),
+              jsx.jsx('p', { className: 'dshgp_hint', children: s.auditEnabled
+                ? '开启后把「开发者特殊要求」清单注入系统提示词，AI 常驻可见、不必等提交被拦截才去读清单（省一次失败的工具往返）。'
+                : '需先开启上方「提交前自动审计」才可用。' }),
             ],
           }),
           /* ①.5 代码禁用户沟通词开关（控制 comment 槽位启停，2026-09-13） */
@@ -541,6 +565,7 @@ window.__ModuleLoader__.load({
         : tab === 'audit' ? jsx.jsx(dshgp_AuditTab, {
           state: props.state,
           toggleAudit: props.toggleAudit,
+          toggleInjectRequirements: props.toggleInjectRequirements,
           editWeight: props.editWeight,
           moveSlot: props.moveSlot,
           toggleDisabled: props.toggleDisabled,
@@ -576,6 +601,7 @@ window.__ModuleLoader__.load({
         this.savedMsg = '';
         this.savedTimer = null;
         this.auditEnabled = false;
+        this.injectRequirements = false;
         this.ruleOrder = [];
         this.slotMeta = {};
         this.weightValues = {};
@@ -598,6 +624,7 @@ window.__ModuleLoader__.load({
           const snap = this.scope.getSnapshot();
           if (snap && snap.value) {
             this.auditEnabled = !!snap.value.auditEnabled;
+            this.injectRequirements = !!snap.value.injectRequirements;
             // 2026-09-13：已填写提示 = 只看是否存在（不读明文回显）
             this.tokenConfigured = !!(snap.value.githubToken && String(snap.value.githubToken).trim());
             this.sshConfigured = !!(snap.value.sshPub && String(snap.value.sshPub).trim());
@@ -617,6 +644,7 @@ window.__ModuleLoader__.load({
         const snap0 = this.scope.getSnapshot();
         if (snap0 && snap0.value) {
           this.auditEnabled = !!snap0.value.auditEnabled;
+          this.injectRequirements = !!snap0.value.injectRequirements;
           this.tokenConfigured = !!(snap0.value.githubToken && String(snap0.value.githubToken).trim());
           this.sshConfigured = !!(snap0.value.sshPub && String(snap0.value.sshPub).trim());
           this.slotMeta = (snap0.value.ruleSlotMeta && typeof snap0.value.ruleSlotMeta === 'object') ? snap0.value.ruleSlotMeta : {};
@@ -639,6 +667,7 @@ window.__ModuleLoader__.load({
           sshPub: this.sshPub,
           sshEmail: this.sshEmail,
           auditEnabled: this.auditEnabled,
+          injectRequirements: this.injectRequirements,
           ruleOrder: this.ruleOrder,
           slotMeta: this.slotMeta,
           weightValues: this.weightValues,
@@ -767,9 +796,27 @@ window.__ModuleLoader__.load({
       /** 审计开关（写回 auditEnabled）。 */
       toggleAudit(checked) {
         this.auditEnabled = !!checked;
+        // 关闭审计时子开关一并落为关闭（父关子不生效，避免状态残留导致重新开启后行为意外）
+        if (!this.auditEnabled && this.injectRequirements) {
+          this.injectRequirements = false;
+          void this.scope.set('injectRequirements', false).catch(() => { /* 父开关写入失败时下次同步纠正 */ });
+        }
         this.publish();
         void this.scope.set('auditEnabled', this.auditEnabled).then(() => {
           this.flashSaved(this.auditEnabled ? '✅ 已开启：提交前自动审计' : '✅ 已关闭：提交前不审计');
+        }).catch(() => {
+          this.failed = true;
+          this.publish();
+        });
+      }
+
+      /** 注入开发者要求清单开关（auditEnabled 的子开关；父开关关闭时不生效）。 */
+      toggleInjectRequirements(checked) {
+        if (!this.auditEnabled) return; // 父开关关闭：子开关不生效（UI 已置灰）
+        this.injectRequirements = !!checked;
+        this.publish();
+        void this.scope.set('injectRequirements', this.injectRequirements).then(() => {
+          this.flashSaved(this.injectRequirements ? '✅ 已开启：注入开发者要求清单' : '✅ 已关闭：不注入要求清单');
         }).catch(() => {
           this.failed = true;
           this.publish();
@@ -855,6 +902,8 @@ window.__ModuleLoader__.load({
           discard: () => this.discard(),
           genKey: () => { void this.genKey(); },
           toggleAudit: (checked) => this.toggleAudit(checked),
+          // 子开关动作必须在这里暴露：页面 props 来自 inject()，漏了会让 onChange 调到 undefined
+          toggleInjectRequirements: (checked) => this.toggleInjectRequirements(checked),
           editWeight: (key, value) => this.editWeight(key, value),
           moveSlot: (slot, dir) => this.moveSlot(slot, dir),
           toggleDisabled: (slot) => { void this.toggleDisabled(slot); },

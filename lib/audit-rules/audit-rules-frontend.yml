@@ -15,9 +15,14 @@ metadata:
   description: "用于服务端内嵌管理界面，不面向搜索引擎"
   last_updated: "2026-09-08"
 
+# exts 说明（2026-09-13）：本包是「前端 HTML 审计规则集」，HTML 规则必须声明 exts，
+#   否则会跑在所有文本文件上——.mjs 里生成网页的 HTML 模板字符串会被当真实网页误报
+#   （实例：assets/preview-gen.mjs 里 `<script>${...}</script>` 被判「内联脚本」blocker）。
+#   框架类规则（react/vue 的 dangerouslySetInnerHTML / v-html / key）是 JS/JSX 写法，故限 JS 类。
 rules:
   # ----- 1. 可访问性 -----
   - id: a11y/img-alt-required
+    exts: ["html", "htm"]
     name: "img 必须包含 alt 属性"
     category: "accessibility"
     severity: "error"
@@ -27,6 +32,7 @@ rules:
     fixable: true
 
   - id: a11y/button-has-label
+    exts: ["html", "htm"]
     name: "按钮必须有可访问名称"
     category: "accessibility"
     severity: "warning"
@@ -35,6 +41,7 @@ rules:
     mitigation: "添加 aria-label 或 title"
 
   - id: a11y/link-has-href
+    exts: ["html", "htm"]
     name: "链接必须有 href 或 role"
     category: "accessibility"
     severity: "warning"
@@ -45,6 +52,7 @@ rules:
     mitigation: "使用 href='#' + onclick 或改为 button"
 
   - id: a11y/form-label-association
+    exts: ["html", "htm"]
     name: "输入框必须关联 label"
     category: "accessibility"
     severity: "warning"
@@ -54,6 +62,7 @@ rules:
 
   # ----- 2. 安全性 -----
   - id: security/script-unsafe-inline
+    exts: ["html", "htm"]
     name: "禁止内联脚本（未受 CSP 保护）"
     category: "security"
     severity: "error"
@@ -65,6 +74,7 @@ rules:
     mitigation: "使用外部脚本 + 严格 CSP"
 
   - id: security/event-handler-unsafe
+    exts: ["html", "htm"]
     name: "禁止事件属性使用 javascript: 伪协议"
     category: "security"
     severity: "error"
@@ -74,6 +84,7 @@ rules:
     fixable: true
 
   - id: security/link-rel-noopener
+    exts: ["html", "htm"]
     name: "target='_blank' 必须加 rel='noopener'"
     category: "security"
     severity: "warning"
@@ -83,6 +94,7 @@ rules:
     fixable: true
 
   - id: security/form-method-get-sensitive
+    exts: ["html", "htm"]
     name: "敏感数据表单禁止使用 GET"
     category: "security"
     severity: "error"
@@ -93,6 +105,7 @@ rules:
 
   # ----- 3. 表单与交互 -----
   - id: forms/button-missing-event
+    exts: ["html", "htm"]
     name: "HTML 按钮未发现 inline 事件（提示，非阻断）"
     category: "forms"
     severity: "info"
@@ -105,6 +118,7 @@ rules:
     mitigation: "独立 HTML：添加 onclick 或 @click；油猴/扩展：用 addEventListener 绑定（见 button/unbound）"
 
   - id: forms/input-validation-missing
+    exts: ["html", "htm"]
     name: "输入框缺少 required 或 aria-required"
     category: "forms"
     severity: "warning"
@@ -114,6 +128,7 @@ rules:
     fixable: true
 
   - id: forms/form-action-missing
+    exts: ["html", "htm"]
     name: "表单缺少 action 或提交事件"
     category: "forms"
     severity: "warning"
@@ -124,6 +139,7 @@ rules:
     mitigation: "添加 action='' 并使用 JavaScript 拦截"
 
   - id: forms/input-autocomplete-sensitive
+    exts: ["html", "htm"]
     name: "敏感输入应设置 autocomplete='off'"
     category: "forms"
     severity: "warning"
@@ -134,6 +150,7 @@ rules:
 
   # ----- 4. 性能 -----
   - id: performance/script-defer-or-async
+    exts: ["html", "htm"]
     name: "外部脚本建议使用 defer 或 async"
     category: "performance"
     severity: "info"
@@ -143,6 +160,7 @@ rules:
     fixable: true
 
   - id: performance/img-loading-lazy
+    exts: ["html", "htm"]
     name: "非关键图片建议设置 loading='lazy'"
     category: "performance"
     severity: "info"
@@ -153,6 +171,7 @@ rules:
 
   # ----- 5. 结构与语义 -----
   - id: semantic/html-lang-required
+    exts: ["html", "htm"]
     name: "html 标签必须包含 lang 属性"
     category: "semantic"
     severity: "warning"
@@ -162,6 +181,7 @@ rules:
     fixable: true
 
   - id: semantic/button-role-warning
+    exts: ["html", "htm"]
     name: "div/span 模拟按钮需加 role='button'"
     category: "semantic"
     severity: "warning"
@@ -172,6 +192,7 @@ rules:
 
   # ----- 6. 框架 -----
   - id: framework/react-dangerous-html
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx"]
     name: "React 禁止直接使用 dangerouslySetInnerHTML"
     category: "framework"
     severity: "error"
@@ -181,6 +202,7 @@ rules:
     fixable: false
 
   - id: framework/vue-v-html
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx"]
     name: "Vue 禁止使用 v-html 渲染外部数据"
     category: "framework"
     severity: "error"
@@ -190,6 +212,7 @@ rules:
     fixable: false
 
   - id: framework/react-key-prop
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx"]
     name: "列表渲染必须包含 key"
     category: "framework"
     severity: "warning"
@@ -204,6 +227,7 @@ rules:
   # unbound / create-element-binding 为交叉比对型（kind: button-bind，无 patterns），
   # 由 checkButtonBindings 同文件提取 HTML 按钮 ↔ JS 绑定证据后比对判定。
   - id: button/inline-binding-in-string
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx"]
     name: "HTML 字符串中的 inline onclick（建议改）"
     category: "button"
     severity: "info"

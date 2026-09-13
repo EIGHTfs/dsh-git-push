@@ -2,7 +2,10 @@
 # 注释关键词检测规则集（AI 用户交流注释识别）
 # 作者：DeepSeek
 # 版本：1.0.0
-# 适用：所有 JavaScript / TypeScript / HTML 文件
+# 适用：所有 JavaScript / TypeScript / HTML 文件 + 文档（md/txt）
+# exts 说明（2026-09-13）：显式声明作用域——本包只查「注释/文档」载体，不查 .json。
+#   不声明时插件配置文件也会被扫：里面写给 AI 的流程约定会被当「公开文档夹带
+#   沟通记录」误报成 blocker，把提交门禁卡死。
 # 描述：检测代码中残留的 AI 用户交流注释
 # 最后更新：2026-09-08
 # ============================================================
@@ -17,6 +20,7 @@ metadata:
 
 rules:
   - id: documentation/comment-suspicious-detection
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx", "html", "htm"]
     name: "检测 AI 用户交流可疑注释"
     category: "documentation"
     severity: "blocker"
@@ -75,6 +79,7 @@ rules:
       - pattern: "用户旅程"
 
   - id: conv-session-ref
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx", "html", "htm", "md", "markdown", "txt"]
     name: "文档引用会话"
     category: "documentation"
     severity: "blocker"
@@ -82,6 +87,7 @@ rules:
     pattern: "(本会话|本次会话|本对话|开发会话|session-[0-9a-f]{8,})"
     fixable: false
   - id: conv-user-decision
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx", "html", "htm", "md", "markdown", "txt"]
     name: "文档引用用户决策"
     category: "documentation"
     severity: "blocker"
@@ -89,6 +95,7 @@ rules:
     pattern: "用户(同意|许可|确认|约定|指定|已定调|拍板|让我|要求我|跟我说)"
     fixable: false
   - id: conv-ai-permit
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx", "html", "htm", "md", "markdown", "txt"]
     name: "文档 AI 承诺措辞"
     category: "documentation"
     severity: "blocker"
@@ -96,6 +103,7 @@ rules:
     pattern: "我(同意|许可|确认|答应|承诺|已按你)"
     fixable: false
   - id: conv-negotiate
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx", "html", "htm", "md", "markdown", "txt"]
     name: "文档协商措辞"
     category: "documentation"
     severity: "blocker"
@@ -103,6 +111,7 @@ rules:
     pattern: "我们(商量|讨论|约定|沟通|说好|议定)"
     fixable: false
   - id: conv-log
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx", "html", "htm", "md", "markdown", "txt"]
     name: "文档对话记录引用"
     category: "documentation"
     severity: "blocker"

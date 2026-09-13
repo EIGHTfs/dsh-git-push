@@ -242,6 +242,11 @@ rules:
     category: "security"
     severity: "error"
     description: "凭据不应硬编码在源代码中"
+    # astConfirmKind: credential-value → 正则初筛后由 token 级精筛（checkCredentialRefAst）确认，
+    #   只报「凭据标识符右侧直接是有效字符串字面量」的行。豁免：类型/存在性检查
+    #   （typeof cfg.githubToken === 'string'）、字段透传（cfg.token = init.token）、
+    #   取环境变量/配置（process.env.KEY / options.token）、占位符与空串。
+    astConfirmKind: credential-value
     patterns:
       - "password\\s*[=:]+\\s*['\"][^'\"]+['\"]"
       - "secret\\s*[=:]+\\s*['\"][^'\"]+['\"]"
@@ -280,6 +285,9 @@ rules:
   # ----- 凭据入库门禁 -----
   # 提交门禁安全底线：新增行命中即拦截提交；severity=error → blocker
   - id: secret-github-pat
+    # 占位符精筛：剥掉 ghp_/sk-/AKIA 前缀后再判是否为演示/占位值
+    #   （文档里写「测试用占位符 ghp_testtokenplaceholder123」、演示页假数据不应报泄漏）
+    astConfirmKind: "placeholder-credential"
     name: "疑似 GitHub PAT 硬编码"
     category: "security"
     severity: "error"
@@ -287,6 +295,9 @@ rules:
     pattern: "\\bghp_[A-Za-z0-9]{20,}\\b"
     fixable: false
   - id: secret-openai-key
+    # 占位符精筛：剥掉 ghp_/sk-/AKIA 前缀后再判是否为演示/占位值
+    #   （文档里写「测试用占位符 ghp_testtokenplaceholder123」、演示页假数据不应报泄漏）
+    astConfirmKind: "placeholder-credential"
     name: "疑似 API key 硬编码"
     category: "security"
     severity: "error"
@@ -415,6 +426,9 @@ rules:
 
   # ── v2 独有能力（1.0.3 合并自原 v2 示范槽位，防旧包覆盖丢失）──
   - id: secret-aws-access-key
+    # 占位符精筛：剥掉 ghp_/sk-/AKIA 前缀后再判是否为演示/占位值
+    #   （文档里写「测试用占位符 ghp_testtokenplaceholder123」、演示页假数据不应报泄漏）
+    astConfirmKind: "placeholder-credential"
     name: "AWS Access Key 疑似泄露"
     category: "security"
     severity: "error"

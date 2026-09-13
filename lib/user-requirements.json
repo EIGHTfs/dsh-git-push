@@ -2,9 +2,9 @@
   "user": "默认开发者",
   "description": "默认开发者特殊要求（AI 调用 git_commit_push / git_remote_create 前必须逐条核对达标，全部达标才执行）",
   "items": [
-    "提交信息写清做了什么：commit message 必须描述本次实际变更内容（做了什么），禁止空泛词（如 update、fix、改了点东西）；格式建议 feat:/fix:/docs:/chore: 前缀 + 具体说明",
+    "提交信息写清做了什么：commit message 必须描述本次实际变更内容（做了什么），禁止空泛词（如 update、fix、改了点东西）；格式建议 feat:/fix:/docs:/chore: 前缀 + 具体说明，先在会话和用户讨论经过用户确认",
     "单文件代码非必要不要超过 400 行，否则需要按功能拆分",
-    "大文件/产物不入库：node_modules、lock 文件、构建产物、下载的图片/视频等不入库；如已入库需先清理（.gitignore + 必要时 git rm --cached），tools/tool 文件夹的二进制文件可以豁免",
+    "大文件/产物不入库：node_modules、lock 文件、构建产物、下载的图片/视频等若无引用不入库；如已入库需先清理（.gitignore + 必要时 git rm --cached），tools/tool 文件夹的二进制文件可以豁免，bin 文件夹新增文件第一次提交提醒用户确认是否需要提交",
     "敏感信息不入库：token/密钥/密码/凭据文件不入公开仓库；如涉及需先移出或豁免确认",
     "删除需可恢复：删除文件/目录前先确认有 git 历史或备份（禁 rm -rf 无痕删除），大删除先 commit 检查点",
     "文档对话类措辞：公开仓库文档只写做了什么，不含会话引用/决策来源/AI 许可表述/商量转述等沟通措辞（见 release-docs-rule）",
