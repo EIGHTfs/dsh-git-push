@@ -112,7 +112,8 @@ test('组件：enum 渲染选项齐全', () => {
   const react = mockReact();
   createSettingsCard(react, {});
   const opts = react.calls.filter((c) => c.type === 'option').map((c) => c.props.value);
-  assert.deepEqual(opts.sort(), ['deep', 'diff', 'full', 'quick', 'standard']);
+  // 2026-09-13：新增「推送通道」enum（ssh/api/auto），期望值随之扩展。
+  assert.deepEqual(opts.sort(), ['api', 'auto', 'deep', 'diff', 'full', 'quick', 'ssh', 'standard']);
 });
 
 test('源码：不含 JSX 语法（无 <Tag> 形式）', () => {
