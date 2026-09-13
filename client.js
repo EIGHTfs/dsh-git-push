@@ -143,9 +143,22 @@ window.__ModuleLoader__.load({
       // 统计条
       '.dshgp_stats{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 4px}',
       '.dshgp_loading{padding:12px;text-align:center;font-size:12px;color:var(--dsw-alias-label-tertiary)}',
-      '.dshgp_rowOn{background:color-mix(in srgb,var(--dsw-alias-label-success) 6%,transparent)}',
-      '.dshgp_rowOff{background:color-mix(in srgb,var(--dsw-alias-label-error) 8%,transparent);opacity:.9}',
-      '.dshgp_rowClickable{cursor:pointer}',
+      // 2026-09-13：启用/禁用底色加强 + 左侧色条，状态一眼可辨。
+      //   启用 = 绿底 + 绿左条；禁用 = 红底 + 红左条（禁用行不再整体降透明度，保持可读）。
+      '.dshgp_rowOn{background:color-mix(in srgb,var(--dsw-alias-label-success) 13%,transparent);border-left:3px solid var(--dsw-alias-label-success)}',
+      '.dshgp_rowOff{background:color-mix(in srgb,var(--dsw-alias-label-error) 15%,transparent);border-left:3px solid var(--dsw-alias-label-error)}',
+      // 行内浮层 tooltip（悬停显示详细信息：描述/作者/统计口径）——不占布局、不推挤下方行。
+      '.dshgp_ruleinfo{position:relative}',
+      '.dshgp_hovercard{display:none;position:absolute;left:0;top:100%;z-index:40;min-width:260px;max-width:420px;margin-top:6px;padding:8px 10px;border:.5px solid var(--dsw-alias-border-l4);border-radius:8px;background:var(--dsw-alias-bg-layer-3);box-shadow:0 6px 20px rgba(0,0,0,.18);font-size:11px;line-height:1.5;color:var(--dsw-alias-label-secondary);white-space:normal}',
+      '.dshgp_ruleinfo:hover .dshgp_hovercard{display:block}',
+      '.dshgp_hoverTitle{font-size:12px;font-weight:600;color:var(--dsw-alias-label-primary);margin-bottom:2px}',
+      '.dshgp_hoverRow{margin-top:2px}',
+      // 启停按钮（行内唯一可点击切换状态的位置）——绿/红实色胶囊，一眼看出点它会切到哪一侧
+      '.dshgp_powerBtn{flex-shrink:0;font:inherit;font-size:11px;border:.5px solid transparent;border-radius:999px;padding:2px 10px;cursor:pointer;white-space:nowrap}',
+      '.dshgp_powerOn{background:var(--dsw-alias-label-success);color:#fff}',
+      '.dshgp_powerOff{background:var(--dsw-alias-label-error);color:#fff}',
+      '.dshgp_powerBtn:disabled{opacity:.45;cursor:default}',
+      '.dshgp_powerBtn:hover:not(:disabled){filter:brightness(1.08)}',
       '.dshgp_error{margin:8px 0 0;font-size:12px;color:var(--dsw-alias-label-error)}',
       '.dshgp_saved{margin:6px 0 0;font-size:12px;color:var(--dsw-alias-label-success)}',
     ].join('');
@@ -286,44 +299,75 @@ window.__ModuleLoader__.load({
       });
     }
 
-    /** 规则包行：↑↓ 调次序 + 单击整行切换禁用/启用 + 直显 描述/作者/拦截/警告/通过（2026-09-13）。 */
+    /**
+     * 规则包行（2026-09-13 交互改版）：
+     *   ① 详细信息改为**悬停浮层**（.dshgp_hovercard，悬停行内信息区显示描述/作者/统计口径），
+     *      常显只留「名称 + 拦截/警告/通过」——不再占用行高、不推挤列表。
+     *   ② 启用/禁用**只由行尾的启停按钮**触发（.dshgp_powerBtn）；整行不再可点击切换，
+     *      避免想拖选/看详情时误触状态。
+     *   ③ 状态底色：启用 = 绿底 + 绿左条，禁用 = 红底 + 红左条（见 CSS .dshgp_rowOn/.dshgp_rowOff）。
+     * 其余：↑↓ 调次序；nodejs/private 为安全红线锁定不可禁用。
+     */
     function dshgp_RuleRow(props, slot, idx, len) {
       const s = props.state;
       const meta = (s.slotMeta && s.slotMeta[slot]) || {};
       const name = meta.name || slot;
       const author = meta.author || '';
-      const stats = (meta && meta.stats) || { blocker: 0, warning: 0, pass: 0, total: 0 };
-      // 2026-09-13：禁用态 = yml 顶层 disabled（后端 listRuleSlots 解析；不再用前端变量/scope）。
-      //   点击即时反馈靠 toggleDisabled 本地翻转 slotMeta，loadSlots 对账 yml 真实状态。
+      const stats = (meta && meta.stats) || { blocker: 0, warning: 0, pass: 0, total: 0, source: 'rules' };
+      // 数字口径随 stats.source 区分——'audit' = 最近一次审计的实际命中数
+      //   （拦截/警告 = 命中的问题数，通过 = 没查出问题的规则数）；'rules' = 未审计时的规则条数口径。
+      const fromAudit = stats.source === 'audit';
+      const countTitle = (kind) => (fromAudit
+        ? `${name} 在最近一次审计中命中 ${kind} ${kind === '拦截' ? stats.blocker : (kind === '警告' ? stats.warning : stats.pass)} 条（共 ${stats.total} 条规则）`
+        : `${name} 共 ${stats.total} 条规则（${kind} 条 ${kind === '拦截' ? stats.blocker : (kind === '警告' ? stats.warning : stats.pass)}）——跑一次审计后显示命中数`);
+      // 禁用态 = yml 顶层 disabled（后端 listRuleSlots 解析）；点击即时反馈靠 toggleDisabled
+      //   本地翻转 slotMeta，loadSlots 对账 yml 真实状态。
       const disabled = !!meta.disabled;
       const locked = slot === 'nodejs' || slot === 'private';
       const move = (dir) => props.moveSlot(slot, dir);
-      // 2026-09-13 榜单行（模仿 skill 记分榜）：↑↓ + 名称(flex:1) + 拦截/警告/通过统计列(56px 右对齐) + 状态列(48px)
-      const badgeNode = locked
-        ? jsx.jsx('span', { className: 'dshgp_badge dshgp_badgeGreen', children: '启用' })
-        : (disabled
-          ? jsx.jsx('span', { className: 'dshgp_badge dshgp_badgeRed', children: '禁用' })
-          : jsx.jsx('span', { className: 'dshgp_badge dshgp_badgeGreen', children: '启用' }));
+      // 悬停浮层内容：描述/作者/统计口径说明（原常显 meta 行移到这里）
+      const hoverCard = jsx.jsxs('div', {
+        className: 'dshgp_hovercard',
+        children: [
+          jsx.jsx('div', { className: 'dshgp_hoverTitle', children: name }),
+          author ? jsx.jsx('div', { className: 'dshgp_hoverRow', children: '作者: ' + author }) : null,
+          meta.description ? jsx.jsx('div', { className: 'dshgp_hoverRow', children: meta.description }) : null,
+          jsx.jsx('div', {
+            className: 'dshgp_hoverRow',
+            children: fromAudit
+              ? `最近一次审计命中：拦截 ${stats.blocker} · 警告 ${stats.warning} · 未命中规则 ${stats.pass}（共 ${stats.total} 条规则）`
+              : `规则条数口径：拦截 ${stats.blocker} · 警告 ${stats.warning} · 规则 ${stats.pass}（共 ${stats.total} 条）——跑一次审计后显示命中数`,
+          }),
+          jsx.jsx('div', { className: 'dshgp_hoverRow', children: locked ? '安全红线：nodejs/private 不可禁用' : (disabled ? '当前禁用——点右侧按钮启用' : '当前启用——点右侧按钮禁用') }),
+        ],
+      });
+      // 启停按钮：行内唯一可切换状态的位置（整行 onClick 已移除）
+      const powerBtn = jsx.jsx('button', {
+        type: 'button',
+        className: 'dshgp_powerBtn ' + (disabled ? 'dshgp_powerOff' : 'dshgp_powerOn'),
+        disabled: locked,
+        onClick: (ev) => { ev.stopPropagation(); props.toggleDisabled(slot); },
+        title: locked ? 'nodejs/private 安全红线，不可禁用' : (disabled ? '点击启用该规则包' : '点击禁用该规则包'),
+        'aria-label': (disabled ? '启用规则包 ' : '禁用规则包 ') + name,
+        'aria-pressed': !disabled,
+        children: disabled ? '禁用' : '启用',
+      });
       return jsx.jsxs('li', {
         className: 'dshgp_rulerow ' + (disabled ? 'dshgp_rowOff' : 'dshgp_rowOn'),
         children: [
           jsx.jsx('button', { type: 'button', className: 'dshgp_mini', disabled: idx === 0, onClick: (ev) => { ev.stopPropagation(); move(-1); }, 'aria-label': name + ' 上移', children: '↑' }),
           jsx.jsx('button', { type: 'button', className: 'dshgp_mini', disabled: idx === len - 1, onClick: (ev) => { ev.stopPropagation(); move(1); }, 'aria-label': name + ' 下移', children: '↓' }),
           jsx.jsxs('div', {
-            className: 'dshgp_ruleinfo dshgp_rowClickable',
-            onClick: () => props.toggleDisabled(slot),
-            title: locked ? 'nodejs/private 安全红线，不可禁用' : (disabled ? '单击启用该规则包' : '单击禁用该规则包'),
+            className: 'dshgp_ruleinfo',
             children: [
               jsx.jsx('span', { className: 'dshgp_rulename', children: name }),
-              (author || meta.description)
-                ? jsx.jsx('div', { className: 'dshgp_rulemeta', children: (author ? '作者: ' + author : '') + (author && meta.description ? ' · ' : '') + (meta.description || '') })
-                : null,
+              hoverCard,
             ],
           }),
-          jsx.jsx('span', { className: 'dshgp_rulecountRed', children: String(stats.blocker) }),
-          jsx.jsx('span', { className: 'dshgp_rulecountYellow', children: String(stats.warning) }),
-          jsx.jsx('span', { className: 'dshgp_rulecountGreen', children: String(stats.pass) }),
-          jsx.jsx('span', { className: 'dshgp_rulebadge', children: badgeNode }),
+          jsx.jsx('span', { className: 'dshgp_rulecountRed', title: countTitle('拦截'), children: String(stats.blocker) }),
+          jsx.jsx('span', { className: 'dshgp_rulecountYellow', title: countTitle('警告'), children: String(stats.warning) }),
+          jsx.jsx('span', { className: 'dshgp_rulecountGreen', title: countTitle('通过'), children: String(stats.pass) }),
+          jsx.jsx('span', { className: 'dshgp_rulebadge', children: powerBtn }),
         ],
       });
     }
@@ -386,16 +430,16 @@ window.__ModuleLoader__.load({
                         className: 'dshgp_ruleheadrow',
                         children: [
                           jsx.jsx('span', { className: 'dshgp_ruleheadrowinfo', children: '规则包' }),
-                          jsx.jsx('span', { className: 'dshgp_rulecountRed', children: '拦截' }),
-                          jsx.jsx('span', { className: 'dshgp_rulecountYellow', children: '警告' }),
-                          jsx.jsx('span', { className: 'dshgp_rulecountGreen', children: '通过' }),
+                          jsx.jsx('span', { className: 'dshgp_rulecountRed', title: '该规则包在最近一次审计中命中的拦截级（blocker）问题数', children: '拦截' }),
+                          jsx.jsx('span', { className: 'dshgp_rulecountYellow', title: '该规则包在最近一次审计中命中的警告级（warning）问题数', children: '警告' }),
+                          jsx.jsx('span', { className: 'dshgp_rulecountGreen', title: '该规则包内没查出问题的规则条数', children: '通过' }),
                           jsx.jsx('span', { className: 'dshgp_rulebadge', children: '状态' }),
                         ],
                       }),
                       order.map((slot, idx) => dshgp_RuleRow(props, slot, idx, order.length)),
                     ],
                   }),
-              jsx.jsx('p', { className: 'dshgp_hint', children: '重复定义的字段（severity_map / thresholds / 权重等）以最后面一个重复定义的为准；私密文件拦截强制加载、恒末尾，不可禁用。' }),
+              jsx.jsx('p', { className: 'dshgp_hint', children: '数字含义：拦截/警告 = 该规则包在最近一次审计中命中的问题数，通过 = 没查出问题的规则条数（未做过审计时显示规则条数口径，行尾标注「规则」）。跑一次 code_audit 或全量扫描即刷新。' }),
               s.slotError ? jsx.jsx('p', { className: 'dshgp_error', children: s.slotError }) : null,
             ],
           }),

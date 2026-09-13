@@ -17,12 +17,17 @@ metadata:
 
 rules:
   # ----- 1. 可读性 -----
+  # exts 说明（2026-09-13）：代码结构类规则（命名/嵌套/长度）只对**代码文件**生效。
+  #   不声明 exts 时会对 md/json/yml 也生效——markdown 文档里的示例代码块
+  #   （如 python 块里的 `PY`、JSON 结构里的缩进）会被当成代码误报。
+  #   本质：这类规则的判定对象是「代码」，文档不是代码（文档里的示例是文本内容）。
   - id: readability/function-name-camelcase
     name: "函数名使用 camelCase"
     category: "readability"
     severity: "warning"
     description: "函数名应使用 camelCase 命名规范"
     pattern: "^[a-z][a-zA-Z0-9]*$"
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx"]
     fixable: false
     examples:
       bad: "function get_user_by_id() {}"
@@ -34,6 +39,7 @@ rules:
     severity: "warning"
     description: "变量名应使用 camelCase，避免使用缩写或拼音"
     pattern: "^[a-z][a-zA-Z0-9]*$"
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx"]
     fixable: false
 
   - id: readability/variable-min-length
@@ -42,6 +48,7 @@ rules:
     severity: "warning"
     description: "过短的变量名（如 a, b, x）降低代码可读性"
     min_length: 2
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx", "py", "go", "rs", "java", "kt", "swift", "php", "rb"]
     exceptions: ["i", "j", "k", "n", "e", "cb"]
     fixable: false
 
@@ -52,6 +59,12 @@ rules:
     severity: "warning"
     description: "函数名 ≤2 字符是缩写（如 gU），无法从名字猜出含义"
     pattern: "\\bfunction\\s+[a-zA-Z_$][a-zA-Z0-9_$]{0,1}\\s*\\("
+    # 2026-09-13 误报修复（正则初筛 → AST 精筛）：i18n 领域标准缩写（tr/t/L 等翻译、
+    #   字典函数名）长度 ≤2 但含义公认，纯正则命中即报会把它们当「无法猜出含义」报掉。
+    #   astConfirmKind: short-func-name → token 级判定（checkShortFunctionNameAst）：
+    #   长度 ≤2 且不在公认缩写白名单（tr/t/L/i18n/db/fs/...）里才报。
+    astConfirm: true
+    astConfirmKind: short-func-name
     fixable: false
     mitigation: "函数名用有含义的完整单词：getUser / sumArray / buildReport"
 
@@ -82,6 +95,13 @@ rules:
     # 2026-09-13 误报修复：只对代码文件生效——README/CSS/JSON/md 里的版本号、端口、
     #   尺寸、日期是正常书写，不构成需要提取常量的硬编码魔数。
     exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx", "py", "go", "rs", "java", "kt", "swift", "php", "rb", "sh", "bash"]
+    # 2026-09-13 误报修复（正则初筛 → AST 精筛）：正则先筛候选行，再用 token 级判定
+    #   确认命中行确实是代码行——注释里的版本号/日期（// v1.8.0、2026-09-13）、
+    #   字符串/CSS 里的数字不再报。
+    # 2026-09-13 升级：astConfirm: magic-number —— 值级精筛，复用 magic-number-smart
+    #   的豁免逻辑（版本号/日期/HTTP 状态码/命名常量值/参数默认值/索引运算 i+1 豁免），
+    #   修纯 regex 把 `i + 1`、`cur - 1`、`data.version === 2`、`5 * 60_000` 当魔数的误报。
+    astConfirm: magic-number
     fixable: false
     mitigation: "提取常量：const TAX_RATE = 1.2; const MAX_LIMIT = 1000; 并加注释说明 1/2/3 等状态码含义"
 
@@ -105,6 +125,7 @@ rules:
     severity: "warning"
     description: "代码缩进嵌套超过 3 层（如 for→for→if→if），可读性灾难，应提前 return 或抽函数"
     max_depth: 3
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx", "py", "go", "rs", "java", "kt", "swift", "php", "rb"]
     fixable: false
 
   - id: readability/max-function-length
@@ -113,6 +134,7 @@ rules:
     severity: "warning"
     description: "过长的函数难以理解和维护"
     max_lines: 50
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx", "py", "go", "rs", "java", "kt", "swift", "php", "rb"]
     fixable: true
 
   - id: readability/max-file-length

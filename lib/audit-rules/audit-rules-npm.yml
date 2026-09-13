@@ -16,12 +16,9 @@ rules:
     name: "files 白名单含可疑条目（应核对实际打包路径）"
     category: "npm"
     severity: "warning"
-    description: "files 白名单决定 npm pack 打进包的内容；不存在/错误路径的条目会让包缺运行时文件（如 audit-rules 应写 lib/audit-rules 而非 audit-rules）。发布前应 npm pack --dry-run 核对"
+    description: "files 白名单决定 npm pack 打进包的内容；**条目指向不存在的路径**会让包缺运行时文件（如写 audit-rules 而实际是 lib/audit-rules）。引擎结构化判定：逐条核对 files 数组里的路径在仓库中是否存在"
+    kind: "npm-json"
     exts: ["json"]
-    patterns:
-      - "\"files\"\\s*:\\s*\\["
-      - "\"audit-rules\""
-      - "\"template\""
     fixable: false
     mitigation: "npm pack --dry-run 看实际打进包的文件清单；规则目录写完整相对路径（lib/audit-rules）"
   - id: npm/files-missing-lib
@@ -106,19 +103,17 @@ rules:
     name: "license 字段核对（缺失则 npm pack 告警）"
     category: "npm"
     severity: "warning"
-    description: "npm 要求 package.json 有 license 字段（可 SPDX 表达式）；缺失时 npm publish 拒绝（npm 8+ 默认无 license 不可发布公共包）。本规则命中 \"version\" 行即提示核对"
+    description: "npm 要求 package.json 有 license 字段（可 SPDX 表达式）；缺失时 npm publish 拒绝（npm 8+ 默认无 license 不可发布公共包）。引擎结构化判定：license 字段**缺失**才报（已声明则不报）"
+    kind: "npm-json"
     exts: ["json"]
-    patterns:
-      - "\"version\"\\s*:\\s*\"[0-9]"
     fixable: false
     mitigation: "增加 \"license\": \"MIT\"（或项目实际 SPDX 值）+ LICENSE 文件；npm publish --dry-run 验证"
   - id: npm/repository-field-check
     name: "repository 字段核对（npm 包元数据）"
     category: "npm"
     severity: "info"
-    description: "建议声明 repository（{type,url}）便于 npm 页面与依赖审计溯源；命中 \"homepage\" 行即提示"
+    description: "建议声明 repository（{type,url}）便于 npm 页面与依赖审计溯源。引擎结构化判定：repository 字段**缺失**才报（已声明则不报）"
+    kind: "npm-json"
     exts: ["json"]
-    patterns:
-      - "\"homepage\""
     fixable: false
     mitigation: "增加 \"repository\": { \"type\": \"git\", \"url\": \"https://github.com/<owner>/<repo>.git\" }"

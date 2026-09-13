@@ -81,6 +81,48 @@ Git 全链路自动化，token / SSH 凭据管理 + 提交推送，无需手动�
 
 **加规则 = 放文件**；**加字段类型（新 kind）才需加函数**（compilers.js 注册制：`registerCompiler(kind, detect, compile)`，加字段=加函数+注册一行，`compileRule` 主体永不修改）。
 
+### 代码架构：lib/ 各文件夹各司其职
+
+改审计逻辑前先分清三层，避免在错误的层里打补丁（尤其不要用「跳过某类行」的补丁去修误报）：
+
+| 层 | 位置 | 职责 |
+|---|---|---|
+| ① 规则声明 | `lib/audit-rules/*.yml` | 阈值 / severity / 豁免清单 / 上下文关键字 / `astConfirm` 开关——**改阈值先改 yml，不改代码** |
+| ② 具体实现 | `lib/score/ast.js` | **token 级精准判断**：轻量 tokenizer（区分 ident / num / str / tmpl / comment）→ 括号平衡 → 判定 |
+| ② 具体实现 | `lib/audit/collector.js` | 采集文本文件（.gitignore 过滤、二进制跳过、`.test` 目录豁免） |
+| ② 具体实现 | `lib/audit/glob.js` | glob → 正则转换（忽略规则匹配） |
+| ② 具体实现 | `lib/audit/index.js` | 审计入口与豁免消费（文件头 `dsh-skip-*` 整文件免疫） |
+| ② 具体实现 | `lib/rule/*.js` | 规则加载 / 编译 / 注册（yml → 编译后规则对象） |
+| ③ 调用包装 | `lib/audit/checks.js` | **只做调用**：把实现结果转成统一 finding（`file/line/rule/severity/message/dimensions/exemptHint/scoreImpact`），不重复造检查逻辑 |
+| ③ 评分 | `lib/score/index.js` | 10 维度对数衰减评分 + 权重 |
+| ③ 呈现 / 交互 | `lib/client/` · `lib/exporter` 等 | 侧边栏 UI、审计面板、规则包列表 |
+
+**检查器标准样式 = 薄包装**（本文件里 `checkEmptyCatch` → 调 `checkEmptyCatchAst`、`checkMagicNumberSmart` → 调 `checkMagicNumberSmartAst`）。
+
+⛔ **反模式**：在 `lib/audit/checks.js` 里自己写正则/逐行扫描重新实现一遍检查逻辑。逐行文本无法区分代码与注释/字符串，必然误报——历史教训：magic-number 曾在 checks.js 里逐行扫，导致注释里的版本号（`// v1.8.0`）、CSS 字号、i18n 字典值全被误报为魔数。**新检查一律写在 `lib/score/ast.js`**。
+
+#### 两层判定：正则初筛 → AST 精准判断
+
+文本型检查统一采用两段式（`astConfirm: true` 开启）：
+
+```
+正则初筛（快）         AST 精筛（准）
+pattern 扫全文          makeCodeLineFilter(text, 候选行)
+→ 得到候选行号列表   →   token 级确认「命中行确实是代码行」
+                        注释 / 字符串 / 模板串行 → 丢弃（不是硬编码）
+```
+
+- **为什么两段式**：正则快但无法区分代码与注释/字符串（单用必然误报）；tokenizer 准但全量 token 化成本高于正则。两段式 = 正则筛候选行 → 只对候选行做 token 判定。
+- **典型收益**：注释里的版本号/日期（`// v1.8.0`、`2026-09-13`）、字符串里的 CSS 字号（`'.x{font-weight:650}'`）、i18n 字典值不再报——无需任何「跳过注释行」的补丁。
+- **不适用**：凭据/敏感/对话残留类规则**不**加 `astConfirm`（这些恰恰要查注释里的内容，例如注释里贴的 token、`// TODO 修复`）。
+
+| 实现方式 | 位置 | 例子 |
+|---|---|---|
+| 正则初筛 + AST 精筛 | yml 的 `astConfirm: true` + `makeCodeLineFilter` | `readability/magic-number` |
+| 纯 token 级（无需正则） | `lib/score/ast.js` | `checkMagicNumberSmartAst` / `checkSyncFs` / `checkEmptyCatchAst` / `checkComplexityAst` / `checkNestingDepthAst` / `checkNameLengthAst` / `checkFuncLinesAst` / `checkRepeatedStringsAst` |
+| 纯正则（本质是文本特征） | `lib/audit/checks.js` 的 `checkRegexRules` | 凭据硬编码、路径穿越、对话残留、黑名单 |
+
+
 ### 10 维度质量评分
 
 可读性 / 可维护性 / 健壮性 / 安全性 / 性能 / 测试覆盖 / 可观测性 / 可部署性 / 文档 / 开发者体验，默认合计 100，可在侧边栏调权重（`weightOverrides` JSON）。
@@ -117,7 +159,10 @@ Git 全链路自动化，token / SSH 凭据管理 + 提交推送，无需手动�
 设置 → 侧边栏 → **Git 提交推送**，三选项卡（对齐插件市场样式）：
 
 - **账号信息**：渐变卡片 + GitHub 图标 + 状态徽标（已连接/检测中/未连接）+ 检测结果块 + Token/SSH 凭据状态标签 + `⟳ 重新检测`
-- **审计**：审计开关 + 代码禁用户沟通词开关 + 10 维度权重编辑 + 规则包列表（↑↓ 调次序、单击展开规则表格）
+- **审计**：审计开关 + 代码禁用户沟通词开关 + 10 维度权重编辑 + 规则包列表
+  - 规则包行：↑↓ 调次序 · **按住行内信息区悬停显示详情浮层**（描述/作者/拦截·警告·通过 命中口径）· 启停**只点行尾按钮**
+  - 状态底色一眼可辨：**启用 = 绿底 + 绿左条**，**禁用 = 红底 + 红左条**（按钮同为绿/红实色胶囊）
+  - 拦截/警告/通过 三列显示**最近一次审计的实际命中数**（未审计时回落为规则条数口径）
 - **设置**：GitHub token + SSH 公钥 + 邮箱 + 一键生成并复制
 
 设置项以 `lib/index.js` 的 `Config` 为单一事实源，`settingsScope` 读写。凭据保存**同时写插件配置目录**（见「凭据管理」）。
@@ -150,7 +195,9 @@ git-sluice self-check           版本一致性 + HELP↔parseArgv 机器比对
 
 | 版本 | 说明 |
 |---|---|
-| **1.1.0**（当前） | **侧边栏三选项卡**（账号信息 / 审计 / 设置）+ **账号面板美化**（渐变卡片 + GitHub 图标 + 状态徽标，设计稿 doc/account-panel-design.html）+ **凭据落盘修复**（persistGithubToken 写插件配置目录 0600 + persistSshPub 写 *.pub，不再只靠 settings.yaml 明文）+ 审计规则包列表（rule-slots meta author + rule-detail 端点）｜438 全绿 |
+| **1.1.2**（当前） | **规则包列表交互改版**（悬停浮层显示详情、启停只点行尾按钮、启用绿底/禁用红底 + 左侧色条）+ **5 类审计误报修复**（npm license/repository/files 结构化判定、gitignore 只报实际存在产物、memory-bomb 受控小文件豁免、function-name-too-short i18n 缩写豁免）+ 新增 `astConfirmKind` 具名精筛机制（small-file-read / short-func-name）｜446 全绿 |
+| **1.1.1** | 用户沟通词 blocker 规则（取消分数制 / 白名单豁免 / 黑名单直拦）+ 审计选项卡开关 + 测试目录豁免 + k 系数 5 档调低｜439 全绿 |
+| **1.1.0** | **侧边栏三选项卡**（账号信息 / 审计 / 设置）+ **账号面板美化**（渐变卡片 + GitHub 图标 + 状态徽标，设计稿 doc/account-panel-design.html）+ **凭据落盘修复**（persistGithubToken 写插件配置目录 0600 + persistSshPub 写 *.pub，不再只靠 settings.yaml 明文）+ 审计规则包列表（rule-slots meta author + rule-detail 端点）｜438 全绿 |
 | **1.0.14** | 客户端重构（Controller + hooks + 独立 section 页）；修复 scope.use 渲染 TypeError 与 Host 缺 settings.register 两根因；双语取消（纯中文）｜430 全绿 |
 | **1.0.13** | 文件健康度矩阵评分规则（kind=file-health，三维分级加权）｜429 全绿 |
 | **1.0.12** | client.js 结构拆分 ≤400 行（消除 max-function/file-length）｜421 全绿 |

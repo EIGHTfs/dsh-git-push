@@ -22,6 +22,9 @@ rules:
     category: "maintainability"
     kind: "file-health"
     severity: "warning"
+    # 只对代码文件评健康度（2026-09-13）：md/txt 等文档的「行数/行长」不是代码健康问题
+    #（README 表格行天然超长、文档天然几百行），不声明 exts 时会对文档误报。
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx", "py", "go", "rs", "java", "kt", "swift", "php", "rb", "sh", "bash"]
     description: "按文件健康度矩阵算法评估：三维独立分级（行数≤200/400/800/1500；大小KB≤30/100/300/1000；行长≤120/200/300/500），加权等级=行数×0.40+大小×0.35+行长×0.25，按扣分表（0/1.0/2.5/4.5/7.0）线性插值，score=max(0.1, 10-penalty)；score≥9 健康，<9 提示拆分，<5 blocker。豁免：*.generated.* / *.min.* / locales/ 整文件跳过；constants/ 行数豁免（大小/行长仍评）；routes/ 行数阈值放宽"
     dimensions:
       - 可维护性

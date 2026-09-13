@@ -14,10 +14,16 @@ rules:
     name: "检测可能导致内存爆炸的代码"
     category: "performance"
     severity: "warning"
-    description: "短时间内占用大量内存的代码模式"
+    description: "短时间内占用大量内存的代码模式（受控的本地小 JSON/配置文件读取不算）"
+    # 2026-09-13：子模式精筛——full-file-read 命中后由引擎确认「读的是否受控小文件」
+    astConfirmKind: "small-file-read"
     patterns:
       - id: full-file-read
         pattern: "fs\\.(readFileSync|readFile)\\s*\\("
+        # 2026-09-13 误报修复（正则初筛 → AST 精筛）：本规则针对「大文件全量读入」，
+        #   读**受控的本地小 JSON 数据/配置文件**（记分数据、标题缓存等，紧跟
+        #   JSON.parse 或路径变量含 data/cache/config/locale）不构成内存爆炸风险——
+        #   旧实现命中即报，对任何读 JSON 的项目恒定误报。精筛条件见 astConfirmKind。
         message: "全量读入文件可能占用大量内存，建议用流式处理"
       - id: unbounded-push
         pattern: "(for|while)\\s*\\([^)]*\\)\\s*\\{[^}]*\\.push\\s*\\([^)]*\\)"
