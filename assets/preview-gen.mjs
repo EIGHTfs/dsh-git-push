@@ -32,16 +32,19 @@ const FAKE = {
   weightOverrides: '',
   githubToken: 'ghp_ExampleToken1234567890abcdefGHIJ',
   sshPub: 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExamplePublicKeyForDemoOnly eightfs@example.com',
-  ruleSlotMeta: {
+  _order: ['nodejs', 'comment', 'npm', 'performance', 'version', 'private'],
+};
+
+// 规则包元数据：只作为 /rule-slots 的接口假数据，**不再放进快照**。
+//   放进快照会掩盖「客户端被空 ruleSlotMeta 覆盖」这类 bug——真实宿主从不提供该字段。
+const SLOT_META = {
     nodejs: { name: 'Node.js 通用', author: 'EIGHTfs', stats: { blocker: 12, warning: 40, pass: 300, total: 352, source: 'audit' } },
     comment: { name: '代码禁沟通词', author: 'EIGHTfs', stats: { blocker: 3, warning: 5, pass: 0, total: 8, source: 'audit' } },
     npm: { name: 'npm 包规范', author: 'EIGHTfs', stats: { blocker: 4, warning: 9, pass: 0, total: 13, source: 'rules' }, disabled: true },
     private: { name: '私密文件', author: 'EIGHTfs', stats: { blocker: 1, warning: 2, pass: 0, total: 3, source: 'rules' } },
     performance: { name: '性能', author: 'EIGHTfs', stats: { blocker: 0, warning: 6, pass: 20, total: 26, source: 'audit' } },
     version: { name: '版本号规范', author: 'EIGHTfs', stats: { blocker: 0, warning: 2, pass: 8, total: 10, source: 'rules' } },
-  },
-  _order: ['nodejs', 'comment', 'npm', 'performance', 'version', 'private'],
-};
+  };
 
 const harness = `
 window.__ERRORS__ = [];
@@ -90,6 +93,7 @@ window.__requireShim = function (name) {
 };
 
 // 宿主 settingsScope：真内存 store，set 后通知 → 界面真的跟着变
+window.__SLOTS__ = ${JSON.stringify(SLOT_META)};
 window.__scopeSubs = [];
 window.__scopeMock = {
   getSnapshot: function () { return { status: 'ready', writable: true, value: window.__FAKE__ }; },
@@ -109,13 +113,13 @@ window.fetch = function (url, init) {
   if (u.indexOf('toggle-rule') >= 0) {
     try {
       var req = JSON.parse((init && init.body) || '{}');
-      var meta = window.__FAKE__.ruleSlotMeta[req.slot];
+      var meta = window.__SLOTS__[req.slot];
       if (meta) meta.disabled = !!req.disabled;
     } catch (e) { /* 假数据解析失败不影响预览 */ }
     return Promise.resolve({ ok: true, status: 200, json: function () { return Promise.resolve({ ok: true }); } });
   }
   if (u.indexOf('rule-slots') >= 0) {
-    body = { ok: true, slots: { order: window.__FAKE__._order.slice(), meta: window.__FAKE__.ruleSlotMeta, forced: ['private'] } };
+    body = { ok: true, slots: { order: window.__FAKE__._order.slice(), meta: window.__SLOTS__, forced: ['private'] } };
   } else if (u.indexOf('account-check') >= 0) {
     body = { ok: true, loggedIn: true, block: '✅ 已登录 GitHub：EIGHTfs（Public 仓库 12 个 / 私有 3 个）' };
   } else if (u.indexOf('gen-ssh-key') >= 0) {

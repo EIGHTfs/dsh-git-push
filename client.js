@@ -646,10 +646,12 @@ window.__ModuleLoader__.load({
             // 2026-09-13：已填写提示 = 只看是否存在（不读明文回显）
             this.tokenConfigured = this.tokenConfigured || dshgp_tokenConfigured(snap.value);
             this.sshConfigured = !!(snap.value.sshPub && String(snap.value.sshPub).trim());
-            // 2026-09-13 修复「只显示 6 个」：ruleOrder 不再从 scope 覆盖——
-            //   用户保存过的 auditRuleOrder（如 6 个）会反复覆盖 loadSlots 拉到的全量 order。
-            //   权威来源 = loadSlots 的后端 order（动态发现全部 yml）；用户调序由 moveSlot 自己写。
-            this.slotMeta = (snap.value.ruleSlotMeta && typeof snap.value.ruleSlotMeta === 'object') ? snap.value.ruleSlotMeta : {};
+            // 2026-09-13 修复「规则包统计全是 0」：slotMeta 与 ruleOrder 同理，也不再从 scope 覆盖。
+            //   snap.value.ruleSlotMeta 是 schema 里声明为「host 启动填充」的字段，但**宿主从未写入**，
+            //   于是每次 scope 发布都把它（空对象）赋给 slotMeta，刚由 loadSlots() 拉到的真实统计被清空，
+            //   所有规则包行回退到 {blocker:0,warning:0,pass:0,total:0} 兜底值 → 列表里数字全是 0。
+            //   权威来源 = loadSlots() 的后端结果（动态发现全部 yml 并带 stats）；启停的即时反馈由
+            //   toggleDisabled 自己改 slotMeta、随后 loadSlots 对账。
             const wo = String(snap.value.weightOverrides || '');
             this.weightValues = {};
             if (wo.trim()) {
@@ -665,7 +667,7 @@ window.__ModuleLoader__.load({
           this.injectRequirements = !!snap0.value.injectRequirements;
           this.tokenConfigured = this.tokenConfigured || dshgp_tokenConfigured(snap0.value);
           this.sshConfigured = !!(snap0.value.sshPub && String(snap0.value.sshPub).trim());
-          this.slotMeta = (snap0.value.ruleSlotMeta && typeof snap0.value.ruleSlotMeta === 'object') ? snap0.value.ruleSlotMeta : {};
+          // slotMeta 不由快照提供（见上方订阅处的说明）：等 loadSlots() 拉取真实数据。
           const wo = String(snap0.value.weightOverrides || '');
           if (wo.trim()) { try { this.weightValues = JSON.parse(wo) || {}; } catch { /* 忽略 */ } }
         }

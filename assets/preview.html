@@ -33301,7 +33301,7 @@ window.addEventListener('unhandledrejection', function (e) { __err('reject', Str
 var __oerr = console.error;
 console.error = function () { __err('console', Array.prototype.map.call(arguments, function (x) { return String((x && x.stack) || x); }).join(' ')); __oerr.apply(console, arguments); };
 
-window.__FAKE__ = {"auditEnabled":false,"injectRequirements":true,"hardcodeFullScan":false,"injectFullSkill":false,"injectRepoIndexFull":false,"auditScanScope":"diff","auditLevel":"standard","auditRuleset":"","maxScanFiles":3000,"weightOverrides":"","githubToken":"ghp_ExampleToken1234567890abcdefGHIJ","sshPub":"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExamplePublicKeyForDemoOnly eightfs@example.com","ruleSlotMeta":{"nodejs":{"name":"Node.js 通用","author":"EIGHTfs","stats":{"blocker":12,"warning":40,"pass":300,"total":352,"source":"audit"}},"comment":{"name":"代码禁沟通词","author":"EIGHTfs","stats":{"blocker":3,"warning":5,"pass":0,"total":8,"source":"audit"}},"npm":{"name":"npm 包规范","author":"EIGHTfs","stats":{"blocker":4,"warning":9,"pass":0,"total":13,"source":"rules"},"disabled":true},"private":{"name":"私密文件","author":"EIGHTfs","stats":{"blocker":1,"warning":2,"pass":0,"total":3,"source":"rules"}},"performance":{"name":"性能","author":"EIGHTfs","stats":{"blocker":0,"warning":6,"pass":20,"total":26,"source":"audit"}},"version":{"name":"版本号规范","author":"EIGHTfs","stats":{"blocker":0,"warning":2,"pass":8,"total":10,"source":"rules"}}},"_order":["nodejs","comment","npm","performance","version","private"]};
+window.__FAKE__ = {"auditEnabled":false,"injectRequirements":true,"hardcodeFullScan":false,"injectFullSkill":false,"injectRepoIndexFull":false,"auditScanScope":"diff","auditLevel":"standard","auditRuleset":"","maxScanFiles":3000,"weightOverrides":"","githubToken":"ghp_ExampleToken1234567890abcdefGHIJ","sshPub":"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExamplePublicKeyForDemoOnly eightfs@example.com","_order":["nodejs","comment","npm","performance","version","private"]};
 window.__CAPTURED__ = null;
 window.__ModuleLoader__ = { load: function (m) { window.__CAPTURED__ = m; } };
 
@@ -33335,6 +33335,7 @@ window.__requireShim = function (name) {
 };
 
 // 宿主 settingsScope：真内存 store，set 后通知 → 界面真的跟着变
+window.__SLOTS__ = {"nodejs":{"name":"Node.js 通用","author":"EIGHTfs","stats":{"blocker":12,"warning":40,"pass":300,"total":352,"source":"audit"}},"comment":{"name":"代码禁沟通词","author":"EIGHTfs","stats":{"blocker":3,"warning":5,"pass":0,"total":8,"source":"audit"}},"npm":{"name":"npm 包规范","author":"EIGHTfs","stats":{"blocker":4,"warning":9,"pass":0,"total":13,"source":"rules"},"disabled":true},"private":{"name":"私密文件","author":"EIGHTfs","stats":{"blocker":1,"warning":2,"pass":0,"total":3,"source":"rules"}},"performance":{"name":"性能","author":"EIGHTfs","stats":{"blocker":0,"warning":6,"pass":20,"total":26,"source":"audit"}},"version":{"name":"版本号规范","author":"EIGHTfs","stats":{"blocker":0,"warning":2,"pass":8,"total":10,"source":"rules"}}};
 window.__scopeSubs = [];
 window.__scopeMock = {
   getSnapshot: function () { return { status: 'ready', writable: true, value: window.__FAKE__ }; },
@@ -33354,13 +33355,13 @@ window.fetch = function (url, init) {
   if (u.indexOf('toggle-rule') >= 0) {
     try {
       var req = JSON.parse((init && init.body) || '{}');
-      var meta = window.__FAKE__.ruleSlotMeta[req.slot];
+      var meta = window.__SLOTS__[req.slot];
       if (meta) meta.disabled = !!req.disabled;
     } catch (e) { /* 假数据解析失败不影响预览 */ }
     return Promise.resolve({ ok: true, status: 200, json: function () { return Promise.resolve({ ok: true }); } });
   }
   if (u.indexOf('rule-slots') >= 0) {
-    body = { ok: true, slots: { order: window.__FAKE__._order.slice(), meta: window.__FAKE__.ruleSlotMeta, forced: ['private'] } };
+    body = { ok: true, slots: { order: window.__FAKE__._order.slice(), meta: window.__SLOTS__, forced: ['private'] } };
   } else if (u.indexOf('account-check') >= 0) {
     body = { ok: true, loggedIn: true, block: '✅ 已登录 GitHub：EIGHTfs（Public 仓库 12 个 / 私有 3 个）' };
   } else if (u.indexOf('gen-ssh-key') >= 0) {
@@ -34017,10 +34018,12 @@ window.__ModuleLoader__.load({
             // 2026-09-13：已填写提示 = 只看是否存在（不读明文回显）
             this.tokenConfigured = this.tokenConfigured || dshgp_tokenConfigured(snap.value);
             this.sshConfigured = !!(snap.value.sshPub && String(snap.value.sshPub).trim());
-            // 2026-09-13 修复「只显示 6 个」：ruleOrder 不再从 scope 覆盖——
-            //   用户保存过的 auditRuleOrder（如 6 个）会反复覆盖 loadSlots 拉到的全量 order。
-            //   权威来源 = loadSlots 的后端 order（动态发现全部 yml）；用户调序由 moveSlot 自己写。
-            this.slotMeta = (snap.value.ruleSlotMeta && typeof snap.value.ruleSlotMeta === 'object') ? snap.value.ruleSlotMeta : {};
+            // 2026-09-13 修复「规则包统计全是 0」：slotMeta 与 ruleOrder 同理，也不再从 scope 覆盖。
+            //   snap.value.ruleSlotMeta 是 schema 里声明为「host 启动填充」的字段，但**宿主从未写入**，
+            //   于是每次 scope 发布都把它（空对象）赋给 slotMeta，刚由 loadSlots() 拉到的真实统计被清空，
+            //   所有规则包行回退到 {blocker:0,warning:0,pass:0,total:0} 兜底值 → 列表里数字全是 0。
+            //   权威来源 = loadSlots() 的后端结果（动态发现全部 yml 并带 stats）；启停的即时反馈由
+            //   toggleDisabled 自己改 slotMeta、随后 loadSlots 对账。
             const wo = String(snap.value.weightOverrides || '');
             this.weightValues = {};
             if (wo.trim()) {
@@ -34036,7 +34039,7 @@ window.__ModuleLoader__.load({
           this.injectRequirements = !!snap0.value.injectRequirements;
           this.tokenConfigured = this.tokenConfigured || dshgp_tokenConfigured(snap0.value);
           this.sshConfigured = !!(snap0.value.sshPub && String(snap0.value.sshPub).trim());
-          this.slotMeta = (snap0.value.ruleSlotMeta && typeof snap0.value.ruleSlotMeta === 'object') ? snap0.value.ruleSlotMeta : {};
+          // slotMeta 不由快照提供（见上方订阅处的说明）：等 loadSlots() 拉取真实数据。
           const wo = String(snap0.value.weightOverrides || '');
           if (wo.trim()) { try { this.weightValues = JSON.parse(wo) || {}; } catch { /* 忽略 */ } }
         }
