@@ -456,6 +456,22 @@ rules:
     patterns:
       - "\\btoken\\s*=\\s*['\"][^'\"]{12,}['\"]"
       - "\\bapi[_-]?key\\s*=\\s*['\"][^'\"]{12,}['\"]"
+
+  # ── 三层审计 L2：数据流检查（2026-09-14）──
+  # L1 由 filterRulesByFileText 消费 file_patterns：文件文本含「清空/重置动作」或
+  #   「访问动作」才进 L2 AST 精查；两者都没有的文件连 tokenize 都不跑（成本极低）。
+  - id: dataflow/clear-then-access
+    kind: "dataflow"
+    name: "清空后访问（同函数数据流）"
+    category: "robustness"
+    severity: "warning"
+    description: "同一函数内对象先被清空（clear()/reset()/splice(0)/=[]/=null/length=0）后被访问（.get()/[下标]/.length）——可能读到已清空对象（undefined/空值）"
+    # L1 文件级初筛：命中任一即候选文件（纯正则，非 token 级，成本极低）
+    file_patterns:
+      - "\\b(?:clear|reset|flush|purge|splice)\\(0?\\s*\\)"
+      - "\\b\\w+\\s*=\\s*(?:\\[\\]|null|undefined)"
+      - "\\b\\w+\\.length\\s*=\\s*0"
+      - "\\b(?:get|at|first|last|peek|head)\\(0?"
 severity_map:
   error: "error"
   warning: "warning"
