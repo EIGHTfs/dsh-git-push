@@ -33301,7 +33301,7 @@ window.addEventListener('unhandledrejection', function (e) { __err('reject', Str
 var __oerr = console.error;
 console.error = function () { __err('console', Array.prototype.map.call(arguments, function (x) { return String((x && x.stack) || x); }).join(' ')); __oerr.apply(console, arguments); };
 
-window.__FAKE__ = {"auditEnabled":true,"injectRequirements":true,"hardcodeFullScan":false,"injectFullSkill":false,"injectRepoIndexFull":false,"auditScanScope":"diff","auditLevel":"standard","auditRuleset":"","maxScanFiles":3000,"weightOverrides":"","githubToken":"ghp_ExampleToken1234567890abcdefGHIJ","sshPub":"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExamplePublicKeyForDemoOnly eightfs@example.com","ruleSlotMeta":{"nodejs":{"name":"Node.js 通用","author":"EIGHTfs","stats":{"blocker":12,"warning":40,"pass":300,"total":352,"source":"audit"}},"comment":{"name":"代码禁沟通词","author":"EIGHTfs","stats":{"blocker":3,"warning":5,"pass":0,"total":8,"source":"audit"}},"npm":{"name":"npm 包规范","author":"EIGHTfs","stats":{"blocker":4,"warning":9,"pass":0,"total":13,"source":"rules"},"disabled":true},"private":{"name":"私密文件","author":"EIGHTfs","stats":{"blocker":1,"warning":2,"pass":0,"total":3,"source":"rules"}},"performance":{"name":"性能","author":"EIGHTfs","stats":{"blocker":0,"warning":6,"pass":20,"total":26,"source":"audit"}},"version":{"name":"版本号规范","author":"EIGHTfs","stats":{"blocker":0,"warning":2,"pass":8,"total":10,"source":"rules"}}},"_order":["nodejs","comment","npm","performance","version","private"]};
+window.__FAKE__ = {"auditEnabled":false,"injectRequirements":true,"hardcodeFullScan":false,"injectFullSkill":false,"injectRepoIndexFull":false,"auditScanScope":"diff","auditLevel":"standard","auditRuleset":"","maxScanFiles":3000,"weightOverrides":"","githubToken":"ghp_ExampleToken1234567890abcdefGHIJ","sshPub":"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExamplePublicKeyForDemoOnly eightfs@example.com","ruleSlotMeta":{"nodejs":{"name":"Node.js 通用","author":"EIGHTfs","stats":{"blocker":12,"warning":40,"pass":300,"total":352,"source":"audit"}},"comment":{"name":"代码禁沟通词","author":"EIGHTfs","stats":{"blocker":3,"warning":5,"pass":0,"total":8,"source":"audit"}},"npm":{"name":"npm 包规范","author":"EIGHTfs","stats":{"blocker":4,"warning":9,"pass":0,"total":13,"source":"rules"},"disabled":true},"private":{"name":"私密文件","author":"EIGHTfs","stats":{"blocker":1,"warning":2,"pass":0,"total":3,"source":"rules"}},"performance":{"name":"性能","author":"EIGHTfs","stats":{"blocker":0,"warning":6,"pass":20,"total":26,"source":"audit"}},"version":{"name":"版本号规范","author":"EIGHTfs","stats":{"blocker":0,"warning":2,"pass":8,"total":10,"source":"rules"}}},"_order":["nodejs","comment","npm","performance","version","private"]};
 window.__CAPTURED__ = null;
 window.__ModuleLoader__ = { load: function (m) { window.__CAPTURED__ = m; } };
 
@@ -33565,6 +33565,18 @@ window.__ModuleLoader__.load({
       return res.json();
     }
 
+    /**
+     * token 是否已配置：优先用 host 派生的布尔位。
+     * 2026-09-13：githubToken 标了 role('secret')，远端读不下发明文 → 设置快照里该字段为空，
+     *   旧写法（看 githubToken 真值）会永远判成「未配置」。故改为优先读 status 给的
+     *   tokenConfigured，明文仍在时（旧 host / 未脱敏环境）沿用旧判断兜底。
+     */
+    function dshgp_tokenConfigured(value) {
+      var v = value || {};
+      if (v.tokenConfigured === true) return true;
+      return !!(v.githubToken && String(v.githubToken).trim());
+    }
+
     /** 复制文本到剪贴板（优先 Clipboard API，兜底 execCommand）。 */
     function dshgp_copyText(text) {
       if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
@@ -33767,7 +33779,12 @@ window.__ModuleLoader__.load({
                 ],
               }),
               jsx.jsx('p', { className: 'dshgp_hint', children: '开启后 git_commit_push 提交前自动跑 L0 静态检查 + 10 维度质量评分；有 blocker 拦截提交。' }),
-              /* 子开关：注入开发者要求清单（父开关关闭时置灰不可用、不生效） */
+              /* 子开关：注入开发者要求清单。
+                 2026-09-13 交互修正：原来父开关关闭时 `disabled` + toggle 直接 return，等于
+                 「点不动、点了也没反应」，必须先点一次父开关再点它（两遍）。现改为：
+                 **一遍即可勾选并保留**（勾选是用户偏好，与父开关无关），父开关关闭时只把整行置灰
+                 （dshgp_subswitchOff）表示「暂不生效」，host 侧注入本身仍由
+                 `cfg.auditEnabled && cfg.injectRequirements` 门控，不会真的注入。 */
               jsx.jsxs('div', {
                 className: 'dshgp_switchrow dshgp_subswitch' + (s.auditEnabled ? '' : ' dshgp_subswitchOff'),
                 children: [
@@ -33775,16 +33792,17 @@ window.__ModuleLoader__.load({
                   jsx.jsx('input', {
                     type: 'checkbox',
                     checked: !!s.injectRequirements,
-                    disabled: !s.auditEnabled,
                     onChange: (ev) => props.toggleInjectRequirements(ev.target.checked),
                     'aria-label': '注入开发者要求清单到系统提示词',
-                    title: s.auditEnabled ? '' : '需先开启「提交前自动审计」',
+                    title: s.auditEnabled ? '' : '已勾选但暂不生效：需开启上方「提交前自动审计」',
                   }),
                 ],
               }),
               jsx.jsx('p', { className: 'dshgp_hint', children: s.auditEnabled
                 ? '开启后把「开发者特殊要求」清单注入系统提示词，AI 常驻可见、不必等提交被拦截才去读清单（省一次失败的工具往返）。'
-                : '需先开启上方「提交前自动审计」才可用。' }),
+                : (s.injectRequirements
+                  ? '已勾选，但上方「提交前自动审计」未开启 → 暂不注入（勾选已保留，开启父开关即生效）。'
+                  : '可直接勾选；「提交前自动审计」未开启时置灰、暂不注入。') }),
             ],
           }),
           /* ①.5 代码禁用户沟通词开关（控制 comment 槽位启停，2026-09-13） */
@@ -33997,7 +34015,7 @@ window.__ModuleLoader__.load({
             this.auditEnabled = !!snap.value.auditEnabled;
             this.injectRequirements = !!snap.value.injectRequirements;
             // 2026-09-13：已填写提示 = 只看是否存在（不读明文回显）
-            this.tokenConfigured = !!(snap.value.githubToken && String(snap.value.githubToken).trim());
+            this.tokenConfigured = this.tokenConfigured || dshgp_tokenConfigured(snap.value);
             this.sshConfigured = !!(snap.value.sshPub && String(snap.value.sshPub).trim());
             // 2026-09-13 修复「只显示 6 个」：ruleOrder 不再从 scope 覆盖——
             //   用户保存过的 auditRuleOrder（如 6 个）会反复覆盖 loadSlots 拉到的全量 order。
@@ -34016,7 +34034,7 @@ window.__ModuleLoader__.load({
         if (snap0 && snap0.value) {
           this.auditEnabled = !!snap0.value.auditEnabled;
           this.injectRequirements = !!snap0.value.injectRequirements;
-          this.tokenConfigured = !!(snap0.value.githubToken && String(snap0.value.githubToken).trim());
+          this.tokenConfigured = this.tokenConfigured || dshgp_tokenConfigured(snap0.value);
           this.sshConfigured = !!(snap0.value.sshPub && String(snap0.value.sshPub).trim());
           this.slotMeta = (snap0.value.ruleSlotMeta && typeof snap0.value.ruleSlotMeta === 'object') ? snap0.value.ruleSlotMeta : {};
           const wo = String(snap0.value.weightOverrides || '');
@@ -34027,6 +34045,7 @@ window.__ModuleLoader__.load({
           this.ruleOrder = Object.keys(this.slotMeta).filter((s) => s !== 'private' && s !== 'template');
         }
         void this.loadSlots();
+        void this.loadCredentialFlags();
         void this.refreshAccount();
       }
       project() {
@@ -34070,6 +34089,18 @@ window.__ModuleLoader__.load({
       publish() { this.store.set(this.project()); }
 
       /** 加载规则包清单（/rule-slots，动态发现 yml）。 */
+      /** 凭据状态（/status）：token 明文不下发浏览器，靠 host 派生的布尔位知道「填没填」。 */
+      async loadCredentialFlags() {
+        try {
+          const data = await dshgp_getJson('/api/git-push/status');
+          const cfg = (data && data.config) || {};
+          if (typeof cfg.tokenConfigured === 'boolean') {
+            this.tokenConfigured = cfg.tokenConfigured;
+            this.publish();
+          }
+        } catch (_e) { /* 取不到就沿用设置快照的兜底判断 */ }
+      }
+
       async loadSlots() {
         this.slotLoading = true;
         this.slotError = '';
@@ -34167,11 +34198,10 @@ window.__ModuleLoader__.load({
       /** 审计开关（写回 auditEnabled）。 */
       toggleAudit(checked) {
         this.auditEnabled = !!checked;
-        // 关闭审计时子开关一并落为关闭（父关子不生效，避免状态残留导致重新开启后行为意外）
-        if (!this.auditEnabled && this.injectRequirements) {
-          this.injectRequirements = false;
-          void this.scope.set('injectRequirements', false).catch(() => { /* 父开关写入失败时下次同步纠正 */ });
-        }
+        // 2026-09-13 交互修正：关闭父开关时**不再**把子开关的勾选抹掉。
+        //   子开关的勾选是用户偏好，父开关只管「此刻生不生效」（host 侧注入由
+        //   cfg.auditEnabled && cfg.injectRequirements 门控）。原实现静默清勾选，
+        //   用户重开父开关时还得再点一遍子开关，且看不出勾选是被谁清掉的。
         this.publish();
         void this.scope.set('auditEnabled', this.auditEnabled).then(() => {
           this.flashSaved(this.auditEnabled ? '✅ 已开启：提交前自动审计' : '✅ 已关闭：提交前不审计');
@@ -34181,13 +34211,18 @@ window.__ModuleLoader__.load({
         });
       }
 
-      /** 注入开发者要求清单开关（auditEnabled 的子开关；父开关关闭时不生效）。 */
+      /**
+       * 注入开发者要求清单开关（auditEnabled 的子开关）。
+       * 父开关关闭时**仍可勾选**（保留偏好、只置灰、不注入）——原实现在这里直接 return，
+       * 用户点了没任何反应，必须先开父开关再点一次（两遍）。
+       */
       toggleInjectRequirements(checked) {
-        if (!this.auditEnabled) return; // 父开关关闭：子开关不生效（UI 已置灰）
         this.injectRequirements = !!checked;
         this.publish();
         void this.scope.set('injectRequirements', this.injectRequirements).then(() => {
-          this.flashSaved(this.injectRequirements ? '✅ 已开启：注入开发者要求清单' : '✅ 已关闭：不注入要求清单');
+          this.flashSaved(this.injectRequirements
+            ? (this.auditEnabled ? '✅ 已开启：注入开发者要求清单' : '✅ 已勾选：待开启「提交前自动审计」后生效')
+            : '✅ 已关闭：不注入要求清单');
         }).catch(() => {
           this.failed = true;
           this.publish();
@@ -34222,6 +34257,7 @@ window.__ModuleLoader__.load({
         try {
           if (raw) await this.scope.set('githubToken', raw);
           if (pub) await this.scope.set('sshPub', pub);
+          if (raw) this.tokenConfigured = true;   // 刚写入即视为已配置（明文不回传，本地直接置位）
           this.text = '';
           this.sshPub = '';
           this.saving = false;

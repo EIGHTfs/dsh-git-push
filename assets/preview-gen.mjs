@@ -19,7 +19,8 @@ const domUmd = readFileSync(`${RD}/umd/react-dom.development.js`, 'utf8');
 
 // 假数据：可变（点开关/调序会真的改它，UI 才反映结果，而不是点完回弹）
 const FAKE = {
-  auditEnabled: true,
+  // 2026-09-13：改为演示「父开关关闭 + 子开关已勾选」——正是可勾选/只置灰/不生效的验证场景
+  auditEnabled: false,
   injectRequirements: true,
   hardcodeFullScan: false,
   injectFullSkill: false,
