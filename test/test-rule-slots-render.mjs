@@ -162,3 +162,26 @@ test('schema：不再保留无人读写的死字段 ruleSlotMeta', () => {
   assert.ok(!/^\s*ruleSlotMeta:/m.test(schema),
     'schema.js 不应再有 ruleSlotMeta 字段（宿主从未填充、客户端已改为不读）');
 });
+
+test('预览页：槽位数据取自真实规则文件，不得与真实实例脱节', async () => {
+  // 手写槽位清单曾只写 6 个 → 预览里只显示 6 个槽位，被误当成「只显示 6 个」的回归。
+  //   这里比对生成的 preview.html 与真实 listRuleSlots() 结果，锁死两者一致。
+  const { listRuleSlots } = await import('../lib/app/http-handlers.js');
+  const real = listRuleSlots(undefined, [], null);
+  const realOrder = real.order.filter((s) => s !== 'template');
+
+  const html = readFileSync(join(ROOT, 'assets/preview.html'), 'utf8');
+  const metaMatch = html.match(/window\.__SLOTS__ = (\{.*?\});/s);
+  const fakeMatch = html.match(/window\.__FAKE__ = (\{.*?\});/s);
+  assert.ok(metaMatch, 'preview.html 应包含 __SLOTS__ 假数据');
+  assert.ok(fakeMatch, 'preview.html 应包含 __FAKE__ 快照假数据');
+  const previewMeta = JSON.parse(metaMatch[1]);
+  const previewOrder = JSON.parse(fakeMatch[1])._order || [];
+
+  assert.deepEqual(previewOrder, realOrder, '预览的槽位顺序应与真实生效顺序一致');
+  assert.deepEqual(Object.keys(previewMeta).sort(), Object.keys(real.meta).sort(),
+    '预览的槽位集合应与真实一致');
+  for (const slot of realOrder) {
+    assert.equal(previewMeta[slot]?.name, real.meta[slot]?.name, `${slot} 的显示名应与真实一致`);
+  }
+});

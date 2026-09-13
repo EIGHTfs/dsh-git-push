@@ -7,6 +7,7 @@
  * 用法：node tool-preview-gen.mjs
  */
 import { readFileSync, writeFileSync } from 'node:fs';
+import { listRuleSlots } from '../lib/app/http-handlers.js';
 
 const DSH = '/vol2/1000/DeepSeek Harness/dsh-v0.1.2-alpha.4';
 const P = `${DSH}/.dsh-home/工作区/dsh-git-push-v2`;
@@ -16,6 +17,14 @@ const RD = `${DSH}/node_modules/.pnpm/react-dom@18.3.1_react@18.3.1/node_modules
 const clientSrc = readFileSync(`${P}/client.js`, 'utf8');
 const reactUmd = readFileSync(`${R}/umd/react.development.js`, 'utf8');
 const domUmd = readFileSync(`${RD}/umd/react-dom.development.js`, 'utf8');
+
+// 槽位数据取自真实规则文件（动态发现 audit-rules-<名>.yml），不再手写清单——
+//   手写清单会与真实规则包脱节：曾只手写 6 个，预览里就只显示 6 个槽位，
+//   被误当成「只显示 6 个」的回归。读取真实数据后预览与真实实例恒等。
+//   第三参传 null = 未审计过，stats 走「规则条数」口径（与真实实例重启后的初始态一致）。
+const realSlots = listRuleSlots(undefined, [], null);
+const SLOT_ORDER = realSlots.order.filter((slot) => slot !== 'template');
+const SLOT_META = realSlots.meta;
 
 // 假数据：可变（点开关/调序会真的改它，UI 才反映结果，而不是点完回弹）
 const FAKE = {
@@ -32,19 +41,12 @@ const FAKE = {
   weightOverrides: '',
   githubToken: 'ghp_ExampleToken1234567890abcdefGHIJ',
   sshPub: 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExamplePublicKeyForDemoOnly eightfs@example.com',
-  _order: ['nodejs', 'comment', 'npm', 'performance', 'version', 'private'],
+  _order: SLOT_ORDER,
 };
 
-// 规则包元数据：只作为 /rule-slots 的接口假数据，**不再放进快照**。
-//   放进快照会掩盖「客户端被空 ruleSlotMeta 覆盖」这类 bug——真实宿主从不提供该字段。
-const SLOT_META = {
-    nodejs: { name: 'Node.js 通用', author: 'EIGHTfs', stats: { blocker: 12, warning: 40, pass: 300, total: 352, source: 'audit' } },
-    comment: { name: '代码禁沟通词', author: 'EIGHTfs', stats: { blocker: 3, warning: 5, pass: 0, total: 8, source: 'audit' } },
-    npm: { name: 'npm 包规范', author: 'EIGHTfs', stats: { blocker: 4, warning: 9, pass: 0, total: 13, source: 'rules' }, disabled: true },
-    private: { name: '私密文件', author: 'EIGHTfs', stats: { blocker: 1, warning: 2, pass: 0, total: 3, source: 'rules' } },
-    performance: { name: '性能', author: 'EIGHTfs', stats: { blocker: 0, warning: 6, pass: 20, total: 26, source: 'audit' } },
-    version: { name: '版本号规范', author: 'EIGHTfs', stats: { blocker: 0, warning: 2, pass: 8, total: 10, source: 'rules' } },
-  };
+// 规则包元数据（SLOT_META）现在来自真实规则文件，见文件上方 realSlots。
+//   仍只作为 /rule-slots 的接口假数据，**不放进快照**——放进快照会掩盖
+//   「客户端被空 ruleSlotMeta 覆盖」这类 bug（真实宿主从不提供该字段）。
 
 const harness = `
 window.__ERRORS__ = [];
@@ -171,7 +173,7 @@ body{margin:0;padding:20px;background:#0f1117;color:#e8eaf0;
 #root{max-width:520px}
 #__err{max-width:520px}
 </style></head><body>
-<div class="banner">这是<b>模拟预览</b>（假数据）：跑的是仓库里真实的 <b>client.js</b>，只垫片了宿主环境。
+<div class="banner">这是<b>模拟预览</b>（交互用假数据）：跑的是仓库里真实的 <b>client.js</b>，只垫片了宿主环境；<b>规则包列表的槽位、显示名、规则条数取自真实规则文件</b>，与真实实例一致。
 三个选项卡、开关、规则包启停/调序、权重、凭据保存、一键生成 SSH 都可点，改动只留在页面内，不写任何文件。</div>
 <div id="root"></div>
 <script>${reactUmd}</script>
