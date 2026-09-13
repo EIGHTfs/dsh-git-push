@@ -20,7 +20,9 @@ import { fileURLToPath } from 'node:url';
 export const SOURCE_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 /** 随插件发布的顶层条目。 */
-export const SYNC_ENTRIES = ['lib', 'skills', 'cli.mjs', 'package.json', 'cordis.patch.yml', 'README.md'];
+// 必须与 package.json 的 files 白名单保持一致：client.js 是侧边栏前端主文件（仓库根），
+//   原先漏列 → 同步到已安装副本时会漏掉它，前端改动装不进去。
+export const SYNC_ENTRIES = ['lib', 'skills', 'cli.mjs', 'client.js', 'package.json', 'cordis.patch.yml', 'README.md'];
 
 /** 同步时排除的路径片段。 */
 export const SYNC_EXCLUDE = ['.git', 'node_modules', 'WORKBOARD', 'test', '.tmp'];

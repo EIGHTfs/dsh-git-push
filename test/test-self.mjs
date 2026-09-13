@@ -206,6 +206,17 @@ test('同步：常量声明齐全', () => {
   assert.ok(SYNC_EXCLUDE.includes('node_modules'));
 });
 
+// 2026-09-13：SYNC_ENTRIES 曾漏 client.js（侧边栏前端主文件在仓库根），
+//   而 package.json 的 files 白名单里有它 → 同步到已安装副本时前端改动装不进去。
+//   锁死两者一致，避免以后新增发布文件又漏同步。
+test('同步：SYNC_ENTRIES 覆盖 package.json files 白名单', () => {
+  const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
+  for (const f of pkg.files) {
+    assert.ok(SYNC_ENTRIES.includes(f),
+      `package.json files 里的 ${f} 未在 SYNC_ENTRIES 中——同步会漏掉它（发布有、安装副本无）`);
+  }
+});
+
 test('同步：detectTargets 对无 HOME 返回空数组（不崩）', () => {
   assert.deepEqual(detectTargets(''), []);
   assert.deepEqual(detectTargets('/no/such/home'), []);
