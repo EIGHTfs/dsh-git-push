@@ -4,8 +4,13 @@ DSH（DeepSeek Harness）git 提交推送与代码审计插件——提交前自
 
 ![账号信息面板](assets/panel-account.png)
 
+审计面板（14 个规则包 + 按包命中数，上下调次序、单击启停）：
+
+![审计面板](assets/panel-audit.png)
+
 > **公开仓库**：EIGHTfs/dsh-git-push（2026-09-13 转 public）｜全量测试 490 全绿（`npm test` 一条命令可复现）
 > **界面模拟页**：`assets/preview.html`（单文件自包含，双击即可打开；跑的是真实 `client.js` + 假数据，三选项卡全部可点）
+> **截图声明**：`screenshots.json`（仓库根、与 `package.json` 同级，列出 `assets/panel-*.png`）——DSH 插件榜单按此文件自动收录截图，作者推自己的仓库即生效，无需到榜单仓库提 PR
 
 ## 目录
 
