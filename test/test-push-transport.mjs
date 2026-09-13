@@ -13,7 +13,10 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
+import { mkdtempSync, writeFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 
 import { dispatchPush, pushViaSsh } from '../lib/git/index.js';
@@ -107,4 +110,22 @@ test('SSH 成功后也做推送后增强（remoteRef/auxRemote/autoTag）', () =
   const sshOnlyHeads = /if \(ssh\.ok\) \{\s*const heads = await fetchRemoteHeads/.test(src);
   assert.ok(!sshOnlyHeads, 'SSH 成功分支不得只拉 heads 而不做 remoteRef/auxRemote 增强');
   assert.ok(/steps\.push\(`pushed-via-/.test(src), '应记录实际生效的通道');
+});
+
+test('安全：remote URL 不得内嵌明文凭据（token/密码）', () => {
+  // 实测发现 6 个仓库的 origin 曾被写成 https://ghp_xxx@github.com/...——
+  //   明文落在 .git/config，且那把 token 已失效（HTTP 401）纯属负担。
+  //   推送凭据应由凭据目录自探测提供（token/密钥），不进 remote URL。
+  const { execFileSync } = require('node:child_process');
+  const out = execFileSync('git', ['remote', '-v'], { cwd: ROOT, encoding: 'utf8' });
+  assert.ok(!/gh[pous]_[A-Za-z0-9]{20,}/.test(out), 'remote URL 不得内嵌 ghp_ 类 token');
+  assert.ok(!/github_pat_[A-Za-z0-9_]{20,}/.test(out), 'remote URL 不得内嵌 github_pat_ 类 token');
+  assert.ok(!/https:\/\/[^\s/@]+:[^\s/@]+@/.test(out), 'remote URL 不得内嵌 user:password 形式凭据');
+});
+
+test('安全：.git/config 不得落盘明文 token', () => {
+  const cfgPath = join(ROOT, '.git', 'config');
+  if (!existsSync(cfgPath)) return; // 非 git 检出（打包副本）跳过
+  const cfg = readFileSync(cfgPath, 'utf8');
+  assert.ok(!/gh[pous]_[A-Za-z0-9]{20,}/.test(cfg), '.git/config 不得出现明文 token');
 });
