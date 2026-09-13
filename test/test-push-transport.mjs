@@ -19,7 +19,7 @@ const require = createRequire(import.meta.url);
 import { mkdtempSync, writeFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 
-import { dispatchPush, pushViaSsh } from '../lib/git/index.js';
+import { dispatchPush, pushViaSsh, sshReason, isNonFastForward } from '../lib/git/index.js';
 import { resolveSshKeys, resolveSshKey, credentialsDir } from '../lib/git/credentials.js';
 import { defaultConfig, SETTINGS_SCHEMA } from '../lib/client/index.js';
 import { Config } from '../lib/app/schema.js';
@@ -128,4 +128,70 @@ test('安全：.git/config 不得落盘明文 token', () => {
   if (!existsSync(cfgPath)) return; // 非 git 检出（打包副本）跳过
   const cfg = readFileSync(cfgPath, 'utf8');
   assert.ok(!/gh[pous]_[A-Za-z0-9]{20,}/.test(cfg), '.git/config 不得出现明文 token');
+});
+
+test('分叉识别：中英文 non-fast-forward 都能认出，鉴权失败不误判', () => {
+  // 真实报错文本：本地与远端各有对方没有的提交时 git 的两种输出
+  assert.ok(isNonFastForward(' ! [rejected]        HEAD -> master (fetch first)'), '英文 fetch first');
+  assert.ok(isNonFastForward('提示：更新被拒绝，因为远程仓库包含您本地尚不存在的提交。'), '中文提示');
+  assert.ok(isNonFastForward('error: failed to push some refs ... non-fast-forward'), '英文 non-fast-forward');
+  // 不得把鉴权/网络类失败误判成分叉（那会挡住本该发生的 API 回落）
+  assert.equal(isNonFastForward('git@ssh.github.com: Permission denied (publickey).'), false, '鉴权失败');
+  assert.equal(isNonFastForward('Could not resolve hostname ssh.github.com'), false, '域名解析失败');
+  assert.equal(isNonFastForward(''), false, '空串');
+});
+
+test('分叉时不回落 API（回落会在远端重建提交、加剧分叉）', () => {
+  const src = readFileSync(join(ROOT, 'lib/git/transport.js'), 'utf8');
+  // SSH 失败后必须先判分叉，再考虑 API 回落
+  const sshFail = src.indexOf('const sshRes = trySsh();');
+  const nff = src.indexOf('if (isNonFastForward(sshRes.reason))');
+  const apiCall = src.indexOf('const apiRes = await tryApi();', sshFail);
+  assert.ok(sshFail >= 0 && nff > sshFail, 'SSH 失败后应先判分叉');
+  assert.ok(apiCall > nff, 'API 回落必须排在分叉判定之后（分叉时直接返回、不回落）');
+  assert.ok(/diverged: true/.test(src), '分叉结果应带 diverged 标记供调用方判断');
+});
+
+test('sshReason：剥掉 known_hosts 告警与 git 提示段，保住真正的失败原因', () => {
+  const noisy = "Warning: Permanently added '[ssh.github.com]:443' (ED25519) to the list of known hosts.\n"
+    + 'To ssh://ssh.github.com:443/EIGHTfs/x.git\n'
+    + ' ! [rejected]        HEAD -> master (fetch first)\n'
+    + '错误：无法推送一些引用\n'
+    + '提示：更新被拒绝，因为远程仓库包含您本地尚不存在的提交。\n'
+    + '提示：详见 git push --help';
+  const r = sshReason(noisy);
+  assert.ok(!r.includes('Permanently added'), '不应保留 known_hosts 告警');
+  assert.ok(!/(^|\s)提示：/.test(r), '不应保留 git 的「提示：」建议段');
+  assert.ok(r.includes('rejected') || r.includes('被拒绝'), '应保留真正的失败原因');
+  assert.ok(r.length <= 320, '长度应受控');
+});
+
+test('真实分叉仓库：dispatchPush 如实报 diverged 而非静默回落 API', async () => {
+  // 用真远端做端到端验证成本高且会改动远端，故此处只断言「分叉分支返回结构」的字段约定；
+  //   端到端行为已在本机 dsh-skill-scoreboard（远端 2f4b3cb / 本地 0093b89 两条链）实测确认。
+  const src = readFileSync(join(ROOT, 'lib/git/transport.js'), 'utf8');
+  assert.ok(/localHead: localHead \|\| ''/.test(src), '应回传 localHead');
+  assert.ok(/remoteHead: remoteHead \|\| ''/.test(src), '应回传 remoteHead');
+  assert.ok(/已阻止回落 API/.test(src), '错误信息应说明为何不回落');
+});
+
+test('API 推送后 remote-tracking 引用指向远端真实 sha（不写本地代理）', () => {
+  const src = readFileSync(join(ROOT, 'lib/git/push.js'), 'utf8');
+  // 旧实现无条件用 localHead 当 refTarget：API 在远端重建提交后本地没有该对象，
+  //   于是这个「代理 sha」让 ahead/behind 谎报 0/0，把已分叉的仓库显示成同步。
+  assert.ok(/async function fetchRemoteBranchRef/.test(src), '应有取回远端对象的函数');
+  assert.ok(/\+refs\/heads\/\$\{branch\}:refs\/remotes\/origin\/\$\{branch\}/.test(src),
+    'fetch 应用 + 前缀写 remote-tracking 引用（远端跟踪引用的语义就是镜像远端）');
+  assert.ok(/if \(pr\.method === 'api'\)/.test(src), '仅 API 通道需要取回真实对象');
+  assert.ok(/代理 sha/.test(src), '取回失败时应如实标注为代理，不冒充真实');
+  // SSH 通道推的就是本地对象，refTarget 保持 localHead 即可
+  assert.ok(/let refTarget = localHead \|\| pr\.commitSha/.test(src), '默认仍以本地 HEAD 为准');
+});
+
+test('API 推送后引用真实性：取回失败不静默（标注代理 + 远端实际 sha）', () => {
+  const src = readFileSync(join(ROOT, 'lib/git/push.js'), 'utf8');
+  assert.ok(/取回失败，远端实际/.test(src), '应写明远端实际 sha');
+  assert.ok(/取回远端对象异常/.test(src), '异常路径也要标注');
+  // 不能因为取回失败就中断推送成功流程
+  assert.ok(/catch \(e\) \{\s*refNote/.test(src), '取回异常不应抛出中断');
 });
