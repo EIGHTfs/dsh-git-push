@@ -390,101 +390,146 @@ window.__ModuleLoader__.load({
       });
     }
 
-    function dshgp_AuditTab(props) {
+    /** 审计开关块：提交前自动审计 + 注入开发者要求清单子开关。 */
+    function dshgp_AuditSwitchBlock(props) {
+      const s = props.state;
+      return jsx.jsxs('div', {
+        className: 'dshgp_block',
+        children: [
+          jsx.jsxs('div', {
+            className: 'dshgp_switchrow',
+            children: [
+              jsx.jsx('span', { className: 'dshgp_switchlabel', children: '提交前自动审计' }),
+              jsx.jsx('input', { type: 'checkbox', checked: !!s.auditEnabled, onChange: (ev) => props.toggleAudit(ev.target.checked), 'aria-label': '提交前自动审计' }),
+            ],
+          }),
+          jsx.jsx('p', { className: 'dshgp_hint', children: '开启后 git_commit_push 提交前自动跑 L0 静态检查 + 10 维度质量评分；有 blocker 拦截提交。' }),
+          /* 子开关：注入开发者要求清单。
+             2026-09-13 交互修正：原来父开关关闭时 `disabled` + toggle 直接 return，等于
+             「点不动、点了也没反应」，必须先点一次父开关再点它（两遍）。现改为：
+             **一遍即可勾选并保留**（勾选是偏好，与父开关无关），父开关关闭时只把整行置灰
+             （dshgp_subswitchOff）表示「暂不生效」，host 侧注入本身由
+             `cfg.auditEnabled && cfg.injectRequirements` 门控，不会真的注入。 */
+          jsx.jsxs('div', {
+            className: 'dshgp_switchrow dshgp_subswitch' + (s.auditEnabled ? '' : ' dshgp_subswitchOff'),
+            children: [
+              jsx.jsx('span', { className: 'dshgp_switchlabel', children: '↳ 注入开发者要求清单到系统提示词' }),
+              jsx.jsx('input', {
+                type: 'checkbox',
+                checked: !!s.injectRequirements,
+                onChange: (ev) => props.toggleInjectRequirements(ev.target.checked),
+                'aria-label': '注入开发者要求清单到系统提示词',
+                title: s.auditEnabled ? '' : '已勾选但暂不生效：需开启上方「提交前自动审计」',
+              }),
+            ],
+          }),
+          jsx.jsx('p', { className: 'dshgp_hint', children: s.auditEnabled
+            ? '开启后把「开发者特殊要求」清单注入系统提示词，AI 常驻可见、不必等提交被拦截才去读清单（省一次失败的工具往返）。'
+            : (s.injectRequirements
+              ? '已勾选，但上方「提交前自动审计」未开启 → 暂不注入（勾选已保留，开启父开关即生效）。'
+              : '可直接勾选；「提交前自动审计」未开启时置灰、暂不注入。') }),
+        ],
+      });
+    }
+
+    /** 注入系统提示词总开关块（2026-09-13 新增）：控制整组 systemPrompt 注入段启停。 */
+    function dshgp_InjectPromptSwitchBlock(props) {
+      const s = props.state;
+      return jsx.jsxs('div', {
+        className: 'dshgp_block',
+        children: [
+          jsx.jsxs('div', {
+            className: 'dshgp_switchrow',
+            children: [
+              jsx.jsx('span', { className: 'dshgp_switchlabel', children: '注入系统提示词' }),
+              jsx.jsx('input', {
+                type: 'checkbox',
+                checked: s.injectSystemPrompt !== false,
+                onChange: (ev) => props.toggleInjectSystemPrompt(ev.target.checked),
+                'aria-label': '注入系统提示词',
+              }),
+            ],
+          }),
+          jsx.jsx('p', { className: 'dshgp_hint', children: s.injectSystemPrompt !== false
+            ? '注入三段：①插件功能用法（每个工具怎么用 + 凭据由插件托管，避免 AI 绕开插件到处找 token）②环境（工作区目录映射 + 工具安装路径 + skill 总入口一行）③提交前 README 核对提醒。只注入目录/路径级信息，不注入 skill 正文。'
+            : '已关闭：不注入任何系统提示词段落（AI 仍可调用插件工具，但看不到功能用法与环境目录）。' }),
+        ],
+      });
+    }
+
+    /** 代码禁用户沟通词开关块（控制 comment 槽位启停）。 */
+    function dshgp_CommentWordingBlock(props) {
+      const s = props.state;
+      return jsx.jsxs('div', {
+        className: 'dshgp_block',
+        children: [
+          jsx.jsxs('div', {
+            className: 'dshgp_switchrow',
+            children: [
+              jsx.jsx('span', { className: 'dshgp_switchlabel', children: '代码禁用户沟通词（命中 Block 提交）' }),
+              jsx.jsx('input', { type: 'checkbox', checked: !((s.slotMeta && s.slotMeta['comment']) || {}).disabled, onChange: () => props.toggleDisabled('comment'), 'aria-label': '代码禁用户沟通词' }),
+            ],
+          }),
+          jsx.jsx('p', { className: 'dshgp_hint', children: '代码注释/文档出现沟通残留措辞（见 comment 规则包黑名单）→ blocker 拦截提交；白名单业务词（用户ID/用户登录等）自动豁免。' }),
+        ],
+      });
+    }
+
+    /** 规则包列表块：列表容器 + 榜单表头 + 逐行渲染（dshgp_RuleRow）。 */
+    function dshgp_RuleListBlock(props) {
       const s = props.state;
       const order = Array.isArray(s.ruleOrder) ? s.ruleOrder : [];
       return jsx.jsxs('div', {
+        className: 'dshgp_block',
+        children: [
+          jsx.jsx('p', { className: 'dshgp_h2', children: '规则包列表（↑↓ 调整次序，单击切换启用/禁用）' }),
+          s.statusMsg ? jsx.jsx('p', { className: 'dshgp_saved', children: s.statusMsg }) : null,
+          order.length === 0
+            ? jsx.jsx('div', { className: 'dshgp_loading', children: s.slotLoading ? '加载中…' : '（无规则包）' })
+            : jsx.jsxs('ul', {
+                className: 'dshgp_rulenext',
+                children: [
+                  /* 榜单表头（模仿 skill 记分榜） */
+                  jsx.jsxs('li', {
+                    className: 'dshgp_ruleheadrow',
+                    children: [
+                      jsx.jsx('span', { className: 'dshgp_ruleheadrowinfo', children: '规则包' }),
+                      jsx.jsx('span', { className: 'dshgp_rulecountRed', title: '该规则包在最近一次审计中命中的拦截级（blocker）问题数', children: '拦截' }),
+                      jsx.jsx('span', { className: 'dshgp_rulecountYellow', title: '该规则包在最近一次审计中命中的警告级（warning）问题数', children: '警告' }),
+                      jsx.jsx('span', { className: 'dshgp_rulecountGreen', title: '该规则包内没查出问题的规则条数', children: '通过' }),
+                      jsx.jsx('span', { className: 'dshgp_rulebadge', children: '状态' }),
+                    ],
+                  }),
+                  order.map((slot, idx) => dshgp_RuleRow(props, slot, idx, order.length)),
+                ],
+              }),
+          jsx.jsx('p', { className: 'dshgp_hint', children: '数字含义：拦截/警告 = 该规则包在最近一次审计中命中的问题数，通过 = 没查出问题的规则条数（未做过审计时显示规则条数口径，行尾标注「规则」）。跑一次 code_audit 或全量扫描即刷新。' }),
+          s.slotError ? jsx.jsx('p', { className: 'dshgp_error', children: s.slotError }) : null,
+        ],
+      });
+    }
+
+    /**
+     * 选项卡二：审计（块组合）。
+     * 2026-09-14：原单函数 122 行（超可读性阈值 max-function-length）拆为四个块组件 + 权重块；
+     *   **渲染输出零变化**——拆分前后同一预览页审计 tab 的 DOM 逐字节比对为空。
+     */
+    function dshgp_AuditTab(props) {
+      return jsx.jsxs('div', {
         className: 'dshgp_section',
         children: [
-          /* ① 审计开关 */
-          jsx.jsxs('div', {
-            className: 'dshgp_block',
-            children: [
-              jsx.jsxs('div', {
-                className: 'dshgp_switchrow',
-                children: [
-                  jsx.jsx('span', { className: 'dshgp_switchlabel', children: '提交前自动审计' }),
-                  jsx.jsx('input', { type: 'checkbox', checked: !!s.auditEnabled, onChange: (ev) => props.toggleAudit(ev.target.checked), 'aria-label': '提交前自动审计' }),
-                ],
-              }),
-              jsx.jsx('p', { className: 'dshgp_hint', children: '开启后 git_commit_push 提交前自动跑 L0 静态检查 + 10 维度质量评分；有 blocker 拦截提交。' }),
-              /* 子开关：注入开发者要求清单。
-                 2026-09-13 交互修正：原来父开关关闭时 `disabled` + toggle 直接 return，等于
-                 「点不动、点了也没反应」，必须先点一次父开关再点它（两遍）。现改为：
-                 **一遍即可勾选并保留**（勾选是用户偏好，与父开关无关），父开关关闭时只把整行置灰
-                 （dshgp_subswitchOff）表示「暂不生效」，host 侧注入本身仍由
-                 `cfg.auditEnabled && cfg.injectRequirements` 门控，不会真的注入。 */
-              jsx.jsxs('div', {
-                className: 'dshgp_switchrow dshgp_subswitch' + (s.auditEnabled ? '' : ' dshgp_subswitchOff'),
-                children: [
-                  jsx.jsx('span', { className: 'dshgp_switchlabel', children: '↳ 注入开发者要求清单到系统提示词' }),
-                  jsx.jsx('input', {
-                    type: 'checkbox',
-                    checked: !!s.injectRequirements,
-                    onChange: (ev) => props.toggleInjectRequirements(ev.target.checked),
-                    'aria-label': '注入开发者要求清单到系统提示词',
-                    title: s.auditEnabled ? '' : '已勾选但暂不生效：需开启上方「提交前自动审计」',
-                  }),
-                ],
-              }),
-              jsx.jsx('p', { className: 'dshgp_hint', children: s.auditEnabled
-                ? '开启后把「开发者特殊要求」清单注入系统提示词，AI 常驻可见、不必等提交被拦截才去读清单（省一次失败的工具往返）。'
-                : (s.injectRequirements
-                  ? '已勾选，但上方「提交前自动审计」未开启 → 暂不注入（勾选已保留，开启父开关即生效）。'
-                  : '可直接勾选；「提交前自动审计」未开启时置灰、暂不注入。') }),
-            ],
-          }),
-          /* ①.5 代码禁用户沟通词开关（控制 comment 槽位启停，2026-09-13） */
-          jsx.jsxs('div', {
-            className: 'dshgp_block',
-            children: [
-              jsx.jsxs('div', {
-                className: 'dshgp_switchrow',
-                children: [
-                  jsx.jsx('span', { className: 'dshgp_switchlabel', children: '代码禁用户沟通词（命中 Block 提交）' }),
-                  jsx.jsx('input', { type: 'checkbox', checked: !((s.slotMeta && s.slotMeta['comment']) || {}).disabled, onChange: () => props.toggleDisabled('comment'), 'aria-label': '代码禁用户沟通词' }),
-                ],
-              }),
-              jsx.jsx('p', { className: 'dshgp_hint', children: '代码注释/文档出现沟通残留措辞（见 comment 规则包黑名单）→ blocker 拦截提交；白名单业务词（用户ID/用户登录等）自动豁免。' }),
-            ],
-          }),
+          jsx.jsx(dshgp_AuditSwitchBlock, props),
+          jsx.jsx(dshgp_InjectPromptSwitchBlock, props),
+          jsx.jsx(dshgp_CommentWordingBlock, props),
           /* ② 审计权重（10 维度） */
           jsx.jsxs('div', {
             className: 'dshgp_block',
             children: [
               jsx.jsx('p', { className: 'dshgp_h2', children: '审计权重（10 维度）' }),
-              jsx.jsx(dshgp_WeightRows, { state: s, editWeight: props.editWeight }),
+              jsx.jsx(dshgp_WeightRows, { state: props.state, editWeight: props.editWeight }),
             ],
           }),
-          /* ③ 规则包列表 */
-          jsx.jsxs('div', {
-            className: 'dshgp_block',
-            children: [
-              jsx.jsx('p', { className: 'dshgp_h2', children: '规则包列表（↑↓ 调整次序，单击切换启用/禁用）' }),
-              s.statusMsg ? jsx.jsx('p', { className: 'dshgp_saved', children: s.statusMsg }) : null,
-              order.length === 0
-                ? jsx.jsx('div', { className: 'dshgp_loading', children: s.slotLoading ? '加载中…' : '（无规则包）' })
-                : jsx.jsxs('ul', {
-                    className: 'dshgp_rulenext',
-                    children: [
-                      /* 榜单表头（模仿 skill 记分榜） */
-                      jsx.jsxs('li', {
-                        className: 'dshgp_ruleheadrow',
-                        children: [
-                          jsx.jsx('span', { className: 'dshgp_ruleheadrowinfo', children: '规则包' }),
-                          jsx.jsx('span', { className: 'dshgp_rulecountRed', title: '该规则包在最近一次审计中命中的拦截级（blocker）问题数', children: '拦截' }),
-                          jsx.jsx('span', { className: 'dshgp_rulecountYellow', title: '该规则包在最近一次审计中命中的警告级（warning）问题数', children: '警告' }),
-                          jsx.jsx('span', { className: 'dshgp_rulecountGreen', title: '该规则包内没查出问题的规则条数', children: '通过' }),
-                          jsx.jsx('span', { className: 'dshgp_rulebadge', children: '状态' }),
-                        ],
-                      }),
-                      order.map((slot, idx) => dshgp_RuleRow(props, slot, idx, order.length)),
-                    ],
-                  }),
-              jsx.jsx('p', { className: 'dshgp_hint', children: '数字含义：拦截/警告 = 该规则包在最近一次审计中命中的问题数，通过 = 没查出问题的规则条数（未做过审计时显示规则条数口径，行尾标注「规则」）。跑一次 code_audit 或全量扫描即刷新。' }),
-              s.slotError ? jsx.jsx('p', { className: 'dshgp_error', children: s.slotError }) : null,
-            ],
-          }),
+          jsx.jsx(dshgp_RuleListBlock, props),
         ],
       });
     }
@@ -584,6 +629,7 @@ window.__ModuleLoader__.load({
           state: props.state,
           toggleAudit: props.toggleAudit,
           toggleInjectRequirements: props.toggleInjectRequirements,
+          toggleInjectSystemPrompt: props.toggleInjectSystemPrompt,
           editWeight: props.editWeight,
           moveSlot: props.moveSlot,
           toggleDisabled: props.toggleDisabled,
@@ -620,6 +666,8 @@ window.__ModuleLoader__.load({
         this.savedTimer = null;
         this.auditEnabled = false;
         this.injectRequirements = false;
+        // 注入系统提示词总开关（默认开；2026-09-13 新增）
+        this.injectSystemPrompt = true;
         this.ruleOrder = [];
         this.slotMeta = {};
         this.weightValues = {};
@@ -643,6 +691,7 @@ window.__ModuleLoader__.load({
           if (snap && snap.value) {
             this.auditEnabled = !!snap.value.auditEnabled;
             this.injectRequirements = !!snap.value.injectRequirements;
+            this.injectSystemPrompt = snap.value.injectSystemPrompt !== false;
             // 2026-09-13：已填写提示 = 只看是否存在（不读明文回显）
             this.tokenConfigured = this.tokenConfigured || dshgp_tokenConfigured(snap.value);
             this.sshConfigured = !!(snap.value.sshPub && String(snap.value.sshPub).trim());
@@ -665,6 +714,7 @@ window.__ModuleLoader__.load({
         if (snap0 && snap0.value) {
           this.auditEnabled = !!snap0.value.auditEnabled;
           this.injectRequirements = !!snap0.value.injectRequirements;
+          this.injectSystemPrompt = snap0.value.injectSystemPrompt !== false;
           this.tokenConfigured = this.tokenConfigured || dshgp_tokenConfigured(snap0.value);
           this.sshConfigured = !!(snap0.value.sshPub && String(snap0.value.sshPub).trim());
           // slotMeta 不由快照提供（见上方订阅处的说明）：等 loadSlots() 拉取真实数据。
@@ -689,6 +739,7 @@ window.__ModuleLoader__.load({
           sshEmail: this.sshEmail,
           auditEnabled: this.auditEnabled,
           injectRequirements: this.injectRequirements,
+          injectSystemPrompt: this.injectSystemPrompt,
           ruleOrder: this.ruleOrder,
           slotMeta: this.slotMeta,
           weightValues: this.weightValues,
@@ -860,6 +911,22 @@ window.__ModuleLoader__.load({
         });
       }
 
+      /**
+       * 注入系统提示词总开关（写回 injectSystemPrompt；默认开）。
+       * 关 = host 侧所有注入段返回空串；开 = 注入功能用法/环境/README 提醒三段。
+       * 注入段里的「开发者要求清单」仍受 auditEnabled + injectRequirements 双重门控。
+       */
+      toggleInjectSystemPrompt(checked) {
+        this.injectSystemPrompt = !!checked;
+        this.publish();
+        void this.scope.set('injectSystemPrompt', this.injectSystemPrompt).then(() => {
+          this.flashSaved(this.injectSystemPrompt ? '✅ 已开启：注入系统提示词' : '✅ 已关闭：不注入系统提示词');
+        }).catch(() => {
+          this.failed = true;
+          this.publish();
+        });
+      }
+
       /** 权重维度编辑（合并写回 weightOverrides JSON）。 */
       editWeight(key, value) {
         this.weightValues = { ...(this.weightValues || {}), [key]: value };
@@ -942,6 +1009,7 @@ window.__ModuleLoader__.load({
           toggleAudit: (checked) => this.toggleAudit(checked),
           // 子开关动作必须在这里暴露：页面 props 来自 inject()，漏了会让 onChange 调到 undefined
           toggleInjectRequirements: (checked) => this.toggleInjectRequirements(checked),
+          toggleInjectSystemPrompt: (checked) => this.toggleInjectSystemPrompt(checked),
           editWeight: (key, value) => this.editWeight(key, value),
           moveSlot: (slot, dir) => this.moveSlot(slot, dir),
           toggleDisabled: (slot) => { void this.toggleDisabled(slot); },

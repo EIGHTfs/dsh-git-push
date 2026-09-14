@@ -54,7 +54,7 @@ function renderAuditInputs(value) {
     };
     throw new Error('require: ' + name);
   };
-  new Function('require', 'window', rootClientSrc)(req, globalThis.window);
+  new Function('require', 'window', rootClientSrc)(req, globalThis.window); // dsh-skip-sensitive: 沙箱执行仓库内 client.js 顶层（受控源码，非外部输入）
   globalThis.window = prevWindow;
   const mod = captured.factory(req);
 

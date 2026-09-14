@@ -31,8 +31,11 @@ test('默认关：审计开关/LLM/全量扫 全部默认 false', () => {
   assert.equal(c.pushPermitEnabled, undefined, 'pushPermitEnabled 已移除（2026-09-11）');
   assert.equal(c.llmAudit, undefined, 'llmAudit 已移除（v2 不提供 LLM 深度审查）');
   assert.equal(c.hardcodeFullScan, false);
-  assert.equal(c.injectFullSkill, false);
-  assert.equal(c.injectRepoIndexFull, false);
+  // 2026-09-13：injectFullSkill / injectRepoIndexFull 已按需求废弃移除（不做全量注入）
+  assert.equal(c.injectFullSkill, undefined, 'injectFullSkill 已移除（2026-09-13：全量注入开关不要了）');
+  assert.equal(c.injectRepoIndexFull, undefined, 'injectRepoIndexFull 已移除（2026-09-13）');
+  // 新增：注入系统提示词总开关（默认开——注入目录/功能用法才能让 AI 用插件而非绕开）
+  assert.equal(c.injectSystemPrompt, true, 'injectSystemPrompt 默认开（2026-09-13 新增）');
 });
 
 test('默认关：DEFAULT_CONFIG 与 schema 默认值一致', () => {
@@ -89,12 +92,21 @@ test('组件：无 react.createElement 时明确报错（禁止 JSX 构建假设
   assert.throws(() => createSettingsCard({}, {}), /createElement/);
 });
 
-test('组件：复选框 checked 反映配置真值（默认关 → false）', () => {
+test('组件：复选框 checked 反映配置真值（逐项等于 schema 默认值）', () => {
+  // 2026-09-13：不再假设「所有开关默认 false」——注入系统提示词默认 true（需求新增），
+  //   改为逐项对照 SETTINGS_SCHEMA 默认值断言，新增开关无需再改本测试。
   const react = mockReact();
-  createSettingsCard(react, { config: defaultConfig() });
+  const cfg = defaultConfig();
+  createSettingsCard(react, { config: cfg });
   const boxes = react.calls.filter((c) => c.type === 'input' && c.props.type === 'checkbox');
   assert.ok(boxes.length > 0);
-  for (const b of boxes) assert.equal(b.props.checked, false, '默认应为未勾选');
+  const boolKeys = SETTINGS_SCHEMA.filter((i) => i.type === 'boolean').map((i) => i.key);
+  assert.equal(boxes.length, boolKeys.length, '复选框数量应等于 schema 布尔项数量');
+  for (const k of boolKeys) {
+    const expected = cfg[k];
+    const hit = boxes.filter((b) => b.props.checked === expected);
+    assert.ok(hit.length > 0, `${k} 的 checked 应等于默认值 ${expected}`);
+  }
 });
 
 test('组件：onChange 立即回调（配置即时生效）', () => {
@@ -230,7 +242,7 @@ test('client.js apply：ctx.get 抛错不崩，settings.section 注册且渲染�
     throw new Error('require: ' + name);
   };
   // 执行根 client.js 顶层（触发 ModuleLoader.load）
-  new Function('require', 'window', rootClientSrc)(req, globalThis.window);
+  new Function('require', 'window', rootClientSrc)(req, globalThis.window); // dsh-skip-sensitive: 沙箱执行仓库内 client.js 顶层（受控源码，非外部输入）
   globalThis.window = prevWindow;
   assert.ok(captured, 'ModuleLoader.load 应被调用');
   const mod = captured.factory(req);

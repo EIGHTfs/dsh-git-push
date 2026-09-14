@@ -4,15 +4,31 @@
  * 跑的是真 client.js（不是手抄 mockup），只垫片宿主环境，所以界面与真实插件一致，
  * 且能发现真实渲染/交互缺陷。生成物单文件自包含（内联 React UMD），双击即开、离线可用。
  *
- * 用法：node tool-preview-gen.mjs
+ * 用法：node assets/preview-gen.mjs
+ *
+ * 路径全部按脚本位置推导（换机/换工作区即用，不写死本机路径）：
+ *   项目根 P = 本文件所在目录的上一级；DSH 根 = P 上溯三级
+ *   （<DSH>/.dsh-home/工作区/<项目>）；React UMD 取 DSH 的 pnpm store。
+ *   需要时可覆盖：DSH_ROOT / REACT_UMD_DIR / REACT_DOM_UMD_DIR。
  */
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { listRuleSlots } from '../lib/app/http-handlers.js';
 
-const DSH = '/vol2/1000/DeepSeek Harness/dsh-v0.1.2-alpha.4';
-const P = `${DSH}/.dsh-home/工作区/dsh-git-push-v2`;
-const R = `${DSH}/node_modules/.pnpm/react@18.3.1/node_modules/react`;
-const RD = `${DSH}/node_modules/.pnpm/react-dom@18.3.1_react@18.3.1/node_modules/react-dom`;
+const P = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+// DSH 根：<DSH>/.dsh-home/工作区/<项目> → 上溯三级
+const DSH = process.env.DSH_ROOT || resolve(P, '..', '..', '..');
+const store = join(DSH, 'node_modules', '.pnpm');
+const R = process.env.REACT_UMD_DIR || join(store, 'react@18.3.1', 'node_modules', 'react');
+const RD = process.env.REACT_DOM_UMD_DIR || join(store, 'react-dom@18.3.1_react@18.3.1', 'node_modules', 'react-dom');
+
+for (const [label, dir] of [['react', R], ['react-dom', RD]]) {
+  if (!existsSync(join(dir, 'umd'))) {
+    console.error(`找不到 ${label} UMD：${dir}\n（DSH 根推导为 ${DSH}；可用 DSH_ROOT / ${label === 'react' ? 'REACT_UMD_DIR' : 'REACT_DOM_UMD_DIR'} 指定）`);
+    process.exit(1);
+  }
+}
 
 const clientSrc = readFileSync(`${P}/client.js`, 'utf8');
 const reactUmd = readFileSync(`${R}/umd/react.development.js`, 'utf8');
@@ -32,8 +48,8 @@ const FAKE = {
   auditEnabled: false,
   injectRequirements: true,
   hardcodeFullScan: false,
-  injectFullSkill: false,
-  injectRepoIndexFull: false,
+  // 2026-09-13：injectFullSkill / injectRepoIndexFull 已废弃移除，改为注入总开关（默认开）
+  injectSystemPrompt: true,
   auditScanScope: 'diff',
   auditLevel: 'standard',
   auditRuleset: '',
