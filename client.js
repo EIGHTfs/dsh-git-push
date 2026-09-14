@@ -108,6 +108,12 @@ window.__ModuleLoader__.load({
       '.dshgp_btn{font:inherit;font-size:12px;border-radius:8px;padding:5px 10px;cursor:pointer;border:.5px solid var(--dsw-alias-border-l4);background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary)}',
       '.dshgp_btn:disabled{opacity:.45;cursor:default}',
       '.dshgp_btnPrimary{border-color:var(--dsw-alias-brand-primary);color:var(--dsw-alias-brand-primary)}',
+      // 审计扫描范围单按钮（2026-09-14）：一个按钮单击切换 diff/full，状态体现在标题 + 颜色
+      '.dshgp_scanbtn{font:inherit;font-size:12px;border-radius:8px;padding:5px 12px;cursor:pointer;border:.5px solid var(--dsw-alias-border-l4);background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary);display:inline-flex;align-items:center;gap:6px;transition:border-color .15s,color .15s,background-color .15s}',
+      '.dshgp_scanbtn:hover{border-color:var(--dsw-alias-brand-primary)}',
+      '.dshgp_scanbtnDiff{color:var(--dsw-alias-label-success);border-color:color-mix(in srgb,var(--dsw-alias-label-success) 55%,transparent)}',
+      '.dshgp_scanbtnFull{border-color:color-mix(in srgb,var(--dsw-alias-label-warning) 55%,transparent);color:var(--dsw-alias-label-warning);background:color-mix(in srgb,var(--dsw-alias-label-warning) 8%,transparent)}',
+      '.dshgp_scanbtnOff{opacity:.45;cursor:not-allowed}',
       '.dshgp_foot{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}',
       // 权重
       '.dshgp_weightrow{display:flex;align-items:center;gap:8px;margin:3px 0}',
@@ -459,14 +465,18 @@ window.__ModuleLoader__.load({
       });
     }
 
-    /** 本地面板单行：路径 + 分支/领先状态 + push 按钮（领先 + 无未提交改动才可点）。 */
+    /** 本地面板单行：路径 + 分支/领先状态 + push 按钮（领先远端可点；工作树未提交改动无影响）。 */
     function dshgp_RepoLocalRow(props) {
       const r = props.repo;
       const s = props.state;
       const busy = s.repoBusy === 'push:' + r.path;
-      // 2026-09-14：有远端 + 工作树干净即可点 push（后端再精确判定领先/创建分支——
-      //   本地未 fetch 时 ahead=null 显示「未跟踪上游」但 push 仍可点，点击时后端 ls-remote 对比）
-      const canPush = !!r.hasRemote && r.changed === 0;
+      // 2026-09-15 修正「推送判定写反」：可推 = 有远端 + 有未推送提交。
+      //   ahead>0 → 本地有领先提交，按钮亮；ahead=null → 状态未知（未 fetch/首次推送），
+      //   交给后端 ls-remote 精确判定，允许点；ahead=0 → 已同步、没有可推的新提交，灰。
+      //   原实现用 `changed === 0`（工作树干净）当可推条件，方向反了：
+      //   github push 推的是已提交内容，工作树脏不脏无影响——把「有领先提交但工作树脏」的
+      //   仓库拦死（能推的不让推），又把「已同步无新提交」的仓库点亮（不能推的按钮才能点）。
+      const canPush = !!r.hasRemote && (r.ahead === null || r.ahead > 0);
       // 2026-09-14 语义纠正：stat 只体现「远端有无」与领先关系；有远端但本地
       //   未 fetch/无同名分支（无法比较）时显示「远端状态未知」，不称上游
       const stat = !r.hasRemote ? '无远端' : (r.ahead === null ? '远端状态未知' : (r.ahead > 0 ? '领先 ' + r.ahead : (r.behind > 0 ? '落后 ' + r.behind : '同步')));
@@ -531,7 +541,7 @@ window.__ModuleLoader__.load({
               }),
             ],
           }),
-          jsx.jsx('p', { className: 'dshgp_repomsg', children: s.localMsg || '扫描目录下的 git 仓库；仓库「领先且无未提交改动」时可手动 push' }),
+          jsx.jsx('p', { className: 'dshgp_repomsg', children: s.localMsg || '扫描目录下的 git 仓库；仓库「领先远端（有未推送提交）」时可手动 push（工作树未提交改动不影响 push，推的是已提交内容）' }),
           rows.length ? jsx.jsxs('div', { className: 'dshgp_replist', children: rows }) : null,
         ],
       });
@@ -704,6 +714,31 @@ window.__ModuleLoader__.load({
             ],
           }),
           jsx.jsx('p', { className: 'dshgp_hint', children: '开启后 git_commit_push 提交前自动跑 L0 静态检查 + 10 维度质量评分；有 blocker 拦截提交。' }),
+          /* 审计扫描范围单按钮（2026-09-14）：**一个按钮单击切换** diff/full，状态体现在
+           按钮标题 + 颜色（diff=绿色「部分」，full=黄色「全量」）。父开关关闭时置灰
+           （不生效但保留选择）。持久化走 host HTTP（persistence=memory 陷阱绕开方案）。 */
+          jsx.jsxs('div', {
+            className: 'dshgp_scanrow' + (s.auditEnabled ? '' : ' dshgp_subswitchOff'),
+            children: [
+              jsx.jsx('span', { className: 'dshgp_switchlabel', children: '审计扫描范围' }),
+              jsx.jsx('button', {
+                type: 'button',
+                className: 'dshgp_scanbtn '
+                  + (s.auditScanScope === 'full' ? 'dshgp_scanbtnFull' : 'dshgp_scanbtnDiff')
+                  + (s.auditEnabled ? '' : ' dshgp_scanbtnOff'),
+                onClick: () => props.toggleAuditScanScope(s.auditScanScope === 'full' ? 'diff' : 'full'),
+                children: s.auditScanScope === 'full' ? '🔴 全量（auditFull）' : '🟢 部分（本次变动）',
+                'aria-label': '审计扫描范围：' + (s.auditScanScope === 'full' ? '全量' : '仅本次变动') + '（单击切换）',
+                title: s.auditScanScope === 'full'
+                  ? '当前：全量扫描（auditFull）——单击切回「部分」（仅本次变动，快）'
+                  : '当前：仅本次变动（auditChanged，diff）——单击切换「全量」（慢但彻底）',
+                disabled: !s.auditEnabled,
+              }),
+            ],
+          }),
+          jsx.jsx('p', { className: 'dshgp_hint', children: s.auditScanScope === 'full'
+            ? '全量扫描（auditFull）：涵括历史遗留文件与全仓 js-yaml 引用证据；大仓库耗时明显。'
+            : '部分扫描（auditChanged，diff）：只审提交相关的文件，最快（默认）。' }),
           /* 子开关：注入开发者要求清单。
              2026-09-13 交互修正：原来父开关关闭时 `disabled` + toggle 直接 return，等于
              「点不动、点了也没反应」，必须先点一次父开关再点它（两遍）。现改为：
@@ -933,6 +968,7 @@ window.__ModuleLoader__.load({
           toggleAudit: props.toggleAudit,
           toggleInjectRequirements: props.toggleInjectRequirements,
           toggleInjectSystemPrompt: props.toggleInjectSystemPrompt,
+          toggleAuditScanScope: props.toggleAuditScanScope,
           editWeight: props.editWeight,
           moveSlot: props.moveSlot,
           toggleDisabled: props.toggleDisabled,
@@ -971,6 +1007,8 @@ window.__ModuleLoader__.load({
         this.injectRequirements = false;
         // 注入系统提示词总开关（默认开；2026-09-13 新增）
         this.injectSystemPrompt = true;
+        // 2026-09-14：审计扫描范围（diff|full）——设置持久化走 host HTTP，前端本地字段镜像
+        this.auditScanScope = 'diff';
         this.ruleOrder = [];
         this.slotMeta = {};
         this.weightValues = {};
@@ -998,13 +1036,16 @@ window.__ModuleLoader__.load({
         this.slotError = '';
         this.genKeying = false;
         this.genKeyError = '';
+        // 2026-09-14：本次编辑会话已触达的设置键集合——loadSettingsFromHttp 的异步 GET
+        //   返回旧值时跳过这些键，防止「点开关被初始化响应弹回」（回弹根因：GET 发出后
+        //   点击发生，POST 未落盘前 GET 旧值先把本地覆盖回去）
+        this.editedKeys = new Set();
         this.store = store.createSnapshotStore(this.project());
         this.unsubscribe = scope.subscribe(() => {
           const snap = this.scope.getSnapshot();
           if (snap && snap.value) {
-            this.auditEnabled = !!snap.value.auditEnabled;
-            this.injectRequirements = !!snap.value.injectRequirements;
-            this.injectSystemPrompt = snap.value.injectSystemPrompt !== false;
+            // 2026-09-15：开关/扫描范围/权重真源是 HTTP + config.json，
+            //   **不再**从 scope 快照覆盖——yaml 缺键时 schema 默认 false 会把勾选弹回。
             // 2026-09-13：已填写提示 = 只看是否存在（不读明文回显）
             this.tokenConfigured = this.tokenConfigured || dshgp_tokenConfigured(snap.value);
             this.sshConfigured = !!(snap.value.sshPub && String(snap.value.sshPub).trim());
@@ -1014,25 +1055,21 @@ window.__ModuleLoader__.load({
             //   所有规则包行回退到 {blocker:0,warning:0,pass:0,total:0} 兜底值 → 列表里数字全是 0。
             //   权威来源 = loadSlots() 的后端结果（动态发现全部 yml 并带 stats）；启停的即时反馈由
             //   toggleDisabled 自己改 slotMeta、随后 loadSlots 对账。
-            const wo = String(snap.value.weightOverrides || '');
-            this.weightValues = {};
-            if (wo.trim()) {
-              try { this.weightValues = JSON.parse(wo) || {}; } catch { /* 坏 JSON 用空表 */ }
-            }
           }
           this.publish();
         });
-        // 初次同步 scope 值
+        // 初次同步：开关可从快照种一次（单测无 HTTP）；之后只信 HTTP / 本地 commitSetting，
+        //   subscribe 不再覆盖——yaml 缺键默认 false 会把勾选弹回。
         const snap0 = this.scope.getSnapshot();
         if (snap0 && snap0.value) {
-          this.auditEnabled = !!snap0.value.auditEnabled;
-          this.injectRequirements = !!snap0.value.injectRequirements;
-          this.injectSystemPrompt = snap0.value.injectSystemPrompt !== false;
+          if (typeof snap0.value.auditEnabled === 'boolean') this.auditEnabled = snap0.value.auditEnabled;
+          if (typeof snap0.value.injectRequirements === 'boolean') this.injectRequirements = snap0.value.injectRequirements;
+          if (typeof snap0.value.injectSystemPrompt === 'boolean') this.injectSystemPrompt = snap0.value.injectSystemPrompt;
+          if (typeof snap0.value.auditScanScope === 'string') this.auditScanScope = snap0.value.auditScanScope;
+          const wo0 = String(snap0.value.weightOverrides || '');
+          if (wo0.trim()) { try { this.weightValues = JSON.parse(wo0) || {}; } catch { /* 忽略 */ } }
           this.tokenConfigured = this.tokenConfigured || dshgp_tokenConfigured(snap0.value);
           this.sshConfigured = !!(snap0.value.sshPub && String(snap0.value.sshPub).trim());
-          // slotMeta 不由快照提供（见上方订阅处的说明）：等 loadSlots() 拉取真实数据。
-          const wo = String(snap0.value.weightOverrides || '');
-          if (wo.trim()) { try { this.weightValues = JSON.parse(wo) || {}; } catch { /* 忽略 */ } }
         }
         // 若 loadSlots 尚未返回，先用已发现的槽位做占位显示（不含 private/template）
         if (!this.ruleOrder.length && Object.keys(this.slotMeta).length) {
@@ -1041,6 +1078,9 @@ window.__ModuleLoader__.load({
         void this.loadSlots();
         void this.loadCredentialFlags();
         void this.refreshAccount();
+        // 2026-09-14：设置持久化走 HTTP 读宿主 scope（绕开 client isLoopback=memory 陷阱——
+        //   反代访问时 scope 快照恒 unavailable，从宿主侧读已落盘设置，重启后开关保持勾选）
+        void this.loadSettingsFromHttp();
       }
       project() {
         const snap = this.scope.getSnapshot();
@@ -1053,6 +1093,7 @@ window.__ModuleLoader__.load({
           auditEnabled: this.auditEnabled,
           injectRequirements: this.injectRequirements,
           injectSystemPrompt: this.injectSystemPrompt,
+          auditScanScope: this.auditScanScope,
           ruleOrder: this.ruleOrder,
           slotMeta: this.slotMeta,
           weightValues: this.weightValues,
@@ -1091,6 +1132,34 @@ window.__ModuleLoader__.load({
         this.publish();
       }
       publish() { this.store.set(this.project()); }
+
+      /**
+       * 2026-09-14：从宿主读已落盘设置（/settings-get，host scope.get 快照）。
+       * 背景：非 loopback 访问（反代）时 client settingsScope 恒 unavailable（memory 模式），
+       *   插件直读 scope 拿不到任何已保存值 → 打开设置页时开关全回默认（现象：重启后勾选丢失，
+       *   需重新打开）。host 侧 scope 才是真源，经 HTTP 读回后覆盖前端字段、保持勾选状态。
+       * 2026-09-14 追加：**用户已编辑过的键跳过**（this.editedKeys）——本请求是异步的，
+       *   若用户在响应回来前点了开关，GET 返回的是 host 旧值，直接覆盖会把刚点的勾选弹回。
+       */
+      async loadSettingsFromHttp() {
+        try {
+          const data = await dshgp_getJson('/api/git-push/settings-get');
+          if (!data || !data.ok || !data.settings) return;
+          const v = data.settings;
+          if (typeof v.auditEnabled === 'boolean' && !this.editedKeys.has('auditEnabled')) this.auditEnabled = v.auditEnabled;
+          if (typeof v.injectRequirements === 'boolean' && !this.editedKeys.has('injectRequirements')) this.injectRequirements = v.injectRequirements;
+          if (typeof v.injectSystemPrompt === 'boolean' && !this.editedKeys.has('injectSystemPrompt')) this.injectSystemPrompt = v.injectSystemPrompt;
+          if (typeof v.auditScanScope === 'string' && !this.editedKeys.has('auditScanScope')) this.auditScanScope = v.auditScanScope;
+          if (typeof v.auditLevel === 'string' && !this.editedKeys.has('auditLevel')) this.auditLevel = v.auditLevel;
+          if (typeof v.weightOverrides === 'string' && v.weightOverrides.trim() && !this.editedKeys.has('weightOverrides')) {
+            try { this.weightValues = JSON.parse(v.weightOverrides) || {}; } catch { /* 忽略 */ }
+          }
+          // 凭据布尔位不受编辑守卫影响：只读派生标记，无回弹风险
+          if (typeof v.tokenConfigured === 'boolean') this.tokenConfigured = v.tokenConfigured;
+          if (typeof v.sshConfigured === 'boolean') this.sshConfigured = v.sshConfigured;
+          this.publish();
+        } catch (_e) { /* 端点不可用/未注册时沿用 scope 兜底 */ }
+      }
 
       /** 加载规则包清单（/rule-slots，动态发现 yml）。 */
       /** 凭据状态（/status）：token 明文不下发浏览器，靠 host 派生的布尔位知道「填没填」。 */
@@ -1208,7 +1277,7 @@ window.__ModuleLoader__.load({
             msg = '✅ 推送成功 ' + path;
           } else {
             // 显示详细错误信息（含 ahead/behind）
-            const err = (data && data.error) || '推送失败';
+            const err = (data && (data.error || (data.push && data.push.reason))) || '推送失败';
             const extra = [];
             if (data && data.ahead > 0) extra.push('领先 ' + data.ahead);
             if (data && data.behind > 0) extra.push('落后 ' + data.behind);
@@ -1298,6 +1367,20 @@ window.__ModuleLoader__.load({
         });
       }
 
+      /**
+       * 2026-09-15：前端设置写入通用入口（抽公共函数消除 toggle 系列重复）。
+       * 统一四件套：标记 editedKeys（防 loadSettingsFromHttp 异步 GET 旧值覆盖弹回）
+       *   → publish（UI 立即反映）→ persistSetting（HTTP 落盘 config.json + loopback scope 双通道）。
+       * @param {string} key 设置键
+       * @param {unknown} value 值
+       * @param {string} okMsg flashSaved 成功文案（空=静默）
+       */
+      commitSetting(key, value, okMsg = '') {
+        this.editedKeys.add(key);
+        this.publish();
+        this.persistSetting(key, value, okMsg);
+      }
+
       /** 审计开关（写回 auditEnabled）。 */
       toggleAudit(checked) {
         this.auditEnabled = !!checked;
@@ -1305,9 +1388,40 @@ window.__ModuleLoader__.load({
         //   子开关的勾选是用户偏好，父开关只管「此刻生不生效」（host 侧注入由
         //   cfg.auditEnabled && cfg.injectRequirements 门控）。原实现静默清勾选，
         //   用户重开父开关时还得再点一遍子开关，且看不出勾选是被谁清掉的。
-        this.publish();
-        void this.scope.set('auditEnabled', this.auditEnabled).then(() => {
-          this.flashSaved(this.auditEnabled ? '✅ 已开启：提交前自动审计' : '✅ 已关闭：提交前不审计');
+        this.commitSetting('auditEnabled', this.auditEnabled, this.auditEnabled
+          ? '✅ 已开启：提交前自动审计'
+          : '✅ 已关闭：提交前不审计');
+      }
+
+      /**
+       * 2026-09-14：设置持久化统一入口（走 host HTTP /settings-set，绕开 client
+       *   isLoopback=memory 陷阱——反代访问时 scope.set 不发 wire、不写盘、重启全丢）。
+       *   同时兼容 loopback 直连（scope.set 官方通道，双份写幂等）。
+       * @param {string} key 设置键
+       * @param {unknown} value 值
+       * @param {string} okMsg flashSaved 成功文案（空=静默）
+       */
+      persistSetting(key, value, okMsg = '') {
+        // 2026-09-15：UI 提交调试日志（浏览器控制台可见；服务端另有 settings-ui.log 持久留痕）
+        if (typeof console !== 'undefined' && console.debug) {
+          try { console.debug('[dsh-git-push] UI 提交', key, '=', String(value).slice(0, 40) + (String(value).length > 40 ? '…' : '')); } catch { /* ignore */ }
+        }
+        // 开关/扫描范围/权重只走 HTTP → config.json。再 scope.set 会写公共 yaml
+        //   （锁竞争）并把 schema 默认值灌回 watch，把刚勾的开关盖掉。
+        const fileOnly = {
+          auditEnabled: 1, injectRequirements: 1, injectSystemPrompt: 1,
+          auditScanScope: 1, auditLevel: 1, weightOverrides: 1,
+        };
+        if (!fileOnly[key]) {
+          void this.scope.set(key, value).catch(() => { /* loopback 兼容通道失败不碍事 */ });
+        }
+        void dshgp_postJson('/api/git-push/settings-set', { key, value }).then((data) => {
+          if (data && data.ok) {
+            if (okMsg) this.flashSaved(okMsg);
+          } else {
+            this.failed = true;
+            this.publish();
+          }
         }).catch(() => {
           this.failed = true;
           this.publish();
@@ -1321,15 +1435,9 @@ window.__ModuleLoader__.load({
        */
       toggleInjectRequirements(checked) {
         this.injectRequirements = !!checked;
-        this.publish();
-        void this.scope.set('injectRequirements', this.injectRequirements).then(() => {
-          this.flashSaved(this.injectRequirements
-            ? (this.auditEnabled ? '✅ 已开启：注入开发者要求清单' : '✅ 已勾选：待开启「提交前自动审计」后生效')
-            : '✅ 已关闭：不注入要求清单');
-        }).catch(() => {
-          this.failed = true;
-          this.publish();
-        });
+        this.commitSetting('injectRequirements', this.injectRequirements, this.injectRequirements
+          ? (this.auditEnabled ? '✅ 已开启：注入开发者要求清单' : '✅ 已勾选：待开启「提交前自动审计」后生效')
+          : '✅ 已关闭：不注入要求清单');
       }
 
       /**
@@ -1339,26 +1447,31 @@ window.__ModuleLoader__.load({
        */
       toggleInjectSystemPrompt(checked) {
         this.injectSystemPrompt = !!checked;
-        this.publish();
-        void this.scope.set('injectSystemPrompt', this.injectSystemPrompt).then(() => {
-          this.flashSaved(this.injectSystemPrompt ? '✅ 已开启：注入系统提示词' : '✅ 已关闭：不注入系统提示词');
-        }).catch(() => {
-          this.failed = true;
-          this.publish();
-        });
+        // 2026-09-15：走 commitSetting 公共入口（自动含 editedKeys 标记 + publish + persistSetting）；
+        //   此前漏了 editedKeys 标记，loadSettingsFromHttp 异步 GET 可能用旧值把它覆盖回去
+        this.commitSetting('injectSystemPrompt', this.injectSystemPrompt, this.injectSystemPrompt
+          ? '✅ 已开启：注入系统提示词'
+          : '✅ 已关闭：不注入系统提示词');
+      }
+
+      /**
+       * 审计扫描范围切换（2026-09-14）：diff=仅本次变动（auditChanged，默认）/ full=全量（auditFull）。
+       * 按钮式单击切换；持久化走 host HTTP（persistence=memory 陷阱绕开方案，见 settings-bridge.js）。
+       */
+      toggleAuditScanScope(scope) {
+        const next = scope === 'full' ? 'full' : 'diff';
+        if (this.auditScanScope === next) return;
+        this.auditScanScope = next;
+        this.commitSetting('auditScanScope', next, next === 'full'
+          ? '✅ 已切换：审计扫描范围 = 全量（auditFull）'
+          : '✅ 已切换：审计扫描范围 = 部分（auditChanged，仅本次变动）');
       }
 
       /** 权重维度编辑（合并写回 weightOverrides JSON）。 */
       editWeight(key, value) {
         this.weightValues = { ...(this.weightValues || {}), [key]: value };
         const json = JSON.stringify(this.weightValues);
-        this.publish();
-        void this.scope.set('weightOverrides', json).then(() => {
-          this.flashSaved('✅ 权重已保存（合计 ' + dshgp_DIMENSIONS.reduce((a, d) => a + (this.weightValues[d.key] != null ? this.weightValues[d.key] : d.def), 0) + '），下次审计生效');
-        }).catch(() => {
-          this.failed = true;
-          this.publish();
-        });
+        this.commitSetting('weightOverrides', json, '✅ 权重已保存（合计 ' + dshgp_DIMENSIONS.reduce((a, d) => a + (this.weightValues[d.key] != null ? this.weightValues[d.key] : d.def), 0) + '），下次审计生效');
       }
 
       edit(text) { this.text = String(text || ''); this.failed = false; this.publish(); }
@@ -1374,8 +1487,12 @@ window.__ModuleLoader__.load({
         this.failed = false;
         this.publish();
         try {
-          if (raw) await this.scope.set('githubToken', raw);
-          if (pub) await this.scope.set('sshPub', pub);
+          // 2026-09-14：凭据持久化改走 persistSetting（host HTTP /settings-set）——
+          //   反代访问时 scope.set 不发 wire，凭据会丢（settings.yaml 不写、watch 不触发、
+          //   persistGithubToken 不落插件目录）。persistSetting 双通道：scope.set（loopback 兼容）
+          //   + HTTP（可靠落盘），两者都触发 host watch → persistGithubToken/sshPub 落插件目录。
+          if (raw) this.persistSetting('githubToken', raw);
+          if (pub) this.persistSetting('sshPub', pub);
           if (raw) this.tokenConfigured = true;   // 刚写入即视为已配置（明文不回传，本地直接置位）
           this.text = '';
           this.sshPub = '';
@@ -1431,6 +1548,7 @@ window.__ModuleLoader__.load({
           // 子开关动作必须在这里暴露：页面 props 来自 inject()，漏了会让 onChange 调到 undefined
           toggleInjectRequirements: (checked) => this.toggleInjectRequirements(checked),
           toggleInjectSystemPrompt: (checked) => this.toggleInjectSystemPrompt(checked),
+          toggleAuditScanScope: (scope) => this.toggleAuditScanScope(scope),
           editWeight: (key, value) => this.editWeight(key, value),
           moveSlot: (slot, dir) => this.moveSlot(slot, dir),
           toggleDisabled: (slot) => { void this.toggleDisabled(slot); },

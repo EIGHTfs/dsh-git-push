@@ -115,7 +115,35 @@ test('client 源码：toggle 动作在 inject() 中暴露（漏了会 onChange �
   assert.ok(rootClientSrc.includes('toggleInjectSystemPrompt: (checked) => this.toggleInjectSystemPrompt(checked)'),
     'inject() 必须暴露 toggleInjectSystemPrompt');
   assert.ok(/toggleInjectSystemPrompt\(checked\)\s*\{/.test(rootClientSrc), 'controller 必须有该方法实现');
-  assert.ok(rootClientSrc.includes("this.scope.set('injectSystemPrompt'"), 'toggle 必须写回 scope');
+  // 2026-09-14：持久化统一走 persistSetting（HTTP /settings-set 落盘，兼容 scope.set 双通道）；
+  //   绕过 client isLoopback=memory 下 scope.set 不发 wire、设置重启丢失的问题
+  // 2026-09-15：toggle 统一走 commitSetting 公共入口（内部调 persistSetting 落盘）
+  assert.ok(rootClientSrc.includes('this.commitSetting(\'injectSystemPrompt\''),
+    'toggle 必须走 commitSetting（HTTP 落盘，非 memory 陷阱）');
+  assert.ok(rootClientSrc.includes('commitSetting(key, value, okMsg = \'\')'),
+    'controller 必须有 commitSetting 公共入口');
+  assert.ok(rootClientSrc.includes('this.persistSetting(key, value, okMsg)'),
+    'commitSetting 内部必须调 persistSetting（HTTP 落盘）');
+});
+
+test('client 源码：审计扫描范围按钮（diff/full 单按钮单击切换）接线完整', () => {
+  // 按钮组渲染（AuditSwitchBlock 内）——单按钮，标题随状态变化，点击切换
+  assert.ok(rootClientSrc.includes("'审计扫描范围'"), '必须有「审计扫描范围」标签');
+  assert.ok(rootClientSrc.includes('dshgp_scanbtn'), '必须有扫描范围按钮（dshgp_scanbtn）');
+  assert.ok(rootClientSrc.includes('dshgp_scanbtnDiff') && rootClientSrc.includes('dshgp_scanbtnFull'),
+    '按钮必须按模式着色（diff=绿 / full=黄）');
+  assert.ok(rootClientSrc.includes("props.toggleAuditScanScope(s.auditScanScope === 'full' ? 'diff' : 'full')"),
+    '单按钮点击必须切换 diff↔full');
+  // inject() 暴露 + AuditTab props 传递
+  assert.ok(rootClientSrc.includes('toggleAuditScanScope: (scope) => this.toggleAuditScanScope(scope)'),
+    'inject() 必须暴露 toggleAuditScanScope');
+  assert.ok(rootClientSrc.includes('toggleAuditScanScope: props.toggleAuditScanScope'),
+    'AuditTab 渲染必须透传 toggleAuditScanScope');
+  // controller 实现 + 统一走 commitSetting（HTTP 落盘）
+  assert.ok(/toggleAuditScanScope\(scope\)\s*\{/.test(rootClientSrc), 'controller 必须有该方法实现');
+  assert.ok(rootClientSrc.includes("this.commitSetting('auditScanScope'"), '切换必须走 commitSetting（HTTP 落盘）');
+  assert.ok(rootClientSrc.includes("this.commitSetting('injectSystemPrompt'"),
+    'injectSystemPrompt 切换也走 commitSetting（统一公共入口）');
 });
 
 /* ───────── ② host 侧接线：总开关门控 + 四段注入 ───────── */
@@ -136,9 +164,15 @@ test('host：注册四段（功能用法 990 / 环境 980 / README 991 / 要求�
   assert.ok(/order: 990/.test(applySrc), '功能用法段应为 order 990');
 });
 
-test('host：设置页切换总开关即时生效（watch 同步 + 清环境注入缓存）', () => {
-  assert.ok(/typeof next\.injectSystemPrompt === 'boolean'/.test(applySrc), 'watch 必须同步 injectSystemPrompt');
-  assert.ok(/envInjectCache = null/.test(applySrc), '切开关须清缓存（否则旧文本继续注入）');
+test('host：设置页切换总开关即时生效（启动 merge + HTTP，watch 不灌开关）', () => {
+  // 2026-09-15：开关真源是 config.json（启动 merge + HTTP settings-set）；
+  //   watch 不得再 applySettingsToCfg(cfg, next)——yaml 缺键会用 schema 默认 false 盖掉勾选
+  assert.ok(applySrc.includes('const changed = applySettingsToCfg(cfg, fileSettings)'),
+    '启动必须从 config.json merge 进 cfg');
+  assert.ok(!/applySettingsToCfg\(\s*cfg\s*,\s*next\s*\)/.test(applySrc),
+    'watch 不得把 yaml 整包灌进 cfg（会把 injectRequirements 默认 false 盖回去）');
+  assert.ok(/envInjectCache = null/.test(applySrc),
+    '切总开关须清环境注入缓存（否则旧文本继续注入）');
 });
 
 test('host：text thunk 全部同步（async 会让模型看到 [object Promise]）', () => {

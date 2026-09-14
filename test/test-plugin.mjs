@@ -3,7 +3,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, existsSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { readFileSync, existsSync, mkdtempSync, mkdirSync, writeFileSync, rmSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
@@ -13,6 +13,7 @@ import { name, GIT_PUSH_SETTINGS_NS, Config, apply, callTool, handleHttp, listTo
 import { setDefineToolOverride } from '../lib/plugin/index.js';
 import { listSyncFiles, syncPlugin, detectTargets, SYNC_ENTRIES, SYNC_EXCLUDE } from '../scripts/sync-plugin.mjs';
 import { VERSION } from '../lib/self/index.js';
+import { setSettingsFileOverride } from '../lib/app/settings-bridge.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -428,3 +429,129 @@ test('commitWithAudit：对照——非豁免目录 blocker 照常拦截', async
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+// ---------- 2026-09-14/15：设置读写端点（settings-get/settings-set） ----------
+// 背景：设置持久化 = 插件私有 config.json（**不写公共 settings.yaml**，跨实例锁竞争 +
+//   client isLoopback=memory 陷阱双坑）。端点与宿主 scope 无关，任何时候都可读写文件。
+// 单测用 setSettingsFileOverride 把 config.json 指向临时目录，不污染真实配置。
+
+test('settings-get：config 不存在 → 200 + 空设置（降级不崩）', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-setget-'));
+  try {
+    setSettingsFileOverride(join(dir, 'config.json'));
+    const r = await handleHttp({ method: 'GET', url: '/api/git-push/settings-get' }, { workspaceRoot: ROOT }, {});
+    assert.equal(r.status, 200);
+    assert.equal(r.body.ok, true);
+    // redactConfig 总带 tokenConfigured/sshConfigured 派生布尔位；无用户设置键（其余为空）
+    assert.equal(r.body.settings.auditEnabled, undefined, '无配置时应无 auditEnabled');
+    assert.equal(r.body.settings.injectRequirements, undefined, '无配置时应无 injectRequirements');
+    assert.equal(r.body.settings.tokenConfigured, false, '派生布尔位默认 false');
+  } finally {
+    setSettingsFileOverride(null);
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('settings-set：写 config.json 成功（无宿主依赖，200）', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-setset-'));
+  try {
+    const file = join(dir, 'config.json');
+    setSettingsFileOverride(file);
+    const r = await handleHttp(
+      { method: 'POST', url: '/api/git-push/settings-set', origin: 'http://127.0.0.1:30801', body: { key: 'auditEnabled', value: true } },
+      { workspaceRoot: ROOT }, {},
+    );
+    assert.equal(r.status, 200);
+    assert.equal(r.body.ok, true);
+    // 文件确实落盘 + 权限 0600
+    const raw = readFileSync(file, 'utf8');
+    assert.match(raw, /"auditEnabled": true/);
+    assert.equal(fsStatMode(file), '600');
+  } finally {
+    setSettingsFileOverride(null);
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('settings-set：非白名单键 400（防越权写任意字段）', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-sete-'));
+  try {
+    setSettingsFileOverride(join(dir, 'config.json'));
+    const r = await handleHttp(
+      { method: 'POST', url: '/api/git-push/settings-set', origin: 'http://127.0.0.1:30801', body: { key: 'evilKey', value: 'x' } },
+      { workspaceRoot: ROOT }, {},
+    );
+    assert.equal(r.status, 400);
+    assert.match(r.body.error, /不支持的设置键/);
+  } finally {
+    setSettingsFileOverride(null);
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('settings-set：白名单键写盘 + get 读回一致（持久化闭环）', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-setloop-'));
+  try {
+    const file = join(dir, 'config.json');
+    setSettingsFileOverride(file);
+    const s = await handleHttp(
+      { method: 'POST', url: '/api/git-push/settings-set', origin: 'http://127.0.0.1:30801', body: { key: 'injectRequirements', value: true } },
+      { workspaceRoot: ROOT }, {},
+    );
+    assert.equal(s.status, 200);
+    const g = await handleHttp({ method: 'GET', url: '/api/git-push/settings-get' }, { workspaceRoot: ROOT }, {});
+    assert.equal(g.body.settings.injectRequirements, true, '写后读回应为 true（重启后保持）');
+  } finally {
+    setSettingsFileOverride(null);
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('settings-set：GET 方法（空 key）→ 400（键白名单校验先行，拒绝空写）', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-setget2-'));
+  try {
+    setSettingsFileOverride(join(dir, 'config.json'));
+    const r = await handleHttp({ method: 'GET', url: '/api/git-push/settings-set' }, { workspaceRoot: ROOT }, {});
+    assert.equal(r.status, 400);
+    assert.match(r.body.error, /不支持的设置键|设置键/);
+  } finally {
+    setSettingsFileOverride(null);
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('settings-set：UI 提交日志落盘（settings-ui.log 留痕 + 凭据打码）', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-setlog-'));
+  try {
+    const file = join(dir, 'config.json');
+    setSettingsFileOverride(file);
+    // 写普通键 + 凭据键（凭据应打码不留明文）
+    const r1 = await handleHttp(
+      { method: 'POST', url: '/api/git-push/settings-set', origin: 'http://127.0.0.1:30801', body: { key: 'auditScanScope', value: 'full' } },
+      { workspaceRoot: ROOT }, {},
+    );
+    const r2 = await handleHttp(
+      { method: 'POST', url: '/api/git-push/settings-set', origin: 'http://127.0.0.1:30801', body: { key: 'githubToken', value: 'ghp_SECRETTOKEN_XYZ' } },
+      { workspaceRoot: ROOT }, {},
+    );
+    assert.equal(r1.status, 200);
+    assert.equal(r2.status, 200);
+    const logFile = join(dir, 'settings-ui.log');
+    assert.ok(existsSync(logFile), 'settings-ui.log 必须生成');
+    const logText = readFileSync(logFile, 'utf8');
+    assert.ok(logText.includes('auditScanScope'), '日志必须记录普通键 auditScanScope');
+    assert.ok(logText.includes('githubToken'), '日志必须记录 githubToken 键');
+    assert.ok(!logText.includes('ghp_SECRETTOKEN_XYZ'), '凭据值必须打码，不得落明文');
+    assert.equal(fsStatMode(logFile), '600', '日志文件必须 0600');
+  } finally {
+    setSettingsFileOverride(null);
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// 辅助：读文件权限（mode & 0o777 的 8 进制字符串）
+function fsStatMode(file) {
+  return (statSync(file).mode & 0o777).toString(8);
+}
+
+// ---------- （2026-09-15 追加）插件私有配置持久化规则 ----------
