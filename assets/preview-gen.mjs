@@ -123,9 +123,27 @@ window.__scopeMock = {
   },
 };
 
+// 接真实后端：URL 传 ?backend=http://127.0.0.1:PORT 时所有 /api/git-push/* 转发到真实服务
+//   （scripts/preview-server.mjs），可用于实测真插件逻辑；不传则用下方 mock（离线预览）。
+var __PRE_REAL__ = window.fetch;
+window.__dshgpScript = window.__dshgpScript || [];
 // 假接口：/toggle-rule 真翻转 disabled，配合 loadSlots 对账，点击结果能留住
 window.fetch = function (url, init) {
   var u = String(url), body = { ok: true };
+  // ?backend= 或 window.__DSHGP_BACKEND__（preview-server 注入）→ 转发真实后端
+  var __PRE_B__ = (location.search.match(/[?&]backend=([^&]+)/) || [])[1] || window.__DSHGP_BACKEND__ || '';
+  if (__PRE_B__) {
+    return __PRE_REAL__(__PRE_B__ + u, {
+      method: ((init && init.method) || 'GET'),
+      headers: { 'Content-Type': 'application/json' },
+      body: (init && init.body) || undefined,
+    }).then(function (raw) {
+      return raw.json().then(function (data) {
+        return { ok: true, status: raw.status, json: function () { return Promise.resolve(data); } };
+      });
+    }).catch(function () { return { ok: true, status: 502, json: function () { return Promise.resolve({ ok: false, error: '后端未启动: ' + __PRE_B__ }); } }; });
+  }
+  body = { ok: true };
   // /toggle-rule 必须真改假数据：toggleDisabled 本地翻转后会 loadSlots 对账，
   //   假数据不改就会被拉回原状（表现为「点完回弹」）。
   if (u.indexOf('toggle-rule') >= 0) {
@@ -160,13 +178,13 @@ window.fetch = function (url, init) {
     else dirs = ['src', 'docs', 'build', 'scripts'];
     body = { ok: true, path: p, parent: parent, dirs: dirs };
   } else if (u.indexOf('repos-local') >= 0) {
-    // 三个演示仓库：①领先+干净→push 可点 ②有未提交→push 禁用 ③无上游→push 禁用
+    // 服务端已过滤：只保留登录同作者（EIGHTfs）的仓库。
+    //   ①领先+干净→push 可点 ②有未提交→push 禁用；其他作者/无 remote 的都被过滤不显示
     body = {
-      ok: true, root: '/home/user/项目', count: 3,
+      ok: true, root: '/home/user/项目', count: 2, owner: 'EIGHTfs', indexedAvailable: true,
       repos: [
-        { path: '/home/user/项目/dsh-git-push-v2', branch: 'master', remote: 'origin', changed: 0, lastCommit: 'a1b2c3d 账号卡片：本地/云端', hasRemote: true, upstream: 'origin/master', ahead: 3, behind: 0 },
-        { path: '/home/user/项目/gamebanana-mods-downloader', branch: 'main', remote: 'origin', changed: 5, lastCommit: 'f0e9d8c 修复下载器', hasRemote: true, upstream: 'origin/main', ahead: 1, behind: 0 },
-        { path: '/home/user/项目/new-project', branch: 'main', remote: 'origin', changed: 0, lastCommit: '（无提交）', hasRemote: true, upstream: '', ahead: null, behind: null },
+        { path: '/home/user/项目/dsh-git-push-v2', branch: 'master', remote: 'origin', changed: 0, lastCommit: 'a1b2c3d 账号卡片：本地/云端', hasRemote: true, upstream: 'origin/master', ahead: 3, behind: 0, indexed: { owner: 'EIGHTfs', repo: 'dsh-git-push', repoUrl: 'https://api.github.com/repos/EIGHTfs/dsh-git-push', visibility: '公开' } },
+        { path: '/home/user/项目/gamebanana-mods-downloader', branch: 'main', remote: 'origin', changed: 5, lastCommit: 'f0e9d8c 修复下载器', hasRemote: true, upstream: 'origin/main', ahead: 1, behind: 0, indexed: { owner: 'EIGHTfs', repo: 'gamebanana-mods-downloader', repoUrl: 'https://api.github.com/repos/EIGHTfs/gamebanana-mods-downloader', visibility: '私有' } },
       ],
     };
   } else if (u.indexOf('repos-cloud') >= 0) {

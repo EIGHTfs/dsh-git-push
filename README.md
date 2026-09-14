@@ -93,6 +93,214 @@ Git 全链路自动化，token / SSH 凭据管理 + 提交推送，无需手动�
 
 **加规则 = 放文件**；**加字段类型（新 kind）才需加函数**（compilers.js 注册制：`registerCompiler(kind, detect, compile)`，加字段=加函数+注册一行，`compileRule` 主体永不修改）。
 
+### 目录结构（自动生成）
+
+> 由 `scripts/tree-doc.mjs` 维护：`gen` 生成 / `check` 查漂移 / `apply` 覆盖本节。
+> 注释来源 `tree-doc.json`（路径 → 一句话介绍），新增文件标「（待注释）」由 AI 补。
+
+<!-- dshgp-tree:start -->
+```text
+dsh-git-push/
+├── lib/ — 核心实现（10 总入口 + 审计引擎 + git 执行层 + 规则编译层）
+│   ├── ARCHITECTURE.md — 架构说明文档
+│   ├── commit-push.js — 审计提交总入口（commitWithAudit + runAudit 同步审计）
+│   ├── index.js — 插件入口（DSH 接线，再导出全部能力）
+│   ├── user-requirements.json — 开发者特殊要求清单（提交推送前逐条核对）
+│   ├── app/ — 插件入口层（apply/HTTP 处理/工具调用分发/注入文本/默认扫描根）
+│   │   ├── apply.js — 插件装载入口（注册 schema/工具/HTTP/注入钩子）
+│   │   ├── constants.js — 插件名与设置命名空间常量
+│   │   ├── http-handlers.js — HTTP 路由分发（全部 /api/git-push/* 端点）
+│   │   ├── index.js — 插件入口再导出（宿主 main 指向）
+│   │   ├── inject-text.js — 注入文本（工具用法提示 FUNCTION_USAGE_HINT）
+│   │   ├── scan-root.js — 默认扫描根解析（配置优先→DSH 家根自动识别）
+│   │   ├── schema.js — 配置 schema（宿主导出缺失时兜底）
+│   │   ├── slot-stats.js — 规则槽位命中统计（模块级状态）
+│   │   ├── tool-call.js — 工具调用分发（git_scan/commit_push/audit/status 等全部工具）
+│   │   ├── tools.js — 工具定义清单（名称/描述/参数 schema）
+│   ├── ast/ — AST 实现层（token 级判定：括号/控制流/数据流/凭据/魔数/命名/规模/分词）
+│   │   ├── brace.js — 括号配对与区间包含工具
+│   │   ├── code-lines.js — 代码行判定（真代码 vs 注释/字符串）+ 字符串字面量提取
+│   │   ├── control-flow.js — 控制流检查（同步 fs/空 catch/圈复杂度/嵌套深度）
+│   │   ├── credential.js — 凭据标识符判定（硬编码/引用/类型检查）
+│   │   ├── dataflow.js — 数据流检查（清空后访问，三层审计 L2）
+│   │   ├── index.js — AST 层统一出口
+│   │   ├── magic-number.js — 硬编码魔数识别（豁免版本号/日期/状态码）
+│   │   ├── naming.js — 命名检查（标识符长度/函数名过短/受控小文件读取）
+│   │   ├── shell.js — shell 精筛（cd 动态路径/写操作命中 .gitignore）
+│   │   ├── size.js — 规模检查（函数长度/文件长度/重复字符串）
+│   │   ├── tokenizer.js — 分词器（token 流 + LRU 缓存）
+│   ├── audit/ — 审计编排层（文件收集/逐文件检查/槽位聚合/审计出口）
+│   │   ├── audit-file.js — 单文件审计执行（跑检查+豁免）
+│   │   ├── checks.js — 检查器入口（纯引用表）
+│   │   ├── collector.js — 文件收集（gitignore 感知）
+│   │   ├── file-context.js — 文件上下文豁免（外部调用超时/mkdir 同函数/版本路径）
+│   │   ├── finding.js — 统一问题对象构造器（makeFinding）
+│   │   ├── glob.js — glob→RegExp 转换（**/*/? 子集）
+│   │   ├── index.js — 审计层统一出口（auditFull/auditChanged）
+│   │   ├── orchestrate.js — 审计编排（收集→检查→汇总）
+│   │   ├── repo-level.js — 仓库级语义规则
+│   │   ├── slot.js — 按规则包聚合审计命中（拦截/警告/通过）
+│   ├── audit-rules/ — 规则包 yml（nodejs/npm/frontend/comment/dsh/private/structure 等动态槽位）
+│   │   ├── audit-rules-comment.yml — 注释类规则（黑名单措辞/对话残留）（规则包 comment）
+│   │   ├── audit-rules-docs.yml — 文档类规则（README/文档措辞）（规则包 docs）
+│   │   ├── audit-rules-dsh.yml — DSH 生态规则（宿主/插件约定）（规则包 dsh）
+│   │   ├── audit-rules-filehealth.yml — 文件健康度规则（三维分级）（规则包 filehealth）
+│   │   ├── audit-rules-folder.yml — 目录级规则（目录数/单目录文件数）（规则包 folder）
+│   │   ├── audit-rules-frontend.yml — 前端规则（按钮绑定/魔数）（规则包 frontend）
+│   │   ├── audit-rules-i18n.yml — i18n 规则（文案硬编码检查）（规则包 i18n）
+│   │   ├── audit-rules-nodejs.yml — Node.js 规则（同步 fs/空 catch）（规则包 nodejs）
+│   │   ├── audit-rules-npm.yml — npm 规则（package.json 规范）（规则包 npm）
+│   │   ├── audit-rules-performance.yml — 性能规则（规则包 performance）
+│   │   ├── audit-rules-private.yml — 私密文件规则（凭据/私密清单）（规则包 private）
+│   │   ├── audit-rules-robustness.yml — 健壮性规则（规则包 robustness）
+│   │   ├── audit-rules-structure.yml — 结构规则（命名/规模/复杂度）（规则包 structure）
+│   │   ├── audit-rules-template.yml — 规则模板（新规则包起点）（规则包 template）
+│   │   ├── audit-rules-version.yml — 版本规则（版本一致性）（规则包 version）
+│   ├── backend/ — 后端服务（后台任务队列——方案 B：审计同步、推送后台化）
+│   │   ├── task-queue.js — 后台任务队列（submitTask/getTask，方案 B）
+│   ├── checks/ — 检查层（按 kind 调用检查器：正则/语义/结构/文件健康/按钮绑定/私密文件）
+│   │   ├── button-bind.js — 按钮事件绑定交叉比对（声明了但没绑定）
+│   │   ├── common.js — 检查器公共设施（豁免提示/severity 封顶/分组）
+│   │   ├── credential-file.js — 凭据文件检查（.env/密钥文件）
+│   │   ├── dataflow.js — 数据流规则包装（L2 token 级→finding）
+│   │   ├── dispatch.js — 调度（runChecks 按 kind 分发汇总）
+│   │   ├── file-health.js — 文件健康度（行数/字节/行长三维打分）
+│   │   ├── filter.js — 规则作用域过滤（exts/exclude_paths）
+│   │   ├── folder.js — 目录级检查（文件夹数/单目录文件数/解包特征）
+│   │   ├── index.js — 检查层统一出口
+│   │   ├── magic-number.js — 魔数检查包装（token 判定→finding）
+│   │   ├── npm-json.js — package.json 检查（依赖版本/私有包豁免）
+│   │   ├── private.js — 私密文件检查（私有仓可见性核对）
+│   │   ├── regex.js — 正则类规则执行（regex/path-regex/blacklist）
+│   │   ├── semantic.js — 语义类规则执行（patch insert/仓库级语义）
+│   │   ├── structural.js — 结构类规则（函数长度/复杂度/嵌套/同步 fs）
+│   ├── client/ — 客户端配置（DEFAULT_CONFIG + SETTINGS_SCHEMA 侧边栏设置项定义）
+│   │   ├── index.js — 侧边栏设置 UI 总入口（DEFAULT_CONFIG + SETTINGS_SCHEMA）
+│   ├── context/ — 上下文注入（给 AI 会话注入环境：目录映射/工具路径/skill 入口）
+│   │   ├── index.js — 上下文注入入口（环境注入文本）
+│   ├── exempt/ — 豁免机制（dsh-skip-* 注释标记解析与文件头/行内语义）
+│   │   ├── index.js — 豁免注册表（dsh-skip-* 全标记消费）
+│   ├── git/ — Git 执行层（runGit/账号/API/克隆/凭据/推送/扫描/索引维护/敏感扫描/传输通道）
+│   │   ├── account.js — 账号校验（token 在线 + SSH 公钥指纹，输出账号状态块）
+│   │   ├── api.js — GitHub REST 调用（githubFetch 统一 token/错误识别）
+│   │   ├── browse.js — 目录浏览（账号卡片路径选择器后端）
+│   │   ├── clone.js — 克隆（Git Data API，不依赖本地凭据）
+│   │   ├── cloud.js — 云端仓库列表（/user/repos 供手动 clone）
+│   │   ├── config.js — 路径与配置（PLUGIN_ROOT + 开发者要求清单读取）
+│   │   ├── credentials.js — 凭据解析（token/SSH 私钥：环境变量→凭据文件→settings）
+│   │   ├── exec.js — git 进程调用（runGit 统一超时/错误规整 + gitRaw 原始字节）
+│   │   ├── ignore.js — .gitignore 兜底（DEFAULT_IGNORE_PATTERNS 补齐）
+│   │   ├── index.js — Git 执行层统一出口
+│   │   ├── post-push.js — 推送后增强（remote-tracking ref/aux remote/tag）
+│   │   ├── push.js — 提交推送编排（commitAndPush 全流程：敏感扫描→add/commit→推送）
+│   │   ├── remote.js — 远端仓库管理（建仓默认 private/可见性切换）
+│   │   ├── repo-index.js — dsh-repo-index 自动维护（扫描 workspace 生成索引 JSON）
+│   │   ├── repos.js — 仓库扫描与展示（describeRepo 分支/远端/领先落后/未提交）
+│   │   ├── sensitive.js — 敏感信息扫描（提交前拦截密钥/凭据/私密文件）
+│   │   ├── transport.js — 推送通道（dispatchPush 决策：SSH/API/auto + 结果核对）
+│   ├── http/ — HTTP 总入口（鉴权中间件 + 端点处理器骨架）
+│   │   ├── index.js — HTTP 总入口（Origin/CSRF/写确认/413/路由分发）
+│   ├── link-check/ — 链接判断（文档链接有效性，只 warning 永不 blocker）
+│   │   ├── index.js — 链接判断总入口（分级扣分，断网不拦）
+│   ├── plugin/ — Host 侧接线层（插件注册到 DSH：工具/HTTP/配置 schema）
+│   │   ├── index.js — Host 侧接线（插件注册：工具/HTTP/配置注入宿主）
+│   ├── readme-gen/ — README 生成（git_gen_readme 工具模板渲染）
+│   │   ├── index.js — README 生成总入口（git_gen_readme 模板渲染）
+│   ├── readme-templates/ — README 模板 yml
+│   │   ├── readme.yml — README 章节模板（git_gen_readme 用）
+│   ├── rule/ — 规则引擎（yml 装载/编译注册表/同形字符检测/槽位启停）
+│   │   ├── compilers.js — 规则编译器注册表（纯引用文件）
+│   │   ├── homoglyph.js — 同形字符检测（yml kind/id 防 ASCII 混淆）
+│   │   ├── loader.js — 规则总入口（yml 装载/解析/槽位启停）
+│   │   ├── registry.js — 规则编译注册表核心（compileRule 主体）
+│   │   └── …（12 个更深文件）
+│   ├── score/ — 10 维度加权评分总入口
+│   │   ├── index.js — 评分总入口（10 维度加权）
+│   ├── self/ — 插件自身总入口（VERSION/versionInfo/CLI 帮助）
+│   │   ├── index.js — 自身总入口（VERSION 一致性/versionInfo）
+├── scripts/ — 开发工具脚本（版本校验/双副本同步/预览服务/README 目录树维护）
+│   ├── audit-runtime-check.mjs — 三层审计 L3 运行时检测脚本
+│   ├── check.mjs — 语法检查脚本（npm run check）
+│   ├── preview-server.mjs — 本地真实后端测试服务（preview.html 接真实 handleHttp）
+│   ├── rule-switch.mjs — 规则槽位手动启停 CLI
+│   ├── scan-version.mjs — 版本一致性校验脚本
+│   ├── scrub-user-wording.mjs — 清理「用户沟通措辞」独立脚本
+│   ├── sync-plugin.mjs — 双副本同步脚本（源仓库 → 部署安装副本）
+│   ├── tree-doc.mjs — README 目录结构维护脚本（gen/check/apply）
+│   ├── watch-preview.mjs — preview.html 自动重生成监听（源码变更即重建）
+├── assets/ — 预览页与配图（preview.html 交互模拟页 + 面板截图）
+│   ├── panel-account.png — 账号卡片面板截图（README 配图）
+│   ├── panel-audit.png — 审计面板截图（README 配图）
+│   ├── panel-settings.png — 设置面板截图（README 配图）
+│   ├── preview-gen.mjs — 生成 preview.html（真 client.js + 假数据垫片）
+│   ├── preview.html — 侧边栏交互模拟页（可点，支持 ?backend= 接真实后端）
+├── test/ — node:test 全量单元测试（541+ 条，覆盖审计/推送/账号/HTTP/后台任务）
+│   ├── .test — 空文件豁免标记（目录级豁免 .test 目录）
+│   ├── test-account-ssh.mjs — 账号检查 + SSH 密钥测试
+│   ├── test-audit-scope.mjs — 审计作用域/凭据占位符回归测试
+│   ├── test-audit.mjs — 审计总入口测试（auditFull/changed/豁免/gitignore）
+│   ├── test-client.mjs — 侧边栏测试（手写 DOM/零外部资源/开关默认）
+│   ├── test-context.mjs — 上下文注入测试
+│   ├── test-dataflow.mjs — 三层审计 L2 数据流测试
+│   ├── test-exempt.mjs — 豁免总入口测试（7 标记 + 位置语义）
+│   ├── test-false-positive-fixes.mjs — 误报修复回归测试
+│   ├── test-file-health.mjs — 文件健康度矩阵评分测试
+│   ├── test-folder-scope.mjs — 目录级审计作用域回归测试
+│   ├── test-git.mjs — git 总入口测试（runGit/commitAndPush/凭据/克隆）
+│   ├── test-http.mjs — HTTP 总入口测试（Origin/CSRF/413/路由）
+│   ├── test-inject-switch.mjs — 注入开发者要求清单子开关回归
+│   ├── test-inject-system-prompt.mjs — 注入系统提示词回归
+│   ├── test-link-check.mjs — 链接判断测试（分级扣分/断网不拦）
+│   ├── test-magic-number.mjs — 硬编码魔数检测测试
+│   ├── test-persist-credentials.mjs — 凭据持久化测试
+│   ├── test-plugin.mjs — 插件接线测试（入口导出/工具清单/双副本同步）
+│   ├── test-push-transport.mjs — 推送通道回归（SSH 优先/一致性语义）
+│   ├── test-quality.mjs — 评分总入口测试（AST 质量检查器）
+│   ├── test-readme-gen.mjs — README 生成测试（模板渲染/版本表）
+│   ├── test-rule-packs.mjs — 规则总入口测试（编译注册/字段指派）
+│   ├── test-rule-slots-render.mjs — 规则包列表统计渲染回归
+│   ├── test-self.mjs — 自身总入口测试（VERSION/CLI/help 比对）
+│   ├── test-sidebar-interaction.mjs — 侧边栏规则包列表交互自检
+│   ├── test-smart-hint.mjs — 扫描智能提示 + 评分对数衰减测试
+│   ├── test-status-secret.mjs — token 明文不下发安全回归
+│   ├── test-task-queue.mjs — 后台任务队列测试（状态机/HTTP 端点/后台化形态）
+│   ├── test-tree-doc.mjs — README 目录树脚本测试（gen/check/apply 闭环）
+├── docs/ — 开发文档
+│   ├── DETAILS-EXEMPT-AND-RULES.md — 细节补充：豁免注释与规则 yml 用法全录
+├── skills/ — 插件权威 skill（功能手册/规则/使用说明，安装副本的 skills/ 同步）
+│   ├── dsh-git-push-functions.md — 插件功能说明书（工具参数/HTTP API/源码定位）
+│   ├── dsh-git-push.md — 插件手册（工具/规则包/设置 UI/安装实录）
+│   ├── dsh-repo-index.md — dsh-repo-index skill（源码索引权威说明）
+│   ├── git-push-live-fix.md — git-push 工具问题当场提出并改插件的规则
+│   ├── task-completion-report.md — 任务收尾汇报规则（✅+交付/验证/遗留）
+│   ├── git-workflow-gitpush/ — 
+│   │   ├── README.md — git 工作流 skill 子目录说明
+│   │   ├── commit-checkpoint-before-push-reorg.md — 推送重组前提交检查点规则
+│   │   ├── file-organize-git-first.md — 文件整理前先 git 提交规则
+│   │   ├── git-collab-conflict.md — git 协作冲突审查规则
+│   │   ├── git-commit-before-batch-ops.md — 批量操作前先 git 提交规则
+│   │   ├── git-commit-feature-progress.md — 功能进度三态提交规则
+│   │   ├── git-project-read-history.md — 进项目先读提交历史规则
+│   │   ├── git-rebuild-process.md — git 重建流程规则
+│   │   ├── git-remote-align-first.md — 远端对齐优先规则
+│   │   ├── github-api-only.md — 只走 GitHub API 规则
+│   │   ├── github-fallback-restore.md — GitHub 回退恢复规则
+│   │   ├── github-pin-repos.md — GitHub 固定仓库规则
+│   │   ├── move-delete-git-checkpoint.md — 移动删除前 git 检查点规则
+│   │   ├── readme-sync-git-md.md — README 同步 git 提交规则
+│   │   ├── skill-every-change-commit-repo.md — 每次变更提交仓库规则
+│   │   ├── versioning-rule.md — 版本规范规则
+├── .gitignore — 忽略规则（node_modules/产物/备份/回收站等）
+├── README.md — 插件 README（功能总览/用法/版本记录）
+├── cli.mjs — 独立 CLI（git-sluice，不依赖宿主可独立运行）
+├── client.js — 侧边栏设置 UI 源码（账号卡片/审计/规则包三选项卡，零依赖手写 DOM）
+├── cordis.patch.yml — DSH 插件组合 patch（loader 注入定义）
+├── package.json — 包声明（零依赖、files 白名单、scripts）
+├── screenshots.json — 截图清单（README 配图引用）
+├── tree-doc.json — 目录结构注释映射（路径→一句话介绍，AI 维护）
+```
+<!-- dshgp-tree:end -->
+
 ### 代码架构：lib/ 各文件夹各司其职
 
 > 分层速查文档：`lib/ARCHITECTURE.md`（三层审计架构四层落地位置：规则声明 → AST 实现 → 检查包装 → 编排调度）
@@ -369,7 +577,8 @@ node assets/preview-gen.mjs
 
 ```
 · git_scan —— 列工作区（含额外路径）所有 git 仓库：分支/remote/未提交与未推送数/最近活动
-· git_commit_push —— 一键提交并推送（先审计→再 commit→再 push）
+· git_commit_push —— 一键提交并推送（审计同步拦截，通过后 commit+push **后台化**：立即返回 async:true+taskId，AI 继续干别的，稍后 git_push_status 查结果）
+· git_push_status —— 查询后台提交推送任务：taskId → status(pending/running/done/error) + 完成后 result/error
 · code_audit —— 审计仓库（L0 静态检查 + 质量评分），scope=full 全量，可传 ruleset / weights
 · git_account_check —— 校验 GitHub 账号与凭据（token 在线校验 + SSH 公钥指纹）
 · git_gen_ssh_key / git_remote_create / git_set_visibility / git_clone / git_gen_readme / link_check
@@ -397,7 +606,7 @@ node assets/preview-gen.mjs
 
 - **账号信息**：渐变卡片 + GitHub 图标 + 状态徽标（已连接/检测中/未连接）+ 检测结果块 + Token/SSH 凭据状态标签 + `⟳ 重新检测`
   - 卡片下方为**仓库管理卡片**（本地 / 云端 两子选项卡，2026-09-14）：
-    - **本地**：默认扫描工作区目录下的 git 仓库，可手动指定路径（文本框 + 📂 目录选择器弹窗浏览，复用 gbmd path-picker 模式）；列表显示 路径 / 分支 / 领先·落后 / 未提交数 / 最近提交。仓库满足「有远端跟踪 + 领先 + 工作树干净」时行尾 `push` 才可点——手动推送（后端再次校验，不满足返回具体原因，如先提交/先 -u 建跟踪）
+    - **本地**：默认扫描根 = **DSH 家根**（由 DSH_HOME / workspaceRoot **动态推导**，非写死）——覆盖 工作区 / 用户 / profiles / workspace 下全部 **git 仓库（遍历所有 `.git` 文件夹，含嵌套子仓库、depth 20）**；可手动指定路径（文本框 + 📂 目录选择器弹窗浏览），**浏览器路径与扫描路径都记住**（localStorage，刷新后恢复）。列表显示 路径 / 分支 · 远端子状态 / 未提交数 / 最近提交 + **索引登记**；**只显示登录同作者的仓库**（有远端则 owner=登录账号；无远端按索引归属判定；无登录态时不过滤）。仓库「有远端 + 工作树干净」即可点 `push`，**点击后行内绿/红反馈**（✅ 推送成功 / ⚠️ 失败原因）；领先/未设上游由后端精确判定（未设 `@{u}` 但有远端仍可推，比较 `origin/<分支>` 或 ls-remote；远端无同名分支=首次推送创建）。仓库路径长时自动省略号截断
     - **云端**：`加载仓库列表` 用 token 拉账号名下所有 GitHub 仓库（GET /user/repos，按最近更新），显示 名称 / 私有·公开 / 默认分支 / 最近更新；点行尾 `clone` 弹出目录选择器选目标目录后克隆（走 Git Data API，不直连 github.com）
 - **审计**：审计开关 + 注入系统提示词开关 + 代码禁用户沟通词开关 + 10 维度权重编辑 + 规则包列表
   - **`注入系统提示词`**（默认开）：控制整组注入段启停——功能用法（每个工具怎么用 + 凭据由插件托管）· 环境（工作区目录映射 + 工具安装路径 + skill 总入口一行）· 提交前 README 核对提醒；关闭后这些段全部返回空串，工具本身照常可用。详见 [三、系统提示词注入](#三系统提示词注入)
@@ -408,6 +617,14 @@ node assets/preview-gen.mjs
 - **设置**：GitHub token + SSH 公钥 + 邮箱 + 一键生成并复制
 
 设置项以 `lib/app/schema.js` 的 `Config` 为单一事实源（`lib/index.js` 只再导出），`settingsScope` 读写。凭据保存**同时写插件配置目录**（见「凭据管理」）。
+
+## 仓库索引联动（dsh-repo-index.json）
+
+账号卡片与「自动生成的仓库索引」双向联动（2026-09-14，移植 v1 的 `lib/repo-index.js` 全量生成实现进 v2 `lib/git/repo-index.js`）：
+
+- **读取（标注）**：本地扫描为每个仓库附 `indexed`（索引登记的 owner/repo/可见性）——即使本地未设 remote/上游，也能一眼看出它在 GitHub 的归属；未登记显示无
+- **更新（自动生成）**：`git_commit_push` 手动推送 与 账号卡片的 `repo-push` **推送成功后全量重建**索引——可见性走 GitHub API（并发 4，token 缺失回退既有标注/未知）、skills 从 package.json `dsh.skills` / `skills/*.md` frontmatter 收集、`localOnly` 维护 workspace 顶层无远端目录；索引写入 `工作区/dsh-git-push-User/<owner>/dsh-repo-index.json`（权威源，dsh-repo-index skill 一致），版本+1、generatedAt 刷新、DO NOT EDIT
+- 索引缺失/损坏全链路静默降级，不阻塞扫描与推送
 
 ## 独立脚本：规则启用/禁用（scripts/rule-switch.mjs）
 
@@ -509,7 +726,19 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
-| **1.1.11**（当前） | **修：开发期备份被同步进安装副本**（承接 1.1.10 把 `scripts/` 纳入同步清单）：`scripts/sync-plugin.mjs` 的 `SYNC_EXCLUDE` 原先只排 `.git` / `node_modules` / `WORKBOARD` / `test` / `.tmp`，**未排 `.bak`** ——开发期备份 `scripts/sync-plugin.mjs.bak` 被当成发布文件复制进安装副本的 `scripts/` 目录（安装副本混入非发布内容，且该备份含旧版白名单，易误读为「同步没生效」）；现补排 `.bak`（子串匹配，含 `.bak-<后缀>`）与 `.trash`（回收站），新增 1 条回归测试并扩充 1 条（`listSyncFiles` 实测返回集不含 `.bak`/`.trash`；`SYNC_EXCLUDE` 常量声明加 `.bak`/`.trash` 断言），并清理已进入安装副本的残留备份 | 524 全绿 |
+| **1.2.0**（当前） | **账号信息新增仓库管理卡片（本地/云端）+ folder 槽位两条新规则 + 仓库索引联动 + 遍历全部 `.git` + 「未跟踪上游」放宽 + 远端状态 bug 修复 + 推送分叉检查 + 审计配置传递修复 + tree-doc 目录树维护脚本** \
+本地/云端卡片：本地=扫描工作区 git 仓库（可手动指定路径 + 目录选择器浏览弹窗，领先且干净可手动 push，未设上游也可推）；云端=token 拉账号名下仓库可手动 clone（Git Data API）；5 新端点（browse/repos-local/repos-cloud/repo-push/repo-clone） \
+folder 槽位 +2（1.0.1）：`cd 到可能不存在的目录`（shell-cd-dynamic）、`写入 .gitignore 忽略目录`（write-into-gitignored），yml→AST→checks 三段落地 `lib/ast/shell.js` \
+**仓库索引联动**：移植 v1 的 dsh-repo-index.json 自动维护（`lib/git/repo-index.js`）——推送成功后全量重建（可见性走 GitHub API、skills 从 package.json/skills 收集、localOnly 维护）；本地扫描为每个仓库附 「索引登记」标注（无 remote 也能显示 GitHub 归属） \
+`.test` 空文件目录豁免扩展到变更审计；本地扫描遍历**所有 `.git` 文件夹**（含嵌套子仓库，depth 提到 20） \
+新增 `scripts/rule-switch.mjs`（复用 UI 规则启停：改 yml 顶层 disabled，命令行开关安装版本槽位，立即生效无需重启） \
+**远端状态 bug 修复**：`runGit()` 返回 `{ok, stdout, stderr}` 无 `status` 字段，describeRepo/push.js 用 `rc.status === 0` 判断 → 永远 `undefined === 0` = false → ahead 永远 null → 全部显示「远端状态未知」；改为 `rc.ok`（5 处），14 个仓库里 13 个正确显示同步/领先/落后 \
+**推送分叉检查**：`pushCurrentBranch` 新增 `behind > 0` 检查——本地与远端分叉时直接拒绝并返回清晰错误（`本地与远端分叉（本地领先 X，远端领先 Y）——先 pull 合并远端提交再推送`），不再让 git 报含糊的 non-fast-forward \
+**审计配置传递修复**：`runAudit()` 新增 `cfg` 参数——宿主传入的插件配置（含 `auditEnabled`）能正确传递到审计门禁，不再被 `defaultConfig()` 硬编码 `false` 覆盖 \
+**tree-doc 目录树维护脚本**：`scripts/tree-doc.mjs`（gen/check/apply 三子命令）+ `tree-doc.json`（206 条路径→一句话注释映射）——自动生成两层折叠目录树（含注释）、检查 README 树与真实文件漂移、覆盖 README 标记块 \
+**preview-server 静态 serve**：`scripts/preview-server.mjs` 改造——GET `/` 自动 serve preview.html 并注入 `__DSHGP_BACKEND__` 指向本服务（免手动拼 `?backend=`），preview-gen 支持 fallback 读注入变量 \
+修复：dispatch 批量替换语法、preview-gen 模板正则转义、AccountTab 动作注入缺失（props 链）；README 豁免机制文档化四类 | 548 全绿 |
+| **1.1.11** | **修：开发期备份被同步进安装副本**（承接 1.1.10 把 `scripts/` 纳入同步清单）：`scripts/sync-plugin.mjs` 的 `SYNC_EXCLUDE` 原先只排 `.git` / `node_modules` / `WORKBOARD` / `test` / `.tmp`，**未排 `.bak`** ——开发期备份 `scripts/sync-plugin.mjs.bak` 被当成发布文件复制进安装副本的 `scripts/` 目录（安装副本混入非发布内容，且该备份含旧版白名单，易误读为「同步没生效」）；现补排 `.bak`（子串匹配，含 `.bak-<后缀>`）与 `.trash`（回收站），新增 1 条回归测试并扩充 1 条（`listSyncFiles` 实测返回集不含 `.bak`/`.trash`；`SYNC_EXCLUDE` 常量声明加 `.bak`/`.trash` 断言），并清理已进入安装副本的残留备份 | 524 全绿 |
 | **1.1.10** | **scripts/ 随插件发布（同步白名单补齐）**：`scripts/` 同时加入 `package.json` 的 `files` 与 `scripts/sync-plugin.mjs` 的 `SYNC_ENTRIES`（两处必须一致，由 `test-self.mjs` 的「SYNC_ENTRIES 覆盖 files 白名单」测试守住）。此前 scripts 只在源码仓库、不进安装副本，导致 README 专门章节承诺的独立脚本入口（`node scripts/scrub-user-wording.mjs`、`node scripts/audit-runtime-check.mjs`、`npm run scan-version`）在**装好的插件里并不存在**（发布有、安装副本无）。补齐后安装副本内 5 个脚本（scan-version / audit-runtime-check / scrub-user-wording / check / sync-plugin）均可用，仍为零外部依赖（只用 node 内置模块）；README「安装与要求」补该说明与逐脚本用途，并更正过时的测试断言数（490 → 523）｜523 全绿 |
 | **1.1.9** | **系统提示词注入改造 + README 版本校验**：①侧边栏「审计」选项卡新增 **「注入系统提示词」总开关**（默认开），控制整组注入段启停（关闭 = 全部返回空串，段仍注册）；②注入内容收敛为目录级并新增 **功能用法段**（order 990：10 个工具各怎么用 + 「凭据由插件托管，不要到处找凭据」+ 调用纪律），解决 AI 绕开插件自行检索 token 的问题；③环境段（order 980）由静态 5 项清单改为 **`which` 实测探测**（只列探测到的工具、惰性缓存、异常降级静态清单），并新增 **工作区根 + 直接子目录** 映射，skill 只注总入口一行；④**移除** `injectFullSkill` / `injectRepoIndexFull` 两个全量注入开关（不再提供全文注入档位）；⑤`scripts/scan-version.mjs` 新增 **第 4 项校验：README 版本号 vs `package.json` version**（优先认「（当前）」标记行、无标记则取版本列表章节最高版本，不一致 exit 1，`--json` 输出 `readmeVersion`/`readmeSource`）；⑥`assets/preview-gen.mjs` 路径改为按脚本位置推导（不再写死本机路径，支持 `DSH_ROOT` 等覆盖）并同步新开关，重新生成 `assets/preview.html` 与 `assets/panel-audit.png`；⑦新增 19 条回归测试（开关渲染/门控与缓存/内容覆盖/废弃开关清除/README 版本提取），并修正「子开关必须先开审计才能开」的过时描述（1.1.5 起已改为随时可勾选）｜523 全绿 |
 | **1.1.8** | **三层审计管线**（用户 2026-09-14 设计）：L1 正则初筛（`filterRulesByFileText` 消费 yml `file_patterns`，命中候选文件才进 L2，未命中剔除规则——检查器空规则短路，成本极低）→ L2 AST 数据流（新 kind `dataflow`：`lib/ast/dataflow.js` 同函数「清空后访问」判定 + `lib/checks/dataflow.js` 包装，规则 `dataflow/clear-then-access` 入 `audit-rules-nodejs.yml`）→ L3 运行时检测（独立脚本 `scripts/audit-runtime-check.mjs`：动态 import 被测模块，实测清空后访问是否拿 undefined，退出码 1=命中）。L2 判定保守（宁漏不误报）：同函数区间互斥（顶层排除函数体，修跨函数误连）、清空后写回撤销（push/set/引用传参填充）、声明初始化（`var x = []`）不算清空、`.length` 读与 shift/pop 消费式访问不报｜**修 gitignore 感知静默失效**（collector.js `sep is not defined`——`tryLoadGitIgnoreSet` 每仓库必抛异常走 catch 返回 null，git 忽略文件从未被排除：iwara 审计从 2795 个文件（含 Node vendor v8 头文件）降到 53 个真实源码文件）｜**修检查器空规则崩溃**（structural.js 的 checkComplexity/checkDepth/checkMaxLines 在规则被 exts/file_patterns 过滤为空时 `rule.severity` 崩溃——iwara 触发，统一加空规则短路）｜504 全绿 |

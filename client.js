@@ -176,10 +176,14 @@ window.__ModuleLoader__.load({
       '.dshgp_pickinput{flex:1;min-width:0;font:inherit;font-size:12px;padding:5px 9px;border:.5px solid var(--dsw-alias-border-l4);border-radius:8px;background:var(--dsw-alias-bg-base);color:var(--dsw-alias-label-primary)}',
       '.dshgp_repohint{font-size:12px;color:var(--dsw-alias-label-tertiary)}',
       '.dshgp_repomsg{margin:0;font-size:11px;color:var(--dsw-alias-label-tertiary);line-height:1.5}',
+      '.dshgp_pushcol{display:flex;flex-direction:column;align-items:flex-end;gap:3px;max-width:46%;min-width:100px}',
+      '.dshgp_fb{font-size:11px;line-height:1.35;word-break:break-all;text-align:right}',
+      '.dshgp_fbok{color:#2fa84f}',
+      '.dshgp_fbfail{color:#d64545}',
       '.dshgp_replist{display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto}',
       '.dshgp_reprow{display:flex;align-items:center;gap:8px;padding:7px 10px;border:.5px solid var(--dsw-alias-border-l2);border-radius:10px;background:color-mix(in srgb,var(--dsw-alias-bg-base) 55%,transparent)}',
       '.dshgp_reprowinfo{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}',
-      '.dshgp_reprowpath{font-size:12px;font-weight:600;color:var(--dsw-alias-label-primary);word-break:break-all}',
+      '.dshgp_reprowpath{font-size:12px;font-weight:600;color:var(--dsw-alias-label-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}',
       '.dshgp_reprowmeta{font-size:11px;color:var(--dsw-alias-label-tertiary);word-break:break-all}',
       '.dshgp_browsebtn{flex-shrink:0;font-size:12px;padding:4px 8px;border:.5px solid var(--dsw-alias-border-l4);border-radius:8px;background:var(--dsw-alias-bg-layer-2);cursor:pointer}',
       // 目录选择弹窗（移植 gbmd path-picker：一行接入 📂 按钮）
@@ -362,6 +366,12 @@ window.__ModuleLoader__.load({
         else if (target) target.value = dshgp_browsePath;
       });
     }
+    function dshgp_browseGuess() {
+      try { return window.localStorage.getItem('dshgp-browse-path') || ''; } catch { return ''; }
+    }
+    function dshgp_browseRemember(p) {
+      try { if (p) window.localStorage.setItem('dshgp-browse-path', p); } catch { /* localStorage 不可用 */ }
+    }
     async function dshgp_browseLoad(p) {
       const list = document.getElementById('dshgp-browse-list');
       const crumb = document.getElementById('dshgp-browse-crumb');
@@ -373,6 +383,7 @@ window.__ModuleLoader__.load({
       catch (e) { crumb.textContent = '读取失败: ' + (e && e.message || e); return; }
       if (!data || !data.ok) { crumb.textContent = (data && data.error) || '读取失败'; return; }
       dshgp_browsePath = data.path;
+      dshgp_browseRemember(data.path);
       crumb.textContent = data.path;
       up.style.display = data.parent ? 'block' : 'none';
       up.dataset.path = data.parent || '';
@@ -394,7 +405,7 @@ window.__ModuleLoader__.load({
       dshgp_browseEnsureDom();
       const mask = document.getElementById('dshgp-browse-mask');
       mask.style.display = 'flex';
-      void dshgp_browseLoad('');
+      void dshgp_browseLoad(dshgp_browseGuess());
     }
     function dshgp_browseClose() {
       if (typeof document === 'undefined') return;
@@ -453,24 +464,39 @@ window.__ModuleLoader__.load({
       const r = props.repo;
       const s = props.state;
       const busy = s.repoBusy === 'push:' + r.path;
-      const canPush = !!r.hasRemote && !!r.upstream && r.changed === 0 && r.ahead > 0;
-      const stat = !r.hasRemote ? '无远端' : (!r.upstream ? '未跟踪上游' : (r.ahead > 0 ? '领先 ' + r.ahead : (r.behind > 0 ? '落后 ' + r.behind : '同步')));
+      // 2026-09-14：有远端 + 工作树干净即可点 push（后端再精确判定领先/创建分支——
+      //   本地未 fetch 时 ahead=null 显示「未跟踪上游」但 push 仍可点，点击时后端 ls-remote 对比）
+      const canPush = !!r.hasRemote && r.changed === 0;
+      // 2026-09-14 语义纠正：stat 只体现「远端有无」与领先关系；有远端但本地
+      //   未 fetch/无同名分支（无法比较）时显示「远端状态未知」，不称上游
+      const stat = !r.hasRemote ? '无远端' : (r.ahead === null ? '远端状态未知' : (r.ahead > 0 ? '领先 ' + r.ahead : (r.behind > 0 ? '落后 ' + r.behind : '同步')));
+      // 2026-09-14 联动仓库索引：本地无 remote/上游时也能显示它的 GitHub 归属
+      const idx = r.indexed;
+      const idxTag = idx ? ' · 🔗 索引 ' + (idx.owner ? idx.owner + '/' + idx.repo : idx.repo) + '(' + idx.visibility + ')' : '';
       return jsx.jsxs('div', {
         className: 'dshgp_reprow',
         children: [
           jsx.jsxs('div', {
             className: 'dshgp_reprowinfo',
             children: [
-              jsx.jsx('span', { className: 'dshgp_reprowpath', children: r.path }),
-              jsx.jsx('span', { className: 'dshgp_reprowmeta', children: ['分支 ' + r.branch + ' · ' + stat + (r.changed > 0 ? ' · 未提交 ' + r.changed : '') + (r.lastCommit ? ' · ' + r.lastCommit : '')] }),
+              jsx.jsx('span', { className: 'dshgp_reprowpath', title: r.path, children: String(r.path).split('/').pop() || r.path }),
+              jsx.jsx('span', { className: 'dshgp_reprowmeta', children: ['分支 ' + r.branch + ' · ' + stat + idxTag + (r.changed > 0 ? ' · 未提交 ' + r.changed : '') + (r.lastCommit ? ' · ' + r.lastCommit : '')] }),
             ],
           }),
-          jsx.jsx('button', {
-            type: 'button',
-            className: 'dshgp_keybtn',
-            disabled: !canPush || busy,
-            onClick: () => props.onPush(r.path),
-            children: busy ? '推送中…' : 'push',
+          jsx.jsxs('div', {
+            className: 'dshgp_pushcol',
+            children: [
+              jsx.jsx('button', {
+                type: 'button',
+                className: 'dshgp_keybtn',
+                disabled: !canPush || busy,
+                onClick: () => props.onPush(r.path),
+                children: busy ? '推送中…' : 'push',
+              }),
+              (s.repoFeedback && s.repoFeedback[r.path])
+                ? jsx.jsx('span', { className: s.repoFeedback[r.path].ok ? 'dshgp_fb dshgp_fbok' : 'dshgp_fb dshgp_fbfail', children: s.repoFeedback[r.path].msg })
+                : null,
+            ],
           }),
         ],
       });
@@ -490,8 +516,8 @@ window.__ModuleLoader__.load({
                 id: 'dshgp-local-path',
                 type: 'text',
                 className: 'dshgp_pickinput',
-                placeholder: '扫描路径（默认工作区）',
-                defaultValue: '',
+                placeholder: '扫描路径（默认 DSH 家根）',
+                defaultValue: typeof window !== 'undefined' && window.localStorage ? (window.localStorage.getItem('dshgp-scan-path') || '') : '',
               }),
               jsx.jsx('button', {
                 type: 'button',
@@ -966,6 +992,7 @@ window.__ModuleLoader__.load({
         this.cloudLoading = false;
         this.cloudMsg = '';
         this.repoBusy = '';
+        this.repoFeedback = {}; // { path: {ok, msg} } push 结果反馈（成功绿/失败红）
         // 规则包加载
         this.slotLoading = false;
         this.slotError = '';
@@ -1047,6 +1074,7 @@ window.__ModuleLoader__.load({
           cloudLoading: this.cloudLoading,
           cloudMsg: this.cloudMsg,
           repoBusy: this.repoBusy,
+          repoFeedback: this.repoFeedback,
           dirty: this.text.trim().length > 0 || this.sshPub.trim().length > 0,
           saving: this.saving,
           failed: this.failed,
@@ -1125,6 +1153,7 @@ window.__ModuleLoader__.load({
         this.publish();
         try {
           const p = String(path || '').trim();
+          try { if (p) window.localStorage.setItem('dshgp-scan-path', p); } catch { /* 忽略 */ }
           const data = await dshgp_getJson('/api/git-push/repos-local' + (p ? '?path=' + encodeURIComponent(p) : ''));
           if (data && data.ok) {
             this.localPath = data.root || p;
@@ -1170,12 +1199,28 @@ window.__ModuleLoader__.load({
       async pushLocalRepo(path) {
         this.repoBusy = 'push:' + path;
         this.publish();
+        let ok = false;
+        let msg = '';
         try {
           const data = await dshgp_postJson('/api/git-push/repo-push', { path, confirm: true });
-          this.localMsg = data && data.ok ? '✅ 已推送 ' + path : '⚠️ ' + ((data && data.error) || '推送失败');
+          ok = !!(data && data.ok);
+          if (ok) {
+            msg = '✅ 推送成功 ' + path;
+          } else {
+            // 显示详细错误信息（含 ahead/behind）
+            const err = (data && data.error) || '推送失败';
+            const extra = [];
+            if (data && data.ahead > 0) extra.push('领先 ' + data.ahead);
+            if (data && data.behind > 0) extra.push('落后 ' + data.behind);
+            msg = '⚠️ ' + err + (extra.length ? '（' + extra.join('，') + '）' : '');
+          }
+          this.localMsg = msg;
         } catch (e) {
-          this.localMsg = '❌ 推送失败: ' + (e && e.message || e);
+          msg = '❌ 推送失败: ' + (e && e.message || e);
+          this.localMsg = msg;
         }
+        // 2026-09-14 push 反馈：行内绿/红醒目提示（成功/失败）
+        this.repoFeedback = Object.assign({}, this.repoFeedback, { [path]: { ok, msg } });
         this.repoBusy = '';
         void this.scanLocalRepos(this.localPath); // 刷新领先/落后状态
         this.publish();

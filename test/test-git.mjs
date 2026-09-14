@@ -86,6 +86,27 @@ test('runGit：cwd 缺省为当前目录也可执行', () => {
   assert.match(r.stdout, /^git version/);
 });
 
+// 2026-09-14 回归：runGit 返回形状契约 {ok,stdout,stderr}——绝无 status 字段。
+//   曾发生 describeRepo/push 误用 rc.status（永远 undefined→静默失效→「远端状态未知」），
+//   此断言守住接口形状，谁改 runGit 返回结构谁先撞测试。
+test('runGit：返回形状契约——只含 ok/stdout/stderr、绝无 status（防 .status 误用再犯）', () => {
+  const r = runGit(['--version'], { cwd: repo });
+  const keys = Object.keys(r).sort();
+  assert.deepEqual(keys, ['ok', 'stderr', 'stdout'], 'runGit 返回键集必须恰为 {ok,stdout,stderr}（顺序无关）');
+  assert.ok(!('status' in r), 'runGit 返回不得含 status 字段');
+  assert.equal(typeof r.ok, 'boolean');
+  assert.equal(typeof r.stdout, 'string');
+  assert.equal(typeof r.stderr, 'string');
+});
+
+test('gitRaw：返回形状契约——含 status/stdout Buffer/stderr Buffer（与 runGit 不同，可判 exitCode）', () => {
+  const r = gitRaw(['--version'], { cwd: repo });
+  assert.ok('status' in r, 'gitRaw 必须含 status');
+  assert.equal(typeof r.status, 'number');
+  assert.ok(Buffer.isBuffer(r.stdout));
+  assert.ok(Buffer.isBuffer(r.stderr));
+});
+
 /* ───────────────────────── 凭据 ───────────────────────── */
 
 test('resolveToken：显式传入优先', () => {
