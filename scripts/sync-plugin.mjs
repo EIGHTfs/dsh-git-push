@@ -27,8 +27,15 @@ export const SOURCE_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 //     否则文档承诺的入口在装好的插件里不存在。
 export const SYNC_ENTRIES = ['lib', 'skills', 'scripts', 'cli.mjs', 'client.js', 'package.json', 'cordis.patch.yml', 'README.md'];
 
-/** 同步时排除的路径片段。 */
-export const SYNC_EXCLUDE = ['.git', 'node_modules', 'WORKBOARD', 'test', '.tmp'];
+/**
+ * 同步时排除的路径片段。
+ *
+ * 2026-09-14 补 .bak / .trash：原先只排 .git / node_modules / WORKBOARD / test / .tmp，
+ *   开发期备份 `scripts/sync-plugin.mjs.bak` 被当发布文件复制进安装副本
+ *   （`<插件目录>/scripts/`），安装副本里混入非发布内容。`.bak` 用子串匹配，
+ *   同时覆盖 `.bak` 与 `.bak-<后缀>`（如 test-git.mjs.bak-d13）。
+ */
+export const SYNC_EXCLUDE = ['.git', 'node_modules', 'WORKBOARD', 'test', '.tmp', '.bak', '.trash'];
 
 /**
  * 递归列出源目录下应同步的文件（相对路径）。

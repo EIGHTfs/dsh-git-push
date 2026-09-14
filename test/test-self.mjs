@@ -204,6 +204,17 @@ test('同步：真实写入到临时目录（幂等）', () => {
 test('同步：常量声明齐全', () => {
   assert.ok(SYNC_ENTRIES.includes('lib'));
   assert.ok(SYNC_EXCLUDE.includes('node_modules'));
+  // 2026-09-14：备份与回收站不得进安装副本（scripts/*.bak 曾被同步进 <插件目录>/scripts/）
+  assert.ok(SYNC_EXCLUDE.includes('.bak'), 'SYNC_EXCLUDE 必须排除 .bak（含 .bak-<后缀>）');
+  assert.ok(SYNC_EXCLUDE.includes('.trash'), 'SYNC_EXCLUDE 必须排除 .trash 回收站');
+});
+
+// 2026-09-14：实测返回集，确保排除规则真的作用于 listSyncFiles（不只是常量里写了名字）
+test('同步：listSyncFiles 返回集不含 .bak / .trash 残留', () => {
+  const files = listSyncFiles(ROOT);
+  const bad = files.filter((f) => f.includes('.bak') || f.includes('.trash'));
+  assert.deepEqual(bad, [], `备份/回收站文件不得进安装副本：${bad.join(', ')}`);
+  assert.ok(files.length > 0, '同步清单不应为空');
 });
 
 // 2026-09-13：SYNC_ENTRIES 曾漏 client.js（侧边栏前端主文件在仓库根），
