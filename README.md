@@ -37,7 +37,7 @@ DSH（DeepSeek Harness）git 提交推送与代码审计插件——提交前自
 | 功能块 | 做什么 | 入口 |
 |---|---|---|
 | **提交推送** | token / SSH 密钥管理、提交、推送、clone、建仓、可见性切换、force 强推、版本历史 | `git_commit_push` 工具 / CLI / 侧边栏 |
-| **代码审计** | 提交前自动审计门禁、14 个规则槽位 96+ 条规则、10 维度质量评分、豁免机制、链接检查、**三层审计管线（L1 正则初筛 / L2 AST 数据流 / L3 运行时检测）** | `code_audit` 工具 / CLI / 侧边栏 |
+| **代码审计** | 提交前自动审计门禁、14 个规则槽位 107 条规则、10 维度质量评分、豁免机制、链接检查、**三层审计管线（L1 正则初筛 / L2 AST 数据流 / L3 运行时检测）** | `code_audit` 工具 / CLI / 侧边栏 |
 
 ## 一、提交推送
 
@@ -86,7 +86,7 @@ Git 全链路自动化，token / SSH 凭据管理 + 提交推送，无需手动�
 | version | 8 | 版本号规范 |
 | dsh | 7 | DSH 插件契约 / 注入通道 |
 | comment | 6 | 注释措辞 / 对话残留 |
-| folder | 4 | 目录总数 / 单目录文件数 / 解包特征 / .gitignore |
+| folder | 6 | 目录总数 / 单目录文件数 / 解包特征 / .gitignore / cd 到可能不存在的目录 / 写文件到 .gitignore 忽略目录 |
 | i18n | 3 | 硬编码文案 / 插值 / 语言包 |
 | performance | 2 | memory-bomb / busy-wait |
 | docs / robustness / structure / template / private | 各 0-4 | 链接检查 / 写前 mkdir / 循环依赖 / 规则模板 / 私密文件拦截 |
@@ -94,6 +94,8 @@ Git 全链路自动化，token / SSH 凭据管理 + 提交推送，无需手动�
 **加规则 = 放文件**；**加字段类型（新 kind）才需加函数**（compilers.js 注册制：`registerCompiler(kind, detect, compile)`，加字段=加函数+注册一行，`compileRule` 主体永不修改）。
 
 ### 代码架构：lib/ 各文件夹各司其职
+
+> 分层速查文档：`lib/ARCHITECTURE.md`（三层审计架构四层落地位置：规则声明 → AST 实现 → 检查包装 → 编排调度）
 
 `lib/` 下**每个文件夹只负责一件事**，改审计逻辑前先分清所属层，避免在错误的层里打补丁
 （尤其不要用「跳过某类行」的补丁去修误报）：
@@ -245,9 +247,48 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 ### 豁免机制
 
-`dsh-skip-*` 注册表（文件头=整文件 / 行内=单点），每个豁免类型声明「能豁免哪些维度」。安全红线不可豁免：`secret-*` / `cred*` / `security/*` 类规则即使标 disabled 也强制加载。
+审计豁免按作用粒度分**四大类**：文件/行注释标记（`dsh-skip-*`）、目录标记（`.test` 空文件）、路径类别（test/scripts 刻意用法）、私有库级别（私密文件降级）。安全红线不可豁免：`secret-*` / `cred*` / `security/*` 类规则即使标 disabled 也强制加载（`lib/exempt/index.js` 为豁免总注册表，`lib/audit-rules/audit-rules-private.yml` 为强制加载清单）。
 
-**`.test` 空文件豁免（目录级）**：在目录内放一个 0 字节的 `.test` 文件，该目录（含全部子目录）整目录跳过扫描——专为测试 fixture 目录设计。例如 `test/` 目录放 `.test` 空文件，整个测试目录不再被审计（测试用例里故意构造的样本不会被误拦）。
+#### ① `dsh-skip-*` 注释标记（文件头=整文件 / 行内=单点）
+
+| 标记 | 位置 | 豁免内容 |
+|---|---|---|
+| `dsh-skip-sensitive` | 文件头=整文件 / 行尾=本行 | 凭据/私密类（`[FUNC]`/`credential-file`/`credential-ref`/`path-regex` 及 `security`、`secret`、`password`、`hardcoded` 等安全词规则） |
+| `dsh-skip-size` | 只能文件头 | 大文件/二进制（`large-file`） |
+| `dsh-skip-func-length` | 文件头=全文件 / **函数定义行行尾=单函数** | 函数超长（`func-lines`） |
+| `dsh-skip-syntax` | 只能文件头 | 语法类（`syntax`/`json-parse`/`yaml-parse`） |
+| `dsh-skip-quality` | 只能文件头 | 质量评分（`func-lines`/`empty-catch`/`sync-fs`） |
+| `dsh-skip-residue` | 行尾=本行 / 文件头=整文件 | 残留类（`debugger`/`todo`/`console` 规则，按规则名前缀细分） |
+| `dsh-skip-style` | 只能文件头 | 数值风格规则（`min-length`/`max-lines`/`max-complexity`/`max-depth`/`min-occurrences`/`repeated-string`） |
+| `dsh-skip-i18n` | 行尾=本行 / 文件头=整文件 | i18n 硬编码文案审计 |
+
+写法（文件头前 3 行内注释 → 整文件豁免；行尾注释 → 本行豁免，仅支持 `sensitive`/`residue`/`func-length`/`i18n`）：
+
+```js
+// dsh-skip-sensitive: 文件含 mock 凭据字面量（仅占位示例，非真实凭据）
+const t = "AKIA—占位示例（示例刻意避开密钥检测正则的 16 位字母形态）";
+
+// dsh-skip-func-length: 故意构造的超长函数样本
+function longFn() { /* ... */ }
+
+console.log(x); // dsh-skip-residue: 本行为刻意保留的调试输出样本
+```
+
+#### ② `.test` 空文件目录豁免（目录级，最强）
+
+在目录内放一个 **0 字节 `.test` 文件**，该目录（含全部子目录）**整目录跳过扫描、不出任何结果**——比 `.samples`（照常出结果但不拦截）更强。专为测试 fixture 目录设计：`test/` 目录放 `.test` 空文件后，整个测试目录不再被审计（测试用例里故意构造的黑名单词样本/超长函数样本不会被误拦）。**全仓收集与变更审计（diff/changed scope）同样生效**——以前者为准，改动若涉及 `test/` 下文件（如新增测试用例），整个 test 目录自动不进变更审计，不会因样本词被误拦提交。
+
+#### ③ 路径类别豁免（test / scripts 刻意用法）
+
+- `test/` 目录下文件：`residue` / `console-log` / `sync-fs` / `empty-catch` / `performance` 类问题自动豁免
+- `scripts/` 目录与 `cli.mjs`：`residue` / `console-log` / `sync-fs` 自动豁免
+
+#### ④ 私有库豁免（private 槽位按远端可见性分级）
+
+仓库跟踪到私密文件（清单见 `audit-rules-private.yml`：`**/id_ed25519`、`**/.ssh/**`、`**/.env`、`**/.npmrc` 等）时按**远端可见性**分级：
+
+- **public** → `blocker` 拦截提交（私钥/凭据已可被任何人获取，必须移除或转私有）
+- **private / unknown** → `warning` 仅提醒（私有边界内放行，转公开前须先移除）——即「私有库豁免」：私密文件与工作留痕（会话记录/凭据/留痕）在**私有仓库可正常提交推送**，不需要额外豁免标记；单文件想彻底不报再用 `dsh-skip-sensitive` 注释
 
 **技能/规则文档豁免**：`skills/` 与 `rules/` 目录下的 md 文档里的沟通措辞（如触发场景描述）是设计文本而非代码残留，不触发用户沟通词规则。
 
@@ -270,6 +311,8 @@ node scripts/audit-runtime-check.mjs --all <目录>
 | `small-file-read` | `checkSmallFileReadAst` | 读文件是否属受控小文件（配置/缓存/字典） | 读 `package.json`、locale 字典、cache 文件 |
 | `short-func-name` | `checkShortFunctionNameAst` | 函数名是否真过短且非公认缩写 | `tr`/`t`/`L`（i18n）、`el`/`cb`/`fn` |
 | `credential-value` | `checkCredentialRefAst` | 凭据标识符右侧**是否直接是有效字面量** | 类型检查 `typeof cfg.token === 'string'`、透传 `cfg.token = init.token`、`process.env.KEY`、占位符 |
+| `shell-cd-dynamic` | `shellCdDynamicLines` | cd 目标是否动态路径（含 `$VAR`/`$()`）且无失败兜底（同行无 `\|\|`、非 `&&` 链、非注释/字符串） | `cd "$(dirname "$0")"` 自我定位（目录必然存在）、`cd "$X" \|\| exit 1` 有兜底、`cd dist` 字面量路径 |
+| `write-into-gitignored` | `writeIntoGitignoredLines` | 写操作（writeFile/mkdir 等）目标路径是否命中仓库 `.gitignore`（需 repoPath 上下文；单文件审计无上下文不报、不臆测） | `node_modules` 内写入（安装产物）、`/tmp` 临时目录、`.gitignore` 里 `!` 取反的路径 |
 
 两种模式：`mode: 'deny'` 把 AST 判定出的行加入豁免集（集合内不报）；`mode: 'allow'` 要求只有 AST 判定出的行才报（集合外不报）。`credential-value` 用 allow 模式——只有当「凭据变量右侧直接跟着非占位字符串字面量」才算硬编码。
 
@@ -353,6 +396,9 @@ node assets/preview-gen.mjs
 设置 → 侧边栏 → **Git 提交推送**，三选项卡（对齐插件市场样式）：
 
 - **账号信息**：渐变卡片 + GitHub 图标 + 状态徽标（已连接/检测中/未连接）+ 检测结果块 + Token/SSH 凭据状态标签 + `⟳ 重新检测`
+  - 卡片下方为**仓库管理卡片**（本地 / 云端 两子选项卡，2026-09-14）：
+    - **本地**：默认扫描工作区目录下的 git 仓库，可手动指定路径（文本框 + 📂 目录选择器弹窗浏览，复用 gbmd path-picker 模式）；列表显示 路径 / 分支 / 领先·落后 / 未提交数 / 最近提交。仓库满足「有远端跟踪 + 领先 + 工作树干净」时行尾 `push` 才可点——手动推送（后端再次校验，不满足返回具体原因，如先提交/先 -u 建跟踪）
+    - **云端**：`加载仓库列表` 用 token 拉账号名下所有 GitHub 仓库（GET /user/repos，按最近更新），显示 名称 / 私有·公开 / 默认分支 / 最近更新；点行尾 `clone` 弹出目录选择器选目标目录后克隆（走 Git Data API，不直连 github.com）
 - **审计**：审计开关 + 注入系统提示词开关 + 代码禁用户沟通词开关 + 10 维度权重编辑 + 规则包列表
   - **`注入系统提示词`**（默认开）：控制整组注入段启停——功能用法（每个工具怎么用 + 凭据由插件托管）· 环境（工作区目录映射 + 工具安装路径 + skill 总入口一行）· 提交前 README 核对提醒；关闭后这些段全部返回空串，工具本身照常可用。详见 [三、系统提示词注入](#三系统提示词注入)
   - 子开关 **`↳ 注入开发者要求清单到系统提示词`**：挂在「提交前自动审计」下面，**随时可勾选（一遍即可）**；审计关闭时该行只置灰表示「暂不生效」、勾选保留，实际是否注入由 host 侧 `injectSystemPrompt && auditEnabled && injectRequirements` 三重门控（省掉每次提交推送时 AI 被门禁拦下再回读清单的一轮往返）
@@ -362,6 +408,30 @@ node assets/preview-gen.mjs
 - **设置**：GitHub token + SSH 公钥 + 邮箱 + 一键生成并复制
 
 设置项以 `lib/app/schema.js` 的 `Config` 为单一事实源（`lib/index.js` 只再导出），`settingsScope` 读写。凭据保存**同时写插件配置目录**（见「凭据管理」）。
+
+## 独立脚本：规则启用/禁用（scripts/rule-switch.mjs）
+
+侧边栏 UI 的规则包启停（写规则 yml 顶层 `disabled: true` / 删除该行）以命令行方式复用同一套实现（`lib/rule/loader.js setSlotDisabled`），**不依赖 GUI**。规则装载每次审计实时读 yml——改完**立即生效、无需重启实例**。
+
+**目标目录**：默认操作**安装版本**（部署副本 `<DSH>/.dsh-home/.dsh/profiles/web/node_modules/dsh-git-push/lib/audit-rules`，即 GUI 实际加载的规则）；`--workspace` 指工作区 `lib/audit-rules`；`--target <目录>` 任意指定。
+
+用法：
+
+```bash
+node scripts/rule-switch.mjs list                      # 列出全部槽位状态（✔ 启用 / ✖ 禁用）
+node scripts/rule-switch.mjs status <槽位>             # 单槽位状态
+node scripts/rule-switch.mjs disable <槽位>            # 禁用（yml 顶层写入 disabled: true）
+node scripts/rule-switch.mjs enable <槽位>             # 启用（删除 disabled 行）
+```
+
+示例：
+
+```bash
+node scripts/rule-switch.mjs disable comment    # 禁用安装版本的 comment 槽位（用户沟通词审计）
+node scripts/rule-switch.mjs enable comment     # 重新启用
+```
+
+边界：`nodejs` / `private` 属安全红线强制槽位，禁用会被拦截（返回错误、不写 yml），与 UI 行为一致。注意与 `scripts/sync-plugin.mjs --write` 的协作：同步会按工作区规则文件覆盖部署副本的 disabled 状态（工作区文件里没有 disabled 行则同步后恢复启用）。
 
 ## 独立 CLI（git-sluice）
 

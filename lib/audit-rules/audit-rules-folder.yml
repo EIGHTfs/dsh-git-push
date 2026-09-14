@@ -5,7 +5,7 @@
 # 字段：threshold / exclude_dirs / signatures / required_patterns 由 folder 编译函数认领。
 metadata:
   name: "文件夹数量审计规则（防止解包/依赖/构建产物入库）"
-  version: "1.0.0"
+  version: "1.0.1"
 
 rules:
   # ----- 规则 1：目录总数异常（正常项目源码目录 ≤ 30）-----
@@ -82,3 +82,37 @@ rules:
       - "*.log"
       - ".env"
     message: ".gitignore 中缺少必要忽略项：{missing}"
+
+  # ----- 规则 5：cd 到可能不存在的目录（动态路径无兜底，2026-09-14）-----
+  # 三段式：正则初筛（cd 命令）→ token 精筛 astConfirm → 精筛集合 shell-cd-dynamic
+  #   （lib/ast/shell.js：目标含 $、排除自我定位 dirname/BASH_SOURCE、同行无 ||、非 && 链）。
+  - id: folder/cd-to-maybe-missing
+    name: "cd 到可能不存在的目录（动态路径无兜底）"
+    category: "folder"
+    severity: "warning"
+    description: "cd 到变量/命令替换路径时目标目录可能不存在，cd 失败后脚本仍会继续执行；应加 || exit/return/echo 兜底或先确认目录存在"
+    patterns:
+      - "\\bcd\\s+\\S+"
+    astConfirm: true
+    astConfirmKind: "shell-cd-dynamic"
+    exceptions:
+      - "脚本自我定位（cd $(dirname $0) / ${BASH_SOURCE[0]%/*}，目录必然存在）"
+      - "同行已有 || 兜底或 && 链"
+
+  # ----- 规则 6：写文件/目录到可能不存在的 gitignore 目录（2026-09-14）-----
+  # 三段式：正则初筛（写操作字面量目标）→ token 精筛 astConfirm → 精筛集合
+  #   write-into-gitignored（lib/ast/shell.js：读仓库 .gitignore 判定目标被忽略；无
+  #   仓库上下文 repoPath 时不报——不臆测）。
+  - id: folder/write-into-gitignored-dir
+    name: "写文件/目录到可能不存在的 gitignore 目录"
+    category: "folder"
+    severity: "warning"
+    description: "写操作的目标目录被 .gitignore 忽略且可能在仓库中不存在；产物不可见，运行时可能失败，应先 mkdir -p 或调整忽略"
+    patterns:
+      - "(writeFile|writeFileSync|appendFile|appendFileSync|createWriteStream|mkdir|mkdirSync)\\s*\\(\\s*['\"][^'\"]+['\"]"
+    astConfirm: true
+    astConfirmKind: "write-into-gitignored"
+    exceptions:
+      - "目标为 node_modules 内写入（安装产物）"
+      - "目标为 /tmp 临时目录"
+      - ".gitignore 中以 ! 取反的路径"

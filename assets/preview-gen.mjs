@@ -142,6 +142,47 @@ window.fetch = function (url, init) {
     body = { ok: true, loggedIn: true, block: '✅ 已登录 GitHub：EIGHTfs（Public 仓库 12 个 / 私有 3 个）' };
   } else if (u.indexOf('gen-ssh-key') >= 0) {
     body = { ok: true, pub: 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINewlyGeneratedDemoKeyForPreview eightfs@example.com' };
+  // 2026-09-14 账号卡片（本地/云端）假数据：结构与真实端点一致，点按钮能真的出列表/弹窗
+  } else if (u.indexOf('browse') >= 0) {
+    // 目录浏览：mock 按请求 path 返回真实层级（点目录真切换，与真实 browseDir 行为一致）
+    var q = String(u).split('?')[1] || '';
+    var p = '';
+    try { p = decodeURIComponent(String(q).replace(/^path=/, '')); } catch (e) { /* 忽略 */ }
+    if (!p) p = '/home/user/项目';
+    var parent = p.replace(/\\/[^/]+$/, '') || '/';
+    var dirs;
+    if (p === '/home/user/项目/dsh-git-push-v2/lib') dirs = ['app', 'ast', 'audit', 'checks', 'git', 'rule', 'self', 'client', 'context'];
+    else if (p === '/home/user/项目/dsh-git-push-v2') dirs = ['lib', 'scripts', 'docs', 'test', 'assets', 'tool'];
+    else if (p === '/home/user/项目/gamebanana-mods-downloader') dirs = ['server', 'crx', 'docs', 'scripts', 'test', 'mapping'];
+    else if (p === '/home/user/项目/ai-work-archive') dirs = ['skills', '开发者文档', '任务'];
+    else if (p === '/home/user/项目') dirs = ['dsh-git-push-v2', 'gamebanana-mods-downloader', 'iwara-downloader', 'ai-work-archive', '任务', '数据', '用户'];
+    else if (p === '/home/user') dirs = ['项目'];
+    else dirs = ['src', 'docs', 'build', 'scripts'];
+    body = { ok: true, path: p, parent: parent, dirs: dirs };
+  } else if (u.indexOf('repos-local') >= 0) {
+    // 三个演示仓库：①领先+干净→push 可点 ②有未提交→push 禁用 ③无上游→push 禁用
+    body = {
+      ok: true, root: '/home/user/项目', count: 3,
+      repos: [
+        { path: '/home/user/项目/dsh-git-push-v2', branch: 'master', remote: 'origin', changed: 0, lastCommit: 'a1b2c3d 账号卡片：本地/云端', hasRemote: true, upstream: 'origin/master', ahead: 3, behind: 0 },
+        { path: '/home/user/项目/gamebanana-mods-downloader', branch: 'main', remote: 'origin', changed: 5, lastCommit: 'f0e9d8c 修复下载器', hasRemote: true, upstream: 'origin/main', ahead: 1, behind: 0 },
+        { path: '/home/user/项目/new-project', branch: 'main', remote: 'origin', changed: 0, lastCommit: '（无提交）', hasRemote: true, upstream: '', ahead: null, behind: null },
+      ],
+    };
+  } else if (u.indexOf('repos-cloud') >= 0) {
+    body = {
+      ok: true, loggedIn: true, count: 4,
+      repos: [
+        { fullName: 'EIGHTfs/dsh-git-push', private: false, defaultBranch: 'master', pushedAt: '2026-09-14T10:00:00Z', description: 'DSH git 提交推送插件' },
+        { fullName: 'EIGHTfs/dsh-git-rescue', private: true, defaultBranch: 'master', pushedAt: '2026-09-13T08:30:00Z', description: 'DSH 救援恢复插件' },
+        { fullName: 'EIGHTfs/dsh-session-conductor', private: false, defaultBranch: 'main', pushedAt: '2026-09-12T15:20:00Z', description: '会话指挥家' },
+        { fullName: 'EIGHTfs/iwara-downloader', private: false, defaultBranch: 'main', pushedAt: '2026-09-10T11:00:00Z', description: 'iwara 下载器' },
+      ],
+    };
+  } else if (u.indexOf('repo-push') >= 0) {
+    body = { ok: true, pushed: true, branch: 'master', ahead: 0 };
+  } else if (u.indexOf('repo-clone') >= 0) {
+    body = { ok: true, dest: '/home/user/项目/dsh-git-push' };
   }
   return Promise.resolve({ ok: true, status: 200, json: function () { return Promise.resolve(body); } });
 };

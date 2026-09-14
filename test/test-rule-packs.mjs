@@ -11,6 +11,10 @@ import { registerCompiler, compileRule, compileAllRules, RULE_COMPILERS } from '
 import { loadRuleFiles, RULE_SLOTS, resolveSlotOrder, discoverRuleSlots, setSlotDisabled } from '../lib/rule/loader.js';
 import { safeRe } from '../lib/rule/compilers.js';
 import { checkBlacklist } from '../lib/audit/checks.js';
+import { checkRegexRules } from '../lib/checks/regex.js';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 test('注册表：编译函数已注册（含 credential-ref / credential-file / [FUNC]）', () => {
   const kinds = RULE_COMPILERS.map((e) => e.kind);
@@ -455,4 +459,55 @@ test('1.0.4：performance 槽位编译（memory-bomb 6 子模式 + busy-wait）'
   assert.ok(bomb, 'memory-bomb 应编译');
   assert.equal(bomb.kind, 'regex');
   assert.ok(Array.isArray(bomb.subPatterns) && bomb.subPatterns.length >= 6, `memory-bomb 应含 ≥6 个子模式（得 ${bomb.subPatterns?.length}）`);
+});
+
+// ---------- 2026-09-14：folder 槽位两条新规则（cd 动态路径 + 写 gitignored 目录） ----------
+// dsh-skip-i18n: 测试用中文文案为规则 message 样本，非产品文案
+test('2026-09-14：folder/cd-to-maybe-missing——cd 动态路径无兜底才报，自我定位/||/&&/字面量/注释/字符串豁免', () => {
+  const r = loadRuleFiles(['folder']);
+  const compiled = compileAllRules(r.merged.rules, { errors: [] });
+  const rule = compiled.find((c) => c.id === 'folder/cd-to-maybe-missing');
+  assert.ok(rule, 'folder/cd-to-maybe-missing 应编译进 regex kind');
+  assert.equal(rule.kind, 'regex');
+  assert.equal(rule.astConfirmKind, 'shell-cd-dynamic');
+  const text = [
+    '#!/bin/sh',
+    'cd "$OUT_DIR"',                 // 2: 动态无兜底 → 报
+    'cd "$(dirname "$0")"',        // 3: 自我定位 → 豁免
+    'cd "$BUILD" || exit 1',        // 4: || 兜底 → 豁免
+    'cd $TMP && make',                // 5: && 链 → 豁免
+    'cd dist',                        // 6: 字面量 → 豁免
+    '# cd "$X"',                    // 7: 注释 → 豁免
+    'echo "cd $HOME"',              // 8: 字符串 → 豁免
+    'cd "$DATA_DIR"; run',          // 9: 动态无兜底 → 报
+  ].join('\n');
+  const hits = checkRegexRules({ file: 'test.sh', text, rules: [rule] });
+  assert.deepEqual(hits.map((h) => h.line), [2, 9]);
+});
+
+test('2026-09-14：folder/write-into-gitignored-dir——写目标命中仓库 .gitignore 才报，无上下文不报', () => {
+  const r = loadRuleFiles(['folder']);
+  const compiled = compileAllRules(r.merged.rules, { errors: [] });
+  const rule = compiled.find((c) => c.id === 'folder/write-into-gitignored-dir');
+  assert.ok(rule, 'folder/write-into-gitignored-dir 应编译进 regex kind');
+  assert.equal(rule.kind, 'regex');
+  assert.equal(rule.astConfirmKind, 'write-into-gitignored');
+  const repo = mkdtempSync(join(tmpdir(), 'dshgp-write-'));
+  try {
+    writeFileSync(join(repo, '.gitignore'), 'dist/\nbuild/\n');
+    const text = [
+      "const fs = require('fs');",
+      "fs.writeFileSync('dist/out.json', 'x');",    // 2: dist/ 被忽略 → 报
+      "fs.mkdirSync('build/tmp');",                 // 3: build/ 被忽略 → 报
+      "fs.writeFileSync('node_modules/a.js', 'x');", // 4: node_modules → 豁免
+      "fs.writeFileSync('src/a.js', 'x');",         // 5: 未忽略 → 豁免
+    ].join('\n');
+    const hits = checkRegexRules({ file: 'out.js', text, rules: [rule], repoPath: repo });
+    assert.deepEqual(hits.map((h) => h.line), [2, 3]);
+    // 无仓库上下文（单文件审计）→ 不臆测、不报
+    const hitsNoCtx = checkRegexRules({ file: 'out.js', text, rules: [rule], repoPath: '' });
+    assert.equal(hitsNoCtx.length, 0);
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
 });

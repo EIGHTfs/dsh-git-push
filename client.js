@@ -166,6 +166,35 @@ window.__ModuleLoader__.load({
       '.dshgp_powerBtn:hover:not(:disabled){filter:brightness(1.08)}',
       '.dshgp_error{margin:8px 0 0;font-size:12px;color:var(--dsw-alias-label-error)}',
       '.dshgp_saved{margin:6px 0 0;font-size:12px;color:var(--dsw-alias-label-success)}',
+      // 2026-09-14 账号卡片：本地/云端（仓库管理）
+      '.dshgp_repocard{position:relative;border:.5px solid var(--dsw-alias-border-l4);border-radius:16px;background:var(--dsw-alias-bg-layer-3);padding:10px 12px 12px}',
+      '.dshgp_suptabs{display:flex;gap:2px;border-bottom:.5px solid var(--dsw-alias-border-l2);margin:0 0 10px}',
+      '.dshgp_suptab{font:inherit;font-size:12px;color:var(--dsw-alias-label-secondary);cursor:pointer;background:0 0;border:none;border-bottom:2px solid transparent;padding:5px 14px}',
+      '.dshgp_suptabOn{color:var(--dsw-alias-brand-primary);border-bottom-color:var(--dsw-alias-brand-primary);font-weight:600}',
+      '.dshgp_repanepane{display:flex;flex-direction:column;gap:8px}',
+      '.dshgp_repobar{display:flex;align-items:center;gap:8px}',
+      '.dshgp_pickinput{flex:1;min-width:0;font:inherit;font-size:12px;padding:5px 9px;border:.5px solid var(--dsw-alias-border-l4);border-radius:8px;background:var(--dsw-alias-bg-base);color:var(--dsw-alias-label-primary)}',
+      '.dshgp_repohint{font-size:12px;color:var(--dsw-alias-label-tertiary)}',
+      '.dshgp_repomsg{margin:0;font-size:11px;color:var(--dsw-alias-label-tertiary);line-height:1.5}',
+      '.dshgp_replist{display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto}',
+      '.dshgp_reprow{display:flex;align-items:center;gap:8px;padding:7px 10px;border:.5px solid var(--dsw-alias-border-l2);border-radius:10px;background:color-mix(in srgb,var(--dsw-alias-bg-base) 55%,transparent)}',
+      '.dshgp_reprowinfo{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}',
+      '.dshgp_reprowpath{font-size:12px;font-weight:600;color:var(--dsw-alias-label-primary);word-break:break-all}',
+      '.dshgp_reprowmeta{font-size:11px;color:var(--dsw-alias-label-tertiary);word-break:break-all}',
+      '.dshgp_browsebtn{flex-shrink:0;font-size:12px;padding:4px 8px;border:.5px solid var(--dsw-alias-border-l4);border-radius:8px;background:var(--dsw-alias-bg-layer-2);cursor:pointer}',
+      // 目录选择弹窗（移植 gbmd path-picker：一行接入 📂 按钮）
+      '.dshgp_browsemask{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.4)}',
+      '.dshgp_browsedialog{width:min(480px,88vw);max-height:70vh;display:flex;flex-direction:column;gap:8px;padding:14px;border:.5px solid var(--dsw-alias-border-l4);border-radius:14px;background:var(--dsw-alias-bg-layer-3);box-shadow:0 12px 40px rgba(0,0,0,.35)}',
+      '.dshgp_browsehead{display:flex;align-items:center;justify-content:space-between}',
+      '.dshgp_browsetitle{font-size:13px;font-weight:600;color:var(--dsw-alias-label-primary)}',
+      '.dshgp_browseclose{font:inherit;font-size:13px;color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:none;padding:2px 6px}',
+      '.dshgp_browsepath{font-size:11px;color:var(--dsw-alias-label-secondary);word-break:break-all;padding:6px 8px;border:.5px solid var(--dsw-alias-border-l2);border-radius:8px;background:var(--dsw-alias-bg-base)}',
+      '.dshgp_browseup{font-size:12px;color:var(--dsw-alias-brand-primary);cursor:pointer;padding:3px 2px}',
+      '.dshgp_browselist{flex:1;min-height:120px;max-height:38vh;overflow-y:auto;display:flex;flex-direction:column;gap:2px}',
+      '.dshgp_browsedir{font-size:12px;color:var(--dsw-alias-label-primary);cursor:pointer;padding:5px 8px;border-radius:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+      '.dshgp_browsedir:hover{background:color-mix(in srgb,var(--dsw-alias-brand-primary) 12%,transparent)}',
+      '.dshgp_browsehint{font-size:12px;color:var(--dsw-alias-label-tertiary);padding:8px}',
+      '.dshgp_browsefoot{display:flex;justify-content:flex-end}',
     ].join('');
 
     function dshgp_ensureCss() {
@@ -225,10 +254,26 @@ window.__ModuleLoader__.load({
       stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round',
       children: jsx.jsx('path', { d: 'M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6' }),
     });
-    function dshgp_AccountTab(props) {
+    /** 账号卡片头部：GitHub 图标 + 标题 + 状态徽标。 */
+    function dshgp_AcctHead(props) {
+      return jsx.jsxs('div', {
+        className: 'dshgp_accthead',
+        children: [
+          jsx.jsx('div', { className: 'dshgp_acctic', children: dshgp_ghIcon }),
+          jsx.jsxs('div', {
+            children: [
+              jsx.jsx('p', { className: 'dshgp_accttitle', children: 'GitHub 账号' }),
+              jsx.jsx('p', { className: 'dshgp_acctsub', children: 'Token / SSH 公钥检测结果 · 进入设置自动检测' }),
+            ],
+          }),
+          jsx.jsxs('span', { className: 'dshgp_acctstat ' + props.statCls, children: [jsx.jsx('span', { className: 'dshgp_acctdot' }), props.statTxt] }),
+        ],
+      });
+    }
+
+    /** 账号卡片（渐变面板）渲染：头部 + 状态块 + 凭据标签 + 刷新按钮。 */
+    function dshgp_AccountCard(props) {
       const s = props.state;
-      // 数据照旧：accountBlock / accountLoggedIn / accountLoading（/api/git-push/account-check）
-      //   + tokenConfigured / sshConfigured（凭据状态标签）
       const loggedIn = !!s.accountLoggedIn;
       const loading = !!s.accountLoading;
       const statCls = loggedIn ? 'dshgp_acctstat_ok' : (loading ? 'dshgp_acctstat_warn' : 'dshgp_acctstat_err');
@@ -244,47 +289,276 @@ window.__ModuleLoader__.load({
         ? jsx.jsx('span', { className: 'dshgp_pill dshgp_pill_on', children: '已配置' })
         : jsx.jsx('span', { className: 'dshgp_pill dshgp_pill_off', children: '未配置' });
       return jsx.jsxs('div', {
+        className: 'dshgp_acctpanel',
+        children: [
+          jsx.jsx(dshgp_AcctHead, { statCls, statTxt }),
+          jsx.jsx('pre', { className: 'dshgp_acctblock2 ' + blockCls, children: blockBody }),
+          jsx.jsxs('div', {
+            className: 'dshgp_acctmeta',
+            children: [
+              jsx.jsxs('div', { className: 'dshgp_acctmetarow', children: [jsx.jsx('span', { className: 'dshgp_acctmetak', children: 'Token' }), tokenPill] }),
+              jsx.jsxs('div', { className: 'dshgp_acctmetarow', children: [jsx.jsx('span', { className: 'dshgp_acctmetak', children: 'SSH 公钥' }), sshPill] }),
+            ],
+          }),
+          jsx.jsxs('div', {
+            className: 'dshgp_acctfoot',
+            children: [
+              jsx.jsx('button', {
+                type: 'button',
+                className: 'dshgp_keybtn',
+                disabled: loading,
+                onClick: props.refreshAccount,
+                children: [dshgp_refreshIcon, loading ? '检测中…' : '重新检测'],
+              }),
+              jsx.jsx('span', { className: 'dshgp_accthint', children: loggedIn ? '登录态有效，凭据已生效' : '凭据状态来自保存的 Token / SSH 公钥' }),
+            ],
+          }),
+        ],
+      });
+    }
+
+    /** 选项卡一：账号信息（2026-09-14 拆卡片：渐变面板 AccountCard + 本地/云端 RepoManagerCard）。 */
+    function dshgp_AccountTab(props) {
+      return jsx.jsxs('div', {
         className: 'dshgp_section',
         children: [
+          jsx.jsx(dshgp_AccountCard, props),
+          // 2026-09-14 账号卡片：本地/云端 仓库管理（本地扫描可手动指定路径 / 云端列表可 clone）
+          jsx.jsx(dshgp_RepoManagerCard, props),
+        ],
+      });
+    }
+
+    /* ═══════════════════ 目录选择弹窗（2026-09-14 移植 gamebanana-mods-downloader 的 path-picker 小模块：一行接入 📂 按钮） ═══════════════════ */
+    let dshgp_browseTarget = null; // 当前打开的输入框（null = 走 onPick 回调）
+    let dshgp_browseOpt = null;    // { onPick } 确认回调（clone 场景）
+    let dshgp_browsePath = '';     // 弹窗当前所在目录
+    function dshgp_browseEnsureDom() {
+      if (typeof document === 'undefined' || document.getElementById('dshgp-browse-mask')) return;
+      const mask = document.createElement('div');
+      mask.id = 'dshgp-browse-mask';
+      mask.className = 'dshgp_browsemask';
+      mask.style.display = 'none';
+      mask.innerHTML = ''
+        + '<div class="dshgp_browsedialog">'
+        + '<div class="dshgp_browsehead"><span class="dshgp_browsetitle">选择目录</span><button type="button" class="dshgp_browseclose" id="dshgp-browse-close">✕</button></div>'
+        + '<div class="dshgp_browsepath" id="dshgp-browse-crumb"></div>'
+        + '<div class="dshgp_browseup" id="dshgp-browse-up">⬆ 上级目录</div>'
+        + '<div class="dshgp_browselist" id="dshgp-browse-list"></div>'
+        + '<div class="dshgp_browsefoot"><button type="button" class="dshgp_keybtn" id="dshgp-browse-ok">选择当前目录</button></div>'
+        + '</div>';
+      document.body.appendChild(mask);
+      mask.addEventListener('click', (e) => { if (e.target === mask) dshgp_browseClose(); });
+      document.getElementById('dshgp-browse-close').addEventListener('click', dshgp_browseClose);
+      document.getElementById('dshgp-browse-up').addEventListener('click', () => {
+        const up = document.getElementById('dshgp-browse-up');
+        if (up && up.dataset.path) dshgp_browseLoad(up.dataset.path);
+      });
+      document.getElementById('dshgp-browse-ok').addEventListener('click', () => {
+        const onPick = dshgp_browseOpt;
+        const target = dshgp_browseTarget;
+        dshgp_browseClose();
+        if (onPick) onPick(dshgp_browsePath);
+        else if (target) target.value = dshgp_browsePath;
+      });
+    }
+    async function dshgp_browseLoad(p) {
+      const list = document.getElementById('dshgp-browse-list');
+      const crumb = document.getElementById('dshgp-browse-crumb');
+      const up = document.getElementById('dshgp-browse-up');
+      if (!list || !crumb) return;
+      crumb.textContent = '读取中…';
+      let data;
+      try { data = await dshgp_getJson('/api/git-push/browse?path=' + encodeURIComponent(String(p || ''))); }
+      catch (e) { crumb.textContent = '读取失败: ' + (e && e.message || e); return; }
+      if (!data || !data.ok) { crumb.textContent = (data && data.error) || '读取失败'; return; }
+      dshgp_browsePath = data.path;
+      crumb.textContent = data.path;
+      up.style.display = data.parent ? 'block' : 'none';
+      up.dataset.path = data.parent || '';
+      let html = '';
+      if (!data.dirs.length) html += '<div class="dshgp_browsehint">（无子目录）</div>';
+      (data.dirs || []).forEach((d) => {
+        const full = data.path === '/' ? '/' + d : data.path + '/' + d;
+        html += '<div class="dshgp_browsedir" data-path="' + String(full).replace(/"/g, '&quot;') + '">📁 ' + String(d).replace(/</g, '&lt;') + '</div>';
+      });
+      list.innerHTML = html;
+      list.querySelectorAll('.dshgp_browsedir').forEach((el) => {
+        el.addEventListener('click', () => dshgp_browseLoad(el.dataset.path));
+      });
+    }
+    function dshgp_browseOpen(input, onPick) {
+      if (typeof document === 'undefined') return;
+      dshgp_browseTarget = input || null;
+      dshgp_browseOpt = onPick || null;
+      dshgp_browseEnsureDom();
+      const mask = document.getElementById('dshgp-browse-mask');
+      mask.style.display = 'flex';
+      void dshgp_browseLoad('');
+    }
+    function dshgp_browseClose() {
+      if (typeof document === 'undefined') return;
+      const mask = document.getElementById('dshgp-browse-mask');
+      if (mask) mask.style.display = 'none';
+      dshgp_browseTarget = null;
+      dshgp_browseOpt = null;
+    }
+    function dshgp_browseAttach(inputEl) {
+      if (!inputEl || inputEl.dataset.dshgpBrowse) return; // 幂等
+      inputEl.dataset.dshgpBrowse = '1';
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'dshgp_browsebtn';
+      btn.textContent = '📂';
+      btn.title = '选择目录';
+      btn.addEventListener('click', () => dshgp_browseOpen(inputEl, null));
+      inputEl.insertAdjacentElement('afterend', btn);
+    }
+
+    /* ═══════════════════ 账号卡片：本地/云端 仓库管理（2026-09-14） ═══════════════════ */
+    function dshgp_RepoManagerCard(props) {
+      const s = props.state;
+      const [view, setView] = react.useState('local');
+      // 每次渲染后为路径输入框挂 📂 按钮（attach 幂等）
+      react.useEffect(() => {
+        const el = document.getElementById('dshgp-local-path');
+        if (el) dshgp_browseAttach(el);
+      });
+      const subTabs = [
+        { id: 'local', label: '本地' },
+        { id: 'cloud', label: '云端' },
+      ];
+      return jsx.jsxs('div', {
+        className: 'dshgp_repocard',
+        children: [
           jsx.jsxs('div', {
-            className: 'dshgp_acctpanel',
+            className: 'dshgp_suptabs',
+            children: subTabs.map((t) => jsx.jsxs('button', {
+              key: t.id,
+              type: 'button',
+              className: view === t.id ? 'dshgp_suptab dshgp_suptabOn' : 'dshgp_suptab',
+              onClick: () => setView(t.id),
+              children: [t.label],
+            })),
+          }),
+          view === 'local'
+            ? jsx.jsx(dshgp_RepoLocalPane, props)
+            : jsx.jsx(dshgp_RepoCloudPane, props),
+        ],
+      });
+    }
+
+    /** 本地面板单行：路径 + 分支/领先状态 + push 按钮（领先 + 无未提交改动才可点）。 */
+    function dshgp_RepoLocalRow(props) {
+      const r = props.repo;
+      const s = props.state;
+      const busy = s.repoBusy === 'push:' + r.path;
+      const canPush = !!r.hasRemote && !!r.upstream && r.changed === 0 && r.ahead > 0;
+      const stat = !r.hasRemote ? '无远端' : (!r.upstream ? '未跟踪上游' : (r.ahead > 0 ? '领先 ' + r.ahead : (r.behind > 0 ? '落后 ' + r.behind : '同步')));
+      return jsx.jsxs('div', {
+        className: 'dshgp_reprow',
+        children: [
+          jsx.jsxs('div', {
+            className: 'dshgp_reprowinfo',
             children: [
-              jsx.jsxs('div', {
-                className: 'dshgp_accthead',
-                children: [
-                  jsx.jsx('div', { className: 'dshgp_acctic', children: dshgp_ghIcon }),
-                  jsx.jsxs('div', {
-                    children: [
-                      jsx.jsx('p', { className: 'dshgp_accttitle', children: 'GitHub 账号' }),
-                      jsx.jsx('p', { className: 'dshgp_acctsub', children: 'Token / SSH 公钥检测结果 · 进入设置自动检测' }),
-                    ],
-                  }),
-                  jsx.jsxs('span', { className: 'dshgp_acctstat ' + statCls, children: [jsx.jsx('span', { className: 'dshgp_acctdot' }), statTxt] }),
-                ],
+              jsx.jsx('span', { className: 'dshgp_reprowpath', children: r.path }),
+              jsx.jsx('span', { className: 'dshgp_reprowmeta', children: ['分支 ' + r.branch + ' · ' + stat + (r.changed > 0 ? ' · 未提交 ' + r.changed : '') + (r.lastCommit ? ' · ' + r.lastCommit : '')] }),
+            ],
+          }),
+          jsx.jsx('button', {
+            type: 'button',
+            className: 'dshgp_keybtn',
+            disabled: !canPush || busy,
+            onClick: () => props.onPush(r.path),
+            children: busy ? '推送中…' : 'push',
+          }),
+        ],
+      });
+    }
+
+    /** 本地面板：默认扫描工作区目录，可手动指定路径（📂 选择器）；仓库领先 + 无未提交改动可手动 push。 */
+    function dshgp_RepoLocalPane(props) {
+      const s = props.state;
+      const rows = (s.localRepos || []).map((r) => jsx.jsx(dshgp_RepoLocalRow, { key: r.path, repo: r, state: s, onPush: props.pushLocalRepo }));
+      return jsx.jsxs('div', {
+        className: 'dshgp_repanepane',
+        children: [
+          jsx.jsxs('div', {
+            className: 'dshgp_repobar',
+            children: [
+              jsx.jsx('input', {
+                id: 'dshgp-local-path',
+                type: 'text',
+                className: 'dshgp_pickinput',
+                placeholder: '扫描路径（默认工作区）',
+                defaultValue: '',
               }),
-              jsx.jsx('pre', { className: 'dshgp_acctblock2 ' + blockCls, children: blockBody }),
-              jsx.jsxs('div', {
-                className: 'dshgp_acctmeta',
-                children: [
-                  jsx.jsxs('div', { className: 'dshgp_acctmetarow', children: [jsx.jsx('span', { className: 'dshgp_acctmetak', children: 'Token' }), tokenPill] }),
-                  jsx.jsxs('div', { className: 'dshgp_acctmetarow', children: [jsx.jsx('span', { className: 'dshgp_acctmetak', children: 'SSH 公钥' }), sshPill] }),
-                ],
-              }),
-              jsx.jsxs('div', {
-                className: 'dshgp_acctfoot',
-                children: [
-                  jsx.jsx('button', {
-                    type: 'button',
-                    className: 'dshgp_keybtn',
-                    disabled: loading,
-                    onClick: props.refreshAccount,
-                    children: [dshgp_refreshIcon, loading ? '检测中…' : '重新检测'],
-                  }),
-                  jsx.jsx('span', { className: 'dshgp_accthint', children: loggedIn ? '登录态有效，凭据已生效' : '凭据状态来自保存的 Token / SSH 公钥' }),
-                ],
+              jsx.jsx('button', {
+                type: 'button',
+                className: 'dshgp_keybtn',
+                disabled: s.localLoading,
+                onClick: () => {
+                  const el = document.getElementById('dshgp-local-path');
+                  props.scanLocalRepos(el ? el.value : '');
+                },
+                children: s.localLoading ? '扫描中…' : '扫描',
               }),
             ],
           }),
+          jsx.jsx('p', { className: 'dshgp_repomsg', children: s.localMsg || '扫描目录下的 git 仓库；仓库「领先且无未提交改动」时可手动 push' }),
+          rows.length ? jsx.jsxs('div', { className: 'dshgp_replist', children: rows }) : null,
+        ],
+      });
+    }
+
+    /** 云端面板单行：仓库名 + 私有/公开/分支/更新时间 + clone 按钮。 */
+    function dshgp_RepoCloudRow(props) {
+      const r = props.repo;
+      const s = props.state;
+      const busy = s.repoBusy === 'clone:' + r.fullName;
+      return jsx.jsxs('div', {
+        className: 'dshgp_reprow',
+        children: [
+          jsx.jsxs('div', {
+            className: 'dshgp_reprowinfo',
+            children: [
+              jsx.jsx('span', { className: 'dshgp_reprowpath', children: r.fullName }),
+              jsx.jsx('span', { className: 'dshgp_reprowmeta', children: [(r.private ? '🔒 私有' : '🌐 公开') + ' · ' + (r.defaultBranch || '') + (r.pushedAt ? ' · 更新 ' + r.pushedAt.slice(0, 10) : '')] }),
+            ],
+          }),
+          jsx.jsx('button', {
+            type: 'button',
+            className: 'dshgp_keybtn',
+            disabled: busy,
+            onClick: () => props.onClone(r.fullName),
+            children: busy ? '克隆中…' : 'clone',
+          }),
+        ],
+      });
+    }
+
+    /** 云端面板：账号名下所有 GitHub 仓库（token 拉取），clone 时弹目录选择器选目标目录。 */
+    function dshgp_RepoCloudPane(props) {
+      const s = props.state;
+      const rows = (s.cloudRepos || []).map((r) => jsx.jsx(dshgp_RepoCloudRow, { key: r.fullName, repo: r, state: s, onClone: props.cloneFlow }));
+      return jsx.jsxs('div', {
+        className: 'dshgp_repanepane',
+        children: [
+          jsx.jsxs('div', {
+            className: 'dshgp_repobar',
+            children: [
+              jsx.jsx('span', { className: 'dshgp_repohint', children: '账号名下仓库（按最近更新）' }),
+              jsx.jsx('button', {
+                type: 'button',
+                className: 'dshgp_keybtn',
+                disabled: s.cloudLoading,
+                onClick: () => props.loadCloudRepos(),
+                children: s.cloudLoading ? '加载中…' : '加载仓库列表',
+              }),
+            ],
+          }),
+          jsx.jsx('p', { className: 'dshgp_repomsg', children: s.cloudMsg || '点仓库行的 clone，弹出目录选择器选定目标目录后克隆' }),
+          rows.length ? jsx.jsxs('div', { className: 'dshgp_replist', children: rows }) : null,
         ],
       });
     }
@@ -624,7 +898,10 @@ window.__ModuleLoader__.load({
           children: [t.label],
         })),
       });
-      const panel = tab === 'account' ? jsx.jsx(dshgp_AccountTab, { state: props.state, refreshAccount: props.refreshAccount })
+      // 2026-09-14：账号选项卡下的本地/云端卡片需要全部注入动作（scanLocalRepos/loadCloudRepos/
+      //   pushLocalRepo/cloneFlow），只传 state+refreshAccount 会导致卡片按钮 onClick 报
+      //   「props.xxx is not a function」——整包传 props（state + 全部注入动作）。
+      const panel = tab === 'account' ? jsx.jsx(dshgp_AccountTab, props)
         : tab === 'audit' ? jsx.jsx(dshgp_AuditTab, {
           state: props.state,
           toggleAudit: props.toggleAudit,
@@ -680,6 +957,15 @@ window.__ModuleLoader__.load({
         this.accountBlock = '';
         this.accountLoggedIn = false;
         this.accountLoading = false;
+        // 2026-09-14 账号卡片：本地/云端（本地扫描 / 云端列表）
+        this.localPath = '';
+        this.localRepos = [];
+        this.localLoading = false;
+        this.localMsg = '';
+        this.cloudRepos = [];
+        this.cloudLoading = false;
+        this.cloudMsg = '';
+        this.repoBusy = '';
         // 规则包加载
         this.slotLoading = false;
         this.slotError = '';
@@ -753,6 +1039,14 @@ window.__ModuleLoader__.load({
           statusMsg: this.statusMsg,
           genKeying: this.genKeying,
           genKeyError: this.genKeyError,
+          localPath: this.localPath,
+          localRepos: this.localRepos,
+          localLoading: this.localLoading,
+          localMsg: this.localMsg,
+          cloudRepos: this.cloudRepos,
+          cloudLoading: this.cloudLoading,
+          cloudMsg: this.cloudMsg,
+          repoBusy: this.repoBusy,
           dirty: this.text.trim().length > 0 || this.sshPub.trim().length > 0,
           saving: this.saving,
           failed: this.failed,
@@ -821,6 +1115,88 @@ window.__ModuleLoader__.load({
           this.accountLoggedIn = false;
         }
         this.accountLoading = false;
+        this.publish();
+      }
+
+      /** 扫描本地仓库（默认工作区；可手动指定路径）。 */
+      async scanLocalRepos(path) {
+        this.localLoading = true;
+        this.localMsg = '';
+        this.publish();
+        try {
+          const p = String(path || '').trim();
+          const data = await dshgp_getJson('/api/git-push/repos-local' + (p ? '?path=' + encodeURIComponent(p) : ''));
+          if (data && data.ok) {
+            this.localPath = data.root || p;
+            this.localRepos = Array.isArray(data.repos) ? data.repos : [];
+            this.localMsg = this.localRepos.length
+              ? '扫描到 ' + this.localRepos.length + ' 个仓库（' + (data.root || '') + '）'
+              : '该路径下没有 git 仓库: ' + (data.root || '');
+          } else {
+            this.localRepos = [];
+            this.localMsg = '❌ ' + ((data && data.error) || '扫描失败');
+          }
+        } catch (e) {
+          this.localRepos = [];
+          this.localMsg = '❌ 扫描失败: ' + (e && e.message || e);
+        }
+        this.localLoading = false;
+        this.publish();
+      }
+
+      /** 拉取云端仓库列表（/repos-cloud，token 列账号名下仓库）。 */
+      async loadCloudRepos() {
+        this.cloudLoading = true;
+        this.cloudMsg = '';
+        this.publish();
+        try {
+          const data = await dshgp_getJson('/api/git-push/repos-cloud');
+          if (data && data.ok) {
+            this.cloudRepos = Array.isArray(data.repos) ? data.repos : [];
+            this.cloudMsg = '共 ' + this.cloudRepos.length + ' 个仓库（按最近更新排序）';
+          } else {
+            this.cloudRepos = [];
+            this.cloudMsg = '❌ ' + ((data && data.error) || '拉取失败');
+          }
+        } catch (e) {
+          this.cloudRepos = [];
+          this.cloudMsg = '❌ 拉取失败: ' + (e && e.message || e);
+        }
+        this.cloudLoading = false;
+        this.publish();
+      }
+
+      /** 本地仓库手动 push（领先 + 工作树干净才允许，后端校验）。 */
+      async pushLocalRepo(path) {
+        this.repoBusy = 'push:' + path;
+        this.publish();
+        try {
+          const data = await dshgp_postJson('/api/git-push/repo-push', { path, confirm: true });
+          this.localMsg = data && data.ok ? '✅ 已推送 ' + path : '⚠️ ' + ((data && data.error) || '推送失败');
+        } catch (e) {
+          this.localMsg = '❌ 推送失败: ' + (e && e.message || e);
+        }
+        this.repoBusy = '';
+        void this.scanLocalRepos(this.localPath); // 刷新领先/落后状态
+        this.publish();
+      }
+
+      /** 云端仓库 clone：先弹目录选择器选目标目录，确认后克隆。 */
+      cloneFlow(repo) {
+        dshgp_browseOpen(null, (dir) => { void this.cloneCloudRepo(repo, dir); });
+      }
+      async cloneCloudRepo(repo, dir) {
+        this.repoBusy = 'clone:' + repo;
+        this.publish();
+        try {
+          const data = await dshgp_postJson('/api/git-push/repo-clone', { target: repo, dir, confirm: true });
+          this.cloudMsg = data && data.ok
+            ? '✅ 已克隆 ' + repo + ' → ' + ((data && data.dest) || dir)
+            : '❌ ' + ((data && data.error) || '克隆失败');
+        } catch (e) {
+          this.cloudMsg = '❌ 克隆失败: ' + (e && e.message || e);
+        }
+        this.repoBusy = '';
         this.publish();
       }
 
@@ -1014,6 +1390,11 @@ window.__ModuleLoader__.load({
           moveSlot: (slot, dir) => this.moveSlot(slot, dir),
           toggleDisabled: (slot) => { void this.toggleDisabled(slot); },
           refreshAccount: () => { void this.refreshAccount(); },
+          // 2026-09-14 账号卡片：本地/云端 动作
+          scanLocalRepos: (path) => { void this.scanLocalRepos(path); },
+          loadCloudRepos: () => { void this.loadCloudRepos(); },
+          pushLocalRepo: (path) => { void this.pushLocalRepo(path); },
+          cloneFlow: (repo) => this.cloneFlow(repo),
         };
       }
     }

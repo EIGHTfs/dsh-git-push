@@ -253,6 +253,77 @@ test('HTTP：account-check 用配置的 cfg.githubToken（不落回配置文件�
   }
 });
 
+// ---------- 2026-09-14 账号卡片端点：browse / repos-local / repos-cloud / repo-push / repo-clone ----------
+test('HTTP 2026-09-14：browse 浏览目录（含父目录与子目录列表）', async () => {
+  const r = await handleHttp({ method: 'GET', url: '/api/git-push/browse?path=' + encodeURIComponent(ROOT) }, { workspaceRoot: ROOT }, {});
+  assert.equal(r.status, 200);
+  assert.equal(r.body.ok, true);
+  assert.equal(r.body.path, ROOT);
+  assert.ok(Array.isArray(r.body.dirs) && r.body.dirs.includes('lib'), '应列出 lib 子目录');
+  assert.ok(r.body.parent, '应有父目录');
+});
+
+test('HTTP 2026-09-14：browse 不存在的路径 → 400', async () => {
+  const r = await handleHttp({ method: 'GET', url: '/api/git-push/browse?path=' + encodeURIComponent(ROOT + '/no-such-dir-xyz') }, { workspaceRoot: ROOT }, {});
+  assert.equal(r.status, 400);
+  assert.match(r.body.error, /目录不存在/);
+});
+
+test('HTTP 2026-09-14：repos-local 扫描仓库（ahead/behind 字段随行）', async () => {
+  const r = await handleHttp({ method: 'GET', url: '/api/git-push/repos-local?path=' + encodeURIComponent(ROOT) }, { workspaceRoot: ROOT }, {});
+  assert.equal(r.status, 200);
+  assert.equal(r.body.ok, true);
+  assert.ok(r.body.count >= 1, '插件根自身是 git 仓库，应 ≥1');
+  const self = r.body.repos.find((x) => x.path === ROOT);
+  assert.ok(self, '应包含 ROOT 仓库');
+  assert.ok('ahead' in self && 'behind' in self && 'hasRemote' in self && 'upstream' in self, '应带领先/落后/远端字段');
+  assert.equal(typeof self.changed, 'number');
+});
+
+test('HTTP 2026-09-14：repos-cloud 未配 token → 友好错误（loggedIn:false）', async () => {
+  const home = mkdtempSync(join(tmpdir(), 'vp-cloud-'));
+  process.env.DSH_HOME = home;
+  try {
+    const r = await handleHttp({ method: 'GET', url: '/api/git-push/repos-cloud' }, { workspaceRoot: ROOT }, {});
+    assert.equal(r.status, 200);
+    assert.equal(r.body.ok, false);
+    assert.equal(r.body.loggedIn, false);
+    assert.match(r.body.error, /未配置 GitHub Token/);
+  } finally {
+    delete process.env.DSH_HOME;
+    try { rmSync(home, { recursive: true, force: true }); } catch { /* noop */ }
+  }
+});
+
+test('HTTP 2026-09-14：repo-push 缺 path → 400；非 git 目录 → 400', async () => {
+  const noPath = await handleHttp({ method: 'POST', url: '/api/git-push/repo-push', origin: 'http://127.0.0.1:30801', body: { confirm: true } }, {}, {});
+  assert.equal(noPath.status, 400);
+  const tmp = mkdtempSync(join(tmpdir(), 'vp-notgit-'));
+  try {
+    const r = await handleHttp({ method: 'POST', url: '/api/git-push/repo-push', origin: 'http://127.0.0.1:30801', body: { path: tmp, confirm: true } }, {}, {});
+    assert.equal(r.status, 400);
+    assert.match(r.body.error, /非 git 仓库/);
+  } finally { try { rmSync(tmp, { recursive: true, force: true }); } catch { /* noop */ } }
+});
+
+test('HTTP 2026-09-14：repo-push / repo-clone 是写确认端点（缺 confirm → 400）', async () => {
+  const r1 = await handleHttp({ method: 'POST', url: '/api/git-push/repo-push', origin: 'http://127.0.0.1:30801', body: { path: ROOT } }, {}, {});
+  assert.equal(r1.status, 400);
+  assert.equal(r1.body.code, 'NEED_CONFIRM');
+  const r2 = await handleHttp({ method: 'POST', url: '/api/git-push/repo-clone', origin: 'http://127.0.0.1:30801', body: { target: 'a/b', dir: '/tmp' } }, {}, {});
+  assert.equal(r2.status, 400);
+  assert.equal(r2.body.code, 'NEED_CONFIRM');
+});
+
+test('HTTP 2026-09-14：repo-clone 缺 target/dir → 400', async () => {
+  const r1 = await handleHttp({ method: 'POST', url: '/api/git-push/repo-clone', origin: 'http://127.0.0.1:30801', body: { confirm: true, dir: '/tmp' } }, {}, {});
+  assert.equal(r1.status, 400);
+  assert.match(r1.body.error, /target/);
+  const r2 = await handleHttp({ method: 'POST', url: '/api/git-push/repo-clone', origin: 'http://127.0.0.1:30801', body: { confirm: true, target: 'a/b' } }, {}, {});
+  assert.equal(r2.status, 400);
+  assert.match(r2.body.error, /dir/);
+});
+
 // ---------- 双副本同步 ----------
 
 // ---------- 1.0.4：package.json 的 dsh 装载契约（缺失→插件装上即失效） ----------
