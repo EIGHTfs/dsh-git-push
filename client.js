@@ -1360,12 +1360,11 @@ window.__ModuleLoader__.load({
         [arr[i], arr[j]] = [arr[j], arr[i]];
         this.ruleOrder = arr;
         this.publish();
-        void this.scope.set('auditRuleOrder', arr).then(() => {
-          this.setStatus('✅ 规则包次序已保存：' + arr.join(' → '));
-        }).catch(() => {
-          this.setStatus('❌ 次序保存失败');
-          this.publish();
-        });
+        // 2026-09-15：次序持久化走 HTTP settings-set（写插件私有 config.json）。
+        //   不再 scope.set——scope.set 会把 auditRuleOrder 写进公共 settings.yaml
+        //   （跨实例锁竞争 + isLoopback=memory 陷阱，见 settings-bridge.js 头部说明）。
+        this.persistSetting('auditRuleOrder', arr);
+        this.setStatus('✅ 规则包次序已保存：' + arr.join(' → '));
       }
 
       /**
@@ -1395,9 +1394,11 @@ window.__ModuleLoader__.load({
       }
 
       /**
-       * 2026-09-14：设置持久化统一入口（走 host HTTP /settings-set，绕开 client
-       *   isLoopback=memory 陷阱——反代访问时 scope.set 不发 wire、不写盘、重启全丢）。
-       *   同时兼容 loopback 直连（scope.set 官方通道，双份写幂等）。
+       * 设置持久化统一入口（**零 scope.set**，单通道走 host HTTP /settings-set → 写插件私有
+       *   config.json）。2026-09-15 彻底移除 scope.set：
+       *   ① scope.set 会把设置写进公共 settings.yaml（跨实例写锁竞争 + isLoopback=memory 陷阱）；
+       *   ② loopback 直连时 scope.set 会写公共 yaml、反代时 memory 不落盘——两条路都不对，
+       *      HTTP settings-set 与访问方式无关、无宿主锁竞争、重启从文件读回，是唯一可靠通道。
        * @param {string} key 设置键
        * @param {unknown} value 值
        * @param {string} okMsg flashSaved 成功文案（空=静默）
@@ -1406,15 +1407,6 @@ window.__ModuleLoader__.load({
         // 2026-09-15：UI 提交调试日志（浏览器控制台可见；服务端另有 settings-ui.log 持久留痕）
         if (typeof console !== 'undefined' && console.debug) {
           try { console.debug('[dsh-git-push] UI 提交', key, '=', String(value).slice(0, 40) + (String(value).length > 40 ? '…' : '')); } catch { /* 控制台不可用时跳过调试输出 */ }
-        }
-        // 开关/扫描范围/权重只走 HTTP → config.json。再 scope.set 会写公共 yaml
-        //   （锁竞争）并把 schema 默认值灌回 watch，把刚勾的开关盖掉。
-        const fileOnly = {
-          auditEnabled: 1, injectRequirements: 1, injectSystemPrompt: 1,
-          auditScanScope: 1, auditLevel: 1, weightOverrides: 1,
-        };
-        if (!fileOnly[key]) {
-          void this.scope.set(key, value).catch(() => { /* loopback 兼容通道失败不碍事 */ });
         }
         void dshgp_postJson('/api/git-push/settings-set', { key, value }).then((data) => {
           if (data && data.ok) {
@@ -1488,10 +1480,9 @@ window.__ModuleLoader__.load({
         this.failed = false;
         this.publish();
         try {
-          // 2026-09-14：凭据持久化改走 persistSetting（host HTTP /settings-set）——
-          //   反代访问时 scope.set 不发 wire，凭据会丢（settings.yaml 不写、watch 不触发、
-          //   persistGithubToken 不落插件目录）。persistSetting 双通道：scope.set（loopback 兼容）
-          //   + HTTP（可靠落盘），两者都触发 host watch → persistGithubToken/sshPub 落插件目录。
+          // 2026-09-15：凭据持久化走 persistSetting（纯 HTTP /settings-set → 服务端
+          //   writeSettingsKey 写 config.json + persistGithubToken/persistSshPub 落插件目录，
+          //   不 scope.set——scope.set 会把凭据写进公共 settings.yaml 明文，反代下还不落盘）。
           if (raw) this.persistSetting('githubToken', raw);
           if (pub) this.persistSetting('sshPub', pub);
           if (raw) this.tokenConfigured = true;   // 刚写入即视为已配置（明文不回传，本地直接置位）
