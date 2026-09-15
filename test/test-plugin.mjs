@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync, mkdtempSync, mkdirSync, writeFileSync, rmSync, statSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 import { execSync } from 'node:child_process';
@@ -301,15 +301,30 @@ test('HTTP 2026-09-14：browse 不存在的路径 → 400', async () => {
   assert.match(r.body.error, /目录不存在/);
 });
 
-test('HTTP 2026-09-14：repos-local 扫描仓库（ahead/behind 字段随行）', async () => {
-  const r = await handleHttp({ method: 'GET', url: '/api/git-push/repos-local?path=' + encodeURIComponent(ROOT) }, { workspaceRoot: ROOT }, {});
-  assert.equal(r.status, 200);
-  assert.equal(r.body.ok, true);
-  assert.ok(r.body.count >= 1, '插件根自身是 git 仓库，应 ≥1');
-  const self = r.body.repos.find((x) => x.path === ROOT);
-  assert.ok(self, '应包含 ROOT 仓库');
-  assert.ok('ahead' in self && 'behind' in self && 'hasRemote' in self && 'upstream' in self, '应带领先/落后/远端字段');
-  assert.equal(typeof self.changed, 'number');
+test('HTTP 2026-09-15：repos-local 扫描=重建索引、列表只读索引（ahead/behind 字段随行）', async () => {
+  // 新语义：扫描 = ?rebuild=1 重建 dsh-repo-index.json（buildRepoIndex），列表只读索引返回。
+  const home = mkdtempSync(join(tmpdir(), 'vp-local-'));
+  process.env.DSH_HOME = home;
+  try {
+    const url = '/api/git-push/repos-local?rebuild=1&path=' + encodeURIComponent(ROOT);
+    const r = await handleHttp({ method: 'GET', url }, { workspaceRoot: ROOT }, {});
+    assert.equal(r.status, 200);
+    assert.equal(r.body.ok, true);
+    assert.ok(r.body.indexedAvailable === true, '重建后索引应可用');
+    // 列表来自索引：插件根自身是 git 仓库，buildRepoIndex 应登记它（repoUrl 可能为空=localOnly，仍入列）
+    const self = r.body.repos.find((x) => x.name === basename(ROOT));
+    assert.ok(self, '索引应包含 ROOT 仓库');
+    assert.ok('ahead' in self && 'behind' in self && 'hasRemote' in self, '应带领先/落后/远端字段');
+    assert.equal(typeof self.changed, 'number');
+    // 再读一次（不 rebuild）：列表仍来自索引，不复扫
+    const r2 = await handleHttp({ method: 'GET', url: '/api/git-push/repos-local?path=' + encodeURIComponent(ROOT) }, { workspaceRoot: ROOT }, {});
+    assert.equal(r2.status, 200);
+    assert.equal(r2.body.ok, true);
+    assert.ok(Array.isArray(r2.body.repos));
+  } finally {
+    delete process.env.DSH_HOME;
+    try { rmSync(home, { recursive: true, force: true }); } catch { /* noop */ }
+  }
 });
 
 test('HTTP 2026-09-14：repos-cloud 未配 token → 友好错误（loggedIn:false）', async () => {

@@ -536,7 +536,7 @@ window.__ModuleLoader__.load({
                 disabled: s.localLoading,
                 onClick: () => {
                   const el = document.getElementById('dshgp-local-path');
-                  props.scanLocalRepos(el ? el.value : '');
+                  props.scanLocalRepos(el ? el.value : '', true);
                 },
                 children: s.localLoading ? '扫描中…' : '扫描',
               }),
@@ -1119,11 +1119,11 @@ window.__ModuleLoader__.load({
         this.unsubscribe = scope.subscribe(() => {
           const snap = this.scope.getSnapshot();
           if (snap && snap.value) {
-            // 2026-09-15：开关/扫描范围/权重真源是 HTTP + config.json，
-            //   **不再**从 scope 快照覆盖——yaml 缺键时 schema 默认 false 会把勾选弹回。
-            // 2026-09-13：已填写提示 = 只看是否存在（不读明文回显）
-            this.tokenConfigured = this.tokenConfigured || dshgp_tokenConfigured(snap.value);
-            this.sshConfigured = !!(snap.value.sshPub && String(snap.value.sshPub).trim());
+            // 2026-09-15 重构：设置/凭据状态全链路统一走 HTTP（settings-get + account-check，
+            //   真源 = config.json + 凭据文件），**scope 快照不再参与任何状态判定**——
+            //   公共 settings.yaml 已零写入（scope.set 全移除），snap.value 里这些键恒缺省，
+            //   此前把 sshConfigured 覆盖成 !!snap.value.sshPub（恒 false）导致「配置了却显示
+            //   未配置」，且每次 scope 发布都弹回，与 loadSettingsFromHttp 拉回的真值互相打架。
             // 2026-09-13 修复「规则包统计全是 0」：slotMeta 与 ruleOrder 同理，也不再从 scope 覆盖。
             //   snap.value.ruleSlotMeta 是 schema 里声明为「host 启动填充」的字段，但**宿主从未写入**，
             //   于是每次 scope 发布都把它（空对象）赋给 slotMeta，刚由 loadSlots() 拉到的真实统计被清空，
@@ -1133,8 +1133,10 @@ window.__ModuleLoader__.load({
           }
           this.publish();
         });
-        // 初次同步：开关可从快照种一次（单测无 HTTP）；之后只信 HTTP / 本地 commitSetting，
-        //   subscribe 不再覆盖——yaml 缺键默认 false 会把勾选弹回。
+        // 2026-09-15 重构：scope 快照只作「无 HTTP 时的初值兜底」（typeof 守卫保证 yaml 零写入
+        //   时 undefined 不会覆盖；仅单测显式传值才生效）。凭据标志 tokenConfigured/sshConfigured
+        //   不再从快照取——公共 yaml 已零写入，snap 里恒缺省只会种出 false，统一由
+        //   refreshAccount（/account-check 读凭据文件真源）与 loadSettingsFromHttp 刷新。
         const snap0 = this.scope.getSnapshot();
         if (snap0 && snap0.value) {
           if (typeof snap0.value.auditEnabled === 'boolean') this.auditEnabled = snap0.value.auditEnabled;
@@ -1143,15 +1145,12 @@ window.__ModuleLoader__.load({
           if (typeof snap0.value.auditScanScope === 'string') this.auditScanScope = snap0.value.auditScanScope;
           const wo0 = String(snap0.value.weightOverrides || '');
           if (wo0.trim()) { try { this.weightValues = JSON.parse(wo0) || {}; } catch { /* 忽略 */ } }
-          this.tokenConfigured = this.tokenConfigured || dshgp_tokenConfigured(snap0.value);
-          this.sshConfigured = !!(snap0.value.sshPub && String(snap0.value.sshPub).trim());
         }
         // 若 loadSlots 尚未返回，先用已发现的槽位做占位显示（不含 private/template）
         if (!this.ruleOrder.length && Object.keys(this.slotMeta).length) {
           this.ruleOrder = Object.keys(this.slotMeta).filter((s) => s !== 'private' && s !== 'template');
         }
         void this.loadSlots();
-        void this.loadCredentialFlags();
         void this.refreshAccount();
         // 2026-09-14：设置持久化走 HTTP 读宿主 scope（绕开 client isLoopback=memory 陷阱——
         //   反代访问时 scope 快照恒 unavailable，从宿主侧读已落盘设置，重启后开关保持勾选）
@@ -1252,18 +1251,8 @@ window.__ModuleLoader__.load({
       }
 
       /** 加载规则包清单（/rule-slots，动态发现 yml）。 */
-      /** 凭据状态（/status）：token 明文不下发浏览器，靠 host 派生的布尔位知道「填没填」。 */
-      async loadCredentialFlags() {
-        try {
-          const data = await dshgp_getJson('/api/git-push/status');
-          const cfg = (data && data.config) || {};
-          if (typeof cfg.tokenConfigured === 'boolean') {
-            this.tokenConfigured = cfg.tokenConfigured;
-            this.publish();
-          }
-        } catch (_e) { /* 取不到就沿用设置快照的兜底判断 */ }
-      }
-
+      // 2026-09-15 重构：原 loadCredentialFlags（/status 只刷 tokenConfigured）删除——
+      //   凭据标志统一由 refreshAccount（/account-check，读凭据文件真源）刷新，避免第三条链路打架。
       async loadSlots() {
         this.slotLoading = true;
         this.slotError = '';
@@ -1289,7 +1278,7 @@ window.__ModuleLoader__.load({
         this.publish();
       }
 
-      /** 刷新账号信息（/account-check，纯展示）。 */
+      /** 刷新账号信息（/account-check，读凭据文件真源；同时刷新凭据徽标）。 */
       async refreshAccount() {
         this.accountLoading = true;
         this.publish();
@@ -1297,6 +1286,13 @@ window.__ModuleLoader__.load({
           const data = await dshgp_getJson('/api/git-push/account-check');
           this.accountBlock = (data && data.block) || ((data && data.detail) || '（无信息）');
           this.accountLoggedIn = !!(data && data.loggedIn);
+          // 2026-09-15 重构：凭据徽标与检测结果同源——account-check 的 cred 直接读凭据文件
+          //   真源（resolveToken / readSshPub），这里同步刷新「已配置/未配置」徽标。
+          //   此前徽标只靠 loadSettingsFromHttp 拉一次、且会被 scope 快照弹回，「重新检测」
+          //   根本不更新它 → 配置了却显示未配置。
+          const cred = (data && data.cred) || {};
+          this.tokenConfigured = !!(cred.hasToken);
+          this.sshConfigured = !!(cred.hasSshPub);
         } catch (e) {
           this.accountBlock = '检测失败: ' + (e && e.message || e);
           this.accountLoggedIn = false;
@@ -1305,28 +1301,31 @@ window.__ModuleLoader__.load({
         this.publish();
       }
 
-      /** 扫描本地仓库（默认工作区；可手动指定路径）。 */
-      async scanLocalRepos(path) {
+      /** 扫描本地仓库（2026-09-15 重构：列表只从 dsh-repo-index.json 读取）。
+       * rebuild=true：扫描 = 重建索引（buildRepoIndex，只存与登录账号一致的条目）后再读回；
+       * 缺省：直接读索引返回（不复扫目录）。 */
+      async scanLocalRepos(path, rebuild) {
         this.localLoading = true;
         this.localMsg = '';
         this.publish();
         try {
           const p = String(path || '').trim();
           try { if (p) window.localStorage.setItem('dshgp-scan-path', p); } catch { /* 忽略 */ }
-          const data = await dshgp_getJson('/api/git-push/repos-local' + (p ? '?path=' + encodeURIComponent(p) : ''));
+          const qs = '?rebuild=' + (rebuild ? '1' : '0') + (p ? '&path=' + encodeURIComponent(p) : '');
+          const data = await dshgp_getJson('/api/git-push/repos-local' + qs);
           if (data && data.ok) {
             this.localPath = data.root || p;
             this.localRepos = Array.isArray(data.repos) ? data.repos : [];
             this.localMsg = this.localRepos.length
-              ? '扫描到 ' + this.localRepos.length + ' 个仓库（' + (data.root || '') + '）'
-              : '该路径下没有 git 仓库: ' + (data.root || '');
+              ? (rebuild ? '已重建索引，读取到 ' : '读取到 ') + this.localRepos.length + ' 个仓库（' + (data.root || '') + '）'
+              : '索引中没有本账号仓库: ' + (data.root || '');
           } else {
             this.localRepos = [];
-            this.localMsg = '❌ ' + ((data && data.error) || '扫描失败');
+            this.localMsg = '❌ ' + ((data && data.error) || '读取失败');
           }
         } catch (e) {
           this.localRepos = [];
-          this.localMsg = '❌ 扫描失败: ' + (e && e.message || e);
+          this.localMsg = '❌ 读取失败: ' + (e && e.message || e);
         }
         this.localLoading = false;
         this.publish();
@@ -1660,7 +1659,7 @@ window.__ModuleLoader__.load({
           toggleDisabled: (slot) => { void this.toggleDisabled(slot); },
           refreshAccount: () => { void this.refreshAccount(); },
           // 2026-09-14 账号卡片：本地/云端 动作
-          scanLocalRepos: (path) => { void this.scanLocalRepos(path); },
+          scanLocalRepos: (path, rebuild) => { void this.scanLocalRepos(path, rebuild); },
           loadCloudRepos: () => { void this.loadCloudRepos(); },
           pushLocalRepo: (path) => { void this.pushLocalRepo(path); },
           cloneFlow: (repo) => this.cloneFlow(repo),

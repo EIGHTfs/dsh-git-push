@@ -222,6 +222,7 @@ dsh-git-push/
 ├── scripts/ — 开发工具脚本（版本校验/双副本同步/预览服务/README 目录树维护）
 │   ├── audit-runtime-check.mjs — 三层审计 L3 运行时检测脚本
 │   ├── check.mjs — 语法检查脚本（npm run check）
+│   ├── func-index.js — （待注释）
 │   ├── preview-server.mjs — 本地真实后端测试服务（preview.html 接真实 handleHttp）
 │   ├── rule-switch.mjs — 规则槽位手动启停 CLI
 │   ├── scan-version.mjs — 版本一致性校验脚本
@@ -782,6 +783,7 @@ scrub-user-wording 改写表从脚本内嵌迁移到 `lib/audit-rules/audit-rule
 健壮性/安全修复：HTTP 入参统一 `readBody` 校验（非对象一律空对象）；空 catch 注释补足（`忽略/跳过/降级/兜底` 语义清单）；client fetch 加 `AbortSignal.timeout(30s)`；`githubFetch` 调用点语义豁免（内部统一 60s 超时）；`git 仓库绝对路径`/`dsh-skip-*` 提示抽常量去重；git 参数拼接改 `concat`；`apiOrFallback`/`sshFallback` 抽取去重；凭据位置说明统一为插件配置目录 `$DSH_HOME/git-push/`（0600）\
 全量审计：blocker 43→0，警告净减 44；回归 578 全绿 |
 设置侧边栏持久化修复（专项测试 test-settings-persistence.mjs 四层断言）：`applySettingsToCfg` 补齐 5 键映射（maxScanFiles/commitMessage/defaultScanRoot/pushMethod/hardcodeFullScan 重启后 cfg 恢复）；权重覆盖真正生效——`code_audit`/提交前审计缺省读 `cfg.weightOverrides`（此前保存了但审计无视，评分恒用默认权重表）；前端补齐 7 键 UI（审计进阶：强度/规则目录/文件上限/硬编码全量扫；推送默认值：通道/扫描路径/提交信息），全部走 HTTP config.json 零 scope.set；tree-doc 自检漂移清零 \
+配置全链路统一（设置/凭据/本地仓库一条链路）：凭据状态（tokenConfigured/sshConfigured）统一由 `refreshAccount`（/account-check 读凭据文件真源 resolveToken/readSshPub）刷新——删除 scope 快照订阅覆盖（公共 yaml 已零写入，快照恒缺省把 sshConfigured 弹回 false，曾造成「配置了却显示未配置」）与冗余的 loadCredentialFlags；`repos-local` 重构：账号选项卡本地仓库只读 dsh-repo-index.json（不复扫），`?rebuild=1` 扫描=重建索引且只存与登录账号一致的条目（buildRepoIndex 按 remote owner 过滤），列表条目附带本地视角 branch/ahead/behind（describeRepo）|
 | **1.2.1** | **设置落盘改插件私有 config.json + 推送判定修正 + 审计拦截列文件 + live ls-remote** \
 开关（审计/注入要求清单/注入系统提示词/扫描范围/权重）真源 = `$DSH_HOME/git-push/config.json`（0600），不再写公共 settings.yaml；host `scope.watch` 只处理凭据，前端订阅不再用 yaml 默认值盖开关 \
 侧边栏 push：可推 = 有远端且 ahead>0（或未知），工作树脏不再拦截；失败把 `push.reason` 提到顶层 error；推送前用插件 SSH 密钥 live ls-remote，不信过期的 origin/<branch> 缓存 \
