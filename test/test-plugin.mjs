@@ -110,6 +110,37 @@ test('apply：无 ctx 不崩溃（防御性）', async () => {
   assert.equal(r, undefined, '无 ctx 也不崩，返回 undefined');
 });
 
+test('apply：斜杠命令走 commands.register（/git-audit）', async () => {
+  const cmds = [];
+  const ctx = {
+    get: (k) => k === 'log' ? { info: () => {}, warn: () => {} } : undefined,
+    inject: (keys, fn) => {
+      if (keys[0] === 'tools') fn({ get: (k) => k === 'tools' ? { register: () => {} } : undefined });
+      if (keys[0] === 'systemPrompt') fn({ get: (k) => k === 'systemPrompt' ? { section: () => {} } : undefined });
+      if (keys[0] === 'webServer') fn({ get: (k) => k === 'webServer' ? { register: () => {} } : undefined });
+      if (keys[0] === 'commands') fn({ commands: { register: (d) => cmds.push(d) } });
+    },
+  };
+  await apply(ctx, {});
+  assert.equal(cmds.length, 1, '应注册 1 条斜杠命令');
+  assert.equal(cmds[0].name, 'git-audit');
+  assert.equal(typeof cmds[0].handler, 'function');
+  assert.ok(cmds[0].input && cmds[0].input.hint, '应有 input.hint 给发现菜单');
+});
+
+test('apply：无 commands 服务时斜杠注册静默跳过', async () => {
+  const ctx = {
+    get: (k) => k === 'log' ? { info: () => {}, warn: () => {} } : undefined,
+    inject: (keys, fn) => {
+      if (keys[0] === 'tools') fn({ get: (k) => k === 'tools' ? { register: () => {} } : undefined });
+      if (keys[0] === 'systemPrompt') fn({ get: (k) => k === 'systemPrompt' ? { section: () => {} } : undefined });
+      if (keys[0] === 'webServer') fn({ get: (k) => k === 'webServer' ? { register: () => {} } : undefined });
+    },
+  };
+  const r = await apply(ctx, {});
+  assert.equal(r, undefined, 'commands 缺失不得让 apply 失败');
+});
+
 // ---------- 工具清单 ----------
 test('工具：8 个工具名齐全（含 git_gen_readme）', () => {
   const names = listTools().map((t) => t.name);

@@ -49,8 +49,6 @@
   "lib/audit/orchestrate.js": "审计编排（收集→检查→汇总）",
   "lib/audit/repo-level.js": "仓库级语义规则",
   "lib/audit/slot.js": "按规则包聚合审计命中（拦截/警告/通过）",
-  "lib/backend": "后端服务（后台任务队列——方案 B：审计同步、推送后台化）",
-  "lib/backend/task-queue.js": "后台任务队列（submitTask/getTask，方案 B）",
   "lib/checks": "检查层（按 kind 调用检查器：正则/语义/结构/文件健康/按钮绑定/私密文件）",
   "lib/checks/button-bind.js": "按钮事件绑定交叉比对（声明了但没绑定）",
   "lib/checks/common.js": "检查器公共设施（豁免提示/severity 封顶/分组）",
@@ -185,7 +183,7 @@
   "test/test-sidebar-interaction.mjs": "侧边栏规则包列表交互自检",
   "test/test-smart-hint.mjs": "扫描智能提示 + 评分对数衰减测试",
   "test/test-status-secret.mjs": "token 明文不下发安全回归",
-  "test/test-task-queue.mjs": "后台任务队列测试（状态机/HTTP 端点/后台化形态）",
+  "test/test-task-queue.mjs": "后台化回归测试（官方 job 注册 / 无 jobs 同步保底 / blocker 拦截）",
   "lib/audit-rules/audit-rules-comment.yml": "注释类规则（黑名单措辞/对话残留）（规则包 comment）",
   "lib/audit-rules/audit-rules-docs.yml": "文档类规则（README/文档措辞）（规则包 docs）",
   "lib/audit-rules/audit-rules-dsh.yml": "DSH 生态规则（宿主/插件约定）（规则包 dsh）",
@@ -205,5 +203,10 @@
   "skills/git-workflow-gitpush/README.md": "git 工作流 skill 子目录说明",
   "test/.test": "空文件豁免标记（目录级豁免 .test 目录）",
   "tree-doc.json": "目录结构注释映射（路径→一句话介绍，AI 维护）",
-  "test/test-tree-doc.mjs": "README 目录树脚本测试（gen/check/apply 闭环）"
+  "test/test-tree-doc.mjs": "README 目录树脚本测试（gen/check/apply 闭环）",
+  "lib/BUGFIX-NOTES-2026-09-14.md": "Bug 修复说明（diff 审计提速 / 凭据文件拦截三层根因）",
+  "lib/app/settings-bridge.js": "设置读写桥（host scope 共享；绕开 client isLoopback=memory 落盘陷阱）",
+  "lib/app/slash-commands.js": "用户输入框斜杠命令（目前只注册 /git-audit）",
+  "test/test-audit-bad-file.mjs": "审计拦截门禁测试（硬编码密码/API key/.env 凭据文件）",
+  "test/test-slash-commands.mjs": "用户输入框 /git-audit 斜杠命令（解析/接线/对本仓库跑 quick）"
 }

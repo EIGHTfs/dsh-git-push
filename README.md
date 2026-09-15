@@ -37,7 +37,7 @@ DSH（DeepSeek Harness）git 提交推送与代码审计插件——提交前自
 | 功能块 | 做什么 | 入口 |
 |---|---|---|
 | **提交推送** | token / SSH 密钥管理、提交、推送、clone、建仓、可见性切换、force 强推、版本历史 | `git_commit_push` 工具 / CLI / 侧边栏 |
-| **代码审计** | 提交前自动审计门禁、14 个规则槽位 107 条规则、10 维度质量评分、豁免机制、链接检查、**三层审计管线（L1 正则初筛 / L2 AST 数据流 / L3 运行时检测）** | `code_audit` 工具 / CLI / 侧边栏 |
+| **代码审计** | 提交前自动审计门禁、14 个规则槽位 107 条规则、10 维度质量评分、豁免机制、链接检查、**三层审计管线（L1 正则初筛 / L2 AST 数据流 / L3 运行时检测）** | `code_audit` 工具 / CLI / 侧边栏 / 输入框 `/git-audit` |
 
 ## 一、提交推送
 
@@ -95,8 +95,8 @@ Git 全链路自动化，token / SSH 凭据管理 + 提交推送，无需手动�
 
 ### 目录结构（自动生成）
 
-> 由 `scripts/tree-doc.mjs` 维护：`gen` 生成 / `check` 查漂移 / `apply` 覆盖本节。
-> 注释来源 `tree-doc.json`（路径 → 一句话介绍），新增文件标「（待注释）」由 AI 补。
+> 由 `scripts/tree-doc.mjs` 维护：`gen` 生成 / `check` 查漂移 / `apply` 覆盖本节 / `sync` 索引自动同步。
+> 注释来源 `tree-doc.json`（路径 → 一句话介绍）：**键集合自动同步**（`sync`/`gen --write` 新增文件自动补键、删除文件自动删键），**描述由 AI/人补**（新键标「（待注释）」）。
 
 <!-- dshgp-tree:start -->
 ```text
@@ -108,13 +108,14 @@ dsh-git-push/
 │   ├── index.js — 插件入口（DSH 接线，再导出全部能力）
 │   ├── user-requirements.json — 开发者特殊要求清单（提交推送前逐条核对）
 │   ├── app/ — 插件入口层（apply/HTTP 处理/工具调用分发/注入文本/默认扫描根）
-│   │   ├── apply.js — 插件装载入口（注册 schema/工具/HTTP/注入钩子）
+│   │   ├── apply.js — 插件装载入口（注册 schema/工具/HTTP/注入钩子/斜杠命令）
 │   │   ├── constants.js — 插件名与设置命名空间常量
 │   │   ├── http-handlers.js — HTTP 路由分发（全部 /api/git-push/* 端点）
 │   │   ├── settings-bridge.js — 设置读写桥（host scope 共享；绕开 client isLoopback=memory 落盘陷阱）
 │   │   ├── index.js — 插件入口再导出（宿主 main 指向）
 │   │   ├── inject-text.js — 注入文本（工具用法提示 FUNCTION_USAGE_HINT）
 │   │   ├── scan-root.js — 默认扫描根解析（配置优先→DSH 家根自动识别）
+│   │   ├── slash-commands.js — 用户输入框斜杠命令（目前只注册 /git-audit）
 │   │   ├── schema.js — 配置 schema（宿主导出缺失时兜底）
 │   │   ├── slot-stats.js — 规则槽位命中统计（模块级状态）
 │   │   ├── tool-call.js — 工具调用分发（git_scan/commit_push/audit/status 等全部工具）
@@ -143,7 +144,7 @@ dsh-git-push/
 │   │   ├── repo-level.js — 仓库级语义规则
 │   │   ├── slot.js — 按规则包聚合审计命中（拦截/警告/通过）
 │   ├── audit-rules/ — 规则包 yml（nodejs/npm/frontend/comment/dsh/private/structure 等动态槽位）
-│   │   ├── audit-rules-comment.yml — 注释类规则（黑名单措辞/对话残留）（规则包 comment）
+│   │   ├── audit-rules-comment.yml — 注释类规则（黑名单措辞/对话残留）+ 顶层 rewrites 清洗改写表（规则包 comment）
 │   │   ├── audit-rules-docs.yml — 文档类规则（README/文档措辞）（规则包 docs）
 │   │   ├── audit-rules-dsh.yml — DSH 生态规则（宿主/插件约定）（规则包 dsh）
 │   │   ├── audit-rules-filehealth.yml — 文件健康度规则（三维分级）（规则包 filehealth）
@@ -158,8 +159,8 @@ dsh-git-push/
 │   │   ├── audit-rules-structure.yml — 结构规则（命名/规模/复杂度）（规则包 structure）
 │   │   ├── audit-rules-template.yml — 规则模板（新规则包起点）（规则包 template）
 │   │   ├── audit-rules-version.yml — 版本规则（版本一致性）（规则包 version）
-│   ├── backend/ — 后端服务（后台任务队列——方案 B：审计同步、推送后台化）
-│   │   ├── task-queue.js — 后台任务队列（submitTask/getTask，方案 B）
+│   ├── app/ — 插件入口层（schema / tools / tool-call / http-handlers / apply 编排）
+│   │   ├── tool-call.js — 工具调用分发（git_commit_push 走宿主官方 ctx.jobs 后台 job）
 │   ├── checks/ — 检查层（按 kind 调用检查器：正则/语义/结构/文件健康/按钮绑定/私密文件）
 │   │   ├── button-bind.js — 按钮事件绑定交叉比对（声明了但没绑定）
 │   │   ├── common.js — 检查器公共设施（豁免提示/severity 封顶/分组）
@@ -228,7 +229,7 @@ dsh-git-push/
 │   ├── scan-version.mjs — 版本一致性校验脚本
 │   ├── scrub-user-wording.mjs — 清理「用户沟通措辞」独立脚本
 │   ├── sync-plugin.mjs — 双副本同步脚本（源仓库 → 部署安装副本）
-│   ├── tree-doc.mjs — README 目录结构维护脚本（gen/check/apply）
+│   ├── tree-doc.mjs — README 目录结构维护脚本（gen/check/apply/sync 索引自动同步）
 │   ├── watch-preview.mjs — preview.html 自动重生成监听（源码变更即重建）
 ├── assets/ — 预览页与配图（preview.html 交互模拟页 + 面板截图）
 │   ├── panel-account.png — 账号卡片面板截图（README 配图）
@@ -263,11 +264,12 @@ dsh-git-push/
 │   ├── test-rule-packs.mjs — 规则总入口测试（编译注册/字段指派）
 │   ├── test-rule-slots-render.mjs — 规则包列表统计渲染回归
 │   ├── test-self.mjs — 自身总入口测试（VERSION/CLI/help 比对）
+│   ├── test-slash-commands.mjs — 用户输入框 /git-audit 斜杠命令（解析/接线/对本仓库跑 quick）
 │   ├── test-sidebar-interaction.mjs — 侧边栏规则包列表交互自检
 │   ├── test-smart-hint.mjs — 扫描智能提示 + 评分对数衰减测试
 │   ├── test-status-secret.mjs — token 明文不下发安全回归
-│   ├── test-task-queue.mjs — 后台任务队列测试（状态机/HTTP 端点/后台化形态）
-│   ├── test-tree-doc.mjs — README 目录树脚本测试（gen/check/apply 闭环）
+│   ├── test-task-queue.mjs — 后台化回归测试（官方 job 注册 / 无 jobs 同步保底 / blocker 拦截）
+│   ├── test-tree-doc.mjs — README 目录树脚本测试（gen/check/apply 闭环 + syncIndex 索引同步）
 ├── docs/ — 开发文档
 │   ├── DETAILS-EXEMPT-AND-RULES.md — 细节补充：豁免注释与规则 yml 用法全录
 ├── skills/ — 插件权威 skill（功能手册/规则/使用说明，安装副本的 skills/ 同步）
@@ -300,7 +302,7 @@ dsh-git-push/
 ├── cordis.patch.yml — DSH 插件组合 patch（loader 注入定义）
 ├── package.json — 包声明（零依赖、files 白名单、scripts）
 ├── screenshots.json — 截图清单（README 配图引用）
-├── tree-doc.json — 目录结构注释映射（路径→一句话介绍，AI 维护）
+├── tree-doc.json — 目录结构注释映射（路径→一句话介绍；键自动同步、描述 AI 维护）
 ```
 <!-- dshgp-tree:end -->
 
@@ -580,8 +582,7 @@ node assets/preview-gen.mjs
 
 ```
 · git_scan —— 列工作区（含额外路径）所有 git 仓库：分支/remote/未提交与未推送数/最近活动
-· git_commit_push —— 一键提交并推送（审计同步拦截，通过后 commit+push **后台化**：立即返回 async:true+taskId，AI 继续干别的，稍后 git_push_status 查结果）
-· git_push_status —— 查询后台提交推送任务：taskId → status(pending/running/done/error) + 完成后 result/error
+· git_commit_push —— 一键提交并推送（审计同步拦截，通过后 commit+push 走宿主官方后台 job：立即返回 async:true+jobId，AI 继续干别的，用宿主 job_output <jobId> 查结果）
 · code_audit —— 审计仓库（L0 静态检查 + 质量评分），scope=full 全量，可传 ruleset / weights
 · git_account_check —— 校验 GitHub 账号与凭据（token 在线校验 + SSH 公钥指纹）
 · git_gen_ssh_key / git_remote_create / git_set_visibility / git_clone / git_gen_readme / link_check
@@ -653,6 +654,44 @@ node scripts/rule-switch.mjs enable comment     # 重新启用
 
 边界：`nodejs` / `private` 属安全红线强制槽位，禁用会被拦截（返回错误、不写 yml），与 UI 行为一致。注意与 `scripts/sync-plugin.mjs --write` 的协作：同步会按工作区规则文件覆盖部署副本的 disabled 状态（工作区文件里没有 disabled 行则同步后恢复启用）。
 
+## 用户输入框斜杠命令
+
+会话输入框打 `/` 会弹出官方发现菜单。本插件目前只注册一条。
+
+语法：
+
+```
+/git-audit [路径] [--full] [--quick|--standard|--deep]
+```
+
+全部参数示例（绝对路径 + 全量 + 最深档）：
+
+```
+/git-audit /path/to/repo --full --deep
+```
+
+只审当前会话工作区的本次变动（最常见）：
+
+```
+/git-audit
+```
+
+当前会话工作区全量、快速档：
+
+```
+/git-audit --full --quick
+```
+
+- **默认路径 = 当前会话工作区**（`session.header.cwd`，与指挥家按工作区分组同一字段）
+- **未分类**（cwd 空）必须写路径，否则报错退出，**不会**扫 DSH 家根
+- 相对路径接到会话 cwd；无 cwd 时相对路径不可用，改给绝对路径
+- 目标必须是 git 仓库（含 `.git`，或向上找到仓库根）；非仓库直接拒绝——`code_audit` 对无 `.git` 目录会走全量 `auditFull`，扫家根会把进程打爆
+- 默认只审本次变动；`--full` 全量；档位 `--quick` / `--standard` / `--deep`
+- 结果只显示在命令层，**不进模型历史**（官方 `dsh-commands` 协议）
+- 未注册的 `/git-scan` `/git-push` 仍走 agent 工具 / 设置页
+
+Host 注册走 `ctx.inject(['commands'])`；无命令适配器的宿主静默跳过。改动需重启主实例后输入框才能看到。
+
 ## 独立 CLI（git-sluice）
 
 脱离 DSH 独立运行（零第三方依赖，仅需 Node ≥18 与本机 git）。
@@ -675,7 +714,7 @@ git-sluice self-check           版本一致性 + HELP↔parseArgv 机器比对
 
 v1.27~v1.44 曾内置 `autoCleanCommentWording`（提交前自动改写代码注释里的沟通残留措辞为中性描述），
 v1.45.0 因「commentStartOf 字符串不感知」**三次静默篡改事故**（把测试夹具字符串里的 `# 用户说…` 当注释改掉）废除，
-确立「只警告、不删改」总原则。本脚本按**同一张改写规则表**（`WORDING_REWRITES`，含日期保留规则）独立复活：
+确立「只警告、不删改」总原则。改写表与审计共用 `lib/audit-rules/audit-rules-comment.yml` 顶层 `rewrites`（match/replace；审计只读 `rules`，不消费改写表）。脚本启动时从该 yml 装载：
 **插件不注册任何入口**（不进 lib/、不注册工具/API/设置项），仅作为可执行脚本，供 AI / 用户手动调用；
 脚本随插件发布，在安装副本目录里同样可跑（见「安装与要求」）。
 
@@ -686,7 +725,7 @@ node scripts/scrub-user-wording.mjs <路径...> --apply --yes     # 非交互强
 node scripts/scrub-user-wording.mjs --repo <git仓库路径> [--apply [--yes]]   # 只处理未提交 diff 涉及文件
 ```
 
-退出码：0=无命中或已处理；2=dry-run 有命中；3=非交互环境未带 `--yes` 拒绝写盘。
+退出码：0=无命中或已处理；2=dry-run 有命中；3=非交互环境未带 `--yes` 拒绝写盘。改写规则改 `audit-rules-comment.yml` 的 `rewrites` 即可，不必改脚本。
 
 相比旧实现的关键修复（三次事故根因）：
 
@@ -729,7 +768,21 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
-| **1.2.1**（当前） | **设置落盘改插件私有 config.json + 推送判定修正 + 审计拦截列文件 + live ls-remote** \
+| **1.2.2**（当前） | **用户输入框斜杠命令 `/git-audit` + 审计清洗改写表并入规则 yml + 后台推送走宿主官方 job + tree-doc 索引自动同步 + 规则 yml dimensions 维度统一绑定 + 文件行数检查注释行单独统计 + 仓库索引路径修正 + 健壮性/安全类告警清零** \
+`/git-audit [路径] [--full] [--quick|--standard|--deep]`：会话输入框直接审计（解析/接线/quick 档自带缓存），与 `code_audit` 工具同判定 \
+scrub-user-wording 改写表从脚本内嵌迁移到 `lib/audit-rules/audit-rules-comment.yml` 顶层 `rewrites:`（审计只读 `rules` 不消费改写表，脚本启动时装载；规则定义文件豁免机制天然覆盖该 yml）\
+`git_commit_push` 后台化改宿主官方 `ctx.jobs`（dsh-jobs-local）：审计仍同步即时拦截，通过后 commit+push 注册为官方后台 job（kind=`git-push`，id 如 `git-push-1`），工具立即返回 `async:true + jobId`，AI 用宿主自带 `job_output <jobId>` / `job_list` / `job_kill` 查询，不再提供 `git_push_status` 工具与 `/api/git-push/task` 端点；自研 `lib/backend/task-queue.js` 删除，脱离 DSH 环境（无 ctx.jobs）时自动降级同步执行 \
+`scripts/tree-doc.mjs` 新增 `sync` 子命令：tree-doc.json 键集合自动同步（新增文件自动补键＝`（待注释）`，删除文件自动删键、描述连带删除，目录键自动补齐），描述仍由 AI/人手动补；`gen --write` / `apply --sync` 复用，`check` 孤儿提示改引导 `sync`；修 `git ls-files --cached` 列出已删文件导致 check 误报漂移 \
+`code_audit` 新增 `includeIgnored` 参数（true=全量扫描含 .gitignore 忽略文件，默认 false 跳过——collector 层本就跳过，工具层补暴露与透传）\
+质量评分 `score` 保留一位小数（不再 Math.round 取整，79 与 79.4 可区分），level 档位用同分判定 \
+规则 yml dimensions 维度统一绑定（`lib/rule/compilers/helpers.js` 新增 `pickDimensions`）：yml 规则条目显式声明 `dimensions:` 时优先透传（支持一字段多维度），未声明回退各编译器内置默认；非法维度名收集编译错误并回退默认，防静默错绑；全部编译域（regex/path-regex/func-lines/credential/数值类/结构类/frontend/link-semantic/dataflow/file-health）统一走 pickDimensions \
+文件行数检查（max-lines）注释行单独统计：`checkFileLines` 新增 `commentLines` 字段（tokenizer 注释 token 按物理行去重，跨行块注释按换行展开），report 信息附「其中注释 N 行」，判定仍按总行数不改变既有行为 \
+仓库索引路径修正：dsh-repo-index.json 查找/写入位置从工作区 `dsh-git-push-User/<owner>/`（已废弃同级仓）改为插件配置目录 `$DSH_HOME/git-push/dsh-repo-index.json`（credentialsDir，与 skill 文档约定一致），生成索引不入 git；`.gitignore` 新增 `dsh-git-push-User/`，已跟踪索引移出 \
+`scanRepos` 补齐 `name` 字段（= 仓库目录名）：修复 buildRepoIndex 生成索引 repos 条目缺 name 的缺陷 \
+扫描逻辑优化：`scanClearThenAccess` 拆 7 个单职责小函数（函数长度 blocker 清零）；`hasExternalCallTimeout` 起始括号深度计入命中行（跨行对象里的 `AbortSignal.timeout` 不再漏豁免）\
+健壮性/安全修复：HTTP 入参统一 `readBody` 校验（非对象一律空对象）；空 catch 注释补足（`忽略/跳过/降级/兜底` 语义清单）；client fetch 加 `AbortSignal.timeout(30s)`；`githubFetch` 调用点语义豁免（内部统一 60s 超时）；`git 仓库绝对路径`/`dsh-skip-*` 提示抽常量去重；git 参数拼接改 `concat`；`apiOrFallback`/`sshFallback` 抽取去重；凭据位置说明统一为插件配置目录 `$DSH_HOME/git-push/`（0600）\
+全量审计：blocker 43→0，警告净减 44；回归 578 全绿 |
+| **1.2.1** | **设置落盘改插件私有 config.json + 推送判定修正 + 审计拦截列文件 + live ls-remote** \
 开关（审计/注入要求清单/注入系统提示词/扫描范围/权重）真源 = `$DSH_HOME/git-push/config.json`（0600），不再写公共 settings.yaml；host `scope.watch` 只处理凭据，前端订阅不再用 yaml 默认值盖开关 \
 侧边栏 push：可推 = 有远端且 ahead>0（或未知），工作树脏不再拦截；失败把 `push.reason` 提到顶层 error；推送前用插件 SSH 密钥 live ls-remote，不信过期的 origin/<branch> 缓存 \
 审计 blocker 返回 `file:line（rule）`；设置 UI 提交写 `settings-ui.log`（JSONL，token/ssh 打码）｜回归全绿 |

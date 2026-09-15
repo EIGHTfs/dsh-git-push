@@ -69,7 +69,13 @@ window.__ERRORS__ = [];
 function __err(kind, msg) {
   window.__ERRORS__.push(kind + ': ' + msg);
   var d = document.getElementById('__err');
-  if (!d) { d = document.createElement('pre'); d.id = '__err'; d.style.cssText = 'color:#f87171;white-space:pre-wrap;font-size:12px;border:1px solid #f87171;padding:8px;margin:0 0 12px'; document.body.insertBefore(d, document.body.firstChild); }
+  if (!d) {
+    d = document.createElement('pre');
+    d.id = '__err';
+    d.style.cssText = 'color:#f87171;white-space:pre-wrap;font-size:12px;'
+      + 'border:1px solid #f87171;padding:8px;margin:0 0 12px';
+    document.body.insertBefore(d, document.body.firstChild);
+  }
   d.textContent += kind + ': ' + msg + String.fromCharCode(10);
 }
 window.addEventListener('error', function (e) { __err('error', e.message); });
@@ -130,6 +136,8 @@ window.__dshgpScript = window.__dshgpScript || [];
 // 假接口：/toggle-rule 真翻转 disabled，配合 loadSlots 对账，点击结果能留住
 window.fetch = function (url, init) {
   var u = String(url), body = { ok: true };
+  // 演示目录根（mock 假数据用；browse/repos-local 共用）
+  var DEMO_HOME = '/home/user/项目';
   // ?backend= 或 window.__DSHGP_BACKEND__（preview-server 注入）→ 转发真实后端
   var __PRE_B__ = (location.search.match(/[?&]backend=([^&]+)/) || [])[1] || window.__DSHGP_BACKEND__ || '';
   if (__PRE_B__) {
@@ -166,14 +174,14 @@ window.fetch = function (url, init) {
     var q = String(u).split('?')[1] || '';
     var p = '';
     try { p = decodeURIComponent(String(q).replace(/^path=/, '')); } catch (e) { /* 忽略 */ }
-    if (!p) p = '/home/user/项目';
+    if (!p) p = DEMO_HOME;
     var parent = p.replace(/\\/[^/]+$/, '') || '/';
     var dirs;
-    if (p === '/home/user/项目/dsh-git-push-v2/lib') dirs = ['app', 'ast', 'audit', 'checks', 'git', 'rule', 'self', 'client', 'context'];
-    else if (p === '/home/user/项目/dsh-git-push-v2') dirs = ['lib', 'scripts', 'docs', 'test', 'assets', 'tool'];
-    else if (p === '/home/user/项目/gamebanana-mods-downloader') dirs = ['server', 'crx', 'docs', 'scripts', 'test', 'mapping'];
-    else if (p === '/home/user/项目/ai-work-archive') dirs = ['skills', '开发者文档', '任务'];
-    else if (p === '/home/user/项目') dirs = ['dsh-git-push-v2', 'gamebanana-mods-downloader', 'iwara-downloader', 'ai-work-archive', '任务', '数据', '用户'];
+    if (p === DEMO_HOME + '/dsh-git-push-v2/lib') dirs = ['app', 'ast', 'audit', 'checks', 'git', 'rule', 'self', 'client', 'context'];
+    else if (p === DEMO_HOME + '/dsh-git-push-v2') dirs = ['lib', 'scripts', 'docs', 'test', 'assets', 'tool'];
+    else if (p === DEMO_HOME + '/gamebanana-mods-downloader') dirs = ['server', 'crx', 'docs', 'scripts', 'test', 'mapping'];
+    else if (p === DEMO_HOME + '/ai-work-archive') dirs = ['skills', '开发者文档', '任务'];
+    else if (p === DEMO_HOME) dirs = ['dsh-git-push-v2', 'gamebanana-mods-downloader', 'iwara-downloader', 'ai-work-archive', '任务', '数据', '用户'];
     else if (p === '/home/user') dirs = ['项目'];
     else dirs = ['src', 'docs', 'build', 'scripts'];
     body = { ok: true, path: p, parent: parent, dirs: dirs };
@@ -183,8 +191,16 @@ window.fetch = function (url, init) {
     body = {
       ok: true, root: '/home/user/项目', count: 2, owner: 'EIGHTfs', indexedAvailable: true,
       repos: [
-        { path: '/home/user/项目/dsh-git-push-v2', branch: 'master', remote: 'origin', changed: 0, lastCommit: 'a1b2c3d 账号卡片：本地/云端', hasRemote: true, upstream: 'origin/master', ahead: 3, behind: 0, indexed: { owner: 'EIGHTfs', repo: 'dsh-git-push', repoUrl: 'https://api.github.com/repos/EIGHTfs/dsh-git-push', visibility: '公开' } },
-        { path: '/home/user/项目/gamebanana-mods-downloader', branch: 'main', remote: 'origin', changed: 5, lastCommit: 'f0e9d8c 修复下载器', hasRemote: true, upstream: 'origin/main', ahead: 1, behind: 0, indexed: { owner: 'EIGHTfs', repo: 'gamebanana-mods-downloader', repoUrl: 'https://api.github.com/repos/EIGHTfs/gamebanana-mods-downloader', visibility: '私有' } },
+        {
+          path: DEMO_HOME + '/dsh-git-push-v2', branch: 'master', remote: 'origin', changed: 0,
+          lastCommit: 'a1b2c3d 账号卡片：本地/云端', hasRemote: true, upstream: 'origin/master', ahead: 3, behind: 0,
+          indexed: { owner: 'EIGHTfs', repo: 'dsh-git-push', repoUrl: 'https://api.github.com/repos/EIGHTfs/dsh-git-push', visibility: '公开' },
+        },
+        {
+          path: DEMO_HOME + '/gamebanana-mods-downloader', branch: 'main', remote: 'origin', changed: 5,
+          lastCommit: 'f0e9d8c 修复下载器', hasRemote: true, upstream: 'origin/main', ahead: 1, behind: 0,
+          indexed: { owner: 'EIGHTfs', repo: 'gamebanana-mods-downloader', repoUrl: 'https://api.github.com/repos/EIGHTfs/gamebanana-mods-downloader', visibility: '私有' },
+        },
       ],
     };
   } else if (u.indexOf('repos-cloud') >= 0) {
@@ -248,7 +264,8 @@ body{margin:0;padding:20px;background:#0f1117;color:#e8eaf0;
 #root{max-width:520px}
 #__err{max-width:520px}
 </style></head><body>
-<div class="banner">这是<b>模拟预览</b>（交互用假数据）：跑的是仓库里真实的 <b>client.js</b>，只垫片了宿主环境；<b>规则包列表的槽位、显示名、规则条数取自真实规则文件</b>，与真实实例一致。
+<div class="banner">这是<b>模拟预览</b>（交互用假数据）：跑的是仓库里真实的 <b>client.js</b>，只垫片了宿主环境；
+<b>规则包列表的槽位、显示名、规则条数取自真实规则文件</b>，与真实实例一致。
 三个选项卡、开关、规则包启停/调序、权重、凭据保存、一键生成 SSH 都可点，改动只留在页面内，不写任何文件。</div>
 <div id="root"></div>
 <script>${reactUmd}</script>

@@ -31,7 +31,7 @@ generatedBy: EIGHTfs 2026-08-23（用户直接指令固化）
    ```
 3. **私有仓库**（多数 dsh-* 插件）：
    ```bash
-   TOKEN=$(cat <workspace_root>/data/sensitive/github-token 2>/dev/null | head -1)
+   TOKEN=$(cat "$DSH_HOME/git-push/github-token" 2>/dev/null | head -1)
    git clone https://${TOKEN}@github.com/EIGHTfs/<项目名>.git
    # 或走 ssh.github.com:443（有 SSH key 时）
    git clone ssh://git@ssh.github.com:443/EIGHTfs/<项目名>.git
@@ -56,7 +56,7 @@ generatedBy: EIGHTfs 2026-08-23（用户直接指令固化）
 
 ## 四、边界与坑
 
-1. **私有仓库必须 token/SSH key**：无凭据 clone 必失败；token 位置 `workspace/data/sensitive/github-token`（600 权限）
+1. **私有仓库必须 token/SSH key**：无凭据 clone 必失败；token 位置 `$DSH_HOME/git-push/github-token`（0600 权限）
 2. **无 GitHub 的项目**（dsh-uuid-fix / dsh-host-perf 等本地 only）：GitHub 找不到 = 如实告知，查部署副本/本地备份，**不凭空说找到了**
 3. **仓库名 ≠ 目录名**：个别项目目录名与仓库名不同，以 dsh-repo-index 为准
 4. **归属关系别混淆**：某项目「随主仓库打包应用」≠「源码在主仓库里」——如 dsh-uuid-fix 补丁打进 DeepSeekHarness-NAS 的 bin/，但源码仍是独立 dsh-uuid-fix 项目

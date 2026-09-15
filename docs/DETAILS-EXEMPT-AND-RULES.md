@@ -431,12 +431,19 @@ cd ../dsh-git-push && node cli.mjs audit ../dsh-git-push-v2 --json
 
 ## 十二、10 维度字段绑定（问题字段 ↔ 维度）
 
-> 设计：**所有问题都归入 10 个维度**；每个 yml 字段在**对应编译函数里写维度绑定**，
-> 支持**一个字段绑定多个维度**（如 repeated-string → 可维护性+可读性）。
+> 设计：**所有问题都归入 10 个维度**；每个规则条目在 **yml 里可显式声明 `dimensions:`**（支持一字段多维度），
+> **未声明则回退对应编译函数的内置默认维度**（2026-09-15 统一机制，见 12.1）。
+> 例：repeated-string 默认 → 可维护性+可读性，yml 写 `dimensions: [性能]` 即覆盖。
 
-### 12.1 绑定位置 = 编译函数（compilers.js），不是 yml
+### 12.1 绑定机制 = yml 显式优先，编译函数默认兜底（pickDimensions）
 
-| kind | 维度绑定（compilers.js 内声明） |
+统一入口 `lib/rule/compilers/helpers.js` 的 `pickDimensions(r, fallback, errors)`：
+
+- yml 条目显式声明 `dimensions:`（数组，一字段可多维度）→ **优先透传**（去重后原样带入编译产物 `dimensions[]`）；
+- 未声明 / 空数组 → **回退编译器内置默认**（下表「默认维度」列）；
+- 声明了**非 10 维度名**（10 维：可读性/可维护性/健壮性/安全性/性能/测试覆盖/可观测性/可部署性/文档/开发者体验）→ **收集编译错误 + 回退默认**，防静默错绑。
+
+| kind | 默认维度（未声明时） |
 |---|---|
 | credential-ref / credential-file / `[FUNC]` | 安全性 |
 | func-lines | 可读性 + 可维护性 |
@@ -452,10 +459,24 @@ cd ../dsh-git-push && node cli.mjs audit ../dsh-git-push-v2 --json
 | semantic | 健壮性 |
 | blacklist | 文档 |
 | folder | 可维护性 + 可部署性 |
+| npm-json | 可部署性 |
+| button-bind / magic-number-smart | 可维护性 |
+| patch-insert | 健壮性 + 可部署性 |
+| dataflow | 健壮性 |
+| file-health | 可维护性 + 可读性 |
 
-### 12.2 为什么绑定写在字段函数里
+> yml 示例：`regex` 规则想记为「安全性」而非默认「可读性」：
+> ```yaml
+> - id: security/foo
+>   patterns: ["bar"]
+>   dimensions:
+>     - 安全性
+> ```
 
-- **yml 保持纯数据**：规则作者不用懂维度，只管写 pattern/阈值；
+### 12.2 为什么绑定支持 yml 覆盖
+
+- **yml 保持可配**：规则作者想改问题归到哪个维度，直接改 yml 的 `dimensions:`，不用碰编译函数；
+- **默认值保留**：绝大多数规则不写维度 → 编译器内置默认兜底，旧规则零改动；
 - **一处声明全链生效**：编译产物直接带 `dimensions[]`，评分 `countByDimension` 直接消费；
 - **加新字段 = 加函数 + 注册一行**（compileRule 主体永不改）。
 

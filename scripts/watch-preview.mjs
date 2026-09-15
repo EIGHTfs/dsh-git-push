@@ -17,7 +17,7 @@
  *     浏览器开 assets/preview.html?backend=http://127.0.0.1:8090
  */
 import { watch } from 'node:fs';
-import { execSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -35,7 +35,9 @@ const TARGETS = [
 function regen() {
   try {
     const t0 = Date.now();
-    execSync(`node ${JSON.stringify(GEN)}`, { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] });
+    // spawnSync + stdio inherit：生成器输出直接透传终端，不收集进内存（preview.html 可能几十 KB）
+    const r = spawnSync('node', [GEN], { cwd: ROOT, stdio: 'inherit', timeout: 120_000 });
+    if (r.status !== 0) throw new Error(`exit ${r.status}`);
     console.log(`[watch] ${new Date().toTimeString().slice(0, 8)} 已重新生成 preview.html (${Date.now() - t0}ms) → 浏览器 Ctrl+R 刷新`);
   } catch (e) {
     console.error('[watch] 重新生成失败:', String(e && e.message || e).split('\n')[0]);

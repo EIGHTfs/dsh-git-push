@@ -219,7 +219,7 @@ window.__ModuleLoader__.load({
 
     /** fetch 封装：GET JSON（same-origin）。 */
     async function dshgp_getJson(url) {
-      const res = await fetch(url, { credentials: 'same-origin' });
+      const res = await fetch(url, { credentials: 'same-origin', signal: AbortSignal.timeout(30_000) });
       return res.json();
     }
     /** fetch 封装：POST JSON（same-origin）。 */
@@ -229,6 +229,7 @@ window.__ModuleLoader__.load({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload || {}),
         credentials: 'same-origin',
+        signal: AbortSignal.timeout(30_000),
       });
       return res.json();
     }
@@ -1404,7 +1405,7 @@ window.__ModuleLoader__.load({
       persistSetting(key, value, okMsg = '') {
         // 2026-09-15：UI 提交调试日志（浏览器控制台可见；服务端另有 settings-ui.log 持久留痕）
         if (typeof console !== 'undefined' && console.debug) {
-          try { console.debug('[dsh-git-push] UI 提交', key, '=', String(value).slice(0, 40) + (String(value).length > 40 ? '…' : '')); } catch { /* ignore */ }
+          try { console.debug('[dsh-git-push] UI 提交', key, '=', String(value).slice(0, 40) + (String(value).length > 40 ? '…' : '')); } catch { /* 控制台不可用时跳过调试输出 */ }
         }
         // 开关/扫描范围/权重只走 HTTP → config.json。再 scope.set 会写公共 yaml
         //   （锁竞争）并把 schema 默认值灌回 watch，把刚勾的开关盖掉。

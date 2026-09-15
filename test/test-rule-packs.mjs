@@ -9,6 +9,7 @@ import assert from 'node:assert/strict';
 import '../lib/rule/compilers.js'; // 副作用导入：注册编译函数
 import { registerCompiler, compileRule, compileAllRules, RULE_COMPILERS } from '../lib/rule/registry.js';
 import { loadRuleFiles, RULE_SLOTS, resolveSlotOrder, discoverRuleSlots, setSlotDisabled } from '../lib/rule/loader.js';
+import { loadWordingRewrites } from '../scripts/scrub-user-wording.mjs';
 import { safeRe } from '../lib/rule/compilers.js';
 import { checkBlacklist } from '../lib/audit/checks.js';
 import { checkRegexRules } from '../lib/checks/regex.js';
@@ -84,6 +85,46 @@ test('dimensions 绑定：func-lines → 可读性+可维护性（多维度）',
 test('dimensions 绑定：[FUNC] → 安全性', () => {
   const res = compileRule({ id: '[FUNC]-x', name: 'x', pattern: 'y' });
   assert.deepEqual(res.rule.dimensions, ['安全性']);
+});
+
+test('dimensions 统一透传（pickDimensions）：yml 显式优先，缺省回退默认', () => {
+  // 显式：regex 规则声明多维度 → 透传（覆盖默认「可读性」）
+  const explicit = compileRule({
+    id: 'x/r-explicit', severity: 'warning', patterns: ['foo'],
+    dimensions: ['安全性', '可维护性'],
+  });
+  assert.equal(explicit.ok, true);
+  assert.deepEqual(explicit.rule.dimensions, ['安全性', '可维护性']);
+
+  // 缺省：regex 不写 dimensions → 回退编译器默认「可读性」
+  const fallback = compileRule({ id: 'x/r-fallback', severity: 'warning', patterns: ['foo'] });
+  assert.deepEqual(fallback.rule.dimensions, ['可读性']);
+
+  // 数值类（max-lines）：显式「性能」覆盖默认「可读性+可维护性」
+  const ml = compileRule({ id: 'x/ml', max_lines: 500, severity: 'warning', dimensions: ['性能'] });
+  assert.deepEqual(ml.rule.dimensions, ['性能']);
+
+  // 凭据类（credential-ref）：显式「文档」覆盖默认「安全性」
+  const cred = compileRule({ id: 'credref-custom', name: 'x', pattern: 'sk-', dimensions: ['文档'] });
+  assert.deepEqual(cred.rule.dimensions, ['文档']);
+
+  // 去重：声明重复维度只保留一次
+  const dedup = compileRule({
+    id: 'x/dedup', severity: 'warning', patterns: ['foo'],
+    dimensions: ['安全性', '安全性', '健壮性'],
+  });
+  assert.deepEqual(dedup.rule.dimensions, ['安全性', '健壮性']);
+});
+
+test('dimensions 非法条目：报错收集 + 回退默认（不静默错绑）', () => {
+  const errors = [];
+  const res = compileRule(
+    { id: 'x/bad', severity: 'warning', patterns: ['foo'], dimensions: ['不存在维度'] },
+    { errors },
+  );
+  assert.equal(res.ok, true);
+  assert.deepEqual(res.rule.dimensions, ['可读性'], '非法维度回退默认');
+  assert.ok(errors.length >= 1 && /未知维度/.test(errors[0]), `应有未知维度报错，实际: ${errors.join('|')}`);
 });
 
 test('未知规则：既无 kind 也无字段 → 报错不静默', () => {
@@ -292,6 +333,26 @@ test('1.0.3：blacklist kind 编译（comment 槽位，2026-09-13 取消分数�
 });
 
 // 2026-09-13 约定：关键词取消分数制——白名单命中不拦截，黑名单命中直接拦截（专项测试）
+test('comment yml 顶层 rewrites 不进审计 rules', () => {
+  const r = loadRuleFiles(['comment']);
+  assert.equal(r.ok, true, r.errors?.join('; '));
+  assert.ok(!r.merged.rules.some((x) => x && (x.match || x.replace)), 'rewrites 不得混进 rules');
+  assert.ok(r.merged.rules.every((x) => x && x.id), '每条审计规则须有 id');
+});
+
+test('scrub 从 audit-rules-comment.yml 读改写表', () => {
+  const rows = loadWordingRewrites();
+  assert.ok(rows.length >= 20, `rewrites 条数过少: ${rows.length}`);
+  const apply = (s) => {
+    let t = s;
+    for (const { re, fn } of rows) t = t.replace(re, fn);
+    return t;
+  };
+  assert.equal(apply('2026-09-14 用户同意改接口'), '2026-09-14改接口');
+  assert.equal(apply('（用户原话）foo'), 'foo');
+  assert.equal(apply('用户说：这里'), '这里');
+});
+
 test('blacklist blocker 模式：黑名单命中即拦 / 白名单命中整行豁免', () => {
   const r = loadRuleFiles(['comment']);
   const compiled = compileAllRules(r.merged.rules, { errors: [] });

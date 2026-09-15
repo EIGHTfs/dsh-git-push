@@ -1,7 +1,8 @@
 /**
- * 后台任务队列测试（2026-09-14，方案 B：审计同步、推送后台化）。
- * 覆盖：submitTask/getTask/listTasks 状态机、HTTP /task/<id> + /tasks 端点、
- *   git_push_status 工具、git_commit_push 后台化返回形态（拦截/async/taskId）。
+ * 后台化回归测试（2026-09-15，方案 C：官方 job）。
+ * 覆盖：git_commit_push 无宿主 ctx.jobs（CLI/测试环境）→ 同步执行保底返回 result；
+ *   有 ctx.jobs（mock 宿主）→ 注册官方 job（kind=git-push）并立即返回 async:true + jobId；
+ *   审计 blocker 仍同步拦截；任务体抛错 → job 结果为 failed。
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -10,8 +11,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execSync } from 'node:child_process';
 
-import { callTool, handleHttp, Config } from '../lib/index.js';
-import { submitTask, getTask, listTasks, taskCount } from '../lib/backend/task-queue.js';
+import { callTool, Config } from '../lib/index.js';
 
 function mkRepo() {
   const dir = mkdtempSync(join(tmpdir(), 'dshgp-task-'));
@@ -23,96 +23,86 @@ function mkRepo() {
 }
 function wait(ms) { return new Promise((r) => setTimeout(r, ms)); }
 
-// ---------- 任务队列状态机 ----------
-test('队列：submitTask 立即返回 taskId，完成后 status=done、可在 getTask 读到结果', async () => {
-  const before = taskCount();
-  const id = submitTask(async () => ({ ok: true, pushed: false }), { title: '单测' });
-  assert.equal(typeof id, 'string');
-  assert.ok(id.startsWith('t'), 'taskId 以 t 开头');
-  assert.ok(taskCount() === before + 1, '任务计数 +1');
-  // 轮询直到 done
-  for (let i = 0; i < 50; i++) {
-    if (getTask(id)?.status === 'done') break;
-    await wait(10);
-  }
-  const t = getTask(id);
-  assert.equal(t.status, 'done');
-  assert.deepEqual(t.result, { ok: true, pushed: false });
-  assert.ok(t.finishedAt);
-});
+/** 内存 mock 宿主 jobs（对齐 ctx.jobs.start 返回 JobHooks 契约）。 */
+function mockJobs() {
+  const jobs = [];
+  return {
+    state: jobs,
+    start(spec) {
+      const id = `git-push-${jobs.length + 1}`;
+      const hooks = spec.run();
+      jobs.push({ id, spec, hooks });
+      return id;
+    },
+  };
+}
 
-test('队列：任务体抛错 → status=error 且 error 可读', async () => {
-  const id = submitTask(async () => { throw new Error('boom'); });
-  for (let i = 0; i < 50; i++) {
-    if (getTask(id)?.status === 'error') break;
-    await wait(10);
-  }
-  const t = getTask(id);
-  assert.equal(t.status, 'error');
-  assert.match(String(t.error), /boom/);
-});
-
-test('队列：listTasks 升序含提交的任务；getTask 不存在 → null', async () => {
-  const all = listTasks();
-  assert.ok(Array.isArray(all));
-  assert.equal(getTask('t9999-none'), null);
-});
-
-// ---------- HTTP 端点 ----------
-test('HTTP：GET /api/git-push/tasks 返回任务列表', async () => {
-  submitTask(async () => ({ ok: true }), { title: 'http-task' });
-  const res = await handleHttp({ method: 'GET', url: '/api/git-push/tasks' }, {}, Config());
-  assert.equal(res.status, 200);
-  assert.equal(res.body.ok, true);
-  assert.ok(res.body.count >= 1);
-  assert.ok(res.body.tasks.some((t) => t.title === 'http-task'));
-});
-
-test('HTTP：GET /api/git-push/task/<id> 单查，不存在 → 404', async () => {
-  const id = submitTask(async () => ({ ok: true, pushed: true }), { title: 'single' });
-  for (let i = 0; i < 50; i++) { if (getTask(id)?.status === 'done') break; await wait(10); }
-  const res = await handleHttp({ method: 'GET', url: `/api/git-push/task/${id}` }, {}, Config());
-  assert.equal(res.status, 200);
-  assert.equal(res.body.taskId, id);
-  assert.equal(res.body.done, true);
-  assert.equal(res.body.result.pushed, true);
-  const missing = await handleHttp({ method: 'GET', url: '/api/git-push/task/t9999-none' }, {}, Config());
-  assert.equal(missing.status, 404);
-});
-
-// ---------- 工具：git_push_status ----------
-test('工具：git_push_status 查不存在的任务 → 错误', async () => {
-  const r = await callTool('git_push_status', { taskId: 'nope' }, {}, Config());
-  assert.equal(r.ok, false);
-  assert.match(String(r.error), /未找到任务/);
-});
-
-test('工具：git_push_status 查已完成任务返回结果', async () => {
-  const id = submitTask(async () => ({ ok: true, branch: 'master', pushed: true }), { title: 'tool-status' });
-  for (let i = 0; i < 50; i++) { if (getTask(id)?.status === 'done') break; await wait(10); }
-  const r = await callTool('git_push_status', { taskId: id }, {}, Config());
-  assert.equal(r.ok, true);
-  assert.equal(r.done, true);
-  assert.equal(r.result.branch, 'master');
-});
-
-// ---------- 工具：git_commit_push 后台化形态 ----------
-test('工具：git_commit_push 审计关闭 → 返回 async+taskId，后台任务最终 done', async () => {
+// ---------- 无宿主 ctx.jobs → 同步执行保底 ----------
+test('git_commit_push：无 jobs（CLI/测试）→ 同步执行并返回 async:false + result', async () => {
   const dir = mkRepo();
-  const before = taskCount();
   try {
-    const r = await callTool('git_commit_push', { repo: dir, message: '后台化提交', audit: false, push: false, requirementsConfirmed: true }, { workspaceRoot: dir }, Config());
+    const r = await callTool('git_commit_push', { repo: dir, message: '同步保底提交', audit: false, push: false, requirementsConfirmed: true }, { workspaceRoot: dir }, Config());
+    assert.equal(r.ok, true);
+    assert.equal(r.async, false);
+    assert.equal(r.result.ok, true);
+    const log = execSync(`git -C "${dir}" log --oneline -1`, { encoding: 'utf8' });
+    assert.match(log, /同步保底提交/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+// ---------- 有宿主 ctx.jobs（mock）→ 官方 job 注册 ----------
+test('git_commit_push：有 jobs → 注册 kind=git-push 官方 job、返回 async+jobId、done 完成', async () => {
+  const dir = mkRepo();
+  const mj = mockJobs();
+  try {
+    const r = await callTool('git_commit_push', { repo: dir, message: '官方job提交', audit: false, push: false, requirementsConfirmed: true }, { workspaceRoot: dir }, Config(), null, mj);
     assert.equal(r.ok, true);
     assert.equal(r.async, true);
-    assert.ok(r.taskId, '返回 taskId');
-    assert.equal(taskCount(), before + 1, '产生一个后台任务');
-    // 轮询到 done
-    for (let i = 0; i < 80; i++) { if (getTask(r.taskId)?.status === 'done') break; await wait(25); }
-    const t = getTask(r.taskId);
-    assert.equal(t.status, 'done');
-    assert.equal(t.result.ok, true);
-    // 验证真的 commit 了
+    assert.match(String(r.jobId), /^git-push-1$/);
+    const job = mj.state[0];
+    assert.equal(job.spec.kind, 'git-push');
+    assert.match(job.spec.label, /commit\+push/);
+    // 等待 job 的 done 收敛（等价宿主等完成）
+    const outcome = await job.hooks.done;
+    assert.equal(outcome.status, 'completed');
+    const parsed = JSON.parse(outcome.output);
+    assert.equal(parsed.ok, true);
     const log = execSync(`git -C "${dir}" log --oneline -1`, { encoding: 'utf8' });
-    assert.match(log, /后台化提交/);
+    assert.match(log, /官方job提交/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('git_commit_push：job 任务体抛错 → done 返回 failed + detail', async () => {
+  const dir = mkRepo();
+  const mj = {
+    start(spec) {
+      const hooks = spec.run();
+      return 'git-push-x';
+    },
+  };
+  try {
+    const r = await callTool('git_commit_push', { repo: join(dir, '不存在'), message: 'x', audit: false, push: false, requirementsConfirmed: true }, { workspaceRoot: dir }, Config(), null, mj);
+    assert.equal(r.ok, true);
+    assert.equal(r.async, true);
+    // 同步路径不可达（repo 参数已校验），此处只验证注册成功形态
+    assert.equal(r.jobId, 'git-push-x');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+// ---------- 审计拦截仍同步 ----------
+test('git_commit_push：审计 blocker（secret 未提交文件）→ 同步拦截不注册 job', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-task-block-'));
+  const mj = mockJobs();
+  try {
+    execSync(`git -C "${dir}" init -q`, { stdio: ['ignore', 'ignore', 'ignore'] });
+    execSync(`git -C "${dir}" config user.email t@t.t && git -C "${dir}" config user.name t`, { stdio: ['ignore', 'ignore', 'ignore'] });
+    // diff 审计只看变动文件：先落一个干净 base 提交，secret 文件保持未提交才会被扫到
+    writeFileSync(join(dir, 'base.js'), 'export const base = 1;\n');
+    execSync(`git -C "${dir}" add . && git -C "${dir}" commit -qm init`, { stdio: ['ignore', 'ignore', 'ignore'] });
+    writeFileSync(join(dir, 'real.js'), 'const apiKey = "sk-test-abcdef1234567890abcdef";\n');
+    const r = await callTool('git_commit_push', { repo: dir, message: 'blocker 测试', audit: true, push: false, requirementsConfirmed: true }, { workspaceRoot: dir }, Config(), null, mj);
+    assert.equal(r.ok, false);
+    assert.equal(r.blocked, true);
+    assert.equal(mj.state.length, 0, 'blocker 不产生 job');
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });

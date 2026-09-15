@@ -1,7 +1,7 @@
 /**
- * README 目录结构维护脚本（tree-doc）测试（2026-09-14）。
+ * README 目录结构维护脚本（tree-doc）测试（2026-09-14，2026-09-15 加 syncIndex）。
  * 覆盖：gen 两层折叠树含注释 / check 无漂移 / 漂移检测（新增/删除/孤儿）/
- *   apply 覆盖标记块 / 解析容错（破折号/代码围栏/树根行）。
+ *   apply 覆盖标记块 / 解析容错（破折号/代码围栏/树根行）/ syncIndex 索引自动同步。
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -9,7 +9,7 @@ import { mkdtempSync, writeFileSync, readFileSync, rmSync, existsSync, mkdirSync
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { buildTreeText, checkDrift } from '../scripts/tree-doc.mjs';
+import { buildTreeText, checkDrift, syncIndex } from '../scripts/tree-doc.mjs';
 
 // 用临时仓库模拟真实结构（脚本 ROOT 指向项目根，这里只测纯函数）
 const TMP = mkdtempSync(join(tmpdir(), 'tree-doc-test-'));
@@ -80,6 +80,36 @@ test('解析容错：破折号/代码围栏/树根行不污染 seen', () => {
   // 直接验证：这些行在完整树中不会产生 stale（由 checkDrift 真实项目根兜底）
   const r = checkDrift();
   assert.equal(r.ok, true);
+});
+
+// ---------- syncIndex 索引自动同步（2026-09-15） ----------
+test('syncIndex：新增文件自动补键（值=待注释）；删除文件自动删键（描述连带）', () => {
+  // 注入真实文件集 = 旧键（保留描述）+ 新文件；真实文件集里没有 b.js（已删）
+  const files = ['lib/a.js', 'lib/c.js']; // b 已删（工作区不存在，不在真实文件集）
+  const map = {
+    'lib': '核心实现',           // 目录键保留
+    'lib/a.js': 'A 文件',        // 保留
+    'lib/b.js': 'B 文件（已删）', // 应自动删除
+  };
+  const { added, removed, map: next } = syncIndex({ write: false, files, map });
+  // 新增 c.js（目录键 lib 已存在，不重复补）
+  assert.ok(added.includes('lib/c.js'), '新增 c.js 应补键');
+  assert.equal(next['lib/c.js'], '（待注释）', '新键值为待注释占位');
+  // 删除 b
+  assert.ok(removed.includes('lib/b.js'), '已删文件 b 应自动删键');
+  assert.ok(!('lib/b.js' in next), 'b 键应从映射消失');
+  assert.ok(next['lib/a.js'] === 'A 文件', '未动文件描述保留');
+  assert.ok(next['lib'] === '核心实现', '目录描述保留');
+});
+
+test('syncIndex：新目录自动补目录键（无尾斜杠）；write=true 变更落盘', () => {
+  // 真实文件集里出现全新目录 x/，目录键 x 应自动补
+  const files = ['x/y.js'];
+  const { added, removed, map } = syncIndex({ write: false, files, map: {} });
+  assert.ok(added.includes('x'), '新目录键 x 应自动补');
+  assert.equal(map['x'], '（待注释）', '目录键值为待注释占位');
+  assert.ok(added.includes('x/y.js'), '新文件键应自动补');
+  assert.ok(Array.isArray(removed));
 });
 
 // 清理

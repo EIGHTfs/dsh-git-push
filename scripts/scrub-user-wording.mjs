@@ -4,15 +4,15 @@
  *
  * 背景：dsh-git-push v1.27~v1.44 曾内置 autoCleanCommentWording（提交前自动改写注释措辞），
  * v1.45.0 因「commentStartOf 字符串不感知」三次静默篡改事故（把测试夹具字符串里的
- * `# 用户说…` 当注释改掉）废除，确立「只警告不删改」总原则。本脚本是它的独立复活版：
+ * 沟通词示例当注释改掉）废除，确立「只警告不删改」总原则。本脚本是它的独立复活版：
  * 插件**不注册任何入口**（不进 lib/、不注册工具/API/设置项），仅作为可执行脚本，
  * 供 AI / 用户需要时手动调用。
  *
  * 相比旧实现的关键修复：
  *   1) 词法感知：逐字符扫描区分「字符串字面量 / 注释 / 代码」，只改写注释段——
- *      字符串里的 `'# 用户说…'`、`"// 用户要求"` 不会被误伤（三次事故根因）。
+ *      字符串里的沟通词示例不会被误伤（三次事故根因）。
  *   2) md 文档跳过 ``` 围栏代码块（测试夹具/示例代码里的措辞是数据，不是沟通残留），
- *      且 md 措辞可能是来源署名/名词用法（如「是否符合用户要求」），交互确认时会标注风险。
+ *      且 md 措辞可能是来源署名/名词用法，交互确认时会标注风险。
  *   3) 先预览再删改：--apply 进入逐条确认（y/n/a/q），确认后才写盘（每文件 .bak 备份）；
  *      --yes 跳过确认全改（供 AI/非交互场景）；非交互环境无 --yes 拒绝写盘。
  *   4) 与审计同规则豁免：文件头前 3 行含 dsh-skip-sensitive / dsh-skip-residue
@@ -27,56 +27,47 @@
  *
  * 退出码：0=无命中或已处理；2=dry-run 有命中；3=非交互环境拒绝写盘。
  */
-import { readFileSync, writeFileSync, readdirSync, statSync } from 'node:fs';
-import { join, extname, basename } from 'node:path';
+import { readFileSync, writeFileSync, readdirSync, statSync, existsSync } from 'node:fs';
+import { join, extname, basename, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { createInterface } from 'node:readline';
+import { load as yamlLoad } from 'js-yaml';
 
-/* ── v1.42.0 从 dsh-git-push 旧 lib/audit.js 原样搬来的措辞改写规则表 ────────────
- * 只处理「用户沟通措辞」，保留日期与功能语义；改写后即为中性技术描述。
- * 顺序敏感（先特例后通配，见注释分组）。 */
-const WORDING_REWRITES = [
-  // 1) 括注「用户原话」→ 删除括注，后续冒号保留
-  { re: /（用户原话）/g, fn: () => '' },
-  { re: /\(用户原话\)/g, fn: () => '' },
-  // 2) 日期 + 措辞（原话/约定/加回）→ 只留日期
-  { re: /(\d{4}-\d{2}-\d{2}) 用户要求（/g, fn: (m, d) => `${d}（` },
-  { re: /(\d{4}-\d{2}-\d{2}) 用户要求加回/g, fn: (m, d) => `${d} 加回` },
-  { re: /(\d{4}-\d{2}-\d{2}) 用户要求：/g, fn: (m, d) => `${d}：` },
-  { re: /(\d{4}-\d{2}-\d{2}) 用户要求/g, fn: (m, d) => `${d}` },
-  { re: /(\d{4}-\d{2}-\d{2}) 用户原话：/g, fn: (m, d) => `${d}：` },
-  { re: /(\d{4}-\d{2}-\d{2}) 用户约定：/g, fn: (m, d) => `${d}：` },
-  { re: /(\d{4}-\d{2}-\d{2}) 用户确立/g, fn: (m, d) => `${d}` },
-  { re: /(\d{4}-\d{2}-\d{2}) 用户确认/g, fn: (m, d) => `${d}` },
-  { re: /(\d{4}-\d{2}-\d{2}) 用户同意/g, fn: (m, d) => `${d}` },
-  // 3) 措辞 + 「内容」 → 「内容」（引号内容保留）
-  { re: /用户原话[：:]?「/g, fn: () => '「' },
-  { re: /用户原话「/g, fn: () => '「' },
-  // 4) （用户要求…） → （…
-  { re: /（用户要求[：:]?/g, fn: () => '（' },
-  { re: /\(用户要求[：:]?/g, fn: () => '(' },
-  // 5) 「用户要求恢复此形态」→ 删除（恢复标记）
-  { re: /用户要求恢复此形态/g, fn: () => '' },
-  // 6) 孤立措辞（要求/原话/约定/规定/明确/拍板/说/：）→ 删除
-  { re: /用户要求[：:]?/g, fn: () => '' },
-  { re: /用户原话[：:]?/g, fn: () => '' },
-  { re: /用户约定[：:]?/g, fn: () => '' },
-  { re: /用户规定[：:]?/g, fn: () => '' },
-  { re: /用户明确[：:]?/g, fn: () => '' },
-  { re: /用户拍板[：:]?/g, fn: () => '' },
-  { re: /用户确立[：:]?/g, fn: () => '' },
-  { re: /用户确认[：:]?/g, fn: () => '' },
-  { re: /用户同意[：:]?/g, fn: () => '' },
-  { re: /用户许可[：:]?/g, fn: () => '' },
-  { re: /用户说[：:]?/g, fn: () => '' },
-  { re: /用户：/g, fn: () => '' },
-];
+const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
+const DEFAULT_REWRITE_YML = join(SCRIPT_DIR, '..', 'lib', 'audit-rules', 'audit-rules-comment.yml');
+
+/**
+ * 从 audit-rules-comment.yml 顶层 rewrites 装载改写表。
+ * 每条 { match, replace }：match=正则源码（加 g），replace 用 $1/$2 模板。
+ * @param {string} [ymlPath]
+ * @returns {Array<{re:RegExp, fn:Function}>}
+ */
+export function loadWordingRewrites(ymlPath = DEFAULT_REWRITE_YML) {
+  if (!existsSync(ymlPath)) throw new Error(`改写规则文件缺失: ${ymlPath}`);
+  const data = yamlLoad(readFileSync(ymlPath, 'utf8')) || {};
+  const rows = Array.isArray(data.rewrites) ? data.rewrites : [];
+  if (rows.length === 0) throw new Error(`${ymlPath} 缺少顶层 rewrites`);
+  return rows.map((row, i) => {
+    const src = String(row?.match || '');
+    if (!src) throw new Error(`rewrites[${i}] 缺 match`);
+    const re = new RegExp(src, 'g');
+    const tpl = row.replace == null ? '' : String(row.replace);
+    return { re, fn: (...a) => tpl.replace(/\$(\d+)/g, (_, n) => a[Number(n)] ?? '') };
+  });
+}
+
+let WORDING_REWRITES = null;
+function wordingRewrites() {
+  if (!WORDING_REWRITES) WORDING_REWRITES = loadWordingRewrites();
+  return WORDING_REWRITES;
+}
 
 /** 对单段文本应用全部改写规则，返回 { text, count }。 */
 function scrubText(text) {
   let c = text;
   let count = 0;
-  for (const { re, fn } of WORDING_REWRITES) {
+  for (const { re, fn } of wordingRewrites()) {
     c = c.replace(re, (...a) => { count++; return fn(...a); });
   }
   return { text: c, count };
@@ -400,4 +391,5 @@ async function main(argv) {
   process.exit(0);
 }
 
-main(process.argv);
+const isDirectRun = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
+if (isDirectRun) main(process.argv);

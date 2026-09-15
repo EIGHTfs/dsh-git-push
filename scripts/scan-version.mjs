@@ -98,7 +98,8 @@ function main() {
   }
   const ok = errors.length === 0;
   if (json) {
-    console.log(JSON.stringify({ ok, selfVersion: VERSION, pkgVersion: vi.pkgVersion, readmeVersion: rv.version || '', readmeSource: rv.source || '', errors }, null, 2));
+    const report = { ok, selfVersion: VERSION, pkgVersion: vi.pkgVersion, readmeVersion: rv.version || '', readmeSource: rv.source || '', errors };
+    console.log(JSON.stringify(report, null, 2));
   } else {
     console.log(`版本一致性 ${ok ? '✅' : '❌'}: lib/self=${VERSION} / package.json=${vi.pkgVersion} / README=${rv.version || '未找到'} / cli HELP 引用 v\${VERSION} 模板`);
     for (const e of errors) console.error(`  ✗ ${e}`);

@@ -171,7 +171,7 @@ test('真实分叉仓库：dispatchPush 如实报 diverged 而非静默回落 AP
   //   端到端行为已在本机 dsh-skill-scoreboard（远端 2f4b3cb / 本地 0093b89 两条链）实测确认。
   const src = readFileSync(join(ROOT, 'lib/git/transport.js'), 'utf8');
   assert.ok(/localHead: localHead \|\| ''/.test(src), '应回传 localHead');
-  assert.ok(/remoteHead: remoteHead \|\| ''/.test(src), '应回传 remoteHead');
+  assert.ok(/remoteHead:\s*remoteHead(?:\s*\|\| '')?|remoteHead,\s*\n/.test(src), '应回传 remoteHead');
   assert.ok(/已阻止回落 API/.test(src), '错误信息应说明为何不回落');
 });
 
