@@ -17,7 +17,7 @@ import { join } from 'node:path';
 
 /** parseArgv 认识的选项白名单（cli-help-sync 机器比对基准，必须与 HELP 文本一致。
  * 注：-m 是单横线别名（helpSync 只比对 -- 双横线），不列入本表。 */
-export const KNOWN_FLAGS = ['--depth', '--full', '--level', '--ruleset', '--weights', '--push', '--no-push', '--dry-run', '--force', '--req-confirm', '--json'];
+export const KNOWN_FLAGS = ['--depth', '--full', '--level', '--ruleset', '--weights', '--include-ignored', '--push', '--no-push', '--dry-run', '--force', '--req-confirm', '--json'];
 
 const HELP = `git-sluice v${VERSION} — dsh-git-push 引擎独立 CLI（脱离 DSH 运行）
 
@@ -25,8 +25,8 @@ const HELP = `git-sluice v${VERSION} — dsh-git-push 引擎独立 CLI（脱离 
   git-sluice version              查看版本
   git-sluice ruleset [槽位...]    编译规则包并输出统计（默认全部槽位）
   git-sluice scan <root> [--depth N]   全量扫描目录（非 git 目录可查）
-  git-sluice audit <root> [--full] [--level quick|standard|deep] [--ruleset <目录>] [--weights <JSON>]
-                                  审计目录（默认 diff 范围；--full=全量；--level=强度；--ruleset=自定规则目录；--weights=权重覆盖 JSON）
+  git-sluice audit <root> [--full] [--level quick|standard|deep] [--ruleset <目录>] [--weights <JSON>] [--include-ignored]
+                                  审计目录（默认 diff 范围；--full=全量；--level=强度；--ruleset=自定规则目录；--weights=权重覆盖 JSON；--include-ignored=连 .gitignore 忽略的文件也扫）
   git-sluice commit <repo> -m <msg> [--push|--no-push] [--dry-run] [--force] [--req-confirm] [--json]
                                   审计门禁 → 提交（默认只 commit 不 push；--push 推远端；--force 强推覆盖远端历史；--req-confirm 显式核对开发者要求）
   git-sluice link-check <路径>    检查 md/文本中的链接有效性（只 warning，flaky 域名打折）
@@ -41,7 +41,7 @@ import './lib/rule/compilers.js';
 
 /** 参数解析：白名单必须与 HELP 文本完全一致（cli-help-sync 自检）。 */
 export function parseArgv(argv) {
-  const flags = { depth: undefined, full: false, level: undefined, ruleset: undefined, weights: undefined, push: undefined, dryRun: false, force: false, reqConfirm: false, message: undefined, json: false };
+  const flags = { depth: undefined, full: false, level: undefined, ruleset: undefined, weights: undefined, includeIgnored: false, push: undefined, dryRun: false, force: false, reqConfirm: false, message: undefined, json: false };
   const positional = [];
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -50,6 +50,7 @@ export function parseArgv(argv) {
       if (v === undefined || v.startsWith('--')) return { error: `--depth 缺值（用法: --depth N）` };
       flags.depth = Number(v);
     } else if (a === '--full') flags.full = true;
+    else if (a === '--include-ignored') flags.includeIgnored = true;
     else if (a === '--level' || a === '--ruleset' || a === '--weights' || a === '-m') {
       const v = argv[++i];
       if (v === undefined || v.startsWith('--')) return { error: `${a} 缺值` };
@@ -117,9 +118,10 @@ export function cmdAudit(root, flags) {
     scope: flags.full ? 'full' : 'diff',
     auditLevel: level,
     rulesetDir: flags.ruleset || '',
+    includeIgnored: flags.includeIgnored === true,
   });
   const q = scoreQuality(res.findings, weights);
-  console.log(`审计 ${root}（scope=${res.scope}, level=${level}${flags.ruleset ? ', ruleset=' + flags.ruleset : ''}）`);
+  console.log(`审计 ${root}（scope=${res.scope}, level=${level}${flags.ruleset ? ', ruleset=' + flags.ruleset : ''}${flags.includeIgnored ? ', include-ignored' : ''}）`);
   console.log(`  summary: ${JSON.stringify(res.summary)}`);
   console.log(`  quality: ${q.score}/100（${q.level}）`);
 }

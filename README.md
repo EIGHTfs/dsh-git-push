@@ -108,15 +108,15 @@ dsh-git-push/
 │   ├── index.js — 插件入口（DSH 接线，再导出全部能力）
 │   ├── user-requirements.json — 开发者特殊要求清单（提交推送前逐条核对）
 │   ├── app/ — 插件入口层（apply/HTTP 处理/工具调用分发/注入文本/默认扫描根）
-│   │   ├── apply.js — 插件装载入口（注册 schema/工具/HTTP/注入钩子/斜杠命令）
+│   │   ├── apply.js — 插件装载入口（注册 schema/工具/HTTP/注入钩子）
 │   │   ├── constants.js — 插件名与设置命名空间常量
 │   │   ├── http-handlers.js — HTTP 路由分发（全部 /api/git-push/* 端点）
-│   │   ├── settings-bridge.js — 设置读写桥（host scope 共享；绕开 client isLoopback=memory 落盘陷阱）
 │   │   ├── index.js — 插件入口再导出（宿主 main 指向）
 │   │   ├── inject-text.js — 注入文本（工具用法提示 FUNCTION_USAGE_HINT）
 │   │   ├── scan-root.js — 默认扫描根解析（配置优先→DSH 家根自动识别）
-│   │   ├── slash-commands.js — 用户输入框斜杠命令（目前只注册 /git-audit）
 │   │   ├── schema.js — 配置 schema（宿主导出缺失时兜底）
+│   │   ├── settings-bridge.js — 设置读写桥（host scope 共享；绕开 client isLoopback=memory 落盘陷阱）
+│   │   ├── slash-commands.js — 用户输入框斜杠命令（目前只注册 /git-audit）
 │   │   ├── slot-stats.js — 规则槽位命中统计（模块级状态）
 │   │   ├── tool-call.js — 工具调用分发（git_scan/commit_push/audit/status 等全部工具）
 │   │   ├── tools.js — 工具定义清单（名称/描述/参数 schema）
@@ -144,7 +144,7 @@ dsh-git-push/
 │   │   ├── repo-level.js — 仓库级语义规则
 │   │   ├── slot.js — 按规则包聚合审计命中（拦截/警告/通过）
 │   ├── audit-rules/ — 规则包 yml（nodejs/npm/frontend/comment/dsh/private/structure 等动态槽位）
-│   │   ├── audit-rules-comment.yml — 注释类规则（黑名单措辞/对话残留）+ 顶层 rewrites 清洗改写表（规则包 comment）
+│   │   ├── audit-rules-comment.yml — 注释类规则（黑名单措辞/对话残留）（规则包 comment）
 │   │   ├── audit-rules-docs.yml — 文档类规则（README/文档措辞）（规则包 docs）
 │   │   ├── audit-rules-dsh.yml — DSH 生态规则（宿主/插件约定）（规则包 dsh）
 │   │   ├── audit-rules-filehealth.yml — 文件健康度规则（三维分级）（规则包 filehealth）
@@ -159,8 +159,6 @@ dsh-git-push/
 │   │   ├── audit-rules-structure.yml — 结构规则（命名/规模/复杂度）（规则包 structure）
 │   │   ├── audit-rules-template.yml — 规则模板（新规则包起点）（规则包 template）
 │   │   ├── audit-rules-version.yml — 版本规则（版本一致性）（规则包 version）
-│   ├── app/ — 插件入口层（schema / tools / tool-call / http-handlers / apply 编排）
-│   │   ├── tool-call.js — 工具调用分发（git_commit_push 走宿主官方 ctx.jobs 后台 job）
 │   ├── checks/ — 检查层（按 kind 调用检查器：正则/语义/结构/文件健康/按钮绑定/私密文件）
 │   │   ├── button-bind.js — 按钮事件绑定交叉比对（声明了但没绑定）
 │   │   ├── common.js — 检查器公共设施（豁免提示/severity 封顶/分组）
@@ -229,7 +227,7 @@ dsh-git-push/
 │   ├── scan-version.mjs — 版本一致性校验脚本
 │   ├── scrub-user-wording.mjs — 清理「用户沟通措辞」独立脚本
 │   ├── sync-plugin.mjs — 双副本同步脚本（源仓库 → 部署安装副本）
-│   ├── tree-doc.mjs — README 目录结构维护脚本（gen/check/apply/sync 索引自动同步）
+│   ├── tree-doc.mjs — README 目录结构维护脚本（gen/check/apply）
 │   ├── watch-preview.mjs — preview.html 自动重生成监听（源码变更即重建）
 ├── assets/ — 预览页与配图（preview.html 交互模拟页 + 面板截图）
 │   ├── panel-account.png — 账号卡片面板截图（README 配图）
@@ -264,12 +262,13 @@ dsh-git-push/
 │   ├── test-rule-packs.mjs — 规则总入口测试（编译注册/字段指派）
 │   ├── test-rule-slots-render.mjs — 规则包列表统计渲染回归
 │   ├── test-self.mjs — 自身总入口测试（VERSION/CLI/help 比对）
-│   ├── test-slash-commands.mjs — 用户输入框 /git-audit 斜杠命令（解析/接线/对本仓库跑 quick）
+│   ├── test-settings-persistence.mjs — 设置侧边栏持久化专项测试（L1 提交/L2 白名单/L3 回读/L4 消费四层断言）
 │   ├── test-sidebar-interaction.mjs — 侧边栏规则包列表交互自检
+│   ├── test-slash-commands.mjs — 用户输入框 /git-audit 斜杠命令（解析/接线/对本仓库跑 quick）
 │   ├── test-smart-hint.mjs — 扫描智能提示 + 评分对数衰减测试
 │   ├── test-status-secret.mjs — token 明文不下发安全回归
 │   ├── test-task-queue.mjs — 后台化回归测试（官方 job 注册 / 无 jobs 同步保底 / blocker 拦截）
-│   ├── test-tree-doc.mjs — README 目录树脚本测试（gen/check/apply 闭环 + syncIndex 索引同步）
+│   ├── test-tree-doc.mjs — README 目录树脚本测试（gen/check/apply 闭环）
 ├── docs/ — 开发文档
 │   ├── DETAILS-EXEMPT-AND-RULES.md — 细节补充：豁免注释与规则 yml 用法全录
 ├── skills/ — 插件权威 skill（功能手册/规则/使用说明，安装副本的 skills/ 同步）
@@ -278,7 +277,7 @@ dsh-git-push/
 │   ├── dsh-repo-index.md — dsh-repo-index skill（源码索引权威说明）
 │   ├── git-push-live-fix.md — git-push 工具问题当场提出并改插件的规则
 │   ├── task-completion-report.md — 任务收尾汇报规则（✅+交付/验证/遗留）
-│   ├── git-workflow-gitpush/ — 
+│   ├── git-workflow-gitpush/ — git-workflow-gitpush 工作流 skill（dsh-git-push 提交纪律）
 │   │   ├── README.md — git 工作流 skill 子目录说明
 │   │   ├── commit-checkpoint-before-push-reorg.md — 推送重组前提交检查点规则
 │   │   ├── file-organize-git-first.md — 文件整理前先 git 提交规则
@@ -302,7 +301,7 @@ dsh-git-push/
 ├── cordis.patch.yml — DSH 插件组合 patch（loader 注入定义）
 ├── package.json — 包声明（零依赖、files 白名单、scripts）
 ├── screenshots.json — 截图清单（README 配图引用）
-├── tree-doc.json — 目录结构注释映射（路径→一句话介绍；键自动同步、描述 AI 维护）
+├── tree-doc.json — 目录结构注释映射（路径→一句话介绍，AI 维护）
 ```
 <!-- dshgp-tree:end -->
 
@@ -782,6 +781,7 @@ scrub-user-wording 改写表从脚本内嵌迁移到 `lib/audit-rules/audit-rule
 扫描逻辑优化：`scanClearThenAccess` 拆 7 个单职责小函数（函数长度 blocker 清零）；`hasExternalCallTimeout` 起始括号深度计入命中行（跨行对象里的 `AbortSignal.timeout` 不再漏豁免）\
 健壮性/安全修复：HTTP 入参统一 `readBody` 校验（非对象一律空对象）；空 catch 注释补足（`忽略/跳过/降级/兜底` 语义清单）；client fetch 加 `AbortSignal.timeout(30s)`；`githubFetch` 调用点语义豁免（内部统一 60s 超时）；`git 仓库绝对路径`/`dsh-skip-*` 提示抽常量去重；git 参数拼接改 `concat`；`apiOrFallback`/`sshFallback` 抽取去重；凭据位置说明统一为插件配置目录 `$DSH_HOME/git-push/`（0600）\
 全量审计：blocker 43→0，警告净减 44；回归 578 全绿 |
+设置侧边栏持久化修复（专项测试 test-settings-persistence.mjs 四层断言）：`applySettingsToCfg` 补齐 5 键映射（maxScanFiles/commitMessage/defaultScanRoot/pushMethod/hardcodeFullScan 重启后 cfg 恢复）；权重覆盖真正生效——`code_audit`/提交前审计缺省读 `cfg.weightOverrides`（此前保存了但审计无视，评分恒用默认权重表）；前端补齐 7 键 UI（审计进阶：强度/规则目录/文件上限/硬编码全量扫；推送默认值：通道/扫描路径/提交信息），全部走 HTTP config.json 零 scope.set；tree-doc 自检漂移清零 \
 | **1.2.1** | **设置落盘改插件私有 config.json + 推送判定修正 + 审计拦截列文件 + live ls-remote** \
 开关（审计/注入要求清单/注入系统提示词/扫描范围/权重）真源 = `$DSH_HOME/git-push/config.json`（0600），不再写公共 settings.yaml；host `scope.watch` 只处理凭据，前端订阅不再用 yaml 默认值盖开关 \
 侧边栏 push：可推 = 有远端且 ahead>0（或未知），工作树脏不再拦截；失败把 `push.reason` 提到顶层 error；推送前用插件 SSH 密钥 live ls-remote，不信过期的 origin/<branch> 缓存 \

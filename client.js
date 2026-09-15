@@ -811,6 +811,42 @@ window.__ModuleLoader__.load({
       });
     }
 
+    /** 审计进阶设置块（2026-09-15 补齐 UI：auditLevel/auditRuleset/maxScanFiles/hardcodeFullScan）。 */
+    function dshgp_AuditAdvancedBlock(props) {
+      const s = props.state;
+      const sel = (key, values) => jsx.jsx('select', {
+        className: 'dshgp_input dshgp_inputInline',
+        value: s[key],
+        onChange: (ev) => props.setAdvanced(key, ev.target.value),
+      }, values.map((v) => jsx.jsx('option', { key: v, value: v, children: v })));
+      return jsx.jsxs('div', {
+        className: 'dshgp_block',
+        children: [
+          jsx.jsx('p', { className: 'dshgp_h2', children: '审计进阶设置' }),
+          jsx.jsxs('div', { className: 'dshgp_field', children: [
+            jsx.jsx('label', { className: 'dshgp_label', htmlFor: 'dshgp-level', children: '审计强度' }),
+            sel('auditLevel', ['quick', 'standard', 'deep']),
+            jsx.jsx('p', { className: 'dshgp_hint', children: 'quick=只跑 regex/黑名单；standard=默认全量；deep=+AST 语义检查' }),
+          ] }),
+          jsx.jsxs('div', { className: 'dshgp_field', children: [
+            jsx.jsx('label', { className: 'dshgp_label', htmlFor: 'dshgp-ruleset', children: '自定规则目录' }),
+            jsx.jsx('input', { id: 'dshgp-ruleset', type: 'text', className: 'dshgp_input', value: s.auditRuleset, onChange: (ev) => props.setAdvanced('auditRuleset', ev.target.value) }),
+            jsx.jsx('p', { className: 'dshgp_hint', children: '空=内置规则包；指向放有 audit-rules-<名>.yml 的目录即整体替换' }),
+          ] }),
+          jsx.jsxs('div', { className: 'dshgp_field', children: [
+            jsx.jsx('label', { className: 'dshgp_label', htmlFor: 'dshgp-maxfiles', children: '全量扫描文件上限' }),
+            jsx.jsx('input', { id: 'dshgp-maxfiles', type: 'number', min: 0, className: 'dshgp_input', value: s.maxScanFiles, onChange: (ev) => props.setAdvanced('maxScanFiles', ev.target.value) }),
+            jsx.jsx('p', { className: 'dshgp_hint', children: '全量审计最多扫多少个文件（0=不限）；超限按「变动优先」截断，弱机防卡死' }),
+          ] }),
+          jsx.jsxs('div', { className: 'dshgp_switchrow', children: [
+            jsx.jsx('span', { className: 'dshgp_switchlabel', children: '硬编码全量扫' }),
+            jsx.jsx('input', { type: 'checkbox', checked: !!s.hardcodeFullScan, onChange: (ev) => props.setAdvanced('hardcodeFullScan', ev.target.checked), 'aria-label': '硬编码全量扫' }),
+          ] }),
+          jsx.jsx('p', { className: 'dshgp_hint', children: '换机前排查存量死路径（默认只扫新增行）' }),
+        ],
+      });
+    }
+
     /** 规则包列表块：列表容器 + 榜单表头 + 逐行渲染（dshgp_RuleRow）。 */
     function dshgp_RuleListBlock(props) {
       const s = props.state;
@@ -865,6 +901,8 @@ window.__ModuleLoader__.load({
               jsx.jsx(dshgp_WeightRows, { state: props.state, editWeight: props.editWeight }),
             ],
           }),
+          /* ③ 审计进阶（2026-09-15 补齐 UI） */
+          jsx.jsx(dshgp_AuditAdvancedBlock, props),
           jsx.jsx(dshgp_RuleListBlock, props),
         ],
       });
@@ -935,6 +973,31 @@ window.__ModuleLoader__.load({
               s.genKeyError ? jsx.jsx('p', { className: 'dshgp_error', children: s.genKeyError }) : null,
             ],
           }),
+          /* 推送与默认值（2026-09-15 补齐 UI：pushMethod/defaultScanRoot/commitMessage） */
+          jsx.jsxs('div', {
+            className: 'dshgp_block',
+            children: [
+              jsx.jsx('p', { className: 'dshgp_h2', children: '推送与默认值' }),
+              jsx.jsxs('div', { className: 'dshgp_field', children: [
+                jsx.jsx('label', { className: 'dshgp_label', htmlFor: 'dshgp-pushmethod', children: '推送通道' }),
+                jsx.jsx('select', {
+                  id: 'dshgp-pushmethod', className: 'dshgp_input dshgp_inputInline',
+                  value: s.pushMethod, onChange: (ev) => props.setAdvanced('pushMethod', ev.target.value),
+                }, ['ssh', 'api', 'auto'].map((v) => jsx.jsx('option', { key: v, value: v, children: v }))),
+                jsx.jsx('p', { className: 'dshgp_hint', children: 'ssh=推本地 HEAD（默认）；api=Git Data API 重建提交；auto=有私钥走 ssh' }),
+              ] }),
+              jsx.jsxs('div', { className: 'dshgp_field', children: [
+                jsx.jsx('label', { className: 'dshgp_label', htmlFor: 'dshgp-scanroot', children: '默认扫描路径' }),
+                jsx.jsx('input', { id: 'dshgp-scanroot', type: 'text', className: 'dshgp_input', value: s.defaultScanRoot, onChange: (ev) => props.setAdvanced('defaultScanRoot', ev.target.value) }),
+                jsx.jsx('p', { className: 'dshgp_hint', children: '账号卡片「本地」扫描与 git_scan 未指定路径时的默认根；空=自动识别 DSH 家根' }),
+              ] }),
+              jsx.jsxs('div', { className: 'dshgp_field', children: [
+                jsx.jsx('label', { className: 'dshgp_label', htmlFor: 'dshgp-commitmsg', children: '自动提交信息' }),
+                jsx.jsx('input', { id: 'dshgp-commitmsg', type: 'text', className: 'dshgp_input', value: s.commitMessage, onChange: (ev) => props.setAdvanced('commitMessage', ev.target.value) }),
+                jsx.jsx('p', { className: 'dshgp_hint', children: '留空则用 AI 生成的消息' }),
+              ] }),
+            ],
+          }),
         ],
       });
     }
@@ -971,6 +1034,7 @@ window.__ModuleLoader__.load({
           toggleInjectSystemPrompt: props.toggleInjectSystemPrompt,
           toggleAuditScanScope: props.toggleAuditScanScope,
           editWeight: props.editWeight,
+          setAdvanced: props.setAdvanced,
           moveSlot: props.moveSlot,
           toggleDisabled: props.toggleDisabled,
         })
@@ -982,6 +1046,7 @@ window.__ModuleLoader__.load({
             save: props.save,
             discard: props.discard,
             genKey: props.genKey,
+            setAdvanced: props.setAdvanced,
           });
       return jsx.jsxs('div', {
         style: { padding: '0 4px' },
@@ -1013,6 +1078,15 @@ window.__ModuleLoader__.load({
         this.ruleOrder = [];
         this.slotMeta = {};
         this.weightValues = {};
+        // 2026-09-15 补齐：以下键此前只有 schema 声明与 HTTP 白名单，前端**没有 UI 控件**
+        //   （只能看不能改）→ 设置「基本都没真正保存」的根源。这里补状态镜像 + 提交 + 回读。
+        this.auditLevel = 'standard';       // quick | standard | deep
+        this.auditRuleset = '';             // 自定规则目录（空=内置）
+        this.maxScanFiles = 3000;           // 全量审计文件数上限（0=不限）
+        this.hardcodeFullScan = false;      // 硬编码全量扫
+        this.pushMethod = 'ssh';            // ssh | api | auto
+        this.defaultScanRoot = '';          // 默认扫描根（空=自动识别）
+        this.commitMessage = '';            // 自动提交信息（空=AI 生成）
         // 2026-09-13：禁用态不再前端变量存储，以 yml 顶层 disabled 为准（listRuleSlots 解析）
         this.statusMsg = '';
         this.statusTimer = null;
@@ -1098,6 +1172,14 @@ window.__ModuleLoader__.load({
           ruleOrder: this.ruleOrder,
           slotMeta: this.slotMeta,
           weightValues: this.weightValues,
+          // 2026-09-15 补齐：审计进阶 / 推送默认值状态镜像（供 UI 渲染）
+          auditLevel: this.auditLevel,
+          auditRuleset: this.auditRuleset,
+          maxScanFiles: this.maxScanFiles,
+          hardcodeFullScan: this.hardcodeFullScan,
+          pushMethod: this.pushMethod,
+          defaultScanRoot: this.defaultScanRoot,
+          commitMessage: this.commitMessage,
           tokenConfigured: this.tokenConfigured,
           sshConfigured: this.sshConfigured,
           accountBlock: this.accountBlock,
@@ -1152,6 +1234,13 @@ window.__ModuleLoader__.load({
           if (typeof v.injectSystemPrompt === 'boolean' && !this.editedKeys.has('injectSystemPrompt')) this.injectSystemPrompt = v.injectSystemPrompt;
           if (typeof v.auditScanScope === 'string' && !this.editedKeys.has('auditScanScope')) this.auditScanScope = v.auditScanScope;
           if (typeof v.auditLevel === 'string' && !this.editedKeys.has('auditLevel')) this.auditLevel = v.auditLevel;
+          // 2026-09-15 补齐回读：新增 UI 的 7 键（advanced），重启后从 config.json 恢复勾选/取值
+          if (typeof v.auditRuleset === 'string' && !this.editedKeys.has('auditRuleset')) this.auditRuleset = v.auditRuleset;
+          if (typeof v.maxScanFiles === 'number' && !this.editedKeys.has('maxScanFiles')) this.maxScanFiles = v.maxScanFiles;
+          if (typeof v.hardcodeFullScan === 'boolean' && !this.editedKeys.has('hardcodeFullScan')) this.hardcodeFullScan = v.hardcodeFullScan;
+          if (typeof v.pushMethod === 'string' && !this.editedKeys.has('pushMethod')) this.pushMethod = v.pushMethod;
+          if (typeof v.defaultScanRoot === 'string' && !this.editedKeys.has('defaultScanRoot')) this.defaultScanRoot = v.defaultScanRoot;
+          if (typeof v.commitMessage === 'string' && !this.editedKeys.has('commitMessage')) this.commitMessage = v.commitMessage;
           if (typeof v.weightOverrides === 'string' && v.weightOverrides.trim() && !this.editedKeys.has('weightOverrides')) {
             try { this.weightValues = JSON.parse(v.weightOverrides) || {}; } catch { /* 忽略 */ }
           }
@@ -1467,6 +1556,30 @@ window.__ModuleLoader__.load({
         this.commitSetting('weightOverrides', json, '✅ 权重已保存（合计 ' + dshgp_DIMENSIONS.reduce((a, d) => a + (this.weightValues[d.key] != null ? this.weightValues[d.key] : d.def), 0) + '），下次审计生效');
       }
 
+      /**
+       * 2026-09-15 新增：审计进阶 / 推送默认值设置项通用提交（补齐 7 键 UI）。
+       * 更新本地镜像 → 走 commitSetting（HTTP settings-set → config.json）→ 即时反馈。
+       * @param {string} key auditLevel|auditRuleset|maxScanFiles|hardcodeFullScan|pushMethod|defaultScanRoot|commitMessage
+       * @param {unknown} value 新值
+       */
+      setAdvanced(key, value) {
+        const ok = /^(auditLevel|auditRuleset|maxScanFiles|hardcodeFullScan|pushMethod|defaultScanRoot|commitMessage)$/.test(key);
+        if (!ok) { this.setStatus('❌ 未知设置键: ' + key); return; }
+        const numKeys = { maxScanFiles: 1 };
+        const boolKeys = { hardcodeFullScan: 1 };
+        const enumKeys = { auditLevel: ['quick', 'standard', 'deep'], pushMethod: ['ssh', 'api', 'auto'] };
+        let v = value;
+        if (boolKeys[key]) v = value === true;
+        else if (numKeys[key]) v = Number(value) || 0;
+        else if (enumKeys[key]) {
+          const allowed = enumKeys[key];
+          v = allowed.includes(value) ? value : this[key];
+          if (v !== value) { this.setStatus('❌ 非法取值: ' + value); return; }
+        } else v = String(value ?? '');
+        this[key] = v;
+        this.commitSetting(key, v, '✅ ' + key + ' 已保存，下次生效');
+      }
+
       edit(text) { this.text = String(text || ''); this.failed = false; this.publish(); }
       editSsh(text) { this.sshPub = String(text || ''); this.failed = false; this.publish(); }
       editEmail(text) { this.sshEmail = String(text || ''); this.failed = false; this.publish(); }
@@ -1542,6 +1655,7 @@ window.__ModuleLoader__.load({
           toggleInjectSystemPrompt: (checked) => this.toggleInjectSystemPrompt(checked),
           toggleAuditScanScope: (scope) => this.toggleAuditScanScope(scope),
           editWeight: (key, value) => this.editWeight(key, value),
+          setAdvanced: (key, value) => this.setAdvanced(key, value),
           moveSlot: (slot, dir) => this.moveSlot(slot, dir),
           toggleDisabled: (slot) => { void this.toggleDisabled(slot); },
           refreshAccount: () => { void this.refreshAccount(); },
