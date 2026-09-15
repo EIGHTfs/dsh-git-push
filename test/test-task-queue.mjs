@@ -106,3 +106,19 @@ test('git_commit_push：审计 blocker（secret 未提交文件）→ 同步拦�
     assert.equal(mj.state.length, 0, 'blocker 不产生 job');
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
+// ---------- 2026-09-15 新增：jobs.start 存在但抛错（控制器不对本 agent 服务）→ 自动降级同步 ----------
+test('git_commit_push：jobs.start 抛错（no job controller serves this agent）→ 降级同步执行不报错', async () => {
+  const dir = mkRepo();
+  const throwingJobs = {
+    start() { throw new Error('no job controller serves this agent'); },
+  };
+  try {
+    const r = await callTool('git_commit_push', { repo: dir, message: '降级同步提交', audit: false, push: false, requirementsConfirmed: true }, { workspaceRoot: dir }, Config(), null, throwingJobs);
+    assert.equal(r.ok, true, 'start 抛错也必须 ok');
+    assert.equal(r.async, false, '降级后应为同步执行');
+    assert.equal(r.jobFallback, true, '应标记 jobFallback 供上层区分');
+    assert.equal(r.result.ok, true);
+    const log = execSync(`git -C "${dir}" log --oneline -1`, { encoding: 'utf8' });
+    assert.match(log, /降级同步提交/, '降级路径应真实完成提交');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
