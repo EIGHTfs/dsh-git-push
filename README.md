@@ -82,6 +82,21 @@ Git 全链路自动化，token / SSH 凭据管理 + 提交推送，无需手动�
 2. **yml 黑名单关键词**（规则 yml 的 `exclude_dirs` 并集，如 folder 规则的 `dist/build/vendor/.dsh/.trash` 等）——候选跳过，但若 gitignore 用 `!` 白名单恢复了该目录（如 `server/project/*` + `!server/project/blueprint/`、`/build/*` + `!/build/keep/`），则保留进入（黑名单不压过白名单）；
 3. **gitignore 忽略判定**（`git check-ignore`）——被忽略目录整棵跳过；被 `!` 恢复的目录照常进入。
 
+**`.auditignore` 审计豁免文件（2026-09-16）**：仓库根放一个 `.auditignore`，用 **gitignore 语法**声明「不审计但可入库」的文件/目录（复用 .gitignore 的解析方式，走 `git check-ignore -c core.excludesFile`）：
+
+```
+# .auditignore 示例：以下内容照常 git 跟踪/提交，但审计扫描跳过
+generated/          # 整棵目录豁免审计
+src/vendor.js       # 单文件豁免审计
+*.lock              # 匹配 yarn.lock 等 .lock 结尾文件
+```
+
+- **目录规则**（`generated/`）在遍历时整棵剪枝；**文件级规则**（`src/vendor.js`、`*.lock`）收集后批量判定剔除
+- 与 `.gitignore` **叠加生效**（各自独立、互不覆盖）：`.gitignore` 管「不入库」，`.auditignore` 管「不入审计」
+- **豁免的文件依旧能入库**——`.auditignore` 只作用于审计扫描，不写进任何 git 配置，`git add` 照常跟踪
+- **CLI 与插件天然一致**：`git-sluice audit` / 插件 `code_audit` 共用同一 collector，同一份 `.auditignore` 双端生效
+- 与 yml `exclude_dirs` 黑名单的区别：yml 黑名单是**全局规则**（所有仓库都跳）；`.auditignore` 是**仓库级**（仅本仓库豁免，且仍可入库）
+
 新增跳过目录一律改 yml（exclude_dirs），不改代码。要调整各层行为见 `lib/skip-dirs.js` 顶部注释。
 
 ### 规则引擎（yml 管理）
@@ -258,6 +273,7 @@ dsh-git-push/
 │   ├── test-audit-scope.mjs — 审计作用域/凭据占位符回归测试
 │   ├── test-audit.mjs — 审计总入口测试（auditFull/changed/豁免/gitignore）
 │   ├── test-audit-empty.mjs — 审计空结果测试（0 文件不评分 + 审计 YAML 层级聚合）
+│   ├── test-auditignore.mjs — .auditignore 审计豁免测试（目录/文件级豁免 + 仍可入库 + 不污染 git 配置）
 │   ├── test-client.mjs — 侧边栏测试（手写 DOM/零外部资源/开关默认）
 │   ├── test-context.mjs — 上下文注入测试
 │   ├── test-dataflow.mjs — 三层审计 L2 数据流测试
@@ -830,7 +846,13 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
-| **1.3.2**（当前） | **审计结果 YAML 报告（按拦截级别→目录→文件聚合）+ 评分防空扫描满分** \
+| **1.3.3**（当前） | **本地扫描完自动补查未知远端状态（写回索引 + 刷新 UI）+ tree-doc 漂移并入审计 + 设置侧边栏预读修复 + 推送门禁开关** \
+**本地扫描完自动串行补查未知云端状态**（lib/git/repo-index.js `updateRepoRemoteStateInIndex` + `/repos-local-refresh` 端点）：本地列表对超预算/熔断的仓库标 `liveSkipped`（远端状态未知）后，前端自动把这些仓库 POST 给后端，串行 liveRemoteHead（SSH 真源）补查 remoteHead/ahead/behind/remoteHeadAt/synced，结果**逐个追加写回索引**（读-改-写单条目，不重建不重扫、保留其他条目），前端同时刷新列表远端状态（移除 liveSkipped 标记）；readRepoIndexMap 透传补查字段 \
+**tree-doc 漂移检查并入审计**（scripts/tree-doc.mjs `checkDrift` 支持自定义 root + lib/audit/orchestrate.js `appendTreeDocDrift`）：auditFull/auditChanged 检查仓库根 README 的 dshgp-tree 标记块与真实文件树是否一致（新增未列/已删未清/映射孤儿），漂移产生 `structure/tree-doc-drift` finding（warning，不拦提交）；无树块=未启用不报 \
+**设置侧边栏本地列表预读修复**：修「重启后不预读」——移除模块级 `dshgp_startupLoaded` 一次性标记（DSH bundle 常驻时保持 true 导致重启后不再预读），改为**每次进入设置页都预读** account-status.json / dsh-repo-index.json；云端获取（repos-cloud）后自动重读索引刷新本地列表远端状态 \
+**推送门禁开关**（设置侧边栏「推送与默认值」区块，schema/settings-bridge/settings-set 白名单接入 `pushGate`）：类似会话指挥家写操作拦截——开启后 `commitAndPush` 的 push 步骤需显式 `pushConfirmed:true` 放行，未放行返回 `PUSH_GATE` 拦截（commit 可落本地、push 被挡、不产生远端变更）；工具 schema 加 `pushConfirmed` 参数、CLI 加 `--push-gate-confirmed`（与插件配置 pushGate 同源）\
+配套：preview-gen.mjs mock 修 `u` 未定义（变量名残留）致 mock 后端报错；新增 test/test-auditignore.mjs（.auditignore 豁免审计 + 豁免文件仍可入库 + 不污染 git 配置）；测试 34/34、check 97/97、tree-doc 无漂移 \
+| **1.3.2** | **审计结果 YAML 报告（按拦截级别→目录→文件聚合）+ 评分防空扫描满分** \
 审计结果新增 `yaml` 字段（lib/audit/report-yaml.js）：把平铺 findings 聚合为层级 YAML（`summary` → 拦截级别 blocker/warning/notice/info → 目录 → 文件 → 规则明细 rule/line/message），供 CLI `--json` 与插件工具 `code_audit` 返回体携带；空级别输出 `[]`，根级文件归 `./`；message 默认截断 200 字符 \
 **评分防满分**（scoreQuality 新增 context 参数 `{files}`）：扫描到 **0 文件**（全量空目录 / diff 0 变动）时**不评分**——返回 `score:null + level:null + emptyResult:true + emptyReason`，不再因「什么都没扫到」直接满分 100；CLI 显示 `quality: 未扫描到任何文件（files=0）`，code_audit block 显示「未评分」；有文件时正常评分不变 \
 配套修复：`checkPrivateFiles`/`collectChangedFiles` 的 execFileSync **显式捕获 git stderr**（非 git 目录跑 git 命令不再把「致命错误」直通污染审计 --json 输出）\

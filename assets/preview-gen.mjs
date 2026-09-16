@@ -187,7 +187,7 @@ window.fetch = function (url, init) {
     else if (p === '/home/user') dirs = ['项目'];
     else dirs = ['src', 'docs', 'build', 'scripts'];
     body = { ok: true, path: p, parent: parent, dirs: dirs };
-  } else if (u.indexOf('repos-local') >= 0) {
+  } else if (urlStr.indexOf('repos-local') >= 0) {
     // 服务端已过滤：只保留登录同作者（EIGHTfs）的仓库。
     //   ①领先+干净→push 可点 ②有未提交→push 禁用；其他作者/无 remote 的都被过滤不显示
     body = {
@@ -205,7 +205,7 @@ window.fetch = function (url, init) {
         },
       ],
     };
-  } else if (u.indexOf('repos-cloud') >= 0) {
+  } else if (urlStr.indexOf('repos-cloud') >= 0) {
     body = {
       ok: true, loggedIn: true, count: 4,
       repos: [

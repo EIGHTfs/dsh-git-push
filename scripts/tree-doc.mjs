@@ -59,13 +59,14 @@ function gitLsFiles(root = ROOT) {
 
 /* ───────────────────────── 注释映射读写 ───────────────────────── */
 
-function loadMapping() {
-  if (!existsSync(MAPPING_FILE)) return {};
-  try { return JSON.parse(readFileSync(MAPPING_FILE, 'utf8')); } catch { return {}; }
+function loadMapping(root = ROOT) {
+  const mappingFile = join(root, 'tree-doc.json');
+  if (!existsSync(mappingFile)) return {};
+  try { return JSON.parse(readFileSync(mappingFile, 'utf8')); } catch { return {}; }
 }
 
-function writeMapping(map) {
-  writeFileSync(MAPPING_FILE, JSON.stringify(map, null, 2) + '\n', 'utf8');
+function writeMapping(map, root = ROOT) {
+  writeFileSync(join(root, 'tree-doc.json'), JSON.stringify(map, null, 2) + '\n', 'utf8');
 }
 
 /**
@@ -195,13 +196,13 @@ function applyBlock(text, newTree) {
 
 /* ───────────────────────── check：漂移对比 ───────────────────────── */
 
-export function checkDrift({ readmePath = DEFAULT_README } = {}) {
+export function checkDrift({ readmePath = DEFAULT_README, root = ROOT } = {}) {
   const text = readReadme(readmePath);
   const block = findBlock(text);
-  const real = buildTreeText();
-  const map = loadMapping();
+  const real = buildTreeText(gitLsFiles(root), loadMapping(root));
+  const map = loadMapping(root);
   // 真实树内已解析条目（路径集合）
-  const realPaths = new Set(gitLsFiles());
+  const realPaths = new Set(gitLsFiles(root));
   const issues = [];
   if (!block) {
     issues.push({ type: 'no-block', msg: `README 没有目录结构标记块（${MARK_START} … ${MARK_END}）` });
@@ -237,7 +238,7 @@ export function checkDrift({ readmePath = DEFAULT_README } = {}) {
   // 真实路径集合（git 未忽略文件 + 真实目录）
   const realSet = new Set();
   for (const p of realPaths) realSet.add(p);
-  const isRealDir = (p) => { try { return statSync(join(ROOT, p.replace(/\/$/, ''))).isDirectory(); } catch { return false; } };
+  const isRealDir = (p) => { try { return statSync(join(root, p.replace(/\/$/, ''))).isDirectory(); } catch { return false; } };
   // missing：真实文件不在树上（被折叠的设计除外）
   const missing = [];
   for (const p of realPaths) {
@@ -253,7 +254,7 @@ export function checkDrift({ readmePath = DEFAULT_README } = {}) {
   // 注释映射孤儿：路径既不是 git 文件，也不是真实目录（目录级注释合法）
   const orphans = [];
   for (const p of Object.keys(map)) {
-    const full = join(ROOT, p);
+    const full = join(root, p);
     let realDir = false;
     try { realDir = statSync(full).isDirectory(); } catch { /* 路径不存在：不算真实目录 */ }
     if (!realSet.has(p) && !realDir) orphans.push(p);

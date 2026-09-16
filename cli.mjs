@@ -22,7 +22,7 @@ import { join } from 'node:path';
 
 /** parseArgv 认识的选项白名单（cli-help-sync 机器比对基准，必须与 HELP 文本一致。
  * 注：-m 是单横线别名（helpSync 只比对 -- 双横线），不列入本表。 */
-export const KNOWN_FLAGS = ['--depth', '--full', '--level', '--ruleset', '--weights', '--include-ignored', '--push', '--no-push', '--dry-run', '--force', '--req-confirm', '--json', '--max', '--owner', '--offline'];
+export const KNOWN_FLAGS = ['--depth', '--full', '--level', '--ruleset', '--weights', '--include-ignored', '--push', '--no-push', '--dry-run', '--force', '--req-confirm', '--push-gate-confirmed', '--json', '--max', '--owner', '--offline'];
 
 const HELP = `git-sluice v${VERSION} — dsh-git-push 引擎独立 CLI（脱离 DSH 运行）
 
@@ -36,8 +36,8 @@ const HELP = `git-sluice v${VERSION} — dsh-git-push 引擎独立 CLI（脱离 
                                   重建仓库索引 dsh-repo-index.json（--offline=纯离线不查 GitHub API）
   git-sluice audit <root> [--full] [--level quick|standard|deep] [--ruleset <目录>] [--weights <JSON>] [--include-ignored]
                                   审计目录（默认 diff 范围；--full=全量；--level=强度；--ruleset=自定规则目录；--weights=权重覆盖 JSON；--include-ignored=连 .gitignore 忽略的文件也扫）
-  git-sluice commit <repo> -m <msg> [--push|--no-push] [--dry-run] [--force] [--req-confirm] [--json]
-                                  审计门禁 → 提交（默认只 commit 不 push；--push 推远端；--force 强推覆盖远端历史；--req-confirm 显式核对开发者要求）
+  git-sluice commit <repo> -m <msg> [--push|--no-push] [--dry-run] [--force] [--req-confirm] [--push-gate-confirmed] [--json]
+                                  审计门禁 → 提交（默认只 commit 不 push；--push 推远端；--force 强推覆盖远端历史；--req-confirm 显式核对开发者要求；--push-gate-confirmed 显式放行推送门禁）
   git-sluice link-check <路径>    检查 md/文本中的链接有效性（只 warning，flaky 域名打折）
   git-sluice yaml-template        输出规则 yml 模板（含 kind + dimensions 示范）
   git-sluice readme-template      输出 README 模板（{{name}} {{version}} 占位符）
@@ -50,7 +50,7 @@ import './lib/rule/compilers.js';
 
 /** 参数解析：白名单必须与 HELP 文本完全一致（cli-help-sync 自检）。 */
 export function parseArgv(argv) {
-  const flags = { depth: undefined, full: false, level: undefined, ruleset: undefined, weights: undefined, includeIgnored: false, push: undefined, dryRun: false, force: false, reqConfirm: false, message: undefined, json: false, max: undefined, owner: undefined, offline: false };
+  const flags = { depth: undefined, full: false, level: undefined, ruleset: undefined, weights: undefined, includeIgnored: false, push: undefined, dryRun: false, force: false, reqConfirm: false, pushGateConfirmed: false, message: undefined, json: false, max: undefined, owner: undefined, offline: false };
   const positional = [];
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -83,6 +83,7 @@ export function parseArgv(argv) {
     else if (a === '--dry-run') flags.dryRun = true;
     else if (a === '--force') flags.force = true;
     else if (a === '--req-confirm') flags.reqConfirm = true;
+    else if (a === '--push-gate-confirmed') flags.pushGateConfirmed = true;
     else if (a === '--json') flags.json = true;
     else if (a.startsWith('--')) return { error: `未知参数: ${a}` };
     else positional.push(a);
@@ -239,6 +240,8 @@ export async function cmdCommit(root, flags) {
   const repo = root || '';
   if (!repo || !existsSync(join(repo, '.git'))) { console.error(`不是 git 仓库: ${repo || '(空)'}`); return 1; }
   if (!String(flags.message || '').trim()) { console.error('缺少 -m <commit message>'); return 1; }
+  // 推送门禁开关取插件配置（config.json pushGate，与侧边栏同一真源）；CLI 未确认时会被拦截
+  const cfg = cliPluginConfig();
   // 审计门禁：blocker 拦截（v2 审计独立调用——与 DSH 工具 git_commit_push 同一实现 commitWithAudit）
   const commitOutcome = await commitWithAudit({
     repoPath: repo,
@@ -247,6 +250,9 @@ export async function cmdCommit(root, flags) {
     dryRun: flags.dryRun === true,
     requirementsConfirmed: flags.reqConfirm === true,
     force: flags.force === true,
+    // 2026-09-17：推送门禁（设置侧边栏开关）——CLI 对应 --push-gate-confirmed（用户已确认）
+    pushGate: cfg.pushGate === true,
+    pushConfirmed: flags.pushGateConfirmed === true,
   });
   if (commitOutcome.blocked) {
     console.error(`审计拦截（${commitOutcome.error || 'blocker'}），提交中止：`);

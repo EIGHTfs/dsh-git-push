@@ -33410,7 +33410,7 @@ window.fetch = function (url, init) {
     else if (p === '/home/user') dirs = ['项目'];
     else dirs = ['src', 'docs', 'build', 'scripts'];
     body = { ok: true, path: p, parent: parent, dirs: dirs };
-  } else if (u.indexOf('repos-local') >= 0) {
+  } else if (urlStr.indexOf('repos-local') >= 0) {
     // 服务端已过滤：只保留登录同作者（EIGHTfs）的仓库。
     //   ①领先+干净→push 可点 ②有未提交→push 禁用；其他作者/无 remote 的都被过滤不显示
     body = {
@@ -33428,7 +33428,7 @@ window.fetch = function (url, init) {
         },
       ],
     };
-  } else if (u.indexOf('repos-cloud') >= 0) {
+  } else if (urlStr.indexOf('repos-cloud') >= 0) {
     body = {
       ok: true, loggedIn: true, count: 4,
       repos: [
@@ -34397,94 +34397,112 @@ window.__ModuleLoader__.load({
 
     /* ═══════════════════ 选项卡三：设置 ═══════════════════ */
     /* ─────────────────── [8] 设置 Tab（SettingsTab） ─────────────────── */
+    function dshgp_CredentialBlock(props) {
+      const s = props.state;
+      return jsx.jsxs('div', {
+        className: 'dshgp_block',
+        children: [
+          // 2026-09-12：保存按钮放「凭据与密钥」标题后面（右侧）；放弃按钮已删
+          jsx.jsxs('div', {
+            style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '8px' },
+            children: [
+              jsx.jsx('p', { className: 'dshgp_h2', style: { margin: 0 }, children: '凭据与密钥' }),
+              jsx.jsx('button', { type: 'button', className: 'dshgp_btn', disabled: !s.dirty || s.saving, onClick: props.save, children: s.saving ? '保存中…' : '保存' }),
+            ],
+          }),
+          jsx.jsx('div', {
+            className: 'dshgp_field',
+            children: [
+              jsx.jsxs('label', { className: 'dshgp_label', htmlFor: 'dshgp-token', children: ['GitHub token', s.tokenConfigured ? jsx.jsx('span', { className: 'dshgp_configured', children: '已填写' }) : null] }),
+              jsx.jsx('input', {
+                id: 'dshgp-token', type: 'password', autoComplete: 'off', className: 'dshgp_input',
+                value: s.text, disabled: !s.writable || s.saving,
+                onChange: (ev) => props.edit(ev.target.value),
+              }),
+              jsx.jsx('p', { className: 'dshgp_hint', children: 'ghp_ / github_pat_ 开头。保存后写入插件配置目录（0600），不在设置页留明文。' }),
+            ],
+          }),
+          jsx.jsx('div', {
+            className: 'dshgp_field',
+            children: [
+              jsx.jsxs('label', { className: 'dshgp_label', htmlFor: 'dshgp-ssh', children: ['SSH 公钥', s.sshConfigured ? jsx.jsx('span', { className: 'dshgp_configured', children: '已填写' }) : null] }),
+              jsx.jsx('textarea', {
+                id: 'dshgp-ssh', className: 'dshgp_textarea', rows: 3,
+                value: s.sshPub, disabled: !s.writable || s.saving,
+                onChange: (ev) => props.editSsh(ev.target.value),
+              }),
+              jsx.jsx('p', { className: 'dshgp_hint', children: 'ssh-ed25519 / ssh-rsa 整行。保存到同级仓 *.pub，不回传明文。' }),
+            ],
+          }),
+          // 2026-09-12：邮箱 + 一键生成同一行（编辑框宽度减少，按钮放编辑框后面）
+          jsx.jsxs('div', {
+            className: 'dshgp_field',
+            children: [
+              jsx.jsx('label', { className: 'dshgp_label', htmlFor: 'dshgp-email', children: 'SSH 邮箱（一键生成用）' }),
+              jsx.jsxs('div', {
+                style: { display: 'flex', alignItems: 'center', gap: '8px' },
+                children: [
+                  jsx.jsx('input', {
+                    id: 'dshgp-email', type: 'text', autoComplete: 'off', className: 'dshgp_input',
+                    style: { flex: '1 1 40%', maxWidth: '200px', minWidth: '120px' },
+                    value: s.sshEmail, disabled: s.genKeying,
+                    onChange: (ev) => props.editEmail(ev.target.value),
+                  }),
+                  jsx.jsx('button', { type: 'button', className: 'dshgp_btn dshgp_btnPrimary', disabled: s.genKeying || !s.sshEmail.trim(), onClick: props.genKey, children: s.genKeying ? '生成中…' : '一键生成并复制' }),
+                ],
+              }),
+            ],
+          }),
+          s.failed ? jsx.jsx('p', { className: 'dshgp_error', children: '保存失败：请检查格式后重试。' }) : null,
+          s.savedMsg ? jsx.jsx('p', { className: 'dshgp_saved', children: s.savedMsg }) : null,
+          s.genKeyError ? jsx.jsx('p', { className: 'dshgp_error', children: s.genKeyError }) : null,
+        ],
+      });
+    }
+
+    /** 推送与默认值区块（2026-09-16 收敛：只保留推送通道；默认扫描路径复用本地仓库列表选择路径）。 */
+    function dshgp_PushDefaultsBlock(props) {
+      const s = props.state;
+      return jsx.jsxs('div', {
+        className: 'dshgp_block',
+        children: [
+          jsx.jsx('p', { className: 'dshgp_h2', children: '推送与默认值' }),
+          jsx.jsxs('div', { className: 'dshgp_field', children: [
+            jsx.jsx('label', { className: 'dshgp_label', htmlFor: 'dshgp-pushmethod', children: '推送通道' }),
+            // 2026-09-16：下拉标签带括号注释（选项 value 仍是 ssh/api/auto，不改值——
+            //   兼容 config.json 已保存的 pushMethod；对外显示用「token」称 api 通道）。
+            jsx.jsx('select', {
+              id: 'dshgp-pushmethod', className: 'dshgp_input dshgp_inputInline',
+              value: s.pushMethod, onChange: (ev) => props.setAdvanced('pushMethod', ev.target.value),
+              children: [
+                { value: 'ssh', label: 'ssh（默认）' },
+                { value: 'api', label: 'token' },
+                { value: 'auto', label: 'auto（先 ssh 再 token）' },
+              ].map((o) => jsx.jsx('option', { key: o.value, value: o.value, children: o.label })),
+            }),
+            jsx.jsx('p', { className: 'dshgp_hint', children: 'ssh = 只走 SSH 私钥（默认）；token = 先走 Git Data API（用 token 推），失败回落 SSH；auto = 先 ssh、失败再回落 token。远端分叉时不静默回落，如实报错。' }),
+          ] }),
+          // 2026-09-17：推送门禁（类似会话指挥家写操作拦截）——开启后 AI 推送必须
+          //   先取得显式放行（带 pushConfirmed:true 重推），否则推送步骤被拦截。
+          jsx.jsxs('div', { className: 'dshgp_field', children: [
+            jsx.jsx('label', { className: 'dshgp_label', htmlFor: 'dshgp-pushgate', children: '推送门禁' }),
+            jsx.jsx('input', {
+              id: 'dshgp-pushgate', type: 'checkbox', className: 'dshgp_check',
+              checked: !!s.pushGate, onChange: (ev) => props.setAdvanced('pushGate', ev.target.checked),
+            }),
+            jsx.jsx('p', { className: 'dshgp_hint', children: '开启后：commit 可正常提交，但 push 前必须显式传 pushConfirmed:true 放行——未放行的推送被拦截并提示「推送门禁已开启，需确认后重试」。用于防止未经放行直接推远端。' }),
+          ] }),
+        ],
+      });
+    }
+
     function dshgp_SettingsTab(props) {
       const s = props.state;
       return jsx.jsxs('div', {
         className: 'dshgp_section',
         children: [
-          jsx.jsxs('div', {
-            className: 'dshgp_block',
-            children: [
-              // 2026-09-12：保存按钮放「凭据与密钥」标题后面（右侧）；放弃按钮已删
-              jsx.jsxs('div', {
-                style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '8px' },
-                children: [
-                  jsx.jsx('p', { className: 'dshgp_h2', style: { margin: 0 }, children: '凭据与密钥' }),
-                  jsx.jsx('button', { type: 'button', className: 'dshgp_btn', disabled: !s.dirty || s.saving, onClick: props.save, children: s.saving ? '保存中…' : '保存' }),
-                ],
-              }),
-              jsx.jsx('div', {
-                className: 'dshgp_field',
-                children: [
-                  jsx.jsxs('label', { className: 'dshgp_label', htmlFor: 'dshgp-token', children: ['GitHub token', s.tokenConfigured ? jsx.jsx('span', { className: 'dshgp_configured', children: '已填写' }) : null] }),
-                  jsx.jsx('input', {
-                    id: 'dshgp-token', type: 'password', autoComplete: 'off', className: 'dshgp_input',
-                    value: s.text, disabled: !s.writable || s.saving,
-                    onChange: (ev) => props.edit(ev.target.value),
-                  }),
-                  jsx.jsx('p', { className: 'dshgp_hint', children: 'ghp_ / github_pat_ 开头。保存后写入插件配置目录（0600），不在设置页留明文。' }),
-                ],
-              }),
-              jsx.jsx('div', {
-                className: 'dshgp_field',
-                children: [
-                  jsx.jsxs('label', { className: 'dshgp_label', htmlFor: 'dshgp-ssh', children: ['SSH 公钥', s.sshConfigured ? jsx.jsx('span', { className: 'dshgp_configured', children: '已填写' }) : null] }),
-                  jsx.jsx('textarea', {
-                    id: 'dshgp-ssh', className: 'dshgp_textarea', rows: 3,
-                    value: s.sshPub, disabled: !s.writable || s.saving,
-                    onChange: (ev) => props.editSsh(ev.target.value),
-                  }),
-                  jsx.jsx('p', { className: 'dshgp_hint', children: 'ssh-ed25519 / ssh-rsa 整行。保存到同级仓 *.pub，不回传明文。' }),
-                ],
-              }),
-              // 2026-09-12：邮箱 + 一键生成同一行（编辑框宽度减少，按钮放编辑框后面）
-              jsx.jsxs('div', {
-                className: 'dshgp_field',
-                children: [
-                  jsx.jsx('label', { className: 'dshgp_label', htmlFor: 'dshgp-email', children: 'SSH 邮箱（一键生成用）' }),
-                  jsx.jsxs('div', {
-                    style: { display: 'flex', alignItems: 'center', gap: '8px' },
-                    children: [
-                      jsx.jsx('input', {
-                        id: 'dshgp-email', type: 'text', autoComplete: 'off', className: 'dshgp_input',
-                        style: { flex: '1 1 40%', maxWidth: '200px', minWidth: '120px' },
-                        value: s.sshEmail, disabled: s.genKeying,
-                        onChange: (ev) => props.editEmail(ev.target.value),
-                      }),
-                      jsx.jsx('button', { type: 'button', className: 'dshgp_btn dshgp_btnPrimary', disabled: s.genKeying || !s.sshEmail.trim(), onClick: props.genKey, children: s.genKeying ? '生成中…' : '一键生成并复制' }),
-                    ],
-                  }),
-                ],
-              }),
-              s.failed ? jsx.jsx('p', { className: 'dshgp_error', children: '保存失败：请检查格式后重试。' }) : null,
-              s.savedMsg ? jsx.jsx('p', { className: 'dshgp_saved', children: s.savedMsg }) : null,
-              s.genKeyError ? jsx.jsx('p', { className: 'dshgp_error', children: s.genKeyError }) : null,
-            ],
-          }),
-          /* 推送与默认值（2026-09-16 收敛：只保留推送通道；默认扫描路径复用本地仓库列表
-             选择路径（dshgp-local-path / localStorage dshgp-scan-path），不再单独设置；
-             自动提交信息移除（留空由调用方/AI 生成消息）） */
-          jsx.jsxs('div', {
-            className: 'dshgp_block',
-            children: [
-              jsx.jsx('p', { className: 'dshgp_h2', children: '推送与默认值' }),
-              jsx.jsxs('div', { className: 'dshgp_field', children: [
-                jsx.jsx('label', { className: 'dshgp_label', htmlFor: 'dshgp-pushmethod', children: '推送通道' }),
-                // 2026-09-16：下拉标签带括号注释（选项 value 仍是 ssh/api/auto，不改值——
-                //   兼容 config.json 已保存的 pushMethod；对外显示用「token」称 api 通道）。
-                jsx.jsx('select', {
-                  id: 'dshgp-pushmethod', className: 'dshgp_input dshgp_inputInline',
-                  value: s.pushMethod, onChange: (ev) => props.setAdvanced('pushMethod', ev.target.value),
-                  children: [
-                    { value: 'ssh', label: 'ssh（默认）' },
-                    { value: 'api', label: 'token' },
-                    { value: 'auto', label: 'auto（先 ssh 再 token）' },
-                  ].map((o) => jsx.jsx('option', { key: o.value, value: o.value, children: o.label })),
-                }),
-                jsx.jsx('p', { className: 'dshgp_hint', children: 'ssh = 只走 SSH 私钥（默认）；token = 先走 Git Data API（用 token 推），失败回落 SSH；auto = 先 ssh、失败再回落 token。远端分叉时不静默回落，如实报错。' }),
-              ] }),
-            ],
-          }),
+          jsx.jsx(dshgp_CredentialBlock, Object.assign({}, props)),
+          jsx.jsx(dshgp_PushDefaultsBlock, Object.assign({}, props)),
         ],
       });
     }
@@ -34572,6 +34590,7 @@ window.__ModuleLoader__.load({
         this.maxScanFiles = 3000;           // 全量审计文件数上限（0=不限）
         this.hardcodeFullScan = false;      // 硬编码全量扫
         this.pushMethod = 'ssh';            // ssh | api | auto
+        this.pushGate = false;              // 2026-09-17：推送门禁（开启后 push 需显式放行）
         // 2026-09-16：defaultScanRoot/commitMessage 设置移除——默认扫描路径复用本地仓库
         //   列表选择路径（localStorage dshgp-scan-path），提交信息留空由调用方/AI 生成。
         // 2026-09-13：禁用态不再前端变量存储，以 yml 顶层 disabled 为准（listRuleSlots 解析）
@@ -34669,6 +34688,7 @@ window.__ModuleLoader__.load({
           maxScanFiles: this.maxScanFiles,
           hardcodeFullScan: this.hardcodeFullScan,
           pushMethod: this.pushMethod,
+          pushGate: this.pushGate, // 2026-09-17：推送门禁（开启后 push 需显式放行）
           // 2026-09-16：defaultScanRoot/commitMessage 状态镜像移除（设置已删除）
           tokenConfigured: this.tokenConfigured,
           sshConfigured: this.sshConfigured,
@@ -34836,6 +34856,43 @@ window.__ModuleLoader__.load({
         }
         this.localLoading = false;
         this.publish();
+        // 2026-09-16：读取/扫描收尾后**自动补查未知远端状态**——列表里 liveSkipped（本地列表预算/
+        //   熔断导致 SSH 探测跳过）的仓库，串行向后端补查（SSH 真源），结果追加写回索引，
+        //   同时刷新本地列表的远端状态（remoteHead/ahead/behind/remoteHeadAt/synced）。
+        void this.refreshUnknownRemote();
+      }
+
+      /** 自动补查 liveSkipped（未知远端状态）仓库：串行走 /repos-local-refresh，更新列表条目。 */
+      async refreshUnknownRemote() {
+        if (this.refreshingRemote) return; // 防重入
+        const skips = (this.localRepos || []).filter((r) => r.liveSkipped === true && r.path);
+        if (!skips.length) return;
+        this.refreshingRemote = true;
+        try {
+          const body = { repos: skips.map((r) => ({ name: r.name, path: r.path, branch: r.branch || '' })) };
+          const res = await dshgp_postJson('/api/git-push/repos-local-refresh', body);
+          const refreshed = (res && Array.isArray(res.refreshed)) ? res.refreshed : [];
+          if (refreshed.length) {
+            // 把补查结果合并进本地列表（按 name 匹配）
+            const byName = new Map(refreshed.filter((r) => r.ok).map((r) => [r.name, r.remoteState || {}]));
+            if (byName.size) {
+              this.localRepos = (this.localRepos || []).map((r) => {
+                const st = byName.get(r.name);
+                if (!st) return r;
+                return Object.assign({}, r, {
+                  remoteHead: st.remoteHead ?? r.remoteHead,
+                  ahead: st.ahead ?? r.ahead,
+                  behind: st.behind ?? r.behind,
+                  remoteHeadAt: st.remoteHeadAt ?? r.remoteHeadAt,
+                  synced: st.synced ?? r.synced,
+                  liveSkipped: false, // 补查完成，不再是未知
+                });
+              });
+              this.publish();
+            }
+          }
+        } catch { /* 补查失败静默（下次读取再补） */ }
+        this.refreshingRemote = false;
       }
 
       /** 手动「扫描」= 独立进程后台离线扫描 + 只读新增 diff（2026-09-16）。
@@ -34907,6 +34964,10 @@ window.__ModuleLoader__.load({
             // 2026-09-16：云端扫描同时写索引（后端 mergeCloudReposIntoIndex），提示已刷新条数
             const idxHint = cloudRes.indexUpdated ? '，索引已刷新 ' + cloudRes.indexUpdated + ' 条' : '';
             this.cloudMsg = '共 ' + this.cloudRepos.length + ' 个仓库（按最近更新排序）' + idxHint;
+            // 2026-09-16：云端获取后**重新读索引刷新本地列表**——后端已把云端仓库（含
+            //   defaultBranch/pushedAt/visibility 云端真源）写进 dsh-repo-index.json，
+            //   侧边栏本地面板的远端状态（默认分支/云端更新/仅云端标记）随之更新。
+            void this.scanLocalRepos(this.localPath, false);
           } else {
             this.cloudRepos = [];
             this.cloudMsg = '❌ ' + ((data && data.error) || '拉取失败');
@@ -35131,10 +35192,10 @@ window.__ModuleLoader__.load({
        * @param {unknown} value 新值
        */
       setAdvanced(key, value) {
-        const ok = /^(auditLevel|auditRuleset|maxScanFiles|hardcodeFullScan|pushMethod)$/.test(key);
+        const ok = /^(auditLevel|auditRuleset|maxScanFiles|hardcodeFullScan|pushMethod|pushGate)$/.test(key);
         if (!ok) { this.setStatus('❌ 未知设置键: ' + key); return; }
         const numKeys = { maxScanFiles: 1 };
-        const boolKeys = { hardcodeFullScan: 1 };
+        const boolKeys = { hardcodeFullScan: 1, pushGate: 1 };
         const enumKeys = { auditLevel: ['quick', 'standard', 'deep'], pushMethod: ['ssh', 'api', 'auto'] };
         let v = value;
         if (boolKeys[key]) v = value === true;
@@ -35238,27 +35299,22 @@ window.__ModuleLoader__.load({
       }
     }
 
-    // 2026-09-16：插件启动读取标记（整页生命周期只触发一次——账号信息 + 本地仓库列表）
-    let dshgp_startupLoaded = false;
-
     const inject = ['slots', 'settingsScope'];
 
     function apply(ctx) {
       const controller = new dshgp_Controller(ctx.settingsScope.bind({ namespace: SETTINGS_NS }));
       const store = controller.store;
-      // 2026-09-16：插件启动时读一次——账号信息 + 本地仓库列表（读 json，不直接改 UI）。
-      //   模块级标记保证整页生命周期只触发一次（settings.section 每次进页面都会 apply，
-      //   但 Controller 是插件单例；此标记防重复读）。后续刷新全靠：
-      //   账号信息 → push 完成 / 手动「重新检测」；本地列表 → push 完成 / 手动「扫描」。
-      if (!dshgp_startupLoaded) {
-        dshgp_startupLoaded = true;
-        // 2026-09-16：启动读取复用「本地仓库列表选择的路径」（localStorage dshgp-scan-path，
-        //   本地面板扫描时写入）；没选过则空 → 后端自动识别 DSH 家根。
-        let savedPath = '';
-        try { savedPath = (typeof window !== 'undefined' && window.localStorage && window.localStorage.getItem('dshgp-scan-path')) || ''; } catch { /* 忽略 */ }
-        void controller.refreshAccount();
-        void controller.scanLocalRepos(savedPath, false); // 启动只读索引（不重建，读 json）
-      }
+      // 2026-09-16（修复「重启后不预读」）：**每次进设置页都预读**账号信息 + 本地仓库列表
+      //   （读 account-status.json / dsh-repo-index.json，本地文件幂等便宜）——此前的模块级
+      //   `dshgp_startupLoaded` 标记在 DSH bundle 常驻（浏览器不刷新）时保持 true，
+      //   导致「第一次预读后，重启/重进设置页不再预读」。改为每次 apply 都读，跟随最新 json。
+      //   后续仍可手动「重新检测 / 扫描」在线刷新。
+      // 读取复用「本地仓库列表选择的路径」（localStorage dshgp-scan-path，本地面板扫描时写入）；
+      //   没选过则空 → 后端自动识别 DSH 家根。
+      let savedPath = '';
+      try { savedPath = (typeof window !== 'undefined' && window.localStorage && window.localStorage.getItem('dshgp-scan-path')) || ''; } catch { /* 忽略 */ }
+      void controller.refreshAccount();
+      void controller.scanLocalRepos(savedPath, false); // 只读索引（不重建，读 json）
       // uSES 桥：SnapshotStore 是裸 observable，用 useSyncExternalStore 自建 selector hook
       const useCardState = (selector) => {
         const snap = react.useSyncExternalStore(store.subscribe, store.getSnapshot);
