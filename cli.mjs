@@ -180,14 +180,18 @@ export function cmdAudit(root, flags) {
   const opts = pluginEqualAuditOpts(cfg, flags, { scope: full ? 'full' : 'diff' });
   const weights = pluginEqualWeights(cfg, flags);
   const auditResult = full ? auditFull(root, opts) : auditWithScope(root, opts);
-  const quality = scoreQuality(auditResult.findings, weights);
+  const quality = scoreQuality(auditResult.findings, weights, { files: auditResult.files });
   if (flags.json) {
-    console.log(JSON.stringify({ ok: true, repo: root, scope: auditResult.scope, summary: auditResult.summary, quality, findings: auditResult.findings }, null, 2));
+    console.log(JSON.stringify({ ok: true, repo: root, scope: auditResult.scope, summary: auditResult.summary, quality, findings: auditResult.findings, files: auditResult.files, yaml: auditResult.yaml }, null, 2));
     return;
   }
   console.log(`审计 ${root}（scope=${auditResult.scope}, level=${opts.auditLevel}${opts.rulesetDir ? ', ruleset=' + opts.rulesetDir : ''}${opts.includeIgnored ? ', include-ignored' : ''}）`);
   console.log(`  summary: ${JSON.stringify(auditResult.summary)}`);
-  console.log(`  quality: ${quality.score}/100（${quality.level}）`);
+  if (quality.emptyResult) {
+    console.log(`  quality: ${quality.emptyReason}（files=${auditResult.files}）`);
+  } else {
+    console.log(`  quality: ${quality.score}/100（${quality.level}）`);
+  }
   if (Object.keys(weights).length) console.log(`  权重覆盖（来自插件配置 weightOverrides）: ${JSON.stringify(weights)}`);
 }
 

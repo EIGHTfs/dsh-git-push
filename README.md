@@ -153,6 +153,7 @@ dsh-git-push/
 │   │   ├── index.js — 审计层统一出口（auditFull/auditChanged）
 │   │   ├── orchestrate.js — 审计编排（收集→检查→汇总）
 │   │   ├── repo-level.js — 仓库级语义规则
+│   │   ├── report-yaml.js — 审计结果 YAML 报告（summary → 拦截级别 → 目录 → 文件 → 规则明细）
 │   │   ├── slot.js — 按规则包聚合审计命中（拦截/警告/通过）
 │   ├── audit-rules/ — 规则包 yml（nodejs/npm/frontend/comment/dsh/private/structure 等动态槽位）
 │   │   ├── audit-rules-comment.yml — 注释类规则（黑名单措辞/对话残留）（规则包 comment）
@@ -256,6 +257,7 @@ dsh-git-push/
 │   ├── test-audit-bad-file.mjs — 审计拦截门禁测试（硬编码密码/API key/.env 凭据文件）
 │   ├── test-audit-scope.mjs — 审计作用域/凭据占位符回归测试
 │   ├── test-audit.mjs — 审计总入口测试（auditFull/changed/豁免/gitignore）
+│   ├── test-audit-empty.mjs — 审计空结果测试（0 文件不评分 + 审计 YAML 层级聚合）
 │   ├── test-client.mjs — 侧边栏测试（手写 DOM/零外部资源/开关默认）
 │   ├── test-context.mjs — 上下文注入测试
 │   ├── test-dataflow.mjs — 三层审计 L2 数据流测试
@@ -828,7 +830,13 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
-| **1.3.1**（当前） | **云端扫描写索引 + 本地远端状态刷新 + 代码质量清扫（命名/魔数）+ 魔数双规则合并** \
+| **1.3.2**（当前） | **审计结果 YAML 报告（按拦截级别→目录→文件聚合）+ 评分防空扫描满分** \
+审计结果新增 `yaml` 字段（lib/audit/report-yaml.js）：把平铺 findings 聚合为层级 YAML（`summary` → 拦截级别 blocker/warning/notice/info → 目录 → 文件 → 规则明细 rule/line/message），供 CLI `--json` 与插件工具 `code_audit` 返回体携带；空级别输出 `[]`，根级文件归 `./`；message 默认截断 200 字符 \
+**评分防满分**（scoreQuality 新增 context 参数 `{files}`）：扫描到 **0 文件**（全量空目录 / diff 0 变动）时**不评分**——返回 `score:null + level:null + emptyResult:true + emptyReason`，不再因「什么都没扫到」直接满分 100；CLI 显示 `quality: 未扫描到任何文件（files=0）`，code_audit block 显示「未评分」；有文件时正常评分不变 \
+配套修复：`checkPrivateFiles`/`collectChangedFiles` 的 execFileSync **显式捕获 git stderr**（非 git 目录跑 git 命令不再把「致命错误」直通污染审计 --json 输出）\
+新增 test/test-audit-empty.mjs（0 文件不评分 + YAML 层级聚合断言）；tree-doc 收录 report-yaml.js 与测试 \
+回归：单测 33/33、check 97/97、tree-doc 无漂移；实测空目录 audit --json 干净（files=0 / score=null / yaml 完整）\
+| **1.3.1** | **云端扫描写索引 + 本地远端状态刷新 + 代码质量清扫（命名/魔数）+ 魔数双规则合并** \
 账号卡片「云端」`加载仓库列表`（/repos-cloud）**同步写索引**（`mergeCloudReposIntoIndex`）：云端仓库登记进 dsh-repo-index.json（含 defaultBranch/pushedAt/description/visibility 云端真源、`cloudOnly` 标记本地无副本），本地已有副本的条目保留本地 path/skills 并刷新云端状态；本地列表透传 `defaultBranch/cloudPushedAt/cloudOnly` 并显示「默认分支 / 云端更新 / 仅云端」——云端扫描一次，本地远端状态同步刷新（接口返回 indexUpdated 提示刷新条数）\
 代码质量清扫（审计分数 74.5 → 77/B）：变量命名类 125→1 条（readability/vague-variable-name + variable-min-length 机械改名 126 处，49 文件）；魔数类 116→56 条（超时/阈值/扣分表提命名常量：file-health 权重与等级边界、collector/http-handlers 超时、apply 注入段 order、score 等级分界、size 函数行数阈值、client fetch 超时与扫描循环上限、link-check 默认参数与 flaky 折扣、preview-gen MB 换算）\
 **魔数双规则合并**：readability/magic-number（regex 通道）并入 readability/magic-number-smart（AST token 级，唯一魔数规则）——smart 覆盖运算/比较里的全部数字字面量形态，杜绝同一魔数报两条；命名常量判定放宽（isNamedConstantValue）：`dshgp_*`/前置前缀 + timeout/limit/size/ms 等语义词尾的变量名算命名常量，不再误报 `const timeout = 30000`；nodejs 槽位规则数 38→37（README 同步）\
