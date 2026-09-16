@@ -54,7 +54,7 @@ Git 全链路自动化，token / SSH 凭据管理 + 提交推送，无需手动�
 | 能力 | 说明 |
 |---|---|
 | `git_commit_push` | 一键提交+推送（审计门禁默认开启；敏感文件自动 .gitignore；`--push/--no-push/--dry-run/--force/--req-confirm/--json`） |
-| 推送通道 | **api 通道**（Git Data API，blob→tree→commit→ref，分支免疫）优先，401 自动回退 **SSH 通道**（ssh.github.com:443） |
+| 推送通道 | `ssh（默认）`= 只走 SSH 私钥 / `token`= 先走 Git Data API（用 token 推）失败回落 SSH / `auto`= 先 ssh 失败回落 token；远端分叉时不静默回落，如实报错 |
 | force 强推 | API 通道重建 commit 去旧 parent / SSH 通道 `git push --force` |
 | clone / 建仓 | `cloneViaApi`（trees+blobs 写文件转 git 仓）/ `ensureRemoteRepo`（建仓+设 origin） |
 | 可见性 | `setVisibility` PATCH 切换 public/private |
@@ -73,6 +73,16 @@ Git 全链路自动化，token / SSH 凭据管理 + 提交推送，无需手动�
 - `auditChanged`：变动范围（git diff）——提交前默认
 - `auditFull`：全量扫描（非 git 目录可查）
 - `code_audit` 工具 / `git-sluice audit` CLI：强度、规则包、权重全覆盖
+
+### 扫描忽略语义（黑名单初筛 + 白名单补充）
+
+全量/变更扫描的目录跳过分三层（lib/skip-dirs.js 统一）：
+
+1. **硬编码基线**（只允许 `node_modules`、`.git`）——机器依赖/内部元数据，**绝对跳过**，不受 gitignore 影响；
+2. **yml 黑名单关键词**（规则 yml 的 `exclude_dirs` 并集，如 folder 规则的 `dist/build/vendor/.dsh/.trash` 等）——候选跳过，但若 gitignore 用 `!` 白名单恢复了该目录（如 `server/project/*` + `!server/project/blueprint/`、`/build/*` + `!/build/keep/`），则保留进入（黑名单不压过白名单）；
+3. **gitignore 忽略判定**（`git check-ignore`）——被忽略目录整棵跳过；被 `!` 恢复的目录照常进入。
+
+新增跳过目录一律改 yml（exclude_dirs），不改代码。要调整各层行为见 `lib/skip-dirs.js` 顶部注释。
 
 ### 规则引擎（yml 管理）
 
@@ -106,6 +116,7 @@ dsh-git-push/
 │   ├── BUGFIX-NOTES-2026-09-14.md — Bug 修复说明（diff 审计提速 / 凭据文件拦截三层根因）
 │   ├── commit-push.js — 审计提交总入口（commitWithAudit + runAudit 同步审计）
 │   ├── index.js — 插件入口（DSH 接线，再导出全部能力）
+│   ├── skip-dirs.js — 统一跳过目录名单（硬编码 node_modules/.git + yml exclude_dirs 黑名单关键词）
 │   ├── user-requirements.json — 开发者特殊要求清单（提交推送前逐条核对）
 │   ├── app/ — 插件入口层（apply/HTTP 处理/工具调用分发/注入文本/默认扫描根）
 │   │   ├── apply.js — 插件装载入口（注册 schema/工具/HTTP/注入钩子）
@@ -182,6 +193,7 @@ dsh-git-push/
 │   ├── exempt/ — 豁免机制（dsh-skip-* 注释标记解析与文件头/行内语义）
 │   │   ├── index.js — 豁免注册表（dsh-skip-* 全标记消费）
 │   ├── git/ — Git 执行层（runGit/账号/API/克隆/凭据/推送/扫描/索引维护/敏感扫描/传输通道）
+│   │   ├── account-status.js — （待注释）
 │   │   ├── account.js — 账号校验（token 在线 + SSH 公钥指纹，输出账号状态块）
 │   │   ├── api.js — GitHub REST 调用（githubFetch 统一 token/错误识别）
 │   │   ├── browse.js — 目录浏览（账号卡片路径选择器后端）
@@ -197,6 +209,7 @@ dsh-git-push/
 │   │   ├── remote.js — 远端仓库管理（建仓默认 private/可见性切换）
 │   │   ├── repo-index.js — dsh-repo-index 自动维护（扫描 workspace 生成索引 JSON）
 │   │   ├── repos.js — 仓库扫描与展示（describeRepo 分支/远端/领先落后/未提交）
+│   │   ├── scan-runner.js — 本地仓库「独立进程后台扫描」运行器（增量进度 + 等待新版本）
 │   │   ├── sensitive.js — 敏感信息扫描（提交前拦截密钥/凭据/私密文件）
 │   │   ├── transport.js — 推送通道（dispatchPush 决策：SSH/API/auto + 结果核对）
 │   ├── http/ — HTTP 总入口（鉴权中间件 + 端点处理器骨架）
@@ -225,6 +238,7 @@ dsh-git-push/
 │   ├── func-index.js — （待注释）
 │   ├── preview-server.mjs — 本地真实后端测试服务（preview.html 接真实 handleHttp）
 │   ├── rule-switch.mjs — 规则槽位手动启停 CLI
+│   ├── scan-repos.mjs — 独立进程离线扫描脚本（逐仓写进度 + 追加索引，纯离线）
 │   ├── scan-version.mjs — 版本一致性校验脚本
 │   ├── scrub-user-wording.mjs — 清理「用户沟通措辞」独立脚本
 │   ├── sync-plugin.mjs — 双副本同步脚本（源仓库 → 部署安装副本）
@@ -622,6 +636,37 @@ node assets/preview-gen.mjs
 
 设置项以 `lib/app/schema.js` 的 `Config` 为单一事实源（`lib/index.js` 只再导出），`settingsScope` 读写。凭据保存**同时写插件配置目录**（见「凭据管理」）。
 
+### 账号信息 / 本地仓库列表：读取时机（2026-09-16 收敛）
+
+账号信息（token/SSH 有效性 + account-status.json 快照）与本地仓库列表（dsh-repo-index.json 索引）**只在下面三种时机读取**，不做轮询/不监听索引文件。**读取一律纯离线读 json（秒级），网络操作只在需要时单独触发**：
+
+| 时机 | 账号信息 | 本地仓库列表 | 说明 |
+|---|---|---|---|
+| **插件启动时** | ✅ 离线读 json | ✅ 离线读 json | 侧边栏插件加载即读（模块级标记整页只执行一次），读的是 json 文件，不直接改 UI |
+| **云端 push 完成后** | ✅ 离线读 | ✅ 离线读 | push 本身**在线**更新 json（重建索引 + 账号校验落盘），前端接着离线读回最新 |
+| **手动刷新** | ✅ `重新检测` = **在线**校验写 json，再离线读回 | ✅ `扫描` = **独立进程后台离线扫描**，逐条追加 | 两个按钮都是「更新 json 后再读」，读取端仍走离线 json |
+
+#### 本地「扫描」：独立进程后台 + 只读新增 diff（2026-09-16）
+
+扫描全程不占前台、不卡界面，也不再一次性等全量扫完：
+
+1. 点 `扫描` → 前端 `POST /api/git-push/repos-local-scan`，后端以 `child_process.spawn(detached)` 拉起**独立进程** `scripts/scan-repos.mjs`（系统级后台，扫描 CPU 密集全在子进程，不拖宿主机）。响应立即返回，**扫描中按钮禁用、不可重复点击**（`alreadyRunning` 兜底）。
+2. 独立进程纯离线逐仓扫描（只扫设置路径、`--depth`/`--max` 限性能，owner 用离线账号 json 比对，不联网）：**每登记一个仓库**就 ① 递增写 `scan-live.json`（`version` +1、`found` 追加）、② 读-改-写把该仓库 entry **追加**进 `dsh-repo-index.json`（不覆盖其他条目）。
+3. 宿主用 `fs.watchFile` 监听 `scan-live.json`，文件一变就唤醒等待者——前端 `POST /api/git-push/repos-local-scan-wait { from: 已见数 }` 挂起直到有新仓库，**只返回「新增的那几条」**（`newest`），前端只把这些**追加**进列表，**不全量重读**。非轮询：有新数据才返回。
+4. 全部扫完 → `scan-live.json` `done:true` → 前端收到收尾，恢复按钮并读一次索引对齐（补全领先/落后字段）。
+
+- 进度文件：`$DSH_HOME/git-push/scan-live.json`（`{ version, found:[仓库名…], done, startedAt }`）。
+- 索引由独立进程**逐仓追加**（`path` 为该仓库真实本地路径），扫描结束即为最新；索引文件不为扫描而整篇重写。
+- **扫描尊重 `.gitignore`（2026-09-16 修复）**：被 git 忽略的目录整棵跳过，不再登记为独立仓库——此前 `DeepSeekHarness-NAS` 的 `/src/`（官方源码）、`/assets/`、`/build/master-build/`（构建产物，内含独立 `.git`）会被误当仓库扫入。实现为每进入一个仓库根**一次** `git ls-files --others --ignored --exclude-standard --directory` 取忽略目录集合，遍历时整棵跳过（单次 git 调用，全量扫描 ~0.6s）。
+- **索引按本轮扫描结果收敛（同批修复）**：扫描结束会剔除「owner 一致但本轮未扫到」的条目（`SCAN pruned …`）——此前只追加/更新不删除，被 `.gitignore` 忽略后不再扫到的仓库会永远留在索引里。索引 = 本次扫描结果。
+
+- **读取与写分离**：启动 / push 后 / 渲染 → 全部离线读 json（毫秒级）；`push`、`重新检测` → 在线更新 json；`扫描` → 独立进程离线扫描（逐仓写进度 + 追加索引，界面只追加新增）。三种读取时机都只读 json。
+- **不监控索引、不轮询**：读取全部由上面三个事件显式触发（startup / push 成功 / 手动按钮），页面内切 tab **不会**反复刷新。
+- **登录 = 或逻辑**：`ssh` 或 `token` **任意一个有效即视为已登录**（`loggedIn = tokenValid || sshValid`），账号 json 快照与在线校验都按此判定，username 取有效者。
+- **默认扫描路径 = 本地仓库列表选择的路径**：前端记住本地面板输入框的路径（localStorage `dshgp-scan-path`），启动读取与后续扫描都复用该路径；没有则后端自动识别 DSH 家根。
+- **推送通道设置保留**（`pushMethod`：ssh=推本地 HEAD / api=Git Data API 重建提交 / auto=有私钥走 ssh）；`defaultScanRoot`/`commitMessage` 两项设置已移除（前者复用本地列表路径，后者留空由调用方/AI 生成）。
+- 单测网络隔离：`DSH_GIT_PUSH_OFFLINE=1` 时 GitHub API 与 SSH 探测全部快速失败，测试不依赖真实网络（`test-plugin.mjs` 等）。
+
 ## 仓库索引联动（dsh-repo-index.json）
 
 账号卡片与「自动生成的仓库索引」双向联动（2026-09-14，移植 v1 的 `lib/repo-index.js` 全量生成实现进 v2 `lib/git/repo-index.js`）：
@@ -700,7 +745,11 @@ Host 注册走 `ctx.inject(['commands'])`；无命令适配器的宿主静默跳
 git-sluice version              查看版本
 git-sluice ruleset [槽位...]    编译规则包并输出统计
 git-sluice scan <root> [--depth N]   全量扫描目录（非 git 目录可查）
-git-sluice audit <root> [--full] [--level quick|standard|deep] [--ruleset <目录>] [--weights <JSON>]
+git-sluice repos <root> [--depth N] [--max N] [--json]
+                                扫描本地 git 仓库（尊重 .gitignore：被忽略目录整棵跳过）
+git-sluice index <root> [--owner <账号>] [--depth N] [--max N] [--offline] [--json]
+                                重建仓库索引 dsh-repo-index.json（--offline=纯离线不查 GitHub API）
+git-sluice audit <root> [--full] [--level quick|standard|deep] [--ruleset <目录>] [--weights <JSON>] [--include-ignored] [--json]
 git-sluice commit <repo> -m <msg> [--push|--no-push] [--dry-run] [--force] [--req-confirm] [--json]
 git-sluice link-check <路径>    检查 md/文本中的链接有效性（只 warning）
 git-sluice yaml-template        输出规则 yml 模板
@@ -708,7 +757,17 @@ git-sluice readme-template      输出 README 模板
 git-sluice self-check           版本一致性 + HELP↔parseArgv 机器比对
 ```
 
-`audit` 参数与服务端设置对应：`--full` ↔ `auditScanScope=full`、`--level` ↔ `auditLevel`、`--ruleset` ↔ `auditRuleset`、`--weights` ↔ `weightOverrides`。
+### CLI 与插件「功能一致、结果一致」（2026-09-16 收敛）
+
+CLI 是引擎的独立入口，**功能与结果必须与插件一致**——同一份实现、同一份配置、同一套参数：
+
+- **同一实现**：`repos` → `lib/git/repos.js` 的 `scanRepos`（与插件本地扫描同函数）；`index` → `lib/git/repo-index.js` 的 `maintainRepoIndex`；`audit`/`scan` → `lib/audit/orchestrate.js` 的 `auditFull`/`auditWithScope`。CLI 不另写一份逻辑。
+- **同一配置**：CLI 读**同一份** `$DSH_HOME/git-push/config.json`（经 `readSettings` + `applySettingsToCfg`，与插件启动回读同一映射），因此 `auditLevel`、`maxScanFiles`、规则包顺序 `auditRuleOrder`、禁用槽位 `auditDisabledSlots`、权重 `weightOverrides` 全部生效。
+- **全量走同一入口**：`--full`（或目录非 git 仓库）走 `auditFull`，与插件 `code_audit` 的全量分支同路径；参数优先级同插件：显式 `--weights` > 配置 `weightOverrides` > 默认权重表。
+- **结果实测一致**（同一仓库同一参数）：CLI `audit . --full` 与插件 `code_audit{repo,scope:'full'}` 均输出 `quality 76.8/B`、`summary {blocker:0, warning:388, notice:45, total:433}`、findings 433 条。
+- 修复前的差异根因：CLI 只传 `scope`+`depth`，不带插件配置 → 跑了已禁用规则包、用默认权重与不同文件上限，表现为「CLI 全量扫描分更低、文件更多」。
+
+`audit` 参数与服务端设置对应：`--full` ↔ `auditScanScope=full`、`--level` ↔ `auditLevel`、`--ruleset` ↔ `auditRuleset`、`--weights` ↔ `weightOverrides`、`--include-ignored` ↔ 连 `.gitignore` 忽略的文件也扫。
 
 ## 独立脚本：清洗用户沟通措辞（scrub-user-wording.mjs）
 
@@ -768,7 +827,14 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
-| **1.2.2**（当前） | **用户输入框斜杠命令 `/git-audit` + 审计清洗改写表并入规则 yml + 后台推送走宿主官方 job + tree-doc 索引自动同步 + 规则 yml dimensions 维度统一绑定 + 文件行数检查注释行单独统计 + 仓库索引路径修正 + 健壮性/安全类告警清零** \
+| **1.3.0**（当前） | **审计忽略全链路修复（黑名单初筛 + 白名单补充）+ 统一跳过目录模块 + CLI 与插件审计同源同参 + 推送通道下拉修正** \
+审计**全量/变更扫描忽略语义重构**（lib/audit/collector.js + lib/skip-dirs.js）：修复 git check-ignore 大仓超时（原枚举 9.9 万文件路径喂 stdin 被 SIGTERM，用残缺 stdout 构造忽略集 → 被 .gitignore 忽略的 src/ 整棵漏进审计）；改为枚举**目录**（数量少一个量级）批量判定，status 非 0/1 不采信残缺输出；跳过目录统一为「硬编码基线（仅 node_modules/.git，绝对跳过）+ yml 黑名单关键词（规则 yml `exclude_dirs` 并集，如 folder 规则的 dist/build/vendor/.dsh/.trash）」——新跳过目录改 yml 不改代码；黑名单命中的目录若被 gitignore `!` 白名单恢复（如 `server/project/*`+`!server/project/blueprint/`、`/build/*`+`!/build/keep/`）则保留进入——整目录黑名单可含白名单子目录；node_modules/.git 绝对跳过不受白名单影响（修复 npm 依赖树漏扫回归）；新增 `node_modules.orig` 进 folder.yml exclude_dirs。三处消费方统一调用（审计收集 / 敏感扫描 / 措辞清洗）\
+CLI 与插件审计**功能一致、结果一致**（cli.mjs）：CLI 读取同一份 config.json（readSettings+applySettingsToCfg，修复返回状态对象当 cfg 的缺陷），权重/禁用槽/规则目录同参；`git-sluice audit . --full` 与插件 `code_audit{scope:'full'}` 实测同分同 finding（74.5/B，433 findings）；无配置环境回退默认权重（76.8/B）\
+CLI 新增 `repos` / `index` 命令（git-sluice repos <root> 列仓库、index <root> 维护本地索引），--max/--owner/--offline 标志全量接入 \
+推送通道下拉修正（client.js）：修复 React jsx 第三参数误当 children（`jsx(type, props, key)` 第三参数是 key）导致下拉渲染为空——推送通道与审计强度下拉均修复；下拉标签带说明：ssh（默认）= 只走 SSH 私钥 / token = 先走 Git Data API 失败回落 SSH / auto = 先 ssh 失败回落 token；远端分叉时不静默回落，如实报错 \
+README 补齐「扫描忽略语义（黑名单初筛 + 白名单补充）」章节 + tree-doc 收录 lib/skip-dirs.js \
+回归：单测 32/32、check 96/96、tree-doc 无漂移 \
+| **1.2.2** | **用户输入框斜杠命令 `/git-audit` + 审计清洗改写表并入规则 yml + 后台推送走宿主官方 job + tree-doc 索引自动同步 + 规则 yml dimensions 维度统一绑定 + 文件行数检查注释行单独统计 + 仓库索引路径修正 + 健壮性/安全类告警清零** \
 `/git-audit [路径] [--full] [--quick|--standard|--deep]`：会话输入框直接审计（解析/接线/quick 档自带缓存），与 `code_audit` 工具同判定 \
 scrub-user-wording 改写表从脚本内嵌迁移到 `lib/audit-rules/audit-rules-comment.yml` 顶层 `rewrites:`（审计只读 `rules` 不消费改写表，脚本启动时装载；规则定义文件豁免机制天然覆盖该 yml）\
 `git_commit_push` 后台化改宿主官方 `ctx.jobs`（dsh-jobs-local）：审计仍同步即时拦截，通过后 commit+push 注册为官方后台 job（kind=`git-push`，id 如 `git-push-1`），工具立即返回 `async:true + jobId`，AI 用宿主自带 `job_output <jobId>` / `job_list` / `job_kill` 查询，不再提供 `git_push_status` 工具与 `/api/git-push/task` 端点；自研 `lib/backend/task-queue.js` 删除，脱离 DSH 环境（无 ctx.jobs）时自动降级同步执行 \

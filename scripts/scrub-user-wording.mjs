@@ -33,6 +33,7 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { createInterface } from 'node:readline';
 import { load as yamlLoad } from 'js-yaml';
+import { getSkipSet } from '../lib/skip-dirs.js';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const DEFAULT_REWRITE_YML = join(SCRIPT_DIR, '..', 'lib', 'audit-rules', 'audit-rules-comment.yml');
@@ -191,7 +192,8 @@ function lineExempt(line) {
 }
 
 const MARKUP_EXTS = ['md', 'markdown', 'txt'];
-const SKIP_DIRS = new Set(['.git', '.trash', 'node_modules', '.npm', '.pnpm-store']);
+// 2026-09-16：跳过目录统一走 lib/skip-dirs.js（node_modules/.git + yml 黑名单关键词），不再各自硬编码。
+const SKIP_DIRS = getSkipSet();
 const SKIP_FILES_RE = /\.(bak\d*|orig)$/i;
 
 /**

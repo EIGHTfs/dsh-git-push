@@ -68,7 +68,7 @@ test('合并：enum 非法值回落默认', () => {
 });
 
 test('合并：string 类型统一字符串', () => {
-  assert.equal(resolveConfig({ commitMessage: 123 }).commitMessage, '123');
+  assert.equal(resolveConfig({ auditRuleset: 123 }).auditRuleset, '123');
 });
 
 test('合并：不改动基线对象（纯函数）', () => {

@@ -10,6 +10,11 @@ import { tmpdir } from 'node:os';
 import { execSync } from 'node:child_process';
 
 import { name, GIT_PUSH_SETTINGS_NS, Config, apply, callTool, handleHttp, listTools, listRuleSlots } from '../lib/index.js';
+
+// 2026-09-16：单测网络隔离——禁止 GitHub API / SSH 探测真实网络（否则假 token 的 /user、
+//   liveRemoteHead 的 ls-remote 会等满超时挂起）。本文件测的是工具分发/端点契约，
+//   一律走离线快速失败路径即可。
+process.env.DSH_GIT_PUSH_OFFLINE = '1';
 import { setDefineToolOverride } from '../lib/plugin/index.js';
 import { listSyncFiles, syncPlugin, detectTargets, SYNC_ENTRIES, SYNC_EXCLUDE } from '../scripts/sync-plugin.mjs';
 import { VERSION } from '../lib/self/index.js';

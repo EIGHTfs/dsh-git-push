@@ -12,12 +12,17 @@ import { scoreQuality } from './lib/score/index.js';
 import { checkLinks, sumLinkPenalty } from './lib/link-check/index.js';
 import { collectTextFiles, readText } from './lib/audit/collector.js';
 import { commitWithAudit } from './lib/commit-push.js';
+import { scanRepos } from './lib/git/repos.js';
+import { maintainRepoIndex } from './lib/git/repo-index.js';
+import { auditFull } from './lib/audit/index.js';
+import { readSettings, applySettingsToCfg } from './lib/app/settings-bridge.js';
+import { defaultConfig } from './lib/client/index.js';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 /** parseArgv 认识的选项白名单（cli-help-sync 机器比对基准，必须与 HELP 文本一致。
  * 注：-m 是单横线别名（helpSync 只比对 -- 双横线），不列入本表。 */
-export const KNOWN_FLAGS = ['--depth', '--full', '--level', '--ruleset', '--weights', '--include-ignored', '--push', '--no-push', '--dry-run', '--force', '--req-confirm', '--json'];
+export const KNOWN_FLAGS = ['--depth', '--full', '--level', '--ruleset', '--weights', '--include-ignored', '--push', '--no-push', '--dry-run', '--force', '--req-confirm', '--json', '--max', '--owner', '--offline'];
 
 const HELP = `git-sluice v${VERSION} — dsh-git-push 引擎独立 CLI（脱离 DSH 运行）
 
@@ -25,6 +30,10 @@ const HELP = `git-sluice v${VERSION} — dsh-git-push 引擎独立 CLI（脱离 
   git-sluice version              查看版本
   git-sluice ruleset [槽位...]    编译规则包并输出统计（默认全部槽位）
   git-sluice scan <root> [--depth N]   全量扫描目录（非 git 目录可查）
+  git-sluice repos <root> [--depth N] [--max N] [--json]
+                                  扫描本地 git 仓库（尊重 .gitignore：被忽略目录整棵跳过）
+  git-sluice index <root> [--owner <账号>] [--depth N] [--max N] [--offline] [--json]
+                                  重建仓库索引 dsh-repo-index.json（--offline=纯离线不查 GitHub API）
   git-sluice audit <root> [--full] [--level quick|standard|deep] [--ruleset <目录>] [--weights <JSON>] [--include-ignored]
                                   审计目录（默认 diff 范围；--full=全量；--level=强度；--ruleset=自定规则目录；--weights=权重覆盖 JSON；--include-ignored=连 .gitignore 忽略的文件也扫）
   git-sluice commit <repo> -m <msg> [--push|--no-push] [--dry-run] [--force] [--req-confirm] [--json]
@@ -41,7 +50,7 @@ import './lib/rule/compilers.js';
 
 /** 参数解析：白名单必须与 HELP 文本完全一致（cli-help-sync 自检）。 */
 export function parseArgv(argv) {
-  const flags = { depth: undefined, full: false, level: undefined, ruleset: undefined, weights: undefined, includeIgnored: false, push: undefined, dryRun: false, force: false, reqConfirm: false, message: undefined, json: false };
+  const flags = { depth: undefined, full: false, level: undefined, ruleset: undefined, weights: undefined, includeIgnored: false, push: undefined, dryRun: false, force: false, reqConfirm: false, message: undefined, json: false, max: undefined, owner: undefined, offline: false };
   const positional = [];
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -49,7 +58,16 @@ export function parseArgv(argv) {
       const v = argv[++i];
       if (v === undefined || v.startsWith('--')) return { error: `--depth 缺值（用法: --depth N）` };
       flags.depth = Number(v);
-    } else if (a === '--full') flags.full = true;
+    } else if (a === '--max') {
+      const v = argv[++i];
+      if (v === undefined || v.startsWith('--')) return { error: `--max 缺值（用法: --max N）` };
+      flags.max = Number(v);
+    } else if (a === '--owner') {
+      const v = argv[++i];
+      if (v === undefined || v.startsWith('--')) return { error: `--owner 缺值（用法: --owner <账号>）` };
+      flags.owner = v;
+    } else if (a === '--offline') flags.offline = true;
+    else if (a === '--full') flags.full = true;
     else if (a === '--include-ignored') flags.includeIgnored = true;
     else if (a === '--level' || a === '--ruleset' || a === '--weights' || a === '-m') {
       const v = argv[++i];
@@ -96,7 +114,12 @@ export function cmdRuleset(slots) {
   for (const [k, v] of Object.entries(byKind)) console.log(`  ${k}: ${v}`);
 }
 
-/** 子命令：scan — 全量扫描目录。 */
+/** 子命令：scan — 全量扫描目录（**与插件 code_audit 结果一致**）。
+ *  2026-09-16 修复：此前 CLI 只传 scope+depth，完全不带插件配置（auditLevel / maxScanFiles /
+ *    规则包启停 auditDisabledSlots / 权重 weightOverrides）→ 审计结果与插件不一致
+ *    （实测「CLI 全量扫描分更低、文件更多」：跑了已禁用规则包 + 默认权重 + 不同文件上限）。
+ *    现在 CLI 读**同一份** config.json（$DSH_HOME/git-push/config.json），用与插件 code_audit
+ *    完全相同的 auditOpts 与入口（auditFull），保证功能与结果一致。 */
 export function cmdScan(root, flags) {
   const depth = flags.depth ?? 3;
   const res = auditWithScope(root, { scope: 'full', depth });
@@ -107,23 +130,104 @@ export function cmdScan(root, flags) {
   }
 }
 
-/** 子命令：audit — 审计目录。 */
-export function cmdAudit(root, flags) {
-  const level = flags.level || 'standard';
-  let weights = {};
-  if (flags.weights) {
-    try { weights = JSON.parse(flags.weights); } catch { console.error('--weights 非法 JSON，已回退默认权重表'); }
+/** 读插件同一份配置（config.json）→ 运行期 cfg（与插件启动回读同一映射）。
+ *  注意：applySettingsToCfg 是**原地修改** cfg、返回 { changedSystemPrompt } 状态对象
+ *  （与插件 apply.js 用法一致：`const changed = applySettingsToCfg(cfg, saved)`）。
+ *  绝不能把它的返回值当 cfg 用——那会让 auditLevel/maxScanFiles/weightOverrides 等全变
+ *  undefined，CLI 结果与插件不一致。 */
+export function cliPluginConfig() {
+  const cfg = defaultConfig();
+  try {
+    const saved = readSettings({});
+    applySettingsToCfg(cfg, saved || {}); // 原地改 cfg，忽略返回值
+  } catch {
+    /* 配置缺失/损坏 → 保留 defaultConfig（与插件首启一致） */
   }
-  const res = auditWithScope(root, {
-    scope: flags.full ? 'full' : 'diff',
+  return cfg;
+}
+
+/**
+ * 构造与插件 code_audit **完全相同**的审计参数（保证 CLI 与插件结果一致）。
+ * 对齐点：auditLevel、maxScanFiles、规则包顺序 slots、禁用槽位 disabledSlots、
+ *   includeIgnored、rulesetDir、权重（weightOverrides）。CLI 显式传参优先于配置。
+ */
+export function pluginEqualAuditOpts(cfg, flags, { scope = 'diff' } = {}) {
+  const validLevels = ['quick', 'standard', 'deep'];
+  const level = validLevels.includes(flags.level) ? flags.level : (cfg.auditLevel || 'standard');
+  const rulesetDir = flags.ruleset || '';
+  return {
+    scope,
+    rulesetDir,
     auditLevel: level,
-    rulesetDir: flags.ruleset || '',
+    maxScanFiles: cfg.maxScanFiles,
+    slots: cfg.auditRuleOrder && cfg.auditRuleOrder.length ? cfg.auditRuleOrder : undefined,
+    disabledSlots: Array.isArray(cfg.auditDisabledSlots) ? cfg.auditDisabledSlots : [],
     includeIgnored: flags.includeIgnored === true,
-  });
+  };
+}
+
+/** CLI 审计权重：显式 --weights > 插件配置 weightOverrides > 默认权重表（与 code_audit 同序）。 */
+export function pluginEqualWeights(cfg, flags) {
+  const src = flags.weights || (typeof cfg.weightOverrides === 'string' ? cfg.weightOverrides : '');
+  if (!src) return {};
+  try { return JSON.parse(src); } catch { return {}; }
+}
+
+/** 子命令：audit — 审计目录（**与插件 code_audit 结果一致**）。 */
+export function cmdAudit(root, flags) {
+  const cfg = cliPluginConfig();
+  const full = flags.full === true || !existsSync(join(root || '.', '.git'));
+  const opts = pluginEqualAuditOpts(cfg, flags, { scope: full ? 'full' : 'diff' });
+  const weights = pluginEqualWeights(cfg, flags);
+  const res = full ? auditFull(root, opts) : auditWithScope(root, opts);
   const q = scoreQuality(res.findings, weights);
-  console.log(`审计 ${root}（scope=${res.scope}, level=${level}${flags.ruleset ? ', ruleset=' + flags.ruleset : ''}${flags.includeIgnored ? ', include-ignored' : ''}）`);
+  if (flags.json) {
+    console.log(JSON.stringify({ ok: true, repo: root, scope: res.scope, summary: res.summary, quality: q, findings: res.findings }, null, 2));
+    return;
+  }
+  console.log(`审计 ${root}（scope=${res.scope}, level=${opts.auditLevel}${opts.rulesetDir ? ', ruleset=' + opts.rulesetDir : ''}${opts.includeIgnored ? ', include-ignored' : ''}）`);
   console.log(`  summary: ${JSON.stringify(res.summary)}`);
   console.log(`  quality: ${q.score}/100（${q.level}）`);
+  if (Object.keys(weights).length) console.log(`  权重覆盖（来自插件配置 weightOverrides）: ${JSON.stringify(weights)}`);
+}
+
+/** 子命令：repos — 扫描本地 git 仓库（尊重 .gitignore）。 */
+export function cmdRepos(root, flags) {
+  const depth = flags.depth ?? 10;
+  const max = flags.max ?? 200;
+  const list = scanRepos(root || '.', { depth, maxRepos: max });
+  if (flags.json) {
+    console.log(JSON.stringify({ ok: true, root, count: list.length, repos: list }, null, 2));
+    return;
+  }
+  console.log(`扫描 ${root || '.'}（depth=${depth}, max=${max}）→ ${list.length} 个仓库：`);
+  for (const r of list) {
+    const br = r.branch ? ` [${r.branch}]` : '';
+    const remote = r.remote ? ` ← ${r.remote}` : ' （无远端）';
+    const dirty = r.changed ? ` · 未提交 ${r.changed}` : '';
+    console.log(`  ${r.name}${br}${dirty}${remote}`);
+    console.log(`    ${r.path}`);
+  }
+  console.log(`（被 .gitignore 忽略的目录已整棵跳过，不当独立仓库）`);
+}
+
+/** 子命令：index — 重建仓库索引 dsh-repo-index.json。 */
+export async function cmdIndex(root, flags) {
+  const depth = flags.depth ?? 20;
+  const max = flags.max ?? 200;
+  const owner = flags.owner || 'EIGHTfs';
+  const r = await maintainRepoIndex({
+    workspaceRoot: root || '.',
+    owner,
+    depth,
+    maxRepos: max,
+    offline: flags.offline === true, // --offline=纯离线（不查 GitHub API）
+  });
+  if (flags.json) { console.log(JSON.stringify({ ...r, root, owner, offline: !!flags.offline }, null, 2)); return r.ok ? 0 : 1; }
+  if (!r.ok) { console.error(`❌ 索引重建失败: ${r.error || ''}`); return 1; }
+  console.log(`✅ 索引已重建：${r.target || ''}`);
+  console.log(`   扫描根 ${root || '.'}（owner=${owner}, depth=${depth}, max=${max}${flags.offline ? ', offline' : ''}）`);
+  return 0;
 }
 
 /** 子命令：commit — 审计门禁 → 提交（默认只 commit 不 push；--push 推远端；--force 强推）。 */
@@ -218,6 +322,16 @@ export function main(argv = process.argv.slice(2)) {
     const { flags, positional, error } = parseArgv(rest);
     if (error) return console.error(error);
     return cmdScan(positional[0] || '.', flags);
+  }
+  if (cmd === 'repos') {
+    const { flags, positional, error } = parseArgv(rest);
+    if (error) return console.error(error);
+    return cmdRepos(positional[0] || '.', flags);
+  }
+  if (cmd === 'index') {
+    const { flags, positional, error } = parseArgv(rest);
+    if (error) return console.error(error);
+    return cmdIndex(positional[0] || '.', flags);
   }
   if (cmd === 'audit') {
     const { flags, positional, error } = parseArgv(rest);

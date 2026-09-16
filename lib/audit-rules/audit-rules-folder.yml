@@ -19,6 +19,7 @@ rules:
     # .trash：安全删除约定的回收站（gitignore），是回收站不是源码，计入会虚增目录数。
     exclude_dirs:
       - "node_modules"
+      - "node_modules.orig"
       - ".git"
       - ".svn"
       - "dist"

@@ -31,6 +31,7 @@ window.__ModuleLoader__.load({
     const NS = 'git-push';
     const SETTINGS_NS = 'git-push';
 
+    /* ─────────────────── [1] 常量区（NS/维度表/样式串） ─────────────────── */
     /** 10 维度质量评分权重（合计 100；与 lib/score/index.js DEFAULT_WEIGHTS 一致）。 */
     const dshgp_DIMENSIONS = [
       { key: '可读性', def: 15 },
@@ -207,6 +208,7 @@ window.__ModuleLoader__.load({
       '.dshgp_browsefoot{display:flex;justify-content:flex-end}',
     ].join('');
 
+    /* ─────────────────── [2] 工具区（ensureCss/getJson/postJson/tokenConfigured/copyText） ─────────────────── */
     function dshgp_ensureCss() {
       if (typeof document === 'undefined') return;
       if (document.querySelector('style[data-plugin-css="dsh-git-push"]')) return;
@@ -254,6 +256,7 @@ window.__ModuleLoader__.load({
       return Promise.resolve();
     }
 
+    /* ─────────────────── [3] 图标区（ghIcon/refreshIcon） ─────────────────── */
     /* ═══════════════════ 选项卡一：账号信息（2026-09-13 美化版：渐变卡片 + GitHub 图标 + 状态徽标） ═══════════════════ */
     const dshgp_ghIcon = jsx.jsx('svg', {
       width: '22', height: '22', viewBox: '0 0 24 24', fill: 'none',
@@ -265,6 +268,7 @@ window.__ModuleLoader__.load({
       stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round',
       children: jsx.jsx('path', { d: 'M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6' }),
     });
+    /* ─────────────────── [4] 账号信息 Tab（AcctHead/AccountCard/AccountTab） ─────────────────── */
     /** 账号卡片头部：GitHub 图标 + 标题 + 状态徽标。 */
     function dshgp_AcctHead(props) {
       return jsx.jsxs('div', {
@@ -318,7 +322,7 @@ window.__ModuleLoader__.load({
                 type: 'button',
                 className: 'dshgp_keybtn',
                 disabled: loading,
-                onClick: props.refreshAccount,
+                onClick: props.recheckAccount,
                 children: [dshgp_refreshIcon, loading ? '检测中…' : '重新检测'],
               }),
               jsx.jsx('span', { className: 'dshgp_accthint', children: loggedIn ? '登录态有效，凭据已生效' : '凭据状态来自保存的 Token / SSH 公钥' }),
@@ -330,6 +334,12 @@ window.__ModuleLoader__.load({
 
     /** 选项卡一：账号信息（2026-09-14 拆卡片：渐变面板 AccountCard + 本地/云端 RepoManagerCard）。 */
     function dshgp_AccountTab(props) {
+      // 2026-09-16：账号信息/本地仓库列表的读取时机已收敛到三种（不再每次切 tab 重读）：
+      //   ①插件启动时（apply 里一次性读：refreshAccount + scanLocalRepos）
+      //   ②云端 push 完成时（pushLocalRepo 成功后顺延重读）
+      //   ③本地仓库手动「扫描」完成索引重建后（扫描按钮 rebuild=true 自带重读）
+      //   因此这里**不再**挂载时刷新——条件渲染（tab==='account'）每次切回都重挂载，
+      //   若在此触发会「一直刷新」；读取全部改由 Controller 层显式调用。
       return jsx.jsxs('div', {
         className: 'dshgp_section',
         children: [
@@ -340,8 +350,9 @@ window.__ModuleLoader__.load({
       });
     }
 
-    /* ═══════════════════ 目录选择弹窗（2026-09-14 移植 gamebanana-mods-downloader 的 path-picker 小模块：一行接入 📂 按钮） ═══════════════════ */
+    /* ─────────────────── [5] 目录选择器（browseEnsureDom/browseLoad/browseOpen/browseClose/browseAttach） ─────────────────── */
     let dshgp_browseTarget = null; // 当前打开的输入框（null = 走 onPick 回调）
+    // 2026-09-14 移植 gamebanana-mods-downloader 的 path-picker 小模块：一行接入 📂 按钮 // 当前打开的输入框（null = 走 onPick 回调）
     let dshgp_browseOpt = null;    // { onPick } 确认回调（clone 场景）
     let dshgp_browsePath = '';     // 弹窗当前所在目录
     function dshgp_browseEnsureDom() {
@@ -434,6 +445,7 @@ window.__ModuleLoader__.load({
     }
 
     /* ═══════════════════ 账号卡片：本地/云端 仓库管理（2026-09-14） ═══════════════════ */
+    /* ─────────────────── [6] 仓库管理卡（RepoManagerCard/RepoLocalPane/RepoCloudPane） ─────────────────── */
     function dshgp_RepoManagerCard(props) {
       const s = props.state;
       const [view, setView] = react.useState('local');
@@ -484,6 +496,11 @@ window.__ModuleLoader__.load({
       // 2026-09-14 联动仓库索引：本地无 remote/上游时也能显示它的 GitHub 归属
       const idx = r.indexed;
       const idxTag = idx ? ' · 🔗 索引 ' + (idx.owner ? idx.owner + '/' + idx.repo : idx.repo) + '(' + idx.visibility + ')' : '';
+      // 2026-09-16：本地/云端 HEAD 与提交时间并排（后端 liveRemoteHead 真源补 remoteHead/remoteHeadAt）
+      const localTime = r.localHeadAt ? new Date(r.localHeadAt).toLocaleString('zh-CN', { hour12: false }) : '';
+      const remoteTime = r.remoteHeadAt ? new Date(r.remoteHeadAt).toLocaleString('zh-CN', { hour12: false }) : '';
+      const headsStr = (r.localHead ? '本地 ' + r.localHead + (localTime ? ' ' + localTime : '') : '')
+        + (r.remoteHead ? ' · 云端 ' + r.remoteHead + (remoteTime ? ' ' + remoteTime : '') : '');
       return jsx.jsxs('div', {
         className: 'dshgp_reprow',
         children: [
@@ -491,7 +508,8 @@ window.__ModuleLoader__.load({
             className: 'dshgp_reprowinfo',
             children: [
               jsx.jsx('span', { className: 'dshgp_reprowpath', title: r.path, children: String(r.path).split('/').pop() || r.path }),
-              jsx.jsx('span', { className: 'dshgp_reprowmeta', children: ['分支 ' + r.branch + ' · ' + stat + idxTag + (r.changed > 0 ? ' · 未提交 ' + r.changed : '') + (r.lastCommit ? ' · ' + r.lastCommit : '')] }),
+              jsx.jsx('span', { className: 'dshgp_reprowmeta', children: ['分支 ' + r.branch + ' · ' + stat + idxTag + (r.changed > 0 ? ' · 未提交 ' + r.changed : '')] }),
+              jsx.jsx('span', { className: 'dshgp_reprowmeta' + (r.synced ? ' dshgp_synced' : ''), children: headsStr || (r.lastCommit ? r.lastCommit : '') }),
             ],
           }),
           jsx.jsxs('div', {
@@ -533,12 +551,15 @@ window.__ModuleLoader__.load({
               jsx.jsx('button', {
                 type: 'button',
                 className: 'dshgp_keybtn',
-                disabled: s.localLoading,
+                // 2026-09-16：扫描中禁用，不可重复点击（后台独立进程扫描链路）
+                disabled: s.localLoading || s.localScanning,
                 onClick: () => {
                   const el = document.getElementById('dshgp-local-path');
-                  props.scanLocalRepos(el ? el.value : '', true);
+                  // 手动「扫描」= **独立进程后台离线重建 + 逐条追加**：
+                  //   扫描进程每登记一个仓库就写进度文件 → 前端只追加新增（不全量重读）。
+                  props.startScan(el ? el.value : '');
                 },
-                children: s.localLoading ? '扫描中…' : '扫描',
+                children: (s.localLoading || s.localScanning) ? '扫描中…' : '扫描',
               }),
             ],
           }),
@@ -553,6 +574,10 @@ window.__ModuleLoader__.load({
       const r = props.repo;
       const s = props.state;
       const busy = s.repoBusy === 'clone:' + r.fullName;
+      // 2026-09-16：云端仓库标记本地是否已有（后端 repos-cloud 附 localExists/localPath）
+      const localTag = r.localExists
+        ? jsx.jsx('span', { className: 'dshgp_pill dshgp_pill_on', children: '本地已有' })
+        : null;
       return jsx.jsxs('div', {
         className: 'dshgp_reprow',
         children: [
@@ -561,6 +586,7 @@ window.__ModuleLoader__.load({
             children: [
               jsx.jsx('span', { className: 'dshgp_reprowpath', children: r.fullName }),
               jsx.jsx('span', { className: 'dshgp_reprowmeta', children: [(r.private ? '🔒 私有' : '🌐 公开') + ' · ' + (r.defaultBranch || '') + (r.pushedAt ? ' · 更新 ' + r.pushedAt.slice(0, 10) : '')] }),
+              localTag,
             ],
           }),
           jsx.jsx('button', {
@@ -600,8 +626,8 @@ window.__ModuleLoader__.load({
       });
     }
 
-    /* ═══════════════════ 选项卡二：审计 ═══════════════════ */
-    /** 10 维度权重行（值来自 state.weightValues，改即写回 weightOverrides JSON）。 */
+    /* ─────────────────── [7] 审计 Tab（WeightRows/RuleRow/AuditSwitchBlock/InjectPromptSwitchBlock/CommentWordingBlock/AuditAdvancedBlock/RuleListBlock/AuditTab） ─────────────────── */
+        /** 10 维度权重行（值来自 state.weightValues，改即写回 weightOverrides JSON）。 */
     function dshgp_WeightRows(props) {
       const s = props.state;
       const rows = dshgp_DIMENSIONS.map((d) => jsx.jsxs('div', {
@@ -814,11 +840,15 @@ window.__ModuleLoader__.load({
     /** 审计进阶设置块（2026-09-15 补齐 UI：auditLevel/auditRuleset/maxScanFiles/hardcodeFullScan）。 */
     function dshgp_AuditAdvancedBlock(props) {
       const s = props.state;
+      // 2026-09-16 修复：React 的 jsx(type, props, key) 第三参数是 **key 不是 children**——
+      //   此前写成 jsx('select', props, options.map(...)) 导致 children 丢失、下拉框渲染为空
+      //   （页面只剩一个空 <select>，用户看到「下拉没有那三种」）。children 必须放进 props。
       const sel = (key, values) => jsx.jsx('select', {
         className: 'dshgp_input dshgp_inputInline',
         value: s[key],
         onChange: (ev) => props.setAdvanced(key, ev.target.value),
-      }, values.map((v) => jsx.jsx('option', { key: v, value: v, children: v })));
+        children: values.map((v) => jsx.jsx('option', { key: v, value: v, children: v })),
+      });
       return jsx.jsxs('div', {
         className: 'dshgp_block',
         children: [
@@ -909,6 +939,7 @@ window.__ModuleLoader__.load({
     }
 
     /* ═══════════════════ 选项卡三：设置 ═══════════════════ */
+    /* ─────────────────── [8] 设置 Tab（SettingsTab） ─────────────────── */
     function dshgp_SettingsTab(props) {
       const s = props.state;
       return jsx.jsxs('div', {
@@ -973,28 +1004,27 @@ window.__ModuleLoader__.load({
               s.genKeyError ? jsx.jsx('p', { className: 'dshgp_error', children: s.genKeyError }) : null,
             ],
           }),
-          /* 推送与默认值（2026-09-15 补齐 UI：pushMethod/defaultScanRoot/commitMessage） */
+          /* 推送与默认值（2026-09-16 收敛：只保留推送通道；默认扫描路径复用本地仓库列表
+             选择路径（dshgp-local-path / localStorage dshgp-scan-path），不再单独设置；
+             自动提交信息移除（留空由调用方/AI 生成消息）） */
           jsx.jsxs('div', {
             className: 'dshgp_block',
             children: [
               jsx.jsx('p', { className: 'dshgp_h2', children: '推送与默认值' }),
               jsx.jsxs('div', { className: 'dshgp_field', children: [
                 jsx.jsx('label', { className: 'dshgp_label', htmlFor: 'dshgp-pushmethod', children: '推送通道' }),
+                // 2026-09-16：下拉标签带括号注释（选项 value 仍是 ssh/api/auto，不改值——
+                //   兼容 config.json 已保存的 pushMethod；对外显示用「token」称 api 通道）。
                 jsx.jsx('select', {
                   id: 'dshgp-pushmethod', className: 'dshgp_input dshgp_inputInline',
                   value: s.pushMethod, onChange: (ev) => props.setAdvanced('pushMethod', ev.target.value),
-                }, ['ssh', 'api', 'auto'].map((v) => jsx.jsx('option', { key: v, value: v, children: v }))),
-                jsx.jsx('p', { className: 'dshgp_hint', children: 'ssh=推本地 HEAD（默认）；api=Git Data API 重建提交；auto=有私钥走 ssh' }),
-              ] }),
-              jsx.jsxs('div', { className: 'dshgp_field', children: [
-                jsx.jsx('label', { className: 'dshgp_label', htmlFor: 'dshgp-scanroot', children: '默认扫描路径' }),
-                jsx.jsx('input', { id: 'dshgp-scanroot', type: 'text', className: 'dshgp_input', value: s.defaultScanRoot, onChange: (ev) => props.setAdvanced('defaultScanRoot', ev.target.value) }),
-                jsx.jsx('p', { className: 'dshgp_hint', children: '账号卡片「本地」扫描与 git_scan 未指定路径时的默认根；空=自动识别 DSH 家根' }),
-              ] }),
-              jsx.jsxs('div', { className: 'dshgp_field', children: [
-                jsx.jsx('label', { className: 'dshgp_label', htmlFor: 'dshgp-commitmsg', children: '自动提交信息' }),
-                jsx.jsx('input', { id: 'dshgp-commitmsg', type: 'text', className: 'dshgp_input', value: s.commitMessage, onChange: (ev) => props.setAdvanced('commitMessage', ev.target.value) }),
-                jsx.jsx('p', { className: 'dshgp_hint', children: '留空则用 AI 生成的消息' }),
+                  children: [
+                    { value: 'ssh', label: 'ssh（默认）' },
+                    { value: 'api', label: 'token' },
+                    { value: 'auto', label: 'auto（先 ssh 再 token）' },
+                  ].map((o) => jsx.jsx('option', { key: o.value, value: o.value, children: o.label })),
+                }),
+                jsx.jsx('p', { className: 'dshgp_hint', children: 'ssh = 只走 SSH 私钥（默认）；token = 先走 Git Data API（用 token 推），失败回落 SSH；auto = 先 ssh、失败再回落 token。远端分叉时不静默回落，如实报错。' }),
               ] }),
             ],
           }),
@@ -1002,7 +1032,7 @@ window.__ModuleLoader__.load({
       });
     }
 
-    /* ═══════════════════ 页面装配：三选项卡 ═══════════════════ */
+    /* ─────────────────── [9] 页面装配（GitPushPage：三选项卡聚合） ─────────────────── */
     function dshgp_GitPushPage(props) {
       dshgp_ensureCss();
       const [tab, setTab] = react.useState('account');
@@ -1058,7 +1088,7 @@ window.__ModuleLoader__.load({
       });
     }
 
-    /* ═══════════════════ Controller：状态机 + 数据加载 ═══════════════════ */
+    /* ─────────────────── [10] Controller（状态机 + 数据加载 + 动作注入） ─────────────────── */
     class dshgp_Controller {
       constructor(scope) {
         this.scope = scope;
@@ -1085,14 +1115,17 @@ window.__ModuleLoader__.load({
         this.maxScanFiles = 3000;           // 全量审计文件数上限（0=不限）
         this.hardcodeFullScan = false;      // 硬编码全量扫
         this.pushMethod = 'ssh';            // ssh | api | auto
-        this.defaultScanRoot = '';          // 默认扫描根（空=自动识别）
-        this.commitMessage = '';            // 自动提交信息（空=AI 生成）
+        // 2026-09-16：defaultScanRoot/commitMessage 设置移除——默认扫描路径复用本地仓库
+        //   列表选择路径（localStorage dshgp-scan-path），提交信息留空由调用方/AI 生成。
         // 2026-09-13：禁用态不再前端变量存储，以 yml 顶层 disabled 为准（listRuleSlots 解析）
         this.statusMsg = '';
         this.statusTimer = null;
         // 账号信息（纯展示）
         this.tokenConfigured = false;
         this.sshConfigured = false;
+        // 2026-09-16：凭据有效性快照（token/ssh 各自 valid/login/checkedAt）——来自 account-status.json
+        this.tokenStatus = null;
+        this.sshStatus = null;
         this.accountBlock = '';
         this.accountLoggedIn = false;
         this.accountLoading = false;
@@ -1100,6 +1133,7 @@ window.__ModuleLoader__.load({
         this.localPath = '';
         this.localRepos = [];
         this.localLoading = false;
+        this.localScanning = false; // 2026-09-16：独立进程扫描进行中（按钮禁用，不可重复扫描）
         this.localMsg = '';
         this.cloudRepos = [];
         this.cloudLoading = false;
@@ -1151,7 +1185,8 @@ window.__ModuleLoader__.load({
           this.ruleOrder = Object.keys(this.slotMeta).filter((s) => s !== 'private' && s !== 'template');
         }
         void this.loadSlots();
-        void this.refreshAccount();
+        // 2026-09-16：账号状态改由「首次打开账号信息页」时（dshgp_AccountTab 的 mount effect）
+        //   触发 refreshAccount，避免构造阶段与页面打开重复拉取；此处不再自动刷新。
         // 2026-09-14：设置持久化走 HTTP 读宿主 scope（绕开 client isLoopback=memory 陷阱——
         //   反代访问时 scope 快照恒 unavailable，从宿主侧读已落盘设置，重启后开关保持勾选）
         void this.loadSettingsFromHttp();
@@ -1177,10 +1212,13 @@ window.__ModuleLoader__.load({
           maxScanFiles: this.maxScanFiles,
           hardcodeFullScan: this.hardcodeFullScan,
           pushMethod: this.pushMethod,
-          defaultScanRoot: this.defaultScanRoot,
-          commitMessage: this.commitMessage,
+          // 2026-09-16：defaultScanRoot/commitMessage 状态镜像移除（设置已删除）
           tokenConfigured: this.tokenConfigured,
           sshConfigured: this.sshConfigured,
+          // 2026-09-16：凭据有效性快照（account-check → account-status.json 的 token/ssh 分项），
+          //   供账号卡片渲染各自 ✅有效/❌无效 徽标 + 登录名。
+          tokenStatus: this.tokenStatus,
+          sshStatus: this.sshStatus,
           accountBlock: this.accountBlock,
           accountLoggedIn: this.accountLoggedIn,
           accountLoading: this.accountLoading,
@@ -1192,6 +1230,7 @@ window.__ModuleLoader__.load({
           localPath: this.localPath,
           localRepos: this.localRepos,
           localLoading: this.localLoading,
+          localScanning: this.localScanning, // 独立进程扫描中（按钮禁用）
           localMsg: this.localMsg,
           cloudRepos: this.cloudRepos,
           cloudLoading: this.cloudLoading,
@@ -1238,8 +1277,7 @@ window.__ModuleLoader__.load({
           if (typeof v.maxScanFiles === 'number' && !this.editedKeys.has('maxScanFiles')) this.maxScanFiles = v.maxScanFiles;
           if (typeof v.hardcodeFullScan === 'boolean' && !this.editedKeys.has('hardcodeFullScan')) this.hardcodeFullScan = v.hardcodeFullScan;
           if (typeof v.pushMethod === 'string' && !this.editedKeys.has('pushMethod')) this.pushMethod = v.pushMethod;
-          if (typeof v.defaultScanRoot === 'string' && !this.editedKeys.has('defaultScanRoot')) this.defaultScanRoot = v.defaultScanRoot;
-          if (typeof v.commitMessage === 'string' && !this.editedKeys.has('commitMessage')) this.commitMessage = v.commitMessage;
+          // 2026-09-16：defaultScanRoot/commitMessage 不再作为设置键回读（已在 UI/白名单移除）
           if (typeof v.weightOverrides === 'string' && v.weightOverrides.trim() && !this.editedKeys.has('weightOverrides')) {
             try { this.weightValues = JSON.parse(v.weightOverrides) || {}; } catch { /* 忽略 */ }
           }
@@ -1279,31 +1317,43 @@ window.__ModuleLoader__.load({
       }
 
       /** 刷新账号信息（/account-check，读凭据文件真源；同时刷新凭据徽标）。 */
+      /** 离线读账号状态（秒级，不触发任何网络）：读 account-status.json 快照 + 凭据文件。
+       *   插件启动 / push 后重读 / 账号卡片渲染全用它。「重新检测」才走在线（recheckAccount）。 */
       async refreshAccount() {
         this.accountLoading = true;
         this.publish();
         try {
-          const data = await dshgp_getJson('/api/git-push/account-check');
-          this.accountBlock = (data && data.block) || ((data && data.detail) || '（无信息）');
+          const data = await dshgp_getJson('/api/git-push/account-status');
+          this.accountBlock = (data && data.block) || '（无账号状态记录，点击「重新检测」在线校验）';
           this.accountLoggedIn = !!(data && data.loggedIn);
-          // 2026-09-15 重构：凭据徽标与检测结果同源——account-check 的 cred 直接读凭据文件
-          //   真源（resolveToken / readSshPub），这里同步刷新「已配置/未配置」徽标。
-          //   此前徽标只靠 loadSettingsFromHttp 拉一次、且会被 scope 快照弹回，「重新检测」
-          //   根本不更新它 → 配置了却显示未配置。
-          const cred = (data && data.cred) || {};
-          this.tokenConfigured = !!(cred.hasToken);
-          this.sshConfigured = !!(cred.hasSshPub);
+          this.tokenConfigured = !!(data && data.tokenConfigured);
+          this.sshConfigured = !!(data && data.sshConfigured);
+          this.tokenStatus = (data && data.tokenStatus) || null;
+          this.sshStatus = (data && data.sshStatus) || null;
         } catch (e) {
-          this.accountBlock = '检测失败: ' + (e && e.message || e);
+          this.accountBlock = '读取失败: ' + (e && e.message || e);
           this.accountLoggedIn = false;
         }
         this.accountLoading = false;
         this.publish();
       }
 
-      /** 扫描本地仓库（2026-09-15 重构：列表只从 dsh-repo-index.json 读取）。
-       * rebuild=true：扫描 = 重建索引（buildRepoIndex，只存与登录账号一致的条目）后再读回；
-       * 缺省：直接读索引返回（不复扫目录）。 */
+      /** 「重新检测」：在线校验 token/SSH → 写 account-status.json → 再离线读回最新。
+       *   仅手动点按钮触发（在线有网络耗时 1~4s），读取端仍走离线 refreshAccount。 */
+      async recheckAccount() {
+        this.accountLoading = true;
+        this.publish();
+        try {
+          await dshgp_postJson('/api/git-push/account-check', { checkSsh: true, confirm: false });
+        } catch (e) {
+          this.accountBlock = '在线检测失败: ' + (e && e.message || e);
+        }
+        await this.refreshAccount(); // 离线读回在线校验落盘的 json
+      }
+
+      /** 扫描本地仓库（2026-09-16：列表只从 dsh-repo-index.json 读取）。
+       * rebuild=true：**离线重建索引**（扫描本地 .git，author 与离线账号 json 一致的登记，
+       *   含本地新增，全程不联网）后再读回；缺省：直接读索引返回（不复扫、不联网）。 */
       async scanLocalRepos(path, rebuild) {
         this.localLoading = true;
         this.localMsg = '';
@@ -1329,6 +1379,63 @@ window.__ModuleLoader__.load({
         }
         this.localLoading = false;
         this.publish();
+      }
+
+      /** 手动「扫描」= 独立进程后台离线扫描 + 只读新增 diff（2026-09-16）。
+       *   流程：① POST repos-local-scan 让后端 spawn 独立进程（扫描中按钮禁用，不可重复点）；
+       *        ② 循环 POST repos-local-scan-wait 等待「有新仓库」（非轮询，文件变化才唤醒）；
+       *        ③ 每次只把新增仓库**追加**进列表（不全量重读），直到扫描 done；
+       *        ④ done 后恢复按钮，最后按索引读一次对齐（收尾）。 */
+      async startScan(path) {
+        if (this.localScanning) return; // 扫描中不可重复点
+        const p = String(path || '').trim();
+        try { if (p) window.localStorage.setItem('dshgp-scan-path', p); } catch { /* 忽略 */ }
+        this.localScanning = true;
+        this.localMsg = '⏳ 扫描中…（后台独立进程，扫到一个追加一个）';
+        this.publish();
+        let seen = this.localRepos.length;
+        try {
+          const started = await dshgp_postJson('/api/git-push/repos-local-scan', { path: p });
+          if (started && started.running && started.ok === false) {
+            this.localMsg = '⚠️ ' + (started.error || '扫描进行中，不能重复扫描');
+            return;
+          }
+          // 循环等待新增：每次 wait 挂起直到独立进程写了新进度（非轮询）
+          for (let i = 0; i < 600; i += 1) {
+            const d = await dshgp_postJson('/api/git-push/repos-local-scan-wait', { from: seen });
+            const newest = (d && d.newest) || [];
+            if (newest.length) {
+              // 只追加新增：从索引取这几条详情（不全量重读列表）
+              await this.appendScannedRepos(newest);
+              seen += newest.length;
+              this.localMsg = '⏳ 扫描中… 已发现 ' + seen + ' 个仓库';
+              this.publish();
+            }
+            if (d && d.done) break;
+            if (!d || d.running === false) break;
+          }
+        } catch (e) {
+          this.localMsg = '❌ 扫描失败: ' + (e && e.message || e);
+        }
+        this.localScanning = false;
+        // 收尾：按索引读一次对齐（保证领先/落后等字段完整）
+        await this.scanLocalRepos(p, false);
+        this.localMsg = '✅ 扫描完成，读取到 ' + this.localRepos.length + ' 个仓库';
+        this.publish();
+      }
+
+      /** 只把「新增仓库名」对应的条目追加进列表（增量，不全量重建）。 */
+      async appendScannedRepos(names) {
+        try {
+          const data = await dshgp_getJson('/api/git-push/repos-local');
+          const all = (data && Array.isArray(data.repos)) ? data.repos : [];
+          const have = new Set(this.localRepos.map((r) => r.name));
+          for (const n of names) {
+            if (have.has(n)) continue;
+            const hit = all.find((r) => r.name === n);
+            if (hit) { this.localRepos = this.localRepos.concat([hit]); have.add(n); }
+          }
+        } catch { /* 读取失败保留已追加 */ }
       }
 
       /** 拉取云端仓库列表（/repos-cloud，token 列账号名下仓库）。 */
@@ -1380,7 +1487,10 @@ window.__ModuleLoader__.load({
         // 2026-09-14 push 反馈：行内绿/红醒目提示（成功/失败）
         this.repoFeedback = Object.assign({}, this.repoFeedback, { [path]: { ok, msg } });
         this.repoBusy = '';
+        // 2026-09-16：推送后自动刷新——本地仓库索引（后端维护 + 前列回读）与账号状态
+        //   （推送到云端后凭据有效性/登录关系可能变化，一并刷新）。
         void this.scanLocalRepos(this.localPath); // 刷新领先/落后状态
+        if (ok) void this.refreshAccount();
         this.publish();
       }
 
@@ -1556,13 +1666,13 @@ window.__ModuleLoader__.load({
       }
 
       /**
-       * 2026-09-15 新增：审计进阶 / 推送默认值设置项通用提交（补齐 7 键 UI）。
+       * 2026-09-15 新增 / 2026-09-16 收敛：审计进阶 / 推送通道设置项通用提交。
        * 更新本地镜像 → 走 commitSetting（HTTP settings-set → config.json）→ 即时反馈。
-       * @param {string} key auditLevel|auditRuleset|maxScanFiles|hardcodeFullScan|pushMethod|defaultScanRoot|commitMessage
+       * @param {string} key auditLevel|auditRuleset|maxScanFiles|hardcodeFullScan|pushMethod
        * @param {unknown} value 新值
        */
       setAdvanced(key, value) {
-        const ok = /^(auditLevel|auditRuleset|maxScanFiles|hardcodeFullScan|pushMethod|defaultScanRoot|commitMessage)$/.test(key);
+        const ok = /^(auditLevel|auditRuleset|maxScanFiles|hardcodeFullScan|pushMethod)$/.test(key);
         if (!ok) { this.setStatus('❌ 未知设置键: ' + key); return; }
         const numKeys = { maxScanFiles: 1 };
         const boolKeys = { hardcodeFullScan: 1 };
@@ -1657,9 +1767,11 @@ window.__ModuleLoader__.load({
           setAdvanced: (key, value) => this.setAdvanced(key, value),
           moveSlot: (slot, dir) => this.moveSlot(slot, dir),
           toggleDisabled: (slot) => { void this.toggleDisabled(slot); },
-          refreshAccount: () => { void this.refreshAccount(); },
+          refreshAccount: () => { void this.refreshAccount(); }, // 离线读 json（启动/push后/渲染）
+          recheckAccount: () => { void this.recheckAccount(); }, // 在线校验写 json（「重新检测」）
           // 2026-09-14 账号卡片：本地/云端 动作
           scanLocalRepos: (path, rebuild) => { void this.scanLocalRepos(path, rebuild); },
+          startScan: (path) => { void this.startScan(path); }, // 扫描按钮：独立进程后台扫描 + 逐条追加
           loadCloudRepos: () => { void this.loadCloudRepos(); },
           pushLocalRepo: (path) => { void this.pushLocalRepo(path); },
           cloneFlow: (repo) => this.cloneFlow(repo),
@@ -1667,11 +1779,27 @@ window.__ModuleLoader__.load({
       }
     }
 
+    // 2026-09-16：插件启动读取标记（整页生命周期只触发一次——账号信息 + 本地仓库列表）
+    let dshgp_startupLoaded = false;
+
     const inject = ['slots', 'settingsScope'];
 
     function apply(ctx) {
       const controller = new dshgp_Controller(ctx.settingsScope.bind({ namespace: SETTINGS_NS }));
       const store = controller.store;
+      // 2026-09-16：插件启动时读一次——账号信息 + 本地仓库列表（读 json，不直接改 UI）。
+      //   模块级标记保证整页生命周期只触发一次（settings.section 每次进页面都会 apply，
+      //   但 Controller 是插件单例；此标记防重复读）。后续刷新全靠：
+      //   账号信息 → push 完成 / 手动「重新检测」；本地列表 → push 完成 / 手动「扫描」。
+      if (!dshgp_startupLoaded) {
+        dshgp_startupLoaded = true;
+        // 2026-09-16：启动读取复用「本地仓库列表选择的路径」（localStorage dshgp-scan-path，
+        //   本地面板扫描时写入）；没选过则空 → 后端自动识别 DSH 家根。
+        let savedPath = '';
+        try { savedPath = (typeof window !== 'undefined' && window.localStorage && window.localStorage.getItem('dshgp-scan-path')) || ''; } catch { /* 忽略 */ }
+        void controller.refreshAccount();
+        void controller.scanLocalRepos(savedPath, false); // 启动只读索引（不重建，读 json）
+      }
       // uSES 桥：SnapshotStore 是裸 observable，用 useSyncExternalStore 自建 selector hook
       const useCardState = (selector) => {
         const snap = react.useSyncExternalStore(store.subscribe, store.getSnapshot);

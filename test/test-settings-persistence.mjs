@@ -36,7 +36,7 @@ function clientSubmitKeys() {
 }
 
 /** setAdvanced 允许键（与 client.js setAdvanced 正则同步；新增键时两处都要加）。 */
-const SET_ADVANCED = ['auditLevel', 'auditRuleset', 'maxScanFiles', 'hardcodeFullScan', 'pushMethod', 'defaultScanRoot', 'commitMessage'];
+const SET_ADVANCED = ['auditLevel', 'auditRuleset', 'maxScanFiles', 'hardcodeFullScan', 'pushMethod'];
 
 /** settings-set 白名单键（L2）。 */
 function allowlistKeys() {
@@ -117,8 +117,6 @@ test('L3 集成：每键 writeSettingsKey → config.json → applySettingsToCfg
       auditRuleset: '/tmp/rules',
       maxScanFiles: 500,
       weightOverrides: '{"安全性":100}',
-      commitMessage: 'feat: 自动提交',
-      defaultScanRoot: '/tmp/root',
       pushMethod: 'api',
       hardcodeFullScan: true,
       auditRuleOrder: ['comment', 'nodejs'],
