@@ -86,24 +86,11 @@ rules:
     fixable: false
     mitigation: "用内容命名：data→userList、flag→isAdmin、tmp→tempFile"
 
-  - id: readability/magic-number
-    name: "魔数散落（魔法数字）"
-    category: "readability"
-    severity: "warning"
-    description: "代码中出现无解释的魔数（如系数 1.2/0.05、比较 1000、等值状态码 1/2/3），建议提取为命名常量并注释含义；赋值初始值（= 1）、箭头返回（=> 1）、比较符后的 0/1 边界（> 0、< 1）不报"
-    pattern: "(?<![=!'\\.])(?:[*+%/]|={2,}|!=)\\s*\\d+(\\.\\d+)?|(?<![=!'\\.])[<>]=?\\s*(?!(?:0|1)(?:\\.0*)?(?![\\d]))\\d+(\\.\\d+)?"
-    # 2026-09-13 误报修复：只对代码文件生效——README/CSS/JSON/md 里的版本号、端口、
-    #   尺寸、日期是正常书写，不构成需要提取常量的硬编码魔数。
-    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx", "py", "go", "rs", "java", "kt", "swift", "php", "rb", "sh", "bash"]
-    # 2026-09-13 误报修复（正则初筛 → AST 精筛）：正则先筛候选行，再用 token 级判定
-    #   确认命中行确实是代码行——注释里的版本号/日期（// v1.8.0、2026-09-13）、
-    #   字符串/CSS 里的数字不再报。
-    # 2026-09-13 升级：astConfirm: magic-number —— 值级精筛，复用 magic-number-smart
-    #   的豁免逻辑（版本号/日期/HTTP 状态码/命名常量值/参数默认值/索引运算 i+1 豁免），
-    #   修纯 regex 把 `i + 1`、`cur - 1`、`data.version === 2`、`5 * 60_000` 当魔数的误报。
-    astConfirm: magic-number
-    fixable: false
-    mitigation: "提取常量：const TAX_RATE = 1.2; const MAX_LIMIT = 1000; 并加注释说明 1/2/3 等状态码含义"
+  # 2026-09-16 合并：readability/magic-number（regex 通道）已并入 readability/magic-number-smart——
+  #   smart（AST token 级）覆盖全部数字字面量形态（含运算 `base * 0.2`、比较 `score > 1.5` 里的数字），
+  #   regex 通道双报且豁免弱（此前靠 astConfirm 复用 smart 判定），删除避免同一魔数报两条。
+  #   命名常量判定已放宽（lib/ast/magic-number.js isNamedConstantValue）：dshgp_*/DEFAULT_*/MAX_* 前缀
+  #   常量与含 timeout/limit/size/ms 等语义词尾的常量名不再误报。
 
   - id: readability/magic-number-smart
     name: "硬编码魔数检测（版本号豁免版）"

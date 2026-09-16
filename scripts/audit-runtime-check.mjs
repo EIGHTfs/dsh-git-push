@@ -82,15 +82,15 @@ async function runFile(file, obj) {
     const clearOps = ['clear', 'reset', 'flush', 'purge'].filter((m) => typeof val?.[m] === 'function');
     const accessOps = ['get', 'first', 'last', 'peek', 'head', 'at', 'shift', 'pop'].filter((m) => typeof val?.[m] === 'function');
     if (!clearOps.length) continue; // 无清空方法 → 本对象不适用
-    for (const c of clearOps) {
+    for (const clearOp of clearOps) {
       let clearOk = true;
-      try { val[c](); } catch (e) { clearOk = false; out.hits.push({ op: `${name}.${c}()`, result: `调用抛错：${String(e?.message || e).split('\n')[0]}` }); }
+      try { val[clearOp](); } catch (e) { clearOk = false; out.hits.push({ op: `${name}.${clearOp}()`, result: `调用抛错：${String(e?.message || e).split('\n')[0]}` }); }
       if (!clearOk) continue;
       for (const a of accessOps) {
-        let res;
-        try { res = val[a](); } catch (e) { res = `抛错：${String(e?.message || e).split('\n')[0]}`; }
-        const isBad = res === undefined || res === null || (Array.isArray(res) && res.length === 0);
-        if (isBad) out.hits.push({ op: `${name}.${c}() 后 ${name}.${a}()`, result: `${typeof res === 'object' ? JSON.stringify(res) : String(res)}` });
+        let accessResult;
+        try { accessResult = val[a](); } catch (e) { accessResult = `抛错：${String(e?.message || e).split('\n')[0]}`; }
+        const isBad = accessResult === undefined || accessResult === null || (Array.isArray(accessResult) && accessResult.length === 0);
+        if (isBad) out.hits.push({ op: `${name}.${clearOp}() 后 ${name}.${a}()`, result: `${typeof accessResult === 'object' ? JSON.stringify(accessResult) : String(accessResult)}` });
       }
     }
   }
@@ -117,7 +117,7 @@ async function main() {
     if (r.hits.length) {
       confirmed++;
       console.log(`✗ ${f} —— L3 确认「清空后访问」命中 ${r.hits.length} 处:`);
-      for (const h of r.hits) console.log(`    ${h.op} → ${h.result}`);
+      for (const hit of r.hits) console.log(`    ${hit.op} → ${hit.result}`);
     } else if (opts.verbose) {
       console.log(`✔ ${f}: 无运行时命中`);
     }

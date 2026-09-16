@@ -46,6 +46,12 @@ window.__ModuleLoader__.load({
       { key: '开发者体验', def: 3 },
     ];
 
+    // 逻辑类常量（fetch 超时 / 扫描循环上限 / 提示时长 / 日志截断长度）
+    const dshgp_FETCH_TIMEOUT_MS = 30_000;        // fetch 超时（same-origin）
+    const dshgp_SCAN_WAIT_MAX_ROUNDS = 600;       // 后台扫描等待循环上限（每次挂起等新进度）
+    const dshgp_SAVED_MSG_MS = 4000;              // 「已保存」提示显示时长
+    const dshgp_LOG_TRUNCATE = 40;                // 调试日志 value 截断长度
+
     const dshgp_css = [
       // 选项卡条（对齐插件市场）
       '.dshgp_tabs{display:flex;align-items:flex-end;gap:2px;border-bottom:1px solid var(--dsw-alias-border-l2);margin:0 0 12px}',
@@ -221,19 +227,19 @@ window.__ModuleLoader__.load({
 
     /** fetch 封装：GET JSON（same-origin）。 */
     async function dshgp_getJson(url) {
-      const res = await fetch(url, { credentials: 'same-origin', signal: AbortSignal.timeout(30_000) });
-      return res.json();
+      const resp = await fetch(url, { credentials: 'same-origin', signal: AbortSignal.timeout(dshgp_FETCH_TIMEOUT_MS) });
+      return resp.json();
     }
     /** fetch 封装：POST JSON（same-origin）。 */
     async function dshgp_postJson(url, payload) {
-      const res = await fetch(url, {
+      const resp = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload || {}),
         credentials: 'same-origin',
-        signal: AbortSignal.timeout(30_000),
+        signal: AbortSignal.timeout(dshgp_FETCH_TIMEOUT_MS),
       });
-      return res.json();
+      return resp.json();
     }
 
     /**
@@ -396,20 +402,20 @@ window.__ModuleLoader__.load({
       const up = document.getElementById('dshgp-browse-up');
       if (!list || !crumb) return;
       crumb.textContent = '读取中…';
-      let data;
-      try { data = await dshgp_getJson('/api/git-push/browse?path=' + encodeURIComponent(String(p || ''))); }
+      let browseRes;
+      try { browseRes = await dshgp_getJson('/api/git-push/browse?path=' + encodeURIComponent(String(p || ''))); }
       catch (e) { crumb.textContent = '读取失败: ' + (e && e.message || e); return; }
-      if (!data || !data.ok) { crumb.textContent = (data && data.error) || '读取失败'; return; }
-      dshgp_browsePath = data.path;
-      dshgp_browseRemember(data.path);
-      crumb.textContent = data.path;
-      up.style.display = data.parent ? 'block' : 'none';
-      up.dataset.path = data.parent || '';
+      if (!browseRes || !browseRes.ok) { crumb.textContent = (browseRes && browseRes.error) || '读取失败'; return; }
+      dshgp_browsePath = browseRes.path;
+      dshgp_browseRemember(browseRes.path);
+      crumb.textContent = browseRes.path;
+      up.style.display = browseRes.parent ? 'block' : 'none';
+      up.dataset.path = browseRes.parent || '';
       let html = '';
-      if (!data.dirs.length) html += '<div class="dshgp_browsehint">（无子目录）</div>';
-      (data.dirs || []).forEach((d) => {
-        const full = data.path === '/' ? '/' + d : data.path + '/' + d;
-        html += '<div class="dshgp_browsedir" data-path="' + String(full).replace(/"/g, '&quot;') + '">📁 ' + String(d).replace(/</g, '&lt;') + '</div>';
+      if (!browseRes.dirs.length) html += '<div class="dshgp_browsehint">（无子目录）</div>';
+      (browseRes.dirs || []).forEach((dirName) => {
+        const full = browseRes.path === '/' ? '/' + dirName : browseRes.path + '/' + dirName;
+        html += '<div class="dshgp_browsedir" data-path="' + String(full).replace(/"/g, '&quot;') + '">📁 ' + String(dirName).replace(/</g, '&lt;') + '</div>';
       });
       list.innerHTML = html;
       list.querySelectorAll('.dshgp_browsedir').forEach((el) => {
@@ -496,6 +502,9 @@ window.__ModuleLoader__.load({
       // 2026-09-14 联动仓库索引：本地无 remote/上游时也能显示它的 GitHub 归属
       const idx = r.indexed;
       const idxTag = idx ? ' · 🔗 索引 ' + (idx.owner ? idx.owner + '/' + idx.repo : idx.repo) + '(' + idx.visibility + ')' : '';
+      // 2026-09-16：云端扫描写索引后透传的云端状态（默认分支 / 云端最后推送时间 / 纯云端标记）
+      const cloudAt = r.cloudPushedAt ? ' · 云端更新 ' + String(r.cloudPushedAt).slice(0, 10) : '';
+      const cloudTag = (r.defaultBranch ? ' · 默认分支 ' + r.defaultBranch : '') + cloudAt + (r.cloudOnly ? ' · 仅云端' : '');
       // 2026-09-16：本地/云端 HEAD 与提交时间并排（后端 liveRemoteHead 真源补 remoteHead/remoteHeadAt）
       const localTime = r.localHeadAt ? new Date(r.localHeadAt).toLocaleString('zh-CN', { hour12: false }) : '';
       const remoteTime = r.remoteHeadAt ? new Date(r.remoteHeadAt).toLocaleString('zh-CN', { hour12: false }) : '';
@@ -508,7 +517,7 @@ window.__ModuleLoader__.load({
             className: 'dshgp_reprowinfo',
             children: [
               jsx.jsx('span', { className: 'dshgp_reprowpath', title: r.path, children: String(r.path).split('/').pop() || r.path }),
-              jsx.jsx('span', { className: 'dshgp_reprowmeta', children: ['分支 ' + r.branch + ' · ' + stat + idxTag + (r.changed > 0 ? ' · 未提交 ' + r.changed : '')] }),
+              jsx.jsx('span', { className: 'dshgp_reprowmeta', children: ['分支 ' + r.branch + ' · ' + stat + idxTag + cloudTag + (r.changed > 0 ? ' · 未提交 ' + r.changed : '')] }),
               jsx.jsx('span', { className: 'dshgp_reprowmeta' + (r.synced ? ' dshgp_synced' : ''), children: headsStr || (r.lastCommit ? r.lastCommit : '') }),
             ],
           }),
@@ -1249,7 +1258,7 @@ window.__ModuleLoader__.load({
         this.savedTimer = setTimeout(() => {
           this.savedMsg = '';
           this.publish();
-        }, 4000);
+        }, dshgp_SAVED_MSG_MS);
         this.publish();
       }
       publish() { this.store.set(this.project()); }
@@ -1264,9 +1273,9 @@ window.__ModuleLoader__.load({
        */
       async loadSettingsFromHttp() {
         try {
-          const data = await dshgp_getJson('/api/git-push/settings-get');
-          if (!data || !data.ok || !data.settings) return;
-          const v = data.settings;
+          const settingsRes = await dshgp_getJson('/api/git-push/settings-get');
+          if (!settingsRes || !settingsRes.ok || !settingsRes.settings) return;
+          const v = settingsRes.settings;
           if (typeof v.auditEnabled === 'boolean' && !this.editedKeys.has('auditEnabled')) this.auditEnabled = v.auditEnabled;
           if (typeof v.injectRequirements === 'boolean' && !this.editedKeys.has('injectRequirements')) this.injectRequirements = v.injectRequirements;
           if (typeof v.injectSystemPrompt === 'boolean' && !this.editedKeys.has('injectSystemPrompt')) this.injectSystemPrompt = v.injectSystemPrompt;
@@ -1296,18 +1305,18 @@ window.__ModuleLoader__.load({
         this.slotError = '';
         this.publish();
         try {
-          const data = await dshgp_getJson('/api/git-push/rule-slots');
-          if (data && data.ok && data.slots) {
-            const meta = data.slots.meta || {};
+          const slotsRes = await dshgp_getJson('/api/git-push/rule-slots');
+          if (slotsRes && slotsRes.ok && slotsRes.slots) {
+            const meta = slotsRes.slots.meta || {};
             // 用后端返回的生效顺序；private 恒末尾
-            const list = Array.isArray(data.slots.order) ? data.slots.order : [];
+            const list = Array.isArray(slotsRes.slots.order) ? slotsRes.slots.order : [];
             const order = list.filter((s) => s !== 'template');
-            const forced = Array.isArray(data.slots.forced) ? data.slots.forced : [];
+            const forced = Array.isArray(slotsRes.slots.forced) ? slotsRes.slots.forced : [];
             this.slotMeta = meta;
             this.ruleOrder = order;
             if (forced.includes('private') && !this.ruleOrder.includes('private')) this.ruleOrder.push('private');
           } else {
-            this.slotError = (data && data.message) || '规则包加载失败';
+            this.slotError = (slotsRes && slotsRes.message) || '规则包加载失败';
           }
         } catch (e) {
           this.slotError = '规则包加载失败: ' + (e && e.message || e);
@@ -1323,13 +1332,13 @@ window.__ModuleLoader__.load({
         this.accountLoading = true;
         this.publish();
         try {
-          const data = await dshgp_getJson('/api/git-push/account-status');
-          this.accountBlock = (data && data.block) || '（无账号状态记录，点击「重新检测」在线校验）';
-          this.accountLoggedIn = !!(data && data.loggedIn);
-          this.tokenConfigured = !!(data && data.tokenConfigured);
-          this.sshConfigured = !!(data && data.sshConfigured);
-          this.tokenStatus = (data && data.tokenStatus) || null;
-          this.sshStatus = (data && data.sshStatus) || null;
+          const accountRes = await dshgp_getJson('/api/git-push/account-status');
+          this.accountBlock = (accountRes && accountRes.block) || '（无账号状态记录，点击「重新检测」在线校验）';
+          this.accountLoggedIn = !!(accountRes && accountRes.loggedIn);
+          this.tokenConfigured = !!(accountRes && accountRes.tokenConfigured);
+          this.sshConfigured = !!(accountRes && accountRes.sshConfigured);
+          this.tokenStatus = (accountRes && accountRes.tokenStatus) || null;
+          this.sshStatus = (accountRes && accountRes.sshStatus) || null;
         } catch (e) {
           this.accountBlock = '读取失败: ' + (e && e.message || e);
           this.accountLoggedIn = false;
@@ -1362,16 +1371,16 @@ window.__ModuleLoader__.load({
           const p = String(path || '').trim();
           try { if (p) window.localStorage.setItem('dshgp-scan-path', p); } catch { /* 忽略 */ }
           const qs = '?rebuild=' + (rebuild ? '1' : '0') + (p ? '&path=' + encodeURIComponent(p) : '');
-          const data = await dshgp_getJson('/api/git-push/repos-local' + qs);
-          if (data && data.ok) {
-            this.localPath = data.root || p;
-            this.localRepos = Array.isArray(data.repos) ? data.repos : [];
+          const localRes = await dshgp_getJson('/api/git-push/repos-local' + qs);
+          if (localRes && localRes.ok) {
+            this.localPath = localRes.root || p;
+            this.localRepos = Array.isArray(localRes.repos) ? localRes.repos : [];
             this.localMsg = this.localRepos.length
-              ? (rebuild ? '已重建索引，读取到 ' : '读取到 ') + this.localRepos.length + ' 个仓库（' + (data.root || '') + '）'
-              : '索引中没有本账号仓库: ' + (data.root || '');
+              ? (rebuild ? '已重建索引，读取到 ' : '读取到 ') + this.localRepos.length + ' 个仓库（' + (localRes.root || '') + '）'
+              : '索引中没有本账号仓库: ' + (localRes.root || '');
           } else {
             this.localRepos = [];
-            this.localMsg = '❌ ' + ((data && data.error) || '读取失败');
+            this.localMsg = '❌ ' + ((localRes && localRes.error) || '读取失败');
           }
         } catch (e) {
           this.localRepos = [];
@@ -1401,9 +1410,9 @@ window.__ModuleLoader__.load({
             return;
           }
           // 循环等待新增：每次 wait 挂起直到独立进程写了新进度（非轮询）
-          for (let i = 0; i < 600; i += 1) {
-            const d = await dshgp_postJson('/api/git-push/repos-local-scan-wait', { from: seen });
-            const newest = (d && d.newest) || [];
+          for (let i = 0; i < dshgp_SCAN_WAIT_MAX_ROUNDS; i += 1) {
+            const waitRes = await dshgp_postJson('/api/git-push/repos-local-scan-wait', { from: seen });
+            const newest = (waitRes && waitRes.newest) || [];
             if (newest.length) {
               // 只追加新增：从索引取这几条详情（不全量重读列表）
               await this.appendScannedRepos(newest);
@@ -1411,8 +1420,8 @@ window.__ModuleLoader__.load({
               this.localMsg = '⏳ 扫描中… 已发现 ' + seen + ' 个仓库';
               this.publish();
             }
-            if (d && d.done) break;
-            if (!d || d.running === false) break;
+            if (waitRes && waitRes.done) break;
+            if (!waitRes || waitRes.running === false) break;
           }
         } catch (e) {
           this.localMsg = '❌ 扫描失败: ' + (e && e.message || e);
@@ -1427,8 +1436,8 @@ window.__ModuleLoader__.load({
       /** 只把「新增仓库名」对应的条目追加进列表（增量，不全量重建）。 */
       async appendScannedRepos(names) {
         try {
-          const data = await dshgp_getJson('/api/git-push/repos-local');
-          const all = (data && Array.isArray(data.repos)) ? data.repos : [];
+          const indexRes = await dshgp_getJson('/api/git-push/repos-local');
+          const all = (indexRes && Array.isArray(indexRes.repos)) ? indexRes.repos : [];
           const have = new Set(this.localRepos.map((r) => r.name));
           for (const n of names) {
             if (have.has(n)) continue;
@@ -1444,10 +1453,12 @@ window.__ModuleLoader__.load({
         this.cloudMsg = '';
         this.publish();
         try {
-          const data = await dshgp_getJson('/api/git-push/repos-cloud');
-          if (data && data.ok) {
-            this.cloudRepos = Array.isArray(data.repos) ? data.repos : [];
-            this.cloudMsg = '共 ' + this.cloudRepos.length + ' 个仓库（按最近更新排序）';
+          const cloudRes = await dshgp_getJson('/api/git-push/repos-cloud');
+          if (cloudRes && cloudRes.ok) {
+            this.cloudRepos = Array.isArray(cloudRes.repos) ? cloudRes.repos : [];
+            // 2026-09-16：云端扫描同时写索引（后端 mergeCloudReposIntoIndex），提示已刷新条数
+            const idxHint = cloudRes.indexUpdated ? '，索引已刷新 ' + cloudRes.indexUpdated + ' 条' : '';
+            this.cloudMsg = '共 ' + this.cloudRepos.length + ' 个仓库（按最近更新排序）' + idxHint;
           } else {
             this.cloudRepos = [];
             this.cloudMsg = '❌ ' + ((data && data.error) || '拉取失败');
@@ -1467,16 +1478,16 @@ window.__ModuleLoader__.load({
         let ok = false;
         let msg = '';
         try {
-          const data = await dshgp_postJson('/api/git-push/repo-push', { path, confirm: true });
-          ok = !!(data && data.ok);
+          const pushRes = await dshgp_postJson('/api/git-push/repo-push', { path, confirm: true });
+          ok = !!(pushRes && pushRes.ok);
           if (ok) {
             msg = '✅ 推送成功 ' + path;
           } else {
             // 显示详细错误信息（含 ahead/behind）
-            const err = (data && (data.error || (data.push && data.push.reason))) || '推送失败';
+            const err = (pushRes && (pushRes.error || (pushRes.push && pushRes.push.reason))) || '推送失败';
             const extra = [];
-            if (data && data.ahead > 0) extra.push('领先 ' + data.ahead);
-            if (data && data.behind > 0) extra.push('落后 ' + data.behind);
+            if (pushRes && pushRes.ahead > 0) extra.push('领先 ' + pushRes.ahead);
+            if (pushRes && pushRes.behind > 0) extra.push('落后 ' + pushRes.behind);
             msg = '⚠️ ' + err + (extra.length ? '（' + extra.join('，') + '）' : '');
           }
           this.localMsg = msg;
@@ -1502,10 +1513,10 @@ window.__ModuleLoader__.load({
         this.repoBusy = 'clone:' + repo;
         this.publish();
         try {
-          const data = await dshgp_postJson('/api/git-push/repo-clone', { target: repo, dir, confirm: true });
-          this.cloudMsg = data && data.ok
-            ? '✅ 已克隆 ' + repo + ' → ' + ((data && data.dest) || dir)
-            : '❌ ' + ((data && data.error) || '克隆失败');
+          const cloneRes = await dshgp_postJson('/api/git-push/repo-clone', { target: repo, dir, confirm: true });
+          this.cloudMsg = cloneRes && cloneRes.ok
+            ? '✅ 已克隆 ' + repo + ' → ' + ((cloneRes && cloneRes.dest) || dir)
+            : '❌ ' + ((cloneRes && cloneRes.error) || '克隆失败');
         } catch (e) {
           this.cloudMsg = '❌ 克隆失败: ' + (e && e.message || e);
         }
@@ -1526,11 +1537,11 @@ window.__ModuleLoader__.load({
         this.setStatus(!nowDisabled ? '✅ 已禁用 ' + slot + '（该槽位规则不再加载）' : '✅ 已启用 ' + slot);
         this.publish();
         try {
-          const res = await dshgp_postJson('/api/git-push/toggle-rule', { slot, disabled: !nowDisabled });
-          if (res && res.ok) {
+          const toggleRes = await dshgp_postJson('/api/git-push/toggle-rule', { slot, disabled: !nowDisabled });
+          if (toggleRes && toggleRes.ok) {
             void this.loadSlots(); // 后台重载对账（yml 解析结果）
           } else {
-            this.setStatus('❌ 切换失败：' + ((res && res.error) || '未知错误'));
+            this.setStatus('❌ 切换失败：' + ((toggleRes && toggleRes.error) || '未知错误'));
             this.loadSlots();
           }
         } catch (e) {
@@ -1546,7 +1557,7 @@ window.__ModuleLoader__.load({
         this.statusTimer = setTimeout(() => {
           this.statusMsg = '';
           this.publish();
-        }, 4000);
+        }, dshgp_SAVED_MSG_MS);
       }
 
       /** 上下调整规则包次序（下覆盖上）。 */
@@ -1604,7 +1615,7 @@ window.__ModuleLoader__.load({
       persistSetting(key, value, okMsg = '') {
         // 2026-09-15：UI 提交调试日志（浏览器控制台可见；服务端另有 settings-ui.log 持久留痕）
         if (typeof console !== 'undefined' && console.debug) {
-          try { console.debug('[dsh-git-push] UI 提交', key, '=', String(value).slice(0, 40) + (String(value).length > 40 ? '…' : '')); } catch { /* 控制台不可用时跳过调试输出 */ }
+          try { console.debug('[dsh-git-push] UI 提交', key, '=', String(value).slice(0, dshgp_LOG_TRUNCATE) + (String(value).length > dshgp_LOG_TRUNCATE ? '…' : '')); } catch { /* 控制台不可用时跳过调试输出 */ }
         }
         void dshgp_postJson('/api/git-push/settings-set', { key, value }).then((data) => {
           if (data && data.ok) {
@@ -1729,16 +1740,16 @@ window.__ModuleLoader__.load({
         this.genKeyError = '';
         this.publish();
         try {
-          const data = await dshgp_postJson('/api/git-push/gen-ssh-key', { email });
-          if (data && data.ok && data.pub) {
-            this.sshPub = data.pub;
+          const genRes = await dshgp_postJson('/api/git-push/gen-ssh-key', { email });
+          if (genRes && genRes.ok && genRes.pub) {
+            this.sshPub = genRes.pub;
             this.publish();
-            await dshgp_copyText(data.pub);
+            await dshgp_copyText(genRes.pub);
             this.genKeying = false;
             this.flashSaved('✅ 公钥已生成：已填入 SSH 公钥框并复制到剪贴板');
           } else {
             this.genKeying = false;
-            this.genKeyError = (data && data.error) || '生成失败';
+            this.genKeyError = (genRes && genRes.error) || '生成失败';
             this.publish();
           }
         } catch (e) {

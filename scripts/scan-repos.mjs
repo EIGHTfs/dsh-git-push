@@ -108,8 +108,8 @@ function pruneIndex({ workspaceRoot, owner, scanned }) {
     if (!r || !r.name) return false;
     if (scanned.has(r.name)) return true;
     // 只清理「本账号所属」的条目（别的 owner 的条目不动，避免误删手动登记的）
-    const m = String(r.repoUrl || '').match(/\/repos\/([^/]+)\//);
-    const rowOwner = m ? m[1] : '';
+    const match = String(r.repoUrl || '').match(/\/repos\/([^/]+)\//);
+    const rowOwner = match ? match[1] : '';
     if (rowOwner && rowOwner !== owner) return true;
     removed.push(r.name);
     return false;
@@ -118,9 +118,9 @@ function pruneIndex({ workspaceRoot, owner, scanned }) {
   doc.repos = kept;
   doc.generatedAt = new Date().toISOString();
   const dir = dirname(p); mkdirSync(dir, { recursive: true });
-  const tmp = `${p}.${process.pid}.tmp`;
-  writeFileSync(tmp, JSON.stringify(doc, null, 2) + '\n', 'utf8');
-  renameSync(tmp, p);
+  const tmpPath = `${p}.${process.pid}.tmp`;
+  writeFileSync(tmpPath, JSON.stringify(doc, null, 2) + '\n', 'utf8');
+  renameSync(tmpPath, p);
   return removed;
 }
 
@@ -133,9 +133,9 @@ function pushLive({ workspaceRoot, found, done }) {
   if (Array.isArray(found)) for (const f of found) if (!cur.found.includes(f)) cur.found.push(f);
   cur.done = !!done;
   const dir = dirname(p); mkdirSync(dir, { recursive: true });
-  const tmp = `${p}.${process.pid}.tmp`;
-  writeFileSync(tmp, JSON.stringify(cur, null, 2) + '\n', 'utf8');
-  renameSync(tmp, p);
+  const tmpPath = `${p}.${process.pid}.tmp`;
+  writeFileSync(tmpPath, JSON.stringify(cur, null, 2) + '\n', 'utf8');
+  renameSync(tmpPath, p);
 }
 
 /** 把单条仓库 entry 追加进 dsh-repo-index.json（读-改-写，不覆盖其他）。 */
@@ -150,9 +150,9 @@ function appendIndexEntry({ workspaceRoot, entry, owner }) {
   if (i >= 0) doc.repos[i] = entry; else doc.repos.push(entry);
   doc.generatedAt = new Date().toISOString();
   const dir = dirname(p); mkdirSync(dir, { recursive: true });
-  const tmp = `${p}.${process.pid}.tmp`;
-  writeFileSync(tmp, JSON.stringify(doc, null, 2) + '\n', 'utf8');
-  renameSync(tmp, p);
+  const tmpPath = `${p}.${process.pid}.tmp`;
+  writeFileSync(tmpPath, JSON.stringify(doc, null, 2) + '\n', 'utf8');
+  renameSync(tmpPath, p);
 }
 
 main().catch((e) => {

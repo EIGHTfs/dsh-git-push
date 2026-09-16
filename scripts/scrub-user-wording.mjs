@@ -46,8 +46,8 @@ const DEFAULT_REWRITE_YML = join(SCRIPT_DIR, '..', 'lib', 'audit-rules', 'audit-
  */
 export function loadWordingRewrites(ymlPath = DEFAULT_REWRITE_YML) {
   if (!existsSync(ymlPath)) throw new Error(`改写规则文件缺失: ${ymlPath}`);
-  const data = yamlLoad(readFileSync(ymlPath, 'utf8')) || {};
-  const rows = Array.isArray(data.rewrites) ? data.rewrites : [];
+  const rewritesDoc = yamlLoad(readFileSync(ymlPath, 'utf8')) || {};
+  const rows = Array.isArray(rewritesDoc.rewrites) ? rewritesDoc.rewrites : [];
   if (rows.length === 0) throw new Error(`${ymlPath} 缺少顶层 rewrites`);
   return rows.map((row, i) => {
     const src = String(row?.match || '');
@@ -66,12 +66,12 @@ function wordingRewrites() {
 
 /** 对单段文本应用全部改写规则，返回 { text, count }。 */
 function scrubText(text) {
-  let c = text;
+  let scrubbed = text;
   let count = 0;
   for (const { re, fn } of wordingRewrites()) {
-    c = c.replace(re, (...a) => { count++; return fn(...a); });
+    scrubbed = scrubbed.replace(re, (...a) => { count++; return fn(...a); });
   }
-  return { text: c, count };
+  return { text: scrubbed, count };
 }
 
 /* ── 词法分段：只把「注释段」交给 scrub，字符串字面量一律跳过 ────────────── */
@@ -114,11 +114,11 @@ function codeCommentRanges(text, syn) {
     }
     // 字符串字面量：整体跳过
     if (ch === '"' || ch === "'" || ch === '`') {
-      const q = ch;
+      const quoteChar = ch;
       let j = i + 1;
       while (j < n) {
         if (text[j] === '\\') { j += 2; continue; }
-        if (text[j] === q) { j++; break; }
+        if (text[j] === quoteChar) { j++; break; }
         j++;
       }
       i = j;
@@ -167,10 +167,10 @@ function markupFenceLines(text) {
   let fence = null;
   let start = 0;
   for (let idx = 0; idx < lines.length; idx++) {
-    const m = lines[idx].match(/^[ \t]*(```+|~~~+)/);
-    if (m) {
-      if (fence === null) { fence = m[1][0]; start = idx; }
-      else if (m[1][0] === fence) {
+    const match = lines[idx].match(/^[ \t]*(```+|~~~+)/);
+    if (match) {
+      if (fence === null) { fence = match[1][0]; start = idx; }
+      else if (match[1][0] === fence) {
         for (let k = start; k <= idx; k++) fenceLines.add(k);
         fence = null;
       }
@@ -262,8 +262,8 @@ function applyConfirmed(file, confirmedSet) {
   let out = file.original;
   const ordered = [...file.candidates].map((c, i) => ({ ...c, idx: i })).filter((c) => confirmedSet.has(c.idx));
   // 从后往前替换，避免坐标漂移
-  for (const c of ordered.sort((a, b) => b.start - a.start)) {
-    out = out.slice(0, c.start) + c.after + out.slice(c.end);
+  for (const cand of ordered.sort((a, b) => b.start - a.start)) {
+    out = out.slice(0, cand.start) + cand.after + out.slice(cand.end);
   }
   return out;
 }
@@ -326,9 +326,9 @@ async function main(argv) {
   const totalCount = report.reduce((n, r) => n + r.count, 0);
   for (const r of report) {
     console.log(`\n${r.path}（${r.count} 处）`);
-    for (const h of r.candidates.slice(0, 8)) {
-      console.log(`  行${h.n}: ${(h.before || '').trim().slice(0, 90)}`);
-      console.log(`        → ${(h.after || '').trim().slice(0, 90)}`);
+    for (const cand of r.candidates.slice(0, 8)) {
+      console.log(`  行${cand.n}: ${(cand.before || '').trim().slice(0, 90)}`);
+      console.log(`        → ${(cand.after || '').trim().slice(0, 90)}`);
     }
     if (r.candidates.length > 8) console.log(`  …另有 ${r.candidates.length - 8} 处`);
   }
@@ -365,12 +365,12 @@ async function main(argv) {
     for (const r of report) {
       const confirmed = [];
       for (let idx = 0; idx < r.candidates.length; idx++) {
-        const h = r.candidates[idx];
+        const cand = r.candidates[idx];
         if (allRemaining) { confirmed.push(idx); continue; }
         const risk = r.isMd ? '（md 文档：措辞可能是来源署名/名词用法，注意人工复核）' : '';
-        console.log(`\n${r.path}:${h.n}${risk}`);
-        console.log(`  - ${(h.before || '').trim().slice(0, 110)}`);
-        console.log(`  + ${(h.after || '').trim().slice(0, 110)}`);
+        console.log(`\n${r.path}:${cand.n}${risk}`);
+        console.log(`  - ${(cand.before || '').trim().slice(0, 110)}`);
+        console.log(`  + ${(cand.after || '').trim().slice(0, 110)}`);
         const raw = await ask('改这条? [y改/n跳过/a改余下/q退出, 默认y] ');
         const ans = (raw == null ? 'q' : String(raw)).trim().toLowerCase(); // EOF 视为退出
         if (ans === 'n') continue;

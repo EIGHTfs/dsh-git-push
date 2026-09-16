@@ -53,11 +53,11 @@ export function listSyncFiles(root = SOURCE_ROOT) {
       else out.push(rel);
     }
   };
-  for (const item of SYNC_ENTRIES) {
-    const full = join(root, item);
+  for (const entryName of SYNC_ENTRIES) {
+    const full = join(root, entryName);
     if (!existsSync(full)) continue;
     if (statSync(full).isDirectory()) walk(full);
-    else out.push(item);
+    else out.push(entryName);
   }
   return out.sort();
 }

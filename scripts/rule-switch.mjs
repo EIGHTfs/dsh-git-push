@@ -45,11 +45,11 @@ function resolveRulesDir(argv) {
 function listSlots(dir) {
   const slots = [];
   for (const f of readdirSync(dir)) {
-    const m = f.match(/^audit-rules-(.+)\.yml$/);
-    if (!m) continue;
+    const match = f.match(/^audit-rules-(.+)\.yml$/);
+    if (!match) continue;
     const text = readFileSync(join(dir, f), 'utf8');
     const disabled = /^disabled:\s*true\s*$/m.test(text);
-    slots.push({ slot: m[1], file: f, disabled });
+    slots.push({ slot: match[1], file: f, disabled });
   }
   return slots.sort((a, b) => a.slot.localeCompare(b.slot));
 }
@@ -82,9 +82,9 @@ function main(argv = process.argv.slice(2)) {
     const slot = argv[1];
     if (!slot) { console.error(`用法: ${cmd} <槽位>`); process.exit(1); }
     const wantDisabled = cmd === 'disable';
-    const res = setSlotDisabled(slot, wantDisabled, { dir });
-    if (!res.ok) {
-      console.error(`❌ ${res.error}`);
+    const outcome = setSlotDisabled(slot, wantDisabled, { dir });
+    if (!outcome.ok) {
+      console.error(`❌ ${outcome.error}`);
       process.exit(1);
     }
     console.log(`✅ ${slot} 已${wantDisabled ? '禁用' : '启用'}（写入 ${dir}/audit-rules-${slot}.yml 顶层 disabled，审计实时生效、无需重启）`);

@@ -90,7 +90,7 @@ Git 全链路自动化，token / SSH 凭据管理 + 提交推送，无需手动�
 
 | 槽位 | 规则数 | 检查内容 |
 |---|---|---|
-| nodejs | 36 | 凭据硬编码 / 路径穿越 / 魔数 / 依赖 / 异步等 |
+| nodejs | 37 | 凭据硬编码 / 路径穿越 / 魔数 / 依赖 / 异步等 |
 | frontend | 19 | 前端安全 / a11y / 依赖 |
 | npm | 10 | 依赖声明 / npmrc 凭据 / 测试入口 |
 | version | 8 | 版本号规范 |
@@ -673,6 +673,7 @@ node assets/preview-gen.mjs
 
 - **读取（标注）**：本地扫描为每个仓库附 `indexed`（索引登记的 owner/repo/可见性）——即使本地未设 remote/上游，也能一眼看出它在 GitHub 的归属；未登记显示无
 - **更新（自动生成）**：`git_commit_push` 手动推送 与 账号卡片的 `repo-push` **推送成功后全量重建**索引——可见性走 GitHub API（并发 4，token 缺失回退既有标注/未知）、skills 从 package.json `dsh.skills` / `skills/*.md` frontmatter 收集、`localOnly` 维护 workspace 顶层无远端目录；索引写入 `工作区/dsh-git-push-User/<owner>/dsh-repo-index.json`（权威源，dsh-repo-index skill 一致），版本+1、generatedAt 刷新、DO NOT EDIT
+- **云端扫描写索引（2026-09-16）**：账号卡片「云端」`加载仓库列表` 也写索引（`mergeCloudReposIntoIndex`）——云端仓库登记进 dsh-repo-index.json（含 defaultBranch/pushedAt/description/visibility 云端真源、`cloudOnly` 标记本地无副本），本地已有副本的条目保留本地 path/skills 并刷新云端状态；本地列表透传 `defaultBranch/cloudPushedAt/cloudOnly`，前端显示「默认分支 / 云端更新 / 仅云端」——云端扫描一次，本地远端状态同步刷新
 - 索引缺失/损坏全链路静默降级，不阻塞扫描与推送
 
 ## 独立脚本：规则启用/禁用（scripts/rule-switch.mjs）
@@ -827,7 +828,12 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
-| **1.3.0**（当前） | **审计忽略全链路修复（黑名单初筛 + 白名单补充）+ 统一跳过目录模块 + CLI 与插件审计同源同参 + 推送通道下拉修正** \
+| **1.3.1**（当前） | **云端扫描写索引 + 本地远端状态刷新 + 代码质量清扫（命名/魔数）+ 魔数双规则合并** \
+账号卡片「云端」`加载仓库列表`（/repos-cloud）**同步写索引**（`mergeCloudReposIntoIndex`）：云端仓库登记进 dsh-repo-index.json（含 defaultBranch/pushedAt/description/visibility 云端真源、`cloudOnly` 标记本地无副本），本地已有副本的条目保留本地 path/skills 并刷新云端状态；本地列表透传 `defaultBranch/cloudPushedAt/cloudOnly` 并显示「默认分支 / 云端更新 / 仅云端」——云端扫描一次，本地远端状态同步刷新（接口返回 indexUpdated 提示刷新条数）\
+代码质量清扫（审计分数 74.5 → 77/B）：变量命名类 125→1 条（readability/vague-variable-name + variable-min-length 机械改名 126 处，49 文件）；魔数类 116→56 条（超时/阈值/扣分表提命名常量：file-health 权重与等级边界、collector/http-handlers 超时、apply 注入段 order、score 等级分界、size 函数行数阈值、client fetch 超时与扫描循环上限、link-check 默认参数与 flaky 折扣、preview-gen MB 换算）\
+**魔数双规则合并**：readability/magic-number（regex 通道）并入 readability/magic-number-smart（AST token 级，唯一魔数规则）——smart 覆盖运算/比较里的全部数字字面量形态，杜绝同一魔数报两条；命名常量判定放宽（isNamedConstantValue）：`dshgp_*`/前置前缀 + timeout/limit/size/ms 等语义词尾的变量名算命名常量，不再误报 `const timeout = 30000`；nodejs 槽位规则数 38→37（README 同步）\
+回归：单测 32/32、check 96/96、tree-doc 无漂移；渲染自检实测 cloudTag 显示「默认分支 / 云端更新 / 仅云端」\
+| **1.3.0** | **审计忽略全链路修复（黑名单初筛 + 白名单补充）+ 统一跳过目录模块 + CLI 与插件审计同源同参 + 推送通道下拉修正** \
 审计**全量/变更扫描忽略语义重构**（lib/audit/collector.js + lib/skip-dirs.js）：修复 git check-ignore 大仓超时（原枚举 9.9 万文件路径喂 stdin 被 SIGTERM，用残缺 stdout 构造忽略集 → 被 .gitignore 忽略的 src/ 整棵漏进审计）；改为枚举**目录**（数量少一个量级）批量判定，status 非 0/1 不采信残缺输出；跳过目录统一为「硬编码基线（仅 node_modules/.git，绝对跳过）+ yml 黑名单关键词（规则 yml `exclude_dirs` 并集，如 folder 规则的 dist/build/vendor/.dsh/.trash）」——新跳过目录改 yml 不改代码；黑名单命中的目录若被 gitignore `!` 白名单恢复（如 `server/project/*`+`!server/project/blueprint/`、`/build/*`+`!/build/keep/`）则保留进入——整目录黑名单可含白名单子目录；node_modules/.git 绝对跳过不受白名单影响（修复 npm 依赖树漏扫回归）；新增 `node_modules.orig` 进 folder.yml exclude_dirs。三处消费方统一调用（审计收集 / 敏感扫描 / 措辞清洗）\
 CLI 与插件审计**功能一致、结果一致**（cli.mjs）：CLI 读取同一份 config.json（readSettings+applySettingsToCfg，修复返回状态对象当 cfg 的缺陷），权重/禁用槽/规则目录同参；`git-sluice audit . --full` 与插件 `code_audit{scope:'full'}` 实测同分同 finding（74.5/B，433 findings）；无配置环境回退默认权重（76.8/B）\
 CLI 新增 `repos` / `index` 命令（git-sluice repos <root> 列仓库、index <root> 维护本地索引），--max/--owner/--offline 标志全量接入 \

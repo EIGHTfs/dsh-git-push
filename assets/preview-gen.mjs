@@ -7,7 +7,7 @@
  * 用法：node assets/preview-gen.mjs
  *
  * 路径全部按脚本位置推导（换机/换工作区即用，不写死本机路径）：
- *   项目根 P = 本文件所在目录的上一级；DSH 根 = P 上溯三级
+ *   项目根 projectRoot = 本文件所在目录的上一级；DSH 根 = projectRoot 上溯三级
  *   （<DSH>/.dsh-home/工作区/<项目>）；React UMD 取 DSH 的 pnpm store。
  *   需要时可覆盖：DSH_ROOT / REACT_UMD_DIR / REACT_DOM_UMD_DIR。
  */
@@ -16,22 +16,24 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { listRuleSlots } from '../lib/app/http-handlers.js';
 
-const P = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+// 字节 → MB 换算：1 MB = 1024 × 1024 字节
+const BYTES_PER_MB = 1024 * 1024;
 // DSH 根：<DSH>/.dsh-home/工作区/<项目> → 上溯三级
-const DSH = process.env.DSH_ROOT || resolve(P, '..', '..', '..');
+const DSH = process.env.DSH_ROOT || resolve(projectRoot, '..', '..', '..');
 const store = join(DSH, 'node_modules', '.pnpm');
-const R = process.env.REACT_UMD_DIR || join(store, 'react@18.3.1', 'node_modules', 'react');
+const reactUmdDir = process.env.REACT_UMD_DIR || join(store, 'react@18.3.1', 'node_modules', 'react');
 const RD = process.env.REACT_DOM_UMD_DIR || join(store, 'react-dom@18.3.1_react@18.3.1', 'node_modules', 'react-dom');
 
-for (const [label, dir] of [['react', R], ['react-dom', RD]]) {
+for (const [label, dir] of [['react', reactUmdDir], ['react-dom', RD]]) {
   if (!existsSync(join(dir, 'umd'))) {
     console.error(`找不到 ${label} UMD：${dir}\n（DSH 根推导为 ${DSH}；可用 DSH_ROOT / ${label === 'react' ? 'REACT_UMD_DIR' : 'REACT_DOM_UMD_DIR'} 指定）`);
     process.exit(1);
   }
 }
 
-const clientSrc = readFileSync(`${P}/client.js`, 'utf8');
-const reactUmd = readFileSync(`${R}/umd/react.development.js`, 'utf8');
+const clientSrc = readFileSync(`${projectRoot}/client.js`, 'utf8');
+const reactUmd = readFileSync(`${reactUmdDir}/umd/react.development.js`, 'utf8');
 const domUmd = readFileSync(`${RD}/umd/react-dom.development.js`, 'utf8');
 
 // 槽位数据取自真实规则文件（动态发现 audit-rules-<名>.yml），不再手写清单——
@@ -68,15 +70,15 @@ const harness = `
 window.__ERRORS__ = [];
 function __err(kind, msg) {
   window.__ERRORS__.push(kind + ': ' + msg);
-  var d = document.getElementById('__err');
-  if (!d) {
-    d = document.createElement('pre');
-    d.id = '__err';
-    d.style.cssText = 'color:#f87171;white-space:pre-wrap;font-size:12px;'
+  var errEl = document.getElementById('__err');
+  if (!errEl) {
+    errEl = document.createElement('pre');
+    errEl.id = '__err';
+    errEl.style.cssText = 'color:#f87171;white-space:pre-wrap;font-size:12px;'
       + 'border:1px solid #f87171;padding:8px;margin:0 0 12px';
-    document.body.insertBefore(d, document.body.firstChild);
+    document.body.insertBefore(errEl, document.body.firstChild);
   }
-  d.textContent += kind + ': ' + msg + String.fromCharCode(10);
+  errEl.textContent += kind + ': ' + msg + String.fromCharCode(10);
 }
 window.addEventListener('error', function (e) { __err('error', e.message); });
 window.addEventListener('unhandledrejection', function (e) { __err('reject', String((e.reason && e.reason.stack) || e.reason)); });
@@ -135,13 +137,13 @@ var __PRE_REAL__ = window.fetch;
 window.__dshgpScript = window.__dshgpScript || [];
 // 假接口：/toggle-rule 真翻转 disabled，配合 loadSlots 对账，点击结果能留住
 window.fetch = function (url, init) {
-  var u = String(url), body = { ok: true };
+  var urlStr = String(url), body = { ok: true };
   // 演示目录根（mock 假数据用；browse/repos-local 共用）
   var DEMO_HOME = '/home/user/项目';
   // ?backend= 或 window.__DSHGP_BACKEND__（preview-server 注入）→ 转发真实后端
   var __PRE_B__ = (location.search.match(/[?&]backend=([^&]+)/) || [])[1] || window.__DSHGP_BACKEND__ || '';
   if (__PRE_B__) {
-    return __PRE_REAL__(__PRE_B__ + u, {
+    return __PRE_REAL__(__PRE_B__ + urlStr, {
       method: ((init && init.method) || 'GET'),
       headers: { 'Content-Type': 'application/json' },
       body: (init && init.body) || undefined,
@@ -154,7 +156,7 @@ window.fetch = function (url, init) {
   body = { ok: true };
   // /toggle-rule 必须真改假数据：toggleDisabled 本地翻转后会 loadSlots 对账，
   //   假数据不改就会被拉回原状（表现为「点完回弹」）。
-  if (u.indexOf('toggle-rule') >= 0) {
+  if (urlStr.indexOf('toggle-rule') >= 0) {
     try {
       var req = JSON.parse((init && init.body) || '{}');
       var meta = window.__SLOTS__[req.slot];
@@ -162,18 +164,18 @@ window.fetch = function (url, init) {
     } catch (e) { /* 假数据解析失败不影响预览 */ }
     return Promise.resolve({ ok: true, status: 200, json: function () { return Promise.resolve({ ok: true }); } });
   }
-  if (u.indexOf('rule-slots') >= 0) {
+  if (urlStr.indexOf('rule-slots') >= 0) {
     body = { ok: true, slots: { order: window.__FAKE__._order.slice(), meta: window.__SLOTS__, forced: ['private'] } };
-  } else if (u.indexOf('account-check') >= 0) {
+  } else if (urlStr.indexOf('account-check') >= 0) {
     body = { ok: true, loggedIn: true, block: '✅ 已登录 GitHub：EIGHTfs（Public 仓库 12 个 / 私有 3 个）' };
-  } else if (u.indexOf('gen-ssh-key') >= 0) {
+  } else if (urlStr.indexOf('gen-ssh-key') >= 0) {
     body = { ok: true, pub: 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINewlyGeneratedDemoKeyForPreview eightfs@example.com' };
   // 2026-09-14 账号卡片（本地/云端）假数据：结构与真实端点一致，点按钮能真的出列表/弹窗
-  } else if (u.indexOf('browse') >= 0) {
+  } else if (urlStr.indexOf('browse') >= 0) {
     // 目录浏览：mock 按请求 path 返回真实层级（点目录真切换，与真实 browseDir 行为一致）
-    var q = String(u).split('?')[1] || '';
+    var queryStr = String(urlStr).split('?')[1] || '';
     var p = '';
-    try { p = decodeURIComponent(String(q).replace(/^path=/, '')); } catch (e) { /* 忽略 */ }
+    try { p = decodeURIComponent(String(queryStr).replace(/^path=/, '')); } catch (e) { /* 忽略 */ }
     if (!p) p = DEMO_HOME;
     var parent = p.replace(/\\/[^/]+$/, '') || '/';
     var dirs;
@@ -213,9 +215,9 @@ window.fetch = function (url, init) {
         { fullName: 'EIGHTfs/iwara-downloader', private: false, defaultBranch: 'main', pushedAt: '2026-09-10T11:00:00Z', description: 'iwara 下载器' },
       ],
     };
-  } else if (u.indexOf('repo-push') >= 0) {
+  } else if (urlStr.indexOf('repo-push') >= 0) {
     body = { ok: true, pushed: true, branch: 'master', ahead: 0 };
-  } else if (u.indexOf('repo-clone') >= 0) {
+  } else if (urlStr.indexOf('repo-clone') >= 0) {
     body = { ok: true, dest: '/home/user/项目/dsh-git-push' };
   }
   return Promise.resolve({ ok: true, status: 200, json: function () { return Promise.resolve(body); } });
@@ -275,5 +277,5 @@ body{margin:0;padding:20px;background:#0f1117;color:#e8eaf0;
 <script>${post}</script>
 </body></html>`;
 
-writeFileSync(`${P}/assets/preview.html`, html);
-console.log('生成 assets/preview.html', (html.length / 1048576).toFixed(2), 'MB');
+writeFileSync(`${projectRoot}/assets/preview.html`, html);
+console.log('生成 assets/preview.html', (html.length / BYTES_PER_MB).toFixed(2), 'MB');

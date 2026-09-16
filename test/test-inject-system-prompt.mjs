@@ -161,7 +161,13 @@ test('host：注册四段（功能用法 990 / 环境 980 / README 991 / 要求�
   for (const name of ['dsh-git-push-usage', 'dsh-git-push-env', 'dsh-git-push-readme-check', 'dsh-git-push-requirements']) {
     assert.ok(applySrc.includes(`name: '${name}'`), `应注册 ${name} 段`);
   }
-  assert.ok(/order: 990/.test(applySrc), '功能用法段应为 order 990');
+  // 2026-09-16：order 值提取为命名常量（ORDER_USAGE/ORDER_ENV/ORDER_README_CHECK/ORDER_REQUIREMENTS），
+  //   断言改为「常量定义 + 各段引用」——顺序语义不变（要求清单 992 > README 991 > 用法 990 > 环境 980）
+  assert.ok(/const ORDER_USAGE = 990/.test(applySrc), '功能用法段排序常量应为 990');
+  assert.ok(/const ORDER_ENV = 980/.test(applySrc), '环境段排序常量应为 980');
+  assert.ok(/const ORDER_README_CHECK = 991/.test(applySrc), 'README 段排序常量应为 991');
+  assert.ok(/const ORDER_REQUIREMENTS = 992/.test(applySrc), '要求清单段排序常量应为 992');
+  assert.ok(/name: 'dsh-git-push-usage', order: ORDER_USAGE/.test(applySrc), '功能用法段应引用 ORDER_USAGE');
 });
 
 test('host：设置页切换总开关即时生效（启动 merge + HTTP，watch 不灌开关）', () => {

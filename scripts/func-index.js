@@ -65,7 +65,7 @@ function stripComment(line) {
   const b = s.indexOf("/*");
   if (b >= 0) { const e = s.indexOf("*/", b + 2); s = e >= 0 ? s.slice(0, b) + s.slice(e + 2) : s.slice(0, b); }
   // 行注释（在引号外才有效——粗略处理：若 // 前有未闭合引号则跳过）
-  const q = /["']/;
+  const quoteRe = /["']/;
   const idx = s.indexOf("//");
   if (idx >= 0) {
     const before = s.slice(0, idx);
@@ -83,23 +83,23 @@ function detectFunction(lines, i, loose) {
   const t = line.trim();
 
   // 1) function name( / async function name(
-  let m = t.match(/^(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\(/);
-  if (m) return { name: m[1], kind: "function", defLine: i };
+  let match = t.match(/^(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\(/);
+  if (match) return { name: match[1], kind: "function", defLine: i };
 
   // 2) const/let/var name = function( / async function(
-  m = t.match(/^(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s+)?function\s*\(/);
-  if (m) return { name: m[1], kind: "var-function", defLine: i };
+  match = t.match(/^(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s+)?function\s*\(/);
+  if (match) return { name: match[1], kind: "var-function", defLine: i };
 
   // 3) const name = (..) => { / async (..) => {
-  m = t.match(/^(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s*)?\(?[^=]*?\)\s*=>\s*\{?\s*$/);
-  if (m) return { name: m[1], kind: "arrow", defLine: i };
+  match = t.match(/^(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s*)?\(?[^=]*?\)\s*=>\s*\{?\s*$/);
+  if (match) return { name: match[1], kind: "arrow", defLine: i };
 
   // 4) module.exports = { ... 内的 name: function( 或 name: (..) => {
   if (loose) {
-    m = t.match(/^\s*([A-Za-z_$][\w$]*)\s*:\s*(?:async\s+)?function\s*\(/);
-    if (m) return { name: m[1], kind: "method", defLine: i };
-    m = t.match(/^\s*([A-Za-z_$][\w$]*)\s*:\s*(?:async\s*)?\([^)]*\)\s*=>\s*\{/);
-    if (m) return { name: m[1], kind: "method", defLine: i };
+    match = t.match(/^\s*([A-Za-z_$][\w$]*)\s*:\s*(?:async\s+)?function\s*\(/);
+    if (match) return { name: match[1], kind: "method", defLine: i };
+    match = t.match(/^\s*([A-Za-z_$][\w$]*)\s*:\s*(?:async\s*)?\([^)]*\)\s*=>\s*\{/);
+    if (match) return { name: match[1], kind: "method", defLine: i };
   }
   return null;
 }
@@ -128,8 +128,8 @@ function scanFile(file) {
       let j = i;
       let depth = 0;
       while (j < lines.length) {
-        const l = stripComment(lines[j]);
-        depth += (l.match(/\{/g) || []).length;
+        const lineText = stripComment(lines[j]);
+        depth += (lineText.match(/\{/g) || []).length;
         if (depth > 0) break;
         j++;
       }
@@ -237,7 +237,7 @@ if (nameFilter) {
         }
         if (f.calls.length) {
           console.log(`\n  调用位置（${f.calls.length} 处）:`);
-          for (const c of f.calls) console.log(`    ${c.line}: ${c.ctx}`);
+          for (const call of f.calls) console.log(`    ${call.line}: ${call.ctx}`);
         }
       }
     }

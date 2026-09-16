@@ -122,10 +122,10 @@ export function cmdRuleset(slots) {
  *    完全相同的 auditOpts 与入口（auditFull），保证功能与结果一致。 */
 export function cmdScan(root, flags) {
   const depth = flags.depth ?? 3;
-  const res = auditWithScope(root, { scope: 'full', depth });
+  const scanResult = auditWithScope(root, { scope: 'full', depth });
   console.log(`扫描 ${root}（full，depth=${depth}）`);
-  console.log(`  findings: ${res.summary.total}（blocker ${res.summary.blocker} / warning ${res.summary.warning}）`);
-  for (const f of res.findings.slice(0, 20)) {
+  console.log(`  findings: ${scanResult.summary.total}（blocker ${scanResult.summary.blocker} / warning ${scanResult.summary.warning}）`);
+  for (const f of scanResult.findings.slice(0, 20)) {
     console.log(`  [${f.severity}] ${f.rule} ${f.file}:${f.line} ${f.message || ''}`);
   }
 }
@@ -179,15 +179,15 @@ export function cmdAudit(root, flags) {
   const full = flags.full === true || !existsSync(join(root || '.', '.git'));
   const opts = pluginEqualAuditOpts(cfg, flags, { scope: full ? 'full' : 'diff' });
   const weights = pluginEqualWeights(cfg, flags);
-  const res = full ? auditFull(root, opts) : auditWithScope(root, opts);
-  const q = scoreQuality(res.findings, weights);
+  const auditResult = full ? auditFull(root, opts) : auditWithScope(root, opts);
+  const quality = scoreQuality(auditResult.findings, weights);
   if (flags.json) {
-    console.log(JSON.stringify({ ok: true, repo: root, scope: res.scope, summary: res.summary, quality: q, findings: res.findings }, null, 2));
+    console.log(JSON.stringify({ ok: true, repo: root, scope: auditResult.scope, summary: auditResult.summary, quality, findings: auditResult.findings }, null, 2));
     return;
   }
-  console.log(`审计 ${root}（scope=${res.scope}, level=${opts.auditLevel}${opts.rulesetDir ? ', ruleset=' + opts.rulesetDir : ''}${opts.includeIgnored ? ', include-ignored' : ''}）`);
-  console.log(`  summary: ${JSON.stringify(res.summary)}`);
-  console.log(`  quality: ${q.score}/100（${q.level}）`);
+  console.log(`审计 ${root}（scope=${auditResult.scope}, level=${opts.auditLevel}${opts.rulesetDir ? ', ruleset=' + opts.rulesetDir : ''}${opts.includeIgnored ? ', include-ignored' : ''}）`);
+  console.log(`  summary: ${JSON.stringify(auditResult.summary)}`);
+  console.log(`  quality: ${quality.score}/100（${quality.level}）`);
   if (Object.keys(weights).length) console.log(`  权重覆盖（来自插件配置 weightOverrides）: ${JSON.stringify(weights)}`);
 }
 
@@ -236,7 +236,7 @@ export async function cmdCommit(root, flags) {
   if (!repo || !existsSync(join(repo, '.git'))) { console.error(`不是 git 仓库: ${repo || '(空)'}`); return 1; }
   if (!String(flags.message || '').trim()) { console.error('缺少 -m <commit message>'); return 1; }
   // 审计门禁：blocker 拦截（v2 审计独立调用——与 DSH 工具 git_commit_push 同一实现 commitWithAudit）
-  const result = await commitWithAudit({
+  const commitOutcome = await commitWithAudit({
     repoPath: repo,
     message: flags.message,
     push: flags.push === true,
@@ -244,17 +244,17 @@ export async function cmdCommit(root, flags) {
     requirementsConfirmed: flags.reqConfirm === true,
     force: flags.force === true,
   });
-  if (result.blocked) {
-    console.error(`审计拦截（${result.error || 'blocker'}），提交中止：`);
-    if (result.audit) console.error(`  summary: ${JSON.stringify(result.audit.summary)}`);
+  if (commitOutcome.blocked) {
+    console.error(`审计拦截（${commitOutcome.error || 'blocker'}），提交中止：`);
+    if (commitOutcome.audit) console.error(`  summary: ${JSON.stringify(commitOutcome.audit.summary)}`);
     return 2;
   }
-  if (flags.json) console.log(JSON.stringify(result, null, 2));
+  if (flags.json) console.log(JSON.stringify(commitOutcome, null, 2));
   else {
-    if (!result.ok && result.error) console.error(`提交失败: ${typeof result.error === 'string' ? result.error : JSON.stringify(result.error)}`);
-    console.log(JSON.stringify(result, null, 2).slice(0, 2000));
+    if (!commitOutcome.ok && commitOutcome.error) console.error(`提交失败: ${typeof commitOutcome.error === 'string' ? commitOutcome.error : JSON.stringify(commitOutcome.error)}`);
+    console.log(JSON.stringify(commitOutcome, null, 2).slice(0, 2000));
   }
-  return result.ok ? 0 : 2;
+  return commitOutcome.ok ? 0 : 2;
 }
 
 /** 子命令：link-check — 检查文本文件的链接有效性（只 warning，不拦提交）。 */
@@ -281,17 +281,17 @@ export function cmdReadmeTemplate() {
 
 /** 子命令：self-check — 版本一致性 + HELP↔parseArgv 机器比对。 */
 export function cmdSelfCheck() {
-  const h = helpSync(HELP, KNOWN_FLAGS);
+  const helpRes = helpSync(HELP, KNOWN_FLAGS);
   let fail = 0;
   console.log('自身自检:');
   console.log(`  version: v${VERSION}`);
-  if (!h.ok) {
+  if (!helpRes.ok) {
     fail++;
     console.error(`  ✗ cli-help-sync: HELP 与 parseArgv 不一致`);
-    for (const f of h.missingInHelp) console.error(`    parseArgv 认但 HELP 没写: ${f}`);
-    for (const f of h.missingInParse) console.error(`    HELP 写了但 parseArgv 不认: ${f}`);
+    for (const f of helpRes.missingInHelp) console.error(`    parseArgv 认但 HELP 没写: ${f}`);
+    for (const f of helpRes.missingInParse) console.error(`    HELP 写了但 parseArgv 不认: ${f}`);
   } else {
-    console.log(`  ✓ cli-help-sync: HELP 与 parseArgv 一致（${h.helpFlags.join(' ')}）`);
+    console.log(`  ✓ cli-help-sync: HELP 与 parseArgv 一致（${helpRes.helpFlags.join(' ')}）`);
   }
   const pkgRes = readPkgJson();
   if (pkgRes && pkgRes.version && pkgRes.version !== VERSION) {

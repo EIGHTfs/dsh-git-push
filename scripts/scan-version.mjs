@@ -41,10 +41,10 @@ export function readmeVersion(text = '') {
   // ② 版本章节内取最高版本
   const heads = ['## 版本列表', '## 版本记录', '## 版本历史', '## 更新日志', '## Changelog'];
   let section = '';
-  for (const h of heads) {
-    const i = src.indexOf(h);
+  for (const head of heads) {
+    const i = src.indexOf(head);
     if (i < 0) continue;
-    const rest = src.slice(i + h.length);
+    const rest = src.slice(i + head.length);
     const next = rest.indexOf('\n## ');
     section = next >= 0 ? rest.slice(0, next) : rest;
     break;

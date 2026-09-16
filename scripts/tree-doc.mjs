@@ -145,7 +145,7 @@ function groupLines(name, paths, map, prefix = '') {
     }
   }
   const note = (p) => (map[p] ? map[p] : '（待注释）');
-  for (const d of direct.sort()) lines.push(`│   ├── ${basename(d)} — ${note(d)}`);
+  for (const entry of direct.sort()) lines.push(`│   ├── ${basename(entry)} — ${note(entry)}`);
   for (const [sub, items] of [...subdirs.entries()].sort()) {
     const subPath = `${name}/${sub}`;
     // 第二层直接文件；更深折叠
@@ -162,9 +162,9 @@ function groupLines(name, paths, map, prefix = '') {
 export function buildTreeText(files = gitLsFiles(), map = loadMapping()) {
   const { groups, groupNames, rootFiles } = buildGroups(files);
   const out = ['```text', 'dsh-git-push/'];
-  for (const g of groupNames) {
-    out.push(`├── ${g}/ — ${map[g] || '（待注释）'}`);
-    out.push(...groupLines(g, groups.get(g), map));
+  for (const groupName of groupNames) {
+    out.push(`├── ${groupName}/ — ${map[groupName] || '（待注释）'}`);
+    out.push(...groupLines(groupName, groups.get(groupName), map));
   }
   for (const rf of [...rootFiles].sort()) {
     out.push(`├── ${rf} — ${map[rf] || '（待注释）'}`);
@@ -215,15 +215,15 @@ export function checkDrift({ readmePath = DEFAULT_README } = {}) {
   for (const line of inBlock.split('\n')) {
     // 缩进深度 = 前缀 `│   ` 的个数（顶层=0）
     const depth = (line.match(/│   /g) || []).length;
-    const m = line.replace(/^(\s*)(?:│   )*(?:├──|└──)\s*/, '').trim();
-    if (!m || m.startsWith('```')) continue; // 跳过代码围栏行
-    if (m.startsWith('…')) {
+    const lineText = line.replace(/^(\s*)(?:│   )*(?:├──|└──)\s*/, '').trim();
+    if (!lineText || lineText.startsWith('```')) continue; // 跳过代码围栏行
+    if (lineText.startsWith('…')) {
       // 折叠行：当前目录链即折叠点（其下更深文件除外）
       if (stack.length) foldedDirs.push(stack.join('/') + '/');
       continue;
     }
     // 按「—」切出名字段（trim 后破折号后无空格，split(' — ') 会失效）
-    const name = m.split('—')[0].trim();
+    const name = lineText.split('—')[0].trim();
     if (!name || name === 'dsh-git-push' || name === 'dsh-git-push/') continue;
     stack = stack.slice(0, depth); // 回退到当前深度
     if (name.endsWith('/')) {

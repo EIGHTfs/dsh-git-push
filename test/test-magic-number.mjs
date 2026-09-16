@@ -37,18 +37,19 @@ test('magic-number-smart：版本号/日期/HTTP 状态码/常见常量豁免', 
 });
 
 test('magic-number-smart：魔数上下文（magic_number_hints）命中', () => {
+  // 2026-09-16 更新：`const timeout = 30000` 这类「变量名表意」的赋值已是命名常量（定义值），
+  //   新规则豁免（isNamedConstantValue 放宽：含 timeout/limit/size/… 语义词尾的变量名算常量）。
+  //   真魔数上下文 = 数字出现在 callback/调用/运算里且无表意变量名——如 setTimeout(…, 30000)。
   const text = [
-    'const timeout = 30000;',
-    'const limit = 100;',
-    'const chunkSize = 4096;',
-    'const retryDelay = 2000;',
+    'setTimeout(fn, 30000);',
+    'fetch(url, { timeout: 100 });',
+    'while (q.length > 4096) {}',
     '',
   ].join('\n');
   const found = hits(text);
   assert.ok(found.length >= 1, '魔数上下文应命中');
   for (const h of found) assert.equal(h.kind, 'magic-number-smart', 'kind 应为 magic-number-smart');
   for (const h of found) assert.equal(h.severity, 'warning', 'severity warning');
-  // 单数字（\b\d{2,}\b 不覆盖 1-9）与合法常量上下文不误报
 });
 
 test('magic-number-smart：同一数字 ≥3 次强制标记且合并 1 条', () => {
