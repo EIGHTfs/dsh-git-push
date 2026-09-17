@@ -573,6 +573,12 @@ test('settings-set：GET 方法（空 key）→ 400（键白名单校验先行�
 
 test('settings-set：UI 提交日志落盘（settings-ui.log 留痕 + 凭据打码）', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'dshgp-setlog-'));
+  // 2026-09-17 修复（测试污染生产数据）：本用例写 githubToken 时，凭据落盘走的是
+  //   credentialsDir() → DSH_HOME（不是 setSettingsFileOverride 重定向的那个文件），
+  //   因此**必须同时隔离 DSH_HOME**，否则测试假 token（ghp_SECRETTOKEN_XYZ）会直接
+  //   覆盖用户真实 config.json 里的真 token（已实际发生）。
+  const prevHome = process.env.DSH_HOME;
+  process.env.DSH_HOME = dir;
   try {
     const file = join(dir, 'config.json');
     setSettingsFileOverride(file);
@@ -596,6 +602,7 @@ test('settings-set：UI 提交日志落盘（settings-ui.log 留痕 + 凭据打�
     assert.equal(fsStatMode(logFile), '600', '日志文件必须 0600');
   } finally {
     setSettingsFileOverride(null);
+    if (prevHome === undefined) delete process.env.DSH_HOME; else process.env.DSH_HOME = prevHome;
     rmSync(dir, { recursive: true, force: true });
   }
 });

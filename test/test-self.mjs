@@ -101,17 +101,19 @@ test('parseArgv：--depth 与 --full 识别', () => {
   assert.deepEqual(r.positional, ['/tmp/x']);
 });
 
-test('parseArgv：--level / --ruleset / --weights 识别（G7 CLI 对齐）', () => {
-  const r = parseArgv(['/tmp/x', '--level', 'quick', '--ruleset', '/tmp/rs', '--weights', '{"安全性":100}']);
-  assert.equal(r.flags.level, 'quick');
+test('parseArgv：--ruleset / --weights 识别（G7 CLI 对齐）', () => {
+  const r = parseArgv(['/tmp/x', '--ruleset', '/tmp/rs', '--weights', '{"安全性":100}']);
   assert.equal(r.flags.ruleset, '/tmp/rs');
   assert.equal(r.flags.weights, '{"安全性":100}');
   assert.deepEqual(r.positional, ['/tmp/x']);
 });
 
-test('parseArgv：--level 非法取值 → 报错（白名单校验）', () => {
-  assert.match(parseArgv(['--level', 'insane']).error, /quick\|standard\|deep/);
-  assert.equal(parseArgv(['--level', 'deep']).flags.level, 'deep');
+test('parseArgv：--level 已删除（审计固定完整流程，不再是合法参数）', () => {
+  // 2026-09-17：审计强度不是用户可配项，CLI 的 --level 随之删除。
+  // 仍传 --level 应被当作未知参数拒绝（而非静默忽略），避免用户以为强度生效了。
+  const r = parseArgv(['--level', 'quick']);
+  assert.ok(r.error, '--level 应报错');
+  assert.match(r.error, /--level/);
 });
 
 test('parseArgv：--ruleset / --weights 缺值 → 报错', () => {

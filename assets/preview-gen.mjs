@@ -49,12 +49,9 @@ const FAKE = {
   // 2026-09-13：改为演示「父开关关闭 + 子开关已勾选」——正是可勾选/只置灰/不生效的验证场景
   auditEnabled: false,
   injectRequirements: true,
-  hardcodeFullScan: false,
   // 2026-09-13：injectFullSkill / injectRepoIndexFull 已废弃移除，改为注入总开关（默认开）
   injectSystemPrompt: true,
   auditScanScope: 'diff',
-  auditLevel: 'standard',
-  auditRuleset: '',
   maxScanFiles: 3000,
   weightOverrides: '',
   githubToken: 'ghp_ExampleToken1234567890abcdefGHIJ',

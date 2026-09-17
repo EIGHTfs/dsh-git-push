@@ -42,7 +42,6 @@ whenToUse: 需要查工具参数细节、排查插件报错、或修改插件源
 | `scope` | string? | `full`=全量扫描 / 缺省=仅本次变动（非 git 目录自动退化为全量） |
 | `llm` | bool? | 追加 LLM 深度审查（需配置 provider/model） |
 | `ruleset` | string? | 自定规则目录（指向含 `audit-rules-<名>.yml` 的目录即整体替换内置规则包；空=内置） |
-| `auditLevel` | string? | 审计强度：`quick`（跳 AST/语义重检查）/ `standard`（默认全量）/ `deep` |
 | `weights` | string? | 权重覆盖 JSON（如 `{"安全性":100}`；非法 JSON 回退默认权重表） |
 
 返回：问题清单（blocker 拦截级 / warning 提醒级）、quality 评分（0-100，A/B/C/D）、是否通过。
@@ -143,10 +142,11 @@ Host 侧注册统一走独立接线层，四段真实 API（对照运行中插�
 **设置项三处同源**（新增项必须三处同加，`test-client.mjs` 断言一致性）：
 `lib/index.js` 的 `Config`（服务端 schema）+ `lib/client/index.js` 的 `SETTINGS_SCHEMA`（纯逻辑，可单测）+ `client.js` 的 `SCHEMA`/`zh`（浏览器侧内联，无法 import 服务端 ESM）。
 
-**11 项设置**：`auditEnabled` / `hardcodeFullScan` / `injectFullSkill` / `injectRepoIndexFull`（boolean，均默认 false）、`auditScanScope`（diff|full）、`auditLevel`（quick|standard|deep）、`auditRuleset`（自定规则目录）、`weightOverrides`（权重 JSON）、`commitMessage`（string）。
+**设置项**：`auditEnabled`（boolean，默认 false）、`auditScanScope`（diff|full）、`maxScanFiles`（全量扫描文件上限）、`weightOverrides`（权重 JSON）、`pushMethod`、`pushGate`。
 
-**审计强度三档**（`auditLevel`，透传链 配置/工具参数 → `auditWithScope` → `auditFull`/`auditChanged` → `auditFile(…, {level})` → `runChecks({…}, {level})`）：
-`quick` 跳过 AST/语义重检查（func-lines / max-complexity / max-depth / max-lines / repeated-string / min-occurrences / semantic / credential-file / min-length），保留正则、凭据、路径、黑名单、空 catch、同步 IO——基础安全不随强度降级；`standard` 全量；`deep` 当前与 standard 等效（预留扩展位）。
+> 2026-09-17 移除：`auditLevel`（审计强度）、`auditRuleset`（自定规则目录）、`hardcodeFullScan`（硬编码全量扫）——均非用户可配项。**审计固定走完整流程**（正则初筛 + AST 语义检查全跑）；**硬编码扫描范围随审计范围走**（审计扫多少，硬编码就扫多少）；自定规则目录只保留工具 `ruleset` 参数（不再进设置）。
+
+**审计固定完整流程**（2026-09-17）：不再有强度档位，每次审计都跑静态初筛（正则/黑名单/凭据/路径/同步 IO/空 catch）+ AST 语义检查（func-lines / max-complexity / max-depth / max-lines / repeated-string / min-occurrences / semantic / credential-file / min-length）；硬编码检查与审计共用同一扫描范围。
 
 **自定规则包**（`auditRuleset` / 工具 `ruleset` 参数）：目录里每个 `audit-rules-<名>.yml` 即一个槽位，放文件即生效、删文件即移除（导入/导出/删除 = 对该目录的文件操作）；装载走 `loadRuleFiles(order, { dir })`，指向空/不存在目录会装载 0 条规则（`errors` 有记录），不静默沿用内置包。
 

@@ -254,6 +254,7 @@ dsh-git-push/
 │   ├── check.mjs — 语法检查脚本（npm run check）
 │   ├── func-index.js — （待注释）
 │   ├── preview-server.mjs — 本地真实后端测试服务（preview.html 接真实 handleHttp）
+│   ├── probe-recheck.mjs — 探针：「重新检测」按钮链路实测（在线校验 token/SSH）
 │   ├── rule-switch.mjs — 规则槽位手动启停 CLI
 │   ├── scan-file-io.mjs — 文件读写扫描器（列出所有 fs 读写调用位置 + 路径参数）
 │   ├── scan-repos.mjs — （待注释）
@@ -294,11 +295,13 @@ dsh-git-push/
 │   ├── test-push-transport.mjs — 推送通道回归（SSH 优先/一致性语义）
 │   ├── test-quality.mjs — 评分总入口测试（AST 质量检查器）
 │   ├── test-readme-gen.mjs — README 生成测试（模板渲染/版本表）
+│   ├── test-repo-list.mjs — 仓库列表测试（本地扫描/索引读写/HTTP 端点/远端状态）
 │   ├── test-rule-packs.mjs — 规则总入口测试（编译注册/字段指派）
 │   ├── test-rule-slots-render.mjs — 规则包列表统计渲染回归
 │   ├── test-self.mjs — 自身总入口测试（VERSION/CLI/help 比对）
 │   ├── test-settings-persistence.mjs — 设置侧边栏持久化专项测试（L1 提交/L2 白名单/L3 回读/L4 消费四层断言）
 │   ├── test-sidebar-interaction.mjs — 侧边栏规则包列表交互自检
+│   ├── test-sidebar-state.mjs — 设置侧边栏状态自检（设置键回读/凭据已填写判断/统一刷新入口/产物同步）
 │   ├── test-slash-commands.mjs — 用户输入框 /git-audit 斜杠命令（解析/接线/对本仓库跑 quick）
 │   ├── test-smart-hint.mjs — 扫描智能提示 + 评分对数衰减测试
 │   ├── test-status-secret.mjs — token 明文不下发安全回归
@@ -484,13 +487,18 @@ node scripts/audit-runtime-check.mjs --all <目录>
 - 单维度评分对数衰减防零分塌陷：`max(0.1, 10 - k*ln(1+errorCount))`，k 按维度分级（安全性 1.8 衰减最快）
 - 总分 = Σ(维度得分×权重)/Σ权重×10；A/B/C/D/E 五档
 
-### 审计强度三档
+### 审计范围（固定完整流程，无强度档位）
 
-| 档位 | 检查范围 |
+每次审计都跑**完整的静态初筛 + AST 语义检查**，不提供可调强度：
+
+| 阶段 | 检查内容 |
 |---|---|
-| `quick` | 正则 / 凭据 / 路径 / 黑名单 / 空 catch / 同步 IO（跳 AST 与语义重检查） |
-| `standard` | 全量（默认） |
-| `deep` | 当前与 standard 等效，为深度检查预留 |
+| 静态初筛 | 正则 / 凭据 / 路径 / 黑名单 / 空 catch / 同步 IO |
+| AST 语义 | func-lines / max-complexity / max-depth / max-lines / repeated-string / min-occurrences / semantic / credential-file / min-length |
+
+扫描范围由 `auditScanScope`（diff / full）与 `maxScanFiles`（全量上限）决定；**硬编码检查与审计共用同一范围**——审计扫多少，硬编码就扫多少。
+
+> 2026-09-17：移除「审计强度」「自定规则目录」「硬编码全量扫」三个设置项。它们并非用户可配项：强度固定为完整流程；自定规则目录只保留工具 `ruleset` 参数；硬编码全量扫此前从未接上审计实现（空开关）。
 
 ### 豁免机制
 
@@ -783,12 +791,12 @@ git-sluice self-check           版本一致性 + HELP↔parseArgv 机器比对
 CLI 是引擎的独立入口，**功能与结果必须与插件一致**——同一份实现、同一份配置、同一套参数：
 
 - **同一实现**：`repos` → `lib/git/repos.js` 的 `scanRepos`（与插件本地扫描同函数）；`index` → `lib/git/repo-index.js` 的 `maintainRepoIndex`；`audit`/`scan` → `lib/audit/orchestrate.js` 的 `auditFull`/`auditWithScope`。CLI 不另写一份逻辑。
-- **同一配置**：CLI 读**同一份** `$DSH_HOME/git-push/config.json`（经 `readSettings` + `applySettingsToCfg`，与插件启动回读同一映射），因此 `auditLevel`、`maxScanFiles`、规则包顺序 `auditRuleOrder`、禁用槽位 `auditDisabledSlots`、权重 `weightOverrides` 全部生效。
+- **同一配置**：CLI 读**同一份** `$DSH_HOME/git-push/config.json`（经 `readSettings` + `applySettingsToCfg`，与插件启动回读同一映射），因此 `maxScanFiles`、规则包顺序 `auditRuleOrder`、禁用槽位 `auditDisabledSlots`、权重 `weightOverrides` 全部生效。
 - **全量走同一入口**：`--full`（或目录非 git 仓库）走 `auditFull`，与插件 `code_audit` 的全量分支同路径；参数优先级同插件：显式 `--weights` > 配置 `weightOverrides` > 默认权重表。
 - **结果实测一致**（同一仓库同一参数）：CLI `audit . --full` 与插件 `code_audit{repo,scope:'full'}` 均输出 `quality 76.8/B`、`summary {blocker:0, warning:388, notice:45, total:433}`、findings 433 条。
 - 修复前的差异根因：CLI 只传 `scope`+`depth`，不带插件配置 → 跑了已禁用规则包、用默认权重与不同文件上限，表现为「CLI 全量扫描分更低、文件更多」。
 
-`audit` 参数与服务端设置对应：`--full` ↔ `auditScanScope=full`、`--level` ↔ `auditLevel`、`--ruleset` ↔ `auditRuleset`、`--weights` ↔ `weightOverrides`、`--include-ignored` ↔ 连 `.gitignore` 忽略的文件也扫。
+`audit` 参数与服务端设置对应：`--full` ↔ `auditScanScope=full`、`--weights` ↔ `weightOverrides`、`--include-ignored` ↔ 连 `.gitignore` 忽略的文件也扫。（2026-09-17：`--level` / `--ruleset` 已随设置项移除；`--ruleset` 仅作为当次调用的自定规则目录参数。）
 
 ## 独立脚本：清洗用户沟通措辞（scrub-user-wording.mjs）
 
@@ -848,7 +856,27 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
-| **1.3.4**（当前） | **凭据统一收进 config.json + 统一 JSON 原子读写 + 索引只存本地仓库 + 局域网地址修正 + 文件读写扫描器** \
+| **1.3.6**（当前） | **凭据分行展示（各自用户名+独立时间，支持两账号）+ 取消账号汇总行 + 远端状态文案不再写死 + 超时不再冒充「失效」+ token 框可见 + 仓库列表专测** \
+**凭据分行展示**（client.js `credPill` + lib/app/http-handlers.js）：账号卡片此前两种凭据都写死「已配置」（SSH 校验过也拿不到用户名），且只有一行汇总「已登录 GitHub：X」。现改为 **Token / SSH 各一行**，分别显示**该凭据自己的用户名**与**各自最近一次校验通过时间**（`tokenStatus.checkedAt` / `sshStatus.checkedAt` 独立透传）——因为 token 与 sshkey 可以是**两个不同 GitHub 用户且都有效**，写单一用户名本身就是错的（会隐藏另一个账号）。两者用户不同时额外提示「Token 属 A，SSH 属 B——推送走 SSH 通道（B）」；只填未校验显示「已填写｜未校验」，超时显示「网络超时，可重试」，失效显示「失效于 <时间>」\
+**取消账号汇总行**（client.js + lib/git/account.js）：删除「✅ 已登录 GitHub: EIGHTfs｜上次成功登录 …」，顶部状态栏只保留「已连接／未连接」，账号身份下放到两条明细里——天然支持两账号并存 \
+**远端状态文案不再写死**（client.js）：本地列表此前对 `ahead === null` 一律显示「远端状态未知」，但后端该值有**两种成因**——① `liveSkipped`（超预算/SSH 熔断，真的没探测）② 已探到远端（`remoteHead` 有值）只是本地缺该提交对象、算不出领先/落后。现按 `liveSkipped` / `remoteHead` 分三种措辞：`未探测远端` / `远端 <sha> · 待 fetch 比较` / `远端已连通 · 待比较`；后端补查端点同步返回 `remoteKnown`/`compareOk`/`compareHint`，不再把「远端明明探到了」显示成未知 \
+**超时不再冒充「失效」**（lib/git/account.js + account-status.js + client.js）：网络超时（`The operation was aborted due to timeout`）此前与「凭据无效」合并为同一个 `valid:false`，页面显示「已失效」——用户会以为凭据坏了、「重新检测」按钮没用。现新增 `timeout` 标志（仅超时/断网类错误置位），UI 用 ⏳ +「未测成（网络超时，可重试）」，与真失效（❌）区分；token 失效且 SSH 可用时补注「推送走 SSH，不受影响」\
+**token 编辑框改为普通编辑框**（client.js）：`type=password` → `type=text`，粘贴长 token 时可核对是否粘全；明文仍只在输入态存在（保存后落 config.json 0600，接口不回传明文）\
+**「重新检测」加防抖**：`accountLoading` 期间忽略重复点击（连点会连发在线请求触发 GitHub 限流，反而更容易超时）\
+**仓库列表专测**（新增 test/test-repo-list.mjs，19 用例）：覆盖本地扫描（发现/远端识别/改动计数/深度/上限/去重/URL 脱敏/非仓库容错）、索引（定位/按路径命中/**只更新单条不重建**/**只更新已有条目、云端-only 不入索引**）、HTTP 端点（repos-local 结构与字段、缺省只读索引不重扫、refresh 空入参不炸）、远端状态语义、前端文案回归；联网用例默认 skip，`DSH_TEST_ONLINE=1` 才跑。新增 scripts/probe-recheck.mjs 探针实测「重新检测」链路 \
+**修复测试污染生产凭据**（test/test-plugin.mjs）：该用例写 token 时未隔离 `DSH_HOME`，而凭据落盘走 `credentialsDir()`——测试假值 `ghp_SECRETTOKEN_XYZ` **曾覆盖用户 config.json 里的真 token**。现该用例同时隔离 `DSH_HOME`，并在回归中校验真实配置 md5 不变 \
+**实测**：重新检测按钮在线校验 token+SSH 双通过 ✓；时间戳随推送刷新（17:01→17:24）✓；超时标 timeout=true、文案为「未测成」✓；测试 36/36（含联网 19/19）、check 98/98、审计 blocker 0、tree-doc 无漂移 ✓ \
+**审计架构收敛：函数长度/密度判定收归 AST 层**（lib/checks/structural.js + lib/ast/size.js）：`checkFuncLines` 此前是**两套独立判定并行**——AST 版（`checkFuncLinesAst`）与自建正则版（自己找函数起点、自己数花括号、自己判行数各判各的），既对同一函数重复报两条，又因未剥离字面量产生严重误报：`scripts/scan-file-io.mjs` 的 `isFnSignature`（真身 8 行）里有一条判断函数签名的正则，模式中含转义的 `\{`，被旧实现当成真实花括号计数 → depth 永不归零 → 一路吞并后面 234 行，报「单函数 242 行」blocker，**提交被自身审计拦下**。现按「yml 是规则 / lib/ast 是实现 / lib/checks 是调用」的分工收敛：新增 `checkFuncDensityAst`（tokenizer 数分号，剥离字符串/正则/注释内的分号），行数与密度两种判定全部由 AST 层提供，checks 层只做「调 AST → 转 finding」，并跳过已被行数判定报出的函数避免重复；正则初筛仍只负责「定候选范围」（L1），不再出结论 \
+**全量复核检查层分工**：逐个核对 `lib/checks/` 全部 21 个检查函数，确认其余均为合规形态——走 AST（dataflow/magic-number-smart/empty-catch/min-length/complexity/depth/repeated/sync-fs/file-lines）、yml 声明的黑白名单正则（blacklist）、规则 `pathPattern` 路径匹配（path-regex/credential-file/private-files）、JSON 结构解析（npm-json）、YAML 结构解析（patch-insert）、文件存在性判定（semantic），无第二处「该用 AST 却自行出结论」的越权 \
+新增回归测试 2 条（`test/test-audit.mjs`）：①函数体内正则含反斜杠花括号不得把短函数算成超长（误报回归）②函数长度/密度判定必须来自 AST 层、checks 层不得自建函数边界识别（架构回归） \
+| **1.3.5** | **凭据彻底只读写 config.json（消灭凭据文件两处状态）+ 保存互不覆盖 + 脱敏值拒绝写入 + 修复列表重复 key** \
+**凭据彻底只读写 config.json**（lib/git/credentials.js，历史遗留一次收口）：token 只读/只写 config.json 的 `githubToken` 键，SSH 公钥只读/只写 `sshPub` 键；**不再读也不再写**配置目录的 `github-token` / `token` / `*.pub` 平铺文件（此前两处状态并存，出现「公钥只落 id_rsa.pub、json 里没有」「json 是真 token 却报 Bad credentials」等打架现象）；SSH **私钥**仍为文件（id_rsa/id_ed25519/id_ecdsa，ssh 命令行必需）；解析顺序收敛为：显式参数 → 环境变量 → 显式指定文件路径 → config.json \
+**保存互不覆盖**（你实测的问题）：只保存 SSH 公钥不再覆盖 token、只保存 token 不再覆盖公钥——两键各写各的键，读-改-写保留同份配置里的其他键；`generateSshKey` 生成密钥后**同步把公钥写入 config.json**（此前只产出 id_rsa.pub 文件，设置页重启回读为空）\
+**脱敏值拒绝写入**（双层防线）：新增 `isMaskedValue()`，`persistGithubToken`/`persistSshPub` 拒绝写入含 `…`/`****` 的打码串；`client.js persistSetting` 对凭据键提前拦截，空值不动该键（留空=保持不变）——彻底封死「回显的脱敏串把真凭据覆盖」的通路 \
+**修复列表重复 key**：`dshgp_RepoLocalPane` 的 key 由 `r.path` 改为 `r.path || name:<name>`（索引里遗留的云端-only 条目 path 为空，多行撞同一空 key → React「two children with the same key」）；`syncRepoIndex` 写入前过滤 `cloudOnly=true`/空 path 条目（写侧强制「索引只存本地仓库」不变量，旧索引被写回即自愈）\
+配套：清理配置目录历史遗留凭据文件（github-token、id_rsa.pub 已备份后移除）；测试断言同步为「只读写 config.json」（test-account-ssh / test-persist-credentials / test-settings-persistence）；相关报错与注入文案同步更新 \
+**实测**：只保存 sshkey → token 未被动（len 42 不变）✓；只保存 token → 公钥未被动 ✓；写脱敏值被拒 ✓；写 token/公钥只落 config.json、无平铺文件 ✓；测试 34/34、check 98/98、tree-doc 无漂移 \
+| **1.3.4** | **凭据统一收进 config.json + 统一 JSON 原子读写 + 索引只存本地仓库 + 局域网地址修正 + 文件读写扫描器** \
 **凭据统一收进 config.json**（lib/git/credentials.js）：`persistGithubToken`/`persistSshPub` 除写旧凭据文件（github-token / *.pub，兼容旧路径）外，**同步写插件 config.json**（githubToken / sshPub 键，0600 原子写）；`readSshPub` 改为**优先读 config.json 的 sshPub**（回退旧 *.pub）；`gen-ssh-key` 一键生成后也把公钥写入 config.json——修「SSH 公钥只落 id_rsa.pub、重启回读 config.json 取不到」；SSH 私钥（id_rsa/id_ed25519/id_ecdsa）仍为文件（ssh 工具链必需） \
 **统一 JSON 原子读写**（新增 lib/git/atomic-json.js：`readJson`/`readJsonAny`/`writeJsonAtomic`/`updateJsonAtomic`/`writeTextAtomic`）：把四处重复的「读 JSON → 改 → .tmp+rename 原子写回」收敛为一份实现，settings-bridge（config.json）、scan-runner（scan-live.json）、repo-index（syncRepoIndex 写索引）改用它；坏文件/缺失统一返回 null 不抛 \
 **dsh-repo-index 只存本地仓库**（lib/git/repo-index.js `mergeCloudReposIntoIndex`）：语义收缩——云端扫描只**更新索引里已有条目的云端字段**（visibility/defaultBranch/pushedAt/description），**不再新增云端-only 条目**（本地无副本的云仓库不进索引；前端「云端有、本地无」由 repos-cloud 的 localExists 判断）；合并保留本地条目既有字段（path/skills/cloneCmd），不重建不丢条目 \

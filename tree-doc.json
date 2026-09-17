@@ -181,6 +181,7 @@
   "test/test-rule-slots-render.mjs": "规则包列表统计渲染回归",
   "test/test-self.mjs": "自身总入口测试（VERSION/CLI/help 比对）",
   "test/test-sidebar-interaction.mjs": "侧边栏规则包列表交互自检",
+  "test/test-sidebar-state.mjs": "设置侧边栏状态自检（设置键回读/凭据已填写判断/统一刷新入口/产物同步）",
   "test/test-smart-hint.mjs": "扫描智能提示 + 评分对数衰减测试",
   "test/test-status-secret.mjs": "token 明文不下发安全回归",
   "test/test-task-queue.mjs": "后台化回归测试（官方 job 注册 / 无 jobs 同步保底 / blocker 拦截）",
@@ -221,5 +222,7 @@
   "scripts/func-index.js": "（待注释）",
   "scripts/scan-repos.mjs": "（待注释）",
   "test/test-audit-empty.mjs": "（待注释）",
-  "test/test-auditignore.mjs": "（待注释）"
+  "test/test-auditignore.mjs": "（待注释）",
+  "test/test-repo-list.mjs": "仓库列表测试（本地扫描/索引读写/HTTP 端点/远端状态）",
+  "scripts/probe-recheck.mjs": "探针：「重新检测」按钮链路实测（在线校验 token/SSH）"
 }

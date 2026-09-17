@@ -36,7 +36,8 @@ function clientSubmitKeys() {
 }
 
 /** setAdvanced 允许键（与 client.js setAdvanced 正则同步；新增键时两处都要加）。 */
-const SET_ADVANCED = ['auditLevel', 'auditRuleset', 'maxScanFiles', 'hardcodeFullScan', 'pushMethod'];
+// 2026-09-17：auditLevel / auditRuleset / hardcodeFullScan 已从设置删除（非用户可配项）
+const SET_ADVANCED = ['maxScanFiles', 'pushMethod'];
 
 /** settings-set 白名单键（L2）。 */
 function allowlistKeys() {
@@ -71,7 +72,9 @@ test('L0 集合：SETTINGS_SCHEMA 声明的每个键都有默认值（UI 事实�
   for (const item of SETTINGS_SCHEMA) {
     assert.ok(item.key in def, `schema 键 ${item.key} 应有默认值`);
   }
-  assert.ok(SETTINGS_SCHEMA.length > 8, `schema 应声明全部设置项（现 ${SETTINGS_SCHEMA.length} 项）`);
+  // 2026-09-17：审计强度/自定规则目录/硬编码全量扫三项已删除，声明数随之下调；
+  //   此处只守住下限，避免每删一项就要改这个魔数。
+  assert.ok(SETTINGS_SCHEMA.length >= 7, `schema 应声明主要设置项（现 ${SETTINGS_SCHEMA.length} 项）`);
 });
 
 test('L2 全键：settings-set 白名单覆盖 SETTINGS_SCHEMA 全部键 + 凭据键', () => {
@@ -113,12 +116,9 @@ test('L3 集成：每键 writeSettingsKey → config.json → applySettingsToCfg
       injectRequirements: true,
       injectSystemPrompt: false,
       auditScanScope: 'full',
-      auditLevel: 'quick',
-      auditRuleset: '/tmp/rules',
       maxScanFiles: 500,
       weightOverrides: '{"安全性":100}',
       pushMethod: 'api',
-      hardcodeFullScan: true,
       auditRuleOrder: ['comment', 'nodejs'],
       auditDisabledSlots: ['comment'],
       githubToken: 'ghp_'.concat('T'.repeat(36)),
@@ -172,11 +172,13 @@ test('L4 关键键 auditRuleOrder：规则加载顺序真正使用 cfg.auditRule
   assert.ok(/resolveSlotOrder\(order/.test(loader), 'resolveSlotOrder 应消费传入 order');
 });
 
-test('L4 关键键 auditScanScope / auditLevel：加载与审计真实读取 cfg', () => {
+test('L4 关键键 auditScanScope：审计 opts 带 scope；审计强度已删除不得回退', () => {
   const tool = readFileSync(join(ROOT, 'lib/app/tool-call.js'), 'utf8');
-  assert.ok(/cfg\.auditLevel/.test(tool), 'code_audit 应使用 cfg.auditLevel');
   // auditScanScope 由前端/工具参数决定，审计 opts 至少包含 scope 字段
   assert.ok(/scope:/.test(tool), '审计 opts 应有 scope 字段');
+  // 2026-09-17：审计固定完整流程，代码里不得再出现 auditLevel 透传
+  assert.ok(!/auditLevel/.test(tool.replace(/^\s*\/\/.*$/gm, '')),
+    'code_audit 不得再消费 auditLevel（审计固定正则初筛 + AST）');
 });
 
 /* ───────────────────────── 凭据链路（不应受断链影响） ───────────────────────── */
@@ -198,7 +200,7 @@ test('凭据：githubToken 经 settings-set 落 config.json（打码位不裸传
   } finally { env.cleanup(); }
 });
 
-test('凭据：sshPub 经 settings-set 落 config.json + 公钥文件', async () => {
+test('凭据：sshPub 经 settings-set 落 config.json（且不再产出 *.pub 文件）', async () => {
   const env = isolatedEnv();
   try {
     const pub = 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAA test@example.com';
@@ -210,8 +212,10 @@ test('凭据：sshPub 经 settings-set 落 config.json + 公钥文件', async ()
     assert.equal(r.status, 200);
     const snap = readSettings({ workspaceRoot: '' });
     assert.ok(snap && snap.sshPub, 'config.json 应落 sshPub');
+    // 2026-09-16 凭据只读写 config.json：不再产出 *.pub 平铺文件
     const files = readdirSync(env.credDir);
-    assert.ok(files.includes('id_ed25519.pub'), `公钥文件应落插件目录: ${files.join(',')}`);
+    assert.ok(!files.some((f) => f.endsWith('.pub')), `不应再有 *.pub 平铺文件: ${files.join(',')}`);
+    assert.ok(files.includes('config.json'), `公钥真源应为 config.json: ${files.join(',')}`);
   } finally { env.cleanup(); }
 });
 
@@ -227,7 +231,7 @@ test('汇总：输出全部断链键（warning 语义，供人工核对）', () 
     const l1 = submitted.has(key);
     const l2 = allow.has(key);
     const l3 = mapped.has(key);
-    const l4 = key === 'weightOverrides' || key === 'auditRuleOrder' || key === 'auditLevel' || key === 'auditScanScope' || key === 'auditEnabled' ? '依赖上层断言' : '需代码确认';
+    const l4 = key === 'weightOverrides' || key === 'auditRuleOrder' || key === 'auditScanScope' || key === 'auditEnabled' ? '依赖上层断言' : '需代码确认';
     const status = (l1 && l2 && l3) ? '✅ 链路通' : `⚠️ 断链(L1提交=${l1} L2白名单=${l2} L3回读=${l3} L4=${l4})`;
     lines.push(`${key}: ${status}`);
   }

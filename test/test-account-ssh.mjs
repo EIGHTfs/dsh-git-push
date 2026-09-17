@@ -40,10 +40,11 @@ test('readSshPub：无公钥 → configured:false', () => {
     assert.equal(r.configured, false);
   } finally { env.cleanup(); }
 });
-test('readSshPub：有 id_rsa.pub → configured:true + 指纹', () => {
+test('readSshPub：config.json 有 sshPub → configured:true + 指纹', () => {
   const env = isolatedEnv();
   try {
-    writeFileSync(join(env.credDir, 'id_rsa.pub'), 'ssh-rsa AAAAB3NzaC1yc2EAAAA test@example.com\n', 'utf8');
+    // 2026-09-16 凭据只读写 config.json：公钥写入 config.json 的 sshPub 键
+    writeFileSync(join(env.credDir, 'config.json'), JSON.stringify({ sshPub: 'ssh-rsa AAAAB3NzaC1yc2EAAAA test@example.com' }), 'utf8');
     const r = readSshPub({});
     assert.equal(r.configured, true);
     assert.ok(r.pub.startsWith('ssh-rsa'));
@@ -59,13 +60,13 @@ test('persistSshPub：空/坏格式拒绝', () => {
     assert.equal(persistSshPub('not-a-key', {}).ok, false);
   } finally { env.cleanup(); }
 });
-test('persistSshPub：ed25519 写 id_ed25519.pub', () => {
+test('persistSshPub：ed25519 写入 config.json 的 sshPub', () => {
   const env = isolatedEnv();
   try {
     const r = persistSshPub('ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAA test@example.com', {});
     assert.equal(r.ok, true);
-    assert.ok(r.source.endsWith('id_ed25519.pub'));
-    assert.equal(existsSync(r.source), true);
+    assert.ok(r.file.endsWith('config.json'), '公钥应写入 config.json（凭据只读写 json）');
+    assert.equal(existsSync(r.file), true, 'config.json 应存在');
   } finally { env.cleanup(); }
 });
 
@@ -84,7 +85,7 @@ test('checkGithubAccount：无 token 无公钥 → 未登录 err', async () => {
 test('checkGithubAccount：仅公钥无 token → 未登录 warn', async () => {
   const env = isolatedEnv();
   try {
-    writeFileSync(join(env.credDir, 'id_rsa.pub'), 'ssh-rsa AAAAB3NzaC1yc2EAAAA t@e.com\n', 'utf8');
+    writeFileSync(join(env.credDir, 'config.json'), JSON.stringify({ sshPub: 'ssh-rsa AAAAB3NzaC1yc2EAAAA t@e.com' }), 'utf8');
     const r = await checkGithubAccount({});
     assert.equal(r.loggedIn, false);
     assert.equal(r.warnLevel, 'warn');
@@ -93,15 +94,27 @@ test('checkGithubAccount：仅公钥无 token → 未登录 warn', async () => {
 });
 
 // ---------- formatGithubAccountBlock ----------
+// 2026-09-17：文案改为逐条列出（Token / SSH 各自用户名与时间），取消单一「已登录 GitHub：X」汇总行
+//   ——两条凭据可属不同 GitHub 用户，写唯一用户名会隐藏另一个账号。断言随新语义更新。
 test('formatGithubAccountBlock：未登录含凭据摘要', () => {
   const block = formatGithubAccountBlock({ cookieSet: true, loggedIn: false, warnLevel: 'err', detail: 'Token 无效（Bad credentials）', cred: { hasToken: true, tokenMasked: 'ghp_…abcd' } });
-  assert.ok(block.includes('未登录'));
-  assert.ok(block.includes('ghp_…abcd'));
+  assert.ok(block.includes('凭据不可用'), `应提示凭据不可用，实际:\n${block}`);
+  assert.ok(block.includes('ghp_…abcd'), '应含 token 掩码摘要');
+  assert.ok(block.includes('Token'), '应有 Token 明细行');
 });
-test('formatGithubAccountBlock：已登录含用户名', () => {
-  const block = formatGithubAccountBlock({ cookieSet: true, loggedIn: true, username: 'EIGHTfs', publicRepos: 9, plan: 'free', cred: {} });
-  assert.ok(block.includes('EIGHTfs'));
-  assert.ok(block.includes('9'));
+
+test('formatGithubAccountBlock：逐条列出各自用户名（支持 Token/SSH 不同用户）', () => {
+  const block = formatGithubAccountBlock({
+    cookieSet: true, loggedIn: true, publicRepos: 9, plan: 'free',
+    cred: { hasToken: true, tokenMasked: 'ghp_…abcd', hasSshPub: true, sshFingerprint: 'ssh-rsa AAAA…x@y.com' },
+    tokenStatus: { valid: true, checked: true, login: 'userA', detail: '' },
+    sshStatus: { valid: true, checked: true, login: 'userB', detail: '' },
+  });
+  assert.ok(block.includes('凭据可用'), `应提示凭据可用，实际:\n${block}`);
+  assert.ok(block.includes('userA'), '应显示 Token 的用户名');
+  assert.ok(block.includes('userB'), '应显示 SSH 的用户名（可与 Token 不同）');
+  assert.ok(block.includes('9'), '应含公钥仓库数');
+  assert.ok(!/已登录 GitHub/.test(block), '不应再有单一账号汇总行');
 });
 
 // ---------- generateSshKey（校验与存在性分支；真实 ssh-keygen 由实测覆盖） ----------
@@ -126,7 +139,7 @@ test('generateSshKey：force 备份旧私钥后再生成（真实 ssh-keygen 存
     const r = generateSshKey('test@example.com', { force: true });
     if (r.ok) {
       assert.equal(existsSync(join(env.credDir, 'id_rsa')), true);
-      assert.equal(existsSync(join(env.credDir, 'id_rsa.pub')), true);
+      assert.equal(existsSync(join(env.credDir, 'config.json')), true, '凭据应落 config.json');
     } else {
       // 失败（无 ssh-keygen）：旧私钥必须已被备份走（force 语义），且未被覆盖成新内容
       assert.ok(r.error, '应有错误信息');

@@ -16,13 +16,16 @@ import { scanRepos } from './lib/git/repos.js';
 import { maintainRepoIndex } from './lib/git/repo-index.js';
 import { auditFull } from './lib/audit/index.js';
 import { readSettings, applySettingsToCfg } from './lib/app/settings-bridge.js';
+import { scanFileIo, summarize } from './scripts/scan-file-io.mjs';
 import { defaultConfig } from './lib/client/index.js';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 /** parseArgv 认识的选项白名单（cli-help-sync 机器比对基准，必须与 HELP 文本一致。
  * 注：-m 是单横线别名（helpSync 只比对 -- 双横线），不列入本表。 */
-export const KNOWN_FLAGS = ['--depth', '--full', '--level', '--ruleset', '--weights', '--include-ignored', '--push', '--no-push', '--dry-run', '--force', '--req-confirm', '--push-gate-confirmed', '--json', '--max', '--owner', '--offline'];
+export const KNOWN_FLAGS = ['--depth', '--full', '--ruleset', '--weights', '--include-ignored', '--push', '--no-push', '--dry-run', '--force', '--req-confirm', '--push-gate-confirmed', '--json', '--max', '--owner', '--offline',
+  // file-io 三标签过滤
+  '--summary', '--write', '--type', '--kind', '--risk', '--op'];
 
 const HELP = `git-sluice v${VERSION} — dsh-git-push 引擎独立 CLI（脱离 DSH 运行）
 
@@ -34,10 +37,12 @@ const HELP = `git-sluice v${VERSION} — dsh-git-push 引擎独立 CLI（脱离 
                                   扫描本地 git 仓库（尊重 .gitignore：被忽略目录整棵跳过）
   git-sluice index <root> [--owner <账号>] [--depth N] [--max N] [--offline] [--json]
                                   重建仓库索引 dsh-repo-index.json（--offline=纯离线不查 GitHub API）
-  git-sluice audit <root> [--full] [--level quick|standard|deep] [--ruleset <目录>] [--weights <JSON>] [--include-ignored]
-                                  审计目录（默认 diff 范围；--full=全量；--level=强度；--ruleset=自定规则目录；--weights=权重覆盖 JSON；--include-ignored=连 .gitignore 忽略的文件也扫）
+  git-sluice audit <root> [--full] [--ruleset <目录>] [--weights <JSON>] [--include-ignored]
+                                  审计目录（默认 diff 范围；--full=全量；--ruleset=自定规则目录；--weights=权重覆盖 JSON；--include-ignored=连 .gitignore 忽略的文件也扫）
   git-sluice commit <repo> -m <msg> [--push|--no-push] [--dry-run] [--force] [--req-confirm] [--push-gate-confirmed] [--json]
                                   审计门禁 → 提交（默认只 commit 不 push；--push 推远端；--force 强推覆盖远端历史；--req-confirm 显式核对开发者要求；--push-gate-confirmed 显式放行推送门禁）
+  git-sluice file-io [路径...] [--summary] [--write] [--type sync|async] [--kind read|write|delete|rename] [--risk high|medium|low] [--op <操作名>] [--json]
+                                  文件读写调用扫描（三标签：类型/操作/上下文）——同步 I/O 在异步路径会阻塞；写/删/改名涉及数据安全
   git-sluice link-check <路径>    检查 md/文本中的链接有效性（只 warning，flaky 域名打折）
   git-sluice yaml-template        输出规则 yml 模板（含 kind + dimensions 示范）
   git-sluice readme-template      输出 README 模板（{{name}} {{version}} 占位符）
@@ -50,7 +55,7 @@ import './lib/rule/compilers.js';
 
 /** 参数解析：白名单必须与 HELP 文本完全一致（cli-help-sync 自检）。 */
 export function parseArgv(argv) {
-  const flags = { depth: undefined, full: false, level: undefined, ruleset: undefined, weights: undefined, includeIgnored: false, push: undefined, dryRun: false, force: false, reqConfirm: false, pushGateConfirmed: false, message: undefined, json: false, max: undefined, owner: undefined, offline: false };
+  const flags = { depth: undefined, full: false, ruleset: undefined, weights: undefined, includeIgnored: false, push: undefined, dryRun: false, force: false, reqConfirm: false, pushGateConfirmed: false, message: undefined, json: false, max: undefined, owner: undefined, offline: false, summary: false, write: false, type: undefined, kind: undefined, risk: undefined, op: undefined };
   const positional = [];
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -69,13 +74,10 @@ export function parseArgv(argv) {
     } else if (a === '--offline') flags.offline = true;
     else if (a === '--full') flags.full = true;
     else if (a === '--include-ignored') flags.includeIgnored = true;
-    else if (a === '--level' || a === '--ruleset' || a === '--weights' || a === '-m') {
+    else if (a === '--ruleset' || a === '--weights' || a === '-m') {
       const v = argv[++i];
       if (v === undefined || v.startsWith('--')) return { error: `${a} 缺值` };
-      if (a === '--level') {
-        if (!['quick', 'standard', 'deep'].includes(v)) return { error: `--level 取值须为 quick|standard|deep（收到 ${v}）` };
-        flags.level = v;
-      } else if (a === '--ruleset') flags.ruleset = v;
+      if (a === '--ruleset') flags.ruleset = v;
       else if (a === '--weights') flags.weights = v;
       else flags.message = v;
     } else if (a === '--push') flags.push = true;
@@ -85,6 +87,31 @@ export function parseArgv(argv) {
     else if (a === '--req-confirm') flags.reqConfirm = true;
     else if (a === '--push-gate-confirmed') flags.pushGateConfirmed = true;
     else if (a === '--json') flags.json = true;
+    // file-io 专用（三标签过滤；值参数支持逗号多值）
+    //   注：每个 flag 用独立 `a === '--xxx'` 分支写，便于 self-check 静态比对 HELP↔parseArgv
+    //   （组合条件 `a === '--x' || a === '--y'` 会让自检扫不到，误报「HELP 写了但 parseArgv 不认」）。
+    else if (a === '--summary') flags.summary = true;
+    else if (a === '--write') flags.write = true;
+    else if (a === '--type') {
+      const v = argv[++i];
+      if (v === undefined || v.startsWith('--')) return { error: `--type 缺值（用法: --type sync|async）` };
+      flags.type = v;
+    }
+    else if (a === '--kind') {
+      const v = argv[++i];
+      if (v === undefined || v.startsWith('--')) return { error: `--kind 缺值（用法: --kind read|write|delete|rename）` };
+      flags.kind = v;
+    }
+    else if (a === '--risk') {
+      const v = argv[++i];
+      if (v === undefined || v.startsWith('--')) return { error: `--risk 缺值（用法: --risk high|medium|low）` };
+      flags.risk = v;
+    }
+    else if (a === '--op') {
+      const v = argv[++i];
+      if (v === undefined || v.startsWith('--')) return { error: `--op 缺值（用法: --op writeFileSync）` };
+      flags.op = v;
+    }
     else if (a.startsWith('--')) return { error: `未知参数: ${a}` };
     else positional.push(a);
   }
@@ -154,12 +181,10 @@ export function cliPluginConfig() {
  */
 export function pluginEqualAuditOpts(cfg, flags, { scope = 'diff' } = {}) {
   const validLevels = ['quick', 'standard', 'deep'];
-  const level = validLevels.includes(flags.level) ? flags.level : (cfg.auditLevel || 'standard');
   const rulesetDir = flags.ruleset || '';
   return {
     scope,
     rulesetDir,
-    auditLevel: level,
     maxScanFiles: cfg.maxScanFiles,
     slots: cfg.auditRuleOrder && cfg.auditRuleOrder.length ? cfg.auditRuleOrder : undefined,
     disabledSlots: Array.isArray(cfg.auditDisabledSlots) ? cfg.auditDisabledSlots : [],
@@ -186,7 +211,7 @@ export function cmdAudit(root, flags) {
     console.log(JSON.stringify({ ok: true, repo: root, scope: auditResult.scope, summary: auditResult.summary, quality, findings: auditResult.findings, files: auditResult.files, yaml: auditResult.yaml }, null, 2));
     return;
   }
-  console.log(`审计 ${root}（scope=${auditResult.scope}, level=${opts.auditLevel}${opts.rulesetDir ? ', ruleset=' + opts.rulesetDir : ''}${opts.includeIgnored ? ', include-ignored' : ''}）`);
+  console.log(`审计 ${root}（scope=${auditResult.scope}${opts.rulesetDir ? ', ruleset=' + opts.rulesetDir : ''}${opts.includeIgnored ? ', include-ignored' : ''}）`);
   console.log(`  summary: ${JSON.stringify(auditResult.summary)}`);
   if (quality.emptyResult) {
     console.log(`  quality: ${quality.emptyReason}（files=${auditResult.files}）`);
@@ -320,6 +345,54 @@ function readPkgJson() {
   } catch { return null; }
 }
 
+/**
+ * file-io —— 文件读写调用扫描（三标签：类型/操作/上下文）。
+ * 输出每条命中带 sync|async、read|write|delete|rename、以及「是否在 async 函数内 /
+ *   循环内 / 请求处理路径上」，用于判断同步 I/O 会不会阻塞其他请求、写操作是否高风险。
+ * @param {string[]} targets 扫描目标（文件或目录；空=默认 lib/ scripts/ cli.mjs client.js）
+ * @param {object} flags { json, summary, write, op, kind, type, risk }
+ */
+export function cmdFileIo(targets = [], flags = {}) {
+  const splitMulti = (v) => String(v || '').split(',').map((x) => x.trim()).filter(Boolean);
+  const hits = scanFileIo({
+    targets,
+    opFilter: splitMulti(flags.op),
+    kindFilter: splitMulti(flags.kind),
+    typeFilter: splitMulti(flags.type),
+    riskOnly: flags.risk || '',
+    writeOnly: !!flags.write,
+  });
+  if (flags.json) {
+    console.log(JSON.stringify({ ok: true, count: hits.length, hits }, null, 2));
+    return hits;
+  }
+  if (flags.summary) { summarize(hits); return hits; }
+  if (!hits.length) { console.log('（未命中任何文件操作）'); return hits; }
+  // 按文件分组输出（组内按行号，风险降序已由 scanFileIo 排好）
+  const byFile = new Map();
+  for (const h of hits) {
+    if (!byFile.has(h.file)) byFile.set(h.file, []);
+    byFile.get(h.file).push(h);
+  }
+  const riskMark = (r) => (r === 'high' ? '🔴' : r === 'medium' ? '🟠' : '·');
+  const tagsOf = (h) => {
+    const t = [h.type === 'sync' ? '同步' : '异步', h.kind];
+    if (h.inAsync) t.push('async内');
+    if (h.inLoop) t.push('循环内');
+    if (h.inRequest) t.push('请求路径');
+    return t.join('·');
+  };
+  for (const [file, hs] of [...byFile.entries()].sort()) {
+    console.log(`\n── ${file} (${hs.length}) ──`);
+    for (const h of hs.sort((a, b) => a.line - b.line)) {
+      console.log(`  ${riskMark(h.risk)} L${String(h.line).padEnd(4)} ${h.op.padEnd(14)} ${tagsOf(h)}`);
+      console.log(`       ${h.path}`);
+    }
+  }
+  console.log(`\n合计 ${hits.length} 处文件操作（🔴high=写/删且并发路径 · 🟠medium=同步阻塞或写类 · ·low=普通读）`);
+  return hits;
+}
+
 export function main(argv = process.argv.slice(2)) {
   const [cmd, ...rest] = argv;
   if (!cmd || cmd === 'help' || cmd === '--help' || cmd === '-h') {
@@ -352,6 +425,11 @@ export function main(argv = process.argv.slice(2)) {
     const { flags, positional, error } = parseArgv(rest);
     if (error) return console.error(error);
     return cmdCommit(positional[0] || '', flags);
+  }
+  if (cmd === 'file-io') {
+    const { flags, positional, error } = parseArgv(rest);
+    if (error) return console.error(error);
+    return cmdFileIo(positional, flags);
   }
   if (cmd === 'link-check') return cmdLinkCheck(rest[0] || '.');
   if (cmd === 'yaml-template') return cmdYamlTemplate();

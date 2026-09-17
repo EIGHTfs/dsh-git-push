@@ -93,6 +93,10 @@ window.__ModuleLoader__.load({
       '.dshgp_pill{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:999px}',
       '.dshgp_pill_on{background:color-mix(in srgb,var(--dsw-alias-label-success) 14%,transparent);color:var(--dsw-alias-label-success)}',
       '.dshgp_pill_off{background:color-mix(in srgb,var(--dsw-alias-label-tertiary) 14%,transparent);color:var(--dsw-alias-label-secondary)}',
+      // 2026-09-17：凭据行「徽标 + 各自有效时间」的容器与时间小字；两用户提示行
+      '.dshgp_credwrap{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}',
+      '.dshgp_credtime{font-size:10px;color:var(--dsw-alias-label-tertiary)}',
+      '.dshgp_acctnote{margin-top:6px;font-size:10px;line-height:1.5;color:var(--dsw-alias-label-secondary)}',
       '.dshgp_acctfoot{position:relative;display:flex;align-items:center;justify-content:space-between;margin-top:10px}',
       '.dshgp_accthint{font-size:10px;color:var(--dsw-alias-label-tertiary)}',
       // 已填写徽标（token/SSH 配置后提示，不显示内容）
@@ -303,12 +307,48 @@ window.__ModuleLoader__.load({
       const blockBody = s.accountBlock
         ? s.accountBlock
         : (loading ? '正在检测 Token / SSH 公钥…' : '未配置 Token / SSH 公钥——请到「设置」选项卡填写凭据');
-      const tokenPill = s.tokenConfigured
-        ? jsx.jsx('span', { className: 'dshgp_pill dshgp_pill_on', children: '已配置' })
-        : jsx.jsx('span', { className: 'dshgp_pill dshgp_pill_off', children: '未配置' });
-      const sshPill = s.sshConfigured
-        ? jsx.jsx('span', { className: 'dshgp_pill dshgp_pill_on', children: '已配置' })
-        : jsx.jsx('span', { className: 'dshgp_pill dshgp_pill_off', children: '未配置' });
+      // 2026-09-17：两条凭据各自独立——Token 与 SSH 可以是**不同 GitHub 用户**，故分别渲染
+      //   「用户名 + 状态徽标 + 各自最近一次校验时间」，不再写死「已配置」（此前 SSH 校验过也
+      //   只显示「已配置」，用户名丢了）。
+      const toLocal = (iso) => {
+        const t = Date.parse(String(iso || ''));
+        if (!Number.isFinite(t)) return '';
+        const d = new Date(t); const p = (n) => String(n).padStart(2, '0');
+        return `${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+      };
+      /** 单条凭据的展示单元：徽标（用户名/状态）+ 时间小字。 */
+      const credPill = (configured, st) => {
+        const s2 = st || {};
+        if (!configured) return jsx.jsx('span', { className: 'dshgp_pill dshgp_pill_off', children: '未配置' });
+        const when = toLocal(s2.checkedAt);
+        if (s2.valid) {
+          return jsx.jsxs('span', { className: 'dshgp_credwrap', children: [
+            jsx.jsx('span', { className: 'dshgp_pill dshgp_pill_on', children: s2.login || '已配置' }),
+            when ? jsx.jsx('span', { className: 'dshgp_credtime', children: '校验于 ' + when }) : null,
+          ] });
+        }
+        if (s2.timeout) {
+          return jsx.jsxs('span', { className: 'dshgp_credwrap', children: [
+            jsx.jsx('span', { className: 'dshgp_pill dshgp_pill_off', children: s2.login || '未测成' }),
+            jsx.jsx('span', { className: 'dshgp_credtime', children: '网络超时，可重试' }),
+          ] });
+        }
+        if (when) {
+          return jsx.jsxs('span', { className: 'dshgp_credwrap', children: [
+            jsx.jsx('span', { className: 'dshgp_pill dshgp_pill_off', children: s2.login || '已失效' }),
+            jsx.jsx('span', { className: 'dshgp_credtime', children: '校验于 ' + when }),
+          ] });
+        }
+        return jsx.jsxs('span', { className: 'dshgp_credwrap', children: [
+          jsx.jsx('span', { className: 'dshgp_pill dshgp_pill_on', children: s2.login || '已填写' }),
+          jsx.jsx('span', { className: 'dshgp_credtime', children: '未校验' }),
+        ] });
+      };
+      const tokenPill = credPill(s.tokenConfigured, s.tokenStatus);
+      const sshPill = credPill(s.sshConfigured, s.sshStatus);
+      // 两凭据属不同用户时如实提示：推送实际走 SSH 通道
+      const twoUsers = !!(s.tokenStatus && s.tokenStatus.login && s.sshStatus && s.sshStatus.login
+        && s.tokenStatus.login !== s.sshStatus.login);
       return jsx.jsxs('div', {
         className: 'dshgp_acctpanel',
         children: [
@@ -319,6 +359,13 @@ window.__ModuleLoader__.load({
             children: [
               jsx.jsxs('div', { className: 'dshgp_acctmetarow', children: [jsx.jsx('span', { className: 'dshgp_acctmetak', children: 'Token' }), tokenPill] }),
               jsx.jsxs('div', { className: 'dshgp_acctmetarow', children: [jsx.jsx('span', { className: 'dshgp_acctmetak', children: 'SSH 公钥' }), sshPill] }),
+              // 2026-09-17：两条凭据可属不同 GitHub 用户（都有效），如实提示各自归属与推送走向
+              twoUsers
+                ? jsx.jsx('div', {
+                    className: 'dshgp_acctnote',
+                    children: `Token 属 ${s.tokenStatus.login}，SSH 属 ${s.sshStatus.login}——推送走 SSH 通道（${s.sshStatus.login}）`,
+                  })
+                : null,
             ],
           }),
           jsx.jsxs('div', {
@@ -496,9 +543,23 @@ window.__ModuleLoader__.load({
       //   github push 推的是已提交内容，工作树脏不脏无影响——把「有领先提交但工作树脏」的
       //   仓库拦死（能推的不让推），又把「已同步无新提交」的仓库点亮（不能推的按钮才能点）。
       const canPush = !!r.hasRemote && (r.ahead === null || r.ahead > 0);
-      // 2026-09-14 语义纠正：stat 只体现「远端有无」与领先关系；有远端但本地
-      //   未 fetch/无同名分支（无法比较）时显示「远端状态未知」，不称上游
-      const stat = !r.hasRemote ? '无远端' : (r.ahead === null ? '远端状态未知' : (r.ahead > 0 ? '领先 ' + r.ahead : (r.behind > 0 ? '落后 ' + r.behind : '同步')));
+      // 2026-09-14 语义纠正：stat 只体现「远端有无」与领先关系。
+      // 2026-09-17 修复「文案写死」：ahead===null 此前一律显示「远端状态未知」，
+      //   但后端 null 有**两种完全不同的成因**，必须分开措辞（否则远端明明探到了还说未知）：
+      //     ① liveSkipped=true —— 真的没探测（超预算/SSH 熔断/远端不可达），此时才叫未知；
+      //     ② liveSkipped 非真 —— 已探到远端（remoteHead 有值），只是本地缺该提交对象
+      //        算不出领先/落后（缓存过期/未 fetch），此时应说「已连通，待 fetch 后比较」。
+      const remoteKnown = !!r.remoteHead;                       // 远端 HEAD 已真实取到
+      const skipped = r.liveSkipped === true;                   // 本轮未探测
+      let stat;
+      if (!r.hasRemote) stat = '无远端';
+      else if (r.ahead === null) {
+        stat = skipped
+          ? '未探测远端'                                       // 真未知：可点「补查」或 push 时核对
+          : (remoteKnown ? '远端 ' + r.remoteHead + ' · 待 fetch 比较' : '远端已连通 · 待比较');
+      } else if (r.ahead > 0) stat = '领先 ' + r.ahead;
+      else if (r.behind > 0) stat = '落后 ' + r.behind;
+      else stat = '同步';
       // 2026-09-14 联动仓库索引：本地无 remote/上游时也能显示它的 GitHub 归属
       const idx = r.indexed;
       const idxTag = idx ? ' · 🔗 索引 ' + (idx.owner ? idx.owner + '/' + idx.repo : idx.repo) + '(' + idx.visibility + ')' : '';
@@ -848,7 +909,7 @@ window.__ModuleLoader__.load({
       });
     }
 
-    /** 审计进阶设置块（2026-09-15 补齐 UI：auditLevel/auditRuleset/maxScanFiles/hardcodeFullScan）。 */
+    /** 审计进阶设置块（2026-09-17 收敛：只剩「全量扫描文件上限」）。 */
     function dshgp_AuditAdvancedBlock(props) {
       const s = props.state;
       // 2026-09-16 修复：React 的 jsx(type, props, key) 第三参数是 **key 不是 children**——
@@ -864,26 +925,15 @@ window.__ModuleLoader__.load({
         className: 'dshgp_block',
         children: [
           jsx.jsx('p', { className: 'dshgp_h2', children: '审计进阶设置' }),
-          jsx.jsxs('div', { className: 'dshgp_field', children: [
-            jsx.jsx('label', { className: 'dshgp_label', htmlFor: 'dshgp-level', children: '审计强度' }),
-            sel('auditLevel', ['quick', 'standard', 'deep']),
-            jsx.jsx('p', { className: 'dshgp_hint', children: 'quick=只跑 regex/黑名单；standard=默认全量；deep=+AST 语义检查' }),
-          ] }),
-          jsx.jsxs('div', { className: 'dshgp_field', children: [
-            jsx.jsx('label', { className: 'dshgp_label', htmlFor: 'dshgp-ruleset', children: '自定规则目录' }),
-            jsx.jsx('input', { id: 'dshgp-ruleset', type: 'text', className: 'dshgp_input', value: s.auditRuleset, onChange: (ev) => props.setAdvanced('auditRuleset', ev.target.value) }),
-            jsx.jsx('p', { className: 'dshgp_hint', children: '空=内置规则包；指向放有 audit-rules-<名>.yml 的目录即整体替换' }),
-          ] }),
+          // 2026-09-17：本块只保留「全量扫描文件上限」一项。
+          //   删除项（均为 AI 擅自添加、非用户可配）：审计强度（固定完整流程）、自定规则目录、
+          //   硬编码全量扫（该项其实从未接上审计实现，是空开关）。
+          //   硬编码扫描范围随审计范围走——审计扫多少，硬编码就扫多少，不再单独控制。
           jsx.jsxs('div', { className: 'dshgp_field', children: [
             jsx.jsx('label', { className: 'dshgp_label', htmlFor: 'dshgp-maxfiles', children: '全量扫描文件上限' }),
             jsx.jsx('input', { id: 'dshgp-maxfiles', type: 'number', min: 0, className: 'dshgp_input', value: s.maxScanFiles, onChange: (ev) => props.setAdvanced('maxScanFiles', ev.target.value) }),
-            jsx.jsx('p', { className: 'dshgp_hint', children: '全量审计最多扫多少个文件（0=不限）；超限按「变动优先」截断，弱机防卡死' }),
+            jsx.jsx('p', { className: 'dshgp_hint', children: '全量审计最多扫多少个文件（0=不限）；超限按「变动优先」截断，弱机防卡死。硬编码检查随此范围一并进行。' }),
           ] }),
-          jsx.jsxs('div', { className: 'dshgp_switchrow', children: [
-            jsx.jsx('span', { className: 'dshgp_switchlabel', children: '硬编码全量扫' }),
-            jsx.jsx('input', { type: 'checkbox', checked: !!s.hardcodeFullScan, onChange: (ev) => props.setAdvanced('hardcodeFullScan', ev.target.checked), 'aria-label': '硬编码全量扫' }),
-          ] }),
-          jsx.jsx('p', { className: 'dshgp_hint', children: '换机前排查存量死路径（默认只扫新增行）' }),
         ],
       });
     }
@@ -969,11 +1019,15 @@ window.__ModuleLoader__.load({
             children: [
               jsx.jsxs('label', { className: 'dshgp_label', htmlFor: 'dshgp-token', children: ['GitHub token', s.tokenConfigured ? jsx.jsx('span', { className: 'dshgp_configured', children: '已填写' }) : null] }),
               jsx.jsx('input', {
-                id: 'dshgp-token', type: 'password', autoComplete: 'off', className: 'dshgp_input',
+                // 2026-09-17：token 编辑框改为**普通编辑框**（原 type=password 掩码显示，
+                //   粘贴长 token 时无法核对是否粘全/粘对；改为可见后可直接比对）。
+                //   明文仍只在输入态存在：保存后落 config.json（0600），接口不回传明文。
+                id: 'dshgp-token', type: 'text', autoComplete: 'off', className: 'dshgp_input',
+                placeholder: 'ghp_… 或 github_pat_…', spellCheck: false,
                 value: s.text, disabled: !s.writable || s.saving,
                 onChange: (ev) => props.edit(ev.target.value),
               }),
-              jsx.jsx('p', { className: 'dshgp_hint', children: 'ghp_ / github_pat_ 开头。保存后写入插件配置目录（0600），不在设置页留明文。' }),
+              jsx.jsx('p', { className: 'dshgp_hint', children: 'ghp_ / github_pat_ 开头。保存后写入插件配置目录的 config.json（0600），不回传明文、不在设置页留存。' }),
             ],
           }),
           jsx.jsx('div', {
@@ -985,7 +1039,7 @@ window.__ModuleLoader__.load({
                 value: s.sshPub, disabled: !s.writable || s.saving,
                 onChange: (ev) => props.editSsh(ev.target.value),
               }),
-              jsx.jsx('p', { className: 'dshgp_hint', children: 'ssh-ed25519 / ssh-rsa 整行。保存到同级仓 *.pub，不回传明文。' }),
+              jsx.jsx('p', { className: 'dshgp_hint', children: 'ssh-ed25519 / ssh-rsa 整行。保存后写入 config.json（与 token 同份配置，互不覆盖），不回传明文。' }),
             ],
           }),
           // 2026-09-12：邮箱 + 一键生成同一行（编辑框宽度减少，按钮放编辑框后面）
@@ -1139,10 +1193,7 @@ window.__ModuleLoader__.load({
         this.weightValues = {};
         // 2026-09-15 补齐：以下键此前只有 schema 声明与 HTTP 白名单，前端**没有 UI 控件**
         //   （只能看不能改）→ 设置「基本都没真正保存」的根源。这里补状态镜像 + 提交 + 回读。
-        this.auditLevel = 'standard';       // quick | standard | deep
-        this.auditRuleset = '';             // 自定规则目录（空=内置）
         this.maxScanFiles = 3000;           // 全量审计文件数上限（0=不限）
-        this.hardcodeFullScan = false;      // 硬编码全量扫
         this.pushMethod = 'ssh';            // ssh | api | auto
         this.pushGate = false;              // 2026-09-17：推送门禁（开启后 push 需显式放行）
         // 2026-09-16：defaultScanRoot/commitMessage 设置移除——默认扫描路径复用本地仓库
@@ -1173,6 +1224,8 @@ window.__ModuleLoader__.load({
         // 规则包加载
         this.slotLoading = false;
         this.slotError = '';
+        // 2026-09-17：统一刷新入口 refresh() 的部分级错误记录（单个部分失败不阻断其余部分）
+        this.refreshError = '';
         this.genKeying = false;
         this.genKeyError = '';
         // 2026-09-14：本次编辑会话已触达的设置键集合——loadSettingsFromHttp 的异步 GET
@@ -1214,12 +1267,13 @@ window.__ModuleLoader__.load({
         if (!this.ruleOrder.length && Object.keys(this.slotMeta).length) {
           this.ruleOrder = Object.keys(this.slotMeta).filter((s) => s !== 'private' && s !== 'template');
         }
-        void this.loadSlots();
+        // 2026-09-17：改走统一刷新入口（一次调用刷设置与槽位；账号仍按需在页面 mount 时刷）
+        void this.refresh(['settings', 'slots']);
         // 2026-09-16：账号状态改由「首次打开账号信息页」时（dshgp_AccountTab 的 mount effect）
         //   触发 refreshAccount，避免构造阶段与页面打开重复拉取；此处不再自动刷新。
         // 2026-09-14：设置持久化走 HTTP 读宿主 scope（绕开 client isLoopback=memory 陷阱——
         //   反代访问时 scope 快照恒 unavailable，从宿主侧读已落盘设置，重启后开关保持勾选）
-        void this.loadSettingsFromHttp();
+        // 2026-09-17：该读取已并入上方 this.refresh(['settings','slots'])，此处不再重复请求。
       }
       project() {
         const snap = this.scope.getSnapshot();
@@ -1237,10 +1291,7 @@ window.__ModuleLoader__.load({
           slotMeta: this.slotMeta,
           weightValues: this.weightValues,
           // 2026-09-15 补齐：审计进阶 / 推送默认值状态镜像（供 UI 渲染）
-          auditLevel: this.auditLevel,
-          auditRuleset: this.auditRuleset,
           maxScanFiles: this.maxScanFiles,
-          hardcodeFullScan: this.hardcodeFullScan,
           pushMethod: this.pushMethod,
           pushGate: this.pushGate, // 2026-09-17：推送门禁（开启后 push 需显式放行）
           // 2026-09-16：defaultScanRoot/commitMessage 状态镜像移除（设置已删除）
@@ -1255,6 +1306,7 @@ window.__ModuleLoader__.load({
           accountLoading: this.accountLoading,
           slotLoading: this.slotLoading,
           slotError: this.slotError,
+          refreshError: this.refreshError, // 2026-09-17 统一刷新入口的部分级错误
           statusMsg: this.statusMsg,
           genKeying: this.genKeying,
           genKeyError: this.genKeyError,
@@ -1293,6 +1345,54 @@ window.__ModuleLoader__.load({
        * 2026-09-14 追加：**用户已编辑过的键跳过**（this.editedKeys）——本请求是异步的，
        *   若用户在响应回来前点了开关，GET 返回的是 host 旧值，直接覆盖会把刚点的勾选弹回。
        */
+      /**
+       * 统一刷新入口（2026-09-17）：**一个函数 + 一个参数**控制刷新设置侧边栏的哪部分，
+       * 取代此前散落在多个 useEffect / 按钮回调里各自 fetch 的写法。
+       *
+       * @param {string|string[]} [parts='all'] 要刷新的部分，可传单个字符串、数组、或 'all'：
+       *   · 'settings' —— 设置（/settings-get 读宿主 scope 已落盘值，覆盖前端字段）
+       *   · 'account'  —— 账号信息（/account-status 离线读凭据真源 + 徽标）
+       *   · 'repos'    —— 本地仓库列表（/repos-local 读 dsh-repo-index.json；可配 path/rebuild）
+       *   · 'cloud'    —— 云端仓库列表（/repos-cloud 走 token 列账号名下仓库）
+       *   · 'slots'    —— 规则槽位（/rule-slots 动态发现 yml + 统计）
+       *   · 'all'      —— 以上全部（默认）
+       * @param {object} [opts]
+       *   · path    —— 仅 'repos' 用：扫描根路径（空=沿用上次）
+       *   · rebuild —— 仅 'repos' 用：true 先离线重建索引再读回
+       *   · silent  —— true 时不置 loading 态（用于后台静默刷新，避免界面闪烁）
+       * @returns {Promise<void>}
+       *
+       * 用法：
+       *   await this.refresh();                      // 全部刷新
+       *   await this.refresh('account');             // 只刷账号信息
+       *   await this.refresh(['settings','slots']);  // 只刷设置与槽位
+       *   await this.refresh('repos', { rebuild: true });  // 重建索引后刷本地列表
+       */
+      async refresh(parts = 'all', opts = {}) {
+        const PARTS = ['settings', 'account', 'repos', 'cloud', 'slots'];
+        let list;
+        if (parts === 'all' || parts === undefined || parts === null) list = PARTS.slice();
+        else list = (Array.isArray(parts) ? parts : [parts])
+          .map((p) => String(p || '').trim().toLowerCase())
+          .filter((p) => PARTS.includes(p));
+        if (!list.length) return;
+
+        // 顺序执行而非并行：repos 依赖索引、account 影响徽标，串行可保证先后关系稳定，
+        // 也避免多个请求同时 publish 造成界面连续重排。
+        for (const p of list) {
+          try {
+            if (p === 'settings') await this.loadSettingsFromHttp();
+            else if (p === 'account') await this.refreshAccount({ silent: opts.silent });
+            else if (p === 'repos') await this.scanLocalRepos(opts.path, opts.rebuild, { silent: opts.silent });
+            else if (p === 'cloud') await this.loadCloudRepos({ silent: opts.silent });
+            else if (p === 'slots') await this.loadSlots({ silent: opts.silent });
+          } catch (e) {
+            // 单个部分失败不影响其余部分：记录到统一错误位，继续刷下一个
+            this.refreshError = `${p}: ` + (e && e.message || e);
+          }
+        }
+      }
+
       async loadSettingsFromHttp() {
         try {
           const settingsRes = await dshgp_getJson('/api/git-push/settings-get');
@@ -1302,12 +1402,12 @@ window.__ModuleLoader__.load({
           if (typeof v.injectRequirements === 'boolean' && !this.editedKeys.has('injectRequirements')) this.injectRequirements = v.injectRequirements;
           if (typeof v.injectSystemPrompt === 'boolean' && !this.editedKeys.has('injectSystemPrompt')) this.injectSystemPrompt = v.injectSystemPrompt;
           if (typeof v.auditScanScope === 'string' && !this.editedKeys.has('auditScanScope')) this.auditScanScope = v.auditScanScope;
-          if (typeof v.auditLevel === 'string' && !this.editedKeys.has('auditLevel')) this.auditLevel = v.auditLevel;
           // 2026-09-15 补齐回读：新增 UI 的 7 键（advanced），重启后从 config.json 恢复勾选/取值
-          if (typeof v.auditRuleset === 'string' && !this.editedKeys.has('auditRuleset')) this.auditRuleset = v.auditRuleset;
           if (typeof v.maxScanFiles === 'number' && !this.editedKeys.has('maxScanFiles')) this.maxScanFiles = v.maxScanFiles;
-          if (typeof v.hardcodeFullScan === 'boolean' && !this.editedKeys.has('hardcodeFullScan')) this.hardcodeFullScan = v.hardcodeFullScan;
           if (typeof v.pushMethod === 'string' && !this.editedKeys.has('pushMethod')) this.pushMethod = v.pushMethod;
+          // 2026-09-17 补漏：pushGate（推送门禁）此前**不在回读列表**——构造函数默认 false，
+          //   打开/刷新设置页时不被宿主真值覆盖，界面永远显示未勾选（实测：勾了门禁、重开页面又变未勾选）。
+          if (typeof v.pushGate === 'boolean' && !this.editedKeys.has('pushGate')) this.pushGate = v.pushGate;
           // 2026-09-16：defaultScanRoot/commitMessage 不再作为设置键回读（已在 UI/白名单移除）
           if (typeof v.weightOverrides === 'string' && v.weightOverrides.trim() && !this.editedKeys.has('weightOverrides')) {
             try { this.weightValues = JSON.parse(v.weightOverrides) || {}; } catch { /* 忽略 */ }
@@ -1322,8 +1422,8 @@ window.__ModuleLoader__.load({
       /** 加载规则包清单（/rule-slots，动态发现 yml）。 */
       // 2026-09-15 重构：原 loadCredentialFlags（/status 只刷 tokenConfigured）删除——
       //   凭据标志统一由 refreshAccount（/account-check，读凭据文件真源）刷新，避免第三条链路打架。
-      async loadSlots() {
-        this.slotLoading = true;
+      async loadSlots({ silent = false } = {}) {
+        if (!silent) { this.slotLoading = true; }
         this.slotError = '';
         this.publish();
         try {
@@ -1350,8 +1450,8 @@ window.__ModuleLoader__.load({
       /** 刷新账号信息（/account-check，读凭据文件真源；同时刷新凭据徽标）。 */
       /** 离线读账号状态（秒级，不触发任何网络）：读 account-status.json 快照 + 凭据文件。
        *   插件启动 / push 后重读 / 账号卡片渲染全用它。「重新检测」才走在线（recheckAccount）。 */
-      async refreshAccount() {
-        this.accountLoading = true;
+      async refreshAccount({ silent = false } = {}) {
+        if (!silent) { this.accountLoading = true; }
         this.publish();
         try {
           const accountRes = await dshgp_getJson('/api/git-push/account-status');
@@ -1372,10 +1472,19 @@ window.__ModuleLoader__.load({
       /** 「重新检测」：在线校验 token/SSH → 写 account-status.json → 再离线读回最新。
        *   仅手动点按钮触发（在线有网络耗时 1~4s），读取端仍走离线 refreshAccount。 */
       async recheckAccount() {
+        // 2026-09-17 防抖：连点会连发在线请求（GitHub /user 有速率限制），
+        //   触发限流后反而更容易超时，表现为「点了没反应」。进行中直接忽略重复点击。
+        if (this.accountLoading) return;
         this.accountLoading = true;
         this.publish();
         try {
-          await dshgp_postJson('/api/git-push/account-check', { checkSsh: true, confirm: false });
+          const res = await dshgp_postJson('/api/git-push/account-check', { checkSsh: true, confirm: false });
+          // 超时 ≠ 失效：网络没测成时如实说明可重试，不写成「检测失败」吓人
+          const ts = (res && res.tokenStatus) || {};
+          const ss = (res && res.sshStatus) || {};
+          if (!ts.valid && ts.timeout) {
+            this.accountBlock = '⏳ 在线校验未完成（网络超时，可稍后重试）；SSH 状态：' + (ss.valid ? '✅ 可用' : '未验证');
+          }
         } catch (e) {
           this.accountBlock = '在线检测失败: ' + (e && e.message || e);
         }
@@ -1385,8 +1494,8 @@ window.__ModuleLoader__.load({
       /** 扫描本地仓库（2026-09-16：列表只从 dsh-repo-index.json 读取）。
        * rebuild=true：**离线重建索引**（扫描本地 .git，author 与离线账号 json 一致的登记，
        *   含本地新增，全程不联网）后再读回；缺省：直接读索引返回（不复扫、不联网）。 */
-      async scanLocalRepos(path, rebuild) {
-        this.localLoading = true;
+      async scanLocalRepos(path, rebuild, { silent = false } = {}) {
+        if (!silent) { this.localLoading = true; }
         this.localMsg = '';
         this.publish();
         try {
@@ -1507,8 +1616,8 @@ window.__ModuleLoader__.load({
       }
 
       /** 拉取云端仓库列表（/repos-cloud，token 列账号名下仓库）。 */
-      async loadCloudRepos() {
-        this.cloudLoading = true;
+      async loadCloudRepos({ silent = false } = {}) {
+        if (!silent) { this.cloudLoading = true; }
         this.cloudMsg = '';
         this.publish();
         try {
@@ -1564,7 +1673,7 @@ window.__ModuleLoader__.load({
         // 2026-09-16：推送后自动刷新——本地仓库索引（后端维护 + 前列回读）与账号状态
         //   （推送到云端后凭据有效性/登录关系可能变化，一并刷新）。
         void this.scanLocalRepos(this.localPath); // 刷新领先/落后状态
-        if (ok) void this.refreshAccount();
+        if (ok) void this.refresh('account'); // push 后刷新账号信息
         this.publish();
       }
 
@@ -1676,6 +1785,19 @@ window.__ModuleLoader__.load({
        * @param {string} okMsg flashSaved 成功文案（空=静默）
        */
       persistSetting(key, value, okMsg = '') {
+        // 2026-09-16 凭据防线（第三层）：凭据键**绝不发送脱敏值/空值**——防止把回显用的
+        //   「ghp_…XYZ」这类打码串写回 config.json 覆盖真凭据（服务端 persistGithubToken/
+        //   persistSshPub 另有 isMaskedValue 拦截，这里是 UI 侧提前拦住不发请求）。
+        if (key === 'githubToken' || key === 'sshPub') {
+          const sv = String(value ?? '').trim();
+          if (!sv) return;                                  // 空值：不动该键（留空=保持不变）
+          if (sv.includes('…') || sv.includes('****') || /^gh[pous]_…/.test(sv)) {
+            this.failed = true;
+            this.flashSaved('❌ 拒绝写入：这是脱敏显示值，请输入完整凭据');
+            this.publish();
+            return;
+          }
+        }
         // 2026-09-15：UI 提交调试日志（浏览器控制台可见；服务端另有 settings-ui.log 持久留痕）
         if (typeof console !== 'undefined' && console.debug) {
           try { console.debug('[dsh-git-push] UI 提交', key, '=', String(value).slice(0, dshgp_LOG_TRUNCATE) + (String(value).length > dshgp_LOG_TRUNCATE ? '…' : '')); } catch { /* 控制台不可用时跳过调试输出 */ }
@@ -1742,15 +1864,15 @@ window.__ModuleLoader__.load({
       /**
        * 2026-09-15 新增 / 2026-09-16 收敛：审计进阶 / 推送通道设置项通用提交。
        * 更新本地镜像 → 走 commitSetting（HTTP settings-set → config.json）→ 即时反馈。
-       * @param {string} key auditLevel|auditRuleset|maxScanFiles|hardcodeFullScan|pushMethod
+       * @param {string} key maxScanFiles|pushMethod
        * @param {unknown} value 新值
        */
       setAdvanced(key, value) {
-        const ok = /^(auditLevel|auditRuleset|maxScanFiles|hardcodeFullScan|pushMethod|pushGate)$/.test(key);
+        const ok = /^(maxScanFiles|pushMethod|pushGate)$/.test(key);
         if (!ok) { this.setStatus('❌ 未知设置键: ' + key); return; }
         const numKeys = { maxScanFiles: 1 };
-        const boolKeys = { hardcodeFullScan: 1, pushGate: 1 };
-        const enumKeys = { auditLevel: ['quick', 'standard', 'deep'], pushMethod: ['ssh', 'api', 'auto'] };
+        const boolKeys = { pushGate: 1 };
+        const enumKeys = { pushMethod: ['ssh', 'api', 'auto'] };
         let v = value;
         if (boolKeys[key]) v = value === true;
         else if (numKeys[key]) v = Number(value) || 0;
@@ -1781,11 +1903,15 @@ window.__ModuleLoader__.load({
           //   不 scope.set——scope.set 会把凭据写进公共 settings.yaml 明文，反代下还不落盘）。
           if (raw) this.persistSetting('githubToken', raw);
           if (pub) this.persistSetting('sshPub', pub);
-          if (raw) this.tokenConfigured = true;   // 刚写入即视为已配置（明文不回传，本地直接置位）
           this.text = '';
           this.sshPub = '';
           this.saving = false;
+          // 2026-09-17：保存后**刷新凭据与密钥的「已填写」状态**——此前只在写入 token 时本地置位
+          //   tokenConfigured、sshConfigured 从不置位（保存公钥后徽标仍显示未填写），且本地置位
+          //   无法反映服务端规范化/落盘失败。统一走 refresh('account') 从 account-status 真源读回。
+          //   顺序：先弹「已保存」提示，再异步读回状态（读回过程不遮挡保存成功的反馈）。
           this.flashSaved('✅ 凭据已保存');
+          await this.refresh('account');
         } catch (_e) {
           this.saving = false;
           this.failed = true;
@@ -1841,12 +1967,14 @@ window.__ModuleLoader__.load({
           setAdvanced: (key, value) => this.setAdvanced(key, value),
           moveSlot: (slot, dir) => this.moveSlot(slot, dir),
           toggleDisabled: (slot) => { void this.toggleDisabled(slot); },
-          refreshAccount: () => { void this.refreshAccount(); }, // 离线读 json（启动/push后/渲染）
+          // 2026-09-17：统一刷新入口（参数控制刷哪部分）——设置 / 账号 / 本地仓库 / 云端 / 槽位
+          refresh: (parts, opts) => { void this.refresh(parts, opts); },
+          refreshAccount: () => { void this.refresh('account'); }, // 离线读 json（启动/push后/渲染）
           recheckAccount: () => { void this.recheckAccount(); }, // 在线校验写 json（「重新检测」）
           // 2026-09-14 账号卡片：本地/云端 动作
-          scanLocalRepos: (path, rebuild) => { void this.scanLocalRepos(path, rebuild); },
+          scanLocalRepos: (path, rebuild) => { void this.refresh('repos', { path, rebuild }); },
           startScan: (path) => { void this.startScan(path); }, // 扫描按钮：独立进程后台扫描 + 逐条追加
-          loadCloudRepos: () => { void this.loadCloudRepos(); },
+          loadCloudRepos: () => { void this.refresh('cloud'); },
           pushLocalRepo: (path) => { void this.pushLocalRepo(path); },
           cloneFlow: (repo) => this.cloneFlow(repo),
         };

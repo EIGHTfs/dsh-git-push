@@ -5,7 +5,7 @@
  */
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, mkdirSync, rmSync, readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -98,6 +98,46 @@ test('auditFull：func-lines 检测超长函数（sub/c.js 60+ 行函数）', ()
   const res = auditFull(join(fixture, 'sub'));
   const fl = res.findings.filter((f) => f.kind === 'func-lines');
   assert.ok(fl.length >= 1, `应命中 func-lines（得 ${fl.length}）`);
+});
+
+test('func-lines 误报回归：函数体内正则含反斜杠花括号不得把短函数算成超长', () => {
+  // 2026-09-17 实测踩坑：scripts/scan-file-io.mjs 的 isFnSignature（真身 8 行）里有一条判断
+  //   函数签名的正则，模式中含转义的 `\{`。旧实现按整行 match(/\{/g) 计数，把正则内部的花括号
+  //   也算进来 → depth 永不归零 → 一路吞并后面 234 行，报「单函数 242 行」blocker，提交被自身
+  //   审计拦下。本用例用最小样本锁住该行为，防止回归。
+  // 尾部放足够多的普通函数：旧实现在「正则含 \{ 导致 depth 虚高 1」之后，要吞掉后面
+  //   所有代码才可能归零（实测真实文件里吞了 234 行）。样本必须有足够长的尾部才能复现。
+  const tail = [];
+  for (let i = 0; i < 60; i++) {
+    tail.push(`function tail${i}() {`);
+    tail.push('  return ' + i + ';');
+    tail.push('}');
+  }
+  const src = [
+    'function isFnSignature(s) {',
+    '  if (/^\\s*if\\b/.test(s)) return false;',
+    '  return /^\\s*(?:async\\s+)?[\\w$]+\\s*\\([^)]*\\)\\s*\\{\\s*$/.test(s);',
+    '}',
+    ...tail,
+  ].join('\n');
+  const rule = { id: 'readability/max-function-length', severity: 'warning', threshold: 50, dimensions: ['可读性'] };
+  const hits = checkFuncLines({ file: 'x.mjs', text: src, rules: [rule] });
+  assert.equal(hits.length, 0, `短函数不应被判超长，实际命中行: ${JSON.stringify(hits.map((h) => h.line))}`);
+});
+
+test('架构收敛：函数长度/密度的判定全部来自 AST 层，checks 层不自行出结论', () => {
+  // 2026-09-17：checkFuncLines 曾是「AST 版 + 自建正则版」两套独立判定并行——正则版自己找
+  //   函数起点、自己数花括号、自己判行数，既与 AST 版重复报同一函数，又因未剥离字面量产生
+  //   严重误报。现要求判定权收归 AST（checkFuncLinesAst / checkFuncDensityAst），
+  //   checks 层只做「调 AST → 转 finding」。本用例锁住该分工，防止再长出第二套实现。
+  const src = readFileSync(new URL('../lib/checks/structural.js', import.meta.url), 'utf8');
+  const body = src.slice(src.indexOf('export function checkFuncLines('), src.indexOf('/** 检查 sync-fs'));
+  assert.ok(/checkFuncLinesAst\(/.test(body), '行数判定必须调用 AST 实现');
+  assert.ok(/checkFuncDensityAst\(/.test(body), '密度判定必须调用 AST 实现');
+  // 不得在 checks 层自建函数边界识别：数花括号 / 正则找函数起点 / 自行 split 行
+  assert.ok(!body.includes('match(/\\{'), '不得自行数花括号（应交给 AST 的 tokenizer）');
+  assert.ok(!body.includes('match(/\\{'), '不得自行数花括号（应交给 AST 的 tokenizer）');
+  assert.ok(!body.includes('function\\s*\\w*\\s*('), '不得用正则识别函数起点');
 });
 
 test('auditWithScope：非 git 目录 full 与 diff 等价（退化）', () => {

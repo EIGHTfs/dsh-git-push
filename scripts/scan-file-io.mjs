@@ -1,28 +1,40 @@
 #!/usr/bin/env node
 /**
- * dsh-git-push — 文件读写调用扫描器（2026-09-16）
+ * dsh-git-push — 文件读写调用扫描器（2026-09-16；同日升级三标签能力）
  *
  * 用途：把项目代码里所有「读/写文件」的调用位置找出来，并尽力解析出读写的
  *   文件路径/文件名——用于核查「某配置写没写、某个文件被哪些地方读写」。
  *
- * 扫描对象：fs 相关调用（readFileSync/writeFileSync/appendFileSync/renameSync/
- *   mkdirSync/readdirSync/existsSync/statSync/unlinkSync/rmSync/copyFileSync/
- *   createWriteStream/createReadStream/openSync 等），以及 node:fs 导入名别名
- *   （如 `import { readFileSync as rf }` 会用 rf(…) 解析）。
+ * 扫描对象：fs 相关调用（readFileSync/readFile/writeFileSync/writeFile/appendFileSync/
+ *   renameSync/rename/mkdirSync/readdirSync/existsSync/statSync/unlinkSync/rmSync/
+ *   copyFileSync/chmodSync/createWriteStream/createReadStream/openSync 等）。
  *
  * 路径解析策略（按优先级）：
  *   ① 静态字符串参数（'config.json'、join(a, 'x.json') 的可计算片段）
  *   ② 模板字符串（`${dir}/x.json`，插值部分标 <expr>）
  *   ③ 变量参数（溯源同文件内的 `const x = '…'` / `const x = join(…)` 赋值，
- *      能解析就展开，不能则标变量名 + 位置）
+ *      能解析就展开，不能则标变量名 + 位置；解析不到标「(未解析)」但仍登记命中）
+ *
+ * ── 三标签（本次升级，每条命中都带）──
+ *   ① **类型** type：sync / async —— 同步 I/O 落在异步路径会阻塞事件循环
+ *      （由操作名是否带 Sync 后缀判定）
+ *   ② **操作** kind：read / write / delete / rename —— 写类（write/delete/rename）
+ *      涉及数据安全，风险更高，默认排前
+ *   ③ **上下文**：是否在 async 函数内（inAsync）、是否在循环内（inLoop）、
+ *      是否在请求处理路径上（inRequest）—— 决定这次 I/O 会不会卡住其他请求
+ *   综合出 risk 等级：🔴 high（写/删 且 并发路径）· 🟠 medium（同步阻塞或写类）· · low
  *
  * 用法：
- *   node scripts/scan-file-io.mjs <文件|目录>…          # 扫指定路径（默认项目根 lib/ scripts/ cli.mjs client.js）
- *   node scripts/scan-file-io.mjs --json                 # JSON 输出（机器可读）
- *   node scripts/scan-file-io.mjs --write                # 只列写操作（读操作也列，但写突出）
- *   node scripts/scan-file-io.mjs --op writeFileSync     # 只看指定操作（可多次）
+ *   node scripts/scan-file-io.mjs <文件|目录>…        # 扫指定路径（默认 lib/ scripts/ cli.mjs client.js）
+ *   node scripts/scan-file-io.mjs --summary           # 三标签汇总视图（类型/操作/上下文/风险 计数）
+ *   node scripts/scan-file-io.mjs --json              # JSON 输出（含全部标签字段）
+ *   node scripts/scan-file-io.mjs --write             # 只看写类操作（write/delete/rename）
+ *   node scripts/scan-file-io.mjs --type sync         # 按类型过滤（sync / async，可逗号多值）
+ *   node scripts/scan-file-io.mjs --kind delete,rename # 按操作过滤（read/write/delete/rename）
+ *   node scripts/scan-file-io.mjs --risk high          # 只看高危
+ *   node scripts/scan-file-io.mjs --op writeFileSync   # 按操作名过滤（可逗号多值）
  *
- * 输出（文本）：文件:行号 | 操作 | 路径参数（解析结果）| 原始参数
+ * 输出（文本）：风险徽标 | 行号 | 操作 | 三标签串 | 路径参数（解析结果）
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, extname, resolve, dirname, basename } from 'node:path';
@@ -30,23 +42,159 @@ import { fileURLToPath } from 'node:url';
 
 /* ───────────────────────── 配置 ───────────────────────── */
 
-/** 要识别的文件操作（正则键 → 显示名）。覆盖 node:fs 常用读写/元数据操作。 */
+/**
+ * 要识别的文件操作。每个条目：
+ *   op    —— 精确操作名（含 Sync 后缀与否决定 **类型标签**：sync/async）
+ *   kind  —— **操作标签**：read | write | delete | rename | meta
+ *   write —— 是否写类（数据安全风险高，供 --write 过滤与排序）
+ */
 const FS_OPS = [
-  [/readFileSync|readFile/, 'read'],
-  [/writeFileSync|writeFile/, 'write'],
-  [/appendFileSync|appendFile/, 'append'],
-  [/renameSync|rename/, 'rename'],
-  [/copyFileSync|copyFile/, 'copy'],
-  [/unlinkSync|unlink/, 'unlink'],
-  [/rmSync|rm/, 'rm'],
-  [/mkdirSync|mkdir/, 'mkdir'],
-  [/readdirSync|readdir/, 'readdir'],
-  [/existsSync|exists/, 'exists'],
-  [/statSync|stat/, 'stat'],
-  [/createWriteStream/, 'write-stream'],
-  [/createReadStream/, 'read-stream'],
-  [/openSync|open/, 'open'],
+  // 读
+  { op: 'readFile', kind: 'read', write: false },
+  { op: 'readFileSync', kind: 'read', write: false },
+  { op: 'readdir', kind: 'read', write: false },
+  { op: 'readdirSync', kind: 'read', write: false },
+  { op: 'createReadStream', kind: 'read', write: false },
+  // 写
+  { op: 'writeFile', kind: 'write', write: true },
+  { op: 'writeFileSync', kind: 'write', write: true },
+  { op: 'appendFile', kind: 'write', write: true },
+  { op: 'appendFileSync', kind: 'write', write: true },
+  { op: 'createWriteStream', kind: 'write', write: true },
+  { op: 'mkdir', kind: 'write', write: true },
+  { op: 'mkdirSync', kind: 'write', write: true },
+  { op: 'copyFile', kind: 'write', write: true },
+  { op: 'copyFileSync', kind: 'write', write: true },
+  { op: 'open', kind: 'write', write: true },
+  { op: 'openSync', kind: 'write', write: true },
+  { op: 'chmod', kind: 'write', write: true },
+  { op: 'chmodSync', kind: 'write', write: true },
+  // 删除
+  { op: 'unlink', kind: 'delete', write: true },
+  { op: 'unlinkSync', kind: 'delete', write: true },
+  { op: 'rm', kind: 'delete', write: true },
+  { op: 'rmSync', kind: 'delete', write: true },
+  { op: 'rmdir', kind: 'delete', write: true },
+  { op: 'rmdirSync', kind: 'delete', write: true },
+  // 重命名
+  { op: 'rename', kind: 'rename', write: true },
+  { op: 'renameSync', kind: 'rename', write: true },
+  // 元数据（读类，不写入）
+  { op: 'existsSync', kind: 'read', write: false },
+  { op: 'accessSync', kind: 'read', write: false },
+  { op: 'stat', kind: 'read', write: false },
+  { op: 'statSync', kind: 'read', write: false },
+  { op: 'realpathSync', kind: 'read', write: false },
 ];
+
+/** 写类操作标签集合（--write 过滤用）。 */
+const WRITE_KINDS = new Set(['write', 'delete', 'rename']);
+
+/**
+ * 上下文标签：判断命中行处于什么结构里（决定这次 I/O 会不会卡住别的请求）。
+ *   inAsync   —— 在 `async` 函数体内（同步 I/O 在这里直接阻塞事件循环）
+ *   inLoop    —— 在 for/while/do/forEach/map 等循环体内（多次 I/O 放大阻塞）
+ *   inRequest —— 在请求处理路径上（HTTP handler / 路由 / 回调参数名像 req/res）
+ */
+/** 函数签名判定用：控制流关键字前缀（这些不是函数定义）。 */
+const CONTROL_KEYWORDS = /^\s*(?:if|for|while|switch|catch|do|else|return|await|throw|typeof|new|delete|void|in|of|case|default|try|finally|with|yield)\b/;
+
+/**
+ * 判断一行是否是**真正的函数签名**（函数声明/函数表达式/箭头函数/方法简写）。
+ * 关键排除项（都踩过坑）：
+ *   · 控制流关键字开头的行（`if (x) {` 曾被当成方法简写）
+ *   · 普通 const 赋值里的括号表达式（`const owner = (a && b) || ''` 曾被当成箭头函数）
+ */
+function isFnSignature(s) {
+  if (CONTROL_KEYWORDS.test(s)) return false;
+  return /^\s*(?:export\s+)?(?:default\s+)?async\s+function\b/.test(s)
+    || /^\s*(?:export\s+)?function\b/.test(s)
+    || /^\s*(?:export\s+)?(?:const|let|var)\s+[\w$]+\s*=\s*(?:async\s+)?function\b/.test(s)
+    || /^\s*(?:export\s+)?(?:const|let|var)\s+[\w$]+\s*=\s*(?:async\s+)?(?:\([^)]*\)|[\w$]+)\s*=>/.test(s)
+    || /^\s*(?:async\s+)?[\w$]+\s*\([^)]*\)\s*\{\s*$/.test(s);
+}
+
+/**
+ * 剥离注释行，返回「只有代码」的行数组（用于上下文判定，避免说明文字里的
+ * handle / route 之类字样被当代码——扫描器自身注释就踩过这个坑）。
+ */
+function stripCommentLines(lines, uptoIdx) {
+  const out = [];
+  let inBlock = false;
+  for (let i = 0; i <= uptoIdx; i++) {
+    const raw = lines[i];
+    if (inBlock) {
+      const end = raw.indexOf('*/');
+      if (end === -1) continue;
+      inBlock = false;
+      const rest = raw.slice(end + 2);
+      if (rest.trim()) out.push(rest);
+      continue;
+    }
+    const open = raw.indexOf('/*');
+    if (open !== -1 && raw.indexOf('*/', open) === -1) {
+      inBlock = true;
+      const head = raw.slice(0, open);
+      if (head.trim()) out.push(head);
+      continue;
+    }
+    if (/^\s*\/\//.test(raw) || /^\s*\*/.test(raw)) continue;
+    out.push(raw);
+  }
+  return out;
+}
+
+/** 从命中行向上扫描，判定是否处于 async 函数体 / 循环体内。 */
+function scanEnclosure(lines, lineIdx) {
+  let inAsync = false;
+  let inLoop = false;
+  for (let i = lineIdx; i >= 0; i--) {
+    const code = stripLiterals(lines[i]);
+    // 上行函数签名：async function / async (...) => / function ... { ... }
+    if (i !== lineIdx && /^\s*(?:async\s+)?(?:function\b|\w+\s*\([^)]*\)\s*(?:=>)?\s*\{)/.test(code)) {
+      if (/\basync\b/.test(code)) inAsync = true;
+    }
+    // 循环结构（含数组迭代方法）
+    if (/^\s*(?:for|while|do)\b/.test(code) || /\.(?:forEach|map|filter|reduce|for\s+of)\s*\(/.test(code)) {
+      inLoop = true;
+    }
+    // 到达顶层（文件级缩进 0 的结束括号）就先停
+    if (/^\}\s*;?\s*$/.test(code) && i < lineIdx) break;
+  }
+  return { inAsync, inLoop };
+}
+
+/**
+ * 判定是否处于**请求处理路径**：向上找最近的函数签名，在该函数体内找真实 HTTP 特征。
+ *   不限固定窗口——大 handler 里 I/O 常离签名几十行，固定 30 行窗口够不到。
+ *   特征必须具体（req.headers / req.method / res.writeHead / handleXxx( /
+ *   createServer((req,res) / 成对 (req, res) 签名），孤立的 req/url 字样不算。
+ */
+function inRequestPath(lines, lineIdx) {
+  const codeLines = stripCommentLines(lines, lineIdx);
+  // 只保留最近一个函数体（从最后一个函数签名行到命中行），避免串到上一个函数
+  let sigStart = 0;
+  for (let i = codeLines.length - 1; i >= 0; i--) {
+    if (isFnSignature(codeLines[i])) { sigStart = i; break; }
+  }
+  const w = codeLines.slice(sigStart).join('\n');
+  return /\b(?:req|request)\.(?:headers|method|url|body|on)\b/.test(w)
+    || /\bres\.(?:writeHead|write|end|setHeader|statusCode)\b/.test(w)
+    || /\b(?:handle|route|onRequest)[A-Za-z_$]*\s*\(/.test(w)
+    || /\bcreateServer\s*\(\s*(?:async\s*)?\(?\s*(?:req|request)\s*,/.test(w)
+    || /\(\s*(?:req|request)\s*,\s*(?:res|response)\s*\)/.test(w);
+}
+
+/** 判定命中行所处上下文（三标签之③）。 */
+function contextAt(lines, lineIdx) {
+  const { inAsync, inLoop } = scanEnclosure(lines, lineIdx);
+  return { inAsync, inLoop, inRequest: inRequestPath(lines, lineIdx) };
+}
+
+/** 类型标签：按操作名是否带 Sync 后缀判定（同步 I/O 会阻塞事件循环）。 */
+function ioTypeOf(opName = '') {
+  return /Sync$/.test(opName) ? 'sync' : 'async';
+}
 
 /** 递归时跳过的目录。 */
 const SKIP_DIRS = new Set(['node_modules', '.git', '.trash', 'dist', 'build', '.bak']);
@@ -103,7 +251,19 @@ function stripLiterals(line) {
     }
     if (c === '/' && next === '/') { lineComment = true; i += 2; continue; }
     if (c === '/' && next === '*') { blockComment = true; i += 2; continue; }
-    if (c === '/' && /[A-Za-z0-9\\^$.|?*+()\[\]{}]/.test(next || '')) { regexMode = true; i++; continue; }
+    // 正则字面量判定：**必须看前一个非空字符**——只有表达式起始位置（行首、`(`、`,`、`=`、
+    //   `:`、`[`、`!`、`&`、`|`、`?`、`{`、`;`、`return` 等之后）的 `/` 才是正则开头；
+    //   标识符/数字/`)`/`]` 之后的 `/` 是**除号**。此前不加区分一律当正则，导致
+    //   `readFile('/tmp/x')` 里的 `/tmp` 被当成正则开始，把整行剩余部分吞掉 → 漏报。
+    if (c === '/' && /[A-Za-z0-9\\^$.|?*+()[\]{}]/.test(next || '')) {
+      const prev = out.trimEnd().slice(-1);
+      const regexAllowed = prev === '' || /[=(,:;[!&|?{}+\-*/%<>~^]/.test(prev) || /\b(?:return|typeof|case|in|of|new|delete|void|do|else|yield|await)$/.test(out.trimEnd());
+      if (regexAllowed) { regexMode = true; i++; continue; }
+      // 否则视作除号，正常输出
+      out += c;
+      i++;
+      continue;
+    }
     if (c === "'" || c === '"' || c === '`') { quote = c; i++; continue; }
     out += c;
     i++;
@@ -126,16 +286,49 @@ function scanFile(file) {
     const line = lines[i];
     const code = stripLiterals(line); // 剔除字符串/注释/正则字面量，防误识别
     if (/^\s*import\s|^\s*\/\/|^\s*\*/.test(line)) continue;
-    for (const [re, op] of FS_OPS) {
-      const m = code.match(re);
-      if (!m) continue;
-      const arg = extractArg(code, op, m[0]);
-      if (arg === null) continue;
-      const resolved = resolvePathArg(arg, varMap, i);
-      hits.push({ file, line: i + 1, op, path: resolved, raw: arg });
+    for (const entry of FS_OPS) {
+      // 词边界匹配，避免 readFile 命中 readFileSync / 自定义前缀名
+      const callRe = new RegExp(`(?<![\\w$.])${entry.op}\\s*\\(`);
+      if (!callRe.test(code)) continue;
+      // 参数提取失败**不丢弃命中**：字符串字面量已被 stripLiterals 剔除（防误识别），
+      //   而路径往往正是字符串字面量——此前 `arg === null → continue` 会把
+      //   `await readFile('/x')` 这类整条漏报。提取不到时路径标「(未解析)」照常登记。
+      const arg = extractArg(code, entry.op, entry.op);
+      const rawArg = arg === null ? '(未解析)' : arg;
+      const resolved = arg === null ? '(未解析)' : resolvePathArg(arg, varMap, i);
+      const ctx = contextAt(lines, i);
+      hits.push({
+        file,
+        line: i + 1,
+        op: entry.op,
+        // ── 三标签 ──
+        type: ioTypeOf(entry.op),              // 类型：sync / async
+        kind: entry.kind,                      // 操作：read / write / delete / rename / meta
+        inAsync: ctx.inAsync,                  // 上下文：异步函数体内
+        inLoop: ctx.inLoop,                    // 上下文：循环体内
+        inRequest: ctx.inRequest,              // 上下文：请求处理路径
+        risk: riskOf(entry, ctx),              // 综合风险等级（供排序/过滤）
+        path: resolved,
+        raw: rawArg,
+      });
     }
   }
   return hits;
+}
+
+/**
+ * 综合风险评级（判读「这次 I/O 会不会卡住其他请求 / 会不会丢数据」）：
+ *   high   —— 写/删/改名 且 在请求路径或循环里（并发下都可能被放大）
+ *   medium —— 同步 I/O 落在 async 路径/循环里（阻塞事件循环），或写类操作
+ *   low    —— 其余（普通读、异步读）
+ */
+function riskOf(entry, ctx) {
+  const writeish = WRITE_KINDS.has(entry.kind);
+  const sync = ioTypeOf(entry.op) === 'sync';
+  if (writeish && (ctx.inRequest || ctx.inLoop)) return 'high';
+  if (sync && (ctx.inAsync || ctx.inLoop || ctx.inRequest)) return 'medium';
+  if (writeish) return 'medium';
+  return 'low';
 }
 
 /** 预收集文件级变量赋值（只收字符串/join 类路径表达式）。 */
@@ -199,11 +392,37 @@ function resolvePathArg(arg, varMap, lineIdx) {
 
 /* ───────────────────────── 输出 ───────────────────────── */
 
-/** 文本输出。 */
-function printText(hits, { writeOnly = false } = {}) {
-  const filtered = writeOnly ? hits.filter((h) => ['write', 'append', 'rename', 'copy', 'unlink', 'rm', 'mkdir', 'write-stream'].includes(h.op)) : hits;
+/** 单条命中渲染成一行标签串（三标签 + 风险）。 */
+function tagsOf(h) {
+  const t = [h.type === 'sync' ? '同步' : '异步', h.kind];
+  if (h.inAsync) t.push('async内');
+  if (h.inLoop) t.push('循环内');
+  if (h.inRequest) t.push('请求路径');
+  return t.join('·');
+}
+
+/** 风险徽标。 */
+function riskMark(risk) {
+  return risk === 'high' ? '🔴' : risk === 'medium' ? '🟠' : '·';
+}
+
+/**
+ * 文本输出（按风险降序，高危在前）。
+ * @param {Array} hits 命中
+ * @param {object} opts { writeOnly, riskOnly, summary }
+ */
+function printText(hits, { writeOnly = false, riskOnly = '', summary = false } = {}) {
+  let filtered = writeOnly ? hits.filter((h) => WRITE_KINDS.has(h.kind)) : hits;
+  if (riskOnly) filtered = filtered.filter((h) => h.risk === riskOnly);
   if (!filtered.length) { console.log('（未命中任何文件操作）'); return; }
-  // 按文件分组
+
+  // 汇总视图：按 类型/操作/风险 计数（复用 CLI 同款 summarize）
+  if (summary) {
+    summarize(filtered);
+    return;
+  }
+
+  // 按文件分组；组内按行号
   const byFile = new Map();
   for (const h of filtered) {
     if (!byFile.has(h.file)) byFile.set(h.file, []);
@@ -211,29 +430,47 @@ function printText(hits, { writeOnly = false } = {}) {
   }
   for (const [file, hs] of [...byFile.entries()].sort()) {
     console.log(`\n── ${file} (${hs.length}) ──`);
-    for (const h of hs) {
-      const mark = ['write', 'append', 'rename', 'copy', 'unlink', 'rm', 'mkdir', 'write-stream'].includes(h.op) ? '✍' : '📖';
-      console.log(`  ${mark} L${String(h.line).padEnd(4)} ${h.op.padEnd(12)} ${h.path}`);
-      console.log(`       原参: ${h.raw}`);
+    for (const h of hs.sort((a, b) => a.line - b.line)) {
+      console.log(`  ${riskMark(h.risk)} L${String(h.line).padEnd(4)} ${h.op.padEnd(14)} ${tagsOf(h)}`);
+      console.log(`       ${h.path}`);
     }
   }
-  console.log(`\n合计 ${filtered.length} 处文件操作`);
+  console.log(`\n合计 ${filtered.length} 处文件操作（🔴high=写/删且并发路径 · 🟠medium=同步阻塞或写类 · ·low=普通读）`);
 }
 
-/** JSON 输出。 */
+/** JSON 输出（含全部标签字段）。 */
 function printJson(hits) {
   console.log(JSON.stringify(hits, null, 2));
 }
 
 /* ───────────────────────── 主流程 ───────────────────────── */
 
-function main() {
-  const args = process.argv.slice(2);
+/**
+ * 主流程（可被 CLI 复用）。
+ * @param {string[]} argv 参数（不含 node/脚本名）
+ */
+export function main(argv = process.argv.slice(2)) {
+  const args = argv;
   const json = args.includes('--json');
   const writeOnly = args.includes('--write');
+  const summary = args.includes('--summary');
+  let riskOnly = '';
   const opFilter = [];
-  for (let i = 0; i < args.length; i++) if (args[i] === '--op') opFilter.push(args[++i]);
-  const targets = args.filter((a) => !a.startsWith('--'));
+  const kindFilter = [];
+  const typeFilter = [];
+  // 多值支持：--kind delete,rename 或 --kind delete --kind rename 均可
+  const splitMulti = (v) => String(v || '').split(',').map((x) => x.trim()).filter(Boolean);
+  // 记录「被 flag 消费掉的位置」，供 targets 精确排除——此前用黑名单正则排除单值，
+  //   `--kind delete,rename` 这种逗号多值整体不匹配黑名单，被当成路径去扫（结果空）。
+  const consumed = new Set();
+  const takeValue = (i) => { consumed.add(i + 1); return args[i + 1]; };
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--op') opFilter.push(...splitMulti(takeValue(i)));
+    else if (args[i] === '--kind') kindFilter.push(...splitMulti(takeValue(i)));
+    else if (args[i] === '--type') typeFilter.push(...splitMulti(takeValue(i)));
+    else if (args[i] === '--risk') riskOnly = takeValue(i);
+  }
+  const targets = args.filter((a, i) => !a.startsWith('--') && !consumed.has(i));
   const root = dirname(fileURLToPath(import.meta.url));
   const defaults = targets.length ? targets : [
     join(root, '..', 'lib'),
@@ -245,8 +482,60 @@ function main() {
   let hits = [];
   for (const f of files) hits = hits.concat(scanFile(f));
   if (opFilter.length) hits = hits.filter((h) => opFilter.some((o) => h.op.includes(o)));
+  if (kindFilter.length) hits = hits.filter((h) => kindFilter.includes(h.kind));
+  if (typeFilter.length) hits = hits.filter((h) => typeFilter.includes(h.type));
+  // 高危优先（同风险按文件/行号稳定排序）
+  hits.sort((a, b) => {
+    const rank = { high: 0, medium: 1, low: 2 };
+    return (rank[a.risk] - rank[b.risk]) || a.file.localeCompare(b.file) || a.line - b.line;
+  });
   if (json) printJson(hits);
-  else printText(hits, { writeOnly });
+  else printText(hits, { writeOnly, riskOnly, summary });
+  return hits;
 }
 
-main();
+/** 供 CLI 复用：扫描 + 按标签过滤，返回命中数组（不打印）。 */
+export function scanFileIo(opts = {}) {
+  const { targets = [], opFilter = [], kindFilter = [], typeFilter = [], riskOnly = '', writeOnly = false } = opts;
+  const root = dirname(fileURLToPath(import.meta.url));
+  const dirs = targets.length ? targets : [
+    join(root, '..', 'lib'), join(root, '..', 'scripts'),
+    join(root, '..', 'cli.mjs'), join(root, '..', 'client.js'),
+  ];
+  const files = collectFiles(dirs);
+  let hits = [];
+  for (const f of files) hits = hits.concat(scanFile(f));
+  if (writeOnly) hits = hits.filter((h) => WRITE_KINDS.has(h.kind));
+  if (opFilter.length) hits = hits.filter((h) => opFilter.some((o) => h.op.includes(o)));
+  if (kindFilter.length) hits = hits.filter((h) => kindFilter.includes(h.kind));
+  if (typeFilter.length) hits = hits.filter((h) => typeFilter.includes(h.type));
+  if (riskOnly) hits = hits.filter((h) => h.risk === riskOnly);
+  hits.sort((a, b) => {
+    const rank = { high: 0, medium: 1, low: 2 };
+    return (rank[a.risk] - rank[b.risk]) || a.file.localeCompare(b.file) || a.line - b.line;
+  });
+  return hits;
+}
+
+/** 供 CLI 复用：打印三标签汇总。 */
+export function summarize(hits) {
+  const count = (key) => {
+    const m = new Map();
+    for (const h of hits) m.set(h[key], (m.get(h[key]) || 0) + 1);
+    return [...m.entries()].sort((a, b) => b[1] - a[1]);
+  };
+  console.log(`合计 ${hits.length} 处文件操作\n`);
+  console.log('【类型】' + count('type').map(([k, v]) => `${k === 'sync' ? '同步' : '异步'} ${v}`).join('  '));
+  console.log('【操作】' + count('kind').map(([k, v]) => `${k} ${v}`).join('  '));
+  console.log('【上下文】异步函数内 ' + hits.filter((h) => h.inAsync).length
+    + '  循环内 ' + hits.filter((h) => h.inLoop).length
+    + '  请求路径 ' + hits.filter((h) => h.inRequest).length);
+  console.log('【风险】🔴high ' + hits.filter((h) => h.risk === 'high').length
+    + '  🟠medium ' + hits.filter((h) => h.risk === 'medium').length
+    + '  ·low ' + hits.filter((h) => h.risk === 'low').length);
+}
+
+// 直接运行时入口（被 import 时不执行）
+if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith('scan-file-io.mjs')) {
+  main();
+}

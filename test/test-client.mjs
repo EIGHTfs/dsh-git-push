@@ -30,7 +30,10 @@ test('默认关：审计开关/LLM/全量扫 全部默认 false', () => {
   assert.equal(c.auditEnabled, false);
   assert.equal(c.pushPermitEnabled, undefined, 'pushPermitEnabled 已移除（2026-09-11）');
   assert.equal(c.llmAudit, undefined, 'llmAudit 已移除（v2 不提供 LLM 深度审查）');
-  assert.equal(c.hardcodeFullScan, false);
+  // 2026-09-17：hardcodeFullScan / auditLevel / auditRuleset 已删除（非用户可配项）
+  assert.equal(c.hardcodeFullScan, undefined, 'hardcodeFullScan 已移除（2026-09-17：硬编码扫描随审计范围走）');
+  assert.equal(c.auditLevel, undefined, 'auditLevel 已移除（2026-09-17：审计固定完整流程）');
+  assert.equal(c.auditRuleset, undefined, 'auditRuleset 已移除（2026-09-17：设置项删除，只认工具 ruleset 参数）');
   // 2026-09-13：injectFullSkill / injectRepoIndexFull 已按需求废弃移除（不做全量注入）
   assert.equal(c.injectFullSkill, undefined, 'injectFullSkill 已移除（2026-09-13：全量注入开关不要了）');
   assert.equal(c.injectRepoIndexFull, undefined, 'injectRepoIndexFull 已移除（2026-09-13）');
@@ -68,7 +71,8 @@ test('合并：enum 非法值回落默认', () => {
 });
 
 test('合并：string 类型统一字符串', () => {
-  assert.equal(resolveConfig({ auditRuleset: 123 }).auditRuleset, '123');
+  // 2026-09-17：auditRuleset 已删除，改用仍存在的 string 键（weightOverrides）
+  assert.equal(resolveConfig({ weightOverrides: 123 }).weightOverrides, '123');
 });
 
 test('合并：不改动基线对象（纯函数）', () => {
@@ -124,8 +128,10 @@ test('组件：enum 渲染选项齐全', () => {
   const react = mockReact();
   createSettingsCard(react, {});
   const opts = react.calls.filter((c) => c.type === 'option').map((c) => c.props.value);
-  // 2026-09-13：新增「推送通道」enum（ssh/api/auto），期望值随之扩展。
-  assert.deepEqual(opts.sort(), ['api', 'auto', 'deep', 'diff', 'full', 'quick', 'ssh', 'standard']);
+  // 2026-09-13：新增「推送通道」enum（ssh/api/auto）。
+  // 2026-09-17：审计强度 enum 已删除（quick/standard/deep 不再出现在界面），
+  //   审计范围 enum（diff/full）与推送通道 enum（ssh/api/auto）保留。
+  assert.deepEqual(opts.sort(), ['api', 'auto', 'diff', 'full', 'ssh']);
 });
 
 test('源码：不含 JSX 语法（无 <Tag> 形式）', () => {

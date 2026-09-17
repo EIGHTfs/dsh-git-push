@@ -28,21 +28,23 @@ test('parseGitAuditInput：空输入 = 默认 diff、无路径', () => {
   const p = parseGitAuditInput('');
   assert.equal(p.path, '');
   assert.equal(p.scope, 'diff');
-  assert.equal(p.auditLevel, undefined);
   assert.equal(p.error, undefined);
 });
 
-test('parseGitAuditInput：路径 + --full + --quick', () => {
-  const p = parseGitAuditInput('工作区/dsh-git-push-v2 --full --quick');
-  assert.equal(p.path, '工作区/dsh-git-push-v2');
-  assert.equal(p.scope, 'full');
-  assert.equal(p.auditLevel, 'quick');
+test('parseGitAuditInput：路径 + --full（强度参数已删除，--quick 视为未知参数）', () => {
+  const ok = parseGitAuditInput('工作区/dsh-git-push-v2 --full');
+  assert.equal(ok.path, '工作区/dsh-git-push-v2');
+  assert.equal(ok.scope, 'full');
+  assert.equal(ok.error, undefined);
+  // 2026-09-17：审计固定完整流程，--quick/--standard/--deep 不再是合法参数
+  const bad = parseGitAuditInput('工作区/dsh-git-push-v2 --quick');
+  assert.match(bad.error || '', /未知参数 --quick/);
 });
 
 test('parseGitAuditInput：路径可含空格（非 flag token 拼接）', () => {
-  const p = parseGitAuditInput('foo bar/baz --deep');
+  const p = parseGitAuditInput('foo bar/baz --full');
   assert.equal(p.path, 'foo bar/baz');
-  assert.equal(p.auditLevel, 'deep');
+  assert.equal(p.scope, 'full');
 });
 
 test('parseGitAuditInput：未知 flag → error', () => {
@@ -121,12 +123,13 @@ test('runGitAuditCommand：非 git 目录拒绝（不走 auditFull）', async ()
   }
 });
 
-test('runGitAuditCommand：空路径 + 会话 cwd 对本仓库 --quick 能出 success', async () => {
+test('runGitAuditCommand：空路径 + 会话 cwd 对本仓库能出 success', async () => {
+  // 2026-09-17：不再传强度（--quick / cfg.auditLevel 均已删除），审计固定完整流程。
   const r = await runGitAuditCommand({
-    rawInput: '--quick',
+    rawInput: '',
     invocation: inv(ROOT),
     env: { workspaceRoot: ROOT },
-    cfg: { auditLevel: 'quick' },
+    cfg: {},
   });
   assert.equal(r.kind, 'success', r.text);
   assert.match(r.text, /审计/);

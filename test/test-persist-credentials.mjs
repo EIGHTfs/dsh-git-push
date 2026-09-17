@@ -29,14 +29,17 @@ function withIsolatedDshHome(fn) {
   }
 }
 
-test('persistGithubToken 写入插件配置目录 github-token（0600）', () => {
+test('persistGithubToken 写入 config.json 的 githubToken（0600）', () => {
   withIsolatedDshHome((dir) => {
     const r = persistGithubToken('ghp_TEST_TOKEN_12345', {});
     assert.equal(r.ok, true, `应写入成功: ${r.error || ''}`);
-    const file = join(dir, 'git-push', 'github-token');
-    assert.equal(existsSync(file), true, 'github-token 文件应存在');
-    assert.equal(readFileSync(file, 'utf8').trim(), 'ghp_TEST_TOKEN_12345', '内容应为 token');
-    const mode = statSync(file).mode & 0o777;
+    // 2026-09-16 凭据只读写 config.json：不再产出 github-token 平铺文件
+    const flat = join(dir, 'git-push', 'github-token');
+    assert.equal(existsSync(flat), false, '不应再写 github-token 平铺文件（凭据只读写 json）');
+    const cfg = join(dir, 'git-push', 'config.json');
+    assert.equal(existsSync(cfg), true, 'config.json 应存在');
+    assert.equal(JSON.parse(readFileSync(cfg, 'utf8')).githubToken, 'ghp_TEST_TOKEN_12345', 'config.json 应含 githubToken');
+    const mode = statSync(cfg).mode & 0o777;
     assert.ok((mode & 0o077) === 0, `权限应不含 group/other 位（实际 ${mode.toString(8)}）`);
   });
 });
@@ -49,14 +52,18 @@ test('persistGithubToken 拒绝非法格式 token', () => {
   });
 });
 
-test('persistSshPub 写入对应 *.pub（ssh-rsa → id_rsa.pub / ssh-ed25519 → id_ed25519.pub）', () => {
+test('persistSshPub 写入 config.json 的 sshPub（不再写 *.pub 平铺文件）', () => {
   withIsolatedDshHome((dir) => {
     const r1 = persistSshPub('ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCtest test@example.com', {});
     assert.equal(r1.ok, true, r1.error || '');
-    assert.equal(existsSync(join(dir, 'git-push', 'id_rsa.pub')), true, 'ssh-rsa 应写 id_rsa.pub');
     const r2 = persistSshPub('ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAITEST fake@example.com', {});
     assert.equal(r2.ok, true, r2.error || '');
-    assert.equal(existsSync(join(dir, 'git-push', 'id_ed25519.pub')), true, 'ssh-ed25519 应写 id_ed25519.pub');
+    // 2026-09-16 凭据只读写 config.json：公钥以 sshPub 键为真源，不再产出 *.pub 文件
+    assert.equal(existsSync(join(dir, 'git-push', 'id_rsa.pub')), false, '不应再写 id_rsa.pub');
+    assert.equal(existsSync(join(dir, 'git-push', 'id_ed25519.pub')), false, '不应再写 id_ed25519.pub');
+    const cfg = join(dir, 'git-push', 'config.json');
+    const pub = JSON.parse(readFileSync(cfg, 'utf8')).sshPub || '';
+    assert.match(pub, /^ssh-ed25519/, 'config.json 的 sshPub 应为最后一次写入值');
   });
 });
 
@@ -77,8 +84,9 @@ test('scope.watch 链路：模拟设置页保存（githubToken/sshPub 变更触�
     assert.equal(tok.ok, true, tok.error || '');
     const pub = persistSshPub('ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCpub7 pub@example.com', {});
     assert.equal(pub.ok, true, pub.error || '');
-    // 文件级终验
-    assert.equal(readFileSync(join(dir, 'git-push', 'github-token'), 'utf8').trim(), 'ghp_SETTINGSPAGE_777');
-    assert.equal(existsSync(join(dir, 'git-push', 'id_rsa.pub')), true);
+    // config.json 级终验（2026-09-16 凭据只读写 json：两键同落一份配置，互不覆盖）
+    const cfg = JSON.parse(readFileSync(join(dir, 'git-push', 'config.json'), 'utf8'));
+    assert.equal(cfg.githubToken, 'ghp_SETTINGSPAGE_777', 'config.json 应含 githubToken');
+    assert.match(cfg.sshPub, /^ssh-rsa /, 'config.json 应含 sshPub（未被 token 写入覆盖）');
   });
 });
