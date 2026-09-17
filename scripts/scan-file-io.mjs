@@ -27,6 +27,8 @@
  * 用法：
  *   node scripts/scan-file-io.mjs <文件|目录>…        # 扫指定路径（默认 lib/ scripts/ cli.mjs client.js）
  *   node scripts/scan-file-io.mjs --summary           # 三标签汇总视图（类型/操作/上下文/风险 计数）
+ *   node scripts/scan-file-io.mjs --report            # 风险报告：统计 + 改造优先级清单（文本表格）
+ *   node scripts/scan-file-io.mjs --report --report-limit 50  # 清单最多 50 条
  *   node scripts/scan-file-io.mjs --json              # JSON 输出（含全部标签字段）
  *   node scripts/scan-file-io.mjs --write             # 只看写类操作（write/delete/rename）
  *   node scripts/scan-file-io.mjs --type sync         # 按类型过滤（sync / async，可逗号多值）
@@ -37,6 +39,8 @@
  * 输出（文本）：风险徽标 | 行号 | 操作 | 三标签串 | 路径参数（解析结果）
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs';
+// 2026-09-17：分级引擎改为复用 AST 层（四级标准），行级逻辑只保留路径解析
+import { scanIoRiskAst, RISK_BADGE, RISK_LABEL, summarizeIoRisk, rankIoFixList } from '../lib/ast/io-risk.js';
 import { join, extname, resolve, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -280,6 +284,9 @@ function scanFile(file) {
   try { text = readFileSync(file, 'utf8'); } catch { return []; }
   const lines = text.split('\n');
   const hits = [];
+  // 本文件的 AST 分级结果（四级标准，与审计一致）；解析失败则空数组，走行级兜底
+  let astHits = [];
+  try { astHits = scanIoRiskAst(text); } catch { astHits = []; }
   // 预收集本文件的变量赋值（路径类）：const x = 'str' / const x = join(...) 等
   const varMap = collectVarAssignments(lines);
   for (let i = 0; i < lines.length; i++) {
@@ -296,7 +303,11 @@ function scanFile(file) {
       const arg = extractArg(code, entry.op, entry.op);
       const rawArg = arg === null ? '(未解析)' : arg;
       const resolved = arg === null ? '(未解析)' : resolvePathArg(arg, varMap, i);
-      const ctx = contextAt(lines, i);
+      const lineCtx = contextAt(lines, i);
+      // 2026-09-17：上下文与分级以 AST 为准（tokenizer + 花括号配对，比行级启发式准）；
+      //   查不到该 (行号,操作名) 才退回行级结果
+      const graded = riskOfByAst(astHits, i + 1, entry.op, entry, lineCtx);
+      const ctx = graded.ctx;
       hits.push({
         file,
         line: i + 1,
@@ -307,7 +318,9 @@ function scanFile(file) {
         inAsync: ctx.inAsync,                  // 上下文：异步函数体内
         inLoop: ctx.inLoop,                    // 上下文：循环体内
         inRequest: ctx.inRequest,              // 上下文：请求处理路径
-        risk: riskOf(entry, ctx),              // 综合风险等级（供排序/过滤）
+        inStartup: ctx.inStartup,              // 上下文：启动路径（新增，四级标准）
+        risk: graded.risk,                     // 综合风险等级（四级，供排序/过滤）
+        riskFromAst: graded.fromAst,           // 分级来源（AST / 行级兜底）
         path: resolved,
         raw: rawArg,
       });
@@ -322,13 +335,44 @@ function scanFile(file) {
  *   medium —— 同步 I/O 落在 async 路径/循环里（阻塞事件循环），或写类操作
  *   low    —— 其余（普通读、异步读）
  */
-function riskOf(entry, ctx) {
+/**
+ * 旧行级启发式分级（3 级）——仅作 AST 不可用时的兜底。
+ *   自 2026-09-17 起，常规路径改用 lib/ast/io-risk.js 的四级标准（与审计一致），
+ *   本函数保留以免 AST 解析异常时整条命中丢失分级信息。
+ */
+function riskOfFallback(entry, ctx) {
   const writeish = WRITE_KINDS.has(entry.kind);
   const sync = ioTypeOf(entry.op) === 'sync';
   if (writeish && (ctx.inRequest || ctx.inLoop)) return 'high';
   if (sync && (ctx.inAsync || ctx.inLoop || ctx.inRequest)) return 'medium';
   if (writeish) return 'medium';
   return 'low';
+}
+
+/**
+ * 按 (行号, 操作名) 从 AST 结果查分级。
+ *   AST 层在循环/函数上下文判定上比行级启发式准确（tokenizer + 花括号配对），
+ *   故以它为准；查不到（如宏/动态调用）才退回行级。
+ *
+ * @param {Array} astHits 本文件的 scanIoRiskAst 结果
+ * @param {number} line 1-based 行号
+ * @param {string} op 操作名（如 readFileSync）
+ * @param {object} entry 行级命中项
+ * @param {object} ctx 行级上下文
+ */
+function riskOfByAst(astHits, line, op, entry, ctx) {
+  const hit = astHits.find((h) => h.line === line && h.call === op);
+  if (!hit) return { risk: riskOfFallback(entry, ctx), ctx, fromAst: false };
+  return {
+    risk: hit.risk,
+    ctx: {
+      inAsync: hit.inAsync,
+      inLoop: hit.inLoop,
+      inRequest: hit.inRequest,
+      inStartup: hit.inStartup,
+    },
+    fromAst: true,
+  };
 }
 
 /** 预收集文件级变量赋值（只收字符串/join 类路径表达式）。 */
@@ -454,6 +498,7 @@ export function main(argv = process.argv.slice(2)) {
   const json = args.includes('--json');
   const writeOnly = args.includes('--write');
   const summary = args.includes('--summary');
+  const report = args.includes('--report');
   let riskOnly = '';
   const opFilter = [];
   const kindFilter = [];
@@ -464,11 +509,13 @@ export function main(argv = process.argv.slice(2)) {
   //   `--kind delete,rename` 这种逗号多值整体不匹配黑名单，被当成路径去扫（结果空）。
   const consumed = new Set();
   const takeValue = (i) => { consumed.add(i + 1); return args[i + 1]; };
+  let reportLimit = 20;
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--op') opFilter.push(...splitMulti(takeValue(i)));
     else if (args[i] === '--kind') kindFilter.push(...splitMulti(takeValue(i)));
     else if (args[i] === '--type') typeFilter.push(...splitMulti(takeValue(i)));
     else if (args[i] === '--risk') riskOnly = takeValue(i);
+    else if (args[i] === '--report-limit') reportLimit = Number(takeValue(i)) || 20;
   }
   const targets = args.filter((a, i) => !a.startsWith('--') && !consumed.has(i));
   const root = dirname(fileURLToPath(import.meta.url));
@@ -490,6 +537,7 @@ export function main(argv = process.argv.slice(2)) {
     return (rank[a.risk] - rank[b.risk]) || a.file.localeCompare(b.file) || a.line - b.line;
   });
   if (json) printJson(hits);
+  else if (report) printReport(hits, { limit: reportLimit });
   else printText(hits, { writeOnly, riskOnly, summary });
   return hits;
 }
@@ -529,10 +577,100 @@ export function summarize(hits) {
   console.log('【操作】' + count('kind').map(([k, v]) => `${k} ${v}`).join('  '));
   console.log('【上下文】异步函数内 ' + hits.filter((h) => h.inAsync).length
     + '  循环内 ' + hits.filter((h) => h.inLoop).length
-    + '  请求路径 ' + hits.filter((h) => h.inRequest).length);
-  console.log('【风险】🔴high ' + hits.filter((h) => h.risk === 'high').length
-    + '  🟠medium ' + hits.filter((h) => h.risk === 'medium').length
-    + '  ·low ' + hits.filter((h) => h.risk === 'low').length);
+    + '  请求路径 ' + hits.filter((h) => h.inRequest).length
+    + '  启动路径 ' + hits.filter((h) => h.inStartup).length);
+  // 四级风险（2026-09-17 起与审计 robustness/io-risk 同一标准）
+  console.log('【风险】' + ['high', 'medium', 'low', 'safe']
+    .map((r) => `${RISK_BADGE[r]}${RISK_LABEL[r]} ${hits.filter((h) => h.risk === r).length}`)
+    .join('  '));
+}
+
+/**
+ * --report：统计 + 改造优先级清单（文本表格）。
+ *   与 --summary（用户视角的计数概览）不同，本视图面向「下一步改哪个」：
+ *     ① 统计块：同步/异步占比、四级风险分布、I/O 密集文件排行
+ *     ② 优先级清单：高风险项按 风险 > 写类 > 同步 排序，给出行号、上下文与理由
+ *   数据来源：AST 层 summarizeIoRisk / rankIoFixList（与审计同一标准）。
+ *
+ * @param {Array} hits 全部命中
+ * @param {{limit?:number}} opts limit=清单最多条数（默认 20）
+ */
+function printReport(hits, opts = {}) {
+  const limit = Number(opts.limit) > 0 ? Number(opts.limit) : 20;
+  const sum = summarizeIoRisk(hits);
+
+  const bar = '─'.repeat(72);
+  console.log(bar);
+  console.log('  I/O 风险报告（四级标准，与审计 robustness/io-risk 一致）');
+  console.log(bar);
+  console.log(`  总调用 ${sum.total} 处` + (sum.total
+    ? `（同步 ${sum.sync} / 异步 ${sum.total - sum.sync}，同步占比 ${Math.round(sum.sync / sum.total * 100)}%）`
+    : ''));
+  if (sum.total === 0) {
+    console.log('  未发现文件 I/O 调用。');
+    console.log(bar);
+    return;
+  }
+
+  // 风险分布
+  console.log('');
+  console.log('  【风险分布】');
+  for (const r of ['high', 'medium', 'low', 'safe']) {
+    const n = sum.byRisk[r] || 0;
+    const pct = Math.round(n / sum.total * 100);
+    const filled = Math.round(pct / 100 * 24);
+    console.log(`    ${RISK_BADGE[r]} ${RISK_LABEL[r].padEnd(2)} ${String(n).padStart(4)} 处  ${'█'.repeat(filled)}${'░'.repeat(24 - filled)}  ${pct}%`);
+  }
+
+  // 操作类别分布
+  console.log('');
+  console.log('  【操作类别】');
+  const kindLabel = { read: '读取', write: '写入', delete: '删除', rename: '改名', meta: '元信息' };
+  console.log('    ' + Object.entries(sum.byKind)
+    .filter(([, v]) => v > 0)
+    .map(([k, v]) => `${kindLabel[k] || k} ${v}`)
+    .join('   '));
+
+  // I/O 密集文件排行
+  if (sum.byFile && sum.byFile.length) {
+    console.log('');
+    console.log('  【I/O 密集文件 TOP' + Math.min(10, sum.byFile.length) + '】（改造收益从高到低）');
+    sum.byFile.slice(0, 10).forEach(({ file, count }, i) => {
+      console.log(`    ${String(i + 1).padStart(2)}. ${String(count).padStart(3)} 处  ${file}`);
+    });
+  }
+
+  // 优先级清单
+  const ranked = rankIoFixList(hits).filter((h) => h.risk === 'high' || h.risk === 'medium');
+  console.log('');
+  console.log('  【改造优先级清单】（高风险在前；风险 > 写类 > 同步）');
+  if (!ranked.length) {
+    console.log('    ✓ 无高风险/中风险项');
+  } else {
+    for (const h of ranked.slice(0, limit)) {
+      const ctxs = [];
+      if (h.inAsync) ctxs.push('异步路径');
+      if (h.inLoop) ctxs.push('循环内');
+      if (h.inRequest) ctxs.push('请求路径');
+      if (h.inStartup) ctxs.push('启动路径');
+      const callName = h.call || h.op || '(未知调用)';
+      console.log(`    ${String(h.rank).padStart(3)}. ${RISK_BADGE[h.risk]}${RISK_LABEL[h.risk]}  ${h.file}:${h.line}`);
+      console.log(`         ${callName}  ·  ${h.kind}  ·  ${ctxs.join('+') || '—'}`);
+      if (h.reason) console.log(`         ${h.reason}`);
+      console.log(`         路径: ${h.path || '(未解析)'}`);
+    }
+    if (ranked.length > limit) {
+      console.log(`    … 另有 ${ranked.length - limit} 项，用 --report-limit <n> 调整`);
+    }
+  }
+
+  // 验证提醒
+  console.log('');
+  console.log('  【改造后验证】');
+  console.log('    · 同步改异步后：跑一遍受影响路径的测试，确认无时序变化');
+  console.log('    · 循环内改并发：确认并发上限（避免 fd 耗尽），保留原顺序语义');
+  console.log('    · 写/删类改造：先确认有备份或 git 历史（可恢复）');
+  console.log(bar);
 }
 
 // 直接运行时入口（被 import 时不执行）
