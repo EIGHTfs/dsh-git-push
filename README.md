@@ -153,6 +153,7 @@ dsh-git-push/
 │   │   ├── credential.js — 凭据标识符判定（硬编码/引用/类型检查）
 │   │   ├── dataflow.js — 数据流检查（清空后访问，三层审计 L2）
 │   │   ├── index.js — AST 层统一出口
+│   │   ├── io-risk.js — I/O 风险分级（四级：异步路径同步/循环内/请求路径/启动路径，写类加权）
 │   │   ├── magic-number.js — 硬编码魔数识别（豁免版本号/日期/状态码）
 │   │   ├── naming.js — 命名检查（标识符长度/函数名过短/受控小文件读取）
 │   │   ├── shell.js — shell 精筛（cd 动态路径/写操作命中 .gitignore）
@@ -196,6 +197,7 @@ dsh-git-push/
 │   │   ├── filter.js — 规则作用域过滤（exts/exclude_paths）
 │   │   ├── folder.js — 目录级检查（文件夹数/单目录文件数/解包特征）
 │   │   ├── index.js — 检查层统一出口
+│   │   ├── io.js — I/O 风险分级包装（checkIoRisk → lib/ast/io-risk.js，取代 quality/sync-fs）
 │   │   ├── magic-number.js — 魔数检查包装（token 判定→finding）
 │   │   ├── npm-json.js — package.json 检查（依赖版本/私有包豁免）
 │   │   ├── private.js — 私密文件检查（私有仓可见性核对）
@@ -293,6 +295,7 @@ dsh-git-push/
 │   ├── test-persist-credentials.mjs — 凭据持久化测试
 │   ├── test-plugin.mjs — 插件接线测试（入口导出/工具清单/双副本同步）
 │   ├── test-push-transport.mjs — 推送通道回归（SSH 优先/一致性语义）
+│   ├── test-io-risk.mjs — I/O 风险分级测试（四级判定/字段/汇总/排序/finding）
 │   ├── test-quality.mjs — 评分总入口测试（AST 质量检查器）
 │   ├── test-readme-gen.mjs — README 生成测试（模板渲染/版本表）
 │   ├── test-repo-list.mjs — 仓库列表测试（本地扫描/索引读写/HTTP 端点/远端状态）
@@ -856,11 +859,12 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
-| **1.3.6**（当前） | **凭据分行展示（各自用户名+独立时间，支持两账号）+ 取消账号汇总行 + 远端状态文案不再写死 + 超时不再冒充「失效」+ token 框可见 + 仓库列表专测** \
+| **1.3.6**（当前） | **凭据分行展示（各自用户名+独立时间，支持两账号）+ 取消账号汇总行 + 远端状态文案不再写死 + 超时不再冒充「失效」+ token 框可见 + 仓库列表专测 + I/O 风险分级（取代 sync-fs）** \
 **凭据分行展示**（client.js `credPill` + lib/app/http-handlers.js）：账号卡片此前两种凭据都写死「已配置」（SSH 校验过也拿不到用户名），且只有一行汇总「已登录 GitHub：X」。现改为 **Token / SSH 各一行**，分别显示**该凭据自己的用户名**与**各自最近一次校验通过时间**（`tokenStatus.checkedAt` / `sshStatus.checkedAt` 独立透传）——因为 token 与 sshkey 可以是**两个不同 GitHub 用户且都有效**，写单一用户名本身就是错的（会隐藏另一个账号）。两者用户不同时额外提示「Token 属 A，SSH 属 B——推送走 SSH 通道（B）」；只填未校验显示「已填写｜未校验」，超时显示「网络超时，可重试」，失效显示「失效于 <时间>」\
 **取消账号汇总行**（client.js + lib/git/account.js）：删除「✅ 已登录 GitHub: EIGHTfs｜上次成功登录 …」，顶部状态栏只保留「已连接／未连接」，账号身份下放到两条明细里——天然支持两账号并存 \
 **远端状态文案不再写死**（client.js）：本地列表此前对 `ahead === null` 一律显示「远端状态未知」，但后端该值有**两种成因**——① `liveSkipped`（超预算/SSH 熔断，真的没探测）② 已探到远端（`remoteHead` 有值）只是本地缺该提交对象、算不出领先/落后。现按 `liveSkipped` / `remoteHead` 分三种措辞：`未探测远端` / `远端 <sha> · 待 fetch 比较` / `远端已连通 · 待比较`；后端补查端点同步返回 `remoteKnown`/`compareOk`/`compareHint`，不再把「远端明明探到了」显示成未知 \
 **超时不再冒充「失效」**（lib/git/account.js + account-status.js + client.js）：网络超时（`The operation was aborted due to timeout`）此前与「凭据无效」合并为同一个 `valid:false`，页面显示「已失效」——用户会以为凭据坏了、「重新检测」按钮没用。现新增 `timeout` 标志（仅超时/断网类错误置位），UI 用 ⏳ +「未测成（网络超时，可重试）」，与真失效（❌）区分；token 失效且 SSH 可用时补注「推送走 SSH，不受影响」\
+**I/O 风险分级取代 sync-fs**（`lib/ast/io-risk.js` + `lib/checks/io.js` + `robustness/io-risk` 规则）：原 `robustness/no-sync-fs` 只判「异步函数内的同步 IO」，且散落在行级正则里；现升级为**四级标准**（🔴高/🟠中/🟡低/🟢安全），判定维度从 1 个（inAsync）扩到 4 个（异步路径/循环内/请求路径/启动路径），并按操作类别加权（写/删/改名涉及数据不可逆，加一档）——异步路径中的同步 IO、循环内 IO 判高风险；顶层一次性初始化（读配置等）判低风险不误伤。实现落在 `lib/ast/io-risk.js`（tokenizer + 花括号配对定上下文，比行级启发式准），`lib/checks/io.js` 只做 finding 转换（薄层纪律）。旧检查 `checkSyncFsInFile` 从 dispatch 移除（分级版是其超集，并存会对同一处 IO 重复报），规则文件里 `no-sync-fs` 同步删除。严重度一律 **warning**（只提示不拦提交）**scan-file-io 分级引擎同步换新 + `--report` 风险报告**（`scripts/scan-file-io.mjs`）：扫描脚本原先自建一套 3 级行级启发式，与审计标准不一致（同一个调用在两处显示不同等级）；现按 (行号, 操作名) 从 AST 结果查表取分级，行级 `riskOf` 降为解析异常时的兜底。**路径解析能力原样保留**（变量溯源 / `join()` 展开——AST 层不提供该能力，故两者互补而非取代）。新增 `--report` 输出**文本表格**：统计块（同步占比、四级风险分布带占比条、操作类别、I/O 密集文件 TOP10）+ **改造优先级清单**（按 风险 > 写类 > 同步 排序，给出行号/调用名/上下文/理由/路径）+ 尾部改造后验证提醒；`--report-limit <n>` 控制条数**I/O 分级测试 16 项**（`test/test-io-risk.mjs`）：覆盖四级判定（含写类加权一档 safe→low、反证异步读不加权）、字段完整性与取值域、`summarizeIoRisk` 统计/`rankIoFixList` 排序与 rank 连续性、`checkIoRisk` 一律 warning 与 scoreImpact 高低区分、解析异常不抛 \
 **token 编辑框改为普通编辑框**（client.js）：`type=password` → `type=text`，粘贴长 token 时可核对是否粘全；明文仍只在输入态存在（保存后落 config.json 0600，接口不回传明文）\
 **「重新检测」加防抖**：`accountLoading` 期间忽略重复点击（连点会连发在线请求触发 GitHub 限流，反而更容易超时）\
 **仓库列表专测**（新增 test/test-repo-list.mjs，19 用例）：覆盖本地扫描（发现/远端识别/改动计数/深度/上限/去重/URL 脱敏/非仓库容错）、索引（定位/按路径命中/**只更新单条不重建**/**只更新已有条目、云端-only 不入索引**）、HTTP 端点（repos-local 结构与字段、缺省只读索引不重扫、refresh 空入参不炸）、远端状态语义、前端文案回归；联网用例默认 skip，`DSH_TEST_ONLINE=1` 才跑。新增 scripts/probe-recheck.mjs 探针实测「重新检测」链路 \

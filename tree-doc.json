@@ -224,5 +224,8 @@
   "test/test-audit-empty.mjs": "（待注释）",
   "test/test-auditignore.mjs": "（待注释）",
   "test/test-repo-list.mjs": "仓库列表测试（本地扫描/索引读写/HTTP 端点/远端状态）",
-  "scripts/probe-recheck.mjs": "探针：「重新检测」按钮链路实测（在线校验 token/SSH）"
+  "scripts/probe-recheck.mjs": "探针：「重新检测」按钮链路实测（在线校验 token/SSH）",
+  "lib/ast/io-risk.js": "IO 风险分级（四级）：scanIoRiskAst 判定上下文/类别 → summarizeIoRisk 统计 → rankIoFixList 优先级清单",
+  "lib/checks/io.js": "IO 风险分级包装：checkIoRisk → lib/ast/io-risk.js（转 warning finding，取代 quality/sync-fs）",
+  "test/test-io-risk.mjs": "IO 风险分级测试（四级判定/字段完整性/汇总/排序/finding 转换）"
 }
