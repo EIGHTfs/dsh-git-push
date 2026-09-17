@@ -32,7 +32,7 @@ import { join, extname, basename, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { createInterface } from 'node:readline';
-import { load as yamlLoad } from 'js-yaml';
+import { load as yamlLoad } from '../lib/vendor/js-yaml/js-yaml.mjs';
 import { getSkipSet } from '../lib/skip-dirs.js';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));

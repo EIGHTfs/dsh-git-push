@@ -1,0 +1,8 @@
+# 审计豁免（不影响 git 跟踪，仅跳过审计扫描）
+# 语法同 .gitignore；用于「要入库但不该被自家规则审」的内容。
+
+# 第三方内置代码（vendor）：构建产物、非本项目编写。
+#   已内置 js-yaml（MIT，dist/js-yaml.mjs）以实现零依赖发布。
+#   其 parser 有 1370 行的单函数，会被 readability/max-function-length 报 blocker——
+#   但我们不改这份代码，报出来只是噪声。
+lib/vendor/

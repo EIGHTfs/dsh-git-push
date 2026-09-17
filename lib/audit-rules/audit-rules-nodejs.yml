@@ -454,6 +454,12 @@ rules:
     category: "security"
     severity: "error"
     description: "检测常见 token 赋值的硬编码"
+    # astConfirmKind: credential-value → 正则初筛后由 token 级精筛确认，只报
+    #   「凭据标识符右侧直接是有效字符串字面量」的行。与 security/no-hardcoded-credentials
+    #   同用一套判据（lib/ast/credential.js），避免两规则宽严不一。
+    #   正则只看字符：注释里举例的 `TOKEN="$(read_token)"`、规则描述文本都会被命中，
+    #   精筛按 token 判定并豁免运行时求值形态（$(cmd)/${VAR}/$VAR），误报在此修正。
+    astConfirmKind: credential-value
     patterns:
       - "\\btoken\\s*=\\s*['\"][^'\"]{12,}['\"]"
       - "\\bapi[_-]?key\\s*=\\s*['\"][^'\"]{12,}['\"]"
@@ -488,7 +494,12 @@ thresholds:
 ignore:
   - pattern: "**/*.{test,spec}.{js,ts}"
     rules: ["*"]
-  - pattern: "**/vendor/**/*.js"
+  # 第三方内置代码（vendor）——构建产物、非本项目编写，不参与风格/规模类审计。
+  #   js/mjs/cjs 全覆盖：此前只写 *.js，导致内置的 js-yaml.mjs 被
+  #   readability/max-function-length 报 3 个 blocker（1370 行的 parser 函数）。
+  - pattern: "**/vendor/**/*.{js,mjs,cjs}"
+    rules: ["*"]
+  - pattern: "**/vendor/**"
     rules: ["*"]
   - pattern: "**/dist/**/*.js"
     rules: ["*"]
