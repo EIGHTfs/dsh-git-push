@@ -161,10 +161,18 @@ rules:
     category: "robustness"
     severity: "warning"
     description: "按上下文与操作类别对文件 I/O 分级：异步路径中的同步 I/O、循环内 I/O 为高风险；写/删/改名类加权一档"
+    # 三段式：正则初筛（哪些文件可能含 fs 调用）→ AST 精筛（注释/字符串里的示例剔除）
+    #   → 分级由 lib/ast/io-risk.js 完成，finding 由 lib/checks/io.js 产出
+    astConfirm: true
+    astConfirmKind: "io-risk"
     patterns:
-      - "fs\\.(readFileSync|writeFileSync|appendFileSync|existsSync|statSync|lstatSync|readdirSync|mkdirSync|rmdirSync|rmSync|unlinkSync|renameSync|copyFileSync|chmodSync|openSync|closeSync|readSync|writeSync|truncateSync|realpathSync)\\s*\\("
-      - "(fs|fsp|fsPromises)\\.(promises\\.)?(readFile|writeFile|appendFile|stat|lstat|readdir|mkdir|rmdir|rm|unlink|rename|copyFile|chmod|open|close|read|write|truncate|realpath|createReadStream|createWriteStream)\\s*\\("
-      - "(require\\([\"']fs[\"']\\)|from\\s+[\"']node:?fs/promises[\"'])\\s*\\."
+      # ① 带 fs. 前缀：fs.readFileSync(...)、fsp.readFile(...)
+      - "(fs|fsp|fsPromises)\\.(promises\\.)?(readFile|writeFile|appendFile|stat|lstat|readdir|mkdir|rmdir|rm|unlink|rename|copyFile|chmod|open|close|read|write|truncate|realpath|createReadStream|createWriteStream)(Sync)?\\s*\\("
+      # ② 裸调用（具名导入后直调）：import { mkdirSync } from 'node:fs' → mkdirSync(...)
+      #    这是最常见写法，此前 patterns 只覆盖带前缀形态，导致大量真实 I/O 漏初筛
+      - "(?<![\\w$.])(readFileSync|writeFileSync|appendFileSync|existsSync|statSync|lstatSync|readdirSync|mkdirSync|rmdirSync|rmSync|unlinkSync|renameSync|copyFileSync|chmodSync|openSync|closeSync|readSync|writeSync|truncateSync|realpathSync)\\s*\\("
+      # ③ fs 模块导入语句（兜底：文件级信号，具体行由 AST 精筛定位）
+      - "(require\\([\"']node:fs[\"']?\\)|from\\s+[\"']node:fs(/promises)?[\"'])"
     fixable: true
     mitigation: "🔴 高风险改用 fs.promises.xxx + await，循环内改为 Promise.all 并发；🟡 启动路径的一次性读取可豁免"
 
