@@ -151,16 +151,22 @@ rules:
     fixable: false
 
   # ----- 3. 健壮性 -----
-  - id: robustness/no-sync-fs
-    name: "禁止在异步函数中使用同步 IO"
+  # 2026-09-17：由 quality/sync-fs 升级为分级版 io-risk。
+  #   旧检查只判「异步函数内的同步 IO」；本检查是其超集，另覆盖：
+  #     循环内 I/O（逐次阻塞）、请求处理路径、启动路径，
+  #     并区分读/写/删/改名（写删类加权）。两者并存会对同一处重复报，故旧规则已移除。
+  #   L1 正则初筛只负责「哪些文件可能含 fs 调用」，定级由 lib/ast/io-risk.js 完成。
+  - id: robustness/io-risk
+    name: "I/O 风险分级（同步阻塞 / 循环内 / 关键路径）"
     category: "robustness"
     severity: "warning"
-    description: "同步 IO 会阻塞事件循环"
+    description: "按上下文与操作类别对文件 I/O 分级：异步路径中的同步 I/O、循环内 I/O 为高风险；写/删/改名类加权一档"
     patterns:
-      - "fs\\.(readFileSync|writeFileSync|statSync|existsSync|readdirSync|mkdirSync|rmSync|unlinkSync|renameSync|copyFileSync|appendFileSync)\\s*\\("
-      - "(require\\([\"']fs[\"']\\)|from\\s+[\"']node:?fs[\"'])\\s*\\.(readFileSync|writeFileSync|statSync|existsSync|readdirSync|mkdirSync|rmSync|unlinkSync|renameSync|copyFileSync|appendFileSync)\\s*\\("
+      - "fs\\.(readFileSync|writeFileSync|appendFileSync|existsSync|statSync|lstatSync|readdirSync|mkdirSync|rmdirSync|rmSync|unlinkSync|renameSync|copyFileSync|chmodSync|openSync|closeSync|readSync|writeSync|truncateSync|realpathSync)\\s*\\("
+      - "(fs|fsp|fsPromises)\\.(promises\\.)?(readFile|writeFile|appendFile|stat|lstat|readdir|mkdir|rmdir|rm|unlink|rename|copyFile|chmod|open|close|read|write|truncate|realpath|createReadStream|createWriteStream)\\s*\\("
+      - "(require\\([\"']fs[\"']\\)|from\\s+[\"']node:?fs/promises[\"'])\\s*\\."
     fixable: true
-    mitigation: "改用 fs.promises.xxx + await"
+    mitigation: "🔴 高风险改用 fs.promises.xxx + await，循环内改为 Promise.all 并发；🟡 启动路径的一次性读取可豁免"
 
   - id: robustness/no-empty-catch
     name: "禁止空的 catch 块"

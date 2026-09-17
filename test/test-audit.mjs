@@ -14,7 +14,7 @@ import '../lib/rule/compilers.js';
 import { auditFull, auditWithScope, makeFinding, summarize } from '../lib/audit/index.js';
 import { collectTextFiles, collectChangedFiles, isGitRepo, readText } from '../lib/audit/collector.js';
 import {
-  checkEmptyCatch, checkRegexRules, checkPathRegexRules, checkFuncLines, checkSyncFsInFile,
+  checkEmptyCatch, checkRegexRules, checkPathRegexRules, checkFuncLines, checkIoRisk,
   checkCredentialFiles, checkMinLength, checkComplexity, checkDepth, checkMaxLines,
   checkRepeated, checkSemantic, groupByKind, runChecks, capSeverity, checkPrivateFiles,
 } from '../lib/audit/checks.js';
@@ -268,15 +268,34 @@ test('checkFuncLines：超阈函数报、未超不报', () => {
   assert.equal(checkFuncLines({ file: 'a.js', text: 'function g() { return 1; }\n', rules }).length, 0);
 });
 
-test('checkSyncFsInFile：async 中的同步 fs 报、纯同步不报', () => {
+test('checkIoRisk：异步中的同步 fs 判高风险；顶层同步判低风险；循环内判高风险', () => {
+  // 旧 quality/sync-fs 场景：异步函数内的同步 fs → 高风险
   const viaPrefix = 'export async function f() {\n  const x = fs.readFileSync("a");\n}\n';
-  assert.ok(checkSyncFsInFile({ file: 'a.mjs', text: viaPrefix }).length >= 1, 'fs. 前缀应报');
+  const r1 = checkIoRisk({ file: 'a.mjs', text: viaPrefix });
+  assert.ok(r1.length >= 1, 'fs. 前缀应报');
+  assert.ok(r1.some((f) => f.message.includes('高风险')), '异步路径中的同步 I/O 应判高风险');
+
   const viaImport = 'import { readFileSync } from "node:fs";\nexport async function g() {\n  const x = readFileSync("a");\n}\n';
-  assert.ok(checkSyncFsInFile({ file: 'a.mjs', text: viaImport }).length >= 1, 'named import 后直调应报');
+  assert.ok(checkIoRisk({ file: 'a.mjs', text: viaImport }).length >= 1, 'named import 后直调应报');
+
+  // 顶层同步读一次 → 低风险（启动路径），不是高风险
   const plain = 'const x = fs.readFileSync("a");\n';
-  assert.equal(checkSyncFsInFile({ file: 'a.mjs', text: plain }).length, 0, '非 async 上下文不报');
-  const custom = 'export async function h() {\n  const x = readFileSync("a");\n}\n';
-  assert.equal(checkSyncFsInFile({ file: 'a.mjs', text: custom }).length, 0, '未 import 的同名自定义函数不误报');
+  const r2 = checkIoRisk({ file: 'a.mjs', text: plain });
+  assert.ok(r2.some((f) => f.message.includes('低风险')), '顶层同步 I/O 应判低风险（启动路径）');
+
+  // 循环内的异步 I/O → 高风险
+  const inLoop = 'async function h() {\n  for (const f of list) { await fs.promises.readFile(f); }\n}\n';
+  const r3 = checkIoRisk({ file: 'a.mjs', text: inLoop });
+  assert.ok(r3.some((f) => f.message.includes('循环内')), '循环内 I/O 应命中循环内上下文');
+
+  // 裸调用（未 import fs）同样报：本检查只认调用名，不做来源判定
+  //   取舍：漏报（真 fs 调用没查出来）比误报代价大；与原 quality/sync-fs 行为一致
+  const bare = 'export async function k() {\n  const x = readFileSync("a");\n}\n';
+  assert.ok(checkIoRisk({ file: 'a.mjs', text: bare }).length >= 1, '裸调用按调用名识别，仍应报');
+
+  // 完全无关的函数名不报
+  const unrelated = 'export async function m() {\n  const x = myCustomReader("a");\n}\n';
+  assert.equal(checkIoRisk({ file: 'a.mjs', text: unrelated }).length, 0, '非 fs 调用名不应报');
 });
 
 test('checkMinLength：过短命名报、正常命名不报', () => {

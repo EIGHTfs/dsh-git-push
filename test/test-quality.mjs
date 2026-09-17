@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 
 import { tokenize, checkSyncFs, checkEmptyCatchAst, checkFuncLinesAst } from '../lib/ast/index.js';
 import { DEFAULT_WEIGHTS, DIMENSION_ORDER, countByDimension, scoreQuality } from '../lib/score/index.js';
-import { checkSyncFsInFile, checkEmptyCatch } from '../lib/audit/checks.js';
+import { checkIoRisk, checkEmptyCatch } from '../lib/audit/checks.js';
 
 // ---------- tokenizer ----------
 test('tokenize：ident/punct/str/comment/tmpl 分类', () => {
@@ -168,14 +168,15 @@ test('坏样本文件：三类质量检查 100% 检出（同 fixture 锚定）',
 });
 
 // ---------- 检查器接入审计（finding 形状） ----------
-test('checkSyncFsInFile：产出统一 finding（rule/kind/dimensions/exemptHint）', () => {
-  const f = checkSyncFsInFile({ file: 'a.mjs', text: 'async function a() { fs.readFileSync("x"); }' });
+test('checkIoRisk：产出统一 finding（rule/kind/dimensions/exemptHint）', () => {
+  const f = checkIoRisk({ file: 'a.mjs', text: 'async function a() { fs.readFileSync("x"); }' });
   assert.equal(f.length, 1);
-  assert.equal(f[0].rule, 'quality/sync-fs');
-  assert.equal(f[0].kind, 'sync-fs');
-  assert.equal(f[0].severity, 'warning');
+  assert.equal(f[0].rule, 'robustness/io-risk');
+  assert.equal(f[0].kind, 'io-risk');
+  assert.equal(f[0].severity, 'warning');   // 分级只提示，不拦提交
   assert.ok(f[0].dimensions.includes('性能'));
-  assert.ok(f[0].exemptHint.includes('dsh-skip-quality'));
+  assert.ok(f[0].dimensions.includes('健壮性'));
+  assert.ok(f[0].exemptHint.includes('dsh-skip'));
 });
 
 test('checkEmptyCatch：多行空块经审计入口命中', () => {
