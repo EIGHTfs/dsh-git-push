@@ -14,7 +14,8 @@
  *   node scripts/watch-preview.mjs &          # 后台
  *   配合真实后端测试：
  *     node scripts/preview-server.mjs --port 8090
- *     浏览器开 assets/preview.html?backend=http://127.0.0.1:8090
+ *     浏览器开 preview-server 的地址（它自己注入同源 backend，无需手拼）：
+ *       局域网 http://<本机局域网IP>:8090   本机回环 http://127.0.0.1:8090
  */
 import { watch } from 'node:fs';
 import { spawnSync } from 'node:child_process';
@@ -56,8 +57,8 @@ for (const f of TARGETS) {
 const ports = [
   {
     cmd: 'scripts/preview-server.mjs',
-    hint: '接真实后端测试可用：node scripts/preview-server.mjs --port 8090，然后浏览器开',
-    url: 'assets/preview.html?backend=http://127.0.0.1:8090',
+    hint: '接真实后端测试可用：node scripts/preview-server.mjs --port 8090，然后浏览器开它的地址（局域网 http://<本机局域网IP>:8090 / 本机回环 http://127.0.0.1:8090）',
+    url: '/',
   },
 ];
 console.log('[watch] 监听源码变更，自动重生成 ' + OUT);

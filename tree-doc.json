@@ -211,5 +211,15 @@
   "test/test-slash-commands.mjs": "用户输入框 /git-audit 斜杠命令（解析/接线/对本仓库跑 quick）",
   "lib/rule/compilers": "各规则 kind 编译器（regex/structure/func/frontend/link-semantic/credential/dataflow/file-health/numeric-kinds）",
   "skills/git-workflow-gitpush": "git-workflow-gitpush 工作流 skill（dsh-git-push 提交纪律）",
-  "test/test-settings-persistence.mjs": "设置侧边栏持久化专项测试（L1 提交/L2 白名单/L3 回读/L4 消费四层断言）"
+  "test/test-settings-persistence.mjs": "设置侧边栏持久化专项测试（L1 提交/L2 白名单/L3 回读/L4 消费四层断言）",
+  "lib/git/atomic-json.js": "统一 JSON 原子读写（readJson/writeJsonAtomic/updateJsonAtomic/writeTextAtomic）",
+  "scripts/scan-file-io.mjs": "文件读写扫描器（列出所有 fs 读写调用位置 + 路径参数）",
+  "lib/audit/report-yaml.js": "（待注释）",
+  "lib/git/account-status.js": "（待注释）",
+  "lib/git/scan-runner.js": "（待注释）",
+  "lib/skip-dirs.js": "（待注释）",
+  "scripts/func-index.js": "（待注释）",
+  "scripts/scan-repos.mjs": "（待注释）",
+  "test/test-audit-empty.mjs": "（待注释）",
+  "test/test-auditignore.mjs": "（待注释）"
 }

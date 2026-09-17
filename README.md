@@ -131,7 +131,7 @@ dsh-git-push/
 │   ├── BUGFIX-NOTES-2026-09-14.md — Bug 修复说明（diff 审计提速 / 凭据文件拦截三层根因）
 │   ├── commit-push.js — 审计提交总入口（commitWithAudit + runAudit 同步审计）
 │   ├── index.js — 插件入口（DSH 接线，再导出全部能力）
-│   ├── skip-dirs.js — 统一跳过目录名单（硬编码 node_modules/.git + yml exclude_dirs 黑名单关键词）
+│   ├── skip-dirs.js — （待注释）
 │   ├── user-requirements.json — 开发者特殊要求清单（提交推送前逐条核对）
 │   ├── app/ — 插件入口层（apply/HTTP 处理/工具调用分发/注入文本/默认扫描根）
 │   │   ├── apply.js — 插件装载入口（注册 schema/工具/HTTP/注入钩子）
@@ -168,7 +168,7 @@ dsh-git-push/
 │   │   ├── index.js — 审计层统一出口（auditFull/auditChanged）
 │   │   ├── orchestrate.js — 审计编排（收集→检查→汇总）
 │   │   ├── repo-level.js — 仓库级语义规则
-│   │   ├── report-yaml.js — 审计结果 YAML 报告（summary → 拦截级别 → 目录 → 文件 → 规则明细）
+│   │   ├── report-yaml.js — （待注释）
 │   │   ├── slot.js — 按规则包聚合审计命中（拦截/警告/通过）
 │   ├── audit-rules/ — 规则包 yml（nodejs/npm/frontend/comment/dsh/private/structure 等动态槽位）
 │   │   ├── audit-rules-comment.yml — 注释类规则（黑名单措辞/对话残留）（规则包 comment）
@@ -212,6 +212,7 @@ dsh-git-push/
 │   │   ├── account-status.js — （待注释）
 │   │   ├── account.js — 账号校验（token 在线 + SSH 公钥指纹，输出账号状态块）
 │   │   ├── api.js — GitHub REST 调用（githubFetch 统一 token/错误识别）
+│   │   ├── atomic-json.js — 统一 JSON 原子读写（readJson/writeJsonAtomic/updateJsonAtomic/writeTextAtomic）
 │   │   ├── browse.js — 目录浏览（账号卡片路径选择器后端）
 │   │   ├── clone.js — 克隆（Git Data API，不依赖本地凭据）
 │   │   ├── cloud.js — 云端仓库列表（/user/repos 供手动 clone）
@@ -225,7 +226,7 @@ dsh-git-push/
 │   │   ├── remote.js — 远端仓库管理（建仓默认 private/可见性切换）
 │   │   ├── repo-index.js — dsh-repo-index 自动维护（扫描 workspace 生成索引 JSON）
 │   │   ├── repos.js — 仓库扫描与展示（describeRepo 分支/远端/领先落后/未提交）
-│   │   ├── scan-runner.js — 本地仓库「独立进程后台扫描」运行器（增量进度 + 等待新版本）
+│   │   ├── scan-runner.js — （待注释）
 │   │   ├── sensitive.js — 敏感信息扫描（提交前拦截密钥/凭据/私密文件）
 │   │   ├── transport.js — 推送通道（dispatchPush 决策：SSH/API/auto + 结果核对）
 │   ├── http/ — HTTP 总入口（鉴权中间件 + 端点处理器骨架）
@@ -254,7 +255,8 @@ dsh-git-push/
 │   ├── func-index.js — （待注释）
 │   ├── preview-server.mjs — 本地真实后端测试服务（preview.html 接真实 handleHttp）
 │   ├── rule-switch.mjs — 规则槽位手动启停 CLI
-│   ├── scan-repos.mjs — 独立进程离线扫描脚本（逐仓写进度 + 追加索引，纯离线）
+│   ├── scan-file-io.mjs — 文件读写扫描器（列出所有 fs 读写调用位置 + 路径参数）
+│   ├── scan-repos.mjs — （待注释）
 │   ├── scan-version.mjs — 版本一致性校验脚本
 │   ├── scrub-user-wording.mjs — 清理「用户沟通措辞」独立脚本
 │   ├── sync-plugin.mjs — 双副本同步脚本（源仓库 → 部署安装副本）
@@ -270,10 +272,10 @@ dsh-git-push/
 │   ├── .test — 空文件豁免标记（目录级豁免 .test 目录）
 │   ├── test-account-ssh.mjs — 账号检查 + SSH 密钥测试
 │   ├── test-audit-bad-file.mjs — 审计拦截门禁测试（硬编码密码/API key/.env 凭据文件）
+│   ├── test-audit-empty.mjs — （待注释）
 │   ├── test-audit-scope.mjs — 审计作用域/凭据占位符回归测试
 │   ├── test-audit.mjs — 审计总入口测试（auditFull/changed/豁免/gitignore）
-│   ├── test-audit-empty.mjs — 审计空结果测试（0 文件不评分 + 审计 YAML 层级聚合）
-│   ├── test-auditignore.mjs — .auditignore 审计豁免测试（目录/文件级豁免 + 仍可入库 + 不污染 git 配置）
+│   ├── test-auditignore.mjs — （待注释）
 │   ├── test-client.mjs — 侧边栏测试（手写 DOM/零外部资源/开关默认）
 │   ├── test-context.mjs — 上下文注入测试
 │   ├── test-dataflow.mjs — 三层审计 L2 数据流测试
@@ -846,7 +848,14 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
-| **1.3.3**（当前） | **本地扫描完自动补查未知远端状态（写回索引 + 刷新 UI）+ tree-doc 漂移并入审计 + 设置侧边栏预读修复 + 推送门禁开关** \
+| **1.3.4**（当前） | **凭据统一收进 config.json + 统一 JSON 原子读写 + 索引只存本地仓库 + 局域网地址修正 + 文件读写扫描器** \
+**凭据统一收进 config.json**（lib/git/credentials.js）：`persistGithubToken`/`persistSshPub` 除写旧凭据文件（github-token / *.pub，兼容旧路径）外，**同步写插件 config.json**（githubToken / sshPub 键，0600 原子写）；`readSshPub` 改为**优先读 config.json 的 sshPub**（回退旧 *.pub）；`gen-ssh-key` 一键生成后也把公钥写入 config.json——修「SSH 公钥只落 id_rsa.pub、重启回读 config.json 取不到」；SSH 私钥（id_rsa/id_ed25519/id_ecdsa）仍为文件（ssh 工具链必需） \
+**统一 JSON 原子读写**（新增 lib/git/atomic-json.js：`readJson`/`readJsonAny`/`writeJsonAtomic`/`updateJsonAtomic`/`writeTextAtomic`）：把四处重复的「读 JSON → 改 → .tmp+rename 原子写回」收敛为一份实现，settings-bridge（config.json）、scan-runner（scan-live.json）、repo-index（syncRepoIndex 写索引）改用它；坏文件/缺失统一返回 null 不抛 \
+**dsh-repo-index 只存本地仓库**（lib/git/repo-index.js `mergeCloudReposIntoIndex`）：语义收缩——云端扫描只**更新索引里已有条目的云端字段**（visibility/defaultBranch/pushedAt/description），**不再新增云端-only 条目**（本地无副本的云仓库不进索引；前端「云端有、本地无」由 repos-cloud 的 localExists 判断）；合并保留本地条目既有字段（path/skills/cloneCmd），不重建不丢条目 \
+**局域网地址修正**（scripts/preview-server.mjs / watch-preview.mjs）：预览服务注入的 backend 由硬编码 `http://127.0.0.1:<port>` 改为**同源 `location.origin`**（局域网设备打开时不再把请求打到设备自己）；请求 origin/host 按**实际 Host 头**覆写（局域网访问不再被判跨源）；启动提示**优先给局域网地址**且 IP 由 os.networkInterfaces 动态探测（不写死机器地址）\
+**文件读写扫描器**（新增 scripts/scan-file-io.mjs）：扫描项目代码列出所有 fs 读写调用位置（read/write/append/rename/copy/unlink/rm/mkdir/readdir/stat/stream…）+ 解析路径参数（静态串、模板串标 \<expr\>、同文件变量赋值溯源），支持 `--write`（只看写）/`--op`（按操作过滤）/`--json`；用于核查「某文件被哪些地方读写」\
+配套：test-persist-credentials 断言更新（config.json 为主存）；tree-doc 索引补新文件描述；测试 34/34、check 98/98、tree-doc 无漂移 \
+| **1.3.3** | **本地扫描完自动补查未知远端状态（写回索引 + 刷新 UI）+ tree-doc 漂移并入审计 + 设置侧边栏预读修复 + 推送门禁开关** \
 **本地扫描完自动串行补查未知云端状态**（lib/git/repo-index.js `updateRepoRemoteStateInIndex` + `/repos-local-refresh` 端点）：本地列表对超预算/熔断的仓库标 `liveSkipped`（远端状态未知）后，前端自动把这些仓库 POST 给后端，串行 liveRemoteHead（SSH 真源）补查 remoteHead/ahead/behind/remoteHeadAt/synced，结果**逐个追加写回索引**（读-改-写单条目，不重建不重扫、保留其他条目），前端同时刷新列表远端状态（移除 liveSkipped 标记）；readRepoIndexMap 透传补查字段 \
 **tree-doc 漂移检查并入审计**（scripts/tree-doc.mjs `checkDrift` 支持自定义 root + lib/audit/orchestrate.js `appendTreeDocDrift`）：auditFull/auditChanged 检查仓库根 README 的 dshgp-tree 标记块与真实文件树是否一致（新增未列/已删未清/映射孤儿），漂移产生 `structure/tree-doc-drift` finding（warning，不拦提交）；无树块=未启用不报 \
 **设置侧边栏本地列表预读修复**：修「重启后不预读」——移除模块级 `dshgp_startupLoaded` 一次性标记（DSH bundle 常驻时保持 true 导致重启后不再预读），改为**每次进入设置页都预读** account-status.json / dsh-repo-index.json；云端获取（repos-cloud）后自动重读索引刷新本地列表远端状态 \

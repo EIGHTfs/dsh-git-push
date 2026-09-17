@@ -65,7 +65,8 @@ test('写入后 resolveToken 能读到（完整闭环：保存 → 落盘 → �
     persistGithubToken('ghp_TEST_ROUNDTRIP_999', {});
     const r = resolveToken({});
     assert.equal(r.token, 'ghp_TEST_ROUNDTRIP_999', 'resolveToken 应读回刚写入的 token');
-    assert.match(r.source, /github-token$/, '来源应是插件配置目录文件');
+    // 2026-09-16 统一：凭据主存 config.json（githubToken 键），resolveToken 优先读它
+    assert.match(r.source, /config\.json$/, '来源应是插件配置目录 config.json（主存）');
   });
 });
 

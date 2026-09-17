@@ -7,7 +7,8 @@
  *
  * 用法：
  *   node scripts/preview-server.mjs --port 8090 [--root <默认扫描根>]
- *   浏览器访问：http://127.0.0.1:8090 （自动接真实后端）
+ *   浏览器访问：http://<本机局域网IP>:8090 （推荐，手机/其他设备也可开）
+ *               本机回环 http://127.0.0.1:8090 亦可用（自动接真实后端）
  *
  * 说明：
  *   - 仅服务本机调试（回环信任 + 全 ENABLE CORS），非生产宿主；不经 DSH 宿主
@@ -15,6 +16,7 @@
  *   - GET / 自动 serve preview.html（注入 backend 指向本服务，免手动拼 URL）。
  */
 import http from 'node:http';
+import os from 'node:os';
 import { readFileSync, existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -22,6 +24,21 @@ import { fileURLToPath } from 'node:url';
 import { readJsonBody } from '../lib/http/index.js';
 import { handleHttp } from '../lib/app/http-handlers.js';
 import { defaultConfig, resolveConfig } from '../lib/client/index.js';
+
+/** 探测本机局域网 IPv4（非回环、非容器网桥）：优先 10.x/192.168.x/172.16-31.x。 */
+function detectLanIp() {
+  try {
+    const cands = [];
+    for (const list of Object.values(os.networkInterfaces())) {
+      for (const ni of list || []) {
+        if (ni.family !== 'IPv4' || ni.internal) continue;
+        cands.push(ni.address);
+      }
+    }
+    // 优先私网段（排除 docker/网桥常见的 172.17-172.31 次级地址，首选项仍按出现顺序）
+    return cands.find((a) => /^10\./.test(a)) || cands.find((a) => /^192\.168\./.test(a)) || cands[0] || '';
+  } catch { return ''; }
+}
 
 const __root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const argv = process.argv.slice(2);
@@ -52,7 +69,10 @@ let previewHtml = '';
 try { previewHtml = readFileSync(previewPath, 'utf8'); } catch { /* preview.html 不存在则不 serve 首页 */ }
 // 在 </head> 前注入 <script> 设置 backend（preview.html fetch mock 优先读 location.search，
 //   fallback 读 window.__DSHGP_BACKEND__，两者都自动接本服务）
-const injectScript = `<script>window.__DSHGP_BACKEND__='http://127.0.0.1:${port}';</script>`;
+// 2026-09-16 修复：注入**同源地址**（location.origin），不再硬编码 127.0.0.1——
+//   经局域网地址（如 http://10.10.10.63:8090）打开页面时，硬编码回环会让浏览器把请求
+//   打到访问设备自己（连不上）；同源地址则本机/局域网都正确指向本服务。
+const injectScript = `<script>window.__DSHGP_BACKEND__=location.origin;</script>`;
 const injectedHtml = previewHtml.replace('</head>', injectScript + '\n</head>');
 
 const server = http.createServer((req, res) => {
@@ -70,10 +90,12 @@ const server = http.createServer((req, res) => {
   }
   // 其他请求 → handleHttp（/api/git-push/* 等）
   readJsonBody(req, async (body) => {
-    // 本地信任：回环预览页跨端口，覆写 origin 为同源以过 CSRF 校验（本地开发服务）。
-    const origin = `http://127.0.0.1:${port}`;
+    // 本地信任：预览页跨端口，覆写 origin 为**请求实际 Host**（本机访问=回环地址，
+    //   局域网访问=局域网地址）以过 CSRF 校验；不再固定 127.0.0.1，否则局域网访问被判跨源。
+    const reqHost = String(req.headers.host || `127.0.0.1:${port}`);
+    const origin = `http://${reqHost}`;
     const r = await handleHttp(
-      { method: req.method, url: req.url, origin, host: `127.0.0.1:${port}`, headers: req.headers, body },
+      { method: req.method, url: req.url, origin, host: reqHost, headers: req.headers, body },
       env,
       cfg,
     );
@@ -83,8 +105,11 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(port, '0.0.0.0', () => {
-  console.log(`dsh-git-push 预览服务已启动:`);
-  console.log(`  本机访问: http://127.0.0.1:${port}`);
-  console.log(`  局域网访问: http://10.10.10.63:${port}`);
-  console.log(`  （自动接真实后端，免手动拼 ?backend=）`);
+  // 2026-09-16：优先给**局域网地址**（远程/手机也能打开），本机回环降为备选；
+  //   IP 用 os.networkInterfaces() 动态探测（不写死某台机器的地址）。
+  const lan = detectLanIp();
+  console.log('dsh-git-push 预览服务已启动:');
+  if (lan) console.log(`  局域网访问: http://${lan}:${port}   ← 推荐（本机/手机/其他设备）`);
+  console.log(`  本机回环:   http://127.0.0.1:${port}`);
+  console.log('  （自动接真实后端，免手动拼 ?backend=）');
 });
