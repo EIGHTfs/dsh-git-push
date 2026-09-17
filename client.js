@@ -543,7 +543,9 @@ window.__ModuleLoader__.load({
     /** 本地面板：默认扫描工作区目录，可手动指定路径（📂 选择器）；仓库领先 + 无未提交改动可手动 push。 */
     function dshgp_RepoLocalPane(props) {
       const s = props.state;
-      const rows = (s.localRepos || []).map((r) => jsx.jsx(dshgp_RepoLocalRow, { key: r.path, repo: r, state: s, onPush: props.pushLocalRepo }));
+      // key 用 path，空 path 时回退 name（索引里云端-only 条目 path 为空，纯 path 作 key 会
+      //   多条撞同一空 key → React「two children with the same key」警告）
+      const rows = (s.localRepos || []).map((r) => jsx.jsx(dshgp_RepoLocalRow, { key: r.path || `name:${r.name}`, repo: r, state: s, onPush: props.pushLocalRepo }));
       return jsx.jsxs('div', {
         className: 'dshgp_repanepane',
         children: [
