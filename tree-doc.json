@@ -176,6 +176,7 @@
   "test/test-magic-number.mjs": "硬编码魔数检测测试",
   "test/test-persist-credentials.mjs": "凭据持久化测试",
   "test/test-plugin.mjs": "插件接线测试（入口导出/工具清单/双副本同步）",
+  "test/test-button-bind.mjs": "按钮绑定交叉比对（jsx 工厂形态/注释过滤/行号归属）",
   "test/test-push-transport.mjs": "推送通道回归（SSH 优先/一致性语义）",
   "test/test-quality.mjs": "评分总入口测试（AST 质量检查器）",
   "test/test-readme-gen.mjs": "README 生成测试（模板渲染/版本表）",

@@ -143,7 +143,7 @@ dsh-git-push/
 │   │   ├── scan-root.js — 默认扫描根解析（配置优先→DSH 家根自动识别）
 │   │   ├── schema.js — 配置 schema（宿主导出缺失时兜底）
 │   │   ├── settings-bridge.js — 设置读写桥（host scope 共享；绕开 client isLoopback=memory 落盘陷阱）
-│   │   ├── slash-commands.js — 用户输入框斜杠命令（注册 6 条只读命令）
+│   │   ├── slash-commands.js — 用户输入框斜杠命令（目前只注册 /git-audit）
 │   │   ├── slot-stats.js — 规则槽位命中统计（模块级状态）
 │   │   ├── tool-call.js — 工具调用分发（git_scan/commit_push/audit/status 等全部工具）
 │   │   ├── tools.js — 工具定义清单（名称/描述/参数 schema）
@@ -174,7 +174,7 @@ dsh-git-push/
 │   │   ├── orchestrate.js — 审计编排（收集→检查→汇总）
 │   │   ├── repo-level.js — 仓库级语义规则
 │   │   ├── report-yaml.js — （待注释）
-│   │   ├── slot.js — 按规则包聚合审计命中（审计报告用；侧边栏走规则条数口径）
+│   │   ├── slot.js — 按规则包聚合审计命中（拦截/警告/通过）
 │   ├── audit-rules/ — 规则包 yml（nodejs/npm/frontend/comment/dsh/private/structure 等动态槽位）
 │   │   ├── audit-rules-comment.yml — 注释类规则（黑名单措辞/对话残留）（规则包 comment）
 │   │   ├── audit-rules-docs.yml — 文档类规则（README/文档措辞）（规则包 docs）
@@ -287,6 +287,7 @@ dsh-git-push/
 │   ├── test-audit-scope.mjs — 审计作用域/凭据占位符回归测试
 │   ├── test-audit.mjs — 审计总入口测试（auditFull/changed/豁免/gitignore）
 │   ├── test-auditignore.mjs — （待注释）
+│   ├── test-button-bind.mjs — 按钮绑定交叉比对（jsx 工厂形态/注释过滤/行号归属）
 │   ├── test-client.mjs — 侧边栏测试（手写 DOM/零外部资源/开关默认）
 │   ├── test-context.mjs — 上下文注入测试
 │   ├── test-dataflow.mjs — 三层审计 L2 数据流测试
@@ -313,7 +314,7 @@ dsh-git-push/
 │   ├── test-settings-persistence.mjs — 设置侧边栏持久化专项测试（L1 提交/L2 白名单/L3 回读/L4 消费四层断言）
 │   ├── test-sidebar-interaction.mjs — 侧边栏规则包列表交互自检
 │   ├── test-sidebar-state.mjs — 设置侧边栏状态自检（设置键回读/凭据已填写判断/统一刷新入口/产物同步）
-│   ├── test-slash-commands.mjs — 用户输入框斜杠命令（6 条只读命令的解析/接线/格式化）
+│   ├── test-slash-commands.mjs — 用户输入框 /git-audit 斜杠命令（解析/接线/对本仓库跑 quick）
 │   ├── test-smart-hint.mjs — 扫描智能提示 + 评分对数衰减测试
 │   ├── test-status-secret.mjs — token 明文不下发安全回归
 │   ├── test-task-queue.mjs — 后台化回归测试（官方 job 注册 / 无 jobs 同步保底 / blocker 拦截）
@@ -867,7 +868,15 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
-| **1.4.3**（当前） | **侧边栏规则包统计口径改为「规则条数」（修自相矛盾的假数据）+ 按钮绑定检测补 jsx 形态 + 预览生成器换机可用** \
+| **1.4.4**（当前） | **修 jsx 按钮检测的三类误报（1.4.3 引入）+ 该检查首次纳入测试** \
+1.4.3 给按钮绑定比对补上 jsx 工厂形态（`jsx.jsx('button', {...})`）后，从「完全漏报」变成了「有检出但误报」——全仓扫出 5 条，实测**全部为假**：\
+**① `input` 被当作按钮候选**：提取正则写的是 `(button|input)`，而 input 用 `onChange` 传值、本就不需要 `onClick`，于是 client.js 里 11 个 input 全被判「未绑定」。现只认 `button`。\
+**② 扫原文导致注释里的按钮算数**：原先直接 `re.exec(text)`，本文件自己的文档注释里写 `jsx.jsx('button', {...})` 就被当真按钮报了 3 条。改为按 tokenizer 标出的注释行做行级屏蔽（tokenizer 的 token 只带 `line` 不带字符偏移，故按行处理；替换为等长空格以保持行号与切片偏移不变）。\
+**③ 事件判定同样被骗**：注释里写 `// onClick: 注释不算` 会被当成「已绑定」而使真未绑定的按钮漏报。事件属性判定改在**过滤注释后的片段**上做——注释与代码在两个方向上都会骗过纯文本正则，故两处都要过滤。\
+另修行号归属：原按匹配位置算行号，跨行属性对象下会漂到前一个调用（实测把 616 行的 `input` 报成 623 行 `button` 的位置）。\
+**该检查此前零测试覆盖**，这正是误报能溜进提交的原因。新增 `test/test-button-bind.mjs`（8 用例）：正反向都锁——真未绑定必须报出、已绑定不报、多行属性对象能取到事件、`input` 不算、注释里的按钮与 onClick 都不算、过滤注释后真按钮仍能提取且行号正确、字符串里的括号不提前截断片段。\
+全仓复扫：提取按钮 31 → **15**（去掉 11 个 input + 注释假阳性），未绑定 5 → **0**。回归 **678 全绿 / 0 失败** |
+| **1.4.3** | **侧边栏规则包统计口径改为「规则条数」（修自相矛盾的假数据）+ 按钮绑定检测补 jsx 形态 + 预览生成器换机可用** \
 **规则包三列口径修正**（`lib/app/http-handlers.js` `listRuleSlots`）：原先「有审计结果就用命中数」，但两侧**量纲不同**——`blocker`/`warning` 累计的是命中**次数**（同一条规则在多个文件各命中一次会累加），`total` 是规则**条数**，同排对比即产出越界数字：实测 `nodejs` 显示 245 警告 / 37 总规则（245 > 37），`filehealth` 5/1、`performance` 7/2 同样越界。现统一为 yml 规则条数口径，三档之和恒等于规则总数（15 个槽位全部自洽）；`hitStats` 形参保留以兼容既有调用方但不再参与计算。\
 **前端文案同步**（`client.js`）：表头 `拦截/警告/通过` → `拦截级/警告级/提示级`，悬停浮层与区块说明改为「该规则包内各严重级的规则条数（取自 yml，与是否跑过审计无关）」，并提示「想知道实际命中请看审计报告」——原先只有悬停才能看到口径说明，不悬停就与命中数无从分辨。\
 **按钮绑定检测补 jsx 形态**（`lib/checks/button-bind.js`）：原实现只认 `innerHTML` 字符串 / 反引号模板 / `createElement` 三种数据源，对 `jsx.jsx('button', {...})` 这类**调用式创建完全不可见**——对 `client.js` 跑出 0 条 finding，而该文件有 27 个此类按钮（含 clone 确认框的「开始克隆/取消」）。新增括号配平取完整调用表达式（只看单行会把多行属性写法全判成「无 onClick」）与事件属性判定，`jsx.jsx('jsx 前缀)`的前置否定不再排除 `.`（`jsx.jsx(...)` 的命名空间前缀）。\
