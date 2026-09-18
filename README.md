@@ -289,6 +289,7 @@ dsh-git-push/
 │   ├── test-auditignore.mjs — （待注释）
 │   ├── test-button-bind.mjs — 按钮绑定交叉比对（jsx 工厂形态/注释过滤/行号归属）
 │   ├── test-client.mjs — 侧边栏测试（手写 DOM/零外部资源/开关默认）
+│   ├── test-clone-preview-buttons.mjs — clone 预览确认框按钮可点（真渲染+真点击）
 │   ├── test-context.mjs — 上下文注入测试
 │   ├── test-dataflow.mjs — 三层审计 L2 数据流测试
 │   ├── test-exempt.mjs — 豁免总入口测试（7 标记 + 位置语义）
@@ -868,7 +869,13 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
-| **1.4.4**（当前） | **修 jsx 按钮检测的三类误报（1.4.3 引入）+ 该检查首次纳入测试** \
+| **1.4.5**（当前） | **修 clone 预览确认框「开始克隆/取消」点了没反应（this 误用）** \
+点 clone 弹出的预览框里两个按钮全都没反应。根因是调用点写成了 `this.cloneConfirmed()` / `this.clonePreview = null`，而它所在的 `dshgp_RepoCloudPane(props)` 是**普通函数组件**、函数体内没有 this——ESM 严格模式下 `this` 为 `undefined`，点击即抛 `TypeError`，前端表现为「点了没反应」（既没报错提示、也没任何状态变化）。该组件内其余动作全部走 `props.*`，**全文件仅此一行误用 `this`**，属改写时从 Controller 方法复制的残留。\
+同时这两个动作**从未在 props 里组装过**，即便改成 `props.cloneConfirmed()` 也仍是 `undefined`。现补齐两个入口（`cloneConfirmed` / `cancelPreview`），调用点改用 `props.*`。\
+取消逻辑收进 Controller 新增的 `cancelPreview()`：原先写在点击回调里只清 `clonePreview`，而 `clonePending`（存着待克隆的 repo 与目标目录）会残留——再确认其它仓库时会拿到上一次的目标目录。现在两者一起清。\
+**顺带全仓排查同类误用**：用 tokenizer 剔注释后扫描全部 31 个 `dshgp_*` 函数组件，确认再无第二处 `this` 误用。\
+新增 `test/test-clone-preview-buttons.mjs`（8 用例）：从源码提取真实函数体、用最小 jsx 替身**实际渲染**预览框，在节点树里找到两个按钮并**真的调用其 onClick**，断言回调被触发（结构级 + 行为级）；另锁「调用点不得出现 this」「承接组件函数体内不得出现 this」「取消须同时清两个态」。已做**反向验证**：把 `this.*` 写法还原回去，测试如期失败 2 条；修好后 8/8 通过——确认测试真的覆盖该分支。回归 **686 全绿 / 0 失败** |
+| **1.4.4** | **修 jsx 按钮检测的三类误报（1.4.3 引入）+ 该检查首次纳入测试** \
 1.4.3 给按钮绑定比对补上 jsx 工厂形态（`jsx.jsx('button', {...})`）后，从「完全漏报」变成了「有检出但误报」——全仓扫出 5 条，实测**全部为假**：\
 **① `input` 被当作按钮候选**：提取正则写的是 `(button|input)`，而 input 用 `onChange` 传值、本就不需要 `onClick`，于是 client.js 里 11 个 input 全被判「未绑定」。现只认 `button`。\
 **② 扫原文导致注释里的按钮算数**：原先直接 `re.exec(text)`，本文件自己的文档注释里写 `jsx.jsx('button', {...})` 就被当真按钮报了 3 条。改为按 tokenizer 标出的注释行做行级屏蔽（tokenizer 的 token 只带 `line` 不带字符偏移，故按行处理；替换为等长空格以保持行号与切片偏移不变）。\

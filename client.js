@@ -709,7 +709,11 @@ window.__ModuleLoader__.load({
           //   百分比按字节算（大文件占绝对多数耗时），并显示停滞时长。
           s.cloneProgress ? dshgp_CloneProgress({ p: s.cloneProgress }) : null,
           // clone 预览：先告知「会下载什么、会跳过什么」，确认再开始
-          s.clonePreview ? dshgp_ClonePreview({ p: s.clonePreview, onConfirm: () => { void this.cloneConfirmed(); }, onCancel: () => { this.clonePreview = null; this.publish(); } }) : null,
+          // 2026-09-18 修：原先这里用 this.cloneConfirmed / this.publish，但本组件是普通函数
+          //   `dshgp_RepoCloudPane(props)`，函数体内**没有 this**（全文件仅本行误用），
+          //   ESM 严格模式下 this 为 undefined → 点击直接抛 TypeError → 按钮「点了没反应」。
+          //   动作一律走 props（与同文件其余按钮一致）。
+          s.clonePreview ? dshgp_ClonePreview({ p: s.clonePreview, onConfirm: () => { void props.cloneConfirmed(); }, onCancel: () => { props.cancelPreview(); } }) : null,
           rows.length ? jsx.jsxs('div', { className: 'dshgp_replist', children: rows }) : null,
         ],
       });
@@ -1799,6 +1803,19 @@ window.__ModuleLoader__.load({
       }
 
       /** 第二步：点「开始克隆」后真正下载，并轮询进度直到结束。 */
+      /**
+       * 取消 clone 预览确认框（点「取消」）。
+       *
+       * 只清预览态与待办态，不做任何远端/磁盘操作——此时尚未开始下载。
+       * 放在 Controller 而非组件里，是为了让「取消」也能顺带清 clonePending，
+       *   否则残留的 clonePending 会让「确认其它仓库」拿到上一次的目标目录。
+       */
+      cancelPreview() {
+        this.clonePreview = null;
+        this.clonePending = null;
+        this.publish();
+      }
+
       async cloneConfirmed() {
         const pend = this.clonePending;
         if (!pend) return;
@@ -2131,6 +2148,8 @@ window.__ModuleLoader__.load({
           loadCloudRepos: () => { void this.refresh('cloud'); },
           pushLocalRepo: (path) => { void this.pushLocalRepo(path); },
           cloneFlow: (repo) => this.cloneFlow(repo),
+          cloneConfirmed: () => { void this.cloneConfirmed(); }, // 预览确认框「开始克隆」
+          cancelPreview: () => { this.cancelPreview(); },        // 预览确认框「取消」
         };
       }
     }
