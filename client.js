@@ -818,12 +818,13 @@ window.__ModuleLoader__.load({
       const name = meta.name || slot;
       const author = meta.author || '';
       const stats = (meta && meta.stats) || { blocker: 0, warning: 0, pass: 0, total: 0, source: 'rules' };
-      // 数字口径随 stats.source 区分——'audit' = 最近一次审计的实际命中数
-      //   （拦截/警告 = 命中的问题数，通过 = 没查出问题的规则数）；'rules' = 未审计时的规则条数口径。
-      const fromAudit = stats.source === 'audit';
-      const countTitle = (kind) => (fromAudit
-        ? `${name} 在最近一次审计中命中 ${kind} ${kind === '拦截' ? stats.blocker : (kind === '警告' ? stats.warning : stats.pass)} 条（共 ${stats.total} 条规则）`
-        : `${name} 共 ${stats.total} 条规则（${kind} 条 ${kind === '拦截' ? stats.blocker : (kind === '警告' ? stats.warning : stats.pass)}）——跑一次审计后显示命中数`);
+      // 口径统一为 yml 规则条数（2026-09-18）：三个数字是「该规则包里各严重级的规则条数」，
+      //   不是审计命中数。此前后端在跑过审计时改显命中数，而命中数按**次数**累加、规则数是**条数**，
+      //   同排对比会出现「245 警告 / 37 总规则」这类越界假数据；现固定为条数口径，不再分支。
+      const countTitle = (kind) => {
+        const n = kind === '拦截' ? stats.blocker : (kind === '警告' ? stats.warning : stats.pass);
+        return `${name}：${kind}级规则 ${n} 条（共 ${stats.total} 条规则）`;
+      };
       // 禁用态 = yml 顶层 disabled（后端 listRuleSlots 解析）；点击即时反馈靠 toggleDisabled
       //   本地翻转 slotMeta，loadSlots 对账 yml 真实状态。
       const disabled = !!meta.disabled;
@@ -838,9 +839,7 @@ window.__ModuleLoader__.load({
           meta.description ? jsx.jsx('div', { className: 'dshgp_hoverRow', children: meta.description }) : null,
           jsx.jsx('div', {
             className: 'dshgp_hoverRow',
-            children: fromAudit
-              ? `最近一次审计命中：拦截 ${stats.blocker} · 警告 ${stats.warning} · 未命中规则 ${stats.pass}（共 ${stats.total} 条规则）`
-              : `规则条数口径：拦截 ${stats.blocker} · 警告 ${stats.warning} · 规则 ${stats.pass}（共 ${stats.total} 条）——跑一次审计后显示命中数`,
+            children: `规则条数：拦截级 ${stats.blocker} 条 · 警告级 ${stats.warning} 条 · 提示级 ${stats.pass} 条（共 ${stats.total} 条规则）`,
           }),
           jsx.jsx('div', { className: 'dshgp_hoverRow', children: locked ? '安全红线：nodejs/private 不可禁用' : (disabled ? '当前禁用——点右侧按钮启用' : '当前启用——点右侧按钮禁用') }),
         ],
@@ -1035,16 +1034,16 @@ window.__ModuleLoader__.load({
                     className: 'dshgp_ruleheadrow',
                     children: [
                       jsx.jsx('span', { className: 'dshgp_ruleheadrowinfo', children: '规则包' }),
-                      jsx.jsx('span', { className: 'dshgp_rulecountRed', title: '该规则包在最近一次审计中命中的拦截级（blocker）问题数', children: '拦截' }),
-                      jsx.jsx('span', { className: 'dshgp_rulecountYellow', title: '该规则包在最近一次审计中命中的警告级（warning）问题数', children: '警告' }),
-                      jsx.jsx('span', { className: 'dshgp_rulecountGreen', title: '该规则包内没查出问题的规则条数', children: '通过' }),
+                      jsx.jsx('span', { className: 'dshgp_rulecountRed', title: '该规则包内拦截级（blocker/error）的规则条数', children: '拦截级' }),
+                      jsx.jsx('span', { className: 'dshgp_rulecountYellow', title: '该规则包内警告级（warning）的规则条数', children: '警告级' }),
+                      jsx.jsx('span', { className: 'dshgp_rulecountGreen', title: '该规则包内提示级（info/notice 等其余严重级）的规则条数', children: '提示级' }),
                       jsx.jsx('span', { className: 'dshgp_rulebadge', children: '状态' }),
                     ],
                   }),
                   order.map((slot, idx) => dshgp_RuleRow(props, slot, idx, order.length)),
                 ],
               }),
-          jsx.jsx('p', { className: 'dshgp_hint', children: '数字含义：拦截/警告 = 该规则包在最近一次审计中命中的问题数，通过 = 没查出问题的规则条数（未做过审计时显示规则条数口径，行尾标注「规则」）。跑一次 code_audit 或全量扫描即刷新。' }),
+          jsx.jsx('p', { className: 'dshgp_hint', children: '数字含义：三个数字是该规则包内各严重级的**规则条数**（拦截级 + 警告级 + 提示级 = 规则总数），取自 yml 规则文件，与是否跑过审计无关。想知道实际命中情况请看审计报告。' }),
           s.slotError ? jsx.jsx('p', { className: 'dshgp_error', children: s.slotError }) : null,
         ],
       });

@@ -6,12 +6,17 @@
  *
  * 用法：node assets/preview-gen.mjs
  *
- * 路径全部按脚本位置推导（换机/换工作区即用，不写死本机路径）：
- *   项目根 projectRoot = 本文件所在目录的上一级；DSH 根 = projectRoot 上溯三级
- *   （<DSH>/.dsh-home/工作区/<项目>）；React UMD 取 DSH 的 pnpm store。
+ * 路径解析（2026-09-18 重写）：
+ *   项目根 projectRoot = 本文件所在目录的上一级。
+ *   DSH 安装根不能靠相对路径推导（数据目录与安装目录不同源），改为探测：
+ *     判据「含 node_modules/ 与 package.json」，顺序 DSH_ROOT > 常见安装位 > 上溯兜底。
+ *   React UMD 取该根 pnpm store；react-dom 常未安装，缺失时自动下载单文件 UMD 到
+ *     <DSH_HOME>/cache/react-umd/（不入库、断网可复用）。
  *   需要时可覆盖：DSH_ROOT / REACT_UMD_DIR / REACT_DOM_UMD_DIR。
  */
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { listRuleSlots } from '../lib/app/http-handlers.js';
@@ -19,13 +24,74 @@ import { listRuleSlots } from '../lib/app/http-handlers.js';
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 // 字节 → MB 换算：1 MB = 1024 × 1024 字节
 const BYTES_PER_MB = 1024 * 1024;
-// DSH 根：<DSH>/.dsh-home/工作区/<项目> → 上溯三级
-const DSH = process.env.DSH_ROOT || resolve(projectRoot, '..', '..', '..');
+/**
+ * 定位 DSH 安装根（2026-09-18 修）。
+ *
+ * 为什么不能靠相对路径：本机**数据目录与安装目录不同源**——
+ *   工作区在 /volume1/@appdata/DeepSeekHarness-NAS/<版本>/工作区/<项目>（@appdata），
+ *   DSH 却装在 /volume1/@appstore/DeepSeekHarness-NAS（@appstore），两者不在同一棵树下，
+ *   上溯任意级都到不了。原实现写死上溯三级，在本机必然报「找不到 react UMD」。
+ * 判据：安装根的标志 = 同时存在 node_modules/ 与 package.json。
+ * 顺序：DSH_ROOT 显式指定 → 常见安装位置 → 从工作区上溯兜底。
+ */
+function findDshRoot() {
+  if (process.env.DSH_ROOT) return process.env.DSH_ROOT;
+  const isRoot = (d) => d && existsSync(join(d, 'package.json')) && existsSync(join(d, 'node_modules'));
+  for (const c of ['/volume1/@appstore/DeepSeekHarness-NAS', '/opt/DeepSeekHarness-NAS', '/usr/local/DeepSeekHarness-NAS']) {
+    if (isRoot(c)) return c;
+  }
+  let cur = resolve(projectRoot);
+  for (let i = 0; i < 6; i++) {
+    const up = resolve(cur, '..');
+    if (up === cur) break;
+    cur = up;
+    if (isRoot(cur)) return cur;
+  }
+  return '';
+}
+
+const DSH = findDshRoot();
+if (!DSH) {
+  console.error('找不到 DSH 安装根（标志：含 node_modules/ 与 package.json）。用 DSH_ROOT 显式指定，例如：\n  DSH_ROOT=/volume1/@appstore/DeepSeekHarness-NAS node assets/preview-gen.mjs');
+  process.exit(1);
+}
 const store = join(DSH, 'node_modules', '.pnpm');
 const reactUmdDir = process.env.REACT_UMD_DIR || join(store, 'react@18.3.1', 'node_modules', 'react');
 const RD = process.env.REACT_DOM_UMD_DIR || join(store, 'react-dom@18.3.1_react@18.3.1', 'node_modules', 'react-dom');
 
-for (const [label, dir] of [['react', reactUmdDir], ['react-dom', RD]]) {
+/**
+ * 确保 react-dom UMD 就位（2026-09-18 修）。
+ *
+ * react-dom **常未随 DSH 安装**（本机实测全盘缺失，DSH 只装了 react），
+ *   而 UMD 是单文件自包含（约 1MB）、不依赖包管理器，因此缺失时直接下载即可，
+ *   不该为此要求用户去装依赖。缓存放 DSH_HOME（数据目录，不入库），命中即复用、断网可重跑。
+ * @returns {string} 含 umd/react-dom.development.js 的目录
+ */
+function ensureReactDomUmd(dir) {
+  if (existsSync(join(dir, 'umd', 'react-dom.development.js'))) return dir;
+  if (process.env.REACT_DOM_UMD_DIR) return dir; // 显式指定时不擅自改写
+  const cache = join(process.env.DSH_HOME || join(tmpdir(), 'dsh-git-push'), 'cache', 'react-umd');
+  const cached = join(cache, 'umd', 'react-dom.development.js');
+  try {
+    mkdirSync(join(cache, 'umd'), { recursive: true });
+    if (!existsSync(cached)) {
+      console.log(`react-dom 未安装，下载单文件 UMD → ${cached}`);
+      const r = spawnSync('curl', ['-sSL', '--max-time', '180', '-o', cached, 'https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js'], { stdio: 'inherit' });
+      if (r.status !== 0 || !existsSync(cached)) {
+        console.error(`下载失败，可手动放置到：${cached}`);
+        return dir;
+      }
+    }
+    return cache;
+  } catch (e) {
+    console.error(`准备 react-dom UMD 失败：${e?.message || e}`);
+    return dir;
+  }
+}
+
+const reactDomDir = ensureReactDomUmd(RD);
+
+for (const [label, dir] of [['react', reactUmdDir], ['react-dom', reactDomDir]]) {
   if (!existsSync(join(dir, 'umd'))) {
     console.error(`找不到 ${label} UMD：${dir}\n（DSH 根推导为 ${DSH}；可用 DSH_ROOT / ${label === 'react' ? 'REACT_UMD_DIR' : 'REACT_DOM_UMD_DIR'} 指定）`);
     process.exit(1);
@@ -34,7 +100,7 @@ for (const [label, dir] of [['react', reactUmdDir], ['react-dom', RD]]) {
 
 const clientSrc = readFileSync(`${projectRoot}/client.js`, 'utf8');
 const reactUmd = readFileSync(`${reactUmdDir}/umd/react.development.js`, 'utf8');
-const domUmd = readFileSync(`${RD}/umd/react-dom.development.js`, 'utf8');
+const domUmd = readFileSync(`${reactDomDir}/umd/react-dom.development.js`, 'utf8');
 
 // 槽位数据取自真实规则文件（动态发现 audit-rules-<名>.yml），不再手写清单——
 //   手写清单会与真实规则包脱节：曾只手写 6 个，预览里就只显示 6 个槽位，

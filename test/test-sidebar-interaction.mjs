@@ -98,7 +98,10 @@ test('规则行：详细信息在悬停浮层里（不再常显 meta 行）', ()
   const texts = walk(card).map((n) => (typeof n.children?.[0] === 'string' ? n.children[0] : '')).join(' | ');
   assert.ok(texts.includes('EIGHTfs'), '浮层显示作者');
   assert.ok(texts.includes('针对前端代码的审计规则集'), '浮层显示描述');
-  assert.ok(texts.includes('最近一次审计命中'), '浮层显示命中数口径说明');
+  // 2026-09-18：浮层口径由「最近一次审计命中」改为「规则条数」——
+  //   三列改为 yml 各严重级的规则条数（与是否跑过审计无关）。
+  assert.ok(texts.includes('规则条数'), '浮层显示规则条数口径说明');
+  assert.ok(!texts.includes('最近一次审计命中'), '不再出现已废弃的命中数口径文案');
   // 常显区不应再有 dshgp_rulemeta（原「作者: xx · 描述」常显行已移入浮层）
   assert.ok(!findClass(tree, 'dshgp_rulemeta'), '常显 meta 行已移除（信息移入浮层）');
 });
