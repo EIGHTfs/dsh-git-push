@@ -27,7 +27,8 @@
  *
  * 退出码：0=无命中或已处理；2=dry-run 有命中；3=非交互环境拒绝写盘。
  */
-import { readFileSync, writeFileSync, readdirSync, statSync, existsSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
+import { readFile, writeFile } from 'node:fs/promises';
 import { join, extname, basename, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
@@ -352,8 +353,8 @@ async function main(argv) {
     for (const r of report) {
       const all = new Set(r.candidates.map((_, i) => i));
       const text = applyConfirmed(r, all);
-      writeFileSync(r.path + '.bak', readFileSync(r.path)); // 备份原文件
-      writeFileSync(r.path, text);
+      await writeFile(r.path + '.bak', await readFile(r.path)); // 备份原文件
+      await writeFile(r.path, text);
       written++;
       writtenCount += r.count;
     }
@@ -381,8 +382,8 @@ async function main(argv) {
       if (quitAll) break;
       if (confirmed.length > 0) {
         const text = applyConfirmed(r, new Set(confirmed));
-        writeFileSync(r.path + '.bak', readFileSync(r.path)); // 备份原文件
-        writeFileSync(r.path, text);
+        await writeFile(r.path + '.bak', await readFile(r.path)); // 备份原文件
+        await writeFile(r.path, text);
         written++;
         writtenCount += confirmed.length;
       }

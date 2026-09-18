@@ -13,7 +13,8 @@
  *   node scripts/sync-plugin.mjs --write            # 真同步
  *   node scripts/sync-plugin.mjs --target <目录>    # 指定目标（默认自动探测）
  */
-import { existsSync, readdirSync, statSync, mkdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, statSync, readFileSync } from 'node:fs';
+import { mkdir, readFile } from 'node:fs/promises';
 // 目标目录常在工作区（CIFS 网络挂载）：copyFileSync 在 CIFS 内会 EPERM
 //   （尝试 SMB 服务端复制），必须用带读写回退的 copyFileCompat。
 import { copyFileCompat } from '../lib/fsx.js';
@@ -109,6 +110,21 @@ export function detectTargets(home = process.env.DSH_HOME || '', pluginName = 'd
  * @param {object} p { source, target, write }
  * @returns {{ok: boolean, written: number, skipped: number, files: string[], error?: string}}
  */
+/**
+ * 两文件内容是否相同；目标不存在返回 false。
+ *   读失败（权限/编码）按「不相同」处理 —— 交给后续复制去覆盖并上报真实错误，
+ *   避免在这里吞掉问题。
+ */
+async function fileContentEqual(from, to) {
+  try {
+    if (!existsSync(to)) return false;
+    const [a, b] = await Promise.all([readFile(from, 'utf8'), readFile(to, 'utf8')]);
+    return a === b;
+  } catch {
+    return false;
+  }
+}
+
 export async function syncPlugin({ source = SOURCE_ROOT, target = '', write = false } = {}) {
   if (!target) return { ok: false, written: 0, skipped: 0, files: [], error: '未指定目标目录（用 --target 或配置 DSH_HOME）' };
   const files = await listSyncFiles(source);
@@ -119,10 +135,11 @@ export async function syncPlugin({ source = SOURCE_ROOT, target = '', write = fa
     const from = join(source, rel);
     const to = join(target, rel);
     // 内容不同才写（幂等）
-    const same = existsSync(to) && readFileSync(to, 'utf8') === readFileSync(from, 'utf8');
+    // 逐文件比较内容（幂等）：改 await 后单次遍历不再阻塞事件循环
+    const same = await fileContentEqual(from, to);
     if (same) { skipped++; continue; }
     if (write) {
-      mkdirSync(dirname(to), { recursive: true });
+      await mkdir(dirname(to), { recursive: true });
       const r = copyFileCompat(from, to);
       if (!r.ok) {
         // 单个文件失败不再抛出中断整个同步：记录后继续，最后统一上报。

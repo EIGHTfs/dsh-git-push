@@ -18,7 +18,8 @@ import { auditFull } from './lib/audit/index.js';
 import { readSettings, applySettingsToCfg } from './lib/app/settings-bridge.js';
 import { scanFileIo, summarize } from './scripts/scan-file-io.mjs';
 import { defaultConfig } from './lib/client/index.js';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
+import { access } from 'node:fs/promises';
 import { join } from 'node:path';
 
 /** parseArgv 认识的选项白名单（cli-help-sync 机器比对基准，必须与 HELP 文本一致。
@@ -199,10 +200,15 @@ export function pluginEqualWeights(cfg, flags) {
   try { return JSON.parse(src); } catch { return {}; }
 }
 
+/** 路径是否存在（异步，避免在 async 命令里做同步 I/O）。 */
+async function pathExists(p) {
+  try { await access(p); return true; } catch { return false; }
+}
+
 /** 子命令：audit — 审计目录（**与插件 code_audit 结果一致**）。 */
 export async function cmdAudit(root, flags) {
   const cfg = cliPluginConfig();
-  const full = flags.full === true || !existsSync(join(root || '.', '.git'));
+  const full = flags.full === true || !(await pathExists(join(root || '.', '.git')));
   const opts = pluginEqualAuditOpts(cfg, flags, { scope: full ? 'full' : 'diff' });
   const weights = pluginEqualWeights(cfg, flags);
   const auditResult = full ? await auditFull(root, opts) : await auditWithScope(root, opts);
@@ -263,7 +269,7 @@ export async function cmdIndex(root, flags) {
 /** 子命令：commit — 审计门禁 → 提交（默认只 commit 不 push；--push 推远端；--force 强推）。 */
 export async function cmdCommit(root, flags) {
   const repo = root || '';
-  if (!repo || !existsSync(join(repo, '.git'))) { console.error(`不是 git 仓库: ${repo || '(空)'}`); return 1; }
+  if (!repo || !(await pathExists(join(repo, '.git')))) { console.error(`不是 git 仓库: ${repo || '(空)'}`); return 1; }
   if (!String(flags.message || '').trim()) { console.error('缺少 -m <commit message>'); return 1; }
   // 推送门禁开关取插件配置（config.json pushGate，与侧边栏同一真源）；CLI 未确认时会被拦截
   const cfg = cliPluginConfig();
