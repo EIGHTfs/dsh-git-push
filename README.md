@@ -126,7 +126,6 @@ src/vendor.js       # 单文件豁免审计
 <!-- dshgp-tree:start -->
 ```text
 dsh-git-push/
-├── .auditignore — 审计豁免清单（不影响 git 入库，仅跳过审计扫描）
 ├── lib/ — 核心实现（10 总入口 + 审计引擎 + git 执行层 + 规则编译层）
 │   ├── ARCHITECTURE.md — 架构说明文档
 │   ├── BUGFIX-NOTES-2026-09-14.md — Bug 修复说明（diff 审计提速 / 凭据文件拦截三层根因）
@@ -155,7 +154,10 @@ dsh-git-push/
 │   │   ├── credential.js — 凭据标识符判定（硬编码/引用/类型检查）
 │   │   ├── dataflow.js — 数据流检查（清空后访问，三层审计 L2）
 │   │   ├── index.js — AST 层统一出口
-│   │   ├── io-risk.js — I/O 风险分级（四级：异步路径同步/循环内/请求路径/启动路径，写类加权）
+│   │   ├── io-risk-const.js — IO 风险分级·常量与档位工具：fs 调用名集/操作类别/风险标签/搜索窗口与阈值 + raise 升档
+│   │   ├── io-risk-fn.js — IO 风险分级·函数边界识别与 token 配对：认普通/箭头/方法简写/类方法，圆括号花括号方括号前后向配对
+│   │   ├── io-risk-loop.js — IO 风险分级·循环判定：循环内/迭代器表达式（只执行一次）/小字面量数组降级/collectRanges 范围收集
+│   │   ├── io-risk.js — IO 风险分级（四级）判定与评分：scanIoRiskAst 判定上下文/类别 → summarizeIoRisk 统计 → rankIoFixList 优先级清单；并再导出下列三个从属模块的公共符号
 │   │   ├── magic-number.js — 硬编码魔数识别（豁免版本号/日期/状态码）
 │   │   ├── naming.js — 命名检查（标识符长度/函数名过短/受控小文件读取）
 │   │   ├── shell.js — shell 精筛（cd 动态路径/写操作命中 .gitignore）
@@ -199,7 +201,7 @@ dsh-git-push/
 │   │   ├── filter.js — 规则作用域过滤（exts/exclude_paths）
 │   │   ├── folder.js — 目录级检查（文件夹数/单目录文件数/解包特征）
 │   │   ├── index.js — 检查层统一出口
-│   │   ├── io.js — I/O 风险分级包装（checkIoRisk → lib/ast/io-risk.js，取代 quality/sync-fs）
+│   │   ├── io.js — IO 风险分级包装：checkIoRisk → lib/ast/io-risk.js（转 warning finding，取代 quality/sync-fs）
 │   │   ├── magic-number.js — 魔数检查包装（token 判定→finding）
 │   │   ├── npm-json.js — package.json 检查（依赖版本/私有包豁免）
 │   │   ├── private.js — 私密文件检查（私有仓可见性核对）
@@ -243,9 +245,6 @@ dsh-git-push/
 │   │   ├── index.js — README 生成总入口（git_gen_readme 模板渲染）
 │   ├── readme-templates/ — README 模板 yml
 │   │   ├── readme.yml — README 章节模板（git_gen_readme 用）
-│   ├── vendor/ — 第三方内置代码（构建产物，审计经 .auditignore 豁免）
-│   │   ├── js-yaml/ — YAML 解析（MIT v4.3.1，dist 构建产物）——置此实现零依赖
-│   │   │   └── …（2 个更深文件）
 │   ├── rule/ — 规则引擎（yml 装载/编译注册表/同形字符检测/槽位启停）
 │   │   ├── compilers.js — 规则编译器注册表（纯引用文件）
 │   │   ├── homoglyph.js — 同形字符检测（yml kind/id 防 ASCII 混淆）
@@ -256,6 +255,8 @@ dsh-git-push/
 │   │   ├── index.js — 评分总入口（10 维度加权）
 │   ├── self/ — 插件自身总入口（VERSION/versionInfo/CLI 帮助）
 │   │   ├── index.js — 自身总入口（VERSION 一致性/versionInfo）
+│   ├── vendor/ — （待注释）
+│   │   └── …（2 个更深文件）
 ├── scripts/ — 开发工具脚本（版本校验/双副本同步/预览服务/README 目录树维护）
 │   ├── audit-runtime-check.mjs — 三层审计 L3 运行时检测脚本
 │   ├── check.mjs — 语法检查脚本（npm run check）
@@ -295,12 +296,12 @@ dsh-git-push/
 │   ├── test-http.mjs — HTTP 总入口测试（Origin/CSRF/413/路由）
 │   ├── test-inject-switch.mjs — 注入开发者要求清单子开关回归
 │   ├── test-inject-system-prompt.mjs — 注入系统提示词回归
+│   ├── test-io-risk.mjs — IO 风险分级测试（四级判定/字段完整性/汇总/排序/finding 转换）
 │   ├── test-link-check.mjs — 链接判断测试（分级扣分/断网不拦）
 │   ├── test-magic-number.mjs — 硬编码魔数检测测试
 │   ├── test-persist-credentials.mjs — 凭据持久化测试
 │   ├── test-plugin.mjs — 插件接线测试（入口导出/工具清单/双副本同步）
 │   ├── test-push-transport.mjs — 推送通道回归（SSH 优先/一致性语义）
-│   ├── test-io-risk.mjs — I/O 风险分级测试（四级判定/字段/汇总/排序/finding）
 │   ├── test-quality.mjs — 评分总入口测试（AST 质量检查器）
 │   ├── test-readme-gen.mjs — README 生成测试（模板渲染/版本表）
 │   ├── test-repo-list.mjs — 仓库列表测试（本地扫描/索引读写/HTTP 端点/远端状态）
@@ -340,6 +341,7 @@ dsh-git-push/
 │   │   ├── readme-sync-git-md.md — README 同步 git 提交规则
 │   │   ├── skill-every-change-commit-repo.md — 每次变更提交仓库规则
 │   │   ├── versioning-rule.md — 版本规范规则
+├── .auditignore — 审计豁免清单（不影响 git 入库，仅跳过审计扫描）——排除内置第三方代码
 ├── .gitignore — 忽略规则（node_modules/产物/备份/回收站等）
 ├── README.md — 插件 README（功能总览/用法/版本记录）
 ├── cli.mjs — 独立 CLI（git-sluice，不依赖宿主可独立运行）
@@ -865,7 +867,7 @@ node scripts/audit-runtime-check.mjs --all <目录>
 | 版本 | 说明 |
 |---|---|
 | **1.3.7**（当前） | **I/O 风险口径补全（四处漏判/误判）+ 大仓遍历异步化** \
-**数组方法形态纳入循环判定**（`lib/ast/io-risk.js` `LOOP_METHODS`）：`LOOP_METHODS` 原先只有 `forEach/map/filter/reduce/flatMap/some/every` 七个，**漏掉 `find`/`findIndex`/`findLast`/`findLastIndex`/`reduceRight`** —— `dirs.find((d) => existsSync(d.full))` 这类「在目录列表里找第一个存在的」是典型的循环内 I/O，却因方法名不在清单里而**完全不被判为循环**（实测 `lib/checks/folder.js:97` 漏报）。补齐后同形判定一致 \
+**io-risk 单文件按职责拆分为四模块**（新增 `lib/ast/io-risk-const.js` / `io-risk-fn.js` / `io-risk-loop.js`）：原 `io-risk.js` 760 行、承载「常量 + 函数边界识别 + 循环判定 + 判定评分」四类互不相干的职责，触发 3 条体积告警（文件长度 / file-health）与 8 条复杂度/嵌套告警，且该文件正是后续继续加判据的地方 —— 在 760 行文件里改判定，成本会随每次改动继续上涨。现按职责切为 **const（常量与档位工具）/ fn（函数边界识别与 token 配对）/ loop（循环判定 + 范围收集）/ `io-risk.js`（判定与评分，纯再导出层）**，四个文件 237/71/209/290 行全部落在 400 行阈值内，`io-risk.js` 对外出口保持原样 5 个符号，**5 处调用方（lib/checks/io.js、lib/checks/regex.js、lib/ast/index.js、test/test-io-risk.mjs、scripts/scan-file-io.mjs）零改动** \**拆分中的两处真实依赖修正**（不是机械搬运）：①`isLoopHead` 被 fn 段的 `collectRanges` 调用，而它又依赖 loop 段的判定函数 —— 按「谁的语义归属谁」重新落位：`isLoopHead` 移入 const（纯谓词，只依赖 LOOP_KEYWORDS/LOOP_METHODS），`collectRanges` 移入 loop（它收集的是**循环与函数的范围**，本就是循环语义），从而把最初按行号切出的 **fn↔loop 双向循环依赖**彻底解开，依赖方向收敛为 const ← fn ← loop ← io-risk 单向；②`raise`（档位升档）原先物理位置在 fn 段、但只依赖 const 的 `LEVELS`，移入 const 使依赖闭合 \**行为等价性已证明**（拆分不可凭「测试通过」了事）：把拆分前的原文件保留为对照，对仓库内 **109 个真实文件**逐文件比对新旧 `scanIoRiskAst` 输出 —— **判定 0 处不一致**，`summarizeIoRisk` / `rankIoFixList` / `RISK_BADGE` / `RISK_LABEL` 一致，**导出符号集合完全一致**；配套 tree-doc 登记三个新模块并重生成目录树，回归 **650 全绿 / 0 失败** \**数组方法形态纳入循环判定**（`lib/ast/io-risk.js` `LOOP_METHODS`）：`LOOP_METHODS` 原先只有 `forEach/map/filter/reduce/flatMap/some/every` 七个，**漏掉 `find`/`findIndex`/`findLast`/`findLastIndex`/`reduceRight`** —— `dirs.find((d) => existsSync(d.full))` 这类「在目录列表里找第一个存在的」是典型的循环内 I/O，却因方法名不在清单里而**完全不被判为循环**（实测 `lib/checks/folder.js:97` 漏报）。补齐后同形判定一致 \
 **迭代器表达式内的 I/O 不再误报**（同文件 `loopHeadSpan`/`matchParenIn`）：`for (const line of readFileSync(f, 'utf8').split(' \
 '))` 里 `readFileSync` 位于**循环头括号内**、进入循环前只执行一次，此前因与 `for` 同行而被行号判定整体算作「循环内 I/O」报高风险（实测 `lib/git/repos.js:81`）。现按 **token 下标**判定（行号无法区分同行代码），头部括号范围内的 I/O 剔除出循环体；**限定只对 `for`/`while` 关键字循环生效** —— 数组方法的括号里是回调体（`.forEach(cb)`），其内 I/O 会随每个元素执行，必须照报 \
 **「从大集合填充」不再被低估**（同文件 `isSmallPushedArray`/`insideLoopOver`）：变量数组走「字面量起手 + 少量 push = 固定小集合」降级时，若 push 发生在**循环体内**（`for (const x of all) c.push(x)`），元素来自被遍历集合、规模不可静态确定，必须按未知处理；同时 `concat`/`splice`/`unshift`/`apply`/`flat`/`flatMap` 及展开运算符 `...` 一律视为规模未知（`[...all]` 的 `...` 是 punct 不是 ident，需单独判） \
