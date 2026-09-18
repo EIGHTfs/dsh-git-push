@@ -509,6 +509,86 @@ test('cloneViaApi：非空目标目录拒绝覆盖', async () => {
   assert.ok(existsSync(join(dest, 'existing.txt')), '已有文件不被覆盖');
 });
 
+test('cloneViaApi：blob 失败不再静默报成功（回归：超时留半成品）', async () => {
+  const dest = join(tmp, 'clone-blob-fail');
+  mockFetch([
+    { match: (u, m) => m === 'GET' && u.endsWith('/repos/o/r'), status: 200, body: { default_branch: 'main' } },
+    { match: (u) => u.includes('/git/trees/main?recursive=1'), status: 200, body: { sha: 'x'.repeat(40), tree: [
+      { path: 'a.txt', type: 'blob', sha: 'b1' },
+      { path: 'b.txt', type: 'blob', sha: 'b2' },
+    ] } },
+    { match: (u) => u.endsWith('/git/blobs/b1'), status: 200, body: { content: 'YQ==', encoding: 'base64' } },
+    { match: (u) => u.endsWith('/git/blobs/b2'), status: 0, body: {} }, // 模拟超时（githubFetch 超时返回 status 0）
+  ]);
+  const r = await cloneViaApi({ target: 'o/r', dest, token: 'ghp_clone' });
+  assert.equal(r.ok, false, '缺文件不得报成功');
+  assert.equal(r.failedCount, 1);
+  assert.match(r.error, /克隆未完成/);
+  assert.equal(r.cleaned, true);
+  assert.ok(!existsSync(dest), '半成品目录已被清理，重试不会被「已存在且非空」挡住');
+});
+
+test('cloneViaApi：失败清理后可直接重试成功（回归：本 bug 的核心症状）', async () => {
+  const dest = join(tmp, 'clone-retry');
+  // 第一次：blob 超时 → 失败并清理
+  mockFetch([
+    { match: (u, m) => m === 'GET' && u.endsWith('/repos/o/r'), status: 200, body: { default_branch: 'main' } },
+    { match: (u) => u.includes('/git/trees/main?recursive=1'), status: 200, body: { sha: 'y'.repeat(40), tree: [{ path: 'f.txt', type: 'blob', sha: 'c1' }] } },
+    { match: (u) => u.endsWith('/git/blobs/c1'), status: 0, body: {} },
+  ]);
+  const r1 = await cloneViaApi({ target: 'o/r', dest, token: 'ghp_clone' });
+  assert.equal(r1.ok, false);
+  // 第二次：网络恢复 → 应直接成功，不再撞「目标目录已存在且非空」
+  mockFetch([
+    { match: (u, m) => m === 'GET' && u.endsWith('/repos/o/r'), status: 200, body: { default_branch: 'main' } },
+    { match: (u) => u.includes('/git/trees/main?recursive=1'), status: 200, body: { sha: 'y'.repeat(40), tree: [{ path: 'f.txt', type: 'blob', sha: 'c1' }] } },
+    { match: (u) => u.endsWith('/git/blobs/c1'), status: 200, body: { content: 'b2s=', encoding: 'base64' } },
+  ]);
+  const r2 = await cloneViaApi({ target: 'o/r', dest, token: 'ghp_clone' });
+  assert.equal(r2.ok, true, '重试应成功，错误: ' + (r2.error || ''));
+  assert.equal(readFileSync(join(dest, 'f.txt'), 'utf8'), 'ok');
+});
+
+test('cloneViaApi：进程被中断留下的残留（有标记、无提交）可自愈重试', async () => {
+  const dest = join(tmp, 'clone-interrupted');
+  // 手工造「被 kill」现场：目录 + 标记文件 + 半个文件，但没有跑完 git init/commit
+  mkdirSync(join(dest, 'sub'), { recursive: true });
+  writeFileSync(join(dest, '半成品.txt'), 'partial\n');
+  writeFileSync(join(dest, '.dsh-git-push-cloning'), String(Date.now()));
+  mockFetch([
+    { match: (u, m) => m === 'GET' && u.endsWith('/repos/o/r'), status: 200, body: { default_branch: 'main' } },
+    { match: (u) => u.includes('/git/trees/main?recursive=1'), status: 200, body: { sha: 'z'.repeat(40), tree: [{ path: 'ok.txt', type: 'blob', sha: 'd1' }] } },
+    { match: (u) => u.endsWith('/git/blobs/d1'), status: 200, body: { content: 'ZmluZQ==', encoding: 'base64' } },
+  ]);
+  const r = await cloneViaApi({ target: 'o/r', dest, token: 'ghp_clone' });
+  assert.equal(r.ok, true, '残留目录应被识别并重来，错误: ' + (r.error || ''));
+  assert.ok(existsSync(join(dest, 'ok.txt')));
+  assert.ok(!existsSync(join(dest, '半成品.txt')), '上次残留内容已被清掉');
+});
+
+test('cloneViaApi：用户自有目录（无标记）仍拒绝覆盖——不得误删', async () => {
+  const dest = join(tmp, 'user-own-dir');
+  mkdirSync(dest, { recursive: true });
+  writeFileSync(join(dest, 'my-work.txt'), 'important\n');
+  mockFetch([{ match: () => true, status: 200, body: { default_branch: 'main' } }]);
+  const r = await cloneViaApi({ target: 'o/r', dest, token: 'ghp_clone' });
+  assert.equal(r.ok, false);
+  assert.match(r.error, /非空/);
+  assert.ok(existsSync(join(dest, 'my-work.txt')), '用户文件必须原样保留');
+});
+
+test('cloneViaApi：成功后不留进行中标记', async () => {
+  const dest = join(tmp, 'clone-no-marker');
+  mockFetch([
+    { match: (u, m) => m === 'GET' && u.endsWith('/repos/o/r'), status: 200, body: { default_branch: 'main' } },
+    { match: (u) => u.includes('/git/trees/main?recursive=1'), status: 200, body: { sha: 'w'.repeat(40), tree: [{ path: 'x.txt', type: 'blob', sha: 'e1' }] } },
+    { match: (u) => u.endsWith('/git/blobs/e1'), status: 200, body: { content: 'eA==', encoding: 'base64' } },
+  ]);
+  const r = await cloneViaApi({ target: 'o/r', dest, token: 'ghp_clone' });
+  assert.equal(r.ok, true);
+  assert.ok(!existsSync(join(dest, '.dsh-git-push-cloning')), '标记文件不应留在成果里');
+});
+
 test('ensureRemoteRepo：已存在 → 不重复创建', async () => {
   mockFetch([
     { match: (u, m) => m === 'GET' && u.endsWith('/user'), status: 200, body: { login: 'EIGHTfs' } },

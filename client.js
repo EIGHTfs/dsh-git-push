@@ -1686,11 +1686,17 @@ window.__ModuleLoader__.load({
         this.publish();
         try {
           const cloneRes = await dshgp_postJson('/api/git-push/repo-clone', { target: repo, dir, confirm: true });
-          this.cloudMsg = cloneRes && cloneRes.ok
-            ? '✅ 已克隆 ' + repo + ' → ' + ((cloneRes && cloneRes.dest) || dir)
-            : '❌ ' + ((cloneRes && cloneRes.error) || '克隆失败');
+          if (cloneRes && cloneRes.ok) {
+            this.cloudMsg = '✅ 已克隆 ' + repo + ' → ' + ((cloneRes && cloneRes.dest) || dir);
+          } else {
+            // 网络类失败（后端多半返回 status 0 / 超时）时补一句「可直接重试」：
+            //   后端失败已清理半成品目录，重试不会撞「目标目录已存在且非空」。
+            const msg = (cloneRes && cloneRes.error) || '克隆失败';
+            const retriable = /timeout|超时|fetch failed|network|克隆未完成|ECONN|socket/i.test(msg);
+            this.cloudMsg = '❌ ' + msg + (retriable ? '（网络问题，可直接重试——半成品已自动清理）' : '');
+          }
         } catch (e) {
-          this.cloudMsg = '❌ 克隆失败: ' + (e && e.message || e);
+          this.cloudMsg = '❌ 克隆失败: ' + (e && e.message || e) + '（可直接重试——半成品已自动清理）';
         }
         this.repoBusy = '';
         this.publish();
