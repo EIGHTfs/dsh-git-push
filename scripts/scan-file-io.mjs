@@ -295,7 +295,7 @@ function scanFile(file) {
     if (/^\s*import\s|^\s*\/\/|^\s*\*/.test(line)) continue;
     for (const entry of FS_OPS) {
       // 词边界匹配，避免 readFile 命中 readFileSync / 自定义前缀名
-      const callRe = new RegExp(`(?<![\\w$.])${entry.op}\\s*\\(`);
+      const callRe = new RegExp(`(?<![\\w$])${entry.op}\\s*\\(`);
       if (!callRe.test(code)) continue;
       // 参数提取失败**不丢弃命中**：字符串字面量已被 stripLiterals 剔除（防误识别），
       //   而路径往往正是字符串字面量——此前 `arg === null → continue` 会把
