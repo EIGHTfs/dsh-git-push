@@ -242,5 +242,6 @@
   ".auditignore": "审计豁免清单（不影响 git 入库，仅跳过审计扫描）——排除内置第三方代码",
   "lib/vendor/js-yaml/LICENSE": "js-yaml 上游 MIT 许可证",
   "lib/vendor/js-yaml/js-yaml.mjs": "js-yaml 4.3.1 上游构建产物（MIT，自包含 ESM）——内置以实现零依赖",
-  "lib/fsx.js": "文件系统适配层（CIFS/SMB 兼容：copyFile 读写回退、chmod 尽力而为、元数据能力探测）"
+  "lib/fsx.js": "文件系统适配层（CIFS/SMB 兼容：copyFile 读写回退、chmod 尽力而为、元数据能力探测）",
+  "lib/audit/ignore-blind.js": "审计静默失明检测（本地 git 排除配置把整仓判成忽略时告警）"
 }

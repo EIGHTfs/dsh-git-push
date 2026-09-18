@@ -182,6 +182,23 @@ test('collectChangedFiles：git 仓库变动列表（M + ??）', () => {
   assert.deepEqual(statuses, ['??', 'M']);
 });
 
+// 2026-09-18：两条审计路径都必须能跑完。上一版接入「静默失明」检测时，
+//   在 auditChanged 里误用了 auditFull 才有的变量名（files 而非 targets），
+//   导致 diff 审计抛 ReferenceError——而当时的测试只覆盖了 auditFull，
+//   漏网直到真实提交时才炸。此用例锁死两条路径的返回值与不抛异常。
+test('auditWithScope：full 与 diff 两条路径均可正常返回', async () => {
+  for (const scope of ['full', 'diff']) {
+    const res = await auditWithScope(gitRepo, { scope });
+    assert.ok(res && res.ok, `${scope} 应返回 ok`);
+    assert.ok(Array.isArray(res.findings), `${scope} 应带 findings 数组`);
+    assert.equal(typeof res.files, 'number', `${scope} 应带数字 files（收集/变动文件数）`);
+    assert.equal(
+      res.scope, scope === 'full' ? 'full' : 'changed',
+      `${scope} 的 scope 字段应为 ${scope === 'full' ? 'full' : 'changed'}`,
+    );
+  }
+});
+
 test('auditChanged：git 仓库只审计变动文件（真 diff）', async () => {
   const res = await auditWithScope(gitRepo, { scope: 'diff' });
   assert.equal(res.scope, 'changed');

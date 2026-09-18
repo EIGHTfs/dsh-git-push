@@ -176,6 +176,7 @@ dsh-git-push/
 │   │   ├── finding.js — 统一问题对象构造器（makeFinding）
 │   │   ├── gitignore-match.js — gitignore 语法匹配器（非 git 目录 .auditignore 兜底，语义与 git 对拍）
 │   │   ├── glob.js — glob→RegExp 转换（**/*/? 子集）
+│   │   ├── ignore-blind.js — 审计静默失明检测（本地 git 排除配置把整仓判成忽略时告警）
 │   │   ├── index.js — 审计层统一出口（auditFull/auditChanged）
 │   │   ├── orchestrate.js — 审计编排（收集→检查→汇总）
 │   │   ├── repo-level.js — 仓库级语义规则
@@ -877,6 +878,9 @@ node scripts/audit-runtime-check.mjs --all <目录>
 | 版本 | 说明 |
 |---|---|
 | **1.4.6**（当前） | **`.auditignore` 非 git 目录兜底 + cookie-secure-flag 误报/漏报各修一（同一版本内修订）** \
+**审计「静默失明」检测（2026-09-18）**：审计的文件收集走 `git check-ignore`，而该判定会采信 `.git/info/exclude`——git 的**本地私有排除**层，优先级等同 `.gitignore` 且不随仓库分发。实测一个被写成单行 `*` 的 `.git/info/exclude` 让某仓库 26 个跟踪文件里 21 个被静默跳过（只收集到 5 个），而当时的审计结论是「0 拦截 / 98.6 分 A」——**不报错、退出正常**，看起来就是「这个仓库很干净」。
+
+这比误报危险：误报会被发现并纠正，静默失明不会。且该文件属本机配置，CI/他人机器上不存在，同一份代码在不同机器上结论不同。新增 `lib/audit/ignore-blind.js`，两条判据取或：① 静态——`info/exclude` 含全仓通配（`*`/`/*`/`**`/`**​/*`）；② 行为——跟踪文件中被判定忽略的比例 ≥ 90% 且总数 ≥ 20。命中即产出 `robustness/audit-blind-spot` 警告，提示清空该文件后重跑。只警告不阻断（仓库可能确有意排除本机文件）。\
 **private 槽位不再显示「0 条规则」（2026-09-18）**：侧边栏「私密文件拦截审计」一直显示「拦截级 0 · 警告级 0 · 提示级 0（共 0 条规则）」，看着像空槽位——实测它**功能完全正常**（往仓库放 id_rsa / config/.env / certs/server.pem，公仓下三个全报 blocker，私仓降为 warning）。根因是统计口径只数 `rules.length`，而 `audit-rules-private.yml` 结构特殊——它用 `private_files:` **清单**声明 13 条文件名匹配式，`rules:` 恒为 `[]`。这是上一轮「统一为规则条数口径」时没能覆盖的一种槽位形态。现对清单驱动槽位按清单条目数计并归入拦截级（该槽位默认语义即拦截），显示为「拦截级 13 条（共 13 条）」。新增回归断言（private 总数 > 0、清单条目全归拦截级、三档之和 == 总数），并做反向验证：还原成只数 rules.length → 测试如期失败 \ \
 **`security/cookie-secure-flag` 误报修正（2026-09-18）**：Python 读取响应头的写法被报 blocker——实测 `line.lower().startswith("set-cookie:")` 命中规则。根因是 `whitelist_patterns` 只覆盖 JS 形态（`match(/Set-Cookie` 与字符串字面量），Python/Go 的 `startswith` / `Header.Get` / `headers.get` 全没覆盖。补 7 条跨语言读取形态。\
 **同时修一处漏报（更严重）**：旧白名单 `['"]Set-Cookie['"]` 只认「字符串里出现 Set-Cookie」，但**设置**与**读取**都用字符串字面量，于是把真风险 `res.setHeader('Set-Cookie', ...)` 一并豁免了——与规则本意（只有设置 cookie 才要求 Secure/HttpOnly）正好相反。改为按**动词**细分：只豁免读取语境（`get`/`startswith`/`match`/`in headers`/`parse` 等），设置动词不再放行。\
