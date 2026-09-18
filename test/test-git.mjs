@@ -525,7 +525,45 @@ test('cloneViaApi：blob 失败不再静默报成功（回归：超时留半成�
   assert.equal(r.failedCount, 1);
   assert.match(r.error, /克隆未完成/);
   assert.equal(r.cleaned, true);
+  // status 0 = 超时 → 成因 network、可重试
+  assert.equal(r.cause, 'network');
+  assert.equal(r.retriable, true);
   assert.ok(!existsSync(dest), '半成品目录已被清理，重试不会被「已存在且非空」挡住');
+});
+
+test('cloneViaApi：失败成因分类——401/404 不得标为可重试（回归：误导重试）', async () => {
+  const tree = { sha: 'x'.repeat(40), tree: [{ path: 'a.txt', type: 'blob', sha: 'b1' }] };
+  const cases = [
+    { label: 'token 失效', status: 401, cause: 'auth', retriable: false },
+    { label: '仓库不存在', status: 404, cause: 'notfound', retriable: false },
+    { label: '限流', status: 429, cause: 'ratelimit', retriable: true },
+    { label: '服务端错误', status: 500, cause: 'server', retriable: true },
+  ];
+  for (const c of cases) {
+    const dest = join(tmp, 'clone-cause-' + c.status);
+    mockFetch([
+      { match: (u, m) => m === 'GET' && u.endsWith('/repos/o/r'), status: 200, body: { default_branch: 'main' } },
+      { match: (u) => u.includes('/git/trees/main?recursive=1'), status: 200, body: tree },
+      { match: (u) => u.endsWith('/git/blobs/b1'), status: c.status, body: { message: c.label } },
+    ]);
+    const r = await cloneViaApi({ target: 'o/r', dest, token: 'ghp_x' });
+    assert.equal(r.ok, false, c.label + ' 应失败');
+    assert.equal(r.cause, c.cause, c.label + ' 成因应为 ' + c.cause);
+    assert.equal(r.retriable, c.retriable, c.label + ' 的 retriable 应为 ' + c.retriable);
+    assert.ok(!existsSync(dest), c.label + '：半成品应已清理');
+  }
+});
+
+test('cloneViaApi：401 的文案须给出可操作处置，而非笼统「网络问题」', async () => {
+  const dest = join(tmp, 'clone-auth-msg');
+  mockFetch([
+    { match: (u, m) => m === 'GET' && u.endsWith('/repos/o/r'), status: 200, body: { default_branch: 'main' } },
+    { match: (u) => u.includes('/git/trees/main?recursive=1'), status: 200, body: { sha: 'x'.repeat(40), tree: [{ path: 'a.txt', type: 'blob', sha: 'b1' }] } },
+    { match: (u) => u.endsWith('/git/blobs/b1'), status: 401, body: { message: 'Bad credentials' } },
+  ]);
+  const r = await cloneViaApi({ target: 'o/r', dest, token: 'ghp_bad' });
+  assert.match(r.error, /token/i, '应提示处理 token，而非让用户重试');
+  assert.doesNotMatch(r.error, /网络/, '不得把凭据问题说成网络问题');
 });
 
 test('cloneViaApi：失败清理后可直接重试成功（回归：本 bug 的核心症状）', async () => {

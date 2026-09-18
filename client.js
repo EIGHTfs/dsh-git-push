@@ -1689,11 +1689,15 @@ window.__ModuleLoader__.load({
           if (cloneRes && cloneRes.ok) {
             this.cloudMsg = '✅ 已克隆 ' + repo + ' → ' + ((cloneRes && cloneRes.dest) || dir);
           } else {
-            // 网络类失败（后端多半返回 status 0 / 超时）时补一句「可直接重试」：
-            //   后端失败已清理半成品目录，重试不会撞「目标目录已存在且非空」。
+            // 成败与成因都由后端结构化给出（clone.js 的 cause/retriable），前端不再
+            //   用正则猜文案：此前「克隆未完成」这段文字出现在**所有**失败里，
+            //   连 401 token 失效、404 仓库不存在都被显示成「网络问题，可直接重试」，
+            //   用户会在无解的错误上反复点。现在只在后端确认可重试时才补那句。
             const msg = (cloneRes && cloneRes.error) || '克隆失败';
-            const retriable = /timeout|超时|fetch failed|network|克隆未完成|ECONN|socket/i.test(msg);
-            this.cloudMsg = '❌ ' + msg + (retriable ? '（网络问题，可直接重试——半成品已自动清理）' : '');
+            const extra = cloneRes && cloneRes.cleaned && cloneRes.retriable === true
+              ? '（半成品已自动清理，可直接重试）'
+              : '';
+            this.cloudMsg = '❌ ' + msg + extra;
           }
         } catch (e) {
           this.cloudMsg = '❌ 克隆失败: ' + (e && e.message || e) + '（可直接重试——半成品已自动清理）';
