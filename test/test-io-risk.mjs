@@ -169,11 +169,17 @@ test('checkIoRisk：每条命中转 warning 级 finding（不拦提交）', () =
   }
 });
 
-test('checkIoRisk：高风险项 scoreImpact 更高（2 vs 1）', () => {
+test('checkIoRisk：高风险计分、低风险仅提示（severity=info 且不计分）', () => {
   const high = checkIoRisk({ file: 'a.mjs', text: 'async function f() { fs.readFileSync("x"); }' });
+  const med = checkIoRisk({ file: 'a.mjs', text: 'function h(req, res) { fs.existsSync("x"); }' });
   const low = checkIoRisk({ file: 'a.mjs', text: 'const c = fs.readFileSync("x");' });
-  assert.equal(high[0].scoreImpact, 2);
-  assert.equal(low[0].scoreImpact, 1);
+  assert.equal(high[0].scoreImpact, 2, '高风险计 2');
+  assert.equal(high[0].severity, 'warning', '高风险按 warning 展示');
+  assert.equal(med[0].scoreImpact, 1, '中风险计 1');
+  assert.equal(med[0].severity, 'warning', '中风险按 warning 展示');
+  // 低风险（启动路径一次性同步 I/O）是提示而非缺陷：展示为 info，且不拉低评分
+  assert.equal(low[0].scoreImpact, 0, '低风险不计分');
+  assert.equal(low[0].severity, 'info', '低风险按 info 展示');
 });
 
 test('checkIoRisk：message 含四级徽标与上下文说明', () => {
