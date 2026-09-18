@@ -14,6 +14,11 @@ rules:
     category: "robustness"
     severity: "warning"
     description: "直接 writeFile 而不 mkdir 父目录，会导致 ENOENT 错误"
+      # 正则初筛 → token 级精筛（makeCodeLineFilter）：剔除注释与字符串里的调用示例。
+      #   本规则是纯 regex，此前会把**说明本规则自身的文档**也命中——实测
+      #   lib/checks/common.js 的 JSDoc（「会把注释/字符串里的 `fs.writeFile(...)`
+      #   示例一并命中」这句话本身）被报成 mkdir-before-write，属自举误报。
+    astConfirm: true
     patterns:
       - "fs\\.(writeFile|writeFileSync|appendFile|appendFileSync|createWriteStream)\\s*\\("
     # 豁免场景：目录通常已存在的常见情况

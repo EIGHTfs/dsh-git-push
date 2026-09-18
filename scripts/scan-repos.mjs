@@ -51,7 +51,9 @@ async function main() {
   ({ credentialsDir } = await import(`${REPO_ROOT}/lib/git/credentials.js`));
   ({ scanRepos } = await import(`${REPO_ROOT}/lib/git/repos.js`));
   ({ parseGithubOwnerRepo } = await import(`${REPO_ROOT}/lib/git/api.js`));
-  try { ({ readAccountStatus } = await import(`${REPO_ROOT}/lib/git/account-status.js`)); } catch { /* 可选 */ }
+  // 可选模块：account-status 缺失或加载失败时，退化为「不做离线 owner 推断」
+  //   （下面的 if (readAccountStatus) 已兜底），不影响扫描主流程。
+  try { ({ readAccountStatus } = await import(`${REPO_ROOT}/lib/git/account-status.js`)); } catch { /* 降级：缺该模块只影响 owner 推断，主流程继续 */ }
 
   // 离线段 owner：优先账号 json 快照（不联网）；无则参数/默认
   let scanOwner = owner;

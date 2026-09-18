@@ -220,6 +220,8 @@ for (const r of usable) {
 
 if (outFile) {
   const json = JSON.stringify({ generatedAt: new Date().toISOString(), files: usable }, null, 2);
+  // --out 可指向任意路径（含尚不存在的子目录），先确保父目录存在，否则 ENOENT
+  fs.mkdirSync(path.dirname(outFile), { recursive: true });
   fs.writeFileSync(outFile, json, "utf8");
   console.log(`索引已写入: ${outFile}`);
 }

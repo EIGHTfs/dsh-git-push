@@ -4,8 +4,20 @@
  */
 const BASE = process.env.DSH_PROBE_BASE || 'http://127.0.0.1:8090';
 const ORIGIN = 'http://127.0.0.1:30801';
-const post = (p, b) => fetch(BASE + p, { method: 'POST', headers: { 'Content-Type': 'application/json', Origin: ORIGIN }, body: JSON.stringify(b) }).then(r => r.json());
-const get = (p) => fetch(BASE + p, { headers: { Origin: ORIGIN } }).then(r => r.json());
+// 超时兜底：/account-check 内部要联网校验 token 与 SSH，服务端异常或网络悬挂时
+//   无超时的 fetch 会**永久挂起**，探针既不报错也不退出（只能 Ctrl+C），
+//   排查时看不到任何有用信息。60s 与 lib/git/api.js 的网络出口默认值一致。
+const TIMEOUT_MS = 60_000;
+const post = (p, b) => fetch(BASE + p, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', Origin: ORIGIN },
+  body: JSON.stringify(b),
+  signal: AbortSignal.timeout(TIMEOUT_MS),
+}).then(r => r.json());
+const get = (p) => fetch(BASE + p, {
+  headers: { Origin: ORIGIN },
+  signal: AbortSignal.timeout(TIMEOUT_MS),
+}).then(r => r.json());
 
 console.log('══ 「重新检测」按钮链路实测 ══\n');
 
