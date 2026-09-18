@@ -382,7 +382,7 @@ test('目录豁免：.test 仓库根标记全跳 + 非空/逃逸/空参数不跳
   }
 });
 
-test('集成：.test 目录在 auditFull 与 scanSensitiveFiles 均被跳过', () => {
+test('集成：.test 目录在 auditFull 与 scanSensitiveFiles 均被跳过', async () => {
   const root = mkdtempSync(join(tmpdir(), 'gp-testint-'));
   try {
     mkdirSync(join(root, 'bad'), { recursive: true });
@@ -391,12 +391,12 @@ test('集成：.test 目录在 auditFull 与 scanSensitiveFiles 均被跳过', (
     writeFileSync(join(root, 'bad', 'bad.js'), 'API_KEY = "ghp_BADBADBAD"');
     writeFileSync(join(root, 'tested', 'bad.js'), 'API_KEY = "ghp_SKIPSKIPSKIP"');
 
-    const auditRes = auditFull(root);
+    const auditRes = await auditFull(root);
     const testedAudit = auditRes.findings.filter((f) => String(f.file).includes('tested/'));
     assert.equal(testedAudit.length, 0, '.test 目录审计 0 finding');
     const badAudit = auditRes.findings.filter((f) => String(f.file).includes('bad/'));
     assert.ok(badAudit.length > 0, '非豁免目录照常出审计 finding');
-    const hits = scanSensitiveFiles(root);
+    const hits = await scanSensitiveFiles(root);
     assert.equal(hits.filter((h) => h.path.includes('tested/')).length, 0, '.test 目录敏感扫描跳过');
     assert.equal(hits.filter((h) => h.path.includes('bad/')).length, 1, '非豁免目录敏感扫描照常命中');
   } finally {

@@ -31,19 +31,19 @@ function setupRepo() {
   return dir;
 }
 
-test('.auditignore：目录规则（generated/）整棵豁免审计', () => {
+test('.auditignore：目录规则（generated/）整棵豁免审计', async () => {
   const dir = setupRepo();
   try {
-    const files = collectTextFiles(dir, { depth: 10, gitIgnoreRoot: dir });
+    const files = await collectTextFiles(dir, { depth: 10, gitIgnoreRoot: dir });
     const arr = Array.isArray(files) ? files : (files.files || []);
     assert.ok(!arr.some((f) => f.path.includes('generated')), 'generated/ 应整棵豁免');
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-test('.auditignore：文件级规则（src/vendor.js / *.lock）豁免审计', () => {
+test('.auditignore：文件级规则（src/vendor.js / *.lock）豁免审计', async () => {
   const dir = setupRepo();
   try {
-    const files = collectTextFiles(dir, { depth: 10, gitIgnoreRoot: dir });
+    const files = await collectTextFiles(dir, { depth: 10, gitIgnoreRoot: dir });
     const arr = Array.isArray(files) ? files : (files.files || []);
     assert.ok(!arr.some((f) => f.path.endsWith('src/vendor.js')), 'src/vendor.js 应豁免');
     assert.ok(!arr.some((f) => f.path.endsWith('yarn.lock')), '*.lock 匹配 yarn.lock 应豁免');
@@ -51,10 +51,10 @@ test('.auditignore：文件级规则（src/vendor.js / *.lock）豁免审计', (
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-test('.auditignore：与 .gitignore 叠加（node_modules 仍被 gitignore 挡）', () => {
+test('.auditignore：与 .gitignore 叠加（node_modules 仍被 gitignore 挡）', async () => {
   const dir = setupRepo();
   try {
-    const files = collectTextFiles(dir, { depth: 10, gitIgnoreRoot: dir });
+    const files = await collectTextFiles(dir, { depth: 10, gitIgnoreRoot: dir });
     const arr = Array.isArray(files) ? files : (files.files || []);
     assert.ok(!arr.some((f) => f.path.includes('node_modules')), 'node_modules 应仍被 .gitignore 挡');
   } finally { rmSync(dir, { recursive: true, force: true }); }

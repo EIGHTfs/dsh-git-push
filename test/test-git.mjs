@@ -202,12 +202,12 @@ test('isBadCredentials：401 / Bad credentials 判定', () => {
 
 /* ───────────────────────── 敏感文件 .gitignore ───────────────────────── */
 
-test('scanSensitiveFiles：扫描 .env / token 文件（文件名黑名单 + 内容级）', () => {
+test('scanSensitiveFiles：扫描 .env / token 文件（文件名黑名单 + 内容级）', async () => {
   writeFileSync(join(repo, '.env'), 'KEY=1\n');
   writeFileSync(join(repo, 'secret.pem'), 'x\n');
   // 内容级：硬编码密码应被检出
   writeFileSync(join(repo, 'app.js'), 'const password = "hunter2secret";\n');
-  const found = scanSensitiveFiles(repo);
+  const found = await scanSensitiveFiles(repo);
   const paths = found.map((h) => h.path);
   assert.ok(paths.includes('.env'), `.env 应命中（实际: ${paths.join(',')}）`);
   assert.ok(paths.includes('secret.pem'), `secret.pem 应命中（实际: ${paths.join(',')}）`);
@@ -219,11 +219,11 @@ test('scanSensitiveFiles：扫描 .env / token 文件（文件名黑名单 + 内
   rmSync(join(repo, 'app.js'), { force: true });
 });
 
-test('scanSensitiveFiles：占位符 / 示例 / 豁免注释不误报', () => {
+test('scanSensitiveFiles：占位符 / 示例 / 豁免注释不误报', async () => {
   writeFileSync(join(repo, 'ok.js'), 'const password = "your_password";\n');
   writeFileSync(join(repo, 'ok2.js'), '// 例如 password = "demo123"\n');
   writeFileSync(join(repo, 'exempt.js'), 'const token = "abc12345"; // dsh-skip-sensitive\n');
-  const found = scanSensitiveFiles(repo);
+  const found = await scanSensitiveFiles(repo);
   const paths = found.map((h) => h.path);
   assert.ok(!paths.includes('ok.js'), '占位符值不应误报');
   assert.ok(!paths.includes('ok2.js'), '示例行不应误报');
@@ -231,66 +231,66 @@ test('scanSensitiveFiles：占位符 / 示例 / 豁免注释不误报', () => {
   for (const f of ['ok.js', 'ok2.js', 'exempt.js']) rmSync(join(repo, f), { force: true });
 });
 
-test('ensureGitignore：敏感文件只报告不写 .gitignore（2026-09-12 用户指令）', () => {
+test('ensureGitignore：敏感文件只报告不写 .gitignore（2026-09-12 用户指令）', async () => {
   writeFileSync(join(repo, '.env'), 'KEY=1\n');
-  const r1 = ensureGitignore(repo);
+  const r1 = await ensureGitignore(repo);
   assert.ok(r1.files.includes('.env'), 'files 应报告 .env');
   const gi = readFileSync(join(repo, '.gitignore'), 'utf8');
   assert.ok(!gi.includes('.env'), '敏感文件不写 .gitignore');
   // 敏感文件不再写盘，基线与自定义照常（基线幂等）
   assert.ok(gi.includes('node_modules/'), '基线忽略照常写');
-  const r2 = ensureGitignore(repo);
+  const r2 = await ensureGitignore(repo);
   assert.equal(r2.baseline, 0, '二次调用基线不重复写');
   rmSync(join(repo, '.env'), { force: true });
   rmSync(join(repo, '.gitignore'), { force: true });
 });
 
-test('ensureGitignore：customIgnorePatterns 追加自定义忽略', () => {
-  const r1 = ensureGitignore(repo, { customIgnorePatterns: '*.bak*,*.orig' });
+test('ensureGitignore：customIgnorePatterns 追加自定义忽略', async () => {
+  const r1 = await ensureGitignore(repo, { customIgnorePatterns: '*.bak*,*.orig' });
   assert.ok(r1.custom >= 2, `custom 应补入 2 条（实际 ${r1.custom}）`);
   const gi = readFileSync(join(repo, '.gitignore'), 'utf8');
   assert.ok(gi.includes('*.bak*'));
   assert.ok(gi.includes('*.orig'));
-  const r2 = ensureGitignore(repo, { customIgnorePatterns: '*.bak*,*.orig' });
+  const r2 = await ensureGitignore(repo, { customIgnorePatterns: '*.bak*,*.orig' });
   assert.equal(r2.custom, 0, '自定义忽略幂等');
   rmSync(join(repo, '.gitignore'), { force: true });
 });
 
-test('ensureGitignore：基线忽略 node_modules 与 node_modules.orig', () => {
-  const r = ensureGitignore(repo);
+test('ensureGitignore：基线忽略 node_modules 与 node_modules.orig', async () => {
+  const r = await ensureGitignore(repo);
   const gi = readFileSync(join(repo, '.gitignore'), 'utf8');
   assert.ok(r.baseline >= 1, '应有基线补入');
   assert.ok(gi.includes('node_modules/'), '应含 node_modules/');
   assert.ok(gi.includes('node_modules.orig/'), '应含 node_modules.orig/');
   // 幂等：二次调用不再追加基线
-  const r2 = ensureGitignore(repo);
+  const r2 = await ensureGitignore(repo);
   assert.equal(r2.baseline, 0, '基线已存在时不重复写');
   rmSync(join(repo, '.gitignore'), { force: true });
 });
 
-test('ensureGitignore：已手写 node_modules（无斜杠）时不重复追加', () => {
+test('ensureGitignore：已手写 node_modules（无斜杠）时不重复追加', async () => {
   writeFileSync(join(repo, '.gitignore'), 'node_modules\nnode_modules.orig\n');
-  const r = ensureGitignore(repo);
+  const r = await ensureGitignore(repo);
   assert.equal(r.baseline, 0, '裸名与带斜杠视为同一忽略项');
   rmSync(join(repo, '.gitignore'), { force: true });
 });
 
-test('ensureGitignore：node_modules.orig 目录不参与敏感文件扫描', () => {
+test('ensureGitignore：node_modules.orig 目录不参与敏感文件扫描', async () => {
   mkdirSync(join(repo, 'node_modules.orig'), { recursive: true });
   writeFileSync(join(repo, 'node_modules.orig', '.env'), 'KEY=1\n');
-  const r = ensureGitignore(repo);
+  const r = await ensureGitignore(repo);
   assert.ok(!r.files.some((f) => f.includes('node_modules.orig')), '残留副本目录内的文件不应被当成仓库敏感文件');
   rmSync(join(repo, 'node_modules.orig'), { recursive: true, force: true });
   rmSync(join(repo, '.gitignore'), { force: true });
 });
 
-test('ensureGitignore：.samples 目录豁免——敏感文件一律不写 .gitignore、照常报告', () => {
+test('ensureGitignore：.samples 目录豁免——敏感文件一律不写 .gitignore、照常报告', async () => {
   // fixtures/.samples 空文件 = 豁免标记：目录内假 token 照常报告，但不进 .gitignore
   mkdirSync(join(repo, 'fixtures'), { recursive: true });
   writeFileSync(join(repo, 'fixtures', '.samples'), '');
   writeFileSync(join(repo, 'fixtures', 'secret.js'), 'const apiKey = "sk-test-abcdef1234567890abcdef";\n');
   writeFileSync(join(repo, 'real.js'), 'const apiKey = "sk-test-abcdef1234567890abcdef";\n');
-  const r = ensureGitignore(repo);
+  const r = await ensureGitignore(repo);
   assert.ok(r.files.includes('fixtures/secret.js'), '豁免目录敏感文件照常报告');
   assert.ok(r.files.includes('real.js'), '非豁免敏感文件照常报告');
   assert.equal(r.sampleExempted, 1, 'sampleExempted 计数 = 1');

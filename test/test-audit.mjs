@@ -57,15 +57,15 @@ after(() => {
   try { rmSync(fixture, { recursive: true, force: true }); } catch { /* noop */ }
 });
 
-test('collector：非 git 目录全量收集（含深层）', () => {
-  const files = collectTextFiles(fixture);
+test('collector：非 git 目录全量收集（含深层）', async () => {
+  const files = await collectTextFiles(fixture);
   assert.ok(files.some((f) => f.path === 'a.js'));
   assert.ok(files.some((f) => f.path === 'sub/c.js'));
   assert.ok(files.length >= 3);
 });
 
-test('collector：gitignore 感知——忽略文件不在收集列表', () => {
-  const files = collectTextFiles(join(fixture, 'repo'), { gitIgnoreRoot: join(fixture, 'repo') });
+test('collector：gitignore 感知——忽略文件不在收集列表', async () => {
+  const files = await collectTextFiles(join(fixture, 'repo'), { gitIgnoreRoot: join(fixture, 'repo') });
   assert.ok(files.some((f) => f.path === 'keep.js'));
   assert.ok(!files.some((f) => f.path === 'secret.log'), '.gitignore 中的 secret.log 应被排除');
 });
@@ -76,8 +76,8 @@ test('collector：isGitRepo / readText', () => {
   assert.equal(readText('/nonexistent-file'), null);
 });
 
-test('auditFull：非 git 目录出 findings（secret 命中）', () => {
-  const res = auditFull(fixture);
+test('auditFull：非 git 目录出 findings（secret 命中）', async () => {
+  const res = await auditFull(fixture);
   assert.equal(res.ok, true);
   assert.equal(res.scope, 'full');
   const secret = res.findings.filter((f) => f.kind === '[FUNC]');
@@ -88,14 +88,14 @@ test('auditFull：非 git 目录出 findings（secret 命中）', () => {
   }
 });
 
-test('auditFull：exempt 文件头 dsh-skip-sensitive → 该文件无 secret 类', () => {
-  const res = auditFull(fixture);
+test('auditFull：exempt 文件头 dsh-skip-sensitive → 该文件无 secret 类', async () => {
+  const res = await auditFull(fixture);
   const hits = res.findings.filter((f) => f.kind === '[FUNC]' && f.file === 'exempt.js');
   assert.equal(hits.length, 0, '豁免文件不应报 secret');
 });
 
-test('auditFull：func-lines 检测超长函数（sub/c.js 60+ 行函数）', () => {
-  const res = auditFull(join(fixture, 'sub'));
+test('auditFull：func-lines 检测超长函数（sub/c.js 60+ 行函数）', async () => {
+  const res = await auditFull(join(fixture, 'sub'));
   const fl = res.findings.filter((f) => f.kind === 'func-lines');
   assert.ok(fl.length >= 1, `应命中 func-lines（得 ${fl.length}）`);
 });
@@ -140,9 +140,9 @@ test('架构收敛：函数长度/密度的判定全部来自 AST 层，checks �
   assert.ok(!body.includes('function\\s*\\w*\\s*('), '不得用正则识别函数起点');
 });
 
-test('auditWithScope：非 git 目录 full 与 diff 等价（退化）', () => {
-  const full = auditWithScope(fixture, { scope: 'full' });
-  const diff = auditWithScope(fixture, { scope: 'diff' });
+test('auditWithScope：非 git 目录 full 与 diff 等价（退化）', async () => {
+  const full = await auditWithScope(fixture, { scope: 'full' });
+  const diff = await auditWithScope(fixture, { scope: 'diff' });
   assert.equal(full.scope, 'full');
   assert.equal(diff.scope, 'changed'); // 非 git 退化 full 但 scope 标记 changed
   assert.equal(diff.summary.total, full.summary.total);
@@ -168,8 +168,8 @@ test('makeFinding / summarize：统一问题对象 + 统计', () => {
   assert.ok(Array.isArray(fs[0].dimensions));
 });
 
-test('auditFull：summary 结构完整 + files 计数', () => {
-  const res = auditFull(fixture);
+test('auditFull：summary 结构完整 + files 计数', async () => {
+  const res = await auditFull(fixture);
   assert.deepEqual(Object.keys(res.summary).sort(), ['blocker', 'notice', 'total', 'warning']);
   assert.ok(res.files >= 3);
 });
@@ -182,8 +182,8 @@ test('collectChangedFiles：git 仓库变动列表（M + ??）', () => {
   assert.deepEqual(statuses, ['??', 'M']);
 });
 
-test('auditChanged：git 仓库只审计变动文件（真 diff）', () => {
-  const res = auditWithScope(gitRepo, { scope: 'diff' });
+test('auditChanged：git 仓库只审计变动文件（真 diff）', async () => {
+  const res = await auditWithScope(gitRepo, { scope: 'diff' });
   assert.equal(res.scope, 'changed');
   assert.equal(res.files, 2, '只应审计 2 个变动文件');
   const secret = res.findings.filter((f) => f.kind === '[FUNC]');
@@ -192,21 +192,21 @@ test('auditChanged：git 仓库只审计变动文件（真 diff）', () => {
   assert.ok(!files.has('a.js'), '未变动文件 a.js 不应出现在变动审计中');
 });
 
-test('auditChanged：删除的文件跳过（status D 无可读内容）', () => {
+test('auditChanged：删除的文件跳过（status D 无可读内容）', async () => {
   rmSync(join(gitRepo, 'clean.js'));
-  const res = auditWithScope(gitRepo, { scope: 'diff' });
+  const res = await auditWithScope(gitRepo, { scope: 'diff' });
   const cleanHits = res.findings.filter((f) => f.file === 'clean.js');
   assert.equal(cleanHits.length, 0, '删除文件不应产出 findings');
   assert.ok(res.files <= 1);
 });
 
-test('auditChanged：二进制文件（png）变动不进入审计（1.0.13 误报修复）', () => {
+test('auditChanged：二进制文件（png）变动不进入审计（1.0.13 误报修复）', async () => {
   // 造一个 png 改动 + 一个文本改动；PNG 不得被 UTF-8 读入触发 regex 乱码误报
   const pngPath = join(gitRepo, 'icon.png');
   writeFileSync(pngPath, Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x01, 0x02]));
   const textPath = join(gitRepo, 'bin-audit.txt');
   writeFileSync(textPath, 'const ok = 1;');
-  const res = auditWithScope(gitRepo, { scope: 'diff' });
+  const res = await auditWithScope(gitRepo, { scope: 'diff' });
   const pngHits = res.findings.filter((f) => f.file.includes('icon.png'));
   assert.equal(pngHits.length, 0, 'PNG 变动不应产出 findings（二进制不进文本审计）');
   assert.ok(res.findings.some((f) => f.file.includes('bin-audit.txt')) || res.files >= 1, '文本变动应仍被审计');
@@ -452,9 +452,9 @@ test('loader：private_files 顶层字段跨文件合并（后覆盖前追加）
 
 
 // ---------- 1.0.4：G7-S4 审计强度三档（quick 跳过 AST/语义；standard/deep 全量） ----------
-test('auditLevel：quick 比 standard 少跑 AST/语义检查（findings 更少）', () => {
-  const quick = auditFull('.', { auditLevel: 'quick' });
-  const std = auditFull('.', { auditLevel: 'standard' });
+test('auditLevel：quick 比 standard 少跑 AST/语义检查（findings 更少）', async () => {
+  const quick = await auditFull('.', { auditLevel: 'quick' });
+  const std = await auditFull('.', { auditLevel: 'standard' });
   assert.ok(quick.findings.length <= std.findings.length, `quick(${quick.findings.length}) 应 ≤ standard(${std.findings.length})`);
   // quick 仍保留正则/黑名单/凭据类（基础安全不因强度降级）
   const quickDims = new Set(quick.findings.flatMap((f) => f.dimensions || []));
@@ -462,9 +462,9 @@ test('auditLevel：quick 比 standard 少跑 AST/语义检查（findings 更少�
     'quick 若含可维护性维度则数量应明显少于 standard');
 });
 
-test('auditLevel：deep 与 standard 全量等价（当前引擎无第三档内容，留扩展位）', () => {
-  const std = auditFull('.', { auditLevel: 'standard' });
-  const deep = auditFull('.', { auditLevel: 'deep' });
+test('auditLevel：deep 与 standard 全量等价（当前引擎无第三档内容，留扩展位）', async () => {
+  const std = await auditFull('.', { auditLevel: 'standard' });
+  const deep = await auditFull('.', { auditLevel: 'deep' });
   assert.equal(deep.findings.length, std.findings.length, 'deep 与 standard 数量一致');
   assert.equal(deep.summary.blocker, std.summary.blocker);
 });

@@ -161,6 +161,10 @@ rules:
     category: "robustness"
     severity: "warning"
     description: "按上下文与操作类别对文件 I/O 分级：异步路径中的同步 I/O、循环内 I/O 为高风险；写/删/改名类加权一档"
+    # 维度归属：I/O 风险是性能与健壮性问题，**不是可读性**。
+    #   不声明会落到 regex 编译器的默认 [可读性]（实测 190 条全记在可读性上，
+    #   把可读性维度从 10 拖到 2.7——而真正的性能/健壮性维度却显示满分，评分失真）。
+    dimensions: ["性能", "健壮性"]
     # 三段式：正则初筛（哪些文件可能含 fs 调用）→ AST 精筛（注释/字符串里的示例剔除）
     #   → 分级由 lib/ast/io-risk.js 完成，finding 由 lib/checks/io.js 产出
     astConfirm: true
@@ -396,6 +400,10 @@ rules:
     category: "performance"
     severity: "warning"
     description: "嵌套循环可能导致性能问题"
+    # astConfirm: true → 正则初筛后由 token 级精筛剔除注释/字符串行。
+    #   正则只看字符：注释里写「两种形态：for (...) { ... for (」这类说明会被命中
+    #   （实测 lib/ast/io-risk.js 的文档注释被报 O(n²)），精筛按 token 判定修正。
+    astConfirm: true
     patterns:
       - "for\\s*\\([^)]*\\)\\s*{[^}]*for\\s*\\("
     fixable: false

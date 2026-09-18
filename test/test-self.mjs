@@ -166,8 +166,8 @@ test('CLI：未知参数报错（不走 HELP 静默）', () => {
 });
 
 // ---------- 双副本同步与发布准备（原 test-plugin，归属自身总入口）----------
-test('同步：同步清单含入口与规则，排除 test/看板', () => {
-  const files = listSyncFiles(ROOT);
+test('同步：同步清单含入口与规则，排除 test/看板', async () => {
+  const files = await listSyncFiles(ROOT);
   assert.ok(files.includes('package.json'));
   assert.ok(files.includes('cli.mjs'));
   assert.ok(files.includes('lib/index.js'));
@@ -177,26 +177,26 @@ test('同步：同步清单含入口与规则，排除 test/看板', () => {
   assert.ok(!files.some((f) => f.includes('node_modules')));
 });
 
-test('同步：dry-run 不写文件（默认安全）', () => {
+test('同步：dry-run 不写文件（默认安全）', async () => {
   const target = join(ROOT, '.tmp-sync-test');
-  const r = syncPlugin({ source: ROOT, target, write: false });
+  const r = await syncPlugin({ source: ROOT, target, write: false });
   assert.equal(r.ok, true);
   assert.ok(r.written > 0);
   assert.equal(existsSync(target), false, 'dry-run 不应创建目标目录');
 });
 
-test('同步：缺目标目录时报错不静默', () => {
-  const r = syncPlugin({ source: ROOT, target: '' });
+test('同步：缺目标目录时报错不静默', async () => {
+  const r = await syncPlugin({ source: ROOT, target: '' });
   assert.equal(r.ok, false);
   assert.ok(r.error.includes('未指定目标'));
 });
 
-test('同步：真实写入到临时目录（幂等）', () => {
+test('同步：真实写入到临时目录（幂等）', async () => {
   const target = join(ROOT, '.tmp-sync-write');
-  const r1 = syncPlugin({ source: ROOT, target, write: true });
+  const r1 = await syncPlugin({ source: ROOT, target, write: true });
   assert.equal(r1.ok, true);
   assert.ok(existsSync(join(target, 'package.json')));
-  const r2 = syncPlugin({ source: ROOT, target, write: true });
+  const r2 = await syncPlugin({ source: ROOT, target, write: true });
   assert.equal(r2.written, 0, '第二次应全部一致（幂等）');
   assert.ok(r2.skipped > 0);
   // 清理
@@ -212,8 +212,8 @@ test('同步：常量声明齐全', () => {
 });
 
 // 2026-09-14：实测返回集，确保排除规则真的作用于 listSyncFiles（不只是常量里写了名字）
-test('同步：listSyncFiles 返回集不含 .bak / .trash 残留', () => {
-  const files = listSyncFiles(ROOT);
+test('同步：listSyncFiles 返回集不含 .bak / .trash 残留', async () => {
+  const files = await listSyncFiles(ROOT);
   const bad = files.filter((f) => f.includes('.bak') || f.includes('.trash'));
   assert.deepEqual(bad, [], `备份/回收站文件不得进安装副本：${bad.join(', ')}`);
   assert.ok(files.length > 0, '同步清单不应为空');
@@ -250,4 +250,34 @@ test('推送准备：cordis.patch.yml 存在且含 insert 写法', () => {
   const yml = readFileSync(join(ROOT, 'cordis.patch.yml'), 'utf8');
   assert.ok(yml.includes('insert:'), '第三方 bundle patch 用 insert 顶层新建行');
   assert.ok(yml.includes('dsh-git-push'));
+});
+
+// 2026-09-18：克隆防护回归 —— 目标位于既有 git 仓库工作树内时必须拒绝。
+//   背景：cloneViaApi 末尾要 git init/add/commit 建初始提交；目标若在既有仓库内
+//   （哪怕目标目录尚不存在），git init 在 CIFS 上会 chmod 失败静默留下未初始化目录，
+//   随后的 add/commit 便向上命中父仓库 .git，把父仓库全部内容作为一次提交写进其历史
+//   —— 实测两次发生（678458e / 17f572d，均已 reset 撤销、未推送）。
+test('clone 防护：目标位于既有仓库工作树内必须拒绝', async () => {
+  const { enclosingGitRoot, cloneViaApi } = await import('../lib/git/clone.js');
+
+  // ① 判据层（不联网）：仓库内不存在目录应命中父仓库根
+  assert.equal(enclosingGitRoot(join(ROOT, '.tmp-not-exist')), ROOT,
+    '仓库内不存在目录应命中父仓库根');
+  assert.equal(enclosingGitRoot(join(ROOT, '.tmp-not-exist', 'deep', 'x')), ROOT,
+    '仓库内深层不存在目录应命中父仓库根');
+  assert.notEqual(enclosingGitRoot(tmpdir()), ROOT, '仓库外目录不应命中本仓库');
+
+  // ② 端到端：走到防护分支必须发生在「目录创建 / git 操作」之前。
+  //   注意不能用无效 token 测——那样会在 HTTP 401 提前返回，根本走不到防护，
+  //   测试会「通过」但什么都没验证。这里用仓库内目标 + 有效凭据，
+  //   若防护失效则错误会是 HTTP/网络类而非「位于既有仓库内」。
+  const headBefore = readFileSync(join(ROOT, '.git', 'HEAD'), 'utf8');
+  const r = await cloneViaApi({ target: 'EIGHTfs/dsh-git-push', dest: join(ROOT, '.tmp-guard-probe') });
+  assert.equal(r.ok, false, '仓库内目标必须被拒绝');
+  assert.match(String(r.error), /既有 git 仓库内/,
+    `错误必须来自防护分支（而非提前的 API 失败）；实际: ${r.error}`);
+  assert.equal(readFileSync(join(ROOT, '.git', 'HEAD'), 'utf8'), headBefore,
+    '被拒绝的克隆不得改动 .git/HEAD');
+  assert.equal(existsSync(join(ROOT, '.tmp-guard-probe')), false,
+    '被拒绝时不得留下目标目录');
 });

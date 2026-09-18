@@ -13,7 +13,11 @@
  *   node scripts/sync-plugin.mjs --write            # 真同步
  *   node scripts/sync-plugin.mjs --target <目录>    # 指定目标（默认自动探测）
  */
-import { existsSync, readdirSync, statSync, mkdirSync, copyFileSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, statSync, mkdirSync, readFileSync } from 'node:fs';
+// 目标目录常在工作区（CIFS 网络挂载）：copyFileSync 在 CIFS 内会 EPERM
+//   （尝试 SMB 服务端复制），必须用带读写回退的 copyFileCompat。
+import { copyFileCompat } from '../lib/fsx.js';
+import { readdir, stat, access } from 'node:fs/promises';
 import { join, relative, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -37,26 +41,33 @@ export const SYNC_ENTRIES = ['lib', 'skills', 'scripts', 'cli.mjs', 'client.js',
  */
 export const SYNC_EXCLUDE = ['.git', 'node_modules', 'WORKBOARD', 'test', '.tmp', '.bak', '.trash'];
 
+/** 异步探测路径是否存在（node:fs/promises 不提供 exists）。 */
+async function exists(p) {
+  try { await access(p); return true; } catch { return false; }
+}
+
 /**
  * 递归列出源目录下应同步的文件（相对路径）。
  * @param {string} root 源根
  * @returns {string[]} 相对路径列表
  */
-export function listSyncFiles(root = SOURCE_ROOT) {
+export async function listSyncFiles(root = SOURCE_ROOT) {
   const out = [];
-  const walk = (dir) => {
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+  // 递归遍历目录：改异步以免在大目录上逐项阻塞事件循环
+  //   （readdir 带 withFileTypes，目录项类型由一次调用带回，无需再逐个 stat）
+  const walk = async (dir) => {
+    for (const entry of await readdir(dir, { withFileTypes: true })) {
       const full = join(dir, entry.name);
       const rel = relative(root, full);
       if (SYNC_EXCLUDE.some((x) => rel.split('/').includes(x) || rel.includes(x))) continue;
-      if (entry.isDirectory()) walk(full);
+      if (entry.isDirectory()) await walk(full);
       else out.push(rel);
     }
   };
   for (const entryName of SYNC_ENTRIES) {
     const full = join(root, entryName);
-    if (!existsSync(full)) continue;
-    if (statSync(full).isDirectory()) walk(full);
+    if (!(await exists(full))) continue;
+    if ((await stat(full)).isDirectory()) await walk(full);
     else out.push(entryName);
   }
   return out.sort();
@@ -98,11 +109,12 @@ export function detectTargets(home = process.env.DSH_HOME || '', pluginName = 'd
  * @param {object} p { source, target, write }
  * @returns {{ok: boolean, written: number, skipped: number, files: string[], error?: string}}
  */
-export function syncPlugin({ source = SOURCE_ROOT, target = '', write = false } = {}) {
+export async function syncPlugin({ source = SOURCE_ROOT, target = '', write = false } = {}) {
   if (!target) return { ok: false, written: 0, skipped: 0, files: [], error: '未指定目标目录（用 --target 或配置 DSH_HOME）' };
-  const files = listSyncFiles(source);
+  const files = await listSyncFiles(source);
   let written = 0;
   let skipped = 0;
+  const failures = [];
   for (const rel of files) {
     const from = join(source, rel);
     const to = join(target, rel);
@@ -111,19 +123,24 @@ export function syncPlugin({ source = SOURCE_ROOT, target = '', write = false } 
     if (same) { skipped++; continue; }
     if (write) {
       mkdirSync(dirname(to), { recursive: true });
-      copyFileSync(from, to);
+      const r = copyFileCompat(from, to);
+      if (!r.ok) {
+        // 单个文件失败不再抛出中断整个同步：记录后继续，最后统一上报。
+        failures.push({ file: rel, error: r.error });
+        continue;
+      }
     }
     written++;
   }
-  return { ok: true, written, skipped, files };
+  return { ok: failures.length === 0, written, skipped, files, failures };
 }
 
 /** CLI 入口。 */
-export function main(argv = process.argv.slice(2)) {
+export async function main(argv = process.argv.slice(2)) {
   const write = argv.includes('--write');
   const ti = argv.indexOf('--target');
   const target = ti >= 0 ? argv[ti + 1] : (detectTargets()[0] || '');
-  const r = syncPlugin({ target, write });
+  const r = await syncPlugin({ target, write });
   if (!r.ok) {
     console.log(`同步未执行：${r.error}`);
     console.log(`可用目标（自动探测）：${detectTargets().join(' | ') || '(无)'}`);
@@ -138,4 +155,8 @@ export function main(argv = process.argv.slice(2)) {
   return 0;
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) main();
+// 顶层 await：main 已异步，未 await 的话 rejection 会成为 unhandled rejection
+//   （进程静默退出，退出码不对），故显式 await 并回传退出码。
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  process.exitCode = await main();
+}

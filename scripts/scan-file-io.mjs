@@ -181,12 +181,12 @@ function inRequestPath(lines, lineIdx) {
   for (let i = codeLines.length - 1; i >= 0; i--) {
     if (isFnSignature(codeLines[i])) { sigStart = i; break; }
   }
-  const w = codeLines.slice(sigStart).join('\n');
-  return /\b(?:req|request)\.(?:headers|method|url|body|on)\b/.test(w)
-    || /\bres\.(?:writeHead|write|end|setHeader|statusCode)\b/.test(w)
-    || /\b(?:handle|route|onRequest)[A-Za-z_$]*\s*\(/.test(w)
-    || /\bcreateServer\s*\(\s*(?:async\s*)?\(?\s*(?:req|request)\s*,/.test(w)
-    || /\(\s*(?:req|request)\s*,\s*(?:res|response)\s*\)/.test(w);
+  const signatureText = codeLines.slice(sigStart).join('\n');
+  return /\b(?:req|request)\.(?:headers|method|url|body|on)\b/.test(signatureText)
+    || /\bres\.(?:writeHead|write|end|setHeader|statusCode)\b/.test(signatureText)
+    || /\b(?:handle|route|onRequest)[A-Za-z_$]*\s*\(/.test(signatureText)
+    || /\bcreateServer\s*\(\s*(?:async\s*)?\(?\s*(?:req|request)\s*,/.test(signatureText)
+    || /\(\s*(?:req|request)\s*,\s*(?:res|response)\s*\)/.test(signatureText);
 }
 
 /** 判定命中行所处上下文（三标签之③）。 */
@@ -236,40 +236,40 @@ function stripLiterals(line) {
   let blockComment = false;
   let regexMode = false;
   while (i < line.length) {
-    const c = line[i];
+    const char = line[i];
     const next = line[i + 1];
     if (lineComment) { i++; continue; }
     if (blockComment) {
-      if (c === '*' && next === '/') { blockComment = false; i += 2; continue; }
+      if (char === '*' && next === '/') { blockComment = false; i += 2; continue; }
       i++; continue;
     }
     if (quote) {
-      if (c === '\\') { i += 2; continue; }
-      if (c === quote) quote = null;
+      if (char === '\\') { i += 2; continue; }
+      if (char === quote) quote = null;
       i++; continue;
     }
     if (regexMode) {
-      if (c === '\\') { i += 2; continue; }
-      if (c === '/') regexMode = false;
+      if (char === '\\') { i += 2; continue; }
+      if (char === '/') regexMode = false;
       i++; continue;
     }
-    if (c === '/' && next === '/') { lineComment = true; i += 2; continue; }
-    if (c === '/' && next === '*') { blockComment = true; i += 2; continue; }
+    if (char === '/' && next === '/') { lineComment = true; i += 2; continue; }
+    if (char === '/' && next === '*') { blockComment = true; i += 2; continue; }
     // 正则字面量判定：**必须看前一个非空字符**——只有表达式起始位置（行首、`(`、`,`、`=`、
     //   `:`、`[`、`!`、`&`、`|`、`?`、`{`、`;`、`return` 等之后）的 `/` 才是正则开头；
     //   标识符/数字/`)`/`]` 之后的 `/` 是**除号**。此前不加区分一律当正则，导致
     //   `readFile('/tmp/x')` 里的 `/tmp` 被当成正则开始，把整行剩余部分吞掉 → 漏报。
-    if (c === '/' && /[A-Za-z0-9\\^$.|?*+()[\]{}]/.test(next || '')) {
+    if (char === '/' && /[A-Za-z0-9\\^$.|?*+()[\]{}]/.test(next || '')) {
       const prev = out.trimEnd().slice(-1);
       const regexAllowed = prev === '' || /[=(,:;[!&|?{}+\-*/%<>~^]/.test(prev) || /\b(?:return|typeof|case|in|of|new|delete|void|do|else|yield|await)$/.test(out.trimEnd());
       if (regexAllowed) { regexMode = true; i++; continue; }
       // 否则视作除号，正常输出
-      out += c;
+      out += char;
       i++;
       continue;
     }
-    if (c === "'" || c === '"' || c === '`') { quote = c; i++; continue; }
-    out += c;
+    if (char === "'" || char === '"' || char === '`') { quote = char; i++; continue; }
+    out += char;
     i++;
   }
   return out;
@@ -381,10 +381,10 @@ function collectVarAssignments(lines) {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     // const NAME = '...' 或 const NAME = join('...', '...')
-    const m = line.match(/^\s*(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(.+?)\s*;?\s*$/);
-    if (!m) continue;
-    const name = m[1];
-    const val = m[2].trim();
+    const declMatch = line.match(/^\s*(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(.+?)\s*;?\s*$/);
+    if (!declMatch) continue;
+    const name = declMatch[1];
+    const val = declMatch[2].trim();
     if (/^['"`]/.test(val) || /^join\s*\(/.test(val) || /^resolve\s*\(/.test(val)) {
       map.set(name, { value: val, line: i + 1 });
     }
@@ -398,9 +398,9 @@ function extractArg(line, op, opName) {
   const nameRe = new RegExp(`[A-Za-z_$][\\w$]*\\b`, 'g');
   let found = null;
   let foundIdx = -1;
-  let m;
-  while ((m = nameRe.exec(line)) !== null) {
-    if (m[0] === opName) { found = m[0]; foundIdx = m.index; break; }
+  let nameMatch;
+  while ((nameMatch = nameRe.exec(line)) !== null) {
+    if (nameMatch[0] === opName) { found = nameMatch[0]; foundIdx = nameMatch.index; break; }
   }
   // 备选：行内只有该操作名出现且带括号（无别名场景退化）
   if (found === null) {
@@ -468,15 +468,15 @@ function printText(hits, { writeOnly = false, riskOnly = '', summary = false } =
 
   // 按文件分组；组内按行号
   const byFile = new Map();
-  for (const h of filtered) {
-    if (!byFile.has(h.file)) byFile.set(h.file, []);
-    byFile.get(h.file).push(h);
+  for (const entry of filtered) {
+    if (!byFile.has(entry.file)) byFile.set(entry.file, []);
+    byFile.get(entry.file).push(entry);
   }
   for (const [file, hs] of [...byFile.entries()].sort()) {
     console.log(`\n── ${file} (${hs.length}) ──`);
-    for (const h of hs.sort((a, b) => a.line - b.line)) {
-      console.log(`  ${riskMark(h.risk)} L${String(h.line).padEnd(4)} ${h.op.padEnd(14)} ${tagsOf(h)}`);
-      console.log(`       ${h.path}`);
+    for (const entry of hs.sort((a, b) => a.line - b.line)) {
+      console.log(`  ${riskMark(entry.risk)} L${String(entry.line).padEnd(4)} ${entry.op.padEnd(14)} ${tagsOf(entry)}`);
+      console.log(`       ${entry.path}`);
     }
   }
   console.log(`\n合计 ${filtered.length} 处文件操作（🔴high=写/删且并发路径 · 🟠medium=同步阻塞或写类 · ·low=普通读）`);
@@ -568,9 +568,9 @@ export function scanFileIo(opts = {}) {
 /** 供 CLI 复用：打印三标签汇总。 */
 export function summarize(hits) {
   const count = (key) => {
-    const m = new Map();
-    for (const h of hits) m.set(h[key], (m.get(h[key]) || 0) + 1);
-    return [...m.entries()].sort((a, b) => b[1] - a[1]);
+    const counter = new Map();
+    for (const entry of hits) counter.set(entry[key], (counter.get(entry[key]) || 0) + 1);
+    return [...counter.entries()].sort((a, b) => b[1] - a[1]);
   };
   console.log(`合计 ${hits.length} 处文件操作\n`);
   console.log('【类型】' + count('type').map(([k, v]) => `${k === 'sync' ? '同步' : '异步'} ${v}`).join('  '));
@@ -647,17 +647,17 @@ function printReport(hits, opts = {}) {
   if (!ranked.length) {
     console.log('    ✓ 无高风险/中风险项');
   } else {
-    for (const h of ranked.slice(0, limit)) {
+    for (const entry of ranked.slice(0, limit)) {
       const ctxs = [];
-      if (h.inAsync) ctxs.push('异步路径');
-      if (h.inLoop) ctxs.push('循环内');
-      if (h.inRequest) ctxs.push('请求路径');
-      if (h.inStartup) ctxs.push('启动路径');
-      const callName = h.call || h.op || '(未知调用)';
-      console.log(`    ${String(h.rank).padStart(3)}. ${RISK_BADGE[h.risk]}${RISK_LABEL[h.risk]}  ${h.file}:${h.line}`);
-      console.log(`         ${callName}  ·  ${h.kind}  ·  ${ctxs.join('+') || '—'}`);
-      if (h.reason) console.log(`         ${h.reason}`);
-      console.log(`         路径: ${h.path || '(未解析)'}`);
+      if (entry.inAsync) ctxs.push('异步路径');
+      if (entry.inLoop) ctxs.push('循环内');
+      if (entry.inRequest) ctxs.push('请求路径');
+      if (entry.inStartup) ctxs.push('启动路径');
+      const callName = entry.call || entry.op || '(未知调用)';
+      console.log(`    ${String(entry.rank).padStart(3)}. ${RISK_BADGE[entry.risk]}${RISK_LABEL[entry.risk]}  ${entry.file}:${entry.line}`);
+      console.log(`         ${callName}  ·  ${entry.kind}  ·  ${ctxs.join('+') || '—'}`);
+      if (entry.reason) console.log(`         ${entry.reason}`);
+      console.log(`         路径: ${entry.path || '(未解析)'}`);
     }
     if (ranked.length > limit) {
       console.log(`    … 另有 ${ranked.length - limit} 项，用 --report-limit <n> 调整`);

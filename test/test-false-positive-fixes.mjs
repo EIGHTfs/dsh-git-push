@@ -95,18 +95,18 @@ after(() => {
 
 const byRule = (findings, ruleId) => findings.filter((f) => f.rule === ruleId);
 
-test('① npm/undeclared-js-yaml：全仓零 js-yaml import 不报（零依赖插件）', () => {
-  const res = auditFull(fixture, { depth: 5 });
+test('① npm/undeclared-js-yaml：全仓零 js-yaml import 不报（零依赖插件）', async () => {
+  const res = await auditFull(fixture, { depth: 5 });
   assert.equal(byRule(res.findings, 'npm/undeclared-js-yaml').length, 0,
     '零依赖项目不应报 js-yaml 未声明（无 import 即无运行时风险）');
   // 对照：真 import 的项目仍应报（规则没有变哑）
-  const dep = auditFull(depProj, { depth: 5 });
+  const dep = await auditFull(depProj, { depth: 5 });
   assert.ok(byRule(dep.findings, 'npm/undeclared-js-yaml').length > 0,
     'import js-yaml 但未声明依赖仍应报');
 });
 
-test('② timeout-on-external-api：fetch + AbortSignal.timeout 同调用不报', () => {
-  const res = auditFull(fixture, { depth: 5 });
+test('② timeout-on-external-api：fetch + AbortSignal.timeout 同调用不报', async () => {
+  const res = await auditFull(fixture, { depth: 5 });
   assert.equal(byRule(res.findings, 'robustness/timeout-on-external-api').length, 0,
     '带 AbortSignal.timeout 的 fetch 不应报无超时');
   // 对照：真无超时的 fetch 仍应报
@@ -114,14 +114,14 @@ test('② timeout-on-external-api：fetch + AbortSignal.timeout 同调用不报'
   assert.ok(hasExternalCallTimeout("fetch('/a', { signal: AbortSignal.timeout(1) })", [], 0) === true, '内联超时豁免');
 });
 
-test('③ client-module-loader-id：已按 load({id,factory}) 契约注册不报', () => {
-  const res = auditFull(fixture, { depth: 5 });
+test('③ client-module-loader-id：已按 load({id,factory}) 契约注册不报', async () => {
+  const res = await auditFull(fixture, { depth: 5 });
   assert.equal(byRule(res.findings, 'dsh/client-module-loader-id').length, 0,
     '已用统一 ModuleLoader 契约的 client 半部不应报');
 });
 
-test('④ concat-in-t：split(\'{\'+\'k\' 的 t( 不误匹配（词边界）', () => {
-  const res = auditFull(fixture, { depth: 5 });
+test('④ concat-in-t：split(\'{\'+\'k\' 的 t( 不误匹配（词边界）', async () => {
+  const res = await auditFull(fixture, { depth: 5 });
   assert.equal(byRule(res.findings, 'i18n/concat-in-t').length, 0,
     'split() 内含拼接不是 t() 调用，不应报 concat-in-t');
   // 对照：真 t('a' + b 拼接仍应命中
@@ -143,16 +143,16 @@ function checkRegexRulesSafe() {
   return findings.some((f) => f.rule === 'i18n/concat-in-t');
 }
 
-test('⑤ mkdir-before-write：写文件前同函数 ensureDataDir 不报', () => {
-  const res = auditFull(fixture, { depth: 5 });
+test('⑤ mkdir-before-write：写文件前同函数 ensureDataDir 不报', async () => {
+  const res = await auditFull(fixture, { depth: 5 });
   assert.equal(byRule(res.findings, 'robustness/mkdir-before-write').length, 0,
     'saveData 模式（先 ensureDataDir 再 writeFile）不应报');
   assert.ok(hasMkdirInSameFunction(['function f() {', '  mkdirSync("/a", {recursive:true})', '  writeFileSync("/a/b")', '}'], 2) === true, '同函数 mkdir 豁免');
   assert.ok(hasMkdirInSameFunction(['function f() {', '  writeFileSync("/a/b")', '}'], 1) === false, '无 mkdir 不豁免');
 });
 
-test('⑥ patch-insert-unique-id：纯 insert 不报；insert+覆盖同 id 才报；README 示例不查', () => {
-  const res = auditFull(fixture, { depth: 5 });
+test('⑥ patch-insert-unique-id：纯 insert 不报；insert+覆盖同 id 才报；README 示例不查', async () => {
+  const res = await auditFull(fixture, { depth: 5 });
   // README 的 insert 代码块示例（md 非 yml）不命中——exts 只查 yml/yaml
   const readmeHits = res.findings.filter((f) => f.rule === 'dsh/patch-insert-unique-id' && /README/i.test(f.file));
   assert.equal(readmeHits.length, 0, 'README.md 示例不应命中（exts 只查 yml/yaml）');
@@ -169,8 +169,8 @@ test('⑥ patch-insert-unique-id：纯 insert 不报；insert+覆盖同 id 才�
   assert.equal(pf.length, 0, '纯 insert 无覆盖行不报（直接调用）');
 });
 
-test('⑦ checkSemantic：只对代码文件报（.gitignore/README 不报）', () => {
-  const res = auditFull(fixture, { depth: 5 });
+test('⑦ checkSemantic：只对代码文件报（.gitignore/README 不报）', async () => {
+  const res = await auditFull(fixture, { depth: 5 });
   // locale-file-missing 是仓库级预期检查（报在 package.json）；folder 规则是仓库级结构检查。
   // 排除这两类后，占位 semantic 规则（安全/a11y/dependency）应只报代码文件。
   const sem = res.findings.filter((f) => f.kind === 'semantic' && !/locale-file/.test(f.rule) && f.rule !== 'folder/gitignore-missing-artifacts');
@@ -182,10 +182,10 @@ test('⑦ checkSemantic：只对代码文件报（.gitignore/README 不报）', 
   assert.equal(gitignoreSemantic.length, 0, '.gitignore 不应有语义/安全占位提示');
 });
 
-test('⑧ version 路径上下文豁免：安装路径里的 dsh-v0.x.y 不报', () => {
+test('⑧ version 路径上下文豁免：安装路径里的 dsh-v0.x.y 不报', async () => {
   assert.ok(isVersionInPathContext('/vol2/runtime/dsh-v0.1.2-alpha.4/.dsh-home') === true, '路径内版本号应豁免');
   assert.ok(isVersionInPathContext('| v0.2.0 | 更新日志标题') === false, 'README 版本记录标题不应豁免');
-  const res = auditFull(fixture, { depth: 5 });
+  const res = await auditFull(fixture, { depth: 5 });
   const v = res.findings.filter((f) => /version\/(embedded-major-zero|readme-zero-title)/.test(f.rule));
   assert.equal(v.length, 0, 'README 路径示例不应触发 version 0.x 警告');
 });

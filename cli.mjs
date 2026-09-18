@@ -148,9 +148,9 @@ export function cmdRuleset(slots) {
  *    （实测「CLI 全量扫描分更低、文件更多」：跑了已禁用规则包 + 默认权重 + 不同文件上限）。
  *    现在 CLI 读**同一份** config.json（$DSH_HOME/git-push/config.json），用与插件 code_audit
  *    完全相同的 auditOpts 与入口（auditFull），保证功能与结果一致。 */
-export function cmdScan(root, flags) {
+export async function cmdScan(root, flags) {
   const depth = flags.depth ?? 3;
-  const scanResult = auditWithScope(root, { scope: 'full', depth });
+  const scanResult = await auditWithScope(root, { scope: 'full', depth });
   console.log(`扫描 ${root}（full，depth=${depth}）`);
   console.log(`  findings: ${scanResult.summary.total}（blocker ${scanResult.summary.blocker} / warning ${scanResult.summary.warning}）`);
   for (const f of scanResult.findings.slice(0, 20)) {
@@ -200,12 +200,12 @@ export function pluginEqualWeights(cfg, flags) {
 }
 
 /** 子命令：audit — 审计目录（**与插件 code_audit 结果一致**）。 */
-export function cmdAudit(root, flags) {
+export async function cmdAudit(root, flags) {
   const cfg = cliPluginConfig();
   const full = flags.full === true || !existsSync(join(root || '.', '.git'));
   const opts = pluginEqualAuditOpts(cfg, flags, { scope: full ? 'full' : 'diff' });
   const weights = pluginEqualWeights(cfg, flags);
-  const auditResult = full ? auditFull(root, opts) : auditWithScope(root, opts);
+  const auditResult = full ? await auditFull(root, opts) : await auditWithScope(root, opts);
   const quality = scoreQuality(auditResult.findings, weights, { files: auditResult.files });
   if (flags.json) {
     console.log(JSON.stringify({ ok: true, repo: root, scope: auditResult.scope, summary: auditResult.summary, quality, findings: auditResult.findings, files: auditResult.files, yaml: auditResult.yaml }, null, 2));
@@ -294,7 +294,7 @@ export async function cmdCommit(root, flags) {
 
 /** 子命令：link-check — 检查文本文件的链接有效性（只 warning，不拦提交）。 */
 export async function cmdLinkCheck(root = '.') {
-  const files = collectTextFiles(root, { depth: 5 }).filter((f) => /\.(md|markdown|txt)$/i.test(f.path));
+  const files = (await collectTextFiles(root, { depth: 5 })).filter((f) => /\.(md|markdown|txt)$/i.test(f.path));
   const all = [];
   for (const f of files) {
     const findings = await checkLinks({ file: f.path, text: readText(f.full) });
@@ -393,48 +393,48 @@ export function cmdFileIo(targets = [], flags = {}) {
   return hits;
 }
 
-export function main(argv = process.argv.slice(2)) {
+export async function main(argv = process.argv.slice(2)) {
   const [cmd, ...rest] = argv;
   if (!cmd || cmd === 'help' || cmd === '--help' || cmd === '-h') {
     console.log(HELP);
     return;
   }
-  if (cmd === 'version' || cmd === '-v' || cmd === '--version') return cmdVersion();
-  if (cmd === 'ruleset') return cmdRuleset(rest);
+  if (cmd === 'version' || cmd === '-v' || cmd === '--version') return await cmdVersion();
+  if (cmd === 'ruleset') return await cmdRuleset(rest);
   if (cmd === 'scan') {
     const { flags, positional, error } = parseArgv(rest);
     if (error) return console.error(error);
-    return cmdScan(positional[0] || '.', flags);
+    return await cmdScan(positional[0] || '.', flags);
   }
   if (cmd === 'repos') {
     const { flags, positional, error } = parseArgv(rest);
     if (error) return console.error(error);
-    return cmdRepos(positional[0] || '.', flags);
+    return await cmdRepos(positional[0] || '.', flags);
   }
   if (cmd === 'index') {
     const { flags, positional, error } = parseArgv(rest);
     if (error) return console.error(error);
-    return cmdIndex(positional[0] || '.', flags);
+    return await cmdIndex(positional[0] || '.', flags);
   }
   if (cmd === 'audit') {
     const { flags, positional, error } = parseArgv(rest);
     if (error) return console.error(error);
-    return cmdAudit(positional[0] || '.', flags);
+    return await cmdAudit(positional[0] || '.', flags);
   }
   if (cmd === 'commit') {
     const { flags, positional, error } = parseArgv(rest);
     if (error) return console.error(error);
-    return cmdCommit(positional[0] || '', flags);
+    return await cmdCommit(positional[0] || '', flags);
   }
   if (cmd === 'file-io') {
     const { flags, positional, error } = parseArgv(rest);
     if (error) return console.error(error);
-    return cmdFileIo(positional, flags);
+    return await cmdFileIo(positional, flags);
   }
-  if (cmd === 'link-check') return cmdLinkCheck(rest[0] || '.');
-  if (cmd === 'yaml-template') return cmdYamlTemplate();
-  if (cmd === 'readme-template') return cmdReadmeTemplate();
-  if (cmd === 'self-check') return cmdSelfCheck();
+  if (cmd === 'link-check') return await cmdLinkCheck(rest[0] || '.');
+  if (cmd === 'yaml-template') return await cmdYamlTemplate();
+  if (cmd === 'readme-template') return await cmdReadmeTemplate();
+  if (cmd === 'self-check') return await cmdSelfCheck();
   console.error(`未知命令: ${cmd}\n`);
   console.log(HELP);
   process.exitCode = 1;
@@ -442,5 +442,7 @@ export function main(argv = process.argv.slice(2)) {
 
 // 直接运行时入口（被 import 时不执行）
 if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith('cli.mjs')) {
-  main();
+  // 顶层 await：main 已异步，未 await 时 rejection 会变成 unhandled rejection
+  //   （进程静默退出、退出码不对），故显式 await 并回传退出码。
+  process.exitCode = (await main()) ?? process.exitCode;
 }

@@ -6,3 +6,8 @@
 #   其 parser 有 1370 行的单函数，会被 readability/max-function-length 报 blocker——
 #   但我们不改这份代码，报出来只是噪声。
 lib/vendor/
+
+# 评分参数表：DEFAULT_WEIGHTS / DIMENSION_K 的数字是「维度名 → 参数」映射值，
+#   键名已表意，拆成 WEIGHT_X = 15 这类常量反而割裂表格、降低可读性；
+#   权重另由侧边栏配置项可调，不是散落魔数。故整文件豁免质量类规则。
+lib/score/index.js

@@ -27,7 +27,7 @@ function cleanup(relPath) {
   try { unlinkSync(full); } catch { /* noop */ }
 }
 
-test('审计拦截：硬编码密码 → blocker', () => {
+test('审计拦截：硬编码密码 → blocker', async () => {
   const rel = '.tmp-test-bad-password.js';
   setupBadFile(rel, [
     '// 测试文件：故意包含硬编码密码',
@@ -36,7 +36,7 @@ test('审计拦截：硬编码密码 → blocker', () => {
     'console.log(dbPassword);',
   ].join('\n'));
   try {
-    const r = runAudit({ repoPath: ROOT, cfg });
+    const r = await runAudit({ repoPath: ROOT, cfg });
     assert.equal(r.ok, false, '应被拦截');
     assert.equal(r.blocked, true, 'blocked 应为 true');
     assert.ok(r.audit, '应有审计摘要');
@@ -45,7 +45,7 @@ test('审计拦截：硬编码密码 → blocker', () => {
   } finally { cleanup(rel); }
 });
 
-test('审计拦截：硬编码 API key → blocker', () => {
+test('审计拦截：硬编码 API key → blocker', async () => {
   const rel = '.tmp-test-bad-apikey.js';
   setupBadFile(rel, [
     '// 测试文件：故意包含 API key',
@@ -54,14 +54,14 @@ test('审计拦截：硬编码 API key → blocker', () => {
     'console.log(apiKey, awsKey);',
   ].join('\n'));
   try {
-    const r = runAudit({ repoPath: ROOT, cfg });
+    const r = await runAudit({ repoPath: ROOT, cfg });
     assert.equal(r.ok, false, '应被拦截');
     assert.equal(r.blocked, true);
     assert.ok(r.audit.summary.blocker > 0);
   } finally { cleanup(rel); }
 });
 
-test('审计拦截：敏感文件（.env）→ blocker', () => {
+test('审计拦截：敏感文件（.env）→ blocker', async () => {
   // 2026-09-14：必须用真实 .env 文件名——凭据文件路径规则（credfile-common 的
   //   path_pattern `(^|[\\/])\.env`）要求「.env 前是路径开头或斜杠」，`.tmp-test-bad.env`
   //   这类前缀名会绕过规则模式。真实 .env / .env.local / config/.env 均被拦截。
@@ -73,13 +73,13 @@ test('审计拦截：敏感文件（.env）→ blocker', () => {
     'API_KEY=ghp_xxxxxxxxxxxx',
   ].join('\n'));
   try {
-    const r = runAudit({ repoPath: ROOT, cfg });
+    const r = await runAudit({ repoPath: ROOT, cfg });
     assert.equal(r.ok, false, '应被拦截');
     assert.equal(r.blocked, true);
   } finally { cleanup(rel); }
 });
 
-test('审计通过：正常文件 → ok', () => {
+test('审计通过：正常文件 → ok', async () => {
   const rel = '.tmp-test-good.js';
   setupBadFile(rel, [
     '// 测试文件：正常代码，无敏感信息',
@@ -87,19 +87,19 @@ test('审计通过：正常文件 → ok', () => {
     'console.log(add(1, 2));',
   ].join('\n'));
   try {
-    const r = runAudit({ repoPath: ROOT, cfg });
+    const r = await runAudit({ repoPath: ROOT, cfg });
     assert.equal(r.ok, true, '正常文件应通过');
     assert.equal(r.blocked, undefined, '不应有 blocked');
   } finally { cleanup(rel); }
 });
 
-test('审计跳过：auditEnabled=false → 直接通过', () => {
+test('审计跳过：auditEnabled=false → 直接通过', async () => {
   const rel = '.tmp-test-skip.js';
   setupBadFile(rel, [
     'const password = "should-not-matter";',
   ].join('\n'));
   try {
-    const r = runAudit({ repoPath: ROOT, cfg: { auditEnabled: false } });
+    const r = await runAudit({ repoPath: ROOT, cfg: { auditEnabled: false } });
     assert.equal(r.ok, true, '审计关闭时应直接通过');
     assert.equal(r.audit, null, 'audit 应为 null');
   } finally { cleanup(rel); }

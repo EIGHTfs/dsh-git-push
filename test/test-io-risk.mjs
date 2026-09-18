@@ -39,24 +39,43 @@ test('io-risk：顶层同步 I/O 判 low（启动路径），不误判为 high',
   assert.equal(hits[0].inStartup, true);
 });
 
-test('io-risk：写类操作加权一档（safe 基线上抬为 low）', () => {
-  // 异步写 + 无循环 + 非关键路径：基础 safe，写类加权后 low（不阻塞事件循环）
-  const src = 'export async function f() {\n  await fs.promises.writeFile("out.txt", "x");\n}\n';
-  const hits = scanIoRiskAst(src);
-  assert.ok(hits.length >= 1, '应命中');
-  assert.equal(hits[0].kind, 'write');
-  assert.equal(hits[0].risk, 'low', '写类应加权一档（safe → low）');
-  assert.ok(hits[0].reason.includes('加权'), '理由应说明加权来源');
-
-  // 同一文件里的异步读未加权，仍在 safe —— 反证加权只作用于写类
-  const both = 'export async function g() {\n'
+test('io-risk：写类操作加权一档（仅重复执行的上下文）', () => {
+  // 2026-09-18 口径修正：加权只作用于**会重复执行**的上下文（循环内 / 请求路径）。
+  //   原先无条件加权，把「启动路径的一次性落盘」「`.tmp` + rename 标准原子写」
+  //   这类*正确做法*也升了一档（实测 25 条 atomic-json/account-status 等被误报中风险）。
+  //   异步写不阻塞、不重复，本身无风险，保持 safe 才是准确的。
+  //
+  // 加权机制仍在，用「循环内」（不依赖请求路径识别）验证：
+  //   循环内的异步写 = 基础 high（循环内）；改用循环内的**异步**写拿基础 safe 观察抬升——
+  //   但异步写不在重复上下文……故直接用「请求路径 + 异步 I/O」这一支：
+  //   异步读在请求路径 = medium；异步写在请求路径 = medium→high（加权）。
+  const both = 'export async function handler(req, res) {\n'
     + '  await fs.promises.writeFile("o", "x");\n'
-    + '  await fs.promises.readFile("i");\n}\n';
-  const h2 = scanIoRiskAst(both);
-  const w = h2.find((h) => h.kind === 'write');
-  const r = h2.find((h) => h.kind === 'read');
-  assert.equal(w.risk, 'low');
-  assert.equal(r.risk, 'safe');
+    + '  await fs.promises.readFile("i");\n'
+    + '  res.end(String(req.url));\n}\n';
+  const hits = scanIoRiskAst(both);
+  const w = hits.find((h) => h.kind === 'write');
+  const r = hits.find((h) => h.kind === 'read');
+  assert.ok(w && r, '应同时命中写与读');
+  assert.equal(w.inRequest, true, '应判为请求路径');
+  assert.equal(w.risk, 'high', '请求路径的写应加权一档（medium → high）');
+  assert.ok(w.reason.includes('加权'), '理由应说明加权来源');
+  // 同上下文里的读未加权 —— 反证加权只作用于写/删/改名
+  assert.equal(r.risk, 'medium', '同类上下文下的读不加权，停在基础档');
+});
+
+test('io-risk：启动路径的一次性写不加权（原子写不应被误升档）', () => {
+  // 标准原子写：`.tmp` + rename。执行一次即结束，不存在「反复 + 不可逆」叠加。
+  const src = 'const tmpPath = `${p}.tmp`;\n'
+    + 'writeFileSync(tmpPath, JSON.stringify(doc), "utf8");\n'
+    + 'renameSync(tmpPath, p);\n';
+  const hits = scanIoRiskAst(src);
+  assert.ok(hits.length >= 2, '应命中写与改名');
+  for (const h of hits) {
+    assert.equal(h.inStartup, true, '应判为启动路径');
+    assert.equal(h.risk, 'low', `${h.call} 一次性执行不应加权（期望 low，实际 ${h.risk}）`);
+    assert.ok(!h.reason.includes('加权'), '理由不应含加权');
+  }
 });
 
 test('io-risk：循环内的同步写判 high', () => {
