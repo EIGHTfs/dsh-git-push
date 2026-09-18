@@ -11,6 +11,7 @@ import {
   DEFAULT_CONFIG, SETTINGS_SCHEMA, defaultConfig, resolveConfig,
   createSettingsCard, collectExternalRefs, INLINE_CSS, clientModuleInfo,
 } from '../lib/client/index.js';
+import { tokenize } from '../lib/ast/tokenizer.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const clientSrc = readFileSync(join(ROOT, 'lib/client/index.js'), 'utf8');
@@ -23,6 +24,63 @@ function mockReact() {
     createElement(type, props, children) { calls.push({ type, props, children }); return { type, props: props || {}, children }; },
   };
 }
+
+// ---------- 浏览器入口 client.js 的标识符完整性 ----------
+// 2026-09-18：clone 按钮报「dshgp_CLONE_TIMEOUT_MS is not defined」——1.4.1 为 clone
+//   放宽超时改用该常量，却漏了定义。这类「用了没定义」只在点到那个按钮时才炸：
+//   node --check 查不出（运行时 ReferenceError 不是语法错误），回归也覆盖不到。
+//
+//   判据**不手写正则剥离字符串/注释**。早期两次实现都栽在这上面：
+//     ① 行注释 /(^|[^:\\])\/\/[^\n]*/ 的「非冒号非反斜杠」会匹配换行符，从行首吞掉代码行；
+//     ② 双引号串 /"(?:[^"\\]|\\.)*"/ 遇到正则字面量里的未闭合引号会跨行失控——实测把
+//        2204 行砍成 478 行，含用法的代码整段消失，于是「未定义」检测恒为空、测试形同虚设。
+//   现改用项目自带 tokenizer（lib/ast/tokenizer.js）：它按类型标明 ident/str/comment，
+//   取 ident 类 token 即天然排除字符串与注释，不再依赖手写正则的脆弱假设。
+test('client.js：dshgp_ 前缀标识符无「用了没定义」', () => {
+  const src = readFileSync(join(ROOT, 'client.js'), 'utf8');
+  const tokens = tokenize(src).filter((t) => t.type === 'ident');
+
+  // 先自证取到的是代码而非被剥离后的残骸，否则下面断言恒真
+  assert.ok(tokens.length > 1000, `ident token 仅 ${tokens.length} 个，tokenizer 结果可疑`);
+
+  const names = new Set(tokens.map((t) => t.value).filter((v) => v.startsWith('dshgp_')));
+  assert.ok(names.size >= 20, `仅收集到 ${names.size} 个 dshgp_ 标识符，判据可能失效`);
+
+  // 定义：const/let/var/function/class NAME，或形参/解构/属性简写形态
+  const defs = new Set();
+  for (let i = 0; i < tokens.length; i += 1) {
+    const t = tokens[i];
+    if (['const', 'let', 'var', 'function', 'class'].includes(t.value)
+        && tokens[i + 1] && tokens[i + 1].value.startsWith('dshgp_')) {
+      defs.add(tokens[i + 1].value);
+    }
+  }
+  // 形参/解构：{ dshgp_x } 或 (dshgp_x, 或 ,dshgp_x)
+  for (let i = 0; i < tokens.length; i += 1) {
+    const v = tokens[i].value;
+    if (!v.startsWith('dshgp_')) continue;
+    const prev = tokens[i - 1] && tokens[i - 1].value;
+    const next = tokens[i + 1] && tokens[i + 1].value;
+    if ((prev === '{' || prev === ',' || prev === '(') && (next === ',' || next === '}' || next === ')' || next === '=')) {
+      // 排除上一 token 是 . 的属性访问（obj.dshgp_x 不是定义）
+      if (tokens[i - 1] && tokens[i - 1].value !== '.') defs.add(v);
+    }
+  }
+
+  const undef = [...names].filter((n) => !defs.has(n));
+  assert.deepEqual(undef, [],
+    'client.js 存在未定义的 dshgp_ 标识符（会在用户点击时抛 ReferenceError）');
+});
+
+// clone 超时必须真正放宽：默认 fetch 超时 30s 对上百 MB 仓库必然不够
+test('client.js：clone 使用放宽后的超时，且该常量已定义', () => {
+  const src = readFileSync(join(ROOT, 'client.js'), 'utf8');
+  const m = src.match(/const\s+dshgp_CLONE_TIMEOUT_MS\s*=\s*([\d_]+)/);
+  assert.ok(m, 'dshgp_CLONE_TIMEOUT_MS 必须显式定义');
+  const ms = Number(m[1].replace(/_/g, ''));
+  assert.ok(ms >= 600_000, `clone 超时应放宽到 10 分钟以上，实际 ${ms}ms`);
+  assert.match(src, /repo-clone'[^)]*dshgp_CLONE_TIMEOUT_MS/, 'clone 请求应传入该放宽超时');
+});
 
 // ---------- 默认关（关键安全默认） ----------
 test('默认关：审计开关/LLM/全量扫 全部默认 false', () => {

@@ -48,6 +48,10 @@ window.__ModuleLoader__.load({
 
     // 逻辑类常量（fetch 超时 / 扫描循环上限 / 提示时长 / 日志截断长度）
     const dshgp_FETCH_TIMEOUT_MS = 30_000;        // fetch 超时（same-origin）
+    // clone 单独放宽到 30 分钟：带 tools/ffmpeg-lib 的仓库总量可达 154MB（光 4 个共享库就 79MB），
+    //   按默认 30s 必然 signal timed out，失败原因与真实耗时无关。
+    //   注：绝对超时只是兜底，判「卡死」看进度是否停滞（由后端 clone-jobs 判定，停滞仅提示不中断）。
+    const dshgp_CLONE_TIMEOUT_MS = 1_800_000;
     const dshgp_SCAN_WAIT_MAX_ROUNDS = 600;       // 后台扫描等待循环上限（每次挂起等新进度）
     const dshgp_SAVED_MSG_MS = 4000;              // 「已保存」提示显示时长
     const dshgp_LOG_TRUNCATE = 40;                // 调试日志 value 截断长度
