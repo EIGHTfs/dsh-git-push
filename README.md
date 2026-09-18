@@ -82,16 +82,21 @@ Git 全链路自动化，token / SSH 凭据管理 + 提交推送，无需手动�
 2. **yml 黑名单关键词**（规则 yml 的 `exclude_dirs` 并集，如 folder 规则的 `dist/build/vendor/.dsh/.trash` 等）——候选跳过，但若 gitignore 用 `!` 白名单恢复了该目录（如 `server/project/*` + `!server/project/blueprint/`、`/build/*` + `!/build/keep/`），则保留进入（黑名单不压过白名单）；
 3. **gitignore 忽略判定**（`git check-ignore`）——被忽略目录整棵跳过；被 `!` 恢复的目录照常进入。
 
-**`.auditignore` 审计豁免文件（2026-09-16）**：仓库根放一个 `.auditignore`，用 **gitignore 语法**声明「不审计但可入库」的文件/目录（复用 .gitignore 的解析方式，走 `git check-ignore -c core.excludesFile`）：
+**`.auditignore` 审计豁免文件（2026-09-16，2026-09-18 补非 git 兜底）**：仓库根放一个 `.auditignore`，用 **gitignore 语法**声明「不审计但可入库」的文件/目录：
 
 ```
 # .auditignore 示例：以下内容照常 git 跟踪/提交，但审计扫描跳过
 generated/          # 整棵目录豁免审计
 src/vendor.js       # 单文件豁免审计
 *.lock              # 匹配 yarn.lock 等 .lock 结尾文件
+*.sh                # 按文件类型豁免：所有层级的 .sh（gitignore 语义：无 / 的模式匹配任意深度）
 ```
 
-- **目录规则**（`generated/`）在遍历时整棵剪枝；**文件级规则**（`src/vendor.js`、`*.lock`）收集后批量判定剔除
+- **目录规则**（`generated/`）在遍历时整棵剪枝；**文件级规则**（`src/vendor.js`、`*.lock`、`*.sh`）收集后判定剔除
+- **按扩展名豁免**：`*.sh` / `*.png` / `*.min.js` 均可，语义与 gitignore 一致——`*.sh` 匹配**任意层级**的 `.sh`（不是只根目录）；只要根目录用 `/*.sh`。实测 `*.sh` 能命中 `deep/nested/dir/run.sh`
+- **否定与恢复**：`!` 前缀恢复审计，且**后面的规则覆盖前面的**（`*.sh` + `!keep.sh` = 只豁免 keep.sh 之外的 .sh）
+- **git 仓库**：走 `git check-ignore -c core.excludesFile`，语义与 git 100% 一致
+- **非 git 目录（2026-09-18 新增兜底）**：解压的源码包、临时导出目录、未 `git init` 的工程同样生效——改用纯 JS 匹配器 `lib/audit/gitignore-match.js`（零依赖，语义逐条与真 git 对拍，见 `test/test-gitignore-match.mjs`）。此前这类目录下 `.auditignore` **形同不存在**，同一个规则在 `git init` 前后行为相反
 - 与 `.gitignore` **叠加生效**（各自独立、互不覆盖）：`.gitignore` 管「不入库」，`.auditignore` 管「不入审计」
 - **豁免的文件依旧能入库**——`.auditignore` 只作用于审计扫描，不写进任何 git 配置，`git add` 照常跟踪
 - **CLI 与插件天然一致**：`git-sluice audit` / 插件 `code_audit` 共用同一 collector，同一份 `.auditignore` 双端生效
@@ -169,6 +174,7 @@ dsh-git-push/
 │   │   ├── collector.js — 文件收集（gitignore 感知）
 │   │   ├── file-context.js — 文件上下文豁免（外部调用超时/mkdir 同函数/版本路径）
 │   │   ├── finding.js — 统一问题对象构造器（makeFinding）
+│   │   ├── gitignore-match.js — gitignore 语法匹配器（非 git 目录 .auditignore 兜底，语义与 git 对拍）
 │   │   ├── glob.js — glob→RegExp 转换（**/*/? 子集）
 │   │   ├── index.js — 审计层统一出口（auditFull/auditChanged）
 │   │   ├── orchestrate.js — 审计编排（收集→检查→汇总）
@@ -297,6 +303,7 @@ dsh-git-push/
 │   ├── test-file-health.mjs — 文件健康度矩阵评分测试
 │   ├── test-folder-scope.mjs — 目录级审计作用域回归测试
 │   ├── test-git.mjs — git 总入口测试（runGit/commitAndPush/凭据/克隆）
+│   ├── test-gitignore-match.mjs — gitignore 兜底匹配（与真 git 对拍 + 非 git 端到端）
 │   ├── test-http.mjs — HTTP 总入口测试（Origin/CSRF/413/路由）
 │   ├── test-inject-switch.mjs — 注入开发者要求清单子开关回归
 │   ├── test-inject-system-prompt.mjs — 注入系统提示词回归
@@ -869,7 +876,13 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
-| **1.4.5**（当前） | **修 clone 预览确认框「开始克隆/取消」点了没反应（this 误用）** \
+| **1.4.6**（当前） | **`.auditignore` 非 git 目录兜底（此前只在 git 仓库生效）** \
+`.auditignore` 原先只走 `git check-ignore`，因此**仅在 git 仓库内生效**——解压的源码包、临时导出目录、未 `git init` 的工程里该文件形同不存在，同一个 `*.sh` 规则在 `git init` 前后行为相反（实测确认）。现在非 git 目录改用纯 JS 匹配器兜底，同样按 gitignore 语法生效。\
+新增 `lib/audit/gitignore-match.js`（零依赖，113 行）：复用既有 `globToRegex`，实现 gitignore 的行解析（注释/空行/`!` 取反/前导 `/` 锚定/尾随 `/` 目录规则）与顺序敏感匹配。**语义逐条与真 git 对拍**——取 9 组规则（`*.sh`、`/*.sh`、`sub/*.sh`、`** + / + *.sh`、`*.lock`、`gen/`、嵌套否定等）在临时仓库跑 `git check-ignore --no-index` 作基准，本实现 11/11 一致。\
+`collector.js` 增加 `tryLoadAuditIgnoreFallback`（非 git 时预计算被忽略目录集，与 git 路径返回**同构 Set**，下游 walk 剪枝逻辑零改动）与 `isGitWorkTree`（探活缓存，避免重复 spawn）；`collectFiles` 文件级豁免分出 git / 非 git 两条并列路径。`orchestrate.js` 改为「非 git 但存在 `.auditignore`」时也传 root。\
+**端到端验证**：同一棵目录树，非 git 与 `git init` 后的 `auditFull` 结果**逐文件一致**。新增 `test/test-gitignore-match.mjs`（6 用例）：匹配器基础语义、与真 git 逐条对拍、非 git 生效、git 前后一致、无 `.auditignore` 时不误伤、解析器字段。已做**反向验证**：把「非 git 也传 root」还原回去，测试如期失败 2 条。\
+README 补齐 `.auditignore` 说明（按扩展名豁免、`*.sh` 示例、非 git 兜底、否定语义）。回归 **692 全绿 / 0 失败** |
+| **1.4.5** | **修 clone 预览确认框「开始克隆/取消」点了没反应（this 误用）** \
 点 clone 弹出的预览框里两个按钮全都没反应。根因是调用点写成了 `this.cloneConfirmed()` / `this.clonePreview = null`，而它所在的 `dshgp_RepoCloudPane(props)` 是**普通函数组件**、函数体内没有 this——ESM 严格模式下 `this` 为 `undefined`，点击即抛 `TypeError`，前端表现为「点了没反应」（既没报错提示、也没任何状态变化）。该组件内其余动作全部走 `props.*`，**全文件仅此一行误用 `this`**，属改写时从 Controller 方法复制的残留。\
 同时这两个动作**从未在 props 里组装过**，即便改成 `props.cloneConfirmed()` 也仍是 `undefined`。现补齐两个入口（`cloneConfirmed` / `cancelPreview`），调用点改用 `props.*`。\
 取消逻辑收进 Controller 新增的 `cancelPreview()`：原先写在点击回调里只清 `clonePreview`，而 `clonePending`（存着待克隆的 repo 与目标目录）会残留——再确认其它仓库时会拿到上一次的目标目录。现在两者一起清。\
