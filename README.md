@@ -38,6 +38,7 @@ DSH（DeepSeek Harness）git 提交推送与代码审计插件——提交前自
 |---|---|---|
 | **提交推送** | token / SSH 密钥管理、提交、推送、clone、建仓、可见性切换、force 强推、版本历史 | `git_commit_push` 工具 / CLI / 侧边栏 |
 | **代码审计** | 提交前自动审计门禁、14 个规则槽位 107 条规则、10 维度质量评分、豁免机制、链接检查、**三层审计管线（L1 正则初筛 / L2 AST 数据流 / L3 运行时检测）** | `code_audit` 工具 / CLI / 侧边栏 / 输入框 `/git-audit` |
+| **I/O 路径扫描** | 扫描脚本里读写文件的调用与路径（含变量溯源、`join()` 展开），四级风险分级（与审计 `io-risk` 同标准） | `io_scan` 工具 / 输入框 `/git-io-scan` / `scripts/scan-file-io.mjs` |
 
 ## 一、提交推送
 
@@ -143,7 +144,7 @@ dsh-git-push/
 │   │   ├── scan-root.js — 默认扫描根解析（配置优先→DSH 家根自动识别）
 │   │   ├── schema.js — 配置 schema（宿主导出缺失时兜底）
 │   │   ├── settings-bridge.js — 设置读写桥（host scope 共享；绕开 client isLoopback=memory 落盘陷阱）
-│   │   ├── slash-commands.js — 用户输入框斜杠命令（目前只注册 /git-audit）
+│   │   ├── slash-commands.js — 用户输入框斜杠命令（注册 6 条只读命令）
 │   │   ├── slot-stats.js — 规则槽位命中统计（模块级状态）
 │   │   ├── tool-call.js — 工具调用分发（git_scan/commit_push/audit/status 等全部工具）
 │   │   ├── tools.js — 工具定义清单（名称/描述/参数 schema）
@@ -313,7 +314,7 @@ dsh-git-push/
 │   ├── test-settings-persistence.mjs — 设置侧边栏持久化专项测试（L1 提交/L2 白名单/L3 回读/L4 消费四层断言）
 │   ├── test-sidebar-interaction.mjs — 侧边栏规则包列表交互自检
 │   ├── test-sidebar-state.mjs — 设置侧边栏状态自检（设置键回读/凭据已填写判断/统一刷新入口/产物同步）
-│   ├── test-slash-commands.mjs — 用户输入框 /git-audit 斜杠命令（解析/接线/对本仓库跑 quick）
+│   ├── test-slash-commands.mjs — 用户输入框斜杠命令（6 条只读命令的解析/接线/格式化）
 │   ├── test-smart-hint.mjs — 扫描智能提示 + 评分对数衰减测试
 │   ├── test-status-secret.mjs — token 明文不下发安全回归
 │   ├── test-task-queue.mjs — 后台化回归测试（官方 job 注册 / 无 jobs 同步保底 / blocker 拦截）
@@ -742,39 +743,38 @@ node scripts/rule-switch.mjs enable comment     # 重新启用
 
 ## 用户输入框斜杠命令
 
-会话输入框打 `/` 会弹出官方发现菜单。本插件目前只注册一条。
+会话输入框打 `/` 会弹出官方发现菜单。本插件注册 **6 条只读命令**：
 
-语法：
+| 命令 | 作用 | 参数 |
+| --- | --- | --- |
+| `/git-audit` | 审计仓库（规则 + 质量评分） | `[路径] [--full]` |
+| `/git-scan` | 列出各仓库分支 / 未提交 / 未推送 | `[路径]` |
+| `/git-io-scan` | 扫描脚本里读写文件的调用与路径，标四级风险 | `[路径] [--write]` |
+| `/link-check` | 检查文档内链接有效性 | `[文件或目录]` |
+| `/git-account` | 校验 GitHub 账号与凭据 | — |
+| `/git-clone-preview` | 预览 clone 将下载 / 跳过哪些文件（不落盘） | `<owner/repo> [--branch 名]` |
 
-```
-/git-audit [路径] [--full] [--quick|--standard|--deep]
-```
+**为什么只有只读命令**：输入框一条命令就改远端（提交、建仓、改可见性）风险过高——写类操作仍走 agent 工具，会经过审计门禁、开发者要求清单与推送门禁。唯一的「远端交互」是 `/git-clone-preview`：它只读远端文件树并回报将下载什么，**不下载、不落盘**。
 
-全部参数示例（绝对路径 + 全量 + 最深档）：
-
-```
-/git-audit /path/to/repo --full --deep
-```
-
-只审当前会话工作区的本次变动（最常见）：
-
-```
-/git-audit
-```
-
-当前会话工作区全量、快速档：
+示例：
 
 ```
-/git-audit --full --quick
+/git-audit                            审当前会话工作区的本次变动
+/git-audit /path/to/repo --full       指定仓库全量审计
+/git-scan                             扫默认扫描根（插件配置）
+/git-io-scan --write                  只看写类 I/O 的调用与路径
+/link-check README.md                 检查单个文档的链接
+/git-clone-preview EIGHTfs/dsh-git-push
 ```
 
-- **默认路径 = 当前会话工作区**（`session.header.cwd`，与指挥家按工作区分组同一字段）
+共同规则：
+
+- **默认路径 = 当前会话工作区**（`session.header.cwd`，与指挥家按工作区分组同一字段）；`/git-scan` 不带路径时用插件配置的默认扫描根
 - **未分类**（cwd 空）必须写路径，否则报错退出，**不会**扫 DSH 家根
 - 相对路径接到会话 cwd；无 cwd 时相对路径不可用，改给绝对路径
-- 目标必须是 git 仓库（含 `.git`，或向上找到仓库根）；非仓库直接拒绝——`code_audit` 对无 `.git` 目录会走全量 `auditFull`，扫家根会把进程打爆
-- 默认只审本次变动；`--full` 全量；档位 `--quick` / `--standard` / `--deep`
+- `/git-audit` 的目标必须是 git 仓库（含 `.git`，或向上找到仓库根）；非仓库直接拒绝——`code_audit` 对无 `.git` 目录会走全量 `auditFull`，扫家根会把进程打爆
+- `/git-io-scan` 复用 `scripts/scan-file-io.mjs`（AST 四级分级，与审计 `robustness/io-risk` 同一标准），默认跳过注释行
 - 结果只显示在命令层，**不进模型历史**（官方 `dsh-commands` 协议）
-- 未注册的 `/git-scan` `/git-push` 仍走 agent 工具 / 设置页
 
 Host 注册走 `ctx.inject(['commands'])`；无命令适配器的宿主静默跳过。改动需重启主实例后输入框才能看到。
 
@@ -868,7 +868,8 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
-| **1.4.1**（当前） | **clone 可见进度与预览确认（不再 30 秒超时、跳过的大文件提前告知）** \ 前台超时与真实耗时脱节：浏览器 fetch 固定 30s 超时，而带 tools/ffmpeg-lib 的仓库总量 154MB、光是 4 个共享库就 79MB，正常下载远超 30s —— 用户看到的是 `signal timed out`，失败与真实原因无关。现 clone 单独放宽到 30 分钟，**且判「卡死」不再依赖绝对超时，而是看进度是否停滞**（单个 30MB 文件传得慢但进度在涨，不该被判死；停滞超过 45s 才提示，仅提示不自动中断）。\ 进度可见：新增 `lib/git/clone-jobs.js`（进度/预览内存态）与 `/clone-progress` 轮询端点，前端每秒取一次并按**字节**算百分比（大文件占绝对多数耗时，按文件数会出现「95% 卡住很久」的错觉），显示已完成文件数、已传/总量与停滞时长。\ **先预览再下载**：此前点 clone 直接开下，用户既不知道总量（无从判断要等多久），也不知道体积守卫会跳过哪些文件 —— 而「悄悄少文件」是最难排查的一类问题。现新增 `previewClone` 与 `/clone-preview` 端点，确认框列出「下载 N 个文件 / 约 X MB」与**逐条跳过清单**（含大小），全被跳过时强提示将得到空仓库。\ 两个旋钮移到 clone 入口所在面板（账号/云端）：`maxCloneFileMB`（单文件上限，0=不限）与 `cloneConcurrency`（并发数 1~16）；刻意**不放进「审计」选项卡** —— 那里只保留 maxScanFiles 一项可配，该不变量由 test-sidebar-state 守住。\ 实测：预览 EIGHTfs/gallery → 下载 95 个 74.7MB、跳过 4 个 79.1MB（tools/ffmpeg-lib 下的 libavcodec.so.61 18.8MB / libfftw3f.so.3 14.9MB / libicudata.so.72 29.8MB / libx265.so.199 15.6MB）——4 个库就超过将被下载的全部内容，既解释了为何必然超时，也说明「跳过」必须提前告知；回归 **656 全绿 / 1 失败**（`test-audit-bad-file` 为改动前既有失败，已验证与本次无关）、审计 blocker 0 |
+| **1.4.2**（当前） | **斜杠命令扩到 6 条只读命令（此前只挂 /git-audit）** \ 输入框此前只注册 `/git-audit` 一条，仓库扫描、I/O 路径扫描、链接检查、账号校验这些**纯只读**能力都只能让 AI 掉工具，人在会话里没法直接跑。现按「只挂只读、写类仍走工具」的原则扩到 6 条：`/git-audit`、`/git-scan`、`/git-io-scan`、`/link-check`、`/git-account`、`/git-clone-preview`。\ **刻意不挂写类**（`git_commit_push` / `git_remote_create` / `git_set_visibility` / `git_gen_readme`）：输入框一条命令就改远端、且绕开审计门禁与开发者要求清单，风险与收益不成比例；唯一的远端交互是 `/git-clone-preview`，它只读远端文件树并回报「将下载 / 将跳过」清单，**不下载不落盘**。新增回归断言显式禁止这三条写类命令出现在斜杠命令里。\ **`/git-io-scan` 不另写扫描逻辑**：初版曾新建 `lib/audit/path-scan.js` 自建一套 Node/Shell 路径正则，实测误报严重（把 `readFileSync(x, 'utf8')` 的**第二个**参数 `'utf8'` 当路径、shell 赋值 `dst="$2"` 与重定向 fd `2>&1` 当路径）——而仓库里**早已有** `scripts/scan-file-io.mjs`（AST 四级分级、变量溯源、与审计 `io-risk` 同标准），遂删除重复实现，改为经 `callTool('io_scan')` 复用它（`lib/app/tool-call.js` 新增 `io_scan` / `git_clone_preview` 两个分发分支）。\ 命令层保持薄：`slash-commands.js` 改为 `SLASH_COMMANDS` 清单驱动注册，参数解析/路径校验/文本格式化各自独立函数便于单测；新增 13 条回归测试（命令集合与顺序、禁止写类命令、五类格式化函数的正常/空/异常形态、相对路径无会话工作区被拒）。\ 修复一处**环境性文件权限事故**：`scripts/scan-file-io.mjs` 的写位在此前编辑中被 `sed -i` 抹掉（内容未变、`git diff` 为空），导致 Node `copyFileSync` 在 CIFS 挂载上对该只读文件报 `EACCES`，进而 `sync-plugin` 自测与 tree-doc 自测连带失败；以 `rm` + `git checkout` 还原为 `-rwxrwxrwx` 后 **670 全绿 / 0 失败**。 |
+| **1.4.1** | **clone 可见进度与预览确认（不再 30 秒超时、跳过的大文件提前告知）** \ 前台超时与真实耗时脱节：浏览器 fetch 固定 30s 超时，而带 tools/ffmpeg-lib 的仓库总量 154MB、光是 4 个共享库就 79MB，正常下载远超 30s —— 用户看到的是 `signal timed out`，失败与真实原因无关。现 clone 单独放宽到 30 分钟，**且判「卡死」不再依赖绝对超时，而是看进度是否停滞**（单个 30MB 文件传得慢但进度在涨，不该被判死；停滞超过 45s 才提示，仅提示不自动中断）。\ 进度可见：新增 `lib/git/clone-jobs.js`（进度/预览内存态）与 `/clone-progress` 轮询端点，前端每秒取一次并按**字节**算百分比（大文件占绝对多数耗时，按文件数会出现「95% 卡住很久」的错觉），显示已完成文件数、已传/总量与停滞时长。\ **先预览再下载**：此前点 clone 直接开下，用户既不知道总量（无从判断要等多久），也不知道体积守卫会跳过哪些文件 —— 而「悄悄少文件」是最难排查的一类问题。现新增 `previewClone` 与 `/clone-preview` 端点，确认框列出「下载 N 个文件 / 约 X MB」与**逐条跳过清单**（含大小），全被跳过时强提示将得到空仓库。\ 两个旋钮移到 clone 入口所在面板（账号/云端）：`maxCloneFileMB`（单文件上限，0=不限）与 `cloneConcurrency`（并发数 1~16）；刻意**不放进「审计」选项卡** —— 那里只保留 maxScanFiles 一项可配，该不变量由 test-sidebar-state 守住。\ 实测：预览 EIGHTfs/gallery → 下载 95 个 74.7MB、跳过 4 个 79.1MB（tools/ffmpeg-lib 下的 libavcodec.so.61 18.8MB / libfftw3f.so.3 14.9MB / libicudata.so.72 29.8MB / libx265.so.199 15.6MB）——4 个库就超过将被下载的全部内容，既解释了为何必然超时，也说明「跳过」必须提前告知；回归 **656 全绿 / 1 失败**（`test-audit-bad-file` 为改动前既有失败，已验证与本次无关）、审计 blocker 0 |
 | **1.4.0** | **clone 失败成因分类（auth/notfound 不再误标可重试）** \
 **clone 失败成因分类（修正上一版对「可重试」的误判）**：上一版把一切失败都提示「网络问题，可直接重试」——因为那句正则命中了「克隆未完成」，而它出现在**所有**失败里。实际 401（token 失效）、404（仓库不存在/私有）重试永远失败，用户会在无解的错误上反复点。现在由后端按 HTTP 状态做**结构化定性**（`cause` + `retriable`），前端不再猜文案：`auth`（401）、`notfound`（404）明确标为不可重试并给出可操作处置（「请更新 token」「请确认 owner/repo」）；`network`（status 0 超时/断网）、`ratelimit`（429/403）、`server`（5xx）、`disk`（写盘失败）才提示可重试。触发条件不止超时——已覆盖 401/403/404/429/5xx/status 0/写盘失败共 7 类，逐类验证分类正确 \
 | **1.3.9** | **clone 超时/中断后可重试（半成品自愈 + 失败不再静默报成功）** \

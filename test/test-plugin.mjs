@@ -127,7 +127,7 @@ test('apply：斜杠命令走 commands.register（/git-audit）', async () => {
     },
   };
   await apply(ctx, {});
-  assert.equal(cmds.length, 1, '应注册 1 条斜杠命令');
+    assert.equal(cmds.length, 6, '应注册 6 条只读斜杠命令');
   assert.equal(cmds[0].name, 'git-audit');
   assert.equal(typeof cmds[0].handler, 'function');
   assert.ok(cmds[0].input && cmds[0].input.hint, '应有 input.hint 给发现菜单');
