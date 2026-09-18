@@ -876,7 +876,13 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
-| **1.4.6**（当前） | **`.auditignore` 非 git 目录兜底（此前只在 git 仓库生效）** \
+| **1.4.6**（当前） | **`.auditignore` 非 git 目录兜底 + cookie-secure-flag 误报/漏报各修一（同一版本内修订）** \
+**`security/cookie-secure-flag` 误报修正（2026-09-18）**：Python 读取响应头的写法被报 blocker——实测 `line.lower().startswith("set-cookie:")` 命中规则。根因是 `whitelist_patterns` 只覆盖 JS 形态（`match(/Set-Cookie` 与字符串字面量），Python/Go 的 `startswith` / `Header.Get` / `headers.get` 全没覆盖。补 7 条跨语言读取形态。\
+**同时修一处漏报（更严重）**：旧白名单 `['"]Set-Cookie['"]` 只认「字符串里出现 Set-Cookie」，但**设置**与**读取**都用字符串字面量，于是把真风险 `res.setHeader('Set-Cookie', ...)` 一并豁免了——与规则本意（只有设置 cookie 才要求 Secure/HttpOnly）正好相反。改为按**动词**细分：只豁免读取语境（`get`/`startswith`/`match`/`in headers`/`parse` 等），设置动词不再放行。\
+另发现白名单**不带 `i` 标志**（`lib/checks/regex.js` 用 `new RegExp(w)` 编译，而规则 pattern 走 `safeRe` 带 `i`），故 Python 里 startswith 传大写 cookie 头名时（形如 startswith 加引号大写头名）会漏网；白名单内改用字符类 `[Ss]et-[Cc]ookie` 显式兼容两种大小写。\
+**该规则此前无测试覆盖**。新增用例（`test/test-false-positive-fixes.mjs`）：6 种读取形态（Python startswith 大小写各一、Headers.get、正则字面量、成员判定、Go Header.Get）均不报；无 Secure 的 `Set-Cookie` 冒号文本照报；并断言 `setHeader` 行**不得**被读取类白名单豁免（锁白名单精确度，防止将来改回宽匹配）。已做**反向验证**：还原旧白名单 → 测试如期失败；去掉读取形态白名单 → 原误报场景重新报出 blocker，确认豁免来自白名单而非注释文字。\
+**已知盲区（未修，属覆盖面而非误报）**：规则 pattern 是「Set-Cookie 后紧跟冒号」，而代码里的真设置调用 `res.setHeader('Set-Cookie', ...)` / `res.cookie()` / `resp.headers['Set-Cookie']=` 冒号后是引号，**均不匹配**——该规则实际只能检出「代码里出现的 Set-Cookie 冒号文本」。扩大覆盖面需新增 pattern，会改变全盘审计结果，另行评估。 \
+**`.auditignore` 非 git 目录兜底** \
 `.auditignore` 原先只走 `git check-ignore`，因此**仅在 git 仓库内生效**——解压的源码包、临时导出目录、未 `git init` 的工程里该文件形同不存在，同一个 `*.sh` 规则在 `git init` 前后行为相反（实测确认）。现在非 git 目录改用纯 JS 匹配器兜底，同样按 gitignore 语法生效。\
 新增 `lib/audit/gitignore-match.js`（零依赖，113 行）：复用既有 `globToRegex`，实现 gitignore 的行解析（注释/空行/`!` 取反/前导 `/` 锚定/尾随 `/` 目录规则）与顺序敏感匹配。**语义逐条与真 git 对拍**——取 9 组规则（`*.sh`、`/*.sh`、`sub/*.sh`、`** + / + *.sh`、`*.lock`、`gen/`、嵌套否定等）在临时仓库跑 `git check-ignore --no-index` 作基准，本实现 11/11 一致。\
 `collector.js` 增加 `tryLoadAuditIgnoreFallback`（非 git 时预计算被忽略目录集，与 git 路径返回**同构 Set**，下游 walk 剪枝逻辑零改动）与 `isGitWorkTree`（探活缓存，避免重复 spawn）；`collectFiles` 文件级豁免分出 git / 非 git 两条并列路径。`orchestrate.js` 改为「非 git 但存在 `.auditignore`」时也传 root。\

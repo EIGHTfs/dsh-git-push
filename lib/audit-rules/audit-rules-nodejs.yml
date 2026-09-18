@@ -382,10 +382,35 @@ rules:
     # 2026-09-13 误报修复：客户端/油猴脚本里 Set-Cookie: 出现在正则字面量
     #   （match(/Set-Cookie:.../) 读取响应头）或字符串样例，不是服务端写 cookie——
     #   只有「实际设置 cookie 的调用」（setHeader('Set-Cookie' 等）才需要带 Secure/HttpOnly。
+    #
+    # 2026-09-18 两处修正（误报 + 漏报各一）：
+    #   ① 误报：Python/Go 等**读取响应头**的写法没被覆盖，实测
+    #      `line.lower().startswith("set-cookie:")` 会报 blocker（真实误报，已在
+    #      scripts/migrate-session/lib/follow.py 遇到）。补 startswith/in/headers.get。
+    #   ② 漏报（更严重）：原白名单 `['"]Set-Cookie['"]` 只认「字符串里出现 Set-Cookie」，
+    #      而**设置**与**读取**都用字符串，于是把真风险 `setHeader("Set-Cookie", ...)`
+    #      一并豁免了——与规则本意（只有设置 cookie 才要求 Secure/HttpOnly）正好相反。
+    #      改为只豁免「读取语境」：动词为 get/read/startswith/in/match/parse 等。
+    #      注意 JS 的 `.get("Set-Cookie")` 与 Node 的 `res.setHeader(...)` 靠动词区分。
     whitelist_patterns:
+      # JS：正则字面量读取响应头
       - "match\\s*\\(\\s*/Set-Cookie"
+      # 字符串里的转义形态（样例/日志文案）
       - "Set-Cookie:\\\\s"
-      - "['\"]Set-Cookie['\"]"
+      # 读取语境（跨语言）：动词在前、Set-Cookie 在后。
+      #   注意：白名单**不带 i 标志**（lib/checks/regex.js 用 new RegExp(w) 编译），
+      #   而规则 pattern 走 safeRe **带 i**。因此这里用字符类 [Ss] 显式兼容两种大小写，
+      #   否则 `startswith("Set-Cookie:")` 会漏网（实测踩到）。
+      - "startswith\\s*\\(\\s*['\"][Ss]et-[Cc]ookie"
+      - "headers?\\s*\\.\\s*get\\s*\\(\\s*['\"][Ss]et-[Cc]ookie"
+      - "\\.\\s*get\\s*\\(\\s*['\"][Ss]et-[Cc]ookie"
+      - "getheader\\s*\\(\\s*['\"][Ss]et-[Cc]ookie"
+      - "\\.\\s*getall\\s*\\(\\s*['\"][Ss]et-[Cc]ookie"
+      # 集合成员判定 / 字典取值（读取响应头）
+      - "['\"][Ss]et-[Cc]ookie['\"]\\s+in\\s"
+      - "in\\s+\\w+\\.\\s*headers"
+      # 解析/日志文案语境（动词为 parse/split/console/log）
+      - "(?:parse|[Ss]plit|console|log|print|echo|debug)\\w*\\s*\\([^)]*['\"][Ss]et-[Cc]ookie"
     fixable: true
 
   - id: security/no-eval

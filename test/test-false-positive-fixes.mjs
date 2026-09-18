@@ -364,3 +364,52 @@ test('credref-plain-secret：类型检查/字段透传/类型注解不报，真�
   assert.equal(run("const token = 'your-token-here';").length, 0, '占位符不应报');
   assert.equal(run("const token = 'CHANGE_ME';").length, 0, 'CHANGE_ME 不应报');
 });
+
+test('cookie-secure-flag：读取响应头不报（跨语言），设置 Cookie 缺 Secure/HttpOnly 照报（2026-09-18）', () => {
+  // 走真实管线：yml 规则定义 → compileAllRules 编译 → groupByKind 分桶
+  const raw = loadRuleFiles().merged.rules.filter((r) => r.id === 'security/cookie-secure-flag');
+  assert.equal(raw.length, 1, '应加载到 security/cookie-secure-flag 规则');
+  const compiled = compileAllRules(raw, { errors: [] }).filter((r) => r.id === 'security/cookie-secure-flag');
+  assert.equal(compiled.length, 1, 'cookie-secure-flag 应编译成功');
+  const run = (text, ext = '.js') => {
+    const file = `x${ext}`;
+    return runChecks({ file, relPath: file, text, grouped: groupByKind(compiled) });
+  };
+
+  // ── ① 不该报：读取响应头（跨语言，均为误报）──
+  //   Python：本次误报来源（scripts/migrate-session/lib/follow.py），
+  //   规则 pattern 是 `Set-Cookie:`，而 safeRe 默认带 i，故小写 set-cookie 也命中；
+  //   旧白名单只覆盖 JS 的 match(/Set-Cookie/) 与字符串字面量，Python 形态全漏。
+  assert.equal(run('if line.lower().startswith("set-cookie:"):', '.py').length, 0,
+    'Python startswith 读取响应头不应报');
+  assert.equal(run('if line.startswith("Set-Cookie:"):', '.py').length, 0,
+    'Python 大小写敏感 startswith 不应报');
+  //   JS：Headers.get / 正则字面量 / 成员判定
+  assert.equal(run("const ck = headers.get('Set-Cookie');").length, 0,
+    'Headers.get 读取响应头不应报');
+  assert.equal(run("const m = raw.match(/Set-Cookie:([^;]+)/);").length, 0,
+    '正则字面量读取响应头不应报');
+  assert.equal(run("const has = 'set-cookie' in lowerHeaders;").length, 0,
+    '成员判定读取响应头不应报');
+  //   Go：Header.Get
+  assert.equal(run('ck := resp.Header.Get("Set-Cookie")', '.go').length, 0,
+    'Go Header.Get 读取响应头不应报');
+
+  // ── ② 照报：字符串里出现 Set-Cookie: 且该行无 Secure（规则的既有检出范围）──
+  //   这条规则实际只能检查「代码里出现的 Set-Cookie: 文本」，覆盖不到 API 调用
+  //   （res.setHeader('Set-Cookie', ...) 后面是引号不是冒号，pattern 不匹配）——
+  //   属已知盲区，见规则注释；此处只锁「命中即报」不被白名单误伤。
+  assert.equal(run("const raw = 'Set-Cookie: sid=1';").length, 1,
+    '无 Secure 的 Set-Cookie 文本应报');
+
+  // ── ③ 白名单不得过宽：读取动词与设置动词要区分 ──
+  //   旧白名单 `['"]Set-Cookie['"]` 只认「字符串里出现 Set-Cookie」，
+  //   而设置与读取都用字符串，于是把真风险 setHeader 一并豁免了（漏报）。
+  //   改按动词细分后，setHeader 行不再被豁免——若将来有人把白名单改回宽匹配，
+  //   本断言会失败（这条锁的是白名单的精确度，不是 pattern 的覆盖面）。
+  const wl = raw[0].whitelist_patterns || [];
+  const wlRe = wl.map((w) => new RegExp(w, 'i'));
+  const setHeaderLine = "res.setHeader('Set-Cookie', 'sid=abc; Path=/');";
+  assert.equal(wlRe.some((re) => re.test(setHeaderLine)), false,
+    'setHeader 设置 Cookie 不应被读取类白名单豁免（会漏报真风险）');
+});
