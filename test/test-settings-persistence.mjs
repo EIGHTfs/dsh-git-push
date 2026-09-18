@@ -37,7 +37,8 @@ function clientSubmitKeys() {
 
 /** setAdvanced 允许键（与 client.js setAdvanced 正则同步；新增键时两处都要加）。 */
 // 2026-09-17：auditLevel / auditRuleset / hardcodeFullScan 已从设置删除（非用户可配项）
-const SET_ADVANCED = ['maxScanFiles', 'pushMethod'];
+// 2026-09-18：新增 clone 体积守卫与并发（setAdvanced 白名单同步，见 client.js）
+const SET_ADVANCED = ['maxScanFiles', 'maxCloneFileMB', 'cloneConcurrency', 'pushMethod'];
 
 /** settings-set 白名单键（L2）。 */
 function allowlistKeys() {

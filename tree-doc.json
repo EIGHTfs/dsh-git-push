@@ -76,6 +76,8 @@
   "lib/git/account.js": "账号校验（token 在线 + SSH 公钥指纹，输出账号状态块）",
   "lib/git/api.js": "GitHub REST 调用（githubFetch 统一 token/错误识别）",
   "lib/git/browse.js": "目录浏览（账号卡片路径选择器后端）",
+  "lib/git/clone-download.js": "并发下载 + .part 断点续传 + 体积守卫 + 进度回调",
+  "lib/git/clone-jobs.js": "clone 进度/预览内存态（供前端轮询）",
   "lib/git/clone.js": "克隆（Git Data API，不依赖本地凭据）",
   "lib/git/cloud.js": "云端仓库列表（/user/repos 供手动 clone）",
   "lib/git/config.js": "路径与配置（PLUGIN_ROOT + 开发者要求清单读取）",

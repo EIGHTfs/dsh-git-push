@@ -51,19 +51,47 @@ after(() => {
   try { rmSync(tmp, { recursive: true, force: true }); } catch { /* noop */ }
 });
 
-/** mock fetch：按请求路径返回预置响应；记录调用。routes 按序匹配（靠前优先）。 */
+/**
+ * mock fetch：按请求路径返回预置响应；记录调用。routes 按序匹配（靠前优先）。
+ *
+ * 2026-09-18：下载改走 raw.githubusercontent.com（只有它支持 Range 续传），
+ *   故 mock 必须能返回**原始字节**而非 JSON。route 给 raw 字段即按二进制回，
+ *   并支持 rawHeaders 用于模拟 Range/206 语义。
+ */
 function mockFetch(routes) {
   fetchCalls = [];
   globalThis.fetch = async (url, opts = {}) => {
     const u = String(url);
-    fetchCalls.push({ url: u, method: opts.method || 'GET' });
+    fetchCalls.push({ url: u, method: opts.method || 'GET', headers: opts.headers || {} });
     for (const r of routes) {
       if (r.match(u, opts.method || 'GET')) {
-        return new Response(JSON.stringify(r.body ?? {}), { status: r.status ?? 200, headers: { 'Content-Type': 'application/json' } });
+        const status = r.status ?? 200;
+        if (r.raw !== undefined) {
+          const buf = Buffer.isBuffer(r.raw) ? r.raw : Buffer.from(String(r.raw), 'utf8');
+          return new Response(buf, { status, headers: r.rawHeaders || {} });
+        }
+        return new Response(JSON.stringify(r.body ?? {}), { status, headers: { 'Content-Type': 'application/json' } });
       }
     }
     return new Response(JSON.stringify({ message: 'not found' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
   };
+}
+
+/**
+ * 生成「raw 端点」mock 路由：把 path→内容 的映射转成 raw.githubusercontent 路由，
+ * 并按 Range 头返回 206 分片（模拟真实 CDN 行为）。老测试只 mock 了 blob API，
+ * 新下载器改走 raw，故统一用本函数补路由。
+ */
+function mockRawRoutes(files) {
+  return Object.entries(files).map(([p, content]) => {
+    const buf = Buffer.isBuffer(content) ? content : Buffer.from(String(content), 'utf8');
+    return {
+      match: (u) => u.includes('raw.githubusercontent.com') && decodeURIComponent(u).endsWith('/' + p),
+      status: 200,
+      raw: buf,
+      rawHeaders: { 'Content-Length': String(buf.length), 'Accept-Ranges': 'bytes' },
+    };
+  });
 }
 
 /* ───────────────────────── runGit ───────────────────────── */
@@ -485,9 +513,8 @@ test('cloneViaApi：完整 mock 流程（tree + blob 写文件）', async () => 
   const dest = join(tmp, 'cloned');
   mockFetch([
     { match: (u, m) => m === 'GET' && u.endsWith('/repos/o/r'), status: 200, body: { default_branch: 'main' } },
-    { match: (u, m) => m === 'GET' && u.includes('/git/trees/main?recursive=1'), status: 200, body: { sha: 'x'.repeat(40), tree: [{ path: 'hello.txt', type: 'blob', sha: 'b1' }, { path: 'sub/nested.txt', type: 'blob', sha: 'b2' }] } },
-    { match: (u) => u.endsWith('/git/blobs/b1'), status: 200, body: { content: 'aGVsbG8=', encoding: 'base64' } },
-    { match: (u) => u.endsWith('/git/blobs/b2'), status: 200, body: { content: 'bmVzdGVk', encoding: 'base64' } },
+    { match: (u, m) => m === 'GET' && u.includes('/git/trees/main?recursive=1'), status: 200, body: { sha: 'x'.repeat(40), tree: [{ path: 'hello.txt', type: 'blob', sha: 'b1', size: 5, mode: '100644' }, { path: 'sub/nested.txt', type: 'blob', sha: 'b2', size: 6, mode: '100644' }] } },
+    ...mockRawRoutes({ 'hello.txt': 'hello', 'sub/nested.txt': 'nested' }),
   ]);
   const r = await cloneViaApi({ target: 'o/r', dest, token: 'ghp_clone' });
   assert.equal(r.ok, true);
@@ -517,8 +544,8 @@ test('cloneViaApi：blob 失败不再静默报成功（回归：超时留半成�
       { path: 'a.txt', type: 'blob', sha: 'b1' },
       { path: 'b.txt', type: 'blob', sha: 'b2' },
     ] } },
-    { match: (u) => u.endsWith('/git/blobs/b1'), status: 200, body: { content: 'YQ==', encoding: 'base64' } },
-    { match: (u) => u.endsWith('/git/blobs/b2'), status: 0, body: {} }, // 模拟超时（githubFetch 超时返回 status 0）
+    { match: (u) => u.includes('raw.githubusercontent.com') && decodeURIComponent(u).endsWith('/a.txt'), status: 200, raw: 'x' },
+    { match: (u) => u.includes('raw.githubusercontent.com') && decodeURIComponent(u).endsWith('/b.txt'), status: 0 },
   ]);
   const r = await cloneViaApi({ target: 'o/r', dest, token: 'ghp_clone' });
   assert.equal(r.ok, false, '缺文件不得报成功');
@@ -532,7 +559,7 @@ test('cloneViaApi：blob 失败不再静默报成功（回归：超时留半成�
 });
 
 test('cloneViaApi：失败成因分类——401/404 不得标为可重试（回归：误导重试）', async () => {
-  const tree = { sha: 'x'.repeat(40), tree: [{ path: 'a.txt', type: 'blob', sha: 'b1' }] };
+  const tree = { sha: 'x'.repeat(40), tree: [{ path: 'a.txt', type: 'blob', sha: 'b1', size: 1, mode: '100644' }] };
   const cases = [
     { label: 'token 失效', status: 401, cause: 'auth', retriable: false },
     { label: '仓库不存在', status: 404, cause: 'notfound', retriable: false },
@@ -544,7 +571,8 @@ test('cloneViaApi：失败成因分类——401/404 不得标为可重试（回�
     mockFetch([
       { match: (u, m) => m === 'GET' && u.endsWith('/repos/o/r'), status: 200, body: { default_branch: 'main' } },
       { match: (u) => u.includes('/git/trees/main?recursive=1'), status: 200, body: tree },
-      { match: (u) => u.endsWith('/git/blobs/b1'), status: c.status, body: { message: c.label } },
+      // 下载走 raw 端点；c.status 决定成因分类（401→auth / 404→notfound / …）
+      { match: (u) => u.includes('raw.githubusercontent.com') && decodeURIComponent(u).endsWith('/a.txt'), status: c.status },
     ]);
     const r = await cloneViaApi({ target: 'o/r', dest, token: 'ghp_x' });
     assert.equal(r.ok, false, c.label + ' 应失败');
@@ -558,8 +586,8 @@ test('cloneViaApi：401 的文案须给出可操作处置，而非笼统「网�
   const dest = join(tmp, 'clone-auth-msg');
   mockFetch([
     { match: (u, m) => m === 'GET' && u.endsWith('/repos/o/r'), status: 200, body: { default_branch: 'main' } },
-    { match: (u) => u.includes('/git/trees/main?recursive=1'), status: 200, body: { sha: 'x'.repeat(40), tree: [{ path: 'a.txt', type: 'blob', sha: 'b1' }] } },
-    { match: (u) => u.endsWith('/git/blobs/b1'), status: 401, body: { message: 'Bad credentials' } },
+    { match: (u) => u.includes('/git/trees/main?recursive=1'), status: 200, body: { sha: 'x'.repeat(40), tree: [{ path: 'a.txt', type: 'blob', sha: 'b1' , size: 1, mode: '100644'}] } },
+    { match: (u) => u.includes('raw.githubusercontent.com') && decodeURIComponent(u).endsWith('/a.txt'), status: 401 },
   ]);
   const r = await cloneViaApi({ target: 'o/r', dest, token: 'ghp_bad' });
   assert.match(r.error, /token/i, '应提示处理 token，而非让用户重试');
@@ -571,16 +599,16 @@ test('cloneViaApi：失败清理后可直接重试成功（回归：本 bug 的�
   // 第一次：blob 超时 → 失败并清理
   mockFetch([
     { match: (u, m) => m === 'GET' && u.endsWith('/repos/o/r'), status: 200, body: { default_branch: 'main' } },
-    { match: (u) => u.includes('/git/trees/main?recursive=1'), status: 200, body: { sha: 'y'.repeat(40), tree: [{ path: 'f.txt', type: 'blob', sha: 'c1' }] } },
-    { match: (u) => u.endsWith('/git/blobs/c1'), status: 0, body: {} },
+    { match: (u) => u.includes('/git/trees/main?recursive=1'), status: 200, body: { sha: 'y'.repeat(40), tree: [{ path: 'f.txt', type: 'blob', sha: 'c1' , size: 2, mode: '100644'}] } },
+    { match: (u) => u.includes('raw.githubusercontent.com') && decodeURIComponent(u).endsWith('/f.txt'), status: 0 },
   ]);
   const r1 = await cloneViaApi({ target: 'o/r', dest, token: 'ghp_clone' });
   assert.equal(r1.ok, false);
   // 第二次：网络恢复 → 应直接成功，不再撞「目标目录已存在且非空」
   mockFetch([
     { match: (u, m) => m === 'GET' && u.endsWith('/repos/o/r'), status: 200, body: { default_branch: 'main' } },
-    { match: (u) => u.includes('/git/trees/main?recursive=1'), status: 200, body: { sha: 'y'.repeat(40), tree: [{ path: 'f.txt', type: 'blob', sha: 'c1' }] } },
-    { match: (u) => u.endsWith('/git/blobs/c1'), status: 200, body: { content: 'b2s=', encoding: 'base64' } },
+    { match: (u) => u.includes('/git/trees/main?recursive=1'), status: 200, body: { sha: 'y'.repeat(40), tree: [{ path: 'f.txt', type: 'blob', sha: 'c1' , size: 2, mode: '100644'}] } },
+    { match: (u) => u.includes('raw.githubusercontent.com') && decodeURIComponent(u).endsWith('/f.txt'), status: 200, raw: 'ok' },
   ]);
   const r2 = await cloneViaApi({ target: 'o/r', dest, token: 'ghp_clone' });
   assert.equal(r2.ok, true, '重试应成功，错误: ' + (r2.error || ''));
@@ -595,8 +623,8 @@ test('cloneViaApi：进程被中断留下的残留（有标记、无提交）可
   writeFileSync(join(dest, '.dsh-git-push-cloning'), String(Date.now()));
   mockFetch([
     { match: (u, m) => m === 'GET' && u.endsWith('/repos/o/r'), status: 200, body: { default_branch: 'main' } },
-    { match: (u) => u.includes('/git/trees/main?recursive=1'), status: 200, body: { sha: 'z'.repeat(40), tree: [{ path: 'ok.txt', type: 'blob', sha: 'd1' }] } },
-    { match: (u) => u.endsWith('/git/blobs/d1'), status: 200, body: { content: 'ZmluZQ==', encoding: 'base64' } },
+    { match: (u) => u.includes('/git/trees/main?recursive=1'), status: 200, body: { sha: 'z'.repeat(40), tree: [{ path: 'ok.txt', type: 'blob', sha: 'd1' , size: 1, mode: '100644'}] } },
+    { match: (u) => u.includes('raw.githubusercontent.com') && decodeURIComponent(u).endsWith('/ok.txt'), status: 200, raw: 'x' },
   ]);
   const r = await cloneViaApi({ target: 'o/r', dest, token: 'ghp_clone' });
   assert.equal(r.ok, true, '残留目录应被识别并重来，错误: ' + (r.error || ''));
@@ -619,8 +647,8 @@ test('cloneViaApi：成功后不留进行中标记', async () => {
   const dest = join(tmp, 'clone-no-marker');
   mockFetch([
     { match: (u, m) => m === 'GET' && u.endsWith('/repos/o/r'), status: 200, body: { default_branch: 'main' } },
-    { match: (u) => u.includes('/git/trees/main?recursive=1'), status: 200, body: { sha: 'w'.repeat(40), tree: [{ path: 'x.txt', type: 'blob', sha: 'e1' }] } },
-    { match: (u) => u.endsWith('/git/blobs/e1'), status: 200, body: { content: 'eA==', encoding: 'base64' } },
+    { match: (u) => u.includes('/git/trees/main?recursive=1'), status: 200, body: { sha: 'w'.repeat(40), tree: [{ path: 'x.txt', type: 'blob', sha: 'e1' , size: 1, mode: '100644'}] } },
+    { match: (u) => u.includes('raw.githubusercontent.com') && decodeURIComponent(u).endsWith('/x.txt'), status: 200, raw: 'x' },
   ]);
   const r = await cloneViaApi({ target: 'o/r', dest, token: 'ghp_clone' });
   assert.equal(r.ok, true);

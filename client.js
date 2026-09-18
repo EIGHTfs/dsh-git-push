@@ -235,13 +235,13 @@ window.__ModuleLoader__.load({
       return resp.json();
     }
     /** fetch 封装：POST JSON（same-origin）。 */
-    async function dshgp_postJson(url, payload) {
+    async function dshgp_postJson(url, payload, timeoutMs) {
       const resp = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload || {}),
         credentials: 'same-origin',
-        signal: AbortSignal.timeout(dshgp_FETCH_TIMEOUT_MS),
+        signal: AbortSignal.timeout((timeoutMs || dshgp_FETCH_TIMEOUT_MS)),
       });
       return resp.json();
     }
@@ -693,9 +693,87 @@ window.__ModuleLoader__.load({
             ],
           }),
           jsx.jsx('p', { className: 'dshgp_repomsg', children: s.cloudMsg || '点仓库行的 clone，弹出目录选择器选定目标目录后克隆' }),
+          // clone 相关设置：跟随 clone 入口（属账号/云端职责）。不放进「审计」选项卡——
+          //   那里只保留 maxScanFiles 一项可配（该不变量由 test-sidebar-state 守住）。
+          jsx.jsxs('div', { className: 'dshgp_clonecfg', children: [
+            jsx.jsxs('label', { className: 'dshgp_label', htmlFor: 'dshgp-maxclone', children: [
+              '单文件上限(MB)',
+              jsx.jsx('input', { id: 'dshgp-maxclone', type: 'number', min: 0, className: 'dshgp_input dshgp_inputsm', value: s.maxCloneFileMB, onChange: (ev) => props.setAdvanced('maxCloneFileMB', ev.target.value) }),
+            ] }),
+            jsx.jsxs('label', { className: 'dshgp_label', htmlFor: 'dshgp-cloneconc', children: [
+              '并发数',
+              jsx.jsx('input', { id: 'dshgp-cloneconc', type: 'number', min: 1, max: 16, className: 'dshgp_input dshgp_inputsm', value: s.cloneConcurrency, onChange: (ev) => props.setAdvanced('cloneConcurrency', ev.target.value) }),
+            ] }),
+          ] }),
+          // clone 进度条：上百 MB 的仓库下载要几分钟，没有进度会被当成卡死。
+          //   百分比按字节算（大文件占绝对多数耗时），并显示停滞时长。
+          s.cloneProgress ? dshgp_CloneProgress({ p: s.cloneProgress }) : null,
+          // clone 预览：先告知「会下载什么、会跳过什么」，确认再开始
+          s.clonePreview ? dshgp_ClonePreview({ p: s.clonePreview, onConfirm: () => { void this.cloneConfirmed(); }, onCancel: () => { this.clonePreview = null; this.publish(); } }) : null,
           rows.length ? jsx.jsxs('div', { className: 'dshgp_replist', children: rows }) : null,
         ],
       });
+    }
+
+    /* ─────────────── clone 进度条 / 预览确认（大仓库人机交互） ─────────────── */
+
+    /**
+     * clone 进度条。
+     *
+     * 上百 MB 的仓库要下几分钟，而前端 fetch 曾固定 30s 超时（用户实测 signal timed out）。
+     * 现在由后端记录进度、前端轮询显示；**判失败不靠绝对超时，而看进度是否停滞**——
+     * 单个 30MB 文件传得慢但进度在涨，不该被判死。
+     */
+    function dshgp_CloneProgress(props) {
+      const p = props.p || {};
+      const mb = (n) => (n / 1024 / 1024).toFixed(1);
+      // 停滞超过 45s 才提示「可能卡住」；只提示，不自动中断（交给用户决定）
+      const stalled = (p.stalledMs || 0) > 45_000;
+      const phaseText = p.phase === 'done' ? '收尾中' : '下载中';
+      return jsx.jsxs('div', { className: 'dshgp_cloneprog', children: [
+        jsx.jsxs('div', { className: 'dshgp_cloneproghead', children: [
+          jsx.jsx('span', { children: phaseText + ' ' + (p.done || 0) + '/' + (p.totalFiles || 0) + ' 个文件' }),
+          jsx.jsx('span', { children: mb(p.transferred || 0) + ' / ' + mb(p.totalBytes || 0) + ' MB（' + (p.percent || 0) + '%）' }),
+        ] }),
+        jsx.jsx('div', { className: 'dshgp_progbar', children:
+          jsx.jsx('div', { className: 'dshgp_progfill', style: { width: (p.percent || 0) + '%' } }),
+        }),
+        stalled ? jsx.jsx('p', { className: 'dshgp_cloneprogwarn', children: '⚠ 已 ' + Math.round((p.stalledMs || 0) / 1000) + ' 秒无新数据，可能网络受限（可继续等待，或取消后重试）' }) : null,
+        (p.failed || 0) > 0 ? jsx.jsx('p', { className: 'dshgp_cloneprogwarn', children: '⚠ 已有 ' + p.failed + ' 个文件下载失败' }) : null,
+      ] });
+    }
+
+    /**
+     * clone 预览确认框：列出将下载 / 将跳过的文件，点「开始克隆」后才真正下载。
+     *
+     * 为什么必须先预览：体积守卫会**主动跳过**超大文件，若不提前告知，用户会以为
+     * 克隆完整，直到使用时才发现缺文件（"悄悄少东西"最难排查）。
+     */
+    function dshgp_ClonePreview(props) {
+      const p = props.p || {};
+      const mb = (n) => (n / 1024 / 1024).toFixed(1);
+      const skipped = p.skipped || [];
+      return jsx.jsxs('div', { className: 'dshgp_clonepreview', children: [
+        jsx.jsx('p', { className: 'dshgp_previewtitle', children: '将克隆 ' + p.repo + '（分支 ' + p.branch + '）' }),
+        jsx.jsxs('ul', { className: 'dshgp_previewlist', children: [
+          jsx.jsx('li', { children: '下载 ' + p.downloadCount + ' 个文件，约 ' + mb(p.downloadBytes) + ' MB' }),
+          p.skippedCount > 0
+            ? jsx.jsx('li', { className: 'dshgp_previewskip', children: '跳过 ' + p.skippedCount + ' 个文件（单个超过 ' + p.maxFileMB + ' MB），约 ' + mb(p.skippedBytes) + ' MB' })
+            : null,
+        ] }),
+        // 跳过清单如实列出：让用户自行判断这些文件是否真的不需要
+        skipped.length ? jsx.jsxs('div', { className: 'dshgp_previewskipbox', children: [
+          jsx.jsx('p', { children: '以下文件不会下载（可在设置里调大「单文件上限」）：' }),
+          jsx.jsx('ul', { children: skipped.slice(0, 8).map((x) => jsx.jsx('li', { children: x.path + '（' + mb(x.size) + ' MB）' }, x.path)) }),
+          skipped.length > 8 ? jsx.jsx('p', { children: '…等共 ' + skipped.length + ' 个' }) : null,
+        ] }) : null,
+        // 全被跳过时强提示：否则用户会得到一个空目录
+        p.empty ? jsx.jsx('p', { className: 'dshgp_cloneprogwarn', children: '⚠ 所有文件都超过上限，将得到一个空仓库。请先调大「单文件上限」或设为 0 关闭限制' }) : null,
+        jsx.jsxs('div', { className: 'dshgp_previewbtns', children: [
+          jsx.jsx('button', { className: 'dshgp_btn', onClick: props.onConfirm, children: '开始克隆' }),
+          jsx.jsx('button', { className: 'dshgp_btn dshgp_btnghost', onClick: props.onCancel, children: '取消' }),
+        ] }),
+      ] });
     }
 
     /* ─────────────────── [7] 审计 Tab（WeightRows/RuleRow/AuditSwitchBlock/InjectPromptSwitchBlock/CommentWordingBlock/AuditAdvancedBlock/RuleListBlock/AuditTab） ─────────────────── */
@@ -1220,6 +1298,11 @@ window.__ModuleLoader__.load({
         this.cloudLoading = false;
         this.cloudMsg = '';
         this.repoBusy = '';
+        this.cloneProgress = null;   // 进行中的 clone 进度（轮询填充）
+        this.clonePreview = null;    // 待确认的 clone 预览
+        this.clonePending = { repo: '', dir: '' };  // 预览后待确认的上下文
+        this.maxCloneFileMB = 10;    // clone 单文件体积上限(MB)；0=不限
+        this.cloneConcurrency = 6;   // clone 并发下载数
         this.repoFeedback = {}; // { path: {ok, msg} } push 结果反馈（成功绿/失败红）
         // 规则包加载
         this.slotLoading = false;
@@ -1319,6 +1402,10 @@ window.__ModuleLoader__.load({
           cloudLoading: this.cloudLoading,
           cloudMsg: this.cloudMsg,
           repoBusy: this.repoBusy,
+          cloneProgress: this.cloneProgress,
+          clonePreview: this.clonePreview,
+          maxCloneFileMB: this.maxCloneFileMB,
+          cloneConcurrency: this.cloneConcurrency,
           repoFeedback: this.repoFeedback,
           dirty: this.text.trim().length > 0 || this.sshPub.trim().length > 0,
           saving: this.saving,
@@ -1404,6 +1491,8 @@ window.__ModuleLoader__.load({
           if (typeof v.auditScanScope === 'string' && !this.editedKeys.has('auditScanScope')) this.auditScanScope = v.auditScanScope;
           // 2026-09-15 补齐回读：新增 UI 的 7 键（advanced），重启后从 config.json 恢复勾选/取值
           if (typeof v.maxScanFiles === 'number' && !this.editedKeys.has('maxScanFiles')) this.maxScanFiles = v.maxScanFiles;
+          if (typeof v.maxCloneFileMB === 'number' && !this.editedKeys.has('maxCloneFileMB')) this.maxCloneFileMB = v.maxCloneFileMB;
+          if (typeof v.cloneConcurrency === 'number' && !this.editedKeys.has('cloneConcurrency')) this.cloneConcurrency = v.cloneConcurrency;
           if (typeof v.pushMethod === 'string' && !this.editedKeys.has('pushMethod')) this.pushMethod = v.pushMethod;
           // 2026-09-17 补漏：pushGate（推送门禁）此前**不在回读列表**——构造函数默认 false，
           //   打开/刷新设置页时不被宿主真值覆盖，界面永远显示未勾选（实测：勾了门禁、重开页面又变未勾选）。
@@ -1677,17 +1766,70 @@ window.__ModuleLoader__.load({
         this.publish();
       }
 
-      /** 云端仓库 clone：先弹目录选择器选目标目录，确认后克隆。 */
+      /** 云端仓库 clone：先弹目录选择器选目标目录，再预览，确认后才真正开始。 */
       cloneFlow(repo) {
         dshgp_browseOpen(null, (dir) => { void this.cloneCloudRepo(repo, dir); });
       }
+
+      /**
+       * 第一步：预览（不下载任何文件）。
+       *
+       * 此前点 clone 直接开下：用户既不知道总量（无从判断要等多久），也不知道
+       * 体积守卫会跳过哪些文件。改为先预览、再确认。
+       */
       async cloneCloudRepo(repo, dir) {
+        this.clonePending = { repo, dir };
+        this.cloudMsg = '正在读取仓库信息…';
         this.repoBusy = 'clone:' + repo;
         this.publish();
         try {
-          const cloneRes = await dshgp_postJson('/api/git-push/repo-clone', { target: repo, dir, confirm: true });
+          const pv = await dshgp_postJson('/api/git-push/clone-preview', { target: repo });
+          if (pv && pv.ok) {
+            this.cloudMsg = '';
+            this.clonePreview = pv;
+          } else {
+            this.cloudMsg = '❌ ' + ((pv && pv.error) || '预览失败');
+            this.clonePending = null;
+          }
+        } catch (e) {
+          this.cloudMsg = '❌ 预览失败: ' + (e && e.message || e);
+          this.clonePending = null;
+        }
+        this.repoBusy = '';
+        this.publish();
+      }
+
+      /** 第二步：点「开始克隆」后真正下载，并轮询进度直到结束。 */
+      async cloneConfirmed() {
+        const pend = this.clonePending;
+        if (!pend) return;
+        this.clonePreview = null;
+        const { repo, dir } = pend;
+        this.repoBusy = 'clone:' + repo;
+        this.publish();
+        // 轮询：后端每完成一批文件就更新内存态进度。
+        //   判「卡死」不靠绝对超时，而看进度是否停滞（大文件慢传不该被杀）。
+        let pollTimer = null;
+        const stopPoll = () => { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } };
+        const poll = async () => {
+          try {
+            const st = await dshgp_postJson('/api/git-push/clone-progress', {});
+            if (st && st.state === 'running' && st.progress) {
+              this.cloneProgress = st.progress;
+              this.publish();
+            }
+          } catch { /* 轮询失败不中断克隆本身 */ }
+        };
+        pollTimer = setInterval(() => { void poll(); }, 1000);
+        void poll();
+        try {
+          // clone 用放宽后的超时：30s 对上百 MB 的仓库必然不够
+          const cloneRes = await dshgp_postJson('/api/git-push/repo-clone', { target: repo, dir, confirm: true }, dshgp_CLONE_TIMEOUT_MS);
           if (cloneRes && cloneRes.ok) {
-            this.cloudMsg = '✅ 已克隆 ' + repo + ' → ' + ((cloneRes && cloneRes.dest) || dir);
+            // 如实报告被跳过的文件：否则用户以为克隆完整
+            const skipped = cloneRes.skippedCount || 0;
+            this.cloudMsg = '✅ 已克隆 ' + repo + ' → ' + ((cloneRes && cloneRes.dest) || dir)
+              + (skipped > 0 ? '（已跳过 ' + skipped + ' 个超大文件）' : '');
           } else {
             // 成败与成因都由后端结构化给出（clone.js 的 cause/retriable），前端不再
             //   用正则猜文案：此前「克隆未完成」这段文字出现在**所有**失败里，
@@ -1702,6 +1844,9 @@ window.__ModuleLoader__.load({
         } catch (e) {
           this.cloudMsg = '❌ 克隆失败: ' + (e && e.message || e) + '（可直接重试——半成品已自动清理）';
         }
+        stopPoll();
+        this.cloneProgress = null;
+        this.clonePending = null;
         this.repoBusy = '';
         this.publish();
       }
@@ -1878,9 +2023,9 @@ window.__ModuleLoader__.load({
        * @param {unknown} value 新值
        */
       setAdvanced(key, value) {
-        const ok = /^(maxScanFiles|pushMethod|pushGate)$/.test(key);
+        const ok = /^(maxScanFiles|maxCloneFileMB|cloneConcurrency|pushMethod|pushGate)$/.test(key);
         if (!ok) { this.setStatus('❌ 未知设置键: ' + key); return; }
-        const numKeys = { maxScanFiles: 1 };
+        const numKeys = { maxScanFiles: 1, maxCloneFileMB: 1, cloneConcurrency: 1 };
         const boolKeys = { pushGate: 1 };
         const enumKeys = { pushMethod: ['ssh', 'api', 'auto'] };
         let v = value;
