@@ -877,6 +877,7 @@ node scripts/audit-runtime-check.mjs --all <目录>
 | 版本 | 说明 |
 |---|---|
 | **1.4.6**（当前） | **`.auditignore` 非 git 目录兜底 + cookie-secure-flag 误报/漏报各修一（同一版本内修订）** \
+**private 槽位不再显示「0 条规则」（2026-09-18）**：侧边栏「私密文件拦截审计」一直显示「拦截级 0 · 警告级 0 · 提示级 0（共 0 条规则）」，看着像空槽位——实测它**功能完全正常**（往仓库放 id_rsa / config/.env / certs/server.pem，公仓下三个全报 blocker，私仓降为 warning）。根因是统计口径只数 `rules.length`，而 `audit-rules-private.yml` 结构特殊——它用 `private_files:` **清单**声明 13 条文件名匹配式，`rules:` 恒为 `[]`。这是上一轮「统一为规则条数口径」时没能覆盖的一种槽位形态。现对清单驱动槽位按清单条目数计并归入拦截级（该槽位默认语义即拦截），显示为「拦截级 13 条（共 13 条）」。新增回归断言（private 总数 > 0、清单条目全归拦截级、三档之和 == 总数），并做反向验证：还原成只数 rules.length → 测试如期失败 \ \
 **`security/cookie-secure-flag` 误报修正（2026-09-18）**：Python 读取响应头的写法被报 blocker——实测 `line.lower().startswith("set-cookie:")` 命中规则。根因是 `whitelist_patterns` 只覆盖 JS 形态（`match(/Set-Cookie` 与字符串字面量），Python/Go 的 `startswith` / `Header.Get` / `headers.get` 全没覆盖。补 7 条跨语言读取形态。\
 **同时修一处漏报（更严重）**：旧白名单 `['"]Set-Cookie['"]` 只认「字符串里出现 Set-Cookie」，但**设置**与**读取**都用字符串字面量，于是把真风险 `res.setHeader('Set-Cookie', ...)` 一并豁免了——与规则本意（只有设置 cookie 才要求 Secure/HttpOnly）正好相反。改为按**动词**细分：只豁免读取语境（`get`/`startswith`/`match`/`in headers`/`parse` 等），设置动词不再放行。\
 另发现白名单**不带 `i` 标志**（`lib/checks/regex.js` 用 `new RegExp(w)` 编译，而规则 pattern 走 `safeRe` 带 `i`），故 Python 里 startswith 传大写 cookie 头名时（形如 startswith 加引号大写头名）会漏网；白名单内改用字符类 `[Ss]et-[Cc]ookie` 显式兼容两种大小写。\

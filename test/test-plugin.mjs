@@ -248,6 +248,16 @@ test('HTTP：rule-slots 端点动态发现全部 yml（模板不入 order）+ di
   assert.ok(slots.order.length >= 14, `order 应含全部非模板槽位（${slots.order.length}）`);
   assert.ok(!slots.order.includes('template'), '模板不应进入 order（模板不显示）');
   assert.equal(slots.meta.comment.disabled, true, 'comment 应带 disabled 标记');
+  // 2026-09-18：清单驱动槽位（private）不能显示成 0 条。
+  //   audit-rules-private.yml 用 `private_files:` 而非 `rules:`（rules 恒为 []），
+  //   只数 rules.length 会让侧边栏显示「共 0 条规则」——而它实际有 13 条匹配清单
+  //   且在正常工作（公仓命中即 blocker）。这类槽位按清单条目数计，归拦截级。
+  {
+    const ps = slots.meta.private.stats;
+    assert.ok(ps.total > 0, `private 槽位规则数应 > 0（清单驱动），实际 ${ps.total}`);
+    assert.equal(ps.blocker, ps.total, 'private 清单条目应全部计为拦截级');
+    assert.equal(ps.blocker + ps.warning + ps.pass, ps.total, 'private 三档之和应等于总数');
+  }
   assert.equal(slots.meta.nodejs.disabled, false, 'nodejs 安全红线不可禁用');
   assert.ok(slots.meta.nodejs.stats, 'meta 应带 stats（前端免展开直显）');
   // 形状断言：stats 四列必须是数字且 total 有值。
