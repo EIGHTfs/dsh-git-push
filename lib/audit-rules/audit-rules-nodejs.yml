@@ -208,8 +208,11 @@ rules:
     category: "robustness"
     severity: "warning"
     description: "外部请求无超时设置会导致请求永久挂起"
+    # 负向后瞻排除自定义封装名（apiFetch/githubFetch 等）——"fetch(" 子串会把
+    #   封装调用误报成无超时裸 fetch；封装内部的超时由 file-context.js
+    #   hasExternalCallTimeout 语义豁免（行内/行前/行后 12 行含 signal/timeout 即豁免）
     patterns:
-      - "(fetch|axios\\.|got\\.|request\\.)\\s*\\("
+      - "(?<![\\w$])(fetch|axios\\.|got\\.|request\\.)\\s*\\("
     fixable: false
     mitigation: "设置 timeout 或 AbortController"
 

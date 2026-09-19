@@ -112,6 +112,21 @@ test('② timeout-on-external-api：fetch + AbortSignal.timeout 同调用不报'
   // 对照：真无超时的 fetch 仍应报
   assert.ok(hasExternalCallTimeout("fetch('/a')", ["fetch('/a')"], 0) === false, '无超时行不豁免');
   assert.ok(hasExternalCallTimeout("fetch('/a', { signal: AbortSignal.timeout(1) })", [], 0) === true, '内联超时豁免');
+  // 2026-09-20 修误报（dsh-session-migrate 复现）：① init/options 定义在调用之前
+  //   （signal 在 fetch 前），只往后看会漏；② apiFetch 等自定义封装名含 "fetch("
+  //   子串被正则误报，负向后瞻排除。
+  const preInit = ['const init = { signal: AbortSignal.timeout(5000) };', 'const r = await fetch(url, init);'];
+  assert.ok(hasExternalCallTimeout(preInit[1], preInit, 1) === true, 'signal 在调用前（init 先定义）应豁免');
+  const preInitMulti = [
+    'const init = {',
+    '  method: "POST",',
+    '  signal: AbortSignal.timeout(8000),',
+    '};',
+    'const r = await fetch(url, init);',
+  ];
+  assert.ok(hasExternalCallTimeout(preInitMulti[4], preInitMulti, 4) === true, '跨行 init + 前向 signal 应豁免');
+  const apiCall = 'const next = await apiFetch(\'/state\')';
+  assert.ok(!/(?<![\w$])(fetch|axios\.|got\.|request\.)\s*\(/.test(apiCall), 'apiFetch 自定义封装名不命中裸 fetch 正则');
 });
 
 test('③ client-module-loader-id：已按 load({id,factory}) 契约注册不报', async () => {
