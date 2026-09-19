@@ -240,3 +240,19 @@ test('1.5.4 可见性切换：后端端点挂 writeConfirmOps 写确认门禁', 
   assert.match(httpSrc, /writeConfirmOps\s*=\s*\[[^\]]*'\/api\/git-push\/repo-visibility'/, 'repo-visibility 未挂写确认门禁');
   assert.match(httpSrc, /case '\/api\/git-push\/repo-visibility'/, '缺少 repo-visibility 端点');
 });
+
+// ---------- 1.5.4 修复：sandbox iframe 中 localStorage SecurityError ----------
+
+test('1.5.4 localStorage 安全：组件代码禁止裸访问（走 dshgp_localGet/localSet 兜底）', () => {
+  // 背景：设置页跑在 sandbox iframe（缺 allow-same-origin）里，`window.localStorage` 存在性
+  //   判断拦不住 getItem 抛 SecurityError——RepoLocalPane 曾因此整块渲染失败。
+  // 契约：helper 定义允许访问 window.localStorage；其余任何 `.getItem(`/`.setItem(` 均须走 helper。
+  const helperBlock = clientSrc.slice(clientSrc.indexOf('function dshgp_localGet'), clientSrc.indexOf('function dshgp_copyText'));
+  assert.match(helperBlock, /window\.localStorage\.getItem/, 'helper 内应有受 try/catch 保护的 getItem');
+  assert.match(helperBlock, /catch/, 'helper 必须有 catch 兜底');
+  const outside = clientSrc.replace(helperBlock, '');
+  const bareGets = outside.match(/window\.localStorage\.getItem/g) || [];
+  const bareSets = outside.match(/window\.localStorage\.setItem/g) || [];
+  assert.equal(bareGets.length, 0, `组件代码裸 getItem ${bareGets.length} 处（应全部走 dshgp_localGet）`);
+  assert.equal(bareSets.length, 0, `组件代码裸 setItem ${bareSets.length} 处（应全部走 dshgp_localSet）`);
+});

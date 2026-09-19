@@ -33711,6 +33711,20 @@ window.__ModuleLoader__.load({
       return !!(v.githubToken && String(v.githubToken).trim());
     }
 
+    /**
+     * 安全 localStorage 读（sandbox iframe 缺 allow-same-origin 时访问即抛 SecurityError，
+     *   `window.localStorage` 存在性判断拦不住 getItem 抛错——必须 try/catch 兜底）。
+     * @returns {string} 值或 ''（不可用/抛错时静默返回空）
+     */
+    function dshgp_localGet(key) {
+      try { return window.localStorage.getItem(key); } catch { return ''; }
+    }
+
+    /** 安全 localStorage 写（同上，不可用/抛错静默忽略）。 */
+    function dshgp_localSet(key, value) {
+      try { if (value) window.localStorage.setItem(key, value); } catch { /* localStorage 不可用 */ }
+    }
+
     /** 复制文本到剪贴板（优先 Clipboard API，兜底 execCommand）。 */
     function dshgp_copyText(text) {
       if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
@@ -33891,10 +33905,10 @@ window.__ModuleLoader__.load({
       });
     }
     function dshgp_browseGuess() {
-      try { return window.localStorage.getItem('dshgp-browse-path') || ''; } catch { return ''; }
+      return dshgp_localGet('dshgp-browse-path');
     }
     function dshgp_browseRemember(p) {
-      try { if (p) window.localStorage.setItem('dshgp-browse-path', p); } catch { /* localStorage 不可用 */ }
+      dshgp_localSet('dshgp-browse-path', p);
     }
     async function dshgp_browseLoad(p) {
       const list = document.getElementById('dshgp-browse-list');
@@ -34071,7 +34085,7 @@ window.__ModuleLoader__.load({
                 type: 'text',
                 className: 'dshgp_pickinput',
                 placeholder: '扫描路径（默认 DSH 家根）',
-                defaultValue: typeof window !== 'undefined' && window.localStorage ? (window.localStorage.getItem('dshgp-scan-path') || '') : '',
+                defaultValue: dshgp_localGet('dshgp-scan-path'),
               }),
               jsx.jsx('button', {
                 type: 'button',
@@ -35140,7 +35154,7 @@ window.__ModuleLoader__.load({
         this.publish();
         try {
           const p = String(path || '').trim();
-          try { if (p) window.localStorage.setItem('dshgp-scan-path', p); } catch { /* 忽略 */ }
+          dshgp_localSet('dshgp-scan-path', p);
           const qs = '?rebuild=' + (rebuild ? '1' : '0') + (p ? '&path=' + encodeURIComponent(p) : '');
           const localRes = await dshgp_getJson('/api/git-push/repos-local' + qs);
           if (localRes && localRes.ok) {
@@ -35206,7 +35220,7 @@ window.__ModuleLoader__.load({
       async startScan(path) {
         if (this.localScanning) return; // 扫描中不可重复点
         const p = String(path || '').trim();
-        try { if (p) window.localStorage.setItem('dshgp-scan-path', p); } catch { /* 忽略 */ }
+        dshgp_localSet('dshgp-scan-path', p);
         this.localScanning = true;
         this.localMsg = '⏳ 扫描中…（后台独立进程，扫到一个追加一个）';
         this.publish();
@@ -35788,8 +35802,7 @@ window.__ModuleLoader__.load({
       //   后续仍可手动「重新检测 / 扫描」在线刷新。
       // 读取复用「本地仓库列表选择的路径」（localStorage dshgp-scan-path，本地面板扫描时写入）；
       //   没选过则空 → 后端自动识别 DSH 家根。
-      let savedPath = '';
-      try { savedPath = (typeof window !== 'undefined' && window.localStorage && window.localStorage.getItem('dshgp-scan-path')) || ''; } catch { /* 忽略 */ }
+      let savedPath = dshgp_localGet('dshgp-scan-path');
       void controller.refreshAccount();
       void controller.scanLocalRepos(savedPath, false); // 只读索引（不重建，读 json）
       // uSES 桥：SnapshotStore 是裸 observable，用 useSyncExternalStore 自建 selector hook
