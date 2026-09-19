@@ -880,7 +880,9 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
-| **1.5.2**（当前） | **工具探测改上下文注入 + 工具清单 json 化（2026-09-20）** \
+| **1.5.3**（当前） | **io-risk 括号配对重构 + 版本号同步（2026-09-20）** \
+`findPromiseAllRanges` 抽出 `findMatchingClose` 括号配对（圈复杂度 16→5、嵌套 6→3），Promise.all 并行判定行为不变（循环内异步并行仍判 low）；`judgeIoTokend`/`findPromiseAllRanges` 剩余圈复杂度提示（13/11）为非阻断 warning 保留。全量 736 项通过。\
+| **1.5.2** | **工具探测改上下文注入 + 工具清单 json 化（2026-09-20）** \
 **改动**：环境信息（工作区目录 + 工具安装路径 + skill 总入口）从 systemPrompt 段迁出，改走 `agent/pre-step` **上下文注入**（每个 agent 首次 step 注入一次，参考 skill 记分榜形态：WeakSet 防重复 + createUserMessage 追加消息 + source 标记；总开关 `injectSystemPrompt` 同时门控两通道）。**工具清单不再写死**：新增 `lib/tool-probes.json` 模板（**只有工具 key、值为空**，随仓库提交，决定探测范围）→ which/where 实测（Windows 自动补 `.exe`）→ 结果落盘运行目录 `<配置目录>/tools.json`（**工具为 key、值为本机实测路径**，不入库、可热改，改探测清单不用重装插件）。模板现覆盖 45 个工具：git/node/npm/python3/curl/ssh/unzip/rsync/7z、tar/gzip/bzip2/xz/zstd/lz4/zip/rar/unrar、synopkg/synouser/synogroup/synoshare/synoacltool、smartctl/mdadm/btrfs/lvm、fnpack/appcenter-cli/docker/ffmpeg、pnpm/bash/wget/jq/yq/rg/fd/scp/tmux/screen/gcc/g++/make/pkg-config。设置页开关文案同步更新为「注入系统提示词/上下文」。\
 **测试**：test-context 新增 4 项（模板只 key / .exe 归一化 / 缺失回退 / 结果落盘 {key:path}）；test-inject-system-prompt 改为「三段 + 上下文注入接线」断言；test-plugin 环境段迁出断言。全量 733 项通过。\
 **顺带修 timeout-on-external-api 误报（dsh-session-migrate 复现）**：①正则加负向后瞻 `(?<![\w$])`——`apiFetch(`/`githubFetch(` 等自定义封装名的 "fetch(" 子串不再被当成裸 fetch；②`hasExternalCallTimeout` 增加**前向 12 行**扫描——init/options 的 `signal: AbortSignal.timeout(...)` 定义在调用之前时同样豁免（原只往后看，漏「先定义 init 再 fetch」写法）。对照保底：真无超时的裸 fetch 仍报。test-false-positive-fixes ② 补 3 个用例。\
