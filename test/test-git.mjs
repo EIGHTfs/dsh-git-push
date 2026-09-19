@@ -551,11 +551,19 @@ test('cloneViaApi：blob 失败不再静默报成功（回归：超时留半成�
   assert.equal(r.ok, false, '缺文件不得报成功');
   assert.equal(r.failedCount, 1);
   assert.match(r.error, /克隆未完成/);
-  assert.equal(r.cleaned, true);
+  // 2026-09-18 语义变更：失败**不再删光目录**，改为保留已下文件以便续传。
+  //   原实现删光 targetDir，实测导致已下的 104MB 内容全丢、gallery 目录整个消失。
+  assert.equal(r.cleaned, false, '不应再标记为「已清理」');
+  assert.equal(r.kept, true, '应标记为「已保留」');
+  assert.equal(r.resumable, true, '应标记为「可续传」');
   // status 0 = 超时 → 成因 network、可重试
   assert.equal(r.cause, 'network');
   assert.equal(r.retriable, true);
-  assert.ok(!existsSync(dest), '半成品目录已被清理，重试不会被「已存在且非空」挡住');
+  assert.ok(existsSync(dest), '半成品目录应保留（已下文件可复用）');
+  assert.ok(existsSync(join(dest, 'a.txt')), '已下成功的文件应保留');
+  // 关键：保留的目录必须仍是「可自愈残留」——有标记、无提交，
+  //   下次 clone 会被 isPartialCloneDir 识别，不会被「已存在且非空」永久挡住
+  assert.ok(existsSync(join(dest, '.dsh-git-push-cloning')), '应保留进行中标记，供下次识别为残留');
 });
 
 test('cloneViaApi：失败成因分类——401/404 不得标为可重试（回归：误导重试）', async () => {
@@ -578,7 +586,9 @@ test('cloneViaApi：失败成因分类——401/404 不得标为可重试（回�
     assert.equal(r.ok, false, c.label + ' 应失败');
     assert.equal(r.cause, c.cause, c.label + ' 成因应为 ' + c.cause);
     assert.equal(r.retriable, c.retriable, c.label + ' 的 retriable 应为 ' + c.retriable);
-    assert.ok(!existsSync(dest), c.label + '：半成品应已清理');
+    // 语义变更：保留目录以便续传（但仍须保留标记与无 .git 状态，才能被识别为残留）
+    assert.ok(existsSync(dest), c.label + '：半成品应保留以便续传');
+    assert.ok(existsSync(join(dest, '.dsh-git-push-cloning')), c.label + '：应保留标记供下次识别');
   }
 });
 
@@ -628,8 +638,11 @@ test('cloneViaApi：进程被中断留下的残留（有标记、无提交）可
   ]);
   const r = await cloneViaApi({ target: 'o/r', dest, token: 'ghp_clone' });
   assert.equal(r.ok, true, '残留目录应被识别并重来，错误: ' + (r.error || ''));
-  assert.ok(existsSync(join(dest, 'ok.txt')));
-  assert.ok(!existsSync(join(dest, '半成品.txt')), '上次残留内容已被清掉');
+  assert.ok(existsSync(join(dest, 'ok.txt')), '本次应下到目标文件');
+  // 语义变更：残留清理只清分片目录，**不再删掉用户上一次留下的文件**。
+  //   本测试的核心意图（残留可自愈重试）不变，且额外保证不误删中间产物。
+  assert.ok(existsSync(join(dest, '半成品.txt')), '上次留下的文件应保留（清理只针对 .dsh-parts）');
+  assert.ok(!existsSync(join(dest, '.dsh-parts')), '分片目录应已清理');
 });
 
 test('cloneViaApi：用户自有目录（无标记）仍拒绝覆盖——不得误删', async () => {

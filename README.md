@@ -296,6 +296,7 @@ dsh-git-push/
 │   ├── test-auditignore.mjs — （待注释）
 │   ├── test-button-bind.mjs — 按钮绑定交叉比对（jsx 工厂形态/注释过滤/行号归属）
 │   ├── test-client.mjs — 侧边栏测试（手写 DOM/零外部资源/开关默认）
+│   ├── test-clone-concurrency.mjs — clone 并发互斥/可中止/失败保留文件（14 项，CIFS 对照用例可跳）
 │   ├── test-clone-preview-buttons.mjs — clone 预览确认框按钮可点（真渲染+真点击）
 │   ├── test-context.mjs — 上下文注入测试
 │   ├── test-dataflow.mjs — 三层审计 L2 数据流测试
@@ -877,6 +878,16 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
+| **1.4.6**（当前） | **clone 并发互斥 + 可中止 + 失败不再删目录（2026-09-18）** \
+**修「报错停止了、其实还在下载」（孤儿下载）**：点克隆报 `创建目录失败: ENOTEMPTY: directory not empty, rmdir '.../.dsh-parts'`，但报错之后 `.dsh-parts` 字节数**持续增长**、文件句柄不释放，任务状态却已是 done。根因三段串起来：① `startCloneJob` 直接覆盖 `current`——文件头注释写着「单任务模型」，代码却无任何约束，第二次 clone 能与第一次并存；② 第二次进残留清理时第一次仍在写盘，`rm` 先 readdir 再逐个删、最后 rmdir，边删边写就出现「readdir 时已删完、rmdir 时服务端又有新条目」→ `ENOTEMPTY`；③ 失败返回后**无人中止** worker，`downloadBlobs` 的 worker 循环没有中止检查点，于是任务已判失败、下载仍跑完剩余全部文件。\
+现补三件事：① **目录级互斥**——`startCloneJob` 改为返回 `{ok:false,reason:'busy'}`，HTTP 层回 409 并提示「已有克隆正在进行（目标目录）」，不再静默覆盖；② **可中止**——新增 `AbortSignal` 随任务管理（`inflight` Map / `abortCloneJob` / `cloneAbortSignal`），`downloadBlobs` 的 worker 与 `fetchToFile` 各加中止检查点，清理同目录残留前先 `abort` 让 worker 退出；③ **结构化日志**——`cloneLog` 记录 start/refuse/abort/cleanup/finish 等事件并同时写 stderr，新增 `GET /api/git-push/clone-logs`（最近 200 条）与 `POST /api/git-push/clone-abort`。\
+**关键连带修复：clone 失败不再删掉整个目标目录**。原实现失败时调用 `cleanupPartial(targetDir)` 递归删光目录，注释理由是「避免下次 clone 撞已存在且非空」——但该问题**已由 `isPartialCloneDir` + 标记文件解决**，不再需要靠删目录规避；而删目录的代价极高：实测 104MB 已下内容因 1 个文件失败被全部丢弃。更严重的是**它静默删掉了目标目录里的一切**——本次实测中 `gallery` 目录（含已下好的 README.md、scripts/、server/ 等）即被一个跑完失败路径的孤儿 clone 整个删除，且未进回收站、不可恢复。现改为：失败时**保留已下文件**、只留标记（回传 `kept:true, resumable:true`）；残留清理**只删 `.dsh-parts` 分片目录**，不再删整个目录。保留是安全的——`downloadBlobs` 先写 `.part`、**长度校验通过后**才 `rename` 到最终路径（原子），故最终路径上的文件必完整；且失败判断已**前移到 `git init/add/commit` 之前**，失败目录内不会留下 `.git`，不会被误判为完整仓库。\
+**`removeDirForce`**：CIFS（`actimeo=1`）上 `rm` 的「readdir→逐个删→rmdir」三步非原子，并发写入时必然 `ENOTEMPTY`。新增该函数：重试 3 次（退避 120ms）→ 逐个条目 `unlink`（忽略 `ENOENT`）→ `rmdir`，最后用 `access` 判定是否已不存在。实测对照（4 个大文件流并发追加写）：`rmSync` **5/5 全部 ENOTEMPTY**，`removeDirForce` **3/3 成功**。\
+**真实故障实测（2026-09-18，EIGHTfs/gallery，99 文件 / 153.8MB，私有仓）**：用修复后的 `cloneViaApi` 克隆，因网络中断致 **86/99 文件拉取失败**。修复后行为：目录**未被删除**，已下好的 13 个文件（README.md、server/、server/public/、start-linux.sh 等，236KB）**全部保留**，标记文件仍在、目录内**无 `.git`**（故不会被误判为完整仓库），日志落 `clone-incomplete-kept`，返回值 `kept:true, resumable:true`，错误文案为「已下好的 13 个文件已保留，再次点击可续传」。**对照修复前**：这 13 个文件会被 `removeDirForce(targetDir)` 连同目录一起删光——正是 gallery 目录消失的同一路径。再次 clone 时日志显示 `cleanup-parts-only` + `resume-kept-files`（只清 `.dsh-parts`、保留已下文件），确认续传语义生效。\
+**续传真的能省——复用已下完的最终文件（同日补齐）**：上面「保留已下文件」落地后实测发现**收益没兑现**：第二次 clone 时那 13 个已下好的文件**又全被重下一遍**。原因是断点续传原本只认 `.part` 分片（`have === size` 则 rename 复用），而失败清理正是要删掉 `.dsh-parts`——分片没了，最终文件虽被保留却无人识别。现于 `fetchToFile` 开头补一条早返回：**最终路径上的文件长度与远端一致即直接复用**，不再发起网络请求。判据与分片续传同源、安全性相同（`rename` 是原子的，最终路径上不存在半截文件，故长度相等可视为完整）。**实测对照**（gallery 的 `README-backup-scan-cache.md`，size=1945 与本地一致）：修复前该文件被重下、mtime 更新；修复后 **mtime 逐纳秒不变**（`19:48:20.668488900`），确认跳过。反向验证：临时禁用该早返回 → mtime 如期变化（确实重下），证明它就是复用的唯一来源。\
+**分片也必须保留——大文件续传的最后一块（同日再补）**：上一处修好「已下完文件复用」后实测又卡住：gallery 剩 4 个 7~15MB 的库，**连跑 3 轮都停在 95/99 不动**。根因是失败清理里那句 `removeDirForce(partsPath)` **在下载前把整个 `.dsh-parts` 删掉**——大文件每轮都从 0 开始，1.88MB 的 `libdav1d.so.7` 实测单次要 19s（网络差时 94s），中途一抖就前功尽弃，而上一轮下到 97% 的分片已被删除。现改为**分片一并保留**，`fetchToFile` 用已有的 `Range` 续传逻辑从中断处接着下。实测修复后该文件分片累积到 14.6MB 并最终下完：进度 95 → **97 → 98 → 99/99 完整成功**（`ok:true, files:99`）。安全性不变——分片只存在于 `.dsh-parts` 内，`rename` 到最终路径前必过长度校验，残留分片不会污染成品；目录内仍无 `.git`，不会被误判为完整仓库。\
+**端到端实测（推荐作为该功能的回归场景）**：gallery 全程在**真实的持续网络抖动**下完成，先后经历 **6 轮中断**（每轮都保留既有成果），最终 `ok:true / 99 文件 / 154MB / .git 已建 / 工作树干净`，且整个过程**从未删过目标目录**。若按修复前的实现，这 6 轮中任意一轮都会把已下的 13~98 个文件（含 154MB 大库）全部删光、永远从零重来。\
+**测试**：新增 `test/test-clone-concurrency.mjs`（16 项）——互斥、中止、日志、`removeDirForce` 并发对照、失败路径不删目录、续传安全性、HTTP 端到端（409/端点可用）。CIFS 对照用例在非 CIFS 环境自动跳过（`rmSync` 本就成功、无从对照），可用 `DSH_TEST_CIFS_DIR` 指定落点真实复现。全部 16 项均做反向验证：拆掉任一修复，对应测试如期失败。同时按新语义更新 `test/test-git.mjs` 3 条既有断言（原断言为「半成品应已清理」，现为「保留且可续传」）。\
 | **1.4.6**（当前） | **`.auditignore` 非 git 目录兜底 + cookie-secure-flag 误报/漏报各修一（同一版本内修订）** \
 **修 clone 按钮 ReferenceError（2026-09-18）**：1.4.1 为 clone 放宽超时改用 `dshgp_CLONE_TIMEOUT_MS`，但**只改了用法、漏了定义**——点克隆即抛 `dshgp_CLONE_TIMEOUT_MS is not defined`。这类「用了没定义」是运行时错误，`node --check` 查不出（语法合法），全量回归也覆盖不到（不触发那条分支），只有用户点到才炸。现补齐定义（30 分钟，与 1.4.1「clone 单独放宽到 30 分钟」一致；判卡死仍看进度停滞而非绝对超时）。\
 **配套：全仓复核同类漏网**。用「收集 `dshgp_` 前缀标识符的定义与引用」做了一次全量比对，client.js **26 个定义 / 26 个引用**全部匹配，无其他漏网，属孤例。新增 2 条回归测试锁死：① client.js 内所有 `dshgp_` 标识符引用必须有同名定义；② clone 超时常量必须存在且 ≥ 10 分钟。\

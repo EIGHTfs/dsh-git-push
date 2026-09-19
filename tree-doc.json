@@ -179,6 +179,7 @@
   "test/test-plugin.mjs": "插件接线测试（入口导出/工具清单/双副本同步）",
   "test/test-button-bind.mjs": "按钮绑定交叉比对（jsx 工厂形态/注释过滤/行号归属）",
   "test/test-clone-preview-buttons.mjs": "clone 预览确认框按钮可点（真渲染+真点击）",
+  "test/test-clone-concurrency.mjs": "clone 并发互斥/可中止/失败保留文件（14 项，CIFS 对照用例可跳）",
   "test/test-gitignore-match.mjs": "gitignore 兜底匹配（与真 git 对拍 + 非 git 端到端）",
   "test/test-push-transport.mjs": "推送通道回归（SSH 优先/一致性语义）",
   "test/test-quality.mjs": "评分总入口测试（AST 质量检查器）",
