@@ -881,7 +881,10 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
-| **1.5.3**（当前） | **io-risk 括号配对重构 + 版本号同步（2026-09-20）** \
+| **1.5.4**（当前） | **设置侧边栏 · 云端仓库可见性切换（2026-09-20）** \
+账号 → 仓库 → 云端面板每行显示 🔒 私有 / 🌐 公开（云端真源），新增「切公开 / 切私有」按钮：点击弹**行内二次确认条**（「确认将 owner/repo 从「X」改为「Y」？改公开有敏感信息暴露风险」）→ 确认后才调后端。后端新增 `/api/git-push/repo-visibility`（GET 单查云端状态；POST 切换，挂 `writeConfirmOps` 写确认门禁——无 `confirm:true` 拒 400 + Origin/CSRF 校验），复用 `setVisibility`（PATCH api.github.com private 字段），成功后就地更新列表徽标并提示。git_set_visibility 工具与 CLI 保持一致（同一实现）。test-sidebar-state 新增 2 项契约测试（visSwitch 注入 + 二次确认 + confirm:true + 端点挂门禁）。\
+同时 `/git-audit` 新增 **`--force` 参数**：非 git 仓库目录默认拒绝全量扫描（防止打爆进程），加 `--force` 显式放行——按目录本身全量审计（code_audit 对非 git 目录自动走 auditFull）。test-slash-commands 新增 2 项（--force 解析 + 非 git 目录强制放行）。\
+| **1.5.3** | **io-risk 括号配对重构 + 版本号同步（2026-09-20）** \
 `findPromiseAllRanges` 抽出 `findMatchingClose` 括号配对（圈复杂度 16→5、嵌套 6→3），Promise.all 并行判定行为不变（循环内异步并行仍判 low）；`judgeIoTokend`/`findPromiseAllRanges` 剩余圈复杂度提示（13/11）为非阻断 warning 保留。全量 736 项通过。\
 | **1.5.2** | **工具探测改上下文注入 + 工具清单 json 化（2026-09-20）** \
 **改动**：环境信息（工作区目录 + 工具安装路径 + skill 总入口）从 systemPrompt 段迁出，改走 `agent/pre-step` **上下文注入**（每个 agent 首次 step 注入一次，参考 skill 记分榜形态：WeakSet 防重复 + createUserMessage 追加消息 + source 标记；总开关 `injectSystemPrompt` 同时门控两通道）。**工具清单不再写死**：新增 `lib/tool-probes.json` 模板（**只有工具 key、值为空**，随仓库提交，决定探测范围）→ which/where 实测（Windows 自动补 `.exe`）→ 结果落盘运行目录 `<配置目录>/tools.json`（**工具为 key、值为本机实测路径**，不入库、可热改，改探测清单不用重装插件）。模板现覆盖 45 个工具：git/node/npm/python3/curl/ssh/unzip/rsync/7z、tar/gzip/bzip2/xz/zstd/lz4/zip/rar/unrar、synopkg/synouser/synogroup/synoshare/synoacltool、smartctl/mdadm/btrfs/lvm、fnpack/appcenter-cli/docker/ffmpeg、pnpm/bash/wget/jq/yq/rg/fd/scp/tmux/screen/gcc/g++/make/pkg-config。设置页开关文案同步更新为「注入系统提示词/上下文」。\

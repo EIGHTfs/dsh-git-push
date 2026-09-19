@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { mkdtempSync, mkdirSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 
 import { SLASH_COMMANDS, findGitRoot, formatClonePreviewCommandText, formatGitAuditCommandText, formatGitScanCommandText, formatIoScanCommandText, formatLinkCheckCommandText, parseCommandInput, parseGitAuditInput, registerSlashCommands, resolveAuditRepo, runGitAuditCommand, runGitClonePreviewCommand, runGitIoScanCommand, runGitScanCommand, sessionCwdOf } from '../lib/app/slash-commands.js';
@@ -110,6 +110,34 @@ test('runGitAuditCommand：非 git 目录拒绝（不走 auditFull）', async ()
     });
     assert.equal(r.kind, 'error');
     assert.match(r.text, /不是 git 仓库/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('parseGitAuditInput：--force 解析为 force 开关', () => {
+  const p = parseGitAuditInput('工作区/测试 --force');
+  assert.equal(p.force, true);
+  assert.equal(p.scope, 'diff'); // force 与 --full 独立
+  const both = parseGitAuditInput('x --full --force');
+  assert.equal(both.force, true);
+  assert.equal(both.scope, 'full');
+  assert.equal(parseGitAuditInput('x').force, false);
+});
+
+test('runGitAuditCommand：非 git 目录 + --force 放行（走 code_audit 全量）', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'gp-nongit-force-'));
+  try {
+    mkdirSync(join(dir, 'lib'), { recursive: true });
+    writeFileSync(join(dir, 'lib', 'a.js'), 'export const a = 1;\n');
+    const r = await runGitAuditCommand({
+      rawInput: dir + ' --force',
+      invocation: inv(ROOT),
+      env: { workspaceRoot: ROOT },
+      cfg: {},
+    });
+    assert.equal(r.kind, 'success', r.text);
+    assert.match(r.text, /审计/);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

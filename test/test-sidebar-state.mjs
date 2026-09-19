@@ -221,3 +221,22 @@ test('assets/preview.html 与 client.js 同步（重新生成过）', () => {
     assert.match(preview, re, `preview.html 未包含最新实现「${label}」——改完 client.js 需重新执行 node assets/preview-gen.mjs`);
   }
 });
+
+// ---------- 1.5.4 仓库可见性切换（云端状态 → 二次确认 → 切换） ----------
+
+test('1.5.4 可见性切换：前端注入 visSwitch 动作 + 行内二次确认', () => {
+  // ① Controller 注入 visSwitch 动作（云端行按钮消费）
+  assert.match(clientSrc, /visSwitch:\s*\(fullName,\s*target\)\s*=>\s*this\.switchVisibility\(fullName,\s*target\)/,
+    'Controller 动作注入缺 visSwitch');
+  // ② 行内二次确认条（「确认将 … 从「…」改为「…」？」）+ 确认后 confirm:true POST
+  assert.match(clientSrc, /确认将 '\s*\+ r\.fullName/, '云端行缺二次确认文案');
+  assert.match(clientSrc, /visibility:\s*target,\s*confirm:\s*true/, '切换请求必须带 confirm:true');
+  // ③ 就地更新列表（成功后刷新该项私有/公开徽标）
+  assert.match(clientSrc, /item\.private\s*=\s*res\.visibility\s*===\s*'private'/, '切换成功后应就地更新列表状态');
+});
+
+test('1.5.4 可见性切换：后端端点挂 writeConfirmOps 写确认门禁', () => {
+  // 破坏性写端点必须在 writeConfirmOps 清单（无 confirm:true → 400 NEED_CONFIRM）
+  assert.match(httpSrc, /writeConfirmOps\s*=\s*\[[^\]]*'\/api\/git-push\/repo-visibility'/, 'repo-visibility 未挂写确认门禁');
+  assert.match(httpSrc, /case '\/api\/git-push\/repo-visibility'/, '缺少 repo-visibility 端点');
+});

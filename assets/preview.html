@@ -33342,7 +33342,7 @@ window.__requireShim = function (name) {
 };
 
 // 宿主 settingsScope：真内存 store，set 后通知 → 界面真的跟着变
-window.__SLOTS__ = {"comment":{"name":"注释质量检测规则（AI 交流注释识别）","description":"检测『用户指示 2』『用户原话』等 AI 协作残留注释","author":"DeepSeek","stats":{"blocker":6,"warning":0,"pass":0,"total":6,"source":"rules"},"disabled":false},"docs":{"name":"docs 审计规则（链接判断槽位）","description":"","author":"","stats":{"blocker":0,"warning":1,"pass":0,"total":1,"source":"rules"},"disabled":false},"dsh":{"name":"dsh 插件专属审计规则集","description":"针对 DeepSeek Harness 插件（cordis 形态）的结构、依赖、工具契约、patch 语义审计；单行正则可执行","author":"EIGHTfs","stats":{"blocker":4,"warning":3,"pass":0,"total":7,"source":"rules"},"disabled":false},"filehealth":{"name":"文件健康度矩阵评分规则集","description":"单文件健康度评估（行数40% + 大小35% + 行长25%），score<9 提示、<5 blocker","author":"DeepSeek","stats":{"blocker":0,"warning":1,"pass":0,"total":1,"source":"rules"},"disabled":false},"folder":{"name":"文件夹数量审计规则（防止解包/依赖/构建产物入库）","description":"","author":"","stats":{"blocker":1,"warning":5,"pass":0,"total":6,"source":"rules"},"disabled":false},"frontend":{"name":"前端 HTML 审计规则（内嵌管理界面）","description":"用于服务端内嵌管理界面，不面向搜索引擎","author":"DeepSeek","stats":{"blocker":6,"warning":13,"pass":7,"total":26,"source":"rules"},"disabled":false},"i18n":{"name":"国际化审计规则（i18n 六条转规则）","description":"","author":"","stats":{"blocker":0,"warning":3,"pass":0,"total":3,"source":"rules"},"disabled":true},"nodejs":{"name":"Node.js 后端审计规则集","description":"覆盖命名规范、代码结构、安全性、健壮性、性能、测试、依赖等维度","author":"DeepSeek","stats":{"blocker":13,"warning":22,"pass":2,"total":37,"source":"rules"},"disabled":false},"npm":{"name":"npm 插件发布审计规则集","description":"针对要发布到 npm 的 dsh 插件：发布清单/依赖声明/凭据防泄漏/publishConfig 语义审计（只扫 package.json + .npmrc）","author":"EIGHTfs","stats":{"blocker":5,"warning":4,"pass":1,"total":10,"source":"rules"},"disabled":false},"performance":{"name":"性能审计规则（memory-bomb 示范落地）","description":"","author":"","stats":{"blocker":0,"warning":2,"pass":0,"total":2,"source":"rules"},"disabled":false},"private":{"name":"私密文件拦截审计（强制槽位）","description":"","author":"EIGHTfs","stats":{"blocker":0,"warning":0,"pass":0,"total":0,"source":"rules"},"disabled":false},"robustness":{"name":"健壮性审计规则（写文件目录保障等）","description":"","author":"","stats":{"blocker":0,"warning":1,"pass":0,"total":1,"source":"rules"},"disabled":false},"structure":{"name":"目录结构规范（本地定制版）","description":"dsh-git-push 目录结构取舍结论：lib/ 平铺即源码（不引入 src/）、docs/ skills/ 保留、无 script/config/dist/log 空目录；统一单数命名（tool/ test/ doc/，不用 tools/ tests/ docs/）","author":"EIGHTfs","stats":{"blocker":0,"warning":1,"pass":0,"total":1,"source":"rules"},"disabled":false},"template":{"name":"自定义审计规则集","description":"根据项目需求自定义填充规则","author":"DeepSeek","stats":{"blocker":0,"warning":0,"pass":1,"total":1,"source":"rules"},"disabled":false},"version":{"name":"版本控制审计规则集（versioning-rule 转写）","description":"版本号 X.Y.Z 语义 + 1 开头硬规则 + 版本只在提交时变化 + README 更新日志同步（源：versioning-rule.md）","author":"EIGHTfs","stats":{"blocker":2,"warning":3,"pass":3,"total":8,"source":"rules"},"disabled":false}};
+window.__SLOTS__ = {"comment":{"name":"注释质量检测规则（AI 交流注释识别）","description":"检测『用户指示 2』『用户原话』等 AI 协作残留注释","author":"DeepSeek","stats":{"blocker":6,"warning":0,"pass":0,"total":6,"source":"rules"},"disabled":false},"docs":{"name":"docs 审计规则（链接判断槽位）","description":"","author":"","stats":{"blocker":0,"warning":1,"pass":0,"total":1,"source":"rules"},"disabled":false},"dsh":{"name":"dsh 插件专属审计规则集","description":"针对 DeepSeek Harness 插件（cordis 形态）的结构、依赖、工具契约、patch 语义审计；单行正则可执行","author":"EIGHTfs","stats":{"blocker":4,"warning":3,"pass":0,"total":7,"source":"rules"},"disabled":false},"filehealth":{"name":"文件健康度矩阵评分规则集","description":"单文件健康度评估（行数40% + 大小35% + 行长25%），score<9 提示、<5 blocker","author":"DeepSeek","stats":{"blocker":0,"warning":1,"pass":0,"total":1,"source":"rules"},"disabled":false},"folder":{"name":"文件夹数量审计规则（防止解包/依赖/构建产物入库）","description":"","author":"","stats":{"blocker":1,"warning":5,"pass":0,"total":6,"source":"rules"},"disabled":false},"frontend":{"name":"前端 HTML 审计规则（内嵌管理界面）","description":"用于服务端内嵌管理界面，不面向搜索引擎","author":"DeepSeek","stats":{"blocker":6,"warning":13,"pass":7,"total":26,"source":"rules"},"disabled":false},"i18n":{"name":"国际化审计规则（i18n 六条转规则）","description":"","author":"","stats":{"blocker":0,"warning":3,"pass":0,"total":3,"source":"rules"},"disabled":true},"nodejs":{"name":"Node.js 后端审计规则集","description":"覆盖命名规范、代码结构、安全性、健壮性、性能、测试、依赖等维度","author":"DeepSeek","stats":{"blocker":13,"warning":22,"pass":2,"total":37,"source":"rules"},"disabled":false},"npm":{"name":"npm 插件发布审计规则集","description":"针对要发布到 npm 的 dsh 插件：发布清单/依赖声明/凭据防泄漏/publishConfig 语义审计（只扫 package.json + .npmrc）","author":"EIGHTfs","stats":{"blocker":5,"warning":4,"pass":1,"total":10,"source":"rules"},"disabled":false},"performance":{"name":"性能审计规则（memory-bomb 示范落地）","description":"","author":"","stats":{"blocker":0,"warning":2,"pass":0,"total":2,"source":"rules"},"disabled":false},"private":{"name":"私密文件拦截审计（强制槽位）","description":"","author":"EIGHTfs","stats":{"blocker":13,"warning":0,"pass":0,"total":13,"source":"rules"},"disabled":false},"robustness":{"name":"健壮性审计规则（写文件目录保障等）","description":"","author":"","stats":{"blocker":0,"warning":1,"pass":0,"total":1,"source":"rules"},"disabled":false},"structure":{"name":"目录结构规范（本地定制版）","description":"dsh-git-push 目录结构取舍结论：lib/ 平铺即源码（不引入 src/）、docs/ skills/ 保留、无 script/config/dist/log 空目录；统一单数命名（tool/ test/ doc/，不用 tools/ tests/ docs/）","author":"EIGHTfs","stats":{"blocker":0,"warning":1,"pass":0,"total":1,"source":"rules"},"disabled":false},"template":{"name":"自定义审计规则集","description":"根据项目需求自定义填充规则","author":"DeepSeek","stats":{"blocker":0,"warning":0,"pass":1,"total":1,"source":"rules"},"disabled":false},"version":{"name":"版本控制审计规则集（versioning-rule 转写）","description":"版本号 X.Y.Z 语义 + 1 开头硬规则 + 版本只在提交时变化 + README 更新日志同步（源：versioning-rule.md）","author":"EIGHTfs","stats":{"blocker":2,"warning":3,"pass":3,"total":8,"source":"rules"},"disabled":false}};
 window.__scopeSubs = [];
 window.__scopeMock = {
   getSnapshot: function () { return { status: 'ready', writable: true, value: window.__FAKE__ }; },
@@ -33496,6 +33496,10 @@ window.__ModuleLoader__.load({
 
     // 逻辑类常量（fetch 超时 / 扫描循环上限 / 提示时长 / 日志截断长度）
     const dshgp_FETCH_TIMEOUT_MS = 30_000;        // fetch 超时（same-origin）
+    // 2026-09-19 克隆后台化：原先 clone 用 30 分钟长超时（请求一直阻塞到克隆结束，
+    //   而带 tools/ffmpeg-lib 的仓库可达 154MB，默认 30s 必然超时）。
+    //   现在 repo-clone 提交即返回 202、下载在服务端后台跑，提交本身是快操作，
+    //   故该长超时常量已删除——提交用下面的短超时，进度与终态由轮询接管。
     const dshgp_SCAN_WAIT_MAX_ROUNDS = 600;       // 后台扫描等待循环上限（每次挂起等新进度）
     const dshgp_SAVED_MSG_MS = 4000;              // 「已保存」提示显示时长
     const dshgp_LOG_TRUNCATE = 40;                // 调试日志 value 截断长度
@@ -33642,6 +33646,7 @@ window.__ModuleLoader__.load({
       '.dshgp_repohint{font-size:12px;color:var(--dsw-alias-label-tertiary)}',
       '.dshgp_repomsg{margin:0;font-size:11px;color:var(--dsw-alias-label-tertiary);line-height:1.5}',
       '.dshgp_pushcol{display:flex;flex-direction:column;align-items:flex-end;gap:3px;max-width:46%;min-width:100px}',
+      '.dshgp_visconfirm{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:5px 8px;border-radius:8px;background:color-mix(in srgb,var(--dsw-alias-label-warning) 9%,transparent);border:.5px solid color-mix(in srgb,var(--dsw-alias-label-warning) 30%,transparent)}',
       '.dshgp_fb{font-size:11px;line-height:1.35;word-break:break-all;text-align:right}',
       '.dshgp_fbok{color:#2fa84f}',
       '.dshgp_fbfail{color:#d64545}',
@@ -34089,14 +34094,42 @@ window.__ModuleLoader__.load({
       });
     }
 
-    /** 云端面板单行：仓库名 + 私有/公开/分支/更新时间 + clone 按钮。 */
+    /** 云端面板单行：仓库名 + 私有/公开/分支/更新时间 + clone 按钮 + 可见性切换（1.5.4，二次确认）。 */
     function dshgp_RepoCloudRow(props) {
       const r = props.repo;
       const s = props.state;
       const busy = s.repoBusy === 'clone:' + r.fullName;
+      const visBusy = s.repoBusy === 'vis:' + r.fullName;
+      // 二次确认态：confirmVis = 待切换目标（'public'|'private'），空 = 未确认
+      const [confirmVis, setConfirmVis] = react.useState('');
+      const [visMsg, setVisMsg] = react.useState('');
+      const target = r.private ? 'public' : 'private';
+      const targetLabel = target === 'public' ? '公开' : '私有';
+      const curLabel = r.private ? '私有' : '公开';
       // 2026-09-16：云端仓库标记本地是否已有（后端 repos-cloud 附 localExists/localPath）
       const localTag = r.localExists
         ? jsx.jsx('span', { className: 'dshgp_pill dshgp_pill_on', children: '本地已有' })
+        : null;
+      const confirmBar = confirmVis
+        ? jsx.jsxs('div', { className: 'dshgp_visconfirm', children: [
+            jsx.jsx('span', { className: 'dshgp_reprowmeta', children: ['确认将 ' + r.fullName + ' 从「' + curLabel + '」改为「' + (confirmVis === 'public' ? '公开' : '私有') + '」？改公开有敏感信息暴露风险。'] }),
+            jsx.jsx('button', {
+              type: 'button', className: 'dshgp_keybtn',
+              disabled: visBusy,
+              onClick: async () => {
+                const res = await props.visSwitch(r.fullName, confirmVis);
+                setVisMsg(res && res.ok ? '✅ 已切换为' + (res.visibility === 'private' ? '私有' : '公开') : '❌ ' + ((res && res.error) || '失败'));
+                setConfirmVis('');
+              },
+              children: visBusy ? '切换中…' : '确认切换',
+            }),
+            jsx.jsx('button', {
+              type: 'button', className: 'dshgp_keybtn',
+              disabled: visBusy,
+              onClick: () => { setConfirmVis(''); setVisMsg(''); },
+              children: '取消',
+            }),
+          ] })
         : null;
       return jsx.jsxs('div', {
         className: 'dshgp_reprow',
@@ -34107,15 +34140,29 @@ window.__ModuleLoader__.load({
               jsx.jsx('span', { className: 'dshgp_reprowpath', children: r.fullName }),
               jsx.jsx('span', { className: 'dshgp_reprowmeta', children: [(r.private ? '🔒 私有' : '🌐 公开') + ' · ' + (r.defaultBranch || '') + (r.pushedAt ? ' · 更新 ' + r.pushedAt.slice(0, 10) : '')] }),
               localTag,
+              visMsg ? jsx.jsx('span', { className: visMsg.startsWith('✅') ? 'dshgp_fb dshgp_fbok' : 'dshgp_fb dshgp_fbfail', children: visMsg }) : null,
             ],
           }),
-          jsx.jsx('button', {
-            type: 'button',
-            className: 'dshgp_keybtn',
-            disabled: busy,
-            onClick: () => props.onClone(r.fullName),
-            children: busy ? '克隆中…' : 'clone',
+          jsx.jsxs('div', {
+            className: 'dshgp_pushcol',
+            children: [
+              jsx.jsx('button', {
+                type: 'button',
+                className: 'dshgp_keybtn',
+                disabled: busy,
+                onClick: () => props.onClone(r.fullName),
+                children: busy ? '克隆中…' : 'clone',
+              }),
+              jsx.jsx('button', {
+                type: 'button',
+                className: 'dshgp_keybtn',
+                disabled: visBusy,
+                onClick: () => { setConfirmVis(target); setVisMsg(''); },
+                children: visBusy ? '切换中…' : (r.private ? '切公开' : '切私有'),
+              }),
+            ],
           }),
+          confirmBar,
         ],
       });
     }
@@ -34123,7 +34170,7 @@ window.__ModuleLoader__.load({
     /** 云端面板：账号名下所有 GitHub 仓库（token 拉取），clone 时弹目录选择器选目标目录。 */
     function dshgp_RepoCloudPane(props) {
       const s = props.state;
-      const rows = (s.cloudRepos || []).map((r) => jsx.jsx(dshgp_RepoCloudRow, { key: r.fullName, repo: r, state: s, onClone: props.cloneFlow }));
+      const rows = (s.cloudRepos || []).map((r) => jsx.jsx(dshgp_RepoCloudRow, { key: r.fullName, repo: r, state: s, onClone: props.cloneFlow, visSwitch: props.visSwitch }));
       return jsx.jsxs('div', {
         className: 'dshgp_repanepane',
         children: [
@@ -34395,7 +34442,7 @@ window.__ModuleLoader__.load({
       });
     }
 
-    /** 注入系统提示词总开关块（2026-09-13 新增）：控制整组 systemPrompt 注入段启停。 */
+    /** 注入总开关块（2026-09-13 新增，2026-09-20 语义扩展）：控制 systemPrompt 段 + 上下文注入启停。 */
     function dshgp_InjectPromptSwitchBlock(props) {
       const s = props.state;
       return jsx.jsxs('div', {
@@ -34404,18 +34451,18 @@ window.__ModuleLoader__.load({
           jsx.jsxs('div', {
             className: 'dshgp_switchrow',
             children: [
-              jsx.jsx('span', { className: 'dshgp_switchlabel', children: '注入系统提示词' }),
+              jsx.jsx('span', { className: 'dshgp_switchlabel', children: '注入系统提示词/上下文' }),
               jsx.jsx('input', {
                 type: 'checkbox',
                 checked: s.injectSystemPrompt !== false,
                 onChange: (ev) => props.toggleInjectSystemPrompt(ev.target.checked),
-                'aria-label': '注入系统提示词',
+                'aria-label': '注入系统提示词/上下文',
               }),
             ],
           }),
           jsx.jsx('p', { className: 'dshgp_hint', children: s.injectSystemPrompt !== false
-            ? '注入三段：①插件功能用法（每个工具怎么用 + 凭据由插件托管，避免 AI 绕开插件到处找 token）②环境（工作区目录映射 + 工具安装路径 + skill 总入口一行）③提交前 README 核对提醒。只注入目录/路径级信息，不注入 skill 正文。'
-            : '已关闭：不注入任何系统提示词段落（AI 仍可调用插件工具，但看不到功能用法与环境目录）。' }),
+            ? '系统提示词：①插件功能用法（每个工具怎么用 + 凭据由插件托管，避免 AI 绕开插件到处找 token）③提交前 README 核对提醒 + 要求清单。上下文：②环境（工作区目录映射 + 工具安装路径 + skill 总入口一行，每个 agent 首次 step 注入一次；工具按 lib/tool-probes.json 模板探测，路径生成到运行目录 tools.json）。只注入目录/路径级信息，不注入 skill 正文。'
+            : '已关闭：不注入任何系统提示词段落与上下文环境信息（AI 仍可调用插件工具，但看不到功能用法与环境目录）。' }),
         ],
       });
     }
@@ -34713,7 +34760,7 @@ window.__ModuleLoader__.load({
         this.savedTimer = null;
         this.auditEnabled = false;
         this.injectRequirements = false;
-        // 注入系统提示词总开关（默认开；2026-09-13 新增）
+        // 注入总开关（默认开；2026-09-13 新增，2026-09-20 扩展为系统提示词+上下文）
         this.injectSystemPrompt = true;
         // 2026-09-14：审计扫描范围（diff|full）——设置持久化走 host HTTP，前端本地字段镜像
         this.auditScanScope = 'diff';
@@ -34750,6 +34797,7 @@ window.__ModuleLoader__.load({
         this.cloudMsg = '';
         this.repoBusy = '';
         this.cloneProgress = null;   // 进行中的 clone 进度（轮询填充）
+        this._cloneResumeTimer = null; // 后台克隆接续轮询句柄（2026-09-19 后台化配套）
         this.clonePreview = null;    // 待确认的 clone 预览
         this.clonePending = { repo: '', dir: '' };  // 预览后待确认的上下文
         this.maxCloneFileMB = 10;    // clone 单文件体积上限(MB)；0=不限
@@ -34929,6 +34977,58 @@ window.__ModuleLoader__.load({
             this.refreshError = `${p}: ` + (e && e.message || e);
           }
         }
+        // 2026-09-19：克隆改为后台 job 后，任务不再随 HTTP 请求存活——
+        //   刷新/重开页面时后端可能仍在下载。这里主动探一次，把「正在跑的克隆」
+        //   重新接回进度条与轮询，避免用户以为任务没了而重复发起（会被互斥拒绝）。
+        void this.resumeCloneIfRunning();
+      }
+
+      /**
+       * 页面加载/刷新后接续**仍在后台跑的克隆**（2026-09-19 克隆后台化配套）。
+       *
+       * 只在 idle/done 之外做动作：running → 恢复进度条并重启轮询；
+       *   done → 如实回显终态（说明上次任务已结束）；idle → 什么都不做。
+       */
+      async resumeCloneIfRunning() {
+        if (this.repoBusy) return; // 已有交互在进行（含本页面自己发起的 clone），不抢
+        let st;
+        try {
+          st = await dshgp_postJson('/api/git-push/clone-progress', {});
+        } catch { return; /* 探测失败静默：下次刷新再试 */ }
+        if (!st || st.state !== 'running' || !st.progress) return;
+        const p = st.progress;
+        this.cloneProgress = p;
+        this.repoBusy = 'clone:' + (p.target || '');
+        this.cloudMsg = '⏳ 后台克隆进行中：' + (p.target || '') + ' → ' + (p.dest || '');
+        this.publish();
+        // 重启轮询直到终态（与 cloneConfirmed 同一收敛逻辑，故此处只做等待）
+        if (this._cloneResumeTimer) clearInterval(this._cloneResumeTimer);
+        this._cloneResumeTimer = setInterval(async () => {
+          try {
+            const s2 = await dshgp_postJson('/api/git-push/clone-progress', {});
+            if (s2 && s2.state === 'running' && s2.progress) {
+              this.cloneProgress = s2.progress;
+              this.publish();
+              return;
+            }
+            if (s2 && s2.state === 'done') {
+              const fin = await dshgp_postJson('/api/git-push/clone-progress', { consume: true });
+              const res = (fin && fin.result) || (s2 && s2.result) || null;
+              this.cloudMsg = res && res.ok
+                ? '✅ 已克隆 ' + (p.target || '') + ' → ' + (res.dest || p.dest || '')
+                : '❌ ' + ((res && res.error) || '克隆失败');
+            } else if (s2 && s2.state === 'idle') {
+              this.cloudMsg = '⚠️ 克隆任务已不存在（可能插件进程重启过），请重新发起';
+            } else {
+              return; // 未知态：继续轮询，不误判
+            }
+            clearInterval(this._cloneResumeTimer);
+            this._cloneResumeTimer = null;
+            this.cloneProgress = null;
+            this.repoBusy = '';
+            this.publish();
+          } catch { /* 轮询失败不中断 */ }
+        }, 1000);
       }
 
       async loadSettingsFromHttp() {
@@ -35217,6 +35317,42 @@ window.__ModuleLoader__.load({
         this.publish();
       }
 
+      /**
+       * 云端仓库私有/公开切换（1.5.4）：POST repo-visibility（confirm 前置后端校验）。
+       * 成功后就地更新列表该项（云端真源返回值），并给行内反馈。
+       * @param {string} fullName owner/repo
+       * @param {string} target public | private
+       * @returns {Promise<object>} 后端响应（{ok, visibility} 或 {ok:false, error}）
+       */
+      async switchVisibility(fullName, target) {
+        const parts = String(fullName || '').split('/');
+        const owner = (parts[0] || '').trim();
+        const repo = (parts[1] || '').trim();
+        if (!owner || !repo) return { ok: false, error: '仓库名格式应为 owner/repo' };
+        this.repoBusy = 'vis:' + fullName;
+        this.publish();
+        let res;
+        try {
+          res = await dshgp_postJson('/api/git-push/repo-visibility', { owner, repo, visibility: target, confirm: true });
+        } catch (e) {
+          res = { ok: false, error: (e && e.message) || '请求失败' };
+        }
+        this.repoBusy = '';
+        if (res && res.ok) {
+          // 就地更新列表该项（新数组引用触发订阅重渲染）
+          const arr = Array.isArray(this.cloudRepos) ? this.cloudRepos.slice() : [];
+          for (const item of arr) {
+            if (String(item.fullName || '') === fullName) item.private = res.visibility === 'private';
+          }
+          this.cloudRepos = arr;
+          this.cloudMsg = '✅ 已切换为' + (res.visibility === 'private' ? '私有' : '公开') + '：' + fullName;
+        } else {
+          this.cloudMsg = '❌ 切换失败：' + ((res && res.error) || '未知错误') + '（' + fullName + '）';
+        }
+        this.publish();
+        return res;
+      }
+
       /** 云端仓库 clone：先弹目录选择器选目标目录，再预览，确认后才真正开始。 */
       cloneFlow(repo) {
         dshgp_browseOpen(null, (dir) => { void this.cloneCloudRepo(repo, dir); });
@@ -35271,15 +35407,53 @@ window.__ModuleLoader__.load({
         const { repo, dir } = pend;
         this.repoBusy = 'clone:' + repo;
         this.publish();
-        // 轮询：后端每完成一批文件就更新内存态进度。
-        //   判「卡死」不靠绝对超时，而看进度是否停滞（大文件慢传不该被杀）。
+        // 2026-09-19：克隆改为**后台 job**——repo-clone 立即返回 202 {async:true, jobId}，
+        //   下载在后端继续跑。故此处不再 await 整个克隆，而是：
+        //     ① 提交任务（拿 jobId；预检/互斥失败会同步回错，照实显示）
+        //     ② 轮询 /clone-progress 驱动进度，直到 state 变 done 取终态
+        //   判「卡死」仍看进度是否停滞（大文件慢传不该被杀），不用绝对超时。
         let pollTimer = null;
         const stopPoll = () => { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } };
+        // 终态收敛：把后端 cloneJobStatus() 的 done.result 转成用户文案。
+        //   成败与成因仍由后端结构化给出（clone.js 的 cause/retriable），前端不猜文案。
+        const renderResult = (res) => {
+          if (res && res.ok) {
+            // 如实报告被跳过的文件：否则用户以为克隆完整
+            const skipped = res.skippedCount || 0;
+            this.cloudMsg = '✅ 已克隆 ' + repo + ' → ' + (res.dest || dir)
+              + (skipped > 0 ? '（已跳过 ' + skipped + ' 个超大文件）' : '');
+          } else {
+            const msg = (res && res.error) || '克隆失败';
+            const extra = res && res.cleaned && res.retriable === true
+              ? '（半成品已自动清理，可直接重试）'
+              : '';
+            this.cloudMsg = '❌ ' + msg + extra;
+          }
+        };
+        // 轮询：① 更新进度条 ② 检测终态（running → done）后收尾。
+        //   consume=true 让后端取走终态，避免下次打开面板读到上次结果。
         const poll = async () => {
           try {
             const st = await dshgp_postJson('/api/git-push/clone-progress', {});
             if (st && st.state === 'running' && st.progress) {
               this.cloneProgress = st.progress;
+              this.publish();
+            } else if (st && st.state === 'done') {
+              // 任务已结束：先取终态再 consume 清掉（顺序反了会读到空）
+              const fin = await dshgp_postJson('/api/git-push/clone-progress', { consume: true });
+              stopPoll();
+              renderResult(fin && fin.result ? fin.result : (st.result || null));
+              this.cloneProgress = null;
+              this.clonePending = null;
+              this.repoBusy = '';
+              this.publish();
+            } else if (st && st.state === 'idle') {
+              // 既非 running 也非 done：任务已消失（进程重启等）——不能永远转圈
+              stopPoll();
+              this.cloudMsg = '⚠️ 克隆任务已不存在（可能插件进程重启过），请重新发起';
+              this.cloneProgress = null;
+              this.clonePending = null;
+              this.repoBusy = '';
               this.publish();
             }
           } catch { /* 轮询失败不中断克隆本身 */ }
@@ -35287,32 +35461,30 @@ window.__ModuleLoader__.load({
         pollTimer = setInterval(() => { void poll(); }, 1000);
         void poll();
         try {
-          // clone 用放宽后的超时：30s 对上百 MB 的仓库必然不够
-          const cloneRes = await dshgp_postJson('/api/git-push/repo-clone', { target: repo, dir, confirm: true }, dshgp_CLONE_TIMEOUT_MS);
-          if (cloneRes && cloneRes.ok) {
-            // 如实报告被跳过的文件：否则用户以为克隆完整
-            const skipped = cloneRes.skippedCount || 0;
-            this.cloudMsg = '✅ 已克隆 ' + repo + ' → ' + ((cloneRes && cloneRes.dest) || dir)
-              + (skipped > 0 ? '（已跳过 ' + skipped + ' 个超大文件）' : '');
+          // 提交即返回（很快）；超时不必再放到 30 分钟——提交本身不下载。
+          const submit = await dshgp_postJson('/api/git-push/repo-clone', { target: repo, dir, confirm: true }, 60_000);
+          if (submit && submit.async === true) {
+            // 已转后台：进度与终态交给轮询，这里只提示「已开始」
+            this.cloudMsg = '⏳ 克隆已在后台运行：' + repo + ' → ' + (submit.dest || dir);
+            this.publish();
           } else {
-            // 成败与成因都由后端结构化给出（clone.js 的 cause/retriable），前端不再
-            //   用正则猜文案：此前「克隆未完成」这段文字出现在**所有**失败里，
-            //   连 401 token 失效、404 仓库不存在都被显示成「网络问题，可直接重试」，
-            //   用户会在无解的错误上反复点。现在只在后端确认可重试时才补那句。
-            const msg = (cloneRes && cloneRes.error) || '克隆失败';
-            const extra = cloneRes && cloneRes.cleaned && cloneRes.retriable === true
-              ? '（半成品已自动清理，可直接重试）'
-              : '';
-            this.cloudMsg = '❌ ' + msg + extra;
+            // 未转后台 = 提交阶段就失败（预检/互斥/参数）——同步回错，照实显示并收尾。
+            //   兼容后端降级为同步返回（老版本/未来改动）的情形。
+            stopPoll();
+            renderResult(submit);
+            this.cloneProgress = null;
+            this.clonePending = null;
+            this.repoBusy = '';
+            this.publish();
           }
         } catch (e) {
+          stopPoll();
           this.cloudMsg = '❌ 克隆失败: ' + (e && e.message || e) + '（可直接重试——半成品已自动清理）';
+          this.cloneProgress = null;
+          this.clonePending = null;
+          this.repoBusy = '';
+          this.publish();
         }
-        stopPoll();
-        this.cloneProgress = null;
-        this.clonePending = null;
-        this.repoBusy = '';
-        this.publish();
       }
 
       /** 单击规则包行：切换禁用/启用（2026-09-13 改为写 yml 顶层 disabled，不存 scope 变量）。 */
@@ -35447,8 +35619,9 @@ window.__ModuleLoader__.load({
       }
 
       /**
-       * 注入系统提示词总开关（写回 injectSystemPrompt；默认开）。
-       * 关 = host 侧所有注入段返回空串；开 = 注入功能用法/环境/README 提醒三段。
+       * 注入总开关（写回 injectSystemPrompt；默认开）。
+       * 2026-09-20：关 = host 侧 systemPrompt 段全部返回空串 + 上下文注入不注入；
+       *   开 = 功能用法/README 提醒/要求清单走系统提示词，环境（工作区/工具/skill 入口）走上下文首条注入。
        * 注入段里的「开发者要求清单」仍受 auditEnabled + injectRequirements 双重门控。
        */
       toggleInjectSystemPrompt(checked) {
@@ -35456,8 +35629,8 @@ window.__ModuleLoader__.load({
         // 2026-09-15：走 commitSetting 公共入口（自动含 editedKeys 标记 + publish + persistSetting）；
         //   此前漏了 editedKeys 标记，loadSettingsFromHttp 异步 GET 可能用旧值把它覆盖回去
         this.commitSetting('injectSystemPrompt', this.injectSystemPrompt, this.injectSystemPrompt
-          ? '✅ 已开启：注入系统提示词'
-          : '✅ 已关闭：不注入系统提示词');
+          ? '✅ 已开启：注入系统提示词/上下文'
+          : '✅ 已关闭：不注入');
       }
 
       /**
@@ -35596,6 +35769,7 @@ window.__ModuleLoader__.load({
           loadCloudRepos: () => { void this.refresh('cloud'); },
           pushLocalRepo: (path) => { void this.pushLocalRepo(path); },
           cloneFlow: (repo) => this.cloneFlow(repo),
+          visSwitch: (fullName, target) => this.switchVisibility(fullName, target), // 云端私有/公开切换（1.5.4）
           cloneConfirmed: () => { void this.cloneConfirmed(); }, // 预览确认框「开始克隆」
           cancelPreview: () => { this.cancelPreview(); },        // 预览确认框「取消」
         };
