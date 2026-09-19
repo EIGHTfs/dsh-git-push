@@ -18,7 +18,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const rootClientSrc = readFileSync(join(ROOT, 'client.js'), 'utf8');
+const rootClientSrc = readFileSync(join(ROOT, 'lib', 'client.js'), 'utf8');
 const LABEL = '注入开发者要求清单到系统提示词';
 
 /**

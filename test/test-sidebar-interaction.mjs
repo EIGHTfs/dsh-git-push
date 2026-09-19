@@ -18,7 +18,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const clientSrc = readFileSync(join(ROOT, 'client.js'), 'utf8');
+const clientSrc = readFileSync(join(ROOT, 'lib', 'client.js'), 'utf8');
 
 /** 记录式 jsx 替身：返回可遍历节点树。
  * 注意：本仓客户端用 jsx-runtime 风格（jsx(type, props) / jsxs(type, props)），

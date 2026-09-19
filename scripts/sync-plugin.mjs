@@ -5,7 +5,7 @@
  * 目标 = DSH 插件目录（.dsh/profiles/<profile>/node_modules/dsh-git-push）
  *
  * 默认 **dryRun**（只打印将要同步的差异，不写入）；`--write` 才真同步。
- * 同步内容：lib/**  skills/**  scripts/**  cli.mjs  client.js  package.json  cordis.patch.yml  README.md
+ * 同步内容：lib/**  skills/**  scripts/**  cli.mjs  package.json  cordis.patch.yml  README.md
  * 排除：.git  node_modules  docs/WORKBOARD*（开发看板不随插件发布）test/**
  *
  * 用法：
@@ -26,11 +26,11 @@ export const SOURCE_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 /** 随插件发布的顶层条目。 */
 // 必须与 package.json 的 files 白名单保持一致（test-self.mjs 有一条测试守住）：
-//   · client.js 是侧边栏前端主文件（仓库根），原先漏列 → 同步到已安装副本时会漏掉它，前端改动装不进去；
+//   · client.js（2026-09-19 起移到 lib/client.js）是侧边栏前端主文件，随 'lib' 整目录同步，不再单列；
 //   · scripts 是随插件发布的独立脚本（scan-version / audit-runtime-check / scrub-user-wording / check /
 //     sync-plugin 本身），README 有专门章节教用户直接 `node scripts/<名>.mjs` 调用 → 安装副本里必须有，
 //     否则文档承诺的入口在装好的插件里不存在。
-export const SYNC_ENTRIES = ['lib', 'skills', 'scripts', 'cli.mjs', 'client.js', 'package.json', 'cordis.patch.yml', 'README.md'];
+export const SYNC_ENTRIES = ['lib', 'skills', 'scripts', 'cli.mjs', 'package.json', 'cordis.patch.yml', 'README.md'];
 
 /**
  * 同步时排除的路径片段。

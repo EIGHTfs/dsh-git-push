@@ -525,7 +525,7 @@ function readPkgJson() {
  * file-io —— 文件读写调用扫描（三标签：类型/操作/上下文）。
  * 输出每条命中带 sync|async、read|write|delete|rename、以及「是否在 async 函数内 /
  *   循环内 / 请求处理路径上」，用于判断同步 I/O 会不会阻塞其他请求、写操作是否高风险。
- * @param {string[]} targets 扫描目标（文件或目录；空=默认 lib/ scripts/ cli.mjs client.js）
+ * @param {string[]} targets 扫描目标（文件或目录；空=默认 lib/ scripts/ cli.mjs）
  * @param {object} flags { json, summary, write, op, kind, type, risk }
  */
 export function cmdFileIo(targets = [], flags = {}) {

@@ -5,7 +5,7 @@
  * 无需手动重生成——浏览器刷新即见新代码。
  *
  * 监听文件：
- *   - client.js（主 UI 源码，界面任何改动）
+ *   - lib/client.js（主 UI 源码，界面任何改动）
  *   - assets/preview-gen.mjs（生成器本身）
  *   - lib/client/index.js（配置 schema / 侧边栏设置项）
  *
@@ -28,7 +28,7 @@ const OUT = resolve(ROOT, 'assets/preview.html');
 
 // 变更即重生成的源码（相对项目根）
 const TARGETS = [
-  resolve(ROOT, 'client.js'),
+  resolve(ROOT, 'lib', 'client.js'),
   resolve(ROOT, 'assets/preview-gen.mjs'),
   resolve(ROOT, 'lib/client/index.js'),
 ];

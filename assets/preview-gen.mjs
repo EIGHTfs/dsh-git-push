@@ -98,7 +98,7 @@ for (const [label, dir] of [['react', reactUmdDir], ['react-dom', reactDomDir]])
   }
 }
 
-const clientSrc = readFileSync(`${projectRoot}/client.js`, 'utf8');
+const clientSrc = readFileSync(`${projectRoot}/lib/client.js`, 'utf8');
 const reactUmd = readFileSync(`${reactUmdDir}/umd/react.development.js`, 'utf8');
 const domUmd = readFileSync(`${reactDomDir}/umd/react-dom.development.js`, 'utf8');
 

@@ -37,7 +37,7 @@ function mockReact() {
 //   现改用项目自带 tokenizer（lib/ast/tokenizer.js）：它按类型标明 ident/str/comment，
 //   取 ident 类 token 即天然排除字符串与注释，不再依赖手写正则的脆弱假设。
 test('client.js：dshgp_ 前缀标识符无「用了没定义」', () => {
-  const src = readFileSync(join(ROOT, 'client.js'), 'utf8');
+  const src = readFileSync(join(ROOT, 'lib', 'client.js'), 'utf8');
   const tokens = tokenize(src).filter((t) => t.type === 'ident');
 
   // 先自证取到的是代码而非被剥离后的残骸，否则下面断言恒真
@@ -78,7 +78,7 @@ test('client.js：clone 提交用短超时（后台化后不再阻塞下载）',
   //   下载在服务端后台跑，前端靠轮询取进度与终态。
   //   故提交调用**不该**再背 30 分钟超时——那是旧「请求阻塞到克隆结束」设计的产物，
   //   长超时还会掩盖「提交阶段就卡死」的真实故障。
-  const src = readFileSync(join(ROOT, 'client.js'), 'utf8');
+  const src = readFileSync(join(ROOT, 'lib', 'client.js'), 'utf8');
   // 提交调用的超时必须是短超时
   const call = src.match(/repo-clone'[^)]*?(60_000|[\d_]+)\s*\)/);
   assert.ok(call, 'repo-clone 提交应显式传超时');
@@ -234,7 +234,7 @@ test('模块描述：不实现 viewer（0.1.8 决策）', () => {
   assert.ok(!JSON.stringify(info).includes('viewer'), '侧边栏不应含提交历史查看器入口');
 });
 // ---------- 根 client.js（DSH 客户端插件适配层，1.0.0） ----------
-const rootClientSrc = readFileSync(join(ROOT, 'client.js'), 'utf8');
+const rootClientSrc = readFileSync(join(ROOT, 'lib', 'client.js'), 'utf8');
 
 test('client.js：DSH 模块加载器格式（2026-09-12 完全移植 v1 结构）', () => {
   assert.ok(rootClientSrc.includes('__ModuleLoader__.load'), '应为 DSH 客户端模块入口');

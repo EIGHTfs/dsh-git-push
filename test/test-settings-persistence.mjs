@@ -26,7 +26,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 /** client.js 中所有 commitSetting/persistSetting 的键（前端提交点 L1）。 */
 function clientSubmitKeys() {
-  const src = readFileSync(join(ROOT, 'client.js'), 'utf8');
+  const src = readFileSync(join(ROOT, 'lib', 'client.js'), 'utf8');
   const keys = new Set();
   for (const m of src.matchAll(/(?:commitSetting|persistSetting)\('([a-zA-Z]+)'/g)) keys.add(m[1]);
   // 2026-09-15：setAdvanced 是通用提交函数（setAdvanced(key, value)，key 为变量）——

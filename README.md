@@ -134,6 +134,7 @@ dsh-git-push/
 ├── lib/ — 核心实现（10 总入口 + 审计引擎 + git 执行层 + 规则编译层）
 │   ├── ARCHITECTURE.md — 架构说明文档
 │   ├── BUGFIX-NOTES-2026-09-14.md — Bug 修复说明（diff 审计提速 / 凭据文件拦截三层根因）
+│   ├── client.js — 侧边栏设置 UI 源码（账号卡片/审计/规则包三选项卡，零依赖手写 DOM）
 │   ├── commit-push.js — 审计提交总入口（commitWithAudit + runAudit 同步审计）
 │   ├── fsx.js — 文件系统适配层（CIFS/SMB 兼容：copyFile 读写回退、chmod 尽力而为、元数据能力探测）
 │   ├── index.js — 插件入口（DSH 接线，再导出全部能力）
@@ -228,7 +229,7 @@ dsh-git-push/
 │   │   ├── atomic-json.js — 统一 JSON 原子读写（readJson/writeJsonAtomic/updateJsonAtomic/writeTextAtomic）
 │   │   ├── browse.js — 目录浏览（账号卡片路径选择器后端）
 │   │   ├── clone-download.js — 并发下载 + .part 断点续传 + 体积守卫 + 进度回调
-│   │   ├── clone-jobs.js — clone 进度/预览/终态内存态（后台任务，供前端轮询；终态刷新后可取回）
+│   │   ├── clone-jobs.js — clone 进度/预览内存态（供前端轮询）
 │   │   ├── clone.js — 克隆（Git Data API，不依赖本地凭据）
 │   │   ├── cloud.js — 云端仓库列表（/user/repos 供手动 clone）
 │   │   ├── config.js — 路径与配置（PLUGIN_ROOT + 开发者要求清单读取）
@@ -296,7 +297,7 @@ dsh-git-push/
 │   ├── test-auditignore.mjs — （待注释）
 │   ├── test-button-bind.mjs — 按钮绑定交叉比对（jsx 工厂形态/注释过滤/行号归属）
 │   ├── test-client.mjs — 侧边栏测试（手写 DOM/零外部资源/开关默认）
-│   ├── test-clone-concurrency.mjs — clone 并发互斥/可中止/失败保留文件/后台 job 化（20 项，CIFS 对照用例可跳）
+│   ├── test-clone-concurrency.mjs — clone 并发互斥/可中止/失败保留文件（14 项，CIFS 对照用例可跳）
 │   ├── test-clone-preview-buttons.mjs — clone 预览确认框按钮可点（真渲染+真点击）
 │   ├── test-context.mjs — 上下文注入测试
 │   ├── test-dataflow.mjs — 三层审计 L2 数据流测试
@@ -358,7 +359,6 @@ dsh-git-push/
 ├── .gitignore — 忽略规则（node_modules/产物/备份/回收站等）
 ├── README.md — 插件 README（功能总览/用法/版本记录）
 ├── cli.mjs — 独立 CLI（git-sluice，不依赖宿主可独立运行）
-├── client.js — 侧边栏设置 UI 源码（账号卡片/审计/规则包三选项卡，零依赖手写 DOM）
 ├── cordis.patch.yml — DSH 插件组合 patch（loader 注入定义）
 ├── package.json — 包声明（零依赖、files 白名单、scripts）
 ├── screenshots.json — 截图清单（README 配图引用）
@@ -878,13 +878,14 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
-| **1.6.0**（当前） | **clone 改为后台 job 运行，看进度不再阻塞页面（2026-09-19）** \
+| **1.5.1**（当前） | **clone 改为后台 job 运行，看进度不再阻塞页面（2026-09-19）** \
 **问题**：点「开始克隆」后，`POST /api/git-push/repo-clone` 会 `await cloneViaApi(...)` **一直阻塞到整个克隆结束**——大仓库（gallery 可达 154MB、上百文件）要几分钟到几十分钟，期间前端只能靠一个 30 分钟超时硬撑；轮询虽在更新进度条，但请求本身不返回，**中途刷新或关掉页面，用户就失去这个任务的任何入口**（既看不到进度，也不知道它还在后台跑）。\
 **改动**：端点改为**提交即返回**——预检（`previewClone` 解析树、算总量）与互斥占位仍**同步**做（失败要立刻如实回错），真正的下载丢进后台协程，端点立即回 `202 { ok:true, async:true, jobId, dest, totalFiles, totalBytes }`。前端拿到 `jobId` 后由**既有的 1 秒轮询** `/clone-progress` 驱动：进度照常刷新，直到 `state` 从 `running` 变 `done` 再取终态显示成败。\
 **刷新后能接续**：终态由 `finishCloneJob` 落进 `lastDone`，所以页面刷新后仍能取到；新增 `resumeCloneIfRunning()`，面板加载后主动探一次，把**仍在后台跑的克隆**重新接回进度条与轮询——避免用户以为任务没了而重复发起（重复点会被互斥回 409）。进程重启仍会丢内存态任务（`clone-jobs.js` 既定的内存态语义），此时前端如实提示「任务已不存在，请重新发起」，不会永远转圈。\
 **后台协程必须挂 `.catch`**：异常若逃逸，会同时绕过 `finishCloneJob`，使 `current` 永不释放——之后**每一次** clone 都会被互斥判为 busy（永久卡死，只能重启插件）。故 IIFE 末尾显式 `.catch` 兜底：记日志 + 补 `setCloneJobPhase('done')` + `finishCloneJob({ok:false,...})`。\
 **顺带清理**：`dshgp_CLONE_TIMEOUT_MS`（30 分钟）已删除——它存在的唯一理由是「请求要一直阻塞到克隆结束」，后台化后提交是快操作，留着是死代码且误导；提交改用 60 秒短超时（长超时还会掩盖「提交阶段就卡死」的真实故障）。\
 **测试**：`test/test-clone-concurrency.mjs` 新增 4 项——① 占用中提交仍回 409（互斥不能因后台化而挪进协程）；② 参数错误仍同步回 400 且不留 running 任务；③ 结构化断言：`await cloneViaApi` 必须落在**承载它的那个异步 IIFE 体内**且该 IIFE 紧接 `.catch`，同时响应为 202 携带 `async:true`；④ 终态可被 `clone-progress` 取到、`consume` 后回 idle。4 项均做反向验证：删掉 `.catch`、202 改 200、去掉 `async:true`、互斥失效、consume 失效——五种拆法对应测试全部如期失败。同时更新 `test/test-client.mjs` 的 clone 超时断言（原守「请求传 30 分钟长超时」的旧设计，前提已不成立）。\
+**结构：`client.js` 移入 `lib/`（同日）**：仓库根的 `client.js`（侧边栏设置 UI 源码，2292 行）移到 `lib/client.js`，与「实现集中在 `lib/`」的分层保持一致。同步改动：`package.json` 的 `exports["./client"]` 指向 `./lib/client.js`（宿主据此自动发现客户端，**这是唯一的功能性入口**）、`files` 白名单去掉根级 `client.js`（`lib` 已覆盖）、`SYNC_ENTRIES` 随之简化（随 `lib` 整目录同步，历史上「漏列导致前端改动装不进安装副本」的风险消除）、`tree-doc.json` 键名迁移、`.auditignore` 豁免路径更新、`assets/preview-gen.mjs` 读取路径、`watch-preview`/`scan-file-io` 的默认目标与注释、13 处测试读取路径。注：`lib/client/index.js`（`SETTINGS_SCHEMA`/`defaultConfig` 逻辑模块，被 12 处 import）**是另一个文件，未受影响**。\
 || **1.5.0** | **CLI 补齐 5 个远端/账号命令 + 修私有仓克隆 token 传递（2026-09-19）** \
 **CLI 补齐（与插件同名工具一一对应）**：CLI 原有 12 个命令（version/ruleset/scan/repos/index/audit/commit/file-io/link-check/yaml-template/readme-template/self-check），而插件另有 5 个远端/账号类工具在 CLI 侧**完全没有对应命令**，脱离 DSH 时这些能力无处可用。现补：`clone`（`--dest`/`--branch`/`--preview`/`--max-file-mb`/`--concurrency`，previewClone 不自己解析 token，CLI 显式传入否则私有仓 404）、`account-check`（复用 `formatGithubAccountBlock`，与侧边栏账号面板口径一致）、`remote-create`（`--owner`/`--visibility`/`--dry-run`）、`set-visibility`（从本地 origin 反推 owner/repo）、`gen-ssh-key`（`--email`/`--force`）。7 个新 flag 各自独立分支写在 parseArgv 里（组合条件会让 cli-help-sync 自检扫不到而误报）。\
 **修 `cloneViaApi` 下载传空 token**：第 193 行把**函数入参** `token` 传给了 `downloadBlobs`，而入参未显式给值时是空串——同函数内的 API 调用走的是解析后的 `tok`（因此元数据/树都正常），只有下载这一步漏改，导致**私有仓所有文件 404**：「仓库不存在或为私有」的报错其实是没带凭据。实测（EIGHTfs/gallery 99 文件）修复前后：**0/99 → 94/99**（剩余 1 个为真实网络中断 `terminated`，且 94 个已下文件按续传语义正确保留）。该 bug 影响 `cloneViaApi` 的**全部 3 个调用方**（插件工具 git_clone / HTTP 端点 / CLI），是私有仓克隆失败的真正根因。\

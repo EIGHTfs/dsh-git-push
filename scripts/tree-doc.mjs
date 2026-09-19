@@ -37,7 +37,7 @@ const DEFAULT_README = join(ROOT, 'README.md');
 // 顶层展示目录（树只列这些分支；其余文件放根级）；未忽略清单里其余顶层路径自动归组
 const TOP_DIRS = [
   'lib', 'scripts', 'assets', 'test', 'docs', 'skills',
-  'client.js', 'cli.mjs', 'package.json', 'README.md', 'cordis.patch.yml',
+  'cli.mjs', 'package.json', 'README.md', 'cordis.patch.yml',
 ];
 
 /* ───────────────────────── git 未忽略文件清单 ───────────────────────── */

@@ -19,7 +19,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const clientSrc = readFileSync(join(ROOT, 'client.js'), 'utf8');
+const clientSrc = readFileSync(join(ROOT, 'lib', 'client.js'), 'utf8');
 
 /** 记录式 jsx 替身（jsx-runtime 形状：children 在 props.children）。 */
 function makeJsx() {

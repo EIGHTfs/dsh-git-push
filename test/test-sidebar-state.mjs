@@ -19,7 +19,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const clientSrc = readFileSync(join(ROOT, 'client.js'), 'utf8');
+const clientSrc = readFileSync(join(ROOT, 'lib', 'client.js'), 'utf8');
 const schemaSrc = readFileSync(join(ROOT, 'lib/app/schema.js'), 'utf8');
 const httpSrc = readFileSync(join(ROOT, 'lib/app/http-handlers.js'), 'utf8');
 

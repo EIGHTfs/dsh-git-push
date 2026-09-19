@@ -372,7 +372,7 @@ test('远端状态：liveSkipped 与「已连通待比较」必须可区分（�
 });
 
 test('前端文案：不再出现写死的「远端状态未知」分支', () => {
-  const src = readFileSync(join(ROOT, 'client.js'), 'utf8');
+  const src = readFileSync(join(ROOT, 'lib', 'client.js'), 'utf8');
   // 修复后按 liveSkipped / remoteHead 分三种措辞，不应再有单一写死文案
   assert.ok(!/'远端状态未知'/.test(src), '不应再写死「远端状态未知」');
   assert.match(src, /liveSkipped/, '应依据 liveSkipped 区分真未知');

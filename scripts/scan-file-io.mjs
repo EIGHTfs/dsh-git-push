@@ -25,7 +25,7 @@
  *   综合出 risk 等级：🔴 high（写/删 且 并发路径）· 🟠 medium（同步阻塞或写类）· · low
  *
  * 用法：
- *   node scripts/scan-file-io.mjs <文件|目录>…        # 扫指定路径（默认 lib/ scripts/ cli.mjs client.js）
+ *   node scripts/scan-file-io.mjs <文件|目录>…        # 扫指定路径（默认 lib/ scripts/ cli.mjs）
  *   node scripts/scan-file-io.mjs --summary           # 三标签汇总视图（类型/操作/上下文/风险 计数）
  *   node scripts/scan-file-io.mjs --report            # 风险报告：统计 + 改造优先级清单（文本表格）
  *   node scripts/scan-file-io.mjs --report --report-limit 50  # 清单最多 50 条
@@ -523,7 +523,7 @@ export function main(argv = process.argv.slice(2)) {
     join(root, '..', 'lib'),
     join(root, '..', 'scripts'),
     join(root, '..', 'cli.mjs'),
-    join(root, '..', 'client.js'),
+    join(root, '..', 'lib', 'client.js'),
   ];
   const files = collectFiles(defaults);
   let hits = [];
@@ -548,7 +548,7 @@ export function scanFileIo(opts = {}) {
   const root = dirname(fileURLToPath(import.meta.url));
   const dirs = targets.length ? targets : [
     join(root, '..', 'lib'), join(root, '..', 'scripts'),
-    join(root, '..', 'cli.mjs'), join(root, '..', 'client.js'),
+    join(root, '..', 'cli.mjs'), join(root, '..', 'lib', 'client.js'),
   ];
   const files = collectFiles(dirs);
   let hits = [];

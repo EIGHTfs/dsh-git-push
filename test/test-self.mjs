@@ -219,9 +219,10 @@ test('同步：listSyncFiles 返回集不含 .bak / .trash 残留', async () => 
   assert.ok(files.length > 0, '同步清单不应为空');
 });
 
-// 2026-09-13：SYNC_ENTRIES 曾漏 client.js（侧边栏前端主文件在仓库根），
+// 2026-09-13：SYNC_ENTRIES 曾漏 client.js（侧边栏前端主文件当时在仓库根），
 //   而 package.json 的 files 白名单里有它 → 同步到已安装副本时前端改动装不进去。
-//   锁死两者一致，避免以后新增发布文件又漏同步。
+//   2026-09-19：client.js 移到 lib/client.js，随 'lib' 整目录同步，此类漏列风险消除；
+//   断言保留——仍锁死 files 白名单与 SYNC_ENTRIES 一致，避免以后新增发布文件又漏同步。
 test('同步：SYNC_ENTRIES 覆盖 package.json files 白名单', () => {
   const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
   for (const f of pkg.files) {

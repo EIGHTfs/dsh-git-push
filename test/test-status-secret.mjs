@@ -58,7 +58,7 @@ test('/api/git-push/status：不回吐 token 明文，且报告是否已配置',
 });
 
 test('client.js：token 是否已配置不再只依赖明文（防退化回明文判断）', () => {
-  const src = readFileSync(join(ROOT, 'client.js'), 'utf8');
+  const src = readFileSync(join(ROOT, 'lib', 'client.js'), 'utf8');
   assert.ok(src.includes('dshgp_tokenConfigured'), 'client.js 应经 dshgp_tokenConfigured 判断是否已配置');
   assert.ok(src.includes("v.tokenConfigured === true"), '应优先采用 host 派生的布尔位');
   assert.ok(!/this\.tokenConfigured = !!\(snap\.value\.githubToken/.test(src),

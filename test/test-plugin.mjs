@@ -412,7 +412,7 @@ test('契约：client.inject 含设置 UI / 插件配置依赖（locale 已随�
 });
 
 test('契约：有 client.js 就必须声明 client.inject（否则侧边栏永不加载）', () => {
-  assert.ok(existsSync(join(ROOT, 'client.js')), '本仓有 client.js');
+  assert.ok(existsSync(join(ROOT, 'lib', 'client.js')), '本仓有 client.js');
   assert.ok(Array.isArray(pkg.dsh.client?.inject) && pkg.dsh.client.inject.length > 0,
     'client.js 存在时 client.inject 不能为空');
 });

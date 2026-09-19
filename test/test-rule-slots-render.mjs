@@ -20,7 +20,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const clientSrc = readFileSync(join(ROOT, 'client.js'), 'utf8');
+const clientSrc = readFileSync(join(ROOT, 'lib', 'client.js'), 'utf8');
 
 /** /rule-slots 的假返回：统计数字刻意取非 0，便于断言「有没有被清空」。 */
 const SLOT_META = {
