@@ -23,12 +23,57 @@ test('io-risk：异步路径中的同步 I/O 判 high', () => {
   assert.equal(hits[0].inAsync, true);
 });
 
-test('io-risk：循环内的 I/O 判 high（含异步调用）', () => {
+test('io-risk：循环内异步串行 await 判 low（只慢不阻塞，非请求路径）', () => {
+  // 2026-09-20 多维分级：风险不取决于「在不在循环里」——
+  //   异步串行 await 只是慢、不阻塞事件循环，非请求路径下从 high 降为 low
   const src = 'async function f(list) {\n  for (const p of list) { await fs.promises.readFile(p); }\n}\n';
   const hits = scanIoRiskAst(src);
   assert.ok(hits.length >= 1, '应命中');
-  assert.equal(hits[0].risk, 'high');
+  assert.equal(hits[0].risk, 'low');
   assert.equal(hits[0].inLoop, true);
+});
+
+test('io-risk：请求路径上循环内逐个 await 判 high（响应时间线性增长）', () => {
+  const src = 'export async function handler(req, res) {\n'
+    + '  for (const p of req.body.files) { await fs.promises.readFile(p); }\n'
+    + '  res.end("ok");\n}\n';
+  const hits = scanIoRiskAst(src);
+  const h = hits.find((x) => x.kind === 'read');
+  assert.ok(h, '应命中');
+  assert.equal(h.inLoop, true, '应判为循环内');
+  assert.equal(h.inRequest, true, '应判为请求路径');
+  assert.equal(h.risk, 'high', '请求路径 + 循环内串行 await = 高风险');
+});
+
+test('io-risk：循环内同步 I/O（边界不可控、非请求路径）判 medium', () => {
+  // 同步阻塞 + 边界不可控但不在请求路径 → 中风险（不再是 high）；
+  //   用读类验证基础档（写/删类在重复上下文会再加权一档，见写加权测试）
+  const src = 'function f(items) {\n  for (const it of items) { fs.readFileSync(it); }\n}\n';
+  const hits = scanIoRiskAst(src);
+  assert.ok(hits.length >= 1);
+  assert.equal(hits[0].risk, 'medium');
+  assert.equal(hits[0].inLoop, true);
+});
+
+test('io-risk：循环内同步 I/O 落在请求路径判 high（三条件齐）', () => {
+  const src = 'function handler(req, res) {\n'
+    + '  for (const f of req.body.files) { fs.readFileSync(f); }\n'
+    + '  res.end("ok");\n}\n';
+  const hits = scanIoRiskAst(src);
+  const h = hits.find((x) => x.kind === 'read');
+  assert.ok(h, '应命中');
+  assert.equal(h.risk, 'high', '同步阻塞 + 边界不可控 + 请求路径 = 高风险');
+});
+
+test('io-risk：循环内异步 I/O 已 Promise.all 并行判 low（不串行放大）', () => {
+  const src = 'async function f(files) {\n'
+    + '  for (const p of files) { await Promise.all([fs.promises.readFile(p), fs.promises.stat(p)]); }\n'
+    + '}\n';
+  const hits = scanIoRiskAst(src);
+  const h = hits.find((x) => x.kind === 'read');
+  assert.ok(h, '应命中');
+  assert.equal(h.inLoop, true, '应判为循环内');
+  assert.equal(h.risk, 'low', 'Promise.all 并行 = 可接受（low）');
 });
 
 test('io-risk：顶层同步 I/O 判 low（启动路径），不误判为 high', () => {
@@ -76,14 +121,6 @@ test('io-risk：启动路径的一次性写不加权（原子写不应被误升�
     assert.equal(h.risk, 'low', `${h.call} 一次性执行不应加权（期望 low，实际 ${h.risk}）`);
     assert.ok(!h.reason.includes('加权'), '理由不应含加权');
   }
-});
-
-test('io-risk：循环内的同步写判 high', () => {
-  const src = 'function f(items) {\n  for (const it of items) { fs.writeFileSync("a", it); }\n}\n';
-  const hits = scanIoRiskAst(src);
-  assert.ok(hits.length >= 1);
-  assert.equal(hits[0].risk, 'high');
-  assert.equal(hits[0].inLoop, true);
 });
 
 test('io-risk：无 I/O 的文件返回空数组（不误报）', () => {
