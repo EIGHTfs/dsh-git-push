@@ -397,3 +397,48 @@ test('远端列表：真实 GitHub 拉取（DSH_TEST_ONLINE=1 才跑）', { skip
     }
   }
 });
+
+test('索引：remoteState 传 visibility 时写回可见性（push 后刷新用）', () => {
+  sandbox(({ ws, home }) => {
+    const target = join(home, 'git-push', 'dsh-repo-index.json');
+    mkdirSync(join(home, 'git-push'), { recursive: true });
+    writeFileSync(target, JSON.stringify({
+      owner: 'EIGHTfs',
+      repos: [{ name: 'r', path: '/x/r', visibility: '未知', remoteHead: '' }],
+    }, null, 2));
+
+    const r = updateRepoRemoteStateInIndex({
+      workspaceRoot: ws, repoName: 'r',
+      remoteState: { remoteHead: 'cafe123', ahead: 0, behind: 0, synced: true, visibility: '私有' },
+      syncTarget: target,
+    });
+    assert.equal(r.ok, true, r.error || '');
+    const hit = JSON.parse(readFileSync(target, 'utf8')).repos.find((x) => x.name === 'r');
+    assert.equal(hit.visibility, '私有', '传了 visibility 就必须写回（此前只更新 5 个远端字段，可见性永远停在旧值）');
+    assert.equal(hit.remoteHead, 'cafe123', '远端 HEAD 应写回');
+    assert.equal(hit.synced, true, '同步态应写回');
+    assert.ok(hit.remoteStateAt, 'remoteStateAt 时间戳应写入');
+  });
+});
+
+test('索引：remoteState 不带 visibility 时不得抹掉既有可见性', () => {
+  sandbox(({ ws, home }) => {
+    const target = join(home, 'git-push', 'dsh-repo-index.json');
+    mkdirSync(join(home, 'git-push'), { recursive: true });
+    writeFileSync(target, JSON.stringify({
+      owner: 'EIGHTfs',
+      repos: [{ name: 'r', path: '/x/r', visibility: '公开', remoteHead: '' }],
+    }, null, 2));
+
+    // 模拟「可见性查询失败」：visibility 缺省 = 本次没查到，而不是「已知是未知」
+    const r = updateRepoRemoteStateInIndex({
+      workspaceRoot: ws, repoName: 'r',
+      remoteState: { remoteHead: 'dead456', ahead: 0, behind: 0, synced: true },
+      syncTarget: target,
+    });
+    assert.equal(r.ok, true, r.error || '');
+    const hit = JSON.parse(readFileSync(target, 'utf8')).repos.find((x) => x.name === 'r');
+    assert.equal(hit.visibility, '公开', '未传 visibility 时必须保留既有值，不能覆盖成空/未知');
+    assert.equal(hit.remoteHead, 'dead456', '其余远端字段照常更新');
+  });
+});
