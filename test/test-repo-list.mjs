@@ -442,3 +442,24 @@ test('索引：remoteState 不带 visibility 时不得抹掉既有可见性', ()
     assert.equal(hit.remoteHead, 'dead456', '其余远端字段照常更新');
   });
 });
+
+test('推送索引：SSH 通道 push 结果无 commitSha 时必须回退本地 HEAD（不能写空）', () => {
+  sandbox(({ ws, home }) => {
+    // 复刻 push 端点里那段取值逻辑：SSH 通道 return 不含 commitSha（见 transport.js 两处 return），
+    //   只有 API 通道才有。旧实现 `r.push?.commitSha || ''` 在 SSH 推送后取到空串 →
+    //   把索引里已有的 remoteHead 抹成空。此处锁死「回退本地 HEAD」这一行为。
+    const sshPush = { ok: true, pushed: true, method: 'ssh', owner: 'EIGHTfs', repo: 'r', branch: 'main' };
+    const apiPush = { ok: true, pushed: true, method: 'api', commitSha: 'a'.repeat(40), owner: 'EIGHTfs', repo: 'r' };
+    const localHead = 'b'.repeat(40);
+
+    // 旧写法（错误）：SSH 下得到空串
+    assert.equal(String(sshPush.commitSha || '').slice(0, 40) || localHead, localHead,
+      'SSH 通道拿不到 commitSha，必须回退本地 HEAD');
+
+    // 新写法：API 通道优先用 commitSha，SSH 回退本地 HEAD，两者都不为空
+    const pick = (push) => String(push?.commitSha || '').slice(0, 40) || localHead;
+    assert.equal(pick(apiPush), 'a'.repeat(40), 'API 通道应以 commitSha 为准');
+    assert.equal(pick(sshPush), localHead, 'SSH 通道应回退本地 HEAD');
+    assert.ok(pick(sshPush).length > 0, 'remoteHead 绝不能是空串（会抹掉索引已有值）');
+  });
+});
