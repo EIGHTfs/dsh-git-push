@@ -19,7 +19,7 @@ import { fileURLToPath } from 'node:url';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const rootClientSrc = readFileSync(join(ROOT, 'lib', 'client.js'), 'utf8');
 const applySrc = readFileSync(join(ROOT, 'lib/app/apply.js'), 'utf8');
-const LABEL = '注入系统提示词';
+const LABEL = '注入系统提示词/上下文';
 
 /** 渲染审计页，返回所有 input props（同 test-inject-switch 范式）。 */
 function renderAuditInputs(value) {
@@ -155,19 +155,35 @@ test('host：注入段由 injectSystemPrompt 门控（关=返回空串，不是�
     'README 提醒段必须由 injectSystemPrompt 门控');
   assert.ok(/cfg\.injectSystemPrompt && cfg\.auditEnabled && cfg\.injectRequirements/.test(applySrc),
     '开发者要求清单段必须三重门控（注入总开关 + 审计 + 子开关）');
+  assert.ok(applySrc.includes("if (!cfg.injectSystemPrompt) return '';"),
+    '环境注入文本（上下文通道）必须由总开关门控（关=空串）');
 });
 
-test('host：注册四段（功能用法 990 / 环境 980 / README 991 / 要求清单 992）', () => {
-  for (const name of ['dsh-git-push-usage', 'dsh-git-push-env', 'dsh-git-push-readme-check', 'dsh-git-push-requirements']) {
+test('host：注册三段（功能用法 990 / README 991 / 要求清单 992）+ 上下文注入接线', () => {
+  for (const name of ['dsh-git-push-usage', 'dsh-git-push-readme-check', 'dsh-git-push-requirements']) {
     assert.ok(applySrc.includes(`name: '${name}'`), `应注册 ${name} 段`);
   }
-  // 2026-09-16：order 值提取为命名常量（ORDER_USAGE/ORDER_ENV/ORDER_README_CHECK/ORDER_REQUIREMENTS），
-  //   断言改为「常量定义 + 各段引用」——顺序语义不变（要求清单 992 > README 991 > 用法 990 > 环境 980）
+  // 2026-09-20：环境段迁出 systemPrompt → agent/pre-step 上下文注入（不再注册 dsh-git-push-env section）
+  assert.ok(!/name: 'dsh-git-push-env'/.test(applySrc), '环境段不应再注册为 systemPrompt section');
+  assert.ok(applySrc.includes('registerPreStepInjection'), 'apply 必须接线上下文注入');
+  assert.ok(applySrc.includes('collectToolPaths(null, { resultFile:'), '环境注入必须探测并落盘运行目录 tools.json');
+  // 2026-09-16：order 值提取为命名常量（ORDER_USAGE/ORDER_README_CHECK/ORDER_REQUIREMENTS），
+  //   断言改为「常量定义 + 各段引用」——顺序语义不变（要求清单 992 > README 991 > 用法 990）
   assert.ok(/const ORDER_USAGE = 990/.test(applySrc), '功能用法段排序常量应为 990');
-  assert.ok(/const ORDER_ENV = 980/.test(applySrc), '环境段排序常量应为 980');
   assert.ok(/const ORDER_README_CHECK = 991/.test(applySrc), 'README 段排序常量应为 991');
   assert.ok(/const ORDER_REQUIREMENTS = 992/.test(applySrc), '要求清单段排序常量应为 992');
   assert.ok(/name: 'dsh-git-push-usage', order: ORDER_USAGE/.test(applySrc), '功能用法段应引用 ORDER_USAGE');
+  assert.ok(!/const ORDER_ENV/.test(applySrc), 'ORDER_ENV 常量应移除（环境段不再走 systemPrompt）');
+});
+
+test('上下文注入：agent/pre-step + WeakSet 防重复 + createUserMessage（参考 skill-scoreboard 形态）', () => {
+  const pluginSrc = readFileSync(join(ROOT, 'lib/plugin/index.js'), 'utf8');
+  assert.ok(pluginSrc.includes("ctx.on('agent/pre-step'"), '必须监听 agent/pre-step');
+  assert.ok(pluginSrc.includes('new WeakSet()'), '必须用 WeakSet 防重复注入');
+  assert.ok(pluginSrc.includes('injectedAgents.has(agent)'), '已注入的 agent 必须跳过');
+  assert.ok(pluginSrc.includes('createUserMessage'), '必须用 createUserMessage 追加 user 消息');
+  assert.ok(pluginSrc.includes("source: { kind: 'plugin', plugin: 'dsh-git-push', form: 'instructions' }"), '消息必须带插件 source 标记');
+  assert.ok(pluginSrc.includes("decision?.kind === 'reject'"), '被拒/中止必须原样放行');
 });
 
 test('host：设置页切换总开关即时生效（启动 merge + HTTP，watch 不灌开关）', () => {

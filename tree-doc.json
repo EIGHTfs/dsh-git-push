@@ -244,5 +244,7 @@
   "test/test-status-secret.mjs": "token 明文不下发安全回归",
   "test/test-task-queue.mjs": "后台化回归测试（官方 job 注册 / 无 jobs 同步保底 / blocker 拦截）",
   "test/test-tree-doc.mjs": "README 目录树脚本测试（gen/check/apply 闭环）",
-  "tree-doc.json": "目录结构注释映射（路径→一句话介绍，AI 维护）"
+  "tree-doc.json": "目录结构注释映射（路径→一句话介绍，AI 维护）",
+  "lib/tool-probes.json": "工具探测清单模板（工具为 key、值为空；运行时实测生成运行目录 tools.json）",
+  "scripts/verify-prestep.mjs": "上下文注入自检脚本（真实触发 agent/pre-step 验证注入）"
 }

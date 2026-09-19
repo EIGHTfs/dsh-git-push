@@ -1,13 +1,17 @@
 /**
  * 上下文注入测试（0.1.7）：环境注入文本生成/解析、路径归属判定。
+ * 2026-09-20：追加工具清单 json 模板（lib/tool-probes.json）读取与运行目录落盘测试。
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
-import { createEnvInjectionText, parseEnvInjection, isWithinRoot, DEFAULT_TOOLS } from '../lib/context/index.js';
+import {
+  createEnvInjectionText, parseEnvInjection, isWithinRoot, DEFAULT_TOOLS,
+  loadToolProbeTemplate, writeToolResult, collectToolPaths,
+} from '../lib/context/index.js';
 
 test('环境注入：生成含 cwd/项目根/工具清单', () => {
   const t = createEnvInjectionText({ cwd: '/work', projectRoot: '/work/proj' });
@@ -38,6 +42,54 @@ test('环境注入：skills 目录存在性标记', () => {
 test('路径归属：target 在 root 内/等于 root → true', () => {
   assert.equal(isWithinRoot('/a/b', '/a/b'), true);
   assert.equal(isWithinRoot('/a/b', '/a/b/c.js'), true);
+});
+
+// ---------- 2026-09-20 工具清单 json 化（模板只 key，值运行时生成） ----------
+
+test('工具清单模板：只取 key 作探测范围（值为空），.exe key 归一化查版本参数', () => {
+  const tmp = mkdtempSync(join(tmpdir(), 'ctx-probes-'));
+  const tpl = join(tmp, 'tool-probes.json');
+  writeFileSync(tpl, JSON.stringify({ git: '', '7z.exe': '' }, null, 2));
+  const list = loadToolProbeTemplate(tpl);
+  assert.equal(list.length, 2, '模板 key 即探测范围');
+  assert.deepEqual(list[0].versionArgs, ['--version'], 'git 应带版本参数');
+  assert.equal(list[1].name, '7z.exe', '.exe 名原样保留（探测时自动补后缀）');
+  assert.deepEqual(list[1].versionArgs, ['-version'], '7z.exe 应归一化后查到版本参数');
+});
+
+test('工具清单模板：文件缺失/空对象回退内置清单', () => {
+  const list = loadToolProbeTemplate('/no-such-template.json');
+  assert.ok(list.length >= 9, '缺失应回退内置清单');
+  assert.ok(list.some((p) => p.name === 'git'), '内置清单应含 git');
+  const tmp = mkdtempSync(join(tmpdir(), 'ctx-probes-empty-'));
+  const tpl = join(tmp, 'tool-probes.json');
+  writeFileSync(tpl, '{}');
+  const empty = loadToolProbeTemplate(tpl);
+  assert.ok(empty.length >= 9, '空对象也应回退内置清单');
+});
+
+test('探测结果落盘：只写 found 且有路径的工具（{key: path} 原子写）', () => {
+  const tmp = mkdtempSync(join(tmpdir(), 'ctx-res-'));
+  const file = join(tmp, 'tools.json');
+  const w = writeToolResult(file, [
+    { name: 'git', path: '/usr/bin/git', found: true },
+    { name: '7z', path: '', found: false },
+    { name: 'node', path: '', found: false },
+  ]);
+  assert.equal(w.ok, true);
+  assert.equal(w.tools, 1, '只统计探测到的工具');
+  const obj = JSON.parse(readFileSync(file, 'utf8'));
+  assert.deepEqual(obj, { git: '/usr/bin/git' });
+});
+
+test('collectToolPaths：默认模板探测 + resultFile 落盘（本机 git 应命中）', () => {
+  const tmp = mkdtempSync(join(tmpdir(), 'ctx-collect-'));
+  const file = join(tmp, 'tools.json');
+  const out = collectToolPaths(null, { resultFile: file });
+  const git = out.find((r) => r.name === 'git');
+  assert.ok(git && git.found && git.path, 'git 应探测到实际路径');
+  const saved = JSON.parse(readFileSync(file, 'utf8'));
+  assert.ok(typeof saved.git === 'string' && saved.git.length > 0, '落盘 json 应有 git 实测路径');
 });
 
 test('路径归属：target 在 root 外/空 → false', () => {

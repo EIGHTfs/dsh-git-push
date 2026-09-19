@@ -139,6 +139,7 @@ dsh-git-push/
 │   ├── fsx.js — 文件系统适配层（CIFS/SMB 兼容：copyFile 读写回退、chmod 尽力而为、元数据能力探测）
 │   ├── index.js — 插件入口（DSH 接线，再导出全部能力）
 │   ├── skip-dirs.js — 跳过目录统一判定（硬编码基线 + yml exclude_dirs 并集 + gitignore 白名单恢复）
+│   ├── tool-probes.json — 工具探测清单模板（工具为 key、值为空；运行时实测生成运行目录 tools.json）
 │   ├── user-requirements.json — 开发者特殊要求清单（提交推送前逐条核对）
 │   ├── app/ — 插件入口层（apply/HTTP 处理/工具调用分发/注入文本/默认扫描根）
 │   │   ├── apply.js — 插件装载入口（注册 schema/工具/HTTP/注入钩子）
@@ -280,6 +281,7 @@ dsh-git-push/
 │   ├── scrub-user-wording.mjs — 清理「用户沟通措辞」独立脚本
 │   ├── sync-plugin.mjs — 双副本同步脚本（源仓库 → 部署安装副本）
 │   ├── tree-doc.mjs — README 目录结构维护脚本（gen/check/apply）
+│   ├── verify-prestep.mjs — 上下文注入自检脚本（真实触发 agent/pre-step 验证注入）
 │   ├── watch-preview.mjs — preview.html 自动重生成监听（源码变更即重建）
 ├── assets/ — 预览页与配图（preview.html 交互模拟页 + 面板截图）
 │   ├── panel-account.png — 账号卡片面板截图（README 配图）
@@ -878,7 +880,10 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
-| **1.5.1**（当前） | **clone 改为后台 job 运行，看进度不再阻塞页面（2026-09-19）** \
+| **1.5.2**（当前） | **工具探测改上下文注入 + 工具清单 json 化（2026-09-20）** \
+**改动**：环境信息（工作区目录 + 工具安装路径 + skill 总入口）从 systemPrompt 段迁出，改走 `agent/pre-step` **上下文注入**（每个 agent 首次 step 注入一次，参考 skill 记分榜形态：WeakSet 防重复 + createUserMessage 追加消息 + source 标记；总开关 `injectSystemPrompt` 同时门控两通道）。**工具清单不再写死**：新增 `lib/tool-probes.json` 模板（**只有工具 key、值为空**，随仓库提交，决定探测范围）→ which/where 实测（Windows 自动补 `.exe`）→ 结果落盘运行目录 `<配置目录>/tools.json`（**工具为 key、值为本机实测路径**，不入库、可热改，改探测清单不用重装插件）。模板现覆盖 45 个工具：git/node/npm/python3/curl/ssh/unzip/rsync/7z、tar/gzip/bzip2/xz/zstd/lz4/zip/rar/unrar、synopkg/synouser/synogroup/synoshare/synoacltool、smartctl/mdadm/btrfs/lvm、fnpack/appcenter-cli/docker/ffmpeg、pnpm/bash/wget/jq/yq/rg/fd/scp/tmux/screen/gcc/g++/make/pkg-config。设置页开关文案同步更新为「注入系统提示词/上下文」。\
+**测试**：test-context 新增 4 项（模板只 key / .exe 归一化 / 缺失回退 / 结果落盘 {key:path}）；test-inject-system-prompt 改为「三段 + 上下文注入接线」断言；test-plugin 环境段迁出断言。全量 733 项通过。\
+| **1.5.1** | **clone 改为后台 job 运行，看进度不再阻塞页面（2026-09-19）** \
 **问题**：点「开始克隆」后，`POST /api/git-push/repo-clone` 会 `await cloneViaApi(...)` **一直阻塞到整个克隆结束**——大仓库（gallery 可达 154MB、上百文件）要几分钟到几十分钟，期间前端只能靠一个 30 分钟超时硬撑；轮询虽在更新进度条，但请求本身不返回，**中途刷新或关掉页面，用户就失去这个任务的任何入口**（既看不到进度，也不知道它还在后台跑）。\
 **改动**：端点改为**提交即返回**——预检（`previewClone` 解析树、算总量）与互斥占位仍**同步**做（失败要立刻如实回错），真正的下载丢进后台协程，端点立即回 `202 { ok:true, async:true, jobId, dest, totalFiles, totalBytes }`。前端拿到 `jobId` 后由**既有的 1 秒轮询** `/clone-progress` 驱动：进度照常刷新，直到 `state` 从 `running` 变 `done` 再取终态显示成败。\
 **刷新后能接续**：终态由 `finishCloneJob` 落进 `lastDone`，所以页面刷新后仍能取到；新增 `resumeCloneIfRunning()`，面板加载后主动探一次，把**仍在后台跑的克隆**重新接回进度条与轮询——避免用户以为任务没了而重复发起（重复点会被互斥回 409）。进程重启仍会丢内存态任务（`clone-jobs.js` 既定的内存态语义），此时前端如实提示「任务已不存在，请重新发起」，不会永远转圈。\

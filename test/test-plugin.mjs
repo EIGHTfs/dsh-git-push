@@ -88,8 +88,9 @@ test('apply：systemPrompt 注入走 section({name,order,text})（真实 API）'
   assert.ok(sections.length >= 1, '应注册至少一段 systemPrompt');
   assert.ok(sections.every((s) => typeof s.name === 'string' && typeof s.text === 'function'),
     '段必须含 name + 同步 text()');
-  assert.ok(sections.some((s) => s.name === 'dsh-git-push-env'), '应含环境注入段');
   assert.ok(sections.some((s) => s.name === 'dsh-git-push-readme-check'), '应含 README 检查提醒段');
+  // 2026-09-20：环境段迁出 systemPrompt → agent/pre-step 上下文注入，不再注册 section
+  assert.ok(!sections.some((s) => s.name === 'dsh-git-push-env'), '环境段应已迁出 systemPrompt');
 });
 
 test('apply：HTTP 走 webServer.register({kind:"prefix"})（真实 API）', async () => {
