@@ -48,10 +48,10 @@ window.__ModuleLoader__.load({
 
     // 逻辑类常量（fetch 超时 / 扫描循环上限 / 提示时长 / 日志截断长度）
     const dshgp_FETCH_TIMEOUT_MS = 30_000;        // fetch 超时（same-origin）
-    // clone 单独放宽到 30 分钟：带 tools/ffmpeg-lib 的仓库总量可达 154MB（光 4 个共享库就 79MB），
-    //   按默认 30s 必然 signal timed out，失败原因与真实耗时无关。
-    //   注：绝对超时只是兜底，判「卡死」看进度是否停滞（由后端 clone-jobs 判定，停滞仅提示不中断）。
-    const dshgp_CLONE_TIMEOUT_MS = 1_800_000;
+    // 2026-09-19 克隆后台化：原先 clone 用 30 分钟长超时（请求一直阻塞到克隆结束，
+    //   而带 tools/ffmpeg-lib 的仓库可达 154MB，默认 30s 必然超时）。
+    //   现在 repo-clone 提交即返回 202、下载在服务端后台跑，提交本身是快操作，
+    //   故该长超时常量已删除——提交用下面的短超时，进度与终态由轮询接管。
     const dshgp_SCAN_WAIT_MAX_ROUNDS = 600;       // 后台扫描等待循环上限（每次挂起等新进度）
     const dshgp_SAVED_MSG_MS = 4000;              // 「已保存」提示显示时长
     const dshgp_LOG_TRUNCATE = 40;                // 调试日志 value 截断长度
@@ -1306,6 +1306,7 @@ window.__ModuleLoader__.load({
         this.cloudMsg = '';
         this.repoBusy = '';
         this.cloneProgress = null;   // 进行中的 clone 进度（轮询填充）
+        this._cloneResumeTimer = null; // 后台克隆接续轮询句柄（2026-09-19 后台化配套）
         this.clonePreview = null;    // 待确认的 clone 预览
         this.clonePending = { repo: '', dir: '' };  // 预览后待确认的上下文
         this.maxCloneFileMB = 10;    // clone 单文件体积上限(MB)；0=不限
@@ -1485,6 +1486,58 @@ window.__ModuleLoader__.load({
             this.refreshError = `${p}: ` + (e && e.message || e);
           }
         }
+        // 2026-09-19：克隆改为后台 job 后，任务不再随 HTTP 请求存活——
+        //   刷新/重开页面时后端可能仍在下载。这里主动探一次，把「正在跑的克隆」
+        //   重新接回进度条与轮询，避免用户以为任务没了而重复发起（会被互斥拒绝）。
+        void this.resumeCloneIfRunning();
+      }
+
+      /**
+       * 页面加载/刷新后接续**仍在后台跑的克隆**（2026-09-19 克隆后台化配套）。
+       *
+       * 只在 idle/done 之外做动作：running → 恢复进度条并重启轮询；
+       *   done → 如实回显终态（说明上次任务已结束）；idle → 什么都不做。
+       */
+      async resumeCloneIfRunning() {
+        if (this.repoBusy) return; // 已有交互在进行（含本页面自己发起的 clone），不抢
+        let st;
+        try {
+          st = await dshgp_postJson('/api/git-push/clone-progress', {});
+        } catch { return; /* 探测失败静默：下次刷新再试 */ }
+        if (!st || st.state !== 'running' || !st.progress) return;
+        const p = st.progress;
+        this.cloneProgress = p;
+        this.repoBusy = 'clone:' + (p.target || '');
+        this.cloudMsg = '⏳ 后台克隆进行中：' + (p.target || '') + ' → ' + (p.dest || '');
+        this.publish();
+        // 重启轮询直到终态（与 cloneConfirmed 同一收敛逻辑，故此处只做等待）
+        if (this._cloneResumeTimer) clearInterval(this._cloneResumeTimer);
+        this._cloneResumeTimer = setInterval(async () => {
+          try {
+            const s2 = await dshgp_postJson('/api/git-push/clone-progress', {});
+            if (s2 && s2.state === 'running' && s2.progress) {
+              this.cloneProgress = s2.progress;
+              this.publish();
+              return;
+            }
+            if (s2 && s2.state === 'done') {
+              const fin = await dshgp_postJson('/api/git-push/clone-progress', { consume: true });
+              const res = (fin && fin.result) || (s2 && s2.result) || null;
+              this.cloudMsg = res && res.ok
+                ? '✅ 已克隆 ' + (p.target || '') + ' → ' + (res.dest || p.dest || '')
+                : '❌ ' + ((res && res.error) || '克隆失败');
+            } else if (s2 && s2.state === 'idle') {
+              this.cloudMsg = '⚠️ 克隆任务已不存在（可能插件进程重启过），请重新发起';
+            } else {
+              return; // 未知态：继续轮询，不误判
+            }
+            clearInterval(this._cloneResumeTimer);
+            this._cloneResumeTimer = null;
+            this.cloneProgress = null;
+            this.repoBusy = '';
+            this.publish();
+          } catch { /* 轮询失败不中断 */ }
+        }, 1000);
       }
 
       async loadSettingsFromHttp() {
@@ -1827,15 +1880,53 @@ window.__ModuleLoader__.load({
         const { repo, dir } = pend;
         this.repoBusy = 'clone:' + repo;
         this.publish();
-        // 轮询：后端每完成一批文件就更新内存态进度。
-        //   判「卡死」不靠绝对超时，而看进度是否停滞（大文件慢传不该被杀）。
+        // 2026-09-19：克隆改为**后台 job**——repo-clone 立即返回 202 {async:true, jobId}，
+        //   下载在后端继续跑。故此处不再 await 整个克隆，而是：
+        //     ① 提交任务（拿 jobId；预检/互斥失败会同步回错，照实显示）
+        //     ② 轮询 /clone-progress 驱动进度，直到 state 变 done 取终态
+        //   判「卡死」仍看进度是否停滞（大文件慢传不该被杀），不用绝对超时。
         let pollTimer = null;
         const stopPoll = () => { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } };
+        // 终态收敛：把后端 cloneJobStatus() 的 done.result 转成用户文案。
+        //   成败与成因仍由后端结构化给出（clone.js 的 cause/retriable），前端不猜文案。
+        const renderResult = (res) => {
+          if (res && res.ok) {
+            // 如实报告被跳过的文件：否则用户以为克隆完整
+            const skipped = res.skippedCount || 0;
+            this.cloudMsg = '✅ 已克隆 ' + repo + ' → ' + (res.dest || dir)
+              + (skipped > 0 ? '（已跳过 ' + skipped + ' 个超大文件）' : '');
+          } else {
+            const msg = (res && res.error) || '克隆失败';
+            const extra = res && res.cleaned && res.retriable === true
+              ? '（半成品已自动清理，可直接重试）'
+              : '';
+            this.cloudMsg = '❌ ' + msg + extra;
+          }
+        };
+        // 轮询：① 更新进度条 ② 检测终态（running → done）后收尾。
+        //   consume=true 让后端取走终态，避免下次打开面板读到上次结果。
         const poll = async () => {
           try {
             const st = await dshgp_postJson('/api/git-push/clone-progress', {});
             if (st && st.state === 'running' && st.progress) {
               this.cloneProgress = st.progress;
+              this.publish();
+            } else if (st && st.state === 'done') {
+              // 任务已结束：先取终态再 consume 清掉（顺序反了会读到空）
+              const fin = await dshgp_postJson('/api/git-push/clone-progress', { consume: true });
+              stopPoll();
+              renderResult(fin && fin.result ? fin.result : (st.result || null));
+              this.cloneProgress = null;
+              this.clonePending = null;
+              this.repoBusy = '';
+              this.publish();
+            } else if (st && st.state === 'idle') {
+              // 既非 running 也非 done：任务已消失（进程重启等）——不能永远转圈
+              stopPoll();
+              this.cloudMsg = '⚠️ 克隆任务已不存在（可能插件进程重启过），请重新发起';
+              this.cloneProgress = null;
+              this.clonePending = null;
+              this.repoBusy = '';
               this.publish();
             }
           } catch { /* 轮询失败不中断克隆本身 */ }
@@ -1843,32 +1934,30 @@ window.__ModuleLoader__.load({
         pollTimer = setInterval(() => { void poll(); }, 1000);
         void poll();
         try {
-          // clone 用放宽后的超时：30s 对上百 MB 的仓库必然不够
-          const cloneRes = await dshgp_postJson('/api/git-push/repo-clone', { target: repo, dir, confirm: true }, dshgp_CLONE_TIMEOUT_MS);
-          if (cloneRes && cloneRes.ok) {
-            // 如实报告被跳过的文件：否则用户以为克隆完整
-            const skipped = cloneRes.skippedCount || 0;
-            this.cloudMsg = '✅ 已克隆 ' + repo + ' → ' + ((cloneRes && cloneRes.dest) || dir)
-              + (skipped > 0 ? '（已跳过 ' + skipped + ' 个超大文件）' : '');
+          // 提交即返回（很快）；超时不必再放到 30 分钟——提交本身不下载。
+          const submit = await dshgp_postJson('/api/git-push/repo-clone', { target: repo, dir, confirm: true }, 60_000);
+          if (submit && submit.async === true) {
+            // 已转后台：进度与终态交给轮询，这里只提示「已开始」
+            this.cloudMsg = '⏳ 克隆已在后台运行：' + repo + ' → ' + (submit.dest || dir);
+            this.publish();
           } else {
-            // 成败与成因都由后端结构化给出（clone.js 的 cause/retriable），前端不再
-            //   用正则猜文案：此前「克隆未完成」这段文字出现在**所有**失败里，
-            //   连 401 token 失效、404 仓库不存在都被显示成「网络问题，可直接重试」，
-            //   用户会在无解的错误上反复点。现在只在后端确认可重试时才补那句。
-            const msg = (cloneRes && cloneRes.error) || '克隆失败';
-            const extra = cloneRes && cloneRes.cleaned && cloneRes.retriable === true
-              ? '（半成品已自动清理，可直接重试）'
-              : '';
-            this.cloudMsg = '❌ ' + msg + extra;
+            // 未转后台 = 提交阶段就失败（预检/互斥/参数）——同步回错，照实显示并收尾。
+            //   兼容后端降级为同步返回（老版本/未来改动）的情形。
+            stopPoll();
+            renderResult(submit);
+            this.cloneProgress = null;
+            this.clonePending = null;
+            this.repoBusy = '';
+            this.publish();
           }
         } catch (e) {
+          stopPoll();
           this.cloudMsg = '❌ 克隆失败: ' + (e && e.message || e) + '（可直接重试——半成品已自动清理）';
+          this.cloneProgress = null;
+          this.clonePending = null;
+          this.repoBusy = '';
+          this.publish();
         }
-        stopPoll();
-        this.cloneProgress = null;
-        this.clonePending = null;
-        this.repoBusy = '';
-        this.publish();
       }
 
       /** 单击规则包行：切换禁用/启用（2026-09-13 改为写 yml 顶层 disabled，不存 scope 变量）。 */

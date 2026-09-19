@@ -348,3 +348,113 @@ test('clone 续传：残留清理必须保留 .dsh-parts 分片', () => {
   assert.match(src, /top\.every\(\(n\) => n === PARTS_DIR\)\) isPartialClone = true/,
     '只含 .dsh-parts 的目录必须被识别为可自愈残留，否则用户重试会一直撞「目录非空」');
 });
+
+// ---------- 后台 job 化（2026-09-19）：克隆不再阻塞 HTTP 请求 ----------
+test('clone 后台化：占用中提交被 409 拒绝（不能因后台化而丢掉互斥）', async () => {
+  __resetCloneJobs();
+  const { handleHttp } = await import('../lib/app/http-handlers.js');
+  const { defaultConfig } = await import('../lib/client/index.js');
+  const call = (url, body = {}, method = 'POST') => handleHttp(
+    {
+      method, url, body, origin: 'http://127.0.0.1:30801',
+      headers: { host: '127.0.0.1:30801', 'content-length': '0' },
+    },
+    { workspaceRoot: ROOT }, defaultConfig(),
+  );
+  // 先占位一个在跑的任务，再提交 → 必须 409（预检/互斥仍同步做，且后台化
+  //   不能把互斥挪进后台协程里，否则两个 clone 会真并发写同一目录）
+  startCloneJob({ target: 'fake/repo', dest: '/tmp/fake-dest-bg', totalFiles: 1, totalBytes: 1 });
+  const r = await call('/api/git-push/repo-clone', { target: 'EIGHTfs/dsh-git-push', dir: '/tmp/x-' + Date.now(), confirm: true });
+  assert.equal(r.status, 409, `占用中应回 409（实际 ${r.status}）`);
+  assert.equal(r.body?.cause, 'busy');
+  assert.equal(r.body?.async, undefined, '被拒时不得冒充已提交后台任务');
+  finishCloneJob({ ok: false, error: 'test' });
+  __resetCloneJobs();
+});
+
+test('clone 后台化：缺 target/dir 仍同步回 400（参数错误不该进后台）', async () => {
+  __resetCloneJobs();
+  const { handleHttp } = await import('../lib/app/http-handlers.js');
+  const { defaultConfig } = await import('../lib/client/index.js');
+  const call = (url, body = {}) => handleHttp(
+    { method: 'POST', url, body, origin: 'http://127.0.0.1:30801', headers: { host: '127.0.0.1:30801' } },
+    { workspaceRoot: ROOT }, defaultConfig(),
+  );
+  const r1 = await call('/api/git-push/repo-clone', { dir: '/tmp', confirm: true });
+  assert.equal(r1.status, 400, '缺 target 应 400');
+  const r2 = await call('/api/git-push/repo-clone', { target: 'EIGHTfs/dsh-git-push', confirm: true });
+  assert.equal(r2.status, 400, '缺 dir 应 400');
+  const st = await handleHttp(
+    { method: 'POST', url: '/api/git-push/clone-progress', body: {}, origin: 'http://127.0.0.1:30801', headers: { host: '127.0.0.1:30801' } },
+    { workspaceRoot: ROOT }, defaultConfig(),
+  );
+  assert.equal(st.body?.state, 'idle', '参数错误不得留下 running 任务（否则永久占住互斥）');
+  __resetCloneJobs();
+});
+
+test('clone 后台化：提交成功后 HTTP 立即返回，且不残留未捕获的后台异常', async () => {
+  // 这条用**非联网**方式验证契约：后台协程的 .catch 必须存在，否则
+  //   异常会绕过 finishCloneJob → current 永不释放 → 之后所有 clone 永久 busy。
+  const src = readFileSync(join(ROOT, 'lib/app/http-handlers.js'), 'utf8');
+  // 用**括号配对**精确取出承载 cloneViaApi 的那个异步 IIFE，再检查它自己挂了 .catch。
+  //   教训：先前写成「端点段内出现 })().catch( 即可」——但该段内还有别的 IIFE（索引回写那条），
+  //   于是把 clone 的 .catch 删掉后断言**仍然通过**（反向验证才暴露）。必须绑定到同一个 IIFE。
+  const segRaw = src.slice(src.indexOf("'/api/git-push/repo-clone'"), src.indexOf("'/api/git-push/clone-logs'"));
+  // 必须**先剥注释**再定位：段内注释里写着「此前这里 await cloneViaApi」，
+  //   直接 indexOf 会命中那句注释（实测踩到），从而锚到上一个 IIFE、断言看错对象。
+  const seg = segRaw
+    .replace(/\/\*[\s\S]*?\*\//g, '')   // 块注释
+    .replace(/(^|[^:])\/\/[^\n]*/g, '$1'); // 行注释（避开 http:// 里的 //）
+  // 段内**有两个** IIFE（① 索引回写 ② clone 后台）。必须锚定②，即
+  //   「最后一个位于 await cloneViaApi 之前的 IIFE 起点」。
+  const callAt = seg.indexOf('await cloneViaApi');
+  assert.ok(callAt > 0, 'repo-clone 内应调用 cloneViaApi');
+  const iifeStart = seg.lastIndexOf('(async () => {', callAt);
+  assert.ok(iifeStart > 0, 'cloneViaApi 应被异步 IIFE 包裹（后台跑）');
+  // 括号配对精确取出该 IIFE 范围，确认 cloneViaApi 真在它体内（而非落在别处）
+  let depth = 0, end = -1;
+  for (let k = seg.indexOf('{', iifeStart); k < seg.length; k++) {
+    const ch = seg[k];
+    if (ch === '{') depth++;
+    else if (ch === '}') { depth--; if (depth === 0) { end = k; break; } }
+  }
+  assert.ok(end > callAt, 'cloneViaApi 必须落在该异步 IIFE 的体内（否则请求仍被阻塞）');
+  const tail = seg.slice(end, end + 20);
+  assert.match(tail, /^\}\)\(\)\.catch\(/, `承载 clone 的 IIFE 必须紧接 })().catch(（实际 "${tail.trim()}"）——异常逃逸会让任务永久卡 busy`);
+  // 且该 IIFE 体内确实包含 cloneViaApi
+  assert.match(seg.slice(iifeStart, end), /cloneViaApi/, '该 IIFE 体内应调用 cloneViaApi');
+  assert.match(seg, /status: 202/, '提交成功应回 202（已受理，非 200 已完成）');
+  assert.match(seg, /async: true/, '响应体应标 async:true，前端据此转轮询');
+  assert.match(seg, /finishCloneJob/, '后台收尾必须调 finishCloneJob 落终态');
+  const retAt = seg.indexOf('status: 202');
+  assert.ok(retAt > iifeStart, '202 响应应在启动后台 IIFE 之后立即返回');
+});
+
+test('clone 后台化：终态可被 clone-progress 取到并 consume（刷新后仍能收敛）', async () => {
+  __resetCloneJobs();
+  const { handleHttp } = await import('../lib/app/http-handlers.js');
+  const { defaultConfig } = await import('../lib/client/index.js');
+  const { updateCloneJob } = await import('../lib/git/clone-jobs.js');
+  const call = async (body) => (await handleHttp(
+    { method: 'POST', url: '/api/git-push/clone-progress', body, origin: 'http://127.0.0.1:30801', headers: { host: '127.0.0.1:30801' } },
+    { workspaceRoot: ROOT }, defaultConfig(),
+  )).body;
+  // running 态
+  startCloneJob({ target: 'o/a', dest: '/tmp/term-a', totalFiles: 4, totalBytes: 400 });
+  updateCloneJob({ done: 2, transferred: 200, failed: 0 });
+  const running = await call({});
+  assert.equal(running.state, 'running', '进行中应报 running');
+  assert.equal(running.progress.percent, 50, '进度按字节算');
+  // 落终态后：不 consume 也能读到（页面刷新后靠这个恢复）
+  finishCloneJob({ ok: false, error: '网络中断' });
+  const done1 = await call({});
+  assert.equal(done1.state, 'done', '结束后应报 done');
+  assert.equal(done1.result.ok, false);
+  assert.match(done1.result.error, /网络中断/);
+  // consume 取走后清空
+  const done2 = await call({ consume: true });
+  assert.equal(done2.state, 'done', 'consume 那次仍返回终态（先取后清）');
+  const idle = await call({});
+  assert.equal(idle.state, 'idle', 'consume 之后应回到 idle');
+  __resetCloneJobs();
+});

@@ -73,13 +73,24 @@ test('client.js：dshgp_ 前缀标识符无「用了没定义」', () => {
 });
 
 // clone 超时必须真正放宽：默认 fetch 超时 30s 对上百 MB 仓库必然不够
-test('client.js：clone 使用放宽后的超时，且该常量已定义', () => {
+test('client.js：clone 提交用短超时（后台化后不再阻塞下载）', () => {
+  // 2026-09-19 克隆后台化：repo-clone 现在是「提交即返回 202」，
+  //   下载在服务端后台跑，前端靠轮询取进度与终态。
+  //   故提交调用**不该**再背 30 分钟超时——那是旧「请求阻塞到克隆结束」设计的产物，
+  //   长超时还会掩盖「提交阶段就卡死」的真实故障。
   const src = readFileSync(join(ROOT, 'client.js'), 'utf8');
-  const m = src.match(/const\s+dshgp_CLONE_TIMEOUT_MS\s*=\s*([\d_]+)/);
-  assert.ok(m, 'dshgp_CLONE_TIMEOUT_MS 必须显式定义');
-  const ms = Number(m[1].replace(/_/g, ''));
-  assert.ok(ms >= 600_000, `clone 超时应放宽到 10 分钟以上，实际 ${ms}ms`);
-  assert.match(src, /repo-clone'[^)]*dshgp_CLONE_TIMEOUT_MS/, 'clone 请求应传入该放宽超时');
+  // 提交调用的超时必须是短超时
+  const call = src.match(/repo-clone'[^)]*?(60_000|[\d_]+)\s*\)/);
+  assert.ok(call, 'repo-clone 提交应显式传超时');
+  const used = Number(String(call[1]).replace(/_/g, ''));
+  assert.ok(used <= 120_000, `提交是快速返回的，超时应为短超时（实际 ${used}ms）——长超时会掩盖提交阶段卡死`);
+  // 旧的长超时常量应已删除（提交不再阻塞，留着是死代码且误导）
+  assert.ok(
+    !/dshgp_CLONE_TIMEOUT_MS/.test(src),
+    'dshgp_CLONE_TIMEOUT_MS 应已删除（后台化后提交不下载，长超时是死代码）',
+  );
+  // 且必须有页面加载后接续后台克隆的恢复路径
+  assert.match(src, /resumeCloneIfRunning/, 'client.js 应能在页面加载后接续后台克隆');
 });
 
 // ---------- 默认关（关键安全默认） ----------
