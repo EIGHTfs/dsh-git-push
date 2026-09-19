@@ -33570,6 +33570,10 @@ window.__ModuleLoader__.load({
       // 按钮
       '.dshgp_btn{font:inherit;font-size:12px;border-radius:8px;padding:5px 10px;cursor:pointer;border:.5px solid var(--dsw-alias-border-l4);background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary)}',
       '.dshgp_btn:disabled{opacity:.45;cursor:default}',
+      // 可见性切换独立确认弹窗（1.5.4 改版）：mask/dialog 复用 browse modal 样式，
+      //   按钮行 + 风险提示
+      '.dshgp_previewbtns{display:flex;gap:8px;justify-content:flex-end;margin-top:4px}',
+      '.dshgp_viswarn{font-size:12px;line-height:1.6;padding:7px 9px;border-radius:8px;background:color-mix(in srgb,var(--dsw-alias-label-warning) 11%,transparent);border:.5px solid color-mix(in srgb,var(--dsw-alias-label-warning) 30%,transparent);color:var(--dsw-alias-label-warning)}',
       '.dshgp_btnPrimary{border-color:var(--dsw-alias-brand-primary);color:var(--dsw-alias-brand-primary)}',
       // 审计扫描范围单按钮（2026-09-14）：一个按钮单击切换 diff/full，状态体现在标题 + 颜色
       '.dshgp_scanbtn{font:inherit;font-size:12px;border-radius:8px;padding:5px 12px;cursor:pointer;border:.5px solid var(--dsw-alias-border-l4);background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary);display:inline-flex;align-items:center;gap:6px;transition:border-color .15s,color .15s,background-color .15s}',
@@ -33646,7 +33650,6 @@ window.__ModuleLoader__.load({
       '.dshgp_repohint{font-size:12px;color:var(--dsw-alias-label-tertiary)}',
       '.dshgp_repomsg{margin:0;font-size:11px;color:var(--dsw-alias-label-tertiary);line-height:1.5}',
       '.dshgp_pushcol{display:flex;flex-direction:column;align-items:flex-end;gap:3px;max-width:46%;min-width:100px}',
-      '.dshgp_visconfirm{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:5px 8px;border-radius:8px;background:color-mix(in srgb,var(--dsw-alias-label-warning) 9%,transparent);border:.5px solid color-mix(in srgb,var(--dsw-alias-label-warning) 30%,transparent)}',
       '.dshgp_fb{font-size:11px;line-height:1.35;word-break:break-all;text-align:right}',
       '.dshgp_fbok{color:#2fa84f}',
       '.dshgp_fbfail{color:#d64545}',
@@ -34108,42 +34111,16 @@ window.__ModuleLoader__.load({
       });
     }
 
-    /** 云端面板单行：仓库名 + 私有/公开/分支/更新时间 + clone 按钮 + 可见性切换（1.5.4，二次确认）。 */
+    /** 云端面板单行：仓库名 + 私有/公开/分支/更新时间 + clone 按钮 + 可见性切换（1.5.4，独立弹窗二次确认）。 */
     function dshgp_RepoCloudRow(props) {
       const r = props.repo;
       const s = props.state;
       const busy = s.repoBusy === 'clone:' + r.fullName;
       const visBusy = s.repoBusy === 'vis:' + r.fullName;
-      // 二次确认态：confirmVis = 待切换目标（'public'|'private'），空 = 未确认
-      const [confirmVis, setConfirmVis] = react.useState('');
-      const [visMsg, setVisMsg] = react.useState('');
       const target = r.private ? 'public' : 'private';
-      const targetLabel = target === 'public' ? '公开' : '私有';
-      const curLabel = r.private ? '私有' : '公开';
       // 2026-09-16：云端仓库标记本地是否已有（后端 repos-cloud 附 localExists/localPath）
       const localTag = r.localExists
         ? jsx.jsx('span', { className: 'dshgp_pill dshgp_pill_on', children: '本地已有' })
-        : null;
-      const confirmBar = confirmVis
-        ? jsx.jsxs('div', { className: 'dshgp_visconfirm', children: [
-            jsx.jsx('span', { className: 'dshgp_reprowmeta', children: ['确认将 ' + r.fullName + ' 从「' + curLabel + '」改为「' + (confirmVis === 'public' ? '公开' : '私有') + '」？改公开有敏感信息暴露风险。'] }),
-            jsx.jsx('button', {
-              type: 'button', className: 'dshgp_keybtn',
-              disabled: visBusy,
-              onClick: async () => {
-                const res = await props.visSwitch(r.fullName, confirmVis);
-                setVisMsg(res && res.ok ? '✅ 已切换为' + (res.visibility === 'private' ? '私有' : '公开') : '❌ ' + ((res && res.error) || '失败'));
-                setConfirmVis('');
-              },
-              children: visBusy ? '切换中…' : '确认切换',
-            }),
-            jsx.jsx('button', {
-              type: 'button', className: 'dshgp_keybtn',
-              disabled: visBusy,
-              onClick: () => { setConfirmVis(''); setVisMsg(''); },
-              children: '取消',
-            }),
-          ] })
         : null;
       return jsx.jsxs('div', {
         className: 'dshgp_reprow',
@@ -34154,7 +34131,6 @@ window.__ModuleLoader__.load({
               jsx.jsx('span', { className: 'dshgp_reprowpath', children: r.fullName }),
               jsx.jsx('span', { className: 'dshgp_reprowmeta', children: [(r.private ? '🔒 私有' : '🌐 公开') + ' · ' + (r.defaultBranch || '') + (r.pushedAt ? ' · 更新 ' + r.pushedAt.slice(0, 10) : '')] }),
               localTag,
-              visMsg ? jsx.jsx('span', { className: visMsg.startsWith('✅') ? 'dshgp_fb dshgp_fbok' : 'dshgp_fb dshgp_fbfail', children: visMsg }) : null,
             ],
           }),
           jsx.jsxs('div', {
@@ -34171,12 +34147,47 @@ window.__ModuleLoader__.load({
                 type: 'button',
                 className: 'dshgp_keybtn',
                 disabled: visBusy,
-                onClick: () => { setConfirmVis(target); setVisMsg(''); },
+                // 2026-09-20：二次确认改为**独立弹窗**（Controller.visConfirm + 全局确认面板），
+                //   不再行内展开确认条——点击只弹窗，确认动作全在弹窗里完成。
+                onClick: () => props.requestVisSwitch(r.fullName, target),
                 children: visBusy ? '切换中…' : (r.private ? '切公开' : '切私有'),
               }),
             ],
           }),
-          confirmBar,
+        ],
+      });
+    }
+
+    /**
+     * 可见性切换独立确认弹窗（1.5.4 改版：行内确认条 → 独立面板弹出）。
+     * 复用 browse modal 的 fixed mask/dialog 风格；确认才调后端，取消/点遮罩关闭。
+     */
+    function dshgp_VisConfirmDialog(props) {
+      const p = props.p || {};
+      const fullName = p.fullName || '';
+      const target = p.target === 'public' ? '公开' : (p.target === 'private' ? '私有' : '');
+      const cur = p.cur === 'public' ? '公开' : (p.cur === 'private' ? '私有' : '');
+      const busy = props.busy === true;
+      return jsx.jsxs('div', {
+        className: 'dshgp_browsemask',
+        children: [
+          jsx.jsxs('div', {
+            className: 'dshgp_browsedialog',
+            children: [
+              jsx.jsxs('div', { className: 'dshgp_browsehead', children: [
+                jsx.jsx('span', { className: 'dshgp_browsetitle', children: '切换仓库可见性' }),
+                jsx.jsx('button', { type: 'button', className: 'dshgp_browseclose', disabled: busy, onClick: props.onCancel, children: '✕' }),
+              ] }),
+              jsx.jsx('p', { className: 'dshgp_previewtitle', children: '确认将 ' + fullName + ' 从「' + cur + '」改为「' + target + '」？' }),
+              p.target === 'public'
+                ? jsx.jsx('p', { className: 'dshgp_viswarn', children: '⚠ 公开后仓库对全网可见，若含 token/密钥/隐私将直接暴露——先确认无敏感信息。' })
+                : jsx.jsx('p', { className: 'dshgp_repohint', children: '改为私有后，仅你（及已授予的协作者）可访问。' }),
+              jsx.jsxs('div', { className: 'dshgp_previewbtns', children: [
+                jsx.jsx('button', { className: 'dshgp_btn', disabled: busy, onClick: props.onConfirm, children: busy ? '切换中…' : '确认切换' }),
+                jsx.jsx('button', { className: 'dshgp_btn dshgp_btnghost', disabled: busy, onClick: props.onCancel, children: '取消' }),
+              ] }),
+            ],
+          }),
         ],
       });
     }
@@ -34223,6 +34234,13 @@ window.__ModuleLoader__.load({
           //   ESM 严格模式下 this 为 undefined → 点击直接抛 TypeError → 按钮「点了没反应」。
           //   动作一律走 props（与同文件其余按钮一致）。
           s.clonePreview ? dshgp_ClonePreview({ p: s.clonePreview, onConfirm: () => { void props.cloneConfirmed(); }, onCancel: () => { props.cancelPreview(); } }) : null,
+          // 1.5.4 可见性切换独立确认面板（fixed mask + dialog）：确认才调后端
+          s.visConfirm ? dshgp_VisConfirmDialog({
+            p: s.visConfirm,
+            busy: s.repoBusy === 'vis:' + s.visConfirm.fullName,
+            onConfirm: () => { void props.confirmVisSwitch(); },
+            onCancel: () => { props.cancelVisSwitch(); },
+          }) : null,
           rows.length ? jsx.jsxs('div', { className: 'dshgp_replist', children: rows }) : null,
         ],
       });
@@ -34814,6 +34832,7 @@ window.__ModuleLoader__.load({
         this._cloneResumeTimer = null; // 后台克隆接续轮询句柄（2026-09-19 后台化配套）
         this.clonePreview = null;    // 待确认的 clone 预览
         this.clonePending = { repo: '', dir: '' };  // 预览后待确认的上下文
+        this.visConfirm = null;      // 1.5.4：待确认的可见性切换（{fullName, target, cur}，命中则弹独立确认面板）
         this.maxCloneFileMB = 10;    // clone 单文件体积上限(MB)；0=不限
         this.cloneConcurrency = 6;   // clone 并发下载数
         this.repoFeedback = {}; // { path: {ok, msg} } push 结果反馈（成功绿/失败红）
@@ -34917,6 +34936,7 @@ window.__ModuleLoader__.load({
           repoBusy: this.repoBusy,
           cloneProgress: this.cloneProgress,
           clonePreview: this.clonePreview,
+          visConfirm: this.visConfirm,
           maxCloneFileMB: this.maxCloneFileMB,
           cloneConcurrency: this.cloneConcurrency,
           repoFeedback: this.repoFeedback,
@@ -35332,8 +35352,39 @@ window.__ModuleLoader__.load({
       }
 
       /**
-       * 云端仓库私有/公开切换（1.5.4）：POST repo-visibility（confirm 前置后端校验）。
-       * 成功后就地更新列表该项（云端真源返回值），并给行内反馈。
+       * 1.5.4：请求切换可见性——只记录待确认目标并弹**独立确认面板**（不直接调用后端）。
+       * 真正切由 confirmVisSwitch 在用户点了「确认切换」后执行。
+       * @param {string} fullName owner/repo
+       * @param {string} target public | private
+       */
+      requestVisSwitch(fullName, target) {
+        if (this.repoBusy) return; // 已有交互（clone/push/切换）进行中，不弹
+        const cur = this.cloudRepos.find((x) => String(x.fullName || '') === fullName);
+        this.visConfirm = { fullName, target, cur: cur && cur.private ? 'private' : 'public' };
+        this.publish();
+      }
+
+      /** 1.5.4：弹窗「确认切换」——按 visConfirm 记录执行切换，结束后关闭面板。 */
+      async confirmVisSwitch() {
+        const v = this.visConfirm;
+        if (!v) return { ok: false, error: '无待确认的切换' };
+        const res = await this.switchVisibility(v.fullName, v.target);
+        this.visConfirm = null;
+        this.publish();
+        return res;
+      }
+
+      /** 1.5.4：弹窗「取消 / 关闭」——丢弃待确认目标。 */
+      cancelVisSwitch() {
+        if (this.visConfirm) {
+          this.visConfirm = null;
+          this.publish();
+        }
+      }
+
+      /**
+       * 云端仓库私有/公开切换：POST repo-visibility（confirm 前置后端校验）。
+       * 成功后就地更新列表该项（云端真源返回值）。
        * @param {string} fullName owner/repo
        * @param {string} target public | private
        * @returns {Promise<object>} 后端响应（{ok, visibility} 或 {ok:false, error}）
@@ -35783,7 +35834,9 @@ window.__ModuleLoader__.load({
           loadCloudRepos: () => { void this.refresh('cloud'); },
           pushLocalRepo: (path) => { void this.pushLocalRepo(path); },
           cloneFlow: (repo) => this.cloneFlow(repo),
-          visSwitch: (fullName, target) => this.switchVisibility(fullName, target), // 云端私有/公开切换（1.5.4）
+          requestVisSwitch: (fullName, target) => this.requestVisSwitch(fullName, target), // 弹独立确认面板（1.5.4）
+          confirmVisSwitch: () => { void this.confirmVisSwitch(); },
+          cancelVisSwitch: () => { this.cancelVisSwitch(); },
           cloneConfirmed: () => { void this.cloneConfirmed(); }, // 预览确认框「开始克隆」
           cancelPreview: () => { this.cancelPreview(); },        // 预览确认框「取消」
         };

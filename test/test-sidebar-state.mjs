@@ -224,12 +224,15 @@ test('assets/preview.html 与 client.js 同步（重新生成过）', () => {
 
 // ---------- 1.5.4 仓库可见性切换（云端状态 → 二次确认 → 切换） ----------
 
-test('1.5.4 可见性切换：前端注入 visSwitch 动作 + 行内二次确认', () => {
-  // ① Controller 注入 visSwitch 动作（云端行按钮消费）
-  assert.match(clientSrc, /visSwitch:\s*\(fullName,\s*target\)\s*=>\s*this\.switchVisibility\(fullName,\s*target\)/,
-    'Controller 动作注入缺 visSwitch');
-  // ② 行内二次确认条（「确认将 … 从「…」改为「…」？」）+ 确认后 confirm:true POST
-  assert.match(clientSrc, /确认将 '\s*\+ r\.fullName/, '云端行缺二次确认文案');
+test('1.5.4 可见性切换：独立确认弹窗（行按钮弹窗 → 确认才调后端）', () => {
+  // ① 行按钮只调用 requestVisSwitch（先弹窗，不直接切）；Controller 持有 visConfirm 待确认态
+  assert.match(clientSrc, /requestVisSwitch:\s*\(fullName,\s*target\)\s*=>\s*this\.requestVisSwitch\(fullName,\s*target\)/,
+    'Controller 动作注入缺 requestVisSwitch');
+  assert.match(clientSrc, /this\.visConfirm\s*=\s*\{\s*fullName,\s*target/, '缺 visConfirm 待确认状态');
+  // ② 独立确认面板：固定遮罩（fixed mask + dialog，非行内展开）+ 确认文案 + confirm:true POST
+  assert.match(clientSrc, /function dshgp_VisConfirmDialog\(props\)/, '缺独立确认弹窗组件');
+  assert.match(clientSrc, /dshgp_browsemask/, '弹窗必须用固定遮罩（独立面板弹出）');
+  assert.match(clientSrc, /确认将 '\s*\+\s*fullName/, '弹窗缺确认文案');
   assert.match(clientSrc, /visibility:\s*target,\s*confirm:\s*true/, '切换请求必须带 confirm:true');
   // ③ 就地更新列表（成功后刷新该项私有/公开徽标）
   assert.match(clientSrc, /item\.private\s*=\s*res\.visibility\s*===\s*'private'/, '切换成功后应就地更新列表状态');
