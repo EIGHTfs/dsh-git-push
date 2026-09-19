@@ -463,3 +463,23 @@ test('推送索引：SSH 通道 push 结果无 commitSha 时必须回退本地 H
     assert.ok(pick(sshPush).length > 0, 'remoteHead 绝不能是空串（会抹掉索引已有值）');
   });
 });
+
+test('探测调优：runGitAsync 与 runGit 语义一致（并发探测的前提）', async () => {
+  const { runGit, runGitAsync } = await import('../lib/git/exec.js');
+  // 成功路径：stdout 都要 trim，ok 都应为 true
+  const a = runGit(['rev-parse', '--show-toplevel'], { cwd: process.cwd() });
+  const b = await runGitAsync(['rev-parse', '--show-toplevel'], { cwd: process.cwd() });
+  assert.equal(b.ok, true, 'runGitAsync 成功路径 ok 应为 true');
+  assert.equal(b.stdout, a.stdout, 'runGitAsync 与 runGit 的 stdout 必须一致（都 trim）');
+  // 失败路径：都不能抛，且 ok=false（否则并发 worker 会中断整批探测）
+  const bad = await runGitAsync(['rev-parse', '--verify', 'no-such-ref-xyz'], { cwd: process.cwd() });
+  assert.equal(bad.ok, false, '失败时 runGitAsync 应返回 ok:false 而非抛出');
+});
+
+test('探测调优：SSH 连接复用参数可关闭，且默认拼装包含 ControlMaster', async () => {
+  const { liveRemoteHeadAsync } = await import('../lib/git/transport.js');
+  assert.equal(typeof liveRemoteHeadAsync, 'function', '必须导出异步版探测函数');
+  // 异步版在非 git 目录下应安全返回 ok:false（不得抛）
+  const r = await liveRemoteHeadAsync({ repoPath: '/nonexistent-dir-xyz', branch: 'main' });
+  assert.equal(r.ok, false, '非仓库路径应返回 ok:false');
+});

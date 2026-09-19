@@ -18,6 +18,13 @@ import { auditFull } from './lib/audit/index.js';
 import { readSettings, applySettingsToCfg } from './lib/app/settings-bridge.js';
 import { scanFileIo, summarize } from './scripts/scan-file-io.mjs';
 import { defaultConfig } from './lib/client/index.js';
+// 2026-09-19 补齐：CLI 与插件工具一一对应（此前缺 5 个远端/账号类命令）
+import { cloneViaApi, previewClone } from './lib/git/clone.js';
+import { DEFAULT_MAX_FILE_MB } from './lib/git/clone-download.js';
+import { parseGithubOwnerRepo } from './lib/git/api.js';
+import { checkGithubAccount, formatGithubAccountBlock } from './lib/git/account.js';
+import { ensureRemoteRepo, setVisibility } from './lib/git/remote.js';
+import { generateSshKey, resolveToken } from './lib/git/credentials.js';
 import { readFileSync } from 'node:fs';
 import { access } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -26,7 +33,9 @@ import { join } from 'node:path';
  * 注：-m 是单横线别名（helpSync 只比对 -- 双横线），不列入本表。 */
 export const KNOWN_FLAGS = ['--depth', '--full', '--ruleset', '--weights', '--include-ignored', '--push', '--no-push', '--dry-run', '--force', '--req-confirm', '--push-gate-confirmed', '--json', '--max', '--owner', '--offline',
   // file-io 三标签过滤
-  '--summary', '--write', '--type', '--kind', '--risk', '--op'];
+  '--summary', '--write', '--type', '--kind', '--risk', '--op',
+  // 2026-09-19 补齐的 5 个命令（clone / account-check / remote-create / set-visibility / gen-ssh-key）
+  '--dest', '--branch', '--preview', '--max-file-mb', '--concurrency', '--visibility', '--email', '--no-check-ssh', '--token'];
 
 const HELP = `git-sluice v${VERSION} — dsh-git-push 引擎独立 CLI（脱离 DSH 运行）
 
@@ -45,6 +54,16 @@ const HELP = `git-sluice v${VERSION} — dsh-git-push 引擎独立 CLI（脱离 
   git-sluice file-io [路径...] [--summary] [--write] [--type sync|async] [--kind read|write|delete|rename] [--risk high|medium|low] [--op <操作名>] [--json]
                                   文件读写调用扫描（三标签：类型/操作/上下文）——同步 I/O 在异步路径会阻塞；写/删/改名涉及数据安全
   git-sluice link-check <路径>    检查 md/文本中的链接有效性（只 warning，flaky 域名打折）
+  git-sluice clone <owner/repo> [dest] [--branch <名>] [--dest <目录>] [--max-file-mb N] [--concurrency N] [--preview] [--json]
+                                  从 GitHub 克隆仓库（Git Data API 通道，不直连 github.com；--preview=只探测不写盘）
+  git-sluice account-check [--token <t>] [--no-check-ssh] [--json]
+                                  校验 GitHub 账号与凭据（token 在线校验 + SSH 公钥指纹）
+  git-sluice remote-create <repo> [--owner <账号>] [--visibility public|private] [--dry-run] [--json]
+                                  按项目文件夹在 GitHub 建远端仓库（已存在则复用），并指向 origin
+  git-sluice set-visibility <repo> --visibility public|private [--json]
+                                  切换仓库公开/私有（public 有敏感信息暴露风险）
+  git-sluice gen-ssh-key --email <x@y.z> [--force] [--json]
+                                  生成 SSH 密钥对（公钥回传，私钥不出本机；--force=先备份再覆盖）
   git-sluice yaml-template        输出规则 yml 模板（含 kind + dimensions 示范）
   git-sluice readme-template      输出 README 模板（{{name}} {{version}} 占位符）
   git-sluice self-check           版本一致性 + HELP↔parseArgv 机器比对（自检）
@@ -54,67 +73,97 @@ const HELP = `git-sluice v${VERSION} — dsh-git-push 引擎独立 CLI（脱离 
 // 导入 compilers 触发注册（副作用：注册 13 种编译函数到 RULE_COMPILERS）
 import './lib/rule/compilers.js';
 
-/** 参数解析：白名单必须与 HELP 文本完全一致（cli-help-sync 自检）。 */
+/**
+ * 参数解析：白名单必须与 HELP 文本完全一致（cli-help-sync 自检）。
+ *
+ * 实现用**表驱动**而非 if-else 长链：每加一个 flag 只加一行表项，
+ *   函数长度不随 flag 数增长（if-else 版加到第 21 个 flag 时func-lines 即 101 行、
+ *   触发自己的 readability/max-function-length blocker）。
+ *
+ * 自检约束：helpSync 用正则 /--[\w-]+/g 扫本文件全文提取 flag 字面量，
+ *   故下表必须**写成 `'--xxx'` 字面量**（拼字符串会让自检扫不到而误报）。
+ */
+
+/** 布尔开关 flag → flags 字段名（出现即为 true）。 */
+const BOOL_FLAGS = {
+  '--full': 'full',
+  '--include-ignored': 'includeIgnored',
+  '--dry-run': 'dryRun',
+  '--force': 'force',
+  '--req-confirm': 'reqConfirm',
+  '--push-gate-confirmed': 'pushGateConfirmed',
+  '--json': 'json',
+  '--offline': 'offline',
+  '--summary': 'summary',
+  '--write': 'write',
+  '--preview': 'preview',
+  '--no-check-ssh': null, // 特殊：置 false 而非 true（见下 applyBool）
+};
+
+/** 取值 flag → [flags 字段名, 缺值提示, 转换函数?]。 */
+const VALUE_FLAGS = {
+  '--depth': ['depth', '--depth 缺值（用法: --depth N）', Number],
+  '--max': ['max', '--max 缺值（用法: --max N）', Number],
+  '--owner': ['owner', '--owner 缺值（用法: --owner <账号>）'],
+  '--ruleset': ['ruleset', '--ruleset 缺值'],
+  '--weights': ['weights', '--weights 缺值'],
+  '-m': ['message', '-m 缺值（用法: -m <提交信息>）'],
+  '--type': ['type', '--type 缺值（用法: --type sync|async）'],
+  '--kind': ['kind', '--kind 缺值（用法: --kind read|write|delete|rename）'],
+  '--risk': ['risk', '--risk 缺值（用法: --risk high|medium|low）'],
+  '--op': ['op', '--op 缺值（用法: --op writeFileSync）'],
+  '--dest': ['dest', '--dest 缺值（用法: --dest <目录>）'],
+  '--branch': ['branch', '--branch 缺值（用法: --branch <分支名>）'],
+  '--max-file-mb': ['maxFileMB', '--max-file-mb 缺值（用法: --max-file-mb N）', Number],
+  '--concurrency': ['concurrency', '--concurrency 缺值（用法: --concurrency N）', Number],
+  '--visibility': ['visibility', '--visibility 缺值（用法: --visibility public|private）'],
+  '--email': ['email', '--email 缺值（用法: --email x@y.z）'],
+  '--token': ['token', '--token 缺值（用法: --token <ghp_...>）'],
+};
+
+/** 默认值（函数内每次调用新建，避免跨调用串状态）。 */
+function defaultFlags() {
+  return {
+    depth: undefined, full: false, ruleset: undefined, weights: undefined, includeIgnored: false,
+    push: undefined, dryRun: false, force: false, reqConfirm: false, pushGateConfirmed: false,
+    message: undefined, json: false, max: undefined, owner: undefined, offline: false,
+    summary: false, write: false, type: undefined, kind: undefined, risk: undefined, op: undefined,
+    dest: undefined, branch: undefined, preview: false, maxFileMB: undefined, concurrency: undefined,
+    visibility: undefined, email: undefined, checkSsh: true, token: undefined,
+  };
+}
+
+/** 布尔开关落值：--no-check-ssh 语义是「关掉」而非「开启」，单独处理。 */
+function applyBoolFlag(flags, a) {
+  if (a === '--no-check-ssh') { flags.checkSsh = false; return; }
+  // --push / --no-push 是同一字段的两态，不能混进 BOOL_FLAGS 的「出现即 true」
+  if (a === '--push') { flags.push = true; return; }
+  if (a === '--no-push') { flags.push = false; return; }
+  flags[BOOL_FLAGS[a]] = true;
+}
+
+/** 取值 flag 落值。 */
+function applyValueFlag(flags, a, v) {
+  const [field, , conv] = VALUE_FLAGS[a];
+  flags[field] = conv ? conv(v) : v;
+}
+
 export function parseArgv(argv) {
-  const flags = { depth: undefined, full: false, ruleset: undefined, weights: undefined, includeIgnored: false, push: undefined, dryRun: false, force: false, reqConfirm: false, pushGateConfirmed: false, message: undefined, json: false, max: undefined, owner: undefined, offline: false, summary: false, write: false, type: undefined, kind: undefined, risk: undefined, op: undefined };
+  const flags = defaultFlags();
   const positional = [];
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
-    if (a === '--depth') {
+    if (a === '--push' || a === '--no-push' || a === '--no-check-ssh' || a in BOOL_FLAGS) {
+      applyBoolFlag(flags, a);
+    } else if (a in VALUE_FLAGS) {
       const v = argv[++i];
-      if (v === undefined || v.startsWith('--')) return { error: `--depth 缺值（用法: --depth N）` };
-      flags.depth = Number(v);
-    } else if (a === '--max') {
-      const v = argv[++i];
-      if (v === undefined || v.startsWith('--')) return { error: `--max 缺值（用法: --max N）` };
-      flags.max = Number(v);
-    } else if (a === '--owner') {
-      const v = argv[++i];
-      if (v === undefined || v.startsWith('--')) return { error: `--owner 缺值（用法: --owner <账号>）` };
-      flags.owner = v;
-    } else if (a === '--offline') flags.offline = true;
-    else if (a === '--full') flags.full = true;
-    else if (a === '--include-ignored') flags.includeIgnored = true;
-    else if (a === '--ruleset' || a === '--weights' || a === '-m') {
-      const v = argv[++i];
-      if (v === undefined || v.startsWith('--')) return { error: `${a} 缺值` };
-      if (a === '--ruleset') flags.ruleset = v;
-      else if (a === '--weights') flags.weights = v;
-      else flags.message = v;
-    } else if (a === '--push') flags.push = true;
-    else if (a === '--no-push') flags.push = false;
-    else if (a === '--dry-run') flags.dryRun = true;
-    else if (a === '--force') flags.force = true;
-    else if (a === '--req-confirm') flags.reqConfirm = true;
-    else if (a === '--push-gate-confirmed') flags.pushGateConfirmed = true;
-    else if (a === '--json') flags.json = true;
-    // file-io 专用（三标签过滤；值参数支持逗号多值）
-    //   注：每个 flag 用独立 `a === '--xxx'` 分支写，便于 self-check 静态比对 HELP↔parseArgv
-    //   （组合条件 `a === '--x' || a === '--y'` 会让自检扫不到，误报「HELP 写了但 parseArgv 不认」）。
-    else if (a === '--summary') flags.summary = true;
-    else if (a === '--write') flags.write = true;
-    else if (a === '--type') {
-      const v = argv[++i];
-      if (v === undefined || v.startsWith('--')) return { error: `--type 缺值（用法: --type sync|async）` };
-      flags.type = v;
+      if (v === undefined || v.startsWith('--')) return { error: VALUE_FLAGS[a][1] };
+      applyValueFlag(flags, a, v);
+    } else if (a.startsWith('--')) {
+      return { error: `未知参数: ${a}` };
+    } else {
+      positional.push(a);
     }
-    else if (a === '--kind') {
-      const v = argv[++i];
-      if (v === undefined || v.startsWith('--')) return { error: `--kind 缺值（用法: --kind read|write|delete|rename）` };
-      flags.kind = v;
-    }
-    else if (a === '--risk') {
-      const v = argv[++i];
-      if (v === undefined || v.startsWith('--')) return { error: `--risk 缺值（用法: --risk high|medium|low）` };
-      flags.risk = v;
-    }
-    else if (a === '--op') {
-      const v = argv[++i];
-      if (v === undefined || v.startsWith('--')) return { error: `--op 缺值（用法: --op writeFileSync）` };
-      flags.op = v;
-    }
-    else if (a.startsWith('--')) return { error: `未知参数: ${a}` };
-    else positional.push(a);
   }
   return { flags, positional };
 }
@@ -311,6 +360,127 @@ export async function cmdLinkCheck(root = '.') {
   console.log(`共 ${all.length} 个问题，扣分合计 ${sumLinkPenalty(all)}（只 warning，不拦提交）`);
 }
 
+/** 子命令：clone — 从 GitHub 克隆仓库（Git Data API 通道，不直连 github.com）。 */
+export async function cmdClone(flags, positional) {
+  const target = positional[0] || '';
+  const dest = positional[1] || flags.dest || '';
+  if (!target) { console.error('缺少 <owner/repo>（用法: git-sluice clone <owner/repo> [dest]）'); return 1; }
+  // --preview：只探测不写盘（对应插件 git_clone 的预检语义）
+  if (flags.preview) {
+    // previewClone 不自己解析 token（内部无 resolveToken），私有仓不传就是 404
+    const tk = flags.token || resolveToken({ tokenPath: process.env.DSH_GIT_PUSH_TOKEN ? undefined : '', repoPath: '' }).token;
+    const pr = await previewClone({ target, token: tk, branch: flags.branch || '' });
+    if (flags.json) { console.log(JSON.stringify(pr, null, 2)); return pr.ok ? 0 : 1; }
+    if (!pr.ok) { console.error(`❌ 预演失败: ${pr.error || ''}`); return 1; }
+    console.log(`预演 ${target}（分支 ${pr.branch || '(默认)'}）`);
+    // 字段名以 previewClone 实际返回为准：totalFiles/downloadCount/downloadBytes/skipped
+    console.log(`  共 ${pr.totalFiles ?? 0} 个文件，将下载 ${pr.downloadCount ?? 0} 个`
+      + `（${((pr.downloadBytes || 0) / 1048576).toFixed(1)} MB）`);
+    if (pr.skipped?.length) console.log(`  ⚠️ 超限跳过 ${pr.skipped.length} 个（> ${flags.maxFileMB ?? DEFAULT_MAX_FILE_MB} MB）`);
+    if (pr.empty) console.log('  ⚠️ 全部文件均超限，无内容可下载');
+    return 0;
+  }
+  const r = await cloneViaApi({
+    target,
+    dest,
+    token: flags.token || '',
+    branch: flags.branch || '',
+    maxFileMB: flags.maxFileMB,
+    // 并发过高会撞 GitHub 风控（与插件同默认值）
+    concurrency: flags.concurrency,
+    // 进度回调：CLI 下按 5% 粒度打点，避免刷屏
+    onProgress: ({ done, total, failed }) => {
+      if (!total) return;
+      const pct = Math.floor((done / total) * 100);
+      if (pct !== cmdClone._lastPct) { cmdClone._lastPct = pct; process.stderr.write(`\r  下载 ${done}/${total}（${pct}%，失败 ${failed}）`); }
+    },
+  });
+  cmdClone._lastPct = -1;
+  if (flags.json) { console.log(JSON.stringify(r, null, 2)); return r.ok ? 0 : 1; }
+  if (!r.ok) {
+    console.error(`\n❌ 克隆未完成：${r.error || ''}`);
+    if (r.failed?.length) for (const x of r.failed.slice(0, 10)) console.error(`  ${x.path} → ${x.reason}`);
+    if (r.kept) console.error('  （已下好的文件已保留，可再次运行续传）');
+    return 1;
+  }
+  console.error(''); // 结束进度行
+  console.log(`✅ 克隆完成：${r.dest || dest || target}`);
+  console.log(`   ${r.files ?? 0}/${r.total ?? 0} 个文件${r.skippedCount ? `，跳过 ${r.skippedCount} 个大文件` : ''}`);
+  if (r.skipped?.length) for (const x of r.skipped) console.log(`   ⚠️ 跳过 ${x.path}（${(x.size / 1048576).toFixed(1)} MB）`);
+  return 0;
+}
+
+/** 子命令：account-check — 校验 GitHub 账号与凭据（token 在线校验 + SSH 公钥指纹）。 */
+export async function cmdAccountCheck(flags) {
+  const r = await checkGithubAccount({ token: flags.token || '', checkSsh: flags.checkSsh !== false });
+  if (flags.json) { console.log(JSON.stringify(r, null, 2)); return r.ok === false ? 1 : 0; }
+  // 复用插件的格式化输出（保证 CLI 与侧边栏账号面板口径一致）
+  console.log(formatGithubAccountBlock(r));
+  if (r.sshPub) console.log(`\n公钥内容：\n${r.sshPub}`);
+  return r.ok === false ? 1 : 0;
+}
+
+/** 子命令：remote-create — 按项目文件夹在 GitHub 建远端仓库（已存在则复用）。 */
+export async function cmdRemoteCreate(repo, flags) {
+  if (!repo) { console.error('缺少 <repo>（用法: git-sluice remote-create <repo> [--visibility public|private]）'); return 1; }
+  const r = await ensureRemoteRepo({
+    repoPath: repo,
+    owner: flags.owner || '',
+    visibility: flags.visibility || 'private',
+    dryRun: flags.dryRun === true,
+  });
+  if (flags.json) { console.log(JSON.stringify(r, null, 2)); return r.ok ? 0 : 1; }
+  if (!r.ok) { console.error(`❌ 失败: ${r.error || ''}`); return 1; }
+  if (r.dryRun) { console.log(`预演：将创建 ${r.owner}/${r.name}（${r.visibility}）`); return 0; }
+  if (r.exists) { console.log(`✅ 远端已存在，直接复用：${r.owner}/${r.name}（${r.visibility}）`); return 0; }
+  console.log(`✅ 已创建远端仓库：${r.owner}/${r.name}（${r.visibility}）`);
+  console.log(`   origin → ${r.origin || ''}`);
+  return 0;
+}
+
+/** 子命令：set-visibility — 切换仓库公开/私有。 */
+export async function cmdSetVisibility(repo, flags) {
+  const vis = String(flags.visibility || '').toLowerCase();
+  if (!repo || (vis !== 'public' && vis !== 'private')) {
+    console.error('用法: git-sluice set-visibility <repo> --visibility public|private');
+    return 1;
+  }
+  // 用 local remote 反推 owner/repo（与插件 git_set_visibility 同一路径）
+  const pr = await resolveRepoOwnerName(repo);
+  if (!pr.ok) { console.error(`❌ ${pr.error}`); return 1; }
+  const r = await setVisibility({ owner: pr.owner, repo: pr.name, visibility: vis });
+  if (flags.json) { console.log(JSON.stringify({ ...r, owner: pr.owner, repo: pr.name }, null, 2)); return r.ok ? 0 : 1; }
+  if (!r.ok) { console.error(`❌ 失败: ${r.error || ''}`); return 1; }
+  console.log(`✅ ${pr.owner}/${pr.name} 可见性已切换为 ${vis}`);
+  return 0;
+}
+
+/** 子命令：gen-ssh-key — 生成 SSH 密钥对（公钥回传，私钥不出本机）。 */
+export async function cmdGenSshKey(flags) {
+  const email = flags.email || '';
+  if (!email) { console.error('缺少 --email <x@y.z>（用法: git-sluice gen-ssh-key --email you@example.com [--force]）'); return 1; }
+  const r = await generateSshKey(email, { force: flags.force === true });
+  if (flags.json) { console.log(JSON.stringify(r, null, 2)); return r.ok ? 0 : 1; }
+  if (!r.ok) { console.error(`❌ 失败: ${r.error || ''}`); return 1; }
+  console.log(`✅ SSH 密钥已生成（${email}）`);
+  if (r.pubPath) console.log(`   公钥文件：${r.pubPath}`);
+  if (r.privPath) console.log(`   私钥文件：${r.privPath}（权限 0600，不上传）`);
+  if (r.pub) console.log(`\n公钥（整行复制到 GitHub → Settings → SSH keys）：\n${r.pub}`);
+  return 0;
+}
+
+/** 从本地 remote 反推 owner/repo（set-visibility 用）。 */
+async function resolveRepoOwnerName(repoPath) {
+  const { execFileSync } = await import('node:child_process');
+  let url = '';
+  try {
+    url = execFileSync('git', ['-C', repoPath, 'remote', 'get-url', 'origin'], { encoding: 'utf8' }).trim();
+  } catch { return { ok: false, error: `读不到 origin：${repoPath}` }; }
+  const pr = parseGithubOwnerRepo(url);
+  if (!pr) return { ok: false, error: `无法从 origin 解析 owner/repo：${url}` };
+  return { ok: true, owner: pr.owner, name: pr.repo };
+}
+
 export function cmdYamlTemplate() {
   console.log(yamlTemplate());
 }
@@ -438,6 +608,31 @@ export async function main(argv = process.argv.slice(2)) {
     return await cmdFileIo(positional, flags);
   }
   if (cmd === 'link-check') return await cmdLinkCheck(rest[0] || '.');
+  if (cmd === 'clone') {
+    const { flags, positional, error } = parseArgv(rest);
+    if (error) return console.error(error);
+    return await cmdClone(flags, positional);
+  }
+  if (cmd === 'account-check') {
+    const { flags, error } = parseArgv(rest);
+    if (error) return console.error(error);
+    return await cmdAccountCheck(flags);
+  }
+  if (cmd === 'remote-create') {
+    const { flags, positional, error } = parseArgv(rest);
+    if (error) return console.error(error);
+    return await cmdRemoteCreate(positional[0] || '', flags);
+  }
+  if (cmd === 'set-visibility') {
+    const { flags, positional, error } = parseArgv(rest);
+    if (error) return console.error(error);
+    return await cmdSetVisibility(positional[0] || '', flags);
+  }
+  if (cmd === 'gen-ssh-key') {
+    const { flags, error } = parseArgv(rest);
+    if (error) return console.error(error);
+    return await cmdGenSshKey(flags);
+  }
   if (cmd === 'yaml-template') return await cmdYamlTemplate();
   if (cmd === 'readme-template') return await cmdReadmeTemplate();
   if (cmd === 'self-check') return await cmdSelfCheck();

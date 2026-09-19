@@ -281,3 +281,66 @@ test('clone 防护：目标位于既有仓库工作树内必须拒绝', async ()
   assert.equal(existsSync(join(ROOT, '.tmp-guard-probe')), false,
     '被拒绝时不得留下目标目录');
 });
+
+// 2026-09-19：CLI 补齐的 5 个命令（clone / account-check / remote-create /
+//   set-visibility / gen-ssh-key）——与插件同名工具一一对应。
+//   这些用例全部**离线**：只验证「命令已接线、参数校验、退出码」三件事，
+//   不发网络请求、不写远端、不动本机凭据（联网部分由 clone e2e 覆盖）。
+test('CLI 新命令：HELP 必须列出 5 个补齐命令', () => {
+  const helpBlock = cliText.match(/const HELP = `([\s\S]*?)`;/);
+  assert.ok(helpBlock, 'cli.mjs 应含 HELP 常量');
+  for (const cmd of ['clone', 'account-check', 'remote-create', 'set-visibility', 'gen-ssh-key']) {
+    assert.ok(new RegExp(`git-sluice ${cmd}\\b`).test(helpBlock[1]),
+      `HELP 必须列出 ${cmd}（否则用户不知道它存在）`);
+  }
+});
+
+test('CLI 新命令：main 分发必须接线（不能只写 HELP）', () => {
+  for (const cmd of ['clone', 'account-check', 'remote-create', 'set-visibility', 'gen-ssh-key']) {
+    assert.ok(new RegExp(`cmd === '${cmd}'`).test(cliText),
+      `main 必须分发 ${cmd}`);
+  }
+});
+
+test('CLI 新命令：--email / --visibility 解析与缺值报错', () => {
+  // 值参数正常解析
+  const r1 = parseArgv(['--email', 'a@b.co', '--visibility', 'private']);
+  assert.equal(r1.flags.email, 'a@b.co');
+  assert.equal(r1.flags.visibility, 'private');
+  // 缺值必须报错（而非静默吞掉下一个参数）
+  for (const f of ['--email', '--visibility', '--dest', '--branch', '--token', '--max-file-mb', '--concurrency']) {
+    const r = parseArgv([f]);
+    assert.ok(r.error, `${f} 缺值必须报错`);
+  }
+});
+
+test('CLI 新命令：--no-check-ssh / --preview 布尔开关', () => {
+  assert.equal(parseArgv(['--preview']).flags.preview, true);
+  // checkSsh 默认 true，--no-check-ssh 置 false（语义是「关掉」而非「开启」）
+  assert.equal(parseArgv([]).flags.checkSsh, true);
+  assert.equal(parseArgv(['--no-check-ssh']).flags.checkSsh, false);
+});
+
+test('CLI 新命令：缺必填参数时退出码非 0（脚本可判失败）', async () => {
+  const cases = [
+    ['clone', []],                       // 缺 <owner/repo>
+    ['remote-create', []],               // 缺 <repo>
+    ['set-visibility', ['/tmp']],        // 缺 --visibility
+    ['gen-ssh-key', []],                 // 缺 --email
+  ];
+  for (const [cmd, args] of cases) {
+    const prevErr = console.error;
+    console.error = () => {};
+    let code;
+    try { code = await main([cmd, ...args]); } finally { console.error = prevErr; }
+    assert.equal(code, 1, `${cmd} 缺参数必须返回 1（实际 ${code}）`);
+  }
+});
+
+test('CLI 新命令：--visibility 只接受 public|private', async () => {
+  const prevErr = console.error;
+  console.error = () => {};
+  let code;
+  try { code = await main(['set-visibility', '/tmp', '--visibility', 'weird']); } finally { console.error = prevErr; }
+  assert.equal(code, 1, '非法 visibility 必须拒绝（防误改可见性）');
+});
