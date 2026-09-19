@@ -340,6 +340,7 @@ dsh-git-push/
 │   ├── dsh-repo-index.md — dsh-repo-index skill（源码索引权威说明）
 │   ├── git-push-live-fix.md — git-push 工具问题当场提出并改插件的规则
 │   ├── task-completion-report.md — 任务收尾汇报规则（✅+交付/验证/遗留）
+│   ├── tool-json-add-ask.md — （待注释）
 │   ├── git-workflow-gitpush/ — git-workflow-gitpush 工作流 skill（dsh-git-push 提交纪律）
 │   │   ├── README.md — git 工作流 skill 子目录说明
 │   │   ├── commit-checkpoint-before-push-reorg.md — 推送重组前提交检查点规则
