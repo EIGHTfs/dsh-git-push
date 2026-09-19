@@ -43,5 +43,8 @@
   "gcc": "",
   "g++": "",
   "make": "",
-  "pkg-config": ""
+  "pkg-config": "",
+  "chromium": "",
+  "playwright": "",
+  "puppeteer": ""
 }
