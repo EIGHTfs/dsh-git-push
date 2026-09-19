@@ -205,3 +205,19 @@ test('解析：往返一致（生成 → 解析 → 关键字段相同）', () =
   assert.equal(parsed.projectRoot, opts.projectRoot);
   assert.deepEqual(parsed.tools, opts.tools);
 });
+
+test('环境注入：运行主机名 + 局域网 IP（默认探测 / host 覆盖）', () => {
+  // 默认：真实探测（本机必有主机名；IP 可能为空但不报错）
+  const t = createEnvInjectionText({ cwd: '/work' });
+  const hostLine = t.split('\n').find((l) => l.startsWith('- 运行主机'));
+  assert.ok(hostLine && hostLine.includes('：'), '应输出「运行主机：主机名（IP）」行');
+  const p = parseEnvInjection(t);
+  assert.ok(p.host && typeof p.host.hostname === 'string' && p.host.hostname.length > 0, '解析出主机名');
+  assert.ok(Array.isArray(p.host.ips), 'ips 为数组');
+  // host 参数注入覆盖（测试可控）
+  const t2 = createEnvInjectionText({ cwd: '/x', host: { hostname: 'testhost', ips: ['10.0.0.8', '192.168.1.5'] } });
+  assert.ok(t2.includes('运行主机：testhost（10.0.0.8 / 192.168.1.5）'));
+  const p2 = parseEnvInjection(t2);
+  assert.equal(p2.host.hostname, 'testhost');
+  assert.deepEqual(p2.host.ips, ['10.0.0.8', '192.168.1.5']);
+});
