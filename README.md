@@ -895,6 +895,11 @@ node scripts/audit-runtime-check.mjs --all <目录>
 **配套改动**：`updateRepoRemoteStateInIndex` 的 `remoteState` 新增可选 `visibility` 字段；**空值不覆盖**——`''` 表示「本次没查到」而非「已知是未知」，无条件写入会把云端扫描/手工标注得到的好值抹成空（实测该分支，见下条测试）。\
 **同日自我修正（两处，均为上一处修复引入）**：①**写索引竞态**——初版把 `updateRepoRemoteStateInIndex`（读-改-写单条目）与 `maintainRepoIndex`（全量重建后整文件覆盖）**并发**跑，后完成者会盖掉先完成者，实测把刚写好的条目冲掉；现改为**串行**，全量重建在前、精确回写在后（重建是权威快照，增量应在其后落定）。②**SSH 通道取不到 commitSha**——`transport.js` 的 SSH 分支 `return` 里**没有** `commitSha`（只有 API 分支有），初版 `r.push?.commitSha || ''` 在 SSH 推送后取到空串，会把索引里已有的 `remoteHead` **抹成空**；现改为拿不到就回退「推送后的本地 HEAD」（推送成功即远端 HEAD == 本地 HEAD）。回归上仍为 fire-and-forget，失败静默。两项均补了锁死测试。\
 **测试**：`test/test-repo-list.mjs` 新增 2 项——①传 `visibility` 必须写回（覆盖「只更新 5 个远端字段、可见性永远停在旧值」的旧行为）；②不传 `visibility` 必须保留既有值、其余字段照常更新。两项均做反向验证：去掉写回分支 → 第 ① 项失败；改成无条件覆盖 → 第 ② 项失败。另做端到端实测：隔离临时索引上调一次回写，确认 5 个字段（`visibility` 未知→私有、`remoteHead`、`remoteHeadAt`、`remoteStateAt`、`ahead`/`behind`）全部正确落盘。\
+| **1.4.6**（当前） | **clone 下载改双通道：先 api 后 raw（2026-09-19）** \
+**现象**：克隆 `EIGHTfs/gallery`（99 文件 / 153.8MB / 私有仓）时 **95 个文件拉取失败**，报 「仓库不存在或为私有」，但同一 token 手工 `curl` 取同一文件却是 **HTTP 200**。\
+**根因**：`clone-download.js` 的 `fetchToFile` 注释写的是走 `api.github.com`，实际代码只走 `raw.githubusercontent.com`。实测本机网络下 **raw 并发 8 只有 1 条通**（其余直接连不上，`SSL_ERROR_SYSCALL`），而 **api 并发 8 全通**；`downloadBlobs` 默认并发 8，于是绝大多数文件必然失败——单发时 raw 偶尔能通，这正是「手工 curl 成功、插件失败」的原因。\
+**修复**：改为**双通道依次尝试**（首个成功即用，全失败才回报最后一条成因）——常态（`have === 0`）**先 api**（稳），失败退 raw；续传（`have > 0`）**先 raw**（唯一支持 `Range` 断点续传），失败退 api。api 通路带 `Accept: application/vnd.github.raw` 才回原始字节（否则回 JSON/base64）。保留 raw 作续传主通道是刻意的：api 的 contents 端点忽略 `Range`，无法从断点续。\
+**实测对照**：改前 raw 并发 8 → **1 成功 / 7 失败**；改后先 api 并发 14 文件 → **14/14 成功（100%）**。两条通道单发均 200 且内容一致（12170B），互为兜底。\
 | **1.4.6**（当前） | **`.auditignore` 非 git 目录兜底 + cookie-secure-flag 误报/漏报各修一（同一版本内修订）** \
 **修 clone 按钮 ReferenceError（2026-09-18）**：1.4.1 为 clone 放宽超时改用 `dshgp_CLONE_TIMEOUT_MS`，但**只改了用法、漏了定义**——点克隆即抛 `dshgp_CLONE_TIMEOUT_MS is not defined`。这类「用了没定义」是运行时错误，`node --check` 查不出（语法合法），全量回归也覆盖不到（不触发那条分支），只有用户点到才炸。现补齐定义（30 分钟，与 1.4.1「clone 单独放宽到 30 分钟」一致；判卡死仍看进度停滞而非绝对超时）。\
 **配套：全仓复核同类漏网**。用「收集 `dshgp_` 前缀标识符的定义与引用」做了一次全量比对，client.js **26 个定义 / 26 个引用**全部匹配，无其他漏网，属孤例。新增 2 条回归测试锁死：① client.js 内所有 `dshgp_` 标识符引用必须有同名定义；② clone 超时常量必须存在且 ≥ 10 分钟。\

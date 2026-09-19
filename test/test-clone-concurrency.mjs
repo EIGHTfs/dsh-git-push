@@ -313,7 +313,12 @@ test('clone 续传：已下完的最终文件必须复用，不得重下', () =>
   const src = readFileSync(join(ROOT, 'lib/git/clone-download.js'), 'utf8');
   const fnStart = src.indexOf('async function fetchToFile');
   assert.ok(fnStart > 0, '应存在 fetchToFile');
-  const body = src.slice(fnStart, fnStart + 2000);
+  // 取到**下一个顶层函数**为止，而不是写死字符数：
+  //   写死 2000 时，函数体内新增任何逻辑（如 2026-09-19 的 api/raw 双通道选路）
+  //   都会把 'await fetch(' 推出窗口，导致本测试「因功能变长而失败」——测的是
+  //   代码长度而非复用语义，属脆弱断言。按函数边界截取才对准被测语义。
+  const nextFn = src.indexOf('\nasync function ', fnStart + 1);
+  const body = src.slice(fnStart, nextFn > 0 ? nextFn : fnStart + 6000);
   // 必须在开头就有「最终文件已完整则复用」的早返回；
   //   若只认 .part 分片，失败清理删掉 .dsh-parts 后保留的文件会被重下，
   //   「保留已下文件」的收益归零（实测 gallery 153.8MB 重下一遍）。
