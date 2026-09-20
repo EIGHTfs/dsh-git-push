@@ -186,6 +186,18 @@ test('上下文注入：agent/pre-step + WeakSet 防重复 + createUserMessage�
   assert.ok(pluginSrc.includes("decision?.kind === 'reject'"), '被拒/中止必须原样放行');
 });
 
+test('上下文注入：cwd 必须取会话工作区（agent.session.header.cwd），不得用宿主框架根', () => {
+  const pluginSrc = readFileSync(join(ROOT, 'lib/plugin/index.js'), 'utf8');
+  const applySrc2 = readFileSync(join(ROOT, 'lib/app/apply.js'), 'utf8');
+  // pre-step 回调把会话 cwd 传给 envInjectText（空则回退默认）
+  assert.ok(pluginSrc.includes('agent.session.header.cwd'), '必须从 agent.session.header.cwd 取会话工作区');
+  assert.ok(pluginSrc.includes('envInjectText(sessionCwd)'), '会话工作区必须传给 envInjectText');
+  // apply 侧：缓存按 root 键化（不同会话 cwd 不串）+ mapWorkspaceDirs 的 git 探测也在会话工作区跑
+  assert.ok(applySrc2.includes('const envInjectText = (cwdOverride) =>'), 'envInjectText 必须接受会话 cwd 覆盖');
+  assert.ok(applySrc2.includes('envInjectCache.has(root)'), '缓存必须按 root 键化');
+  assert.ok(applySrc2.includes('workspaceRoot: root, cwd: root'), 'mapWorkspaceDirs 的 cwd 必须与注入 cwd 一致');
+});
+
 test('host：设置页切换总开关即时生效（启动 merge + HTTP，watch 不灌开关）', () => {
   // 2026-09-15：开关真源是 config.json（启动 merge + HTTP settings-set）；
   //   watch 不得再 applySettingsToCfg(cfg, next)——yaml 缺键会用 schema 默认 false 盖掉勾选

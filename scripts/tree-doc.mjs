@@ -273,42 +273,51 @@ const isMain = process.argv[1] && fileURLToPath(import.meta.url) === resolve(pro
 if (isMain) {
   const args = process.argv.slice(2);
   const cmd = args[0];
+  // 2026-09-20：`--root <路径>` 支持外调其他项目——其他仓库可直接用本脚本维护自己的
+  //   README 目录树（`node <dsh-git-push>/scripts/tree-doc.mjs check --root <其他项目根>`）。
+  //   缺省 = 自身项目（向后兼容）；显式 `--readme` 优先于 root 推导的 README 路径。
+  const rootIdx = args.indexOf('--root');
+  const rootArg = rootIdx !== -1 && args[rootIdx + 1] ? resolve(args[rootIdx + 1]) : ROOT;
+  const defReadme = rootArg === ROOT ? DEFAULT_README : join(rootArg, 'README.md');
   const readmeIdx = args.indexOf('--readme');
-  const readmePath = readmeIdx !== -1 ? resolve(args[readmeIdx + 1] || DEFAULT_README) : DEFAULT_README;
+  const readmePath = readmeIdx !== -1 ? resolve(args[readmeIdx + 1] || defReadme) : defReadme;
   const forceAll = args.includes('--all');
+  const filesOf = (r) => gitLsFiles(r);
+  const mapOf = (r) => loadMapping(r);
 
   switch (cmd) {
     case 'sync': {
       // 索引自动同步：新增补（待注释）、删除自动删键（描述连带删）
-      const { added, removed, map } = syncIndex({ write: !args.includes('--dry') });
+      const files = filesOf(rootArg);
+      const { added, removed, map } = syncIndex({ write: !args.includes('--dry'), files, map: mapOf(rootArg) });
       const dirs = new Set();
-      for (const f of gitLsFiles()) {
+      for (const f of files) {
         let dir = f.includes('/') ? f.slice(0, f.lastIndexOf('/')) : null;
         while (dir) { dirs.add(dir + '/'); const i = dir.lastIndexOf('/'); dir = i === -1 ? null : dir.slice(0, i); }
       }
-      const tree = buildTreeText(gitLsFiles(), map);
+      const tree = buildTreeText(files, map);
       if (added.length) console.log(`✅ 新增索引键 ${added.length} 个（值=（待注释），请补描述）:\n  ${added.join('\n  ')}`);
       if (removed.length) console.log(`🗑  删除索引键 ${removed.length} 个（文件已删，描述连带删除）:\n  ${removed.join('\n  ')}`);
       if (!added.length && !removed.length) console.log('✅ 索引已同步（无新增/删除）');
-      if (args.includes('--write-tree')) writeFileSync(DEFAULT_README, applyBlock(readReadme(DEFAULT_README), tree), 'utf8');
+      if (args.includes('--write-tree')) writeFileSync(readmePath, applyBlock(readReadme(readmePath), tree), 'utf8');
       console.log(`（tree-doc.json 现有 ${Object.keys(map).length} 键；gen 输出见 tree-doc.mjs gen）`);
       break;
     }
     case 'gen': {
-      const files = gitLsFiles();
+      const files = filesOf(rootArg);
       if (args.includes('--write')) {
         // 索引同步 + 补（待注释）（2026-09-15：与 sync 同一逻辑，--all 为显式全量语义）
-        const { added, removed } = syncIndex({ write: true, files });
+        const { added, removed } = syncIndex({ write: true, files, map: mapOf(rootArg) });
         if (forceAll) console.log('--all：已强制全量追加索引');
         console.log(`tree-doc.json 已同步（新增 ${added.length} / 删除 ${removed.length}；${added.length ? '待注释键请补描述' : ''}）`);
       } else {
-        console.log(buildTreeText(files, loadMapping()));
+        console.log(buildTreeText(files, mapOf(rootArg)));
       }
       break;
     }
     case 'check': {
-      const r = checkDrift({ readmePath });
-      if (r.ok) { console.log('✅ 目录结构与 README 一致（无漂移）'); process.exit(0); }
+      const r = checkDrift({ readmePath, root: rootArg });
+      if (r.ok) { console.log(`✅ 目录结构与 README 一致（无漂移）${rootArg !== ROOT ? ` @ ${rootArg}` : ''}`); process.exit(0); }
       console.log('❌ 存在漂移：');
       for (const i of r.issues) console.log('  -', i.msg);
       if (r.realTree) console.log('\n═══ 最新树（可用 apply 覆盖）═══\n' + r.realTree);
@@ -316,8 +325,8 @@ if (isMain) {
     }
     case 'apply': {
       // apply 前先同步索引，保证树用最新映射（描述缺失处标（待注释））
-      if (args.includes('--sync') || forceAll) syncIndex({ write: true });
-      const tree = buildTreeText();
+      if (args.includes('--sync') || forceAll) syncIndex({ write: true, files: filesOf(rootArg), map: mapOf(rootArg) });
+      const tree = buildTreeText(filesOf(rootArg), mapOf(rootArg));
       const text = readReadme(readmePath);
       const updated = applyBlock(text, tree);
       writeFileSync(readmePath, updated, 'utf8');
@@ -325,7 +334,7 @@ if (isMain) {
       break;
     }
     default:
-      console.log('用法: node scripts/tree-doc.mjs <sync|gen|check|apply> [--readme <路径>] [--write] [--all] [--dry]');
+      console.log('用法: node scripts/tree-doc.mjs <sync|gen|check|apply> [--root <项目根>] [--readme <路径>] [--write] [--all] [--dry]');
       process.exit(1);
   }
 }

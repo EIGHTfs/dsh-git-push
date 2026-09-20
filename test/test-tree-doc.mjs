@@ -5,11 +5,16 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync, readFileSync, rmSync, existsSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { buildTreeText, checkDrift, syncIndex } from '../scripts/tree-doc.mjs';
+
+// 脚本与项目根（CLI --root 外调用例需要）
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 // 用临时仓库模拟真实结构（脚本 ROOT 指向项目根，这里只测纯函数）
 const TMP = mkdtempSync(join(tmpdir(), 'tree-doc-test-'));
@@ -110,6 +115,42 @@ test('syncIndex：新目录自动补目录键（无尾斜杠）；write=true 变
   assert.equal(map['x'], '（待注释）', '目录键值为待注释占位');
   assert.ok(added.includes('x/y.js'), '新文件键应自动补');
   assert.ok(Array.isArray(removed));
+});
+
+// ---------- CLI `--root` 外调其他项目（2026-09-20，1.5.6） ----------
+test('CLI --root：可对任意项目根 check/apply（其他项目复用本脚本）', () => {
+  // 构造临时 git 仓库（模拟其他项目：有 README 树块 + tree-doc.json）
+  const proj = mkdtempSync(join(tmpdir(), 'tree-doc-root-'));
+  const files = ['src/index.js', 'tree-doc.json', 'README.md'];
+  const map = { 'src': '源码', 'src/index.js': '入口', 'tree-doc.json': '目录注释映射', 'README.md': '文档' };
+  const tree = buildTreeText(files, map);
+  writeFileSync(join(proj, 'README.md'), makeReadme(tree), 'utf8');
+  writeFileSync(join(proj, 'tree-doc.json'), JSON.stringify(map, null, 2) + '\n', 'utf8');
+  mkdirSync(join(proj, 'src'), { recursive: true });
+  writeFileSync(join(proj, 'src/index.js'), 'export const x = 1;\n', 'utf8');
+  // 模拟 git init 仓库（gitLsFiles root 需要 git 检测）
+  const initRes = spawnSync('git', ['-C', proj, 'init', '-q'], { encoding: 'utf8' });
+  assert.equal(initRes.status, 0, '临时仓库 git init 应成功');
+  spawnSync('git', ['-C', proj, 'add', '-A'], { encoding: 'utf8' });
+
+  // CLI check --root：外部项目无漂移
+  const script = join(ROOT, 'scripts/tree-doc.mjs');
+  const check = spawnSync(process.execPath, [script, 'check', '--root', proj], { encoding: 'utf8' });
+  assert.equal(check.status, 0, 'check --root 应通过（无漂移）: ' + check.stdout + check.stderr);
+
+  // 加一个新文件后 check --root 应漂移（真实文件不在 README 树）
+  writeFileSync(join(proj, 'src/new.js'), 'export const y = 2;\n', 'utf8');
+  spawnSync('git', ['-C', proj, 'add', '-A'], { encoding: 'utf8' });
+  const drift = spawnSync(process.execPath, [script, 'check', '--root', proj], { encoding: 'utf8' });
+  assert.equal(drift.status, 1, '新增未列文件应报漂移');
+  assert.match(drift.stdout, /new\.js/, '漂移应点名 new.js');
+
+  // apply --root：把最新树写进外部项目 README
+  const apply = spawnSync(process.execPath, [script, 'apply', '--root', proj], { encoding: 'utf8' });
+  assert.equal(apply.status, 0, 'apply --root 应成功: ' + apply.stdout + apply.stderr);
+  const readmeAfter = readFileSync(join(proj, 'README.md'), 'utf8');
+  assert.match(readmeAfter, /new\.js — （待注释）/, 'apply 后 README 应含新文件（待注释键在 json 未补描述）');
+  try { rmSync(proj, { recursive: true, force: true }); } catch { /* 清理 */ }
 });
 
 // 清理
