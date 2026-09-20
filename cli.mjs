@@ -28,6 +28,7 @@ import { generateSshKey, resolveToken } from './lib/git/credentials.js';
 import { readFileSync } from 'node:fs';
 import { access } from 'node:fs/promises';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 /** parseArgv 认识的选项白名单（cli-help-sync 机器比对基准，必须与 HELP 文本一致。
  * 注：-m 是单横线别名（helpSync 只比对 -- 双横线），不列入本表。 */
@@ -54,6 +55,8 @@ const HELP = `git-sluice v${VERSION} — dsh-git-push 引擎独立 CLI（脱离 
   git-sluice file-io [路径...] [--summary] [--write] [--type sync|async] [--kind read|write|delete|rename] [--risk high|medium|low] [--op <操作名>] [--json]
                                   文件读写调用扫描（三标签：类型/操作/上下文）——同步 I/O 在异步路径会阻塞；写/删/改名涉及数据安全
   git-sluice link-check <路径>    检查 md/文本中的链接有效性（只 warning，flaky 域名打折）
+  git-sluice module-splitter <analyze|split|verify> <file|plan> [--dry-run] [--json]
+                                  巨型单文件按顶层块拆分（python3 零依赖；analyze 先出块/依赖图 → AI 写 plan.json → split 切分 → verify 校验导出面；--dry-run=split 只预演）
   git-sluice clone <owner/repo> [dest] [--branch <名>] [--dest <目录>] [--max-file-mb N] [--concurrency N] [--preview] [--json]
                                   从 GitHub 克隆仓库（Git Data API 通道，不直连 github.com；--preview=只探测不写盘）
   git-sluice account-check [--token <t>] [--no-check-ssh] [--json]
@@ -569,6 +572,40 @@ export function cmdFileIo(targets = [], flags = {}) {
   return hits;
 }
 
+/** module-splitter CLI（与插件工具 module_splitter 同实现，调 python3 零依赖脚本）。 */
+export async function cmdModuleSplitter(positional = [], flags = {}) {
+  const sub = String(positional[0] || '').trim();
+  const target = String(positional[1] || '').trim();
+  if (!['analyze', 'split', 'verify'].includes(sub)) {
+    console.error(`module-splitter 子命令应为 analyze|split|verify（得「${sub || '(空)'}」）`);
+    return { ok: false, error: '子命令应为 analyze|split|verify' };
+  }
+  if (!target) {
+    console.error('module-splitter 需要目标参数：analyze <file.js> / split <plan.json> / verify <plan.json>');
+    return { ok: false, error: '缺目标文件/plan 路径' };
+  }
+  const { spawnSync } = await import('node:child_process');
+  const script = fileURLToPath(new URL('./scripts/module-splitter.py', import.meta.url));
+  const args = [script, sub, target];
+  if (flags.dryRun) args.push('--dry-run');
+  const r = spawnSync('python3', args, { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024, timeout: 120_000 });
+  if (r.error) {
+    const msg = r.error.code === 'ENOENT' ? 'python3 不可用（module-splitter 依赖 python3 标准库）' : `执行失败: ${r.error.message}`;
+    console.error(msg);
+    return { ok: false, error: msg };
+  }
+  if (r.status !== 0) {
+    console.error(r.stderr || r.stdout || `退出码 ${r.status}`);
+    return { ok: false, status: r.status, error: String(r.stderr || r.stdout || '执行失败').trim().slice(0, 500) };
+  }
+  if (flags.json) {
+    console.log(JSON.stringify({ ok: true, command: sub, target, output: r.stdout }, null, 2));
+  } else {
+    console.log(r.stdout);
+  }
+  return { ok: true, command: sub, target, output: r.stdout };
+}
+
 export async function main(argv = process.argv.slice(2)) {
   const [cmd, ...rest] = argv;
   if (!cmd || cmd === 'help' || cmd === '--help' || cmd === '-h') {
@@ -608,6 +645,11 @@ export async function main(argv = process.argv.slice(2)) {
     return await cmdFileIo(positional, flags);
   }
   if (cmd === 'link-check') return await cmdLinkCheck(rest[0] || '.');
+  if (cmd === 'module-splitter') {
+    const { flags, positional, error } = parseArgv(rest);
+    if (error) return console.error(error);
+    return await cmdModuleSplitter(positional, flags);
+  }
   if (cmd === 'clone') {
     const { flags, positional, error } = parseArgv(rest);
     if (error) return console.error(error);
@@ -645,5 +687,8 @@ export async function main(argv = process.argv.slice(2)) {
 if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith('cli.mjs')) {
   // 顶层 await：main 已异步，未 await 时 rejection 会变成 unhandled rejection
   //   （进程静默退出、退出码不对），故显式 await 并回传退出码。
-  process.exitCode = (await main()) ?? process.exitCode;
+  // 2026-09-20：命令函数（cmdFileIo/cmdModuleSplitter 等）返回业务对象/数组，
+  //   只有 number 才赋 exitCode——否则 `process.exitCode = 对象` 抛 ERR_INVALID_ARG_TYPE。
+  const mainResult = await main();
+  if (typeof mainResult === 'number' && Number.isInteger(mainResult)) process.exitCode = mainResult;
 }

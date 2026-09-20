@@ -67,7 +67,7 @@ test('apply：工具注册走 tools.register(defineTool(...))（真实 API）', 
   assert.ok(defineCalls.length >= 6, `应经 defineTool 包装（实际 ${defineCalls.length}）`);
   assert.equal(registered.length, defineCalls.length, 'register 数量应与 define 一致');
   const names = registered.map((t) => t.name);
-  for (const n of ['git_scan', 'git_commit_push', 'code_audit', 'git_clone', 'git_remote_create', 'git_set_visibility', 'link_check']) {
+  for (const n of ['git_scan', 'git_commit_push', 'code_audit', 'git_clone', 'git_remote_create', 'git_set_visibility', 'link_check', 'module_splitter']) {
     assert.ok(names.includes(n), `缺工具 ${n}`);
   }
   setDefineToolOverride(null);

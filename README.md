@@ -272,6 +272,7 @@ dsh-git-push/
 │   ├── audit-runtime-check.mjs — 三层审计 L3 运行时检测脚本
 │   ├── check.mjs — 语法检查脚本（npm run check）
 │   ├── func-index.js — （待注释）
+│   ├── module-splitter.py — 巨型单文件按顶层块拆分脚本（analyze/split/verify 三命令，python3 零依赖；module_splitter 工具与 CLI 的底层实现）
 │   ├── preview-server.mjs — 本地真实后端测试服务（preview.html 接真实 handleHttp）
 │   ├── probe-recheck.mjs — 探针：「重新检测」按钮链路实测（在线校验 token/SSH）
 │   ├── rule-switch.mjs — 规则槽位手动启停 CLI
@@ -315,6 +316,7 @@ dsh-git-push/
 │   ├── test-io-risk.mjs — IO 风险分级测试（四级判定/字段完整性/汇总/排序/finding 转换）
 │   ├── test-link-check.mjs — 链接判断测试（分级扣分/断网不拦）
 │   ├── test-magic-number.mjs — 硬编码魔数检测测试
+│   ├── test-module-splitter.mjs — module_splitter 工具 + CLI 接入测试（契约 + 行为 + 脚本随插件发布）
 │   ├── test-persist-credentials.mjs — 凭据持久化测试
 │   ├── test-plugin.mjs — 插件接线测试（入口导出/工具清单/双副本同步）
 │   ├── test-push-transport.mjs — 推送通道回归（SSH 优先/一致性语义）
@@ -883,7 +885,9 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
-| **1.5.5**（当前） | **环境注入 cwd 修正为会话工作区 + tree-doc --root 外调（2026-09-20）** \
+| **1.5.6**（当前） | **module_splitter 工具 + CLI 接入（2026-09-20）** \
+新增 **`module_splitter`** AI 工具（复用 `scripts/module-splitter.py`，python3 零依赖）——巨型单文件按顶层块拆分：`analyze <file.js>`（只读分析：顶层块行号/行数/块间依赖图/循环风险，先跑这个再据写 plan.json）→ `split <plan.json>`（按 plan 切分到模块 + 生成纯引用 index；`dryRun=true` 只预演不落盘）→ `verify <plan.json>`（校验 index 再导出名集合与原文件 export 完全一致，拆完必跑）。plan 走**文件路径**（AI 先用 write 工具写好 plan.json 再传）；脚本随插件发布（`scripts/` 进 SYNC_ENTRIES）。CLI 同步接入：**`git-sluice module-splitter <analyze|split|verify> <file|plan> [--dry-run] [--json]`**（与插件工具同实现，spawn python3 参数数组防注入；python3 缺失降级提示）。\
+| **1.5.5** | **环境注入 cwd 修正为会话工作区 + tree-doc --root 外调（2026-09-20）** \
 **环境注入 cwd 修正为会话工作区**：pre-step 注入的 `cwd` / 项目 git 根 / 工作区子目录取 `agent.session.header.cwd`（会话工作区，与宿主 sandbox-policy 的 resolve 同源），不再用宿主全局 workspaceRoot（= DSH 安装根）——AI 拿到的任务落位正确；注入缓存按 root 键化（不同会话 cwd 不串），`mapWorkspaceDirs` 的 git 根探测与注入 cwd 一致。test-inject-system-prompt 新增契约测试 4 项。\
 **tree-doc 支持 `--root <项目根>` 外调**：其他项目可直接调用 `scripts/tree-doc.mjs` 维护自己的 README 目录树——`node <dsh-git-push>/scripts/tree-doc.mjs check --root <其他项目根>`（apply/gen/sync 同理），缺省 = 自身项目（向后兼容），显式 `--readme` 优先于 root 推导路径，`check` 输出附带目标项目根。test-tree-doc 新增 CLI 集成用例（临时 git 仓库：check 无漂移 / 新增文件报漂移并点名 / apply 把新文件写进外部项目 README）。\
 | **1.5.4** | **设置侧边栏 · 云端仓库可见性切换（2026-09-20）** \

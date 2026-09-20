@@ -246,5 +246,8 @@
   "test/test-tree-doc.mjs": "README 目录树脚本测试（gen/check/apply 闭环）",
   "tree-doc.json": "目录结构注释映射（路径→一句话介绍，AI 维护）",
   "lib/tool-probes.json": "工具探测清单模板（工具为 key、值为空；运行时实测生成运行目录 tools.json）",
-  "scripts/verify-prestep.mjs": "上下文注入自检脚本（真实触发 agent/pre-step 验证注入）"
+  "scripts/verify-prestep.mjs": "上下文注入自检脚本（真实触发 agent/pre-step 验证注入）",
+  "scripts/module-splitter.py": "巨型单文件按顶层块拆分脚本（analyze/split/verify 三命令，python3 零依赖；module_splitter 工具与 CLI 的底层实现）",
+  "test/test-module-splitter.mjs": "module_splitter 工具 + CLI 接入测试（契约 + 行为 + 脚本随插件发布）",
+  "skills/tool-json-add-ask.md": "（待注释）"
 }
