@@ -13,6 +13,7 @@ import { tmpdir } from 'node:os';
 import '../lib/rule/compilers.js';
 import { auditFull, auditWithScope, makeFinding, summarize } from '../lib/audit/index.js';
 import { collectTextFiles, collectChangedFiles, isGitRepo, readText } from '../lib/audit/collector.js';
+import { checkFileLines, checkFuncLinesAst } from '../lib/ast/size.js';
 import {
   checkEmptyCatch, checkRegexRules, checkPathRegexRules, checkFuncLines, checkIoRisk,
   checkCredentialFiles, checkMinLength, checkComplexity, checkDepth, checkMaxLines,
@@ -484,4 +485,28 @@ test('auditLevel：deep 与 standard 全量等价（当前引擎无第三档内�
   const deep = await auditFull('.', { auditLevel: 'deep' });
   assert.equal(deep.findings.length, std.findings.length, 'deep 与 standard 数量一致');
   assert.equal(deep.summary.blocker, std.summary.blocker);
+});
+
+// ---------- 2026-09-20：文件/函数长度默认按非注释部分 ----------
+
+test('checkFileLines：默认按非注释行判定（注释多的文件不误报）；excludeComments:false 回退总行数', () => {
+  const text = '// 注释\n'.repeat(30) + 'const x = 1;\n'.repeat(10); // 40 行：注释 30 + 代码 10
+  const r1 = checkFileLines(text, { warn: 20, block: 40 });
+  assert.equal(r1.codeLines, r1.lines - r1.commentLines, 'codeLines = 总行数 − 注释行');
+  assert.ok(r1.codeLines <= 30, '非注释行数应明显小于总行数（注释占多数）');
+  assert.equal(r1.level, null, '非注释行低于阈值 20 → 不报');
+  const r2 = checkFileLines(text, { warn: 20, block: 40, excludeComments: false });
+  assert.ok(r2.level !== null, 'excludeComments:false 按总行数 40 → 报 blocker');
+});
+
+test('checkFuncLinesAst：函数长度按非注释行判定（注释行不占预算）', () => {
+  // 函数体 60 行但 55 行是注释 → 非注释 5 行，阈值 10 不报
+  const commentHeavy = 'function f() {\n' + '  // 说明\n'.repeat(30) + '  let a = 1;\n'.repeat(4) + '}\n';
+  const r1 = checkFuncLinesAst(commentHeavy, { warn: 10, block: 20 });
+  assert.equal(r1.length, 0, '注释行多的函数按非注释行数不超阈值');
+  // 同样行数但全代码 → 报
+  const codeHeavy = 'function g() {\n' + '  let a = 1;\n'.repeat(20) + '}\n';
+  const r2 = checkFuncLinesAst(codeHeavy, { warn: 10, block: 20 });
+  assert.ok(r2.length >= 1, '全代码 20 行超过阈值 10 → 报');
+  assert.ok(r2[0].codeLen >= 20, 'codeLen = 实际非注释行数');
 });
