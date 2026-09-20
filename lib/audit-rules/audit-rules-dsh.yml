@@ -63,7 +63,14 @@ rules:
     #   引擎按 relPath 前缀过滤（见 lib/audit/checks.js filterRulesByExt + runChecks）。
     #   补充：crx/native-host/ 是浏览器扩展的 Node 原生宿主（host 半部），require 正常；
     #   exts 限 JS 类排除 .sh/.py 等非 JS 文件（start.sh 内嵌 node -e 的 require 也正常）。
-    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx"]
+    # 2026-09-20 误报修复（根目录 Node 构建脚本）：
+    #   · exts 去掉 cjs——`.cjs` 是 CommonJS/Node 专属模块格式，浏览器 client 半部不可能
+    #     是 .cjs 文件（浏览器只加载 .js/.mjs/.ts 编译产物），根目录构建脚本（build.cjs
+    #     /webpack.config.cjs 等）的 require('fs') 属正常 Node 用法，不再误报；
+    #   · exclude_paths 补根级 Node 构建/配置脚本文件名前缀（build./gulpfile/webpack.config/
+    #     rollup.config/vite.config/tsup.config/eslint.config/jest.config/babel.config 等）——
+    #     这类工具脚本与配置文件放仓库根、require Node 内置模块是常态，同样不该被当 client。
+    exts: ["js", "mjs", "ts", "tsx", "jsx"]
     exclude_paths:
       - "server/"
       - "test/"
@@ -74,6 +81,16 @@ rules:
       - "lib/"
       - "utils/"
       - "crx/native-host/"
+      - "build."
+      - "gulpfile"
+      - "gruntfile"
+      - "webpack.config"
+      - "rollup.config"
+      - "vite.config"
+      - "tsup.config"
+      - "eslint.config"
+      - "jest.config"
+      - "babel.config"
     fixable: false
     mitigation: "浏览器侧改用 fetch/WebSocket/indexedDB 等 web API；Node 侧能力留在 host 半部经 RPC 暴露"
 

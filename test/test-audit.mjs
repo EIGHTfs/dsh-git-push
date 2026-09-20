@@ -510,3 +510,28 @@ test('checkFuncLinesAst：函数长度按非注释行判定（注释行不占预
   assert.ok(r2.length >= 1, '全代码 20 行超过阈值 10 → 报');
   assert.ok(r2[0].codeLen >= 20, 'codeLen = 实际非注释行数');
 });
+
+// ---------- 2026-09-20：dsh/client-node-builtin-require 根目录 Node 构建脚本误报修复 ----------
+
+test('client-node-builtin-require：根目录 Node 构建脚本不误报，真 client 代码仍拦截', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'dshgp-dshrule-'));
+  try {
+    // ① 根目录 .cjs 构建脚本（build.cjs 场景）：CommonJS Node 专属格式，require('fs') 正常
+    writeFileSync(join(root, 'build.cjs'), 'const fs = require("fs");\nconst path = require("path");\nconst os = require("os");\n');
+    // ② 根目录 .mjs 构建脚本：build. 前缀排除
+    writeFileSync(join(root, 'build.mjs'), 'import { createRequire } from "node:module";\nconst require = createRequire(import.meta.url);\nconst fs = require("fs");\n');
+    // ③ 真 client 代码（crx/ 目录，浏览器半部）：require('fs') 必须仍报
+    mkdirSync(join(root, 'crx'));
+    writeFileSync(join(root, 'crx', 'content.js'), 'const fs = require("fs");\nconst path = require("path");\n');
+    const res = await auditFull(root);
+    const hits = (res.findings || []).filter((f) => String(f.rule).includes('client-node-builtin'));
+    const files = hits.map((f) => f.file.replace(/\\/g, '/'));
+    assert.equal(hits.filter((f) => files.includes('build.cjs')).length, 0, '根目录 .cjs 构建脚本的 require(fs) 不误报');
+    assert.equal(hits.filter((f) => files.includes('build.mjs')).length, 0, '根目录 build.mjs 构建脚本不误报');
+    const clientHits = hits.filter((f) => files.includes('crx/content.js'));
+    assert.ok(clientHits.length >= 2, `crx/ 真 client 代码 require(fs/path) 应仍拦截（得 ${clientHits.length}）`);
+    assert.ok(hits.every((f) => f.severity === 'blocker'), 'client-node-builtin-require 命中应为 blocker 级');
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
