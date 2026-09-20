@@ -32,7 +32,7 @@ import { fileURLToPath } from 'node:url';
 
 /** parseArgv 认识的选项白名单（cli-help-sync 机器比对基准，必须与 HELP 文本一致。
  * 注：-m 是单横线别名（helpSync 只比对 -- 双横线），不列入本表。 */
-export const KNOWN_FLAGS = ['--depth', '--full', '--ruleset', '--weights', '--include-ignored', '--push', '--no-push', '--dry-run', '--force', '--req-confirm', '--push-gate-confirmed', '--json', '--max', '--owner', '--offline',
+export const KNOWN_FLAGS = ['--depth', '--full', '--ruleset', '--weights', '--include-ignored', '--push', '--no-push', '--dry-run', '--force', '--req-confirm', '--push-gate-confirmed', '--json', '--max', '--owner', '--offline', '--paths',
   // file-io 三标签过滤
   '--summary', '--write', '--type', '--kind', '--risk', '--op',
   // 2026-09-19 补齐的 5 个命令（clone / account-check / remote-create / set-visibility / gen-ssh-key）
@@ -50,8 +50,8 @@ const HELP = `git-sluice v${VERSION} — dsh-git-push 引擎独立 CLI（脱离 
                                   重建仓库索引 dsh-repo-index.json（--offline=纯离线不查 GitHub API）
   git-sluice audit <root> [--full] [--ruleset <目录>] [--weights <JSON>] [--include-ignored]
                                   审计目录（默认 diff 范围；--full=全量；--ruleset=自定规则目录；--weights=权重覆盖 JSON；--include-ignored=连 .gitignore 忽略的文件也扫）
-  git-sluice commit <repo> -m <msg> [--push|--no-push] [--dry-run] [--force] [--req-confirm] [--push-gate-confirmed] [--json]
-                                  审计门禁 → 提交（默认只 commit 不 push；--push 推远端；--force 强推覆盖远端历史；--req-confirm 显式核对开发者要求；--push-gate-confirmed 显式放行推送门禁）
+  git-sluice commit <repo> -m <msg> [--push|--no-push] [--dry-run] [--force] [--req-confirm] [--push-gate-confirmed] [--paths <路径1,路径2>] [--json]
+                                  审计门禁 → 提交（默认只 commit 不 push；--push 推远端；--force 强推覆盖远端历史；--req-confirm 显式核对开发者要求；--push-gate-confirmed 显式放行推送门禁；--paths 精确 add 指定文件替代 add -A）
   git-sluice file-io [路径...] [--summary] [--write] [--type sync|async] [--kind read|write|delete|rename] [--risk high|medium|low] [--op <操作名>] [--json]
                                   文件读写调用扫描（三标签：类型/操作/上下文）——同步 I/O 在异步路径会阻塞；写/删/改名涉及数据安全
   git-sluice link-check <路径>    检查 md/文本中的链接有效性（只 warning，flaky 域名打折）
@@ -338,6 +338,8 @@ export async function cmdCommit(root, flags) {
     // 2026-09-17：推送门禁（设置侧边栏开关）——CLI 对应 --push-gate-confirmed（用户已确认）
     pushGate: cfg.pushGate === true,
     pushConfirmed: flags.pushGateConfirmed === true,
+    // 2026-09-21：精确 add 路径（逗号分隔，相对 repo）；空 = git add -A
+    paths: String(flags.paths || ''),
   });
   if (commitOutcome.blocked) {
     console.error(`审计拦截（${commitOutcome.error || 'blocker'}），提交中止：`);

@@ -893,7 +893,9 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
-| **1.5.6**（当前） | **module_splitter 工具 + CLI 接入（2026-09-20）** \
+| **1.6.0**（当前） | **git_commit_push / CLI commit 支持精确 add 路径（2026-09-21）** \
+`git_commit_push` 新增 **`paths` 参数**（逗号分隔、相对 repo）：**只暂存指定文件**，替代默认 `git add -A`——共享工作区/有他人未提交改动时避免把无关文件一并扫入提交（bench-template 等场景实测踩坑：add -A 会把 _iwara-style 等他人改动全带进提交）；空 = 保持 add -A 全量。CLI 同步接入：**`git-sluice commit <repo> -m <msg> --paths <路径1,路径2>`**（KNOWN_FLAGS + HELP 同步；与插件工具同一实现 commitAndPush 透传 paths）。\
+| **1.5.6** | **module_splitter 工具 + CLI 接入（2026-09-20）** \
 新增 **`module_splitter`** AI 工具（复用 `scripts/module-splitter.py`，python3 零依赖）——巨型单文件按顶层块拆分：`analyze <file.js>`（只读分析：顶层块行号/行数/块间依赖图/循环风险，先跑这个再据写 plan.json）→ `split <plan.json>`（按 plan 切分到模块 + 生成纯引用 index；`dryRun=true` 只预演不落盘）→ `verify <plan.json>`（校验 index 再导出名集合与原文件 export 完全一致，拆完必跑）。plan 走**文件路径**（AI 先用 write 工具写好 plan.json 再传）；脚本随插件发布（`scripts/` 进 SYNC_ENTRIES）。CLI 同步接入：**`git-sluice module-splitter <analyze|split|verify> <file|plan> [--dry-run] [--json]`**（与插件工具同实现，spawn python3 参数数组防注入；python3 缺失降级提示）。\
 | **1.5.5** | **环境注入 cwd 修正为会话工作区 + tree-doc --root 外调（2026-09-20）** \
 **环境注入 cwd 修正为会话工作区**：pre-step 注入的 `cwd` / 项目 git 根 / 工作区子目录取 `agent.session.header.cwd`（会话工作区，与宿主 sandbox-policy 的 resolve 同源），不再用宿主全局 workspaceRoot（= DSH 安装根）——AI 拿到的任务落位正确；注入缓存按 root 键化（不同会话 cwd 不串），`mapWorkspaceDirs` 的 git 根探测与注入 cwd 一致。test-inject-system-prompt 新增契约测试 4 项。\

@@ -7,6 +7,7 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, existsSync, readFileSync } from 'node:fs';
+import { execSync } from 'node:child_process';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
@@ -809,6 +810,33 @@ test('gitRaw：buffer 通道保留 blob 原始字节（含末尾换行/非 UTF-8
     // 对照：runGit 读同一 blob 会丢末尾换行（旧 bug 语义——pushViaApi 曾因它损坏 17/109 文件）
     const oldWay = runGit(['cat-file', 'blob', shaA], { cwd: dir });
     assert.notEqual(oldWay.stdout, '你好\n第二行\n', 'runGit(utf8+trim) 应有损（证明 gitRaw 必要）');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// ---------- 2026-09-21：commitAndPush paths（精确 add，避免 add -A 扫入无关文件） ----------
+test('commitAndPush：paths 只暂存指定文件（他人改动保持未暂存）', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-paths-'));
+  try {
+    // 造仓库 + 两个改动文件：mine.js（本次要提交）+ theirs.js（他人未提交，不应被扫入）
+    execSync('git init -q', { cwd: dir });
+    execSync('git config user.email t@example.com', { cwd: dir });
+    execSync('git config user.name tester', { cwd: dir });
+    writeFileSync(join(dir, 'mine.js'), 'const a = 1;\n');
+    writeFileSync(join(dir, 'theirs.js'), 'const b = 2;\n');
+    execSync('git add -A && git commit -qm init', { cwd: dir });
+    writeFileSync(join(dir, 'mine.js'), 'const a = 1;\nconst a2 = 11;\n');
+    writeFileSync(join(dir, 'theirs.js'), 'const b = 2;\nconst b2 = 22;\n');
+    // paths 只指 mine.js → 只暂存 mine；theirs.js 保持未暂存（add -A 会把它也扫入）
+    const r = await commitAndPush({ repoPath: dir, message: 'paths 精确提交', push: false, requirementsConfirmed: true, paths: 'mine.js' });
+    assert.equal(r.ok, true, r.error || '');
+    const staged = execSync('git status --porcelain', { cwd: dir, encoding: 'utf8' });
+    assert.ok(!staged.includes('mine.js'), 'mine.js 应已提交（status 不再出现）');
+    assert.ok(staged.includes('theirs.js'), 'theirs.js 必须保持未暂存（未被 paths 提交扫入）');
+    const committed = execSync('git show --stat --oneline HEAD', { cwd: dir, encoding: 'utf8' });
+    assert.ok(committed.includes('mine.js'), '提交应只含 mine.js');
+    assert.ok(!committed.includes('theirs.js'), '提交不得含 theirs.js（add -A 误扫场景被 paths 阻止）');
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
