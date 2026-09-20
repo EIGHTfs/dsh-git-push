@@ -883,11 +883,12 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
-| **1.5.4**（当前） | **设置侧边栏 · 云端仓库可见性切换（2026-09-20）** \
-账号 → 仓库 → 云端面板每行显示 🔒 私有 / 🌐 公开（云端真源），新增「切公开 / 切私有」按钮：点击弹**行内二次确认条**（「确认将 owner/repo 从「X」改为「Y」？改公开有敏感信息暴露风险」）→ 确认后才调后端。后端新增 `/api/git-push/repo-visibility`（GET 单查云端状态；POST 切换，挂 `writeConfirmOps` 写确认门禁——无 `confirm:true` 拒 400 + Origin/CSRF 校验），复用 `setVisibility`（PATCH api.github.com private 字段），成功后就地更新列表徽标并提示。git_set_visibility 工具与 CLI 保持一致（同一实现）。test-sidebar-state 新增 2 项契约测试（visSwitch 注入 + 二次确认 + confirm:true + 端点挂门禁）。\
-同时 `/git-audit` 新增 **`--force` 参数**：非 git 仓库目录默认拒绝全量扫描（防止打爆进程），加 `--force` 显式放行——按目录本身全量审计（code_audit 对非 git 目录自动走 auditFull）。test-slash-commands 新增 2 项（--force 解析 + 非 git 目录强制放行）。\
+| **1.5.5**（当前） | **环境注入 cwd 修正为会话工作区 + tree-doc --root 外调（2026-09-20）** \
 **环境注入 cwd 修正为会话工作区**：pre-step 注入的 `cwd` / 项目 git 根 / 工作区子目录取 `agent.session.header.cwd`（会话工作区，与宿主 sandbox-policy 的 resolve 同源），不再用宿主全局 workspaceRoot（= DSH 安装根）——AI 拿到的任务落位正确；注入缓存按 root 键化（不同会话 cwd 不串），`mapWorkspaceDirs` 的 git 根探测与注入 cwd 一致。test-inject-system-prompt 新增契约测试 4 项。\
 **tree-doc 支持 `--root <项目根>` 外调**：其他项目可直接调用 `scripts/tree-doc.mjs` 维护自己的 README 目录树——`node <dsh-git-push>/scripts/tree-doc.mjs check --root <其他项目根>`（apply/gen/sync 同理），缺省 = 自身项目（向后兼容），显式 `--readme` 优先于 root 推导路径，`check` 输出附带目标项目根。test-tree-doc 新增 CLI 集成用例（临时 git 仓库：check 无漂移 / 新增文件报漂移并点名 / apply 把新文件写进外部项目 README）。\
+| **1.5.4** | **设置侧边栏 · 云端仓库可见性切换（2026-09-20）** \
+账号 → 仓库 → 云端面板每行显示 🔒 私有 / 🌐 公开（云端真源），新增「切公开 / 切私有」按钮：点击弹**行内二次确认条**（「确认将 owner/repo 从「X」改为「Y」？改公开有敏感信息暴露风险」）→ 确认后才调后端。后端新增 `/api/git-push/repo-visibility`（GET 单查云端状态；POST 切换，挂 `writeConfirmOps` 写确认门禁——无 `confirm:true` 拒 400 + Origin/CSRF 校验），复用 `setVisibility`（PATCH api.github.com private 字段），成功后就地更新列表徽标并提示。git_set_visibility 工具与 CLI 保持一致（同一实现）。test-sidebar-state 新增 2 项契约测试（visSwitch 注入 + 二次确认 + confirm:true + 端点挂门禁）。\
+同时 `/git-audit` 新增 **`--force` 参数**：非 git 仓库目录默认拒绝全量扫描（防止打爆进程），加 `--force` 显式放行——按目录本身全量审计（code_audit 对非 git 目录自动走 auditFull）。test-slash-commands 新增 2 项（--force 解析 + 非 git 目录强制放行）。\
 | **1.5.3** | **io-risk 括号配对重构 + 版本号同步（2026-09-20）** \
 `findPromiseAllRanges` 抽出 `findMatchingClose` 括号配对（圈复杂度 16→5、嵌套 6→3），Promise.all 并行判定行为不变（循环内异步并行仍判 low）；`judgeIoTokend`/`findPromiseAllRanges` 剩余圈复杂度提示（13/11）为非阻断 warning 保留。全量 736 项通过。\
 | **1.5.2** | **工具探测改上下文注入 + 工具清单 json 化（2026-09-20）** \
