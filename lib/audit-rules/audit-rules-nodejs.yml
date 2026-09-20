@@ -258,13 +258,19 @@ rules:
     #   只报「凭据标识符右侧直接是有效字符串字面量」的行。豁免：类型/存在性检查
     #   （typeof cfg.githubToken === 'string'）、字段透传（cfg.token = init.token）、
     #   取环境变量/配置（process.env.KEY / options.token）、占位符与空串。
+    # 2026-09-21 误报修复（start-preview.mjs 反代服务器场景）：
+    #   · 正则加 `(?<![?&/])` 负向断言——排除 `?token=` / `&token=` / `/token=` 这类
+    #     **URL 参数名**（如 '/?token=' + encodeURIComponent(token)），URL 带凭据名是
+    #     泄露风险但**不是硬编码**，单列 security/no-credential-in-url（warning）覆盖；
+    #   · 引号内内容收紧为 `[^'"\s]{8,}`——真实凭据较长，短占位/空串不参与初筛
+    #     （AST 精筛仍按 isMeaningfulCredentialValue 判占位符，双层不矛盾）。
     astConfirmKind: credential-value
     patterns:
-      - "password\\s*[=:]+\\s*['\"][^'\"]+['\"]"
-      - "secret\\s*[=:]+\\s*['\"][^'\"]+['\"]"
-      - "api[_-]?key\\s*[=:]+\\s*['\"][^'\"]+['\"]"
-      - "token\\s*[=:]+\\s*['\"][^'\"]+['\"]"
-      - "cookie\\s*[=:]+\\s*['\"][^'\"]+['\"]"
+      - "(?<![?&/])password\\s*[=:]+\\s*['\"][^'\"\\s]{8,}['\"]"
+      - "(?<![?&/])secret\\s*[=:]+\\s*['\"][^'\"\\s]{8,}['\"]"
+      - "(?<![?&/])api[_-]?key\\s*[=:]+\\s*['\"][^'\"\\s]{8,}['\"]"
+      - "(?<![?&/])token\\s*[=:]+\\s*['\"][^'\"\\s]{8,}['\"]"
+      - "(?<![?&/])cookie\\s*[=:]+\\s*['\"][^'\"\\s]{8,}['\"]"
     # 2026-09-13 误报修复：正则把「凭据字段引用/API 名/字符串字面量」误判为「凭据值硬编码」。
     #   白名单行豁免——命中以下任一模子的行不报：
     #   · GM_cookie（油猴 GM_cookie API 名，非硬编码值）
@@ -285,6 +291,20 @@ rules:
       - "完整 Cookie"
     fixable: false
     mitigation: "使用环境变量 process.env.XXX"
+
+  - id: security/no-credential-in-url
+    name: "URL 中不应携带凭据参数名"
+    category: "security"
+    severity: "warning"
+    description: "URL 参数/路径中含 token/secret/password 等敏感字段名——凭据可能被浏览器历史/代理日志/Referer 头泄露；非硬编码（硬编码凭据由 no-hardcoded-credentials 管），仅提示"
+    # 2026-09-21：从 no-hardcoded-credentials 拆出——`?token=` / `&key=` 这类 URL 参数名
+    #   此前被硬编码凭据正则误报（如 '/?token=' + encodeURIComponent(token)，反代服务器认证路径）；
+    #   URL 带凭据名本身有泄露风险（日志/历史/Referer），但**不是硬编码**，单列 warning 提示，
+    #   与「右值是否为字符串字面量」的硬编码判据彻底分开（见 lib/ast/credential.js scanCredentialTokens）。
+    patterns:
+      - "[?&](?:token|key|secret|password|passwd|api[_-]?key|cookie|credential|access[_-]?key)=[^&\\s'\"]*"
+    fixable: false
+    mitigation: "改用 Authorization 头或 POST body 传递凭据，避免出现在 URL（防日志/历史/Referer 泄露）"
 
   - id: security/no-path-traversal
     name: "路径穿越防护"

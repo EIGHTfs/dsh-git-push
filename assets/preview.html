@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8">
-<title>dsh-git-push 侧边栏模拟（假数据 / 全部可点）</title>
+<title>dsh-git-push 侧边栏预览（真实后端数据）</title>
 <style>
 :root{
   --dsw-alias-label-primary:#e8eaf0;--dsw-alias-label-secondary:#a0a6b4;--dsw-alias-label-tertiary:#6b7280;
@@ -16,9 +16,9 @@ body{margin:0;padding:20px;background:#0f1117;color:#e8eaf0;
 #root{max-width:520px}
 #__err{max-width:520px}
 </style></head><body>
-<div class="banner">这是<b>模拟预览</b>（交互用假数据）：跑的是仓库里真实的 <b>client.js</b>，只垫片了宿主环境；
-<b>规则包列表的槽位、显示名、规则条数取自真实规则文件</b>，与真实实例一致。
-三个选项卡、开关、规则包启停/调序、权重、凭据保存、一键生成 SSH 都可点，改动只留在页面内，不写任何文件。</div>
+<div class="banner">这是<b>真实后端数据预览</b>：跑的是仓库里真实的 <b>client.js</b>（垫片宿主环境）；默认在
+<b>start.sh 起的预览服务</b>下打开，账号/仓库/规则/审计/设置全部来自 <b>DSH 真实后端</b>（读写都真实）。
+离线调试可用 <b>?mock=1</b> 切回内置假数据（改动只留页面内、不写文件）；跨后端实测用 <b>?backend=http://127.0.0.1:端口</b>。</div>
 <div id="root"></div>
 <script>/**
  * @license React
@@ -33354,16 +33354,16 @@ window.__scopeMock = {
   },
 };
 
-// 接真实后端：URL 传 ?backend=http://127.0.0.1:PORT 时所有 /api/git-push/* 转发到真实服务
-//   （scripts/preview-server.mjs），可用于实测真插件逻辑；不传则用下方 mock（离线预览）。
+// 接真实后端（2026-09-20 完全真实数据版）：
+//   · 默认（无参数）：同源相对路径 /api/git-push/* 直接放行——在 start-preview.mjs 反代服务下
+//     打开时请求落到真实 DSH 后端，预览数据完全真实（账号/仓库/规则/审计/设置）。
+//   · URL 传 ?backend=http://127.0.0.1:PORT → 转发到所给后端（preview-server 直连实测）。
+//   · ?mock=1 → 走下方假数据（离线调试兜底，默认不再用假数据）。
 var __PRE_REAL__ = window.fetch;
 window.__dshgpScript = window.__dshgpScript || [];
-// 假接口：/toggle-rule 真翻转 disabled，配合 loadSlots 对账，点击结果能留住
 window.fetch = function (url, init) {
   var urlStr = String(url), body = { ok: true };
-  // 演示目录根（mock 假数据用；browse/repos-local 共用）
-  var DEMO_HOME = '/home/user/项目';
-  // ?backend= 或 window.__DSHGP_BACKEND__（preview-server 注入）→ 转发真实后端
+  // ?backend= 或 window.__DSHGP_BACKEND__（preview-server 注入）→ 转发指定后端
   var __PRE_B__ = (location.search.match(/[?&]backend=([^&]+)/) || [])[1] || window.__DSHGP_BACKEND__ || '';
   if (__PRE_B__) {
     return __PRE_REAL__(__PRE_B__ + urlStr, {
@@ -33376,7 +33376,14 @@ window.fetch = function (url, init) {
       });
     }).catch(function () { return { ok: true, status: 502, json: function () { return Promise.resolve({ ok: false, error: '后端未启动: ' + __PRE_B__ }); } }; });
   }
+  // 默认放行同源：start-preview.mjs 反代到 DSH 真实后端（完全真实数据）；
+  //   仅显式 ?mock=1 才走下方假数据（离线调试）。
+  if (!/[?&]mock=1/.test(location.search)) {
+    return __PRE_REAL__(urlStr, init);
+  }
   body = { ok: true };
+  // 演示目录根（mock 假数据用；browse/repos-local 共用）
+  var DEMO_HOME = '/home/user/项目';
   // /toggle-rule 必须真改假数据：toggleDisabled 本地翻转后会 loadSlots 对账，
   //   假数据不改就会被拉回原状（表现为「点完回弹」）。
   if (urlStr.indexOf('toggle-rule') >= 0) {

@@ -428,3 +428,34 @@ test('cookie-secure-flag：读取响应头不报（跨语言），设置 Cookie 
   assert.equal(wlRe.some((re) => re.test(setHeaderLine)), false,
     'setHeader 设置 Cookie 不应被读取类白名单豁免（会漏报真风险）');
 });
+
+// ---------- 2026-09-21：no-hardcoded-credentials 误报修复 ----------
+//   根因：正则只看 `token=` 模式不看语义；AST 精筛跨表达式边界把下一条语句的 `:`/`=` 误认。
+//   修复：①正则加 (?<![?&/]) 负向断言 + 引号内 ≥8 字符 ②scanCredentialTokens 在 `(` `)` `,`
+//   边界 break（标识符不是左值时不再向后找运算符）③URL 凭据名单列 no-credential-in-url（warning）。
+test('⑧ 硬编码凭据：URL 参数名/拼接不误报，真赋值仍报，URL 凭据名单列 warning', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-cred-fp-'));
+  try {
+    const src = [
+      'const token = "ghp_1234567890ABCDEFGHIJ";',   // 真硬编码 → 报
+      'const url = "/?token=" + encodeURIComponent(token);', // URL 参数名+拼接 → 不报硬编码；URL 规则 warning
+      'const y = token + "suffix";',                  // 拼接 → 不报
+      'const apiKey = "AKIA1234567890ABCDEF";',       // 真硬编码 → 报
+      'server.get("/api?secret=" + q);',              // 拼接+URL → 不报硬编码
+    ].join('\n');
+    writeFileSync(join(dir, 'a.js'), src);
+    const res = await auditFull(dir);
+    const hard = res.findings.filter((f) => f.rule === 'security/no-hardcoded-credentials');
+    const urlRule = res.findings.filter((f) => f.rule === 'security/no-credential-in-url');
+    // 真硬编码行（1、4）应报 blocker；拼接/URL 行（2、3、5）不应报
+    const lines = hard.map((f) => f.line);
+    assert.ok(lines.includes(1) && lines.includes(4), `真硬编码应报（得行 ${lines}）`);
+    assert.ok(!lines.includes(2) && !lines.includes(3) && !lines.includes(5),
+      `URL 参数名/拼接不误报（得行 ${lines}）`);
+    // URL 凭据名：?token= / ?secret= 命中独立 warning 规则（非硬编码 blocker）
+    assert.ok(urlRule.length >= 2, `URL 凭据名应命中 no-credential-in-url（得 ${urlRule.length}）`);
+    assert.ok(urlRule.every((f) => f.severity === 'warning'), 'URL 凭据名应为 warning 而非 error');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

@@ -249,5 +249,8 @@
   "scripts/verify-prestep.mjs": "上下文注入自检脚本（真实触发 agent/pre-step 验证注入）",
   "scripts/module-splitter.py": "巨型单文件按顶层块拆分脚本（analyze/split/verify 三命令，python3 零依赖；module_splitter 工具与 CLI 的底层实现）",
   "test/test-module-splitter.mjs": "module_splitter 工具 + CLI 接入测试（契约 + 行为 + 脚本随插件发布）",
-  "skills/tool-json-add-ask.md": "（待注释）"
+  "skills/tool-json-add-ask.md": "（待注释）",
+  "assemble.json": "bench-template 下发清单（键=模板仓库相对路径，值=本插件落点；preview 启动两件套 → assets/）",
+  "assets/start-preview.mjs": "预览反代服务器（模板 bench-template server/lib/preview 下发改用：本地服务 preview.html，/api/git-push/* 转发 DSH 真实后端 + token 认证）",
+  "assets/start.sh": "预览服务器启停脚本（start/stop/restart/status + --port + PID/日志/健康检查 /preview-ping）"
 }

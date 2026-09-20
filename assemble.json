@@ -1,0 +1,7 @@
+{
+  "_comment": "bench-template 下发清单（键=模板仓库内相对路径，值=本插件落点）。preview 启动两件套：start.sh（启停脚本 start/stop/restart/status）+ start-preview.mjs（反向代理服务器：本地服务 assets/preview.html，把 /api 转发到 DSH 真实后端并自动 token 认证）。重装会覆盖 assets/ 下这两个文件；assets/preview-gen.mjs 为自研生成脚本不入清单。",
+  "files": {
+    "server/lib/preview/start.sh": "assets/start.sh",
+    "server/lib/preview/start-preview.mjs": "assets/start-preview.mjs"
+  }
+}

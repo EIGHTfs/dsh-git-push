@@ -290,6 +290,8 @@ dsh-git-push/
 │   ├── panel-settings.png — 设置面板截图（README 配图）
 │   ├── preview-gen.mjs — 生成 preview.html（真 client.js + 假数据垫片）
 │   ├── preview.html — 侧边栏交互模拟页（可点，支持 ?backend= 接真实后端）
+│   ├── start-preview.mjs — 预览反代服务器（模板 bench-template server/lib/preview 下发改用：本地服务 preview.html，/api/git-push/* 转发 DSH 真实后端 + token 认证）
+│   ├── start.sh — 预览服务器启停脚本（start/stop/restart/status + --port + PID/日志/健康检查 /preview-ping）
 ├── test/ — node:test 全量单元测试（541+ 条，覆盖审计/推送/账号/HTTP/后台任务）
 │   ├── .test — 空文件豁免标记（目录级豁免 .test 目录）
 │   ├── test-account-ssh.mjs — 账号检查 + SSH 密钥测试
@@ -363,6 +365,7 @@ dsh-git-push/
 ├── .auditignore — 审计豁免清单（不影响 git 入库，仅跳过审计扫描）——排除内置第三方代码
 ├── .gitignore — 忽略规则（node_modules/产物/备份/回收站等）
 ├── README.md — 插件 README（功能总览/用法/版本记录）
+├── assemble.json — bench-template 下发清单（键=模板仓库相对路径，值=本插件落点；preview 启动两件套 → assets/）
 ├── cli.mjs — 独立 CLI（git-sluice，不依赖宿主可独立运行）
 ├── cordis.patch.yml — DSH 插件组合 patch（loader 注入定义）
 ├── package.json — 包声明（零依赖、files 白名单、scripts）
@@ -616,14 +619,19 @@ console.log(x); // dsh-skip-residue: 本行为刻意保留的调试输出样本
 
 > 截断只影响 `scope: 'full'` 的全量扫描；默认的 `scope: 'diff'`（只审本次变动）不受影响——日常提交推送走的就是 diff。
 
-## 界面模拟页（assets/preview.html）
+## 界面预览页（assets/preview.html，真实后端数据）
 
-`assets/preview.html` 是**单文件自包含**的侧边栏模拟页：双击用浏览器打开即可，无需 DSH、无需起服务、离线可用。
+`assets/preview.html` 由 `assets/preview-gen.mjs` 生成（内联真实 `client.js`，只垫片宿主环境 `window.__ModuleLoader__`/`react`/`settingsScope`/`fetch`，界面与真实插件一致）；**用 `assets/start.sh` 启动本地反代服务访问**（启动脚本与反代服务器来自模板仓库 bench-template `server/lib/preview/`，经 `assemble.json` 文件清单下发）：
 
-- **跑的是真实 `client.js`**（由 `assets/preview-gen.mjs` 内联注入），只垫片宿主环境（`window.__ModuleLoader__`、`react`、`settingsScope`、`fetch`），所以界面与真实插件一致，能发现真实渲染/交互缺陷
-- **假数据**：账号信息（已登录 EIGHTfs）、6 个规则包、10 维度权重、凭据状态
+```
+./assets/start.sh start [--port 31000]   # 启动（默认 30999；已有项目占用时用 --port 错开）
+./assets/start.sh status / restart / stop
+```
+
+- **完全真实后端数据**：`assets/start-preview.mjs` 反向代理——`/api/git-push/*` 全部转发到 DSH 真实后端（默认 http://127.0.0.1:30800 反代，`--dsh` 可覆盖），并自动完成 token 认证（`--token` > 环境变量 `DSH_PREVIEW_TOKEN` > 解析 `dsh-proxy.log` 兜底）。预览里的账号信息 / 本地仓库 / 云端仓库 / 规则包 / 审计结果 / 设置**全部来自真实后端**（读取与写入都真实）。
+- **离线调试**：URL 加 `?mock=1` 切回内置假数据（改动只留页面内、不写文件）；跨后端实测用 `?backend=http://127.0.0.1:端口`。
 - **全部可点**：三选项卡切换 · 审计开关 · **注入系统提示词开关** · 「注入开发者要求清单」子开关（含置灰联动）· 规则包启停与 ↑↓ 调序 · 权重编辑 · token/SSH 保存 · 邮箱一键生成 SSH 并回填
-- 所有改动只留在页面内（内存假数据），**不写任何文件、不调真实接口**
+- 健康检查 `GET /preview-ping`（start.sh 启动判定）；PID 落 `dsh-git-push.pid`（插件根）；日志 `assets/preview-server.log`（超 10MB 轮转）
 
 重新生成（改了 `client.js` 后同步）：
 
