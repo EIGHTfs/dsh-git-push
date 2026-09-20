@@ -27,7 +27,7 @@ import { execSync } from 'node:child_process';
 import { scanRepos, describeRepo, maskRemoteUrl } from '../lib/git/repos.js';
 import {
   locateRepoIndex, readRepoIndexMap, indexEntryForRepo, updateRepoRemoteStateInIndex,
-  mergeCloudReposIntoIndex,
+  mergeCloudReposIntoIndex, updateRepoIndex,
 } from '../lib/git/repo-index.js';
 
 const ONLINE = process.env.DSH_TEST_ONLINE === '1';
@@ -482,4 +482,66 @@ test('探测调优：SSH 连接复用参数可关闭，且默认拼装包含 Con
   // 异步版在非 git 目录下应安全返回 ok:false（不得抛）
   const r = await liveRemoteHeadAsync({ repoPath: '/nonexistent-dir-xyz', branch: 'main' });
   assert.equal(r.ok, false, '非仓库路径应返回 ok:false');
+});
+
+/* ───────────────────── ③ 2026-09-20 updateRepoIndex 统一入口（读-改-写合并不全量覆盖） ───────────────────── */
+
+/** async 版隔离沙箱（updateRepoIndex 是异步函数；sandbox() 同步清理会先于 await 完成）。 */
+async function sandboxAsync(fn) {
+  const ws = mkdtempSync(join(tmpdir(), 'dshgp-repolist-ws2-'));
+  const home = mkdtempSync(join(tmpdir(), 'dshgp-repolist-home2-'));
+  const prevHome = process.env.DSH_HOME;
+  process.env.DSH_HOME = home;
+  try {
+    return await fn({ ws, home });
+  } finally {
+    if (prevHome === undefined) delete process.env.DSH_HOME; else process.env.DSH_HOME = prevHome;
+    rmSync(ws, { recursive: true, force: true });
+    rmSync(home, { recursive: true, force: true });
+  }
+}
+
+test('索引：updateRepoIndex rebuild 合并不全量覆盖（保留未扫描到的旧条目）', async () => {
+  await sandboxAsync(async ({ ws }) => {
+    makeRepo(join(ws, 'repo-a'), { remote: 'https://github.com/EIGHTfs/repo-a.git' });
+    makeRepo(join(ws, 'repo-b'), { remote: 'https://github.com/EIGHTfs/repo-b.git' });
+    // 第一次重建：两条都进索引
+    const r1 = await updateRepoIndex({ workspaceRoot: ws, owner: 'EIGHTfs', offline: true, mode: 'rebuild' });
+    assert.equal(r1.ok, true, r1.error || '');
+    assert.equal(r1.indexUpdated, true, 'rebuild 成功应返回 indexUpdated');
+    const idx1 = JSON.parse(readFileSync(r1.target, 'utf8'));
+    assert.ok(idx1.repos.some((x) => x.name === 'repo-a') && idx1.repos.some((x) => x.name === 'repo-b'), '首建应含两条');
+    // 第二次：repo-b 目录删除（模拟扫描范围变化——旧行为会把索引整文件覆盖成只剩 repo-a）
+    rmSync(join(ws, 'repo-b'), { recursive: true, force: true });
+    const r2 = await updateRepoIndex({ workspaceRoot: ws, owner: 'EIGHTfs', offline: true, mode: 'rebuild' });
+    const idx2 = JSON.parse(readFileSync(r2.target, 'utf8'));
+    const names = idx2.repos.map((x) => x.name);
+    assert.ok(names.includes('repo-a'), 'repo-a 仍应在');
+    assert.ok(names.includes('repo-b'), 'repo-b 旧条目必须保留（读-改-写合并不全量覆盖——修复「数据被覆盖成只剩最新一次」）');
+    assert.equal(r2.indexUpdated, true);
+  });
+});
+
+test('索引：updateRepoIndex merge-cloud / single 模式返回 indexUpdated', async () => {
+  await sandboxAsync(async ({ ws, home }) => {
+    const target = join(home, 'git-push', 'dsh-repo-index.json');
+    mkdirSync(join(home, 'git-push'), { recursive: true });
+    writeFileSync(target, JSON.stringify({ owner: 'EIGHTfs', repos: [{ name: 'x', path: '/x' }] }));
+    // merge-cloud：云端有 x → 更新已有条目（indexUpdated true）
+    const m = await updateRepoIndex({
+      workspaceRoot: ws, owner: 'EIGHTfs', syncTarget: target, mode: 'merge-cloud',
+      cloudRepos: [{ name: 'x', fullName: 'EIGHTfs/x', private: false, defaultBranch: 'main', pushedAt: '2026-01-01T00:00:00Z', description: '' }],
+    });
+    assert.equal(m.ok, true, m.error || '');
+    assert.equal(m.indexUpdated, true, 'merge-cloud 成功应返回 indexUpdated');
+    // single：更新远端状态（indexUpdated true）
+    const s = await updateRepoIndex({
+      workspaceRoot: ws, repoName: 'x', syncTarget: target, mode: 'single',
+      remoteState: { remoteHead: 'abc', ahead: 1, behind: 0, synced: false },
+    });
+    assert.equal(s.ok, true, s.error || '');
+    assert.equal(s.indexUpdated, true, 'single 成功应返回 indexUpdated');
+    const after = JSON.parse(readFileSync(target, 'utf8'));
+    assert.equal(after.repos.find((x) => x.name === 'x').remoteHead, 'abc', 'single 模式应写回远端状态');
+  });
 });

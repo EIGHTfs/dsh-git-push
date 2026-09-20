@@ -13,7 +13,7 @@ import { checkLinks, sumLinkPenalty } from './lib/link-check/index.js';
 import { collectTextFiles, readText } from './lib/audit/collector.js';
 import { commitWithAudit } from './lib/commit-push.js';
 import { scanRepos } from './lib/git/repos.js';
-import { maintainRepoIndex } from './lib/git/repo-index.js';
+import { maintainRepoIndex, updateRepoIndex } from './lib/git/repo-index.js';
 import { auditFull } from './lib/audit/index.js';
 import { readSettings, applySettingsToCfg } from './lib/app/settings-bridge.js';
 import { scanFileIo, summarize } from './scripts/scan-file-io.mjs';
@@ -304,16 +304,18 @@ export async function cmdIndex(root, flags) {
   const depth = flags.depth ?? 20;
   const max = flags.max ?? 200;
   const owner = flags.owner || 'EIGHTfs';
-  const r = await maintainRepoIndex({
+  // 2026-09-20：统一走 updateRepoIndex（mode='rebuild' 读-改-写合并不全量覆盖）
+  const r = await updateRepoIndex({
     workspaceRoot: root || '.',
     owner,
     depth,
     maxRepos: max,
     offline: flags.offline === true, // --offline=纯离线（不查 GitHub API）
+    mode: 'rebuild',
   });
   if (flags.json) { console.log(JSON.stringify({ ...r, root, owner, offline: !!flags.offline }, null, 2)); return r.ok ? 0 : 1; }
   if (!r.ok) { console.error(`❌ 索引重建失败: ${r.error || ''}`); return 1; }
-  console.log(`✅ 索引已重建：${r.target || ''}`);
+  console.log(`✅ 索引已更新：${r.target || ''}（新增/更新 ${r.updated ?? 0} 条，indexUpdated=${r.indexUpdated === true}）`);
   console.log(`   扫描根 ${root || '.'}（owner=${owner}, depth=${depth}, max=${max}${flags.offline ? ', offline' : ''}）`);
   return 0;
 }
