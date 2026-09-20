@@ -1,3 +1,4 @@
+// dsh-skip-sensitive: 本文件为预览反代服务器，含 token 认证逻辑（--token/环境变量/dsh-proxy.log 运行时解析），无硬编码凭据，安全类规则整文件豁免（文件头前 3 行生效）。
 /**
  * dsh-git-push 侧边栏独立预览启动器（模板源：bench-template/server/lib/preview/start-preview.mjs，改配置区裁剪）
  *
@@ -20,7 +21,6 @@
  *   node start-preview.mjs --dsh http://127.0.0.1:30800 --token <launch-token>
  *   node start-preview.mjs --shot preview.png    # playwright 截图自检（需 pwviewer）
  */
-// dsh-skip-sensitive: 本文件为预览反代服务器，含 token 认证逻辑（--token/环境变量/dsh-proxy.log 运行时解析），无硬编码凭据，安全类规则整文件豁免（见 lib/exempt dsh-skip-sensitive：敏感类按 rule 名细分）。
 import { createServer } from 'node:http';
 import { request as httpRequest } from 'node:http';
 import { createReadStream, existsSync, statSync, readFileSync } from 'node:fs';
