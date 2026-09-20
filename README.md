@@ -650,7 +650,7 @@ node assets/preview-gen.mjs
 
 ```
 · git_scan —— 列工作区（含额外路径）所有 git 仓库：分支/remote/未提交与未推送数/最近活动
-· git_commit_push —— 一键提交并推送（审计同步拦截，通过后 commit+push 走宿主官方后台 job：立即返回 async:true+jobId，AI 继续干别的，用宿主 job_output <jobId> 查结果）
+· git_commit_push —— 一键提交并推送（审计同步拦截，通过后 commit+push 走宿主官方后台 job：立即返回 async:true+jobId，结果完成会自动返回、无需特意查询；如需主动查用宿主 job_output <jobId>）
 · code_audit —— 审计仓库（L0 静态检查 + 质量评分），scope=full 全量，可传 ruleset / weights
 · git_account_check —— 校验 GitHub 账号与凭据（token 在线校验 + SSH 公钥指纹）
 · git_gen_ssh_key / git_remote_create / git_set_visibility / git_clone / git_gen_readme / link_check
