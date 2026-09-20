@@ -178,6 +178,8 @@ dsh-git-push/
 │   │   ├── finding.js — 统一问题对象构造器（makeFinding）
 │   │   ├── gitignore-match.js — gitignore 语法匹配器（非 git 目录 .auditignore 兜底，语义与 git 对拍）
 │   │   ├── glob.js — glob→RegExp 转换（**/*/? 子集）
+│   │   ├── history-report.js — （待注释）
+│   │   ├── history.js — （待注释）
 │   │   ├── ignore-blind.js — 审计静默失明检测（本地 git 排除配置把整仓判成忽略时告警）
 │   │   ├── index.js — 审计层统一出口（auditFull/auditChanged）
 │   │   ├── orchestrate.js — 审计编排（收集→检查→汇总）
@@ -312,6 +314,7 @@ dsh-git-push/
 │   ├── test-folder-scope.mjs — 目录级审计作用域回归测试
 │   ├── test-git.mjs — git 总入口测试（runGit/commitAndPush/凭据/克隆）
 │   ├── test-gitignore-match.mjs — gitignore 兜底匹配（与真 git 对拍 + 非 git 端到端）
+│   ├── test-history-audit.mjs — （待注释）
 │   ├── test-http.mjs — HTTP 总入口测试（Origin/CSRF/413/路由）
 │   ├── test-inject-switch.mjs — 注入开发者要求清单子开关回归
 │   ├── test-inject-system-prompt.mjs — 注入系统提示词回归
@@ -893,7 +896,9 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
-| **1.6.0**（当前） | **git_commit_push / CLI commit 支持精确 add 路径（2026-09-21）** \
+| **1.7.0**（当前） | **audit --history 历史提交审计（2026-09-21）** \
+新增 **历史提交审计**：`git-sluice audit <repo> --history [--since <起始提交>] [--until <结束提交>] [--out <目录>]`——**只看历史提交**（不审当前工作区/diff），遍历起始~结束提交（皆缺省=全部历史、含两端）的**代码快照**（`git archive` 解临时目录）逐提交 `auditFull` 全量审计；**按提交后台串行**，每提交一份审计清单落盘（`<short>-<时间>.json` 完整 + `.md` 可读版 + `SUMMARY.json` 汇总）；保存位置 `--out` 可指定，**缺省 = git 根目录 `audit-history/`**；中断安全（已落盘保留、快照用完即删）。插件 code_audit 同步接入 `history/since/until/outDir` 四参数（宿主后台 job 串行执行、立即返回 jobId；无宿主 jobs 时同步降级）。实现：`lib/audit/history.js`（遍历+快照审计+串行）+ `lib/audit/history-report.js`（落盘+默认目录）。方案见 `docs/方案-audit-history-历史提交审计.md`。\
+| **1.6.0** | **git_commit_push / CLI commit 支持精确 add 路径（2026-09-21）** \
 `git_commit_push` 新增 **`paths` 参数**（逗号分隔、相对 repo）：**只暂存指定文件**，替代默认 `git add -A`——共享工作区/有他人未提交改动时避免把无关文件一并扫入提交（bench-template 等场景实测踩坑：add -A 会把 _iwara-style 等他人改动全带进提交）；空 = 保持 add -A 全量。CLI 同步接入：**`git-sluice commit <repo> -m <msg> --paths <路径1,路径2>`**（KNOWN_FLAGS + HELP 同步；与插件工具同一实现 commitAndPush 透传 paths）。\
 | **1.5.6** | **module_splitter 工具 + CLI 接入（2026-09-20）** \
 新增 **`module_splitter`** AI 工具（复用 `scripts/module-splitter.py`，python3 零依赖）——巨型单文件按顶层块拆分：`analyze <file.js>`（只读分析：顶层块行号/行数/块间依赖图/循环风险，先跑这个再据写 plan.json）→ `split <plan.json>`（按 plan 切分到模块 + 生成纯引用 index；`dryRun=true` 只预演不落盘）→ `verify <plan.json>`（校验 index 再导出名集合与原文件 export 完全一致，拆完必跑）。plan 走**文件路径**（AI 先用 write 工具写好 plan.json 再传）；脚本随插件发布（`scripts/` 进 SYNC_ENTRIES）。CLI 同步接入：**`git-sluice module-splitter <analyze|split|verify> <file|plan> [--dry-run] [--json]`**（与插件工具同实现，spawn python3 参数数组防注入；python3 缺失降级提示）。\

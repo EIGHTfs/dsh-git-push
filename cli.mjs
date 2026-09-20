@@ -32,7 +32,7 @@ import { fileURLToPath } from 'node:url';
 
 /** parseArgv 认识的选项白名单（cli-help-sync 机器比对基准，必须与 HELP 文本一致。
  * 注：-m 是单横线别名（helpSync 只比对 -- 双横线），不列入本表。 */
-export const KNOWN_FLAGS = ['--depth', '--full', '--ruleset', '--weights', '--include-ignored', '--push', '--no-push', '--dry-run', '--force', '--req-confirm', '--push-gate-confirmed', '--json', '--max', '--owner', '--offline', '--paths',
+export const KNOWN_FLAGS = ['--depth', '--full', '--ruleset', '--weights', '--include-ignored', '--push', '--no-push', '--dry-run', '--force', '--req-confirm', '--push-gate-confirmed', '--json', '--max', '--owner', '--offline', '--paths', '--history', '--since', '--until', '--out',
   // file-io 三标签过滤
   '--summary', '--write', '--type', '--kind', '--risk', '--op',
   // 2026-09-19 补齐的 5 个命令（clone / account-check / remote-create / set-visibility / gen-ssh-key）
@@ -48,8 +48,8 @@ const HELP = `git-sluice v${VERSION} — dsh-git-push 引擎独立 CLI（脱离 
                                   扫描本地 git 仓库（尊重 .gitignore：被忽略目录整棵跳过）
   git-sluice index <root> [--owner <账号>] [--depth N] [--max N] [--offline] [--json]
                                   重建仓库索引 dsh-repo-index.json（--offline=纯离线不查 GitHub API）
-  git-sluice audit <root> [--full] [--ruleset <目录>] [--weights <JSON>] [--include-ignored]
-                                  审计目录（默认 diff 范围；--full=全量；--ruleset=自定规则目录；--weights=权重覆盖 JSON；--include-ignored=连 .gitignore 忽略的文件也扫）
+  git-sluice audit <root> [--full] [--ruleset <目录>] [--weights <JSON>] [--include-ignored] [--history [--since <提交>] [--until <提交>] [--out <目录>]]
+                                  审计目录（默认 diff 范围；--full=全量；--ruleset=自定规则目录；--weights=权重覆盖 JSON；--include-ignored=连 .gitignore 忽略的文件也扫；--history=历史提交审计——逐提交快照全量审计并落盘报告，--since/--until 起始~结束提交（皆缺省=全部历史、含两端），--out 报告保存目录（缺省=git 根 audit-history/））
   git-sluice commit <repo> -m <msg> [--push|--no-push] [--dry-run] [--force] [--req-confirm] [--push-gate-confirmed] [--paths <路径1,路径2>] [--json]
                                   审计门禁 → 提交（默认只 commit 不 push；--push 推远端；--force 强推覆盖远端历史；--req-confirm 显式核对开发者要求；--push-gate-confirmed 显式放行推送门禁；--paths 精确 add 指定文件替代 add -A）
   git-sluice file-io [路径...] [--summary] [--write] [--type sync|async] [--kind read|write|delete|rename] [--risk high|medium|low] [--op <操作名>] [--json]
@@ -90,6 +90,7 @@ import './lib/rule/compilers.js';
 /** 布尔开关 flag → flags 字段名（出现即为 true）。 */
 const BOOL_FLAGS = {
   '--full': 'full',
+  '--history': 'history',
   '--include-ignored': 'includeIgnored',
   '--dry-run': 'dryRun',
   '--force': 'force',
@@ -122,6 +123,9 @@ const VALUE_FLAGS = {
   '--visibility': ['visibility', '--visibility 缺值（用法: --visibility public|private）'],
   '--email': ['email', '--email 缺值（用法: --email x@y.z）'],
   '--token': ['token', '--token 缺值（用法: --token <ghp_...>）'],
+  '--since': ['since', '--since 缺值（用法: --since <起始提交 sha/ref>）'],
+  '--until': ['until', '--until 缺值（用法: --until <结束提交 sha/ref>）'],
+  '--out': ['out', '--out 缺值（用法: --out <报告保存目录>）'],
 };
 
 /** 默认值（函数内每次调用新建，避免跨调用串状态）。 */
@@ -260,6 +264,22 @@ async function pathExists(p) {
 /** 子命令：audit — 审计目录（**与插件 code_audit 结果一致**）。 */
 export async function cmdAudit(root, flags) {
   const cfg = cliPluginConfig();
+  // 2026-09-21：history 模式——历史提交审计（逐提交快照全量审计 + 落盘报告）
+  if (flags.history === true) {
+    const { runHistoryAudit } = await import('./lib/audit/history.js');
+    const opts = pluginEqualAuditOpts(cfg, flags, { scope: 'full' });
+    const weights = pluginEqualWeights(cfg, flags);
+    const r = await runHistoryAudit(root || '.', {
+      since: flags.since, until: flags.until, outDir: flags.out,
+      auditOpts: opts, weights,
+      onCommit: (p) => { if (!flags.json) console.log(`  [${p.index}/${p.total}] ${p.short} ${p.ok ? '✓' : '✗ ' + (p.error || '')}`); },
+    });
+    if (!r.ok) { console.error(`❌ ${r.error || '历史审计失败'}`); return 1; }
+    if (flags.json) { console.log(JSON.stringify(r, null, 2)); return 0; }
+    console.log(`历史审计完成：${r.total} 个提交（处理 ${r.processed}，失败 ${r.failed}${r.aborted ? '，已中断' : ''}）`);
+    console.log(`报告目录：${r.reportDir}`);
+    return 0;
+  }
   const full = flags.full === true || !(await pathExists(join(root || '.', '.git')));
   const opts = pluginEqualAuditOpts(cfg, flags, { scope: full ? 'full' : 'diff' });
   const weights = pluginEqualWeights(cfg, flags);

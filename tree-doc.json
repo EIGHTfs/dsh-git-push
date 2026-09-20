@@ -252,5 +252,8 @@
   "skills/tool-json-add-ask.md": "（待注释）",
   "assemble.json": "bench-template 下发清单（键=模板仓库相对路径，值=本插件落点；preview 启动两件套 → assets/）",
   "assets/start-preview.mjs": "预览反代服务器（模板 bench-template server/lib/preview 下发改用：本地服务 preview.html，/api/git-push/* 转发 DSH 真实后端 + token 认证）",
-  "assets/start.sh": "预览服务器启停脚本（start/stop/restart/status + --port + PID/日志/健康检查 /preview-ping）"
+  "assets/start.sh": "预览服务器启停脚本（start/stop/restart/status + --port + PID/日志/健康检查 /preview-ping）",
+  "lib/audit/history-report.js": "（待注释）",
+  "lib/audit/history.js": "（待注释）",
+  "test/test-history-audit.mjs": "（待注释）"
 }
