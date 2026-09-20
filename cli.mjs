@@ -297,6 +297,13 @@ export async function cmdAudit(root, flags) {
     console.log(`  quality: ${quality.score}/100（${quality.level}）`);
   }
   if (Object.keys(weights).length) console.log(`  权重覆盖（来自插件配置 weightOverrides）: ${JSON.stringify(weights)}`);
+  // 2026-09-21：文档加分制（0 分起、上限 10）——结构信号 + 交叉验证，不进问题计数
+  const ds = auditResult.docsScore;
+  if (ds && Array.isArray(ds.items)) {
+    const total = ds.items.filter((i) => i.hit).reduce((a, i) => a + (Number(i.score) || 0), 0);
+    console.log(`  文档加分：命中 ${ds.hits?.length ?? 0}/${ds.items.length}（+${total.toFixed(1)}/10）`);
+    if (Array.isArray(ds.review) && ds.review.length) console.log(`  建议人工复核：${ds.review.join('；')}`);
+  }
 }
 
 /** 子命令：repos — 扫描本地 git 仓库（尊重 .gitignore）。 */

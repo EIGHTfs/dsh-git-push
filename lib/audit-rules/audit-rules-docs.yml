@@ -1,9 +1,12 @@
 # dsh-skip-doc: 链接规则定义文件含 URL 模式示范（非真实待检链接）
-# dsh-git-push 审计规则（docs 槽位）：链接判断（link-check）
-# link-check kind 由 lib/link-check/index.js 实现；本槽位只声明开关、分级与 flaky 清单。
+# dsh-git-push 审计规则（docs 槽位）：链接判断（link-check）+ 文档加分制（docs-score）
+# link-check kind 由 lib/link-check/index.js 实现。
+# 文档加分制（docs-score）**不是规则**：由 lib/score/docs-score.js 实现（结构信号 + 版本交叉验证，
+#   0 分起上限 10，不进 findings/扣分维度/门禁，scoreQuality context.docsScore 单独加分）——
+#   故不在本 yml 声明（声明会被当规则 kind 编译报错）。
 metadata:
   name: "docs 审计规则（链接判断槽位）"
-  version: "1.0.0"
+  version: "1.1.0"
 
 rules:
   - id: link-check
@@ -26,3 +29,4 @@ rules:
     timeouts_ms: 5000
     concurrency: 10
     max_links: 200
+

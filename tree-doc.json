@@ -255,5 +255,7 @@
   "assets/start.sh": "预览服务器启停脚本（start/stop/restart/status + --port + PID/日志/健康检查 /preview-ping）",
   "lib/audit/history-report.js": "（待注释）",
   "lib/audit/history.js": "（待注释）",
-  "test/test-history-audit.mjs": "（待注释）"
+  "test/test-history-audit.mjs": "（待注释）",
+  "lib/score/docs-score.js": "文档加分制检查器（文档集结构信号 + 版本一致性交叉验证，0 分起上限 10；不进 findings）",
+  "test/test-docs-score.mjs": "文档加分制测试（文档集圈法/四检查/公式/不一致 review/不冲突）"
 }

@@ -265,6 +265,7 @@ dsh-git-push/
 │   │   ├── registry.js — 规则编译注册表核心（compileRule 主体）
 │   │   └── …（12 个更深文件）
 │   ├── score/ — 10 维度加权评分总入口
+│   │   ├── docs-score.js — 文档加分制检查器（文档集结构信号 + 版本一致性交叉验证，0 分起上限 10；不进 findings）
 │   │   ├── index.js — 评分总入口（10 维度加权）
 │   ├── self/ — 插件自身总入口（VERSION/versionInfo/CLI 帮助）
 │   │   ├── index.js — 自身总入口（VERSION 一致性/versionInfo）
@@ -308,6 +309,7 @@ dsh-git-push/
 │   ├── test-clone-preview-buttons.mjs — clone 预览确认框按钮可点（真渲染+真点击）
 │   ├── test-context.mjs — 上下文注入测试
 │   ├── test-dataflow.mjs — 三层审计 L2 数据流测试
+│   ├── test-docs-score.mjs — 文档加分制测试（文档集圈法/四检查/公式/不一致 review/不冲突）
 │   ├── test-exempt.mjs — 豁免总入口测试（7 标记 + 位置语义）
 │   ├── test-false-positive-fixes.mjs — 误报修复回归测试
 │   ├── test-file-health.mjs — 文件健康度矩阵评分测试
@@ -896,8 +898,9 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
-| **1.7.0**（当前） | **audit --history 历史提交审计（2026-09-21）** \
+| **1.7.0**（当前） | **audit --history 历史提交审计 + 文档维度加分制（2026-09-21）** \
 新增 **历史提交审计**：`git-sluice audit <repo> --history [--since <起始提交>] [--until <结束提交>] [--out <目录>]`——**只看历史提交**（不审当前工作区/diff），遍历起始~结束提交（皆缺省=全部历史、含两端）的**代码快照**（`git archive` 解临时目录）逐提交 `auditFull` 全量审计；**按提交后台串行**，每提交一份审计清单落盘（`<short>-<时间>.json` 完整 + `.md` 可读版 + `SUMMARY.json` 汇总）；保存位置 `--out` 可指定，**缺省 = git 根目录 `audit-history/`**；中断安全（已落盘保留、快照用完即删）。插件 code_audit 同步接入 `history/since/until/outDir` 四参数（宿主后台 job 串行执行、立即返回 jobId；无宿主 jobs 时同步降级）。实现：`lib/audit/history.js`（遍历+快照审计+串行）+ `lib/audit/history-report.js`（落盘+默认目录）。方案见 `docs/方案-audit-history-历史提交审计.md`。\
+同时新增 **文档维度加分制**（0 分起、上限 10，替代扣分制文档维度——原扣分制下文档几乎不扣分、人人满分无区分度）：`文档得分 = min(10, Σ命中加分项分值)`；4 项结构信号+交叉验证（README 存在 / **版本号与 package.json 一致**（文档集任一版本号==pkg.version，最硬）/ 安装启动命令 / 环境变量清单，每项 2.5）；检查范围=**文档集**（README + `docs/` 下递归 .md + 根级常见命名如 CHANGELOG/INSTALL，排除 node_modules 等）；多文档版本不一致只进「建议人工复核」**不扣分**（与 version/readme-changelog 口径错开）；加分项**不进 findings/扣分维度/门禁**（`auditFull` 返回独立 `docsScore` 字段，`scoreQuality` 单独加分，与现有 yml 规则零冲突）。实现：`lib/score/docs-score.js`。方案见 `docs/方案-文档维度加分制.md`。\
 | **1.6.0** | **git_commit_push / CLI commit 支持精确 add 路径（2026-09-21）** \
 `git_commit_push` 新增 **`paths` 参数**（逗号分隔、相对 repo）：**只暂存指定文件**，替代默认 `git add -A`——共享工作区/有他人未提交改动时避免把无关文件一并扫入提交（bench-template 等场景实测踩坑：add -A 会把 _iwara-style 等他人改动全带进提交）；空 = 保持 add -A 全量。CLI 同步接入：**`git-sluice commit <repo> -m <msg> --paths <路径1,路径2>`**（KNOWN_FLAGS + HELP 同步；与插件工具同一实现 commitAndPush 透传 paths）。\
 | **1.5.6** | **module_splitter 工具 + CLI 接入（2026-09-20）** \
