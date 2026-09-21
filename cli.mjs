@@ -61,6 +61,8 @@ const HELP = `git-sluice v${VERSION} — dsh-git-push 引擎独立 CLI（脱离 
                                   从 GitHub 克隆仓库（Git Data API 通道，不直连 github.com；--preview=只探测不写盘）
   git-sluice account-check [--token <t>] [--no-check-ssh] [--json]
                                   校验 GitHub 账号与凭据（token 在线校验 + SSH 公钥指纹）
+  git-sluice cred-env [--json]
+                                  输出插件保管凭据的环境变量前缀（SSH: GIT_SSH_COMMAND 私钥路径 / HTTPS: GIT_ASKPASS 脚本）——AI 执行任意外部 git 命令时粘贴使用，全程无 token/私钥明文
   git-sluice remote-create <repo> [--owner <账号>] [--visibility public|private] [--dry-run] [--json]
                                   按项目文件夹在 GitHub 建远端仓库（已存在则复用），并指向 origin
   git-sluice set-visibility <repo> --visibility public|private [--json]
@@ -454,6 +456,23 @@ export async function cmdAccountCheck(flags) {
   return r.ok === false ? 1 : 0;
 }
 
+/** 子命令：cred-env — 输出插件保管凭据的环境变量前缀（AI 执行外部 git 时粘贴使用，无明文）。 */
+export async function cmdCredEnv(flags) {
+  const { buildCredEnv } = await import('./lib/git/cred-env.js');
+  const r = buildCredEnv({});
+  if (flags.json) { console.log(JSON.stringify(r, null, 2)); return 0; }
+  if (!r.provided.length) { console.log(`❌ ${r.hint}`); return 1; }
+  console.log('凭据传递（插件保管，以下只有路径/命令串，无 token/私钥明文）：');
+  for (const ch of r.provided) {
+    const c = r[ch];
+    console.log(`\n[${ch === 'ssh' ? 'SSH 通道' : 'HTTPS 通道'}]`);
+    console.log(`  envPrefix: ${c.envPrefix}`);
+    console.log(`  用法示例: ${c.example}`);
+  }
+  console.log(`\n提示：${r.hint}`);
+  return 0;
+}
+
 /** 子命令：remote-create — 按项目文件夹在 GitHub 建远端仓库（已存在则复用）。 */
 export async function cmdRemoteCreate(repo, flags) {
   if (!repo) { console.error('缺少 <repo>（用法: git-sluice remote-create <repo> [--visibility public|private]）'); return 1; }
@@ -690,6 +709,11 @@ export async function main(argv = process.argv.slice(2)) {
     const { flags, error } = parseArgv(rest);
     if (error) return console.error(error);
     return await cmdAccountCheck(flags);
+  }
+  if (cmd === 'cred-env') {
+    const { flags, error } = parseArgv(rest);
+    if (error) return console.error(error);
+    return await cmdCredEnv(flags);
   }
   if (cmd === 'remote-create') {
     const { flags, positional, error } = parseArgv(rest);

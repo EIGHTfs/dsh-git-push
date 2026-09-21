@@ -257,5 +257,7 @@
   "lib/audit/history.js": "（待注释）",
   "test/test-history-audit.mjs": "（待注释）",
   "lib/score/docs-score.js": "文档加分制检查器（文档集结构信号 + 版本一致性交叉验证，0 分起上限 10；不进 findings）",
-  "test/test-docs-score.mjs": "文档加分制测试（文档集圈法/四检查/公式/不一致 review/不冲突）"
+  "test/test-docs-score.mjs": "文档加分制测试（文档集圈法/四检查/公式/不一致 review/不冲突）",
+  "lib/git/cred-env.js": "凭据传递工具（SSH 私钥路径 GIT_SSH_COMMAND / HTTPS askpass 脚本，AI 执行外部 git 不接触明文）",
+  "test/test-cred-env.mjs": "git_cred_env 凭据传递测试（双通道/无明文/askpass 调用/无凭据兜底）"
 }

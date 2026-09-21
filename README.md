@@ -236,6 +236,7 @@ dsh-git-push/
 │   │   ├── clone.js — 克隆（Git Data API，不依赖本地凭据）
 │   │   ├── cloud.js — 云端仓库列表（/user/repos 供手动 clone）
 │   │   ├── config.js — 路径与配置（PLUGIN_ROOT + 开发者要求清单读取）
+│   │   ├── cred-env.js — 凭据传递工具（SSH 私钥路径 GIT_SSH_COMMAND / HTTPS askpass 脚本，AI 执行外部 git 不接触明文）
 │   │   ├── credentials.js — 凭据解析（token/SSH 私钥：环境变量→凭据文件→settings）
 │   │   ├── exec.js — git 进程调用（runGit 统一超时/错误规整 + gitRaw 原始字节）
 │   │   ├── ignore.js — .gitignore 兜底（DEFAULT_IGNORE_PATTERNS 补齐）
@@ -308,6 +309,7 @@ dsh-git-push/
 │   ├── test-clone-concurrency.mjs — clone 并发互斥/可中止/失败保留文件（14 项，CIFS 对照用例可跳）
 │   ├── test-clone-preview-buttons.mjs — clone 预览确认框按钮可点（真渲染+真点击）
 │   ├── test-context.mjs — 上下文注入测试
+│   ├── test-cred-env.mjs — git_cred_env 凭据传递测试（双通道/无明文/askpass 调用/无凭据兜底）
 │   ├── test-dataflow.mjs — 三层审计 L2 数据流测试
 │   ├── test-docs-score.mjs — 文档加分制测试（文档集圈法/四检查/公式/不一致 review/不冲突）
 │   ├── test-exempt.mjs — 豁免总入口测试（7 标记 + 位置语义）
@@ -898,7 +900,9 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
-| **1.7.0**（当前） | **audit --history 历史提交审计 + 文档维度加分制（2026-09-21）** \
+| **1.8.0**（当前） | **git_cred_env 凭据传递（AI 执行外部 git 不接触明文）（2026-09-21）** \
+新增 **凭据传递工具 `git_cred_env`**（工具 + CLI `git-sluice cred-env [--json]`）：插件保管的凭据（config.json `githubToken` + 配置目录 SSH 私钥）转成**可直接粘贴的环境变量前缀**，供 AI 执行**任意外部 git 命令**时使用——**SSH 通道** `GIT_SSH_COMMAND="ssh -i '<私钥路径>' -p 443 -o IdentitiesOnly=yes …"`（AI 只接触私钥文件**路径**，明文不经手）；**HTTPS 通道** `GIT_ASKPASS="<配置目录>/git-askpass.sh"`（插件生成 askpass 脚本，git 要密码时从 config.json 回显 token，AI 只接触脚本**路径**）。返回 `provided/hasSshKey/hasToken/ssh/https` 各通道 envPrefix+example——**全程不含 token/私钥明文**（实测输出 `ghp_ 明文? false`；envPrefix 直接 `git ls-remote` 验证凭据可用）。复用存量 `resolveSshKey`/`resolveToken`/`credentialsDir`（不重复造轮子）；插件不覆盖 git 功能，只做凭据传递。实现：`lib/git/cred-env.js`。\
+| **1.7.0** | **audit --history 历史提交审计 + 文档维度加分制（2026-09-21）** \
 新增 **历史提交审计**：`git-sluice audit <repo> --history [--since <起始提交>] [--until <结束提交>] [--out <目录>]`——**只看历史提交**（不审当前工作区/diff），遍历起始~结束提交（皆缺省=全部历史、含两端）的**代码快照**（`git archive` 解临时目录）逐提交 `auditFull` 全量审计；**按提交后台串行**，每提交一份审计清单落盘（`<short>-<时间>.json` 完整 + `.md` 可读版 + `SUMMARY.json` 汇总）；保存位置 `--out` 可指定，**缺省 = git 根目录 `audit-history/`**；中断安全（已落盘保留、快照用完即删）。插件 code_audit 同步接入 `history/since/until/outDir` 四参数（宿主后台 job 串行执行、立即返回 jobId；无宿主 jobs 时同步降级）。实现：`lib/audit/history.js`（遍历+快照审计+串行）+ `lib/audit/history-report.js`（落盘+默认目录）。方案见 `docs/方案-audit-history-历史提交审计.md`。\
 同时新增 **文档维度加分制**（0 分起、上限 10，替代扣分制文档维度——原扣分制下文档几乎不扣分、人人满分无区分度）：`文档得分 = min(10, Σ命中加分项分值)`；4 项结构信号+交叉验证（README 存在 / **版本号与 package.json 一致**（文档集任一版本号==pkg.version，最硬）/ 安装启动命令 / 环境变量清单，每项 2.5）；检查范围=**文档集**（README + `docs/` 下递归 .md + 根级常见命名如 CHANGELOG/INSTALL，排除 node_modules 等）；多文档版本不一致只进「建议人工复核」**不扣分**（与 version/readme-changelog 口径错开）；加分项**不进 findings/扣分维度/门禁**（`auditFull` 返回独立 `docsScore` 字段，`scoreQuality` 单独加分，与现有 yml 规则零冲突）。实现：`lib/score/docs-score.js`。方案见 `docs/方案-文档维度加分制.md`。\
 UI 本地面板每仓库行新增 **commit 按钮**（与 push 并排）：弹窗输入 commit message → `/repo-commit` 复用 **git_commit_push 的本地提交审计**（`commitWithAudit` push:false，`audit:true` 强制审计）——blocker → 返回精简「🚫 审计拦截」+ 命中清单（不提交）；warning → 提交成功并附警告数；push 按钮保持**只负责推送**。
