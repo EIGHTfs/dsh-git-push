@@ -219,6 +219,23 @@ window.fetch = function (url, init) {
   // 默认放行同源：start-preview.mjs 反代到 DSH 真实后端（完全真实数据）；
   //   仅显式 ?mock=1 才走下方假数据（离线调试）。
   if (!/[?&]mock=1/.test(location.search)) {
+    // 2026-09-21 修复：**file:// 双击打开**时相对 URL（/api/git-push/*）无 http 基址，
+    //   fetch 直接抛「Failed to parse URL」——自动回退本机 preview 服务（start.sh 缺省
+    //   端口 30999；--port 错开或用 ?backend= 指定则覆盖）。连不上给清晰指引而非裸报错。
+    if (location.protocol === 'file:') {
+      var fileBase = window.__DSHGP_BACKEND__ || 'http://127.0.0.1:30999';
+      return __PRE_REAL__(fileBase + urlStr, init).catch(function () {
+        return {
+          ok: true, status: 502,
+          json: function () {
+            return Promise.resolve({
+              ok: false,
+              error: '后端未启动或端口不符（双击打开 preview.html：请先 assets/start.sh start 起服务经 http://<IP>:<端口> 访问；端口错开时给 URL 加 ?backend=http://127.0.0.1:<实际端口>；或加 ?mock=1 用离线假数据）',
+            });
+          },
+        };
+      });
+    }
     return __PRE_REAL__(urlStr, init);
   }
   body = { ok: true };
@@ -336,7 +353,7 @@ body{margin:0;padding:20px;background:#0f1117;color:#e8eaf0;
 #root{max-width:520px}
 #__err{max-width:520px}
 </style></head><body>
-<div class="banner">这是<b>真实后端数据预览</b>：跑的是仓库里真实的 <b>client.js</b>（垫片宿主环境）；默认在
+<div class="banner"><b>打开方式</b>：本地双击（file://）会自动连 <b>http://127.0.0.1:30999</b>（start.sh 缺省端口）——请先 <b>assets/start.sh start</b> 起服务经 http://<本机IP>:<端口> 访问，端口不符给 URL 加 <b>?backend=http://127.0.0.1:端口</b>（或 ?mock=1 离线）；经服务打开时数据完全来自真实后端。  <hr style="border-color:rgba(255,255,255,.12);margin:8px 0">这是<b>真实后端数据预览</b>：跑的是仓库里真实的 <b>client.js</b>（垫片宿主环境）；默认在
 <b>start.sh 起的预览服务</b>下打开，账号/仓库/规则/审计/设置全部来自 <b>DSH 真实后端</b>（读写都真实）。
 离线调试可用 <b>?mock=1</b> 切回内置假数据（改动只留页面内、不写文件）；跨后端实测用 <b>?backend=http://127.0.0.1:端口</b>。</div>
 <div id="root"></div>
