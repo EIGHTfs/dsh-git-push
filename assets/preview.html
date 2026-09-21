@@ -33342,7 +33342,7 @@ window.__requireShim = function (name) {
 };
 
 // 宿主 settingsScope：真内存 store，set 后通知 → 界面真的跟着变
-window.__SLOTS__ = {"comment":{"name":"注释质量检测规则（AI 交流注释识别）","description":"检测『用户指示 2』『用户原话』等 AI 协作残留注释","author":"DeepSeek","stats":{"blocker":6,"warning":0,"pass":0,"total":6,"source":"rules"},"disabled":false},"docs":{"name":"docs 审计规则（链接判断槽位）","description":"","author":"","stats":{"blocker":0,"warning":1,"pass":0,"total":1,"source":"rules"},"disabled":false},"dsh":{"name":"dsh 插件专属审计规则集","description":"针对 DeepSeek Harness 插件（cordis 形态）的结构、依赖、工具契约、patch 语义审计；单行正则可执行","author":"EIGHTfs","stats":{"blocker":4,"warning":3,"pass":0,"total":7,"source":"rules"},"disabled":false},"filehealth":{"name":"文件健康度矩阵评分规则集","description":"单文件健康度评估（行数40% + 大小35% + 行长25%），score<9 提示、<5 blocker","author":"DeepSeek","stats":{"blocker":0,"warning":1,"pass":0,"total":1,"source":"rules"},"disabled":false},"folder":{"name":"文件夹数量审计规则（防止解包/依赖/构建产物入库）","description":"","author":"","stats":{"blocker":1,"warning":5,"pass":0,"total":6,"source":"rules"},"disabled":false},"frontend":{"name":"前端 HTML 审计规则（内嵌管理界面）","description":"用于服务端内嵌管理界面，不面向搜索引擎","author":"DeepSeek","stats":{"blocker":6,"warning":13,"pass":7,"total":26,"source":"rules"},"disabled":false},"i18n":{"name":"国际化审计规则（i18n 六条转规则）","description":"","author":"","stats":{"blocker":0,"warning":3,"pass":0,"total":3,"source":"rules"},"disabled":true},"nodejs":{"name":"Node.js 后端审计规则集","description":"覆盖命名规范、代码结构、安全性、健壮性、性能、测试、依赖等维度","author":"DeepSeek","stats":{"blocker":13,"warning":22,"pass":2,"total":37,"source":"rules"},"disabled":false},"npm":{"name":"npm 插件发布审计规则集","description":"针对要发布到 npm 的 dsh 插件：发布清单/依赖声明/凭据防泄漏/publishConfig 语义审计（只扫 package.json + .npmrc）","author":"EIGHTfs","stats":{"blocker":5,"warning":4,"pass":1,"total":10,"source":"rules"},"disabled":false},"performance":{"name":"性能审计规则（memory-bomb 示范落地）","description":"","author":"","stats":{"blocker":0,"warning":2,"pass":0,"total":2,"source":"rules"},"disabled":false},"private":{"name":"私密文件拦截审计（强制槽位）","description":"","author":"EIGHTfs","stats":{"blocker":13,"warning":0,"pass":0,"total":13,"source":"rules"},"disabled":false},"robustness":{"name":"健壮性审计规则（写文件目录保障等）","description":"","author":"","stats":{"blocker":0,"warning":1,"pass":0,"total":1,"source":"rules"},"disabled":false},"structure":{"name":"目录结构规范（本地定制版）","description":"dsh-git-push 目录结构取舍结论：lib/ 平铺即源码（不引入 src/）、docs/ skills/ 保留、无 script/config/dist/log 空目录；统一单数命名（tool/ test/ doc/，不用 tools/ tests/ docs/）","author":"EIGHTfs","stats":{"blocker":0,"warning":1,"pass":0,"total":1,"source":"rules"},"disabled":false},"template":{"name":"自定义审计规则集","description":"根据项目需求自定义填充规则","author":"DeepSeek","stats":{"blocker":0,"warning":0,"pass":1,"total":1,"source":"rules"},"disabled":false},"version":{"name":"版本控制审计规则集（versioning-rule 转写）","description":"版本号 X.Y.Z 语义 + 1 开头硬规则 + 版本只在提交时变化 + README 更新日志同步（源：versioning-rule.md）","author":"EIGHTfs","stats":{"blocker":2,"warning":3,"pass":3,"total":8,"source":"rules"},"disabled":false}};
+window.__SLOTS__ = {"comment":{"name":"注释质量检测规则（AI 交流注释识别）","description":"检测『用户指示 2』『用户原话』等 AI 协作残留注释","author":"DeepSeek","stats":{"blocker":6,"warning":0,"pass":0,"total":6,"source":"rules"},"disabled":false},"docs":{"name":"docs 审计规则（链接判断槽位）","description":"","author":"","stats":{"blocker":0,"warning":1,"pass":0,"total":1,"source":"rules"},"disabled":false},"dsh":{"name":"dsh 插件专属审计规则集","description":"针对 DeepSeek Harness 插件（cordis 形态）的结构、依赖、工具契约、patch 语义审计；单行正则可执行","author":"EIGHTfs","stats":{"blocker":4,"warning":3,"pass":0,"total":7,"source":"rules"},"disabled":false},"filehealth":{"name":"文件健康度矩阵评分规则集","description":"单文件健康度评估（行数40% + 大小35% + 行长25%），score<9 提示、<5 blocker","author":"DeepSeek","stats":{"blocker":0,"warning":1,"pass":0,"total":1,"source":"rules"},"disabled":false},"folder":{"name":"文件夹数量审计规则（防止解包/依赖/构建产物入库）","description":"","author":"","stats":{"blocker":1,"warning":5,"pass":0,"total":6,"source":"rules"},"disabled":false},"frontend":{"name":"前端 HTML 审计规则（内嵌管理界面）","description":"用于服务端内嵌管理界面，不面向搜索引擎","author":"DeepSeek","stats":{"blocker":6,"warning":13,"pass":7,"total":26,"source":"rules"},"disabled":false},"i18n":{"name":"国际化审计规则（i18n 六条转规则）","description":"","author":"","stats":{"blocker":0,"warning":3,"pass":0,"total":3,"source":"rules"},"disabled":true},"nodejs":{"name":"Node.js 后端审计规则集","description":"覆盖命名规范、代码结构、安全性、健壮性、性能、测试、依赖等维度","author":"DeepSeek","stats":{"blocker":13,"warning":23,"pass":2,"total":38,"source":"rules"},"disabled":false},"npm":{"name":"npm 插件发布审计规则集","description":"针对要发布到 npm 的 dsh 插件：发布清单/依赖声明/凭据防泄漏/publishConfig 语义审计（只扫 package.json + .npmrc）","author":"EIGHTfs","stats":{"blocker":5,"warning":4,"pass":1,"total":10,"source":"rules"},"disabled":false},"performance":{"name":"性能审计规则（memory-bomb 示范落地）","description":"","author":"","stats":{"blocker":0,"warning":2,"pass":0,"total":2,"source":"rules"},"disabled":false},"private":{"name":"私密文件拦截审计（强制槽位）","description":"","author":"EIGHTfs","stats":{"blocker":13,"warning":0,"pass":0,"total":13,"source":"rules"},"disabled":false},"robustness":{"name":"健壮性审计规则（写文件目录保障等）","description":"","author":"","stats":{"blocker":0,"warning":1,"pass":0,"total":1,"source":"rules"},"disabled":false},"structure":{"name":"目录结构规范（本地定制版）","description":"dsh-git-push 目录结构取舍结论：lib/ 平铺即源码（不引入 src/）、docs/ skills/ 保留、无 script/config/dist/log 空目录；统一单数命名（tool/ test/ doc/，不用 tools/ tests/ docs/）","author":"EIGHTfs","stats":{"blocker":0,"warning":1,"pass":0,"total":1,"source":"rules"},"disabled":false},"template":{"name":"自定义审计规则集","description":"根据项目需求自定义填充规则","author":"DeepSeek","stats":{"blocker":0,"warning":0,"pass":1,"total":1,"source":"rules"},"disabled":false},"version":{"name":"版本控制审计规则集（versioning-rule 转写）","description":"版本号 X.Y.Z 语义 + 1 开头硬规则 + 版本只在提交时变化 + README 更新日志同步（源：versioning-rule.md）","author":"EIGHTfs","stats":{"blocker":2,"warning":3,"pass":3,"total":8,"source":"rules"},"disabled":false}};
 window.__scopeSubs = [];
 window.__scopeMock = {
   getSnapshot: function () { return { status: 'ready', writable: true, value: window.__FAKE__ }; },
@@ -34062,12 +34062,21 @@ window.__ModuleLoader__.load({
           jsx.jsxs('div', {
             className: 'dshgp_pushcol',
             children: [
+              // 2026-09-21：commit 按钮与 push 并排——本地提交（复用提交推送的本地提交审计，
+              //   精简报拦截/警告）；有未提交改动才可点；push 保持只负责推送。
+              jsx.jsx('button', {
+                type: 'button',
+                className: 'dshgp_keybtn',
+                disabled: busy || !(r.changed > 0),
+                onClick: () => props.onCommit(r.path),
+                children: busy === 'commit:' + r.path ? '提交中…' : 'commit',
+              }),
               jsx.jsx('button', {
                 type: 'button',
                 className: 'dshgp_keybtn',
                 disabled: !canPush || busy,
                 onClick: () => props.onPush(r.path),
-                children: busy ? '推送中…' : 'push',
+                children: busy === 'push:' + r.path ? '推送中…' : 'push',
               }),
               (s.repoFeedback && s.repoFeedback[r.path])
                 ? jsx.jsx('span', { className: s.repoFeedback[r.path].ok ? 'dshgp_fb dshgp_fbok' : 'dshgp_fb dshgp_fbfail', children: s.repoFeedback[r.path].msg })
@@ -34083,7 +34092,7 @@ window.__ModuleLoader__.load({
       const s = props.state;
       // key 用 path，空 path 时回退 name（索引里云端-only 条目 path 为空，纯 path 作 key 会
       //   多条撞同一空 key → React「two children with the same key」警告）
-      const rows = (s.localRepos || []).map((r) => jsx.jsx(dshgp_RepoLocalRow, { key: r.path || `name:${r.name}`, repo: r, state: s, onPush: props.pushLocalRepo }));
+      const rows = (s.localRepos || []).map((r) => jsx.jsx(dshgp_RepoLocalRow, { key: r.path || `name:${r.name}`, repo: r, state: s, onPush: props.pushLocalRepo, onCommit: props.commitLocalRepo }));
       return jsx.jsxs('div', {
         className: 'dshgp_repanepane',
         children: [
@@ -35358,6 +35367,43 @@ window.__ModuleLoader__.load({
         this.publish();
       }
 
+      /** 2026-09-21：本地仓库手动 commit（只提交不推送）——复用提交推送的本地提交审计。
+       *  弹窗输入 commit message → POST /repo-commit → commitWithAudit(push:false)。
+       *  精简返回：blocker → 「审计拦截」；warning → 附警告数；成功 → 「已提交 sha」。
+       *  @param {string} path 仓库绝对路径
+       */
+      async commitLocalRepo(path) {
+        const message = window.prompt('输入 commit message（本地提交；审计门禁通过才提交）：', '');
+        if (message === null || !String(message).trim()) return; // 用户取消
+        this.repoBusy = 'commit:' + path;
+        this.publish();
+        let ok = false;
+        let msg = '';
+        try {
+          const res = await dshgp_postJson('/api/git-push/repo-commit', { path, message: String(message).trim(), confirm: true });
+          // post 封装返回 {data, msg...} 或直出 body；data.ok 为准
+          const d = (res && res.ok !== undefined) ? res : (res && res.data ? res.data : res);
+          if (d && d.ok) {
+            ok = true;
+            const w = d.warningCount || 0;
+            msg = '✅ 已提交' + (d.commitSha ? ' ' + d.commitSha : '') + (w ? '（⚠️ ' + w + ' 条 warning，见审计）' : '');
+          } else if (d && d.blocked) {
+            const list = (d.blockers && d.blockers.length ? d.blockers.slice(0, 2).join('；') : (d.error || '审计拦截'));
+            msg = '🚫 审计拦截：' + list;
+          } else {
+            msg = '⚠️ ' + (d && d.error ? d.error : '提交失败');
+          }
+          this.localMsg = msg;
+        } catch (e) {
+          msg = '❌ 提交失败: ' + (e && e.message || e);
+          this.localMsg = msg;
+        }
+        this.repoFeedback = Object.assign({}, this.repoFeedback, { [path]: { ok, msg } });
+        this.repoBusy = '';
+        void this.scanLocalRepos(this.localPath); // 提交后未提交数变化，刷新列表
+        this.publish();
+      }
+
       /**
        * 1.5.4：请求切换可见性——只记录待确认目标并弹**独立确认面板**（不直接调用后端）。
        * 真正切由 confirmVisSwitch 在用户点了「确认切换」后执行。
@@ -35840,6 +35886,7 @@ window.__ModuleLoader__.load({
           startScan: (path) => { void this.startScan(path); }, // 扫描按钮：独立进程后台扫描 + 逐条追加
           loadCloudRepos: () => { void this.refresh('cloud'); },
           pushLocalRepo: (path) => { void this.pushLocalRepo(path); },
+          commitLocalRepo: (path) => { void this.commitLocalRepo(path); }, // 2026-09-21：本地 commit（复用提交审计）
           cloneFlow: (repo) => this.cloneFlow(repo),
           requestVisSwitch: (fullName, target) => this.requestVisSwitch(fullName, target), // 弹独立确认面板（1.5.4）
           confirmVisSwitch: () => { void this.confirmVisSwitch(); },
