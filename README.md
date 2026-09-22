@@ -900,7 +900,8 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
-| **1.8.0**（当前） | **git_cred_env 凭据传递（AI 执行外部 git 不接触明文）（2026-09-21）** \
+| **1.8.1**（当前） | **tree-doc --root 外调修复（syncIndex 写盘落指定目录）+ 中文路径 quotepath=false（git ls-files 不再八进制转义，tree-doc.json 键名正确）**
+| **1.8.0** | **git_cred_env 凭据传递（AI 执行外部 git 不接触明文）（2026-09-21）** \
 新增 **凭据传递工具 `git_cred_env`**（工具 + CLI `git-sluice cred-env [--json]`）：插件保管的凭据（config.json `githubToken` + 配置目录 SSH 私钥）转成**可直接粘贴的环境变量前缀**，供 AI 执行**任意外部 git 命令**时使用——**SSH 通道** `GIT_SSH_COMMAND="ssh -i '<私钥路径>' -p 443 -o IdentitiesOnly=yes …"`（AI 只接触私钥文件**路径**，明文不经手）；**HTTPS 通道** `GIT_ASKPASS="<配置目录>/git-askpass.sh"`（插件生成 askpass 脚本，git 要密码时从 config.json 回显 token，AI 只接触脚本**路径**）。返回 `provided/hasSshKey/hasToken/ssh/https` 各通道 envPrefix+example——**全程不含 token/私钥明文**（实测输出 `ghp_ 明文? false`；envPrefix 直接 `git ls-remote` 验证凭据可用）。复用存量 `resolveSshKey`/`resolveToken`/`credentialsDir`（不重复造轮子）；插件不覆盖 git 功能，只做凭据传递。实现：`lib/git/cred-env.js`。\
 | **1.7.0** | **audit --history 历史提交审计 + 文档维度加分制（2026-09-21）** \
 新增 **历史提交审计**：`git-sluice audit <repo> --history [--since <起始提交>] [--until <结束提交>] [--out <目录>]`——**只看历史提交**（不审当前工作区/diff），遍历起始~结束提交（皆缺省=全部历史、含两端）的**代码快照**（`git archive` 解临时目录）逐提交 `auditFull` 全量审计；**按提交后台串行**，每提交一份审计清单落盘（`<short>-<时间>.json` 完整 + `.md` 可读版 + `SUMMARY.json` 汇总）；保存位置 `--out` 可指定，**缺省 = git 根目录 `audit-history/`**；中断安全（已落盘保留、快照用完即删）。插件 code_audit 同步接入 `history/since/until/outDir` 四参数（宿主后台 job 串行执行、立即返回 jobId；无宿主 jobs 时同步降级）。实现：`lib/audit/history.js`（遍历+快照审计+串行）+ `lib/audit/history-report.js`（落盘+默认目录）。方案见 `docs/方案-audit-history-历史提交审计.md`。\

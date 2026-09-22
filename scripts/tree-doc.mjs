@@ -45,7 +45,7 @@ const TOP_DIRS = [
 function gitLsFiles(root = ROOT) {
   try {
     // 已跟踪 + 未跟踪但未忽略（新文件/待提交都算「未忽略文件」，README 目录树应含它们）
-    const out = execFileSync('git', ['-C', root, 'ls-files', '--cached', '--others', '--exclude-standard'], { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
+    const out = execFileSync('git', ['-c', 'core.quotepath=false', '-C', root, 'ls-files', '--cached', '--others', '--exclude-standard'], { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
     return out.split('\n').map((l) => l.trim()).filter(Boolean).filter((p) => {
       // 缺陷修复 2026-09-15：--cached 会把「已跟踪但工作区已删」的文件也列出
       //   （如 mv 进 .trash 的旧文件仍留在索引），导致 check 误报「真实存在但未列」。
@@ -77,7 +77,7 @@ function writeMapping(map, root = ROOT) {
  * @param {{write?: boolean, files?: string[], map?: object}} [opts] 测试可注入
  * @returns {{added: string[], removed: string[], map: object}}
  */
-export function syncIndex({ write = true, files = gitLsFiles(), map = loadMapping() } = {}) {
+export function syncIndex({ write = true, files = gitLsFiles(), map = loadMapping(), root = ROOT } = {}) {
   const added = [];
   const removed = [];
   const next = { ...map };
@@ -105,7 +105,7 @@ export function syncIndex({ write = true, files = gitLsFiles(), map = loadMappin
     next[p] = '（待注释）';
     added.push(p);
   }
-  if (write && (added.length || removed.length)) writeMapping(next);
+  if (write && (added.length || removed.length)) writeMapping(next, root);
   return { added, removed, map: next };
 }
 
@@ -307,7 +307,7 @@ if (isMain) {
       const files = filesOf(rootArg);
       if (args.includes('--write')) {
         // 索引同步 + 补（待注释）（2026-09-15：与 sync 同一逻辑，--all 为显式全量语义）
-        const { added, removed } = syncIndex({ write: true, files, map: mapOf(rootArg) });
+        const { added, removed } = syncIndex({ write: true, files, map: mapOf(rootArg), root: rootArg });
         if (forceAll) console.log('--all：已强制全量追加索引');
         console.log(`tree-doc.json 已同步（新增 ${added.length} / 删除 ${removed.length}；${added.length ? '待注释键请补描述' : ''}）`);
       } else {
@@ -325,7 +325,7 @@ if (isMain) {
     }
     case 'apply': {
       // apply 前先同步索引，保证树用最新映射（描述缺失处标（待注释））
-      if (args.includes('--sync') || forceAll) syncIndex({ write: true, files: filesOf(rootArg), map: mapOf(rootArg) });
+      if (args.includes('--sync') || forceAll) syncIndex({ write: true, files: filesOf(rootArg), map: mapOf(rootArg), root: rootArg });
       const tree = buildTreeText(filesOf(rootArg), mapOf(rootArg));
       const text = readReadme(readmePath);
       const updated = applyBlock(text, tree);
