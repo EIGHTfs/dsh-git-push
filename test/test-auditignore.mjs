@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, execSync } from 'node:child_process';
 
 import { collectTextFiles } from '../lib/audit/collector.js';
 
@@ -82,5 +82,34 @@ test('.auditignore：不写进任何 git 配置（不污染 .git/info/exclude）
       const content = readFileSync(infoExclude, 'utf8');
       assert.ok(!content.includes('auditignore'), '.git/info/exclude 不应被写入 .auditignore 内容');
     }
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+// ---------- 2026-09-22：文件级 gitignore（含中文路径）修复回归 ----------
+//   现象：全量审计不按 .gitignore 排除 lib/client.js / 任务.md / *.log 等**文件级**规则
+//   （目录级 node_modules/ 生效但文件规则漏进）。根因：collectTextFiles 的文件分支无 gitignore
+//   判定（原文件级补判仅在有 .auditignore 时触发）；且 check-ignore 输出中文路径带引号字节转义
+//   （core.quotepath 默认 true），ignored 集合比对失效。修复：git 仓库下无条件文件级批量
+//   check-ignore + 全部 git spawnSync 加 -c core.quotepath=false。
+test('collectTextFiles：文件级 .gitignore 规则生效（含中文文件名）', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-gi-file-'));
+  try {
+    execSync('git init -q', { cwd: dir });
+    writeFileSync(join(dir, '.gitignore'), 'lib/client.js\n任务.md\n*.log\nnode_modules/\n');
+    writeFileSync(join(dir, 'README.md'), '# x\n');
+    writeFileSync(join(dir, 'keep.js'), 'const k = 1;\n');
+    mkdirSync(join(dir, 'lib'), { recursive: true });
+    mkdirSync(join(dir, 'node_modules'), { recursive: true });
+    writeFileSync(join(dir, 'lib/client.js'), '/* 构建产物，应被忽略 */\n');
+    writeFileSync(join(dir, '任务.md'), '待办\n');
+    writeFileSync(join(dir, 'app.log'), 'log\n');
+    writeFileSync(join(dir, 'node_modules/x.js'), 'x\n');
+    const f = await collectTextFiles(dir, { gitIgnoreRoot: dir });
+    const rels = f.map((x) => x.rel || x.path.replace(dir + '/', ''));
+    assert.ok(rels.includes('README.md') && rels.includes('keep.js'), '未忽略文件应保留');
+    assert.ok(!rels.includes('lib/client.js'), '文件级规则 lib/client.js 应忽略');
+    assert.ok(!rels.some((r) => r === '任务.md' || r.endsWith('/任务.md')), '中文文件名任务.md 应忽略（quotepath 转义修复）');
+    assert.ok(!rels.some((r) => r.endsWith('.log')), '*.log 应忽略');
+    assert.ok(!rels.some((r) => r.includes('node_modules')), 'node_modules/ 应忽略');
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
