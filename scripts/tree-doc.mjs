@@ -289,7 +289,7 @@ if (isMain) {
     case 'sync': {
       // 索引自动同步：新增补（待注释）、删除自动删键（描述连带删）
       const files = filesOf(rootArg);
-      const { added, removed, map } = syncIndex({ write: !args.includes('--dry'), files, map: mapOf(rootArg) });
+      const { added, removed, map } = syncIndex({ write: !args.includes('--dry'), files, map: mapOf(rootArg), root: rootArg });
       const dirs = new Set();
       for (const f of files) {
         let dir = f.includes('/') ? f.slice(0, f.lastIndexOf('/')) : null;
