@@ -270,5 +270,41 @@
   "test/test-functions-doc.mjs": "函数索引/文档测试（analyze 字段/apply 生成/归档/注释/skipEmpty）",
   "docs/方案-audit-history-历史提交审计.md": "（待注释）",
   "docs/方案-repo-index-account-status-更新收口.md": "（待注释）",
-  "docs/方案-文档维度加分制.md": "（待注释）"
+  "docs/方案-文档维度加分制.md": "（待注释）",
+  "_meta": {
+    "worktree": {
+      "README.md": {
+        "status": "M",
+        "mtime": "2026-09-22T23:54:49.742Z",
+        "note": "注释可能需更新"
+      },
+      "cli.mjs": {
+        "status": "M",
+        "mtime": "2026-09-22T23:51:07.011Z",
+        "note": "注释可能需更新"
+      },
+      "lib/self/index.js": {
+        "status": "M",
+        "mtime": "2026-09-22T23:50:16.917Z",
+        "note": "注释可能需更新"
+      },
+      "package.json": {
+        "status": "M",
+        "mtime": "2026-09-22T23:50:16.918Z",
+        "note": "注释可能需更新"
+      },
+      "docs/方案-io-risk规则推断与准确率评估.md": {
+        "status": "A",
+        "mtime": "2026-09-22T23:53:58.328Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-cli-audit-parity.mjs": {
+        "status": "A",
+        "mtime": "2026-09-22T23:49:51.651Z",
+        "note": "注释可能需更新"
+      }
+    }
+  },
+  "test/test-cli-audit-parity.mjs": "CLI 与源码全量审计一致性测试（audit --full --json vs 直接 auditFull，含忽略排除）",
+  "docs/方案-io-risk规则推断与准确率评估.md": "方案：io-risk 规则推断与准确率评估"
 }

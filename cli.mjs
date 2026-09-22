@@ -34,7 +34,7 @@ import { fileURLToPath } from 'node:url';
  * 注：-m 是单横线别名（helpSync 只比对 -- 双横线），不列入本表。 */
 export const KNOWN_FLAGS = ['--depth', '--full', '--ruleset', '--weights', '--include-ignored', '--push', '--no-push', '--dry-run', '--force', '--req-confirm', '--push-gate-confirmed', '--json', '--max', '--owner', '--offline', '--paths', '--history', '--since', '--until', '--out', '--skip-empty',
   // file-io 三标签过滤
-  '--summary', '--write', '--type', '--kind', '--risk', '--op',
+  '--summary', '--write', '--type', '--kind', '--risk', '--op', '--root', '--readme',
   // 2026-09-19 补齐的 5 个命令（clone / account-check / remote-create / set-visibility / gen-ssh-key）
   '--dest', '--branch', '--preview', '--max-file-mb', '--concurrency', '--visibility', '--email', '--no-check-ssh', '--token'];
 
@@ -57,6 +57,8 @@ const HELP = `git-sluice v${VERSION} — dsh-git-push 引擎独立 CLI（脱离 
   git-sluice link-check <路径>    检查 md/文本中的链接有效性（只 warning，flaky 域名打折）
   git-sluice module-splitter <analyze|split|verify> <file|plan> [--dry-run] [--json]
   git-sluice functions <analyze|apply> [目录] [--skip-empty] [--json]
+  git-sluice tree-doc <sync|gen|check|apply> [--root <目录>] [--readme <路径>] [--write]
+                                  README 目录结构维护：sync 索引同步（新增自动加键/删除自动删键）；gen 生成树；check 检查漂移；apply 覆盖 README 标记块（封装 scripts/tree-doc.mjs）
                                   函数索引与函数文档：analyze 生成 functions-index.json（复用 scripts/func-index.js，含签名/注释槽位）；apply 读 JSON（人工补 comment 后）生成 docs/函数/*.md（文件删除归档 _archived，注释不丢）
                                   巨型单文件按顶层块拆分（python3 零依赖；analyze 先出块/依赖图 → AI 写 plan.json → split 切分 → verify 校验导出面；--dry-run=split 只预演）
   git-sluice clone <owner/repo> [dest] [--branch <名>] [--dest <目录>] [--max-file-mb N] [--concurrency N] [--preview] [--json]
@@ -117,6 +119,8 @@ const VALUE_FLAGS = {
   '--ruleset': ['ruleset', '--ruleset 缺值'],
   '--weights': ['weights', '--weights 缺值'],
   '-m': ['message', '-m 缺值（用法: -m <提交信息>）'],
+  '--root': ['root', '--root 缺值（用法: --root <目录>）'],
+  '--readme': ['readme', '--readme 缺值（用法: --readme <README路径>）'],
   '--type': ['type', '--type 缺值（用法: --type sync|async）'],
   '--kind': ['kind', '--kind 缺值（用法: --kind read|write|delete|rename）'],
   '--risk': ['risk', '--risk 缺值（用法: --risk high|medium|low）'],
@@ -626,6 +630,22 @@ export function cmdFileIo(targets = [], flags = {}) {
 }
 
 /** module-splitter CLI（与插件工具 module_splitter 同实现，调 python3 零依赖脚本）。 */
+/** 子命令：tree-doc — README 目录结构维护（封装 scripts/tree-doc.mjs：sync/gen/check/apply）。 */
+export async function cmdTreeDoc(sub, flags) {
+  if (!['sync', 'gen', 'check', 'apply'].includes(sub)) {
+    console.error(`tree-doc 子命令应为 sync|gen|check|apply（得「${sub || '(空)'}」）`);
+    return 1;
+  }
+  const { spawnSync } = await import('node:child_process');
+  const script = fileURLToPath(new URL('./scripts/tree-doc.mjs', import.meta.url));
+  const args = [script, sub];
+  if (flags.root) args.push('--root', String(flags.root));
+  if (flags.readme) args.push('--readme', String(flags.readme));
+  if (flags.write) args.push('--write');
+  const r = spawnSync(process.execPath, args, { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024, timeout: 120_000, stdio: 'inherit' });
+  return r.status === 0 ? 0 : 1;
+}
+
 /** 子命令：functions — 函数索引（analyze）与函数文档（apply，复用 scripts/func-index.js / functions-doc.mjs）。 */
 export async function cmdFunctions(op, target, flags) {
   if (!['analyze', 'apply'].includes(op)) {
@@ -748,6 +768,11 @@ export async function main(argv = process.argv.slice(2)) {
     const { flags, positional, error } = parseArgv(rest);
     if (error) return console.error(error);
     return await cmdFunctions(positional[0] || '', positional[1] || '', flags);
+  }
+  if (cmd === 'tree-doc') {
+    const { flags, positional, error } = parseArgv(rest);
+    if (error) return console.error(error);
+    return await cmdTreeDoc(positional[0] || '', flags);
   }
   if (cmd === 'remote-create') {
     const { flags, positional, error } = parseArgv(rest);

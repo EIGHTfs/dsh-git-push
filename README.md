@@ -306,6 +306,7 @@ dsh-git-push/
 │   ├── test-audit.mjs — 审计总入口测试（auditFull/changed/豁免/gitignore）
 │   ├── test-auditignore.mjs — （待注释）
 │   ├── test-button-bind.mjs — 按钮绑定交叉比对（jsx 工厂形态/注释过滤/行号归属）
+│   ├── test-cli-audit-parity.mjs — CLI 与源码全量审计一致性测试（audit --full --json vs 直接 auditFull，含忽略排除）
 │   ├── test-client.mjs — 侧边栏测试（手写 DOM/零外部资源/开关默认）
 │   ├── test-clone-concurrency.mjs — clone 并发互斥/可中止/失败保留文件（14 项，CIFS 对照用例可跳）
 │   ├── test-clone-preview-buttons.mjs — clone 预览确认框按钮可点（真渲染+真点击）
@@ -348,6 +349,7 @@ dsh-git-push/
 ├── docs/ — 开发文档
 │   ├── DETAILS-EXEMPT-AND-RULES.md — 细节补充：豁免注释与规则 yml 用法全录
 │   ├── 方案-audit-history-历史提交审计.md — （待注释）
+│   ├── 方案-io-risk规则推断与准确率评估.md — 方案：io-risk 规则推断与准确率评估
 │   ├── 方案-repo-index-account-status-更新收口.md — （待注释）
 │   ├── 方案-tree-doc变动追踪与函数文档.md — （待注释）
 │   ├── 方案-文档维度加分制.md — （待注释）
@@ -909,6 +911,7 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
+| **1.8.2**（当前） | **CLI 新增 tree-doc 子命令**（`git-sluice tree-doc <sync\|gen\|check\|apply> [--root]`）+ **CLI 与源码全量审计一致性自动测试**（test-cli-audit-parity：`audit --full --json` 与直接调用 auditFull 结果完全一致，含忽略文件排除）+ 版本纪律修订（**每次提交默认升第三位**；major/minor 调整另行指定） |
 | **1.8.1**（当前） | **tree-doc --root 外调修复（syncIndex 写盘落指定目录）+ 中文路径 quotepath=false（git ls-files 不再八进制转义，tree-doc.json 键名正确）**。同期新增 **tree-doc 工作区变动追踪 + 函数索引/文档**：①`tree-doc sync` 记录工作区未提交变动文件（M/A/D）修改时间到 `_meta.worktree`（面向开发者提示「注释可能需更新」；**apply 只同步原描述**，元数据不进 README；审计加 notice）②`git-sluice functions analyze|apply`（复用 func-index.js + comment/signature 槽位 → functions-index.json → docs/函数/*.md，删除归档）。方案见 `docs/方案-tree-doc变动追踪与函数文档.md`。\
 | **1.8.0** | **git_cred_env 凭据传递（AI 执行外部 git 不接触明文）（2026-09-21）** \
 新增 **凭据传递工具 `git_cred_env`**（工具 + CLI `git-sluice cred-env [--json]`）：插件保管的凭据（config.json `githubToken` + 配置目录 SSH 私钥）转成**可直接粘贴的环境变量前缀**，供 AI 执行**任意外部 git 命令**时使用——**SSH 通道** `GIT_SSH_COMMAND="ssh -i '<私钥路径>' -p 443 -o IdentitiesOnly=yes …"`（AI 只接触私钥文件**路径**，明文不经手）；**HTTPS 通道** `GIT_ASKPASS="<配置目录>/git-askpass.sh"`（插件生成 askpass 脚本，git 要密码时从 config.json 回显 token，AI 只接触脚本**路径**）。返回 `provided/hasSshKey/hasToken/ssh/https` 各通道 envPrefix+example——**全程不含 token/私钥明文**（实测输出 `ghp_ 明文? false`；envPrefix 直接 `git ls-remote` 验证凭据可用）。复用存量 `resolveSshKey`/`resolveToken`/`credentialsDir`（不重复造轮子）；插件不覆盖 git 功能，只做凭据传递。实现：`lib/git/cred-env.js`。\
