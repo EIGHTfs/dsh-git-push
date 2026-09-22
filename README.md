@@ -276,6 +276,7 @@ dsh-git-push/
 │   ├── audit-runtime-check.mjs — 三层审计 L3 运行时检测脚本
 │   ├── check.mjs — 语法检查脚本（npm run check）
 │   ├── func-index.js — （待注释）
+│   ├── functions-doc.mjs — 函数文档生成器（读 functions-index.json 生成 docs/函数/*.md，源文件删除归档 _archived 保留人工注释）
 │   ├── module-splitter.py — 巨型单文件按顶层块拆分脚本（analyze/split/verify 三命令，python3 零依赖；module_splitter 工具与 CLI 的底层实现）
 │   ├── preview-server.mjs — 本地真实后端测试服务（preview.html 接真实 handleHttp）
 │   ├── probe-recheck.mjs — 探针：「重新检测」按钮链路实测（在线校验 token/SSH）
@@ -316,6 +317,7 @@ dsh-git-push/
 │   ├── test-false-positive-fixes.mjs — 误报修复回归测试
 │   ├── test-file-health.mjs — 文件健康度矩阵评分测试
 │   ├── test-folder-scope.mjs — 目录级审计作用域回归测试
+│   ├── test-functions-doc.mjs — 函数索引/文档测试（analyze 字段/apply 生成/归档/注释/skipEmpty）
 │   ├── test-git.mjs — git 总入口测试（runGit/commitAndPush/凭据/克隆）
 │   ├── test-gitignore-match.mjs — gitignore 兜底匹配（与真 git 对拍 + 非 git 端到端）
 │   ├── test-history-audit.mjs — （待注释）
@@ -345,6 +347,12 @@ dsh-git-push/
 │   ├── test-tree-doc.mjs — README 目录树脚本测试（gen/check/apply 闭环）
 ├── docs/ — 开发文档
 │   ├── DETAILS-EXEMPT-AND-RULES.md — 细节补充：豁免注释与规则 yml 用法全录
+│   ├── 方案-audit-history-历史提交审计.md — （待注释）
+│   ├── 方案-repo-index-account-status-更新收口.md — （待注释）
+│   ├── 方案-tree-doc变动追踪与函数文档.md — （待注释）
+│   ├── 方案-文档维度加分制.md — （待注释）
+│   ├── 函数/ — （待注释）
+│   │   └── …（1 个更深文件）
 ├── skills/ — 插件权威 skill（功能手册/规则/使用说明，安装副本的 skills/ 同步）
 │   ├── dsh-git-push-functions.md — 插件功能说明书（工具参数/HTTP API/源码定位）
 │   ├── dsh-git-push.md — 插件手册（工具/规则包/设置 UI/安装实录）
@@ -375,6 +383,7 @@ dsh-git-push/
 ├── assemble.json — bench-template 下发清单（键=模板仓库相对路径，值=本插件落点；preview 启动两件套 → assets/）
 ├── cli.mjs — 独立 CLI（git-sluice，不依赖宿主可独立运行）
 ├── cordis.patch.yml — DSH 插件组合 patch（loader 注入定义）
+├── functions-index.json — 函数索引 JSON（func-index --out 生成：name/kind/行/signature/comment 槽位，人工补 comment 后 apply 生成函数文档）
 ├── package.json — 包声明（零依赖、files 白名单、scripts）
 ├── screenshots.json — 截图清单（README 配图引用）
 ├── tree-doc.json — 目录结构注释映射（路径→一句话介绍，AI 维护）
@@ -900,7 +909,7 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
-| **1.8.1**（当前） | **tree-doc --root 外调修复（syncIndex 写盘落指定目录）+ 中文路径 quotepath=false（git ls-files 不再八进制转义，tree-doc.json 键名正确）**
+| **1.8.1**（当前） | **tree-doc --root 外调修复（syncIndex 写盘落指定目录）+ 中文路径 quotepath=false（git ls-files 不再八进制转义，tree-doc.json 键名正确）**。同期新增 **tree-doc 工作区变动追踪 + 函数索引/文档**：①`tree-doc sync` 记录工作区未提交变动文件（M/A/D）修改时间到 `_meta.worktree`（面向开发者提示「注释可能需更新」；**apply 只同步原描述**，元数据不进 README；审计加 notice）②`git-sluice functions analyze|apply`（复用 func-index.js + comment/signature 槽位 → functions-index.json → docs/函数/*.md，删除归档）。方案见 `docs/方案-tree-doc变动追踪与函数文档.md`。\
 | **1.8.0** | **git_cred_env 凭据传递（AI 执行外部 git 不接触明文）（2026-09-21）** \
 新增 **凭据传递工具 `git_cred_env`**（工具 + CLI `git-sluice cred-env [--json]`）：插件保管的凭据（config.json `githubToken` + 配置目录 SSH 私钥）转成**可直接粘贴的环境变量前缀**，供 AI 执行**任意外部 git 命令**时使用——**SSH 通道** `GIT_SSH_COMMAND="ssh -i '<私钥路径>' -p 443 -o IdentitiesOnly=yes …"`（AI 只接触私钥文件**路径**，明文不经手）；**HTTPS 通道** `GIT_ASKPASS="<配置目录>/git-askpass.sh"`（插件生成 askpass 脚本，git 要密码时从 config.json 回显 token，AI 只接触脚本**路径**）。返回 `provided/hasSshKey/hasToken/ssh/https` 各通道 envPrefix+example——**全程不含 token/私钥明文**（实测输出 `ghp_ 明文? false`；envPrefix 直接 `git ls-remote` 验证凭据可用）。复用存量 `resolveSshKey`/`resolveToken`/`credentialsDir`（不重复造轮子）；插件不覆盖 git 功能，只做凭据传递。实现：`lib/git/cred-env.js`。\
 | **1.7.0** | **audit --history 历史提交审计 + 文档维度加分制（2026-09-21）** \

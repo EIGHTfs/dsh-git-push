@@ -83,15 +83,15 @@ function detectFunction(lines, i, loose) {
   const t = line.trim();
 
   // 1) function name( / async function name(
-  let match = t.match(/^(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\(/);
+  let match = t.match(/^(?:export\s+)?(?:default\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\(/);
   if (match) return { name: match[1], kind: "function", defLine: i };
 
   // 2) const/let/var name = function( / async function(
-  match = t.match(/^(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s+)?function\s*\(/);
+  match = t.match(/^(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s+)?function\s*\(/);
   if (match) return { name: match[1], kind: "var-function", defLine: i };
 
   // 3) const name = (..) => { / async (..) => {
-  match = t.match(/^(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s*)?\(?[^=]*?\)\s*=>\s*\{?\s*$/);
+  match = t.match(/^(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s*)?\(?[^=]*?\)\s*=>\s*\{?\s*$/);
   if (match) return { name: match[1], kind: "arrow", defLine: i };
 
   // 4) module.exports = { ... 内的 name: function( 或 name: (..) => {
@@ -145,6 +145,9 @@ function scanFile(file) {
       defLine: i + 1,
       endLine: end + 1,
       lines: bodyLines,
+      // 2026-09-23：doc 生成载体——signature=定义行原文；comment=人工补注释（补后 functions apply 生成 docs/函数/*.md）
+      signature: String(lines[i] || '').trim(),
+      comment: '',
     });
   }
 

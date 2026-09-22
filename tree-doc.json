@@ -259,5 +259,80 @@
   "lib/score/docs-score.js": "文档加分制检查器（文档集结构信号 + 版本一致性交叉验证，0 分起上限 10；不进 findings）",
   "test/test-docs-score.mjs": "文档加分制测试（文档集圈法/四检查/公式/不一致 review/不冲突）",
   "lib/git/cred-env.js": "凭据传递工具（SSH 私钥路径 GIT_SSH_COMMAND / HTTPS askpass 脚本，AI 执行外部 git 不接触明文）",
-  "test/test-cred-env.mjs": "git_cred_env 凭据传递测试（双通道/无明文/askpass 调用/无凭据兜底）"
+  "test/test-cred-env.mjs": "git_cred_env 凭据传递测试（双通道/无明文/askpass 调用/无凭据兜底）",
+  "docs/函数/lib/score": "（待注释）",
+  "docs/函数/lib": "（待注释）",
+  "docs/函数": "（待注释）",
+  "docs/函数/lib/score/index.js.md": "（待注释）",
+  "docs/方案-tree-doc变动追踪与函数文档.md": "（待注释）",
+  "functions-index.json": "函数索引 JSON（func-index --out 生成：name/kind/行/signature/comment 槽位，人工补 comment 后 apply 生成函数文档）",
+  "scripts/functions-doc.mjs": "函数文档生成器（读 functions-index.json 生成 docs/函数/*.md，源文件删除归档 _archived 保留人工注释）",
+  "test/test-functions-doc.mjs": "函数索引/文档测试（analyze 字段/apply 生成/归档/注释/skipEmpty）",
+  "docs/方案-audit-history-历史提交审计.md": "（待注释）",
+  "docs/方案-repo-index-account-status-更新收口.md": "（待注释）",
+  "docs/方案-文档维度加分制.md": "（待注释）",
+  "_meta": {
+    "worktree": {
+      "README.md": {
+        "status": "M",
+        "mtime": "2026-09-22T23:10:33.272Z",
+        "note": "注释可能需更新"
+      },
+      "cli.mjs": {
+        "status": "M",
+        "mtime": "2026-09-22T23:08:18.374Z",
+        "note": "注释可能需更新"
+      },
+      "lib/app/tool-call.js": {
+        "status": "M",
+        "mtime": "2026-09-22T23:09:46.366Z",
+        "note": "注释可能需更新"
+      },
+      "lib/app/tools.js": {
+        "status": "M",
+        "mtime": "2026-09-22T23:09:46.365Z",
+        "note": "注释可能需更新"
+      },
+      "lib/audit/orchestrate.js": {
+        "status": "M",
+        "mtime": "2026-09-22T23:04:31.206Z",
+        "note": "注释可能需更新"
+      },
+      "scripts/func-index.js": {
+        "status": "M",
+        "mtime": "2026-09-22T23:05:21.684Z",
+        "note": "注释可能需更新"
+      },
+      "scripts/tree-doc.mjs": {
+        "status": "M",
+        "mtime": "2026-09-22T23:01:50.369Z",
+        "note": "注释可能需更新"
+      },
+      "docs/函数/": {
+        "status": "A",
+        "mtime": "2026-09-22T23:09:25.557Z",
+        "note": "注释可能需更新"
+      },
+      "docs/方案-tree-doc变动追踪与函数文档.md": {
+        "status": "A",
+        "mtime": "2026-09-22T22:57:47.421Z",
+        "note": "注释可能需更新"
+      },
+      "functions-index.json": {
+        "status": "A",
+        "mtime": "2026-09-22T23:08:42.409Z",
+        "note": "注释可能需更新"
+      },
+      "scripts/functions-doc.mjs": {
+        "status": "A",
+        "mtime": "2026-09-22T23:06:04.620Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-functions-doc.mjs": {
+        "status": "A",
+        "mtime": "2026-09-22T23:10:02.600Z",
+        "note": "注释可能需更新"
+      }
+    }
+  }
 }

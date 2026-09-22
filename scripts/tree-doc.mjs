@@ -70,6 +70,36 @@ function writeMapping(map, root = ROOT) {
 }
 
 /**
+ * 工作区未提交变动文件（2026-09-23）：git status --porcelain → {path: {status, mtime, note}}。
+ * M/A/D + 文件 mtime——**面向开发者/AI 的元数据**：提示「该文件变动了，tree-doc 注释可能需更新」。
+ * 与 tree-doc.json 的 `_meta.worktree` 配合；apply 到 README 只同步原描述，不含本信息。
+ * @returns {Object<string, {status: string, mtime: string, note: string}>}
+ */
+function gitWorktreeChanges(root = ROOT) {
+  try {
+    const out = execFileSync(
+      'git', ['-c', 'core.quotepath=false', '-C', root, 'status', '--porcelain'],
+      { encoding: 'utf8', maxBuffer: 4 * 1024 * 1024 },
+    );
+    const res = {};
+    for (const raw of out.split('\n')) {
+      if (!raw.trim()) continue;
+      // status --porcelain：前 2 字符 = 状态两列（index/worktree），第 3 字符 = 空格。
+      //   不能 trim 整行再 slice（trim 掉前导空格会错位，实测路径首字符被吃）。
+      const cell = raw.slice(0, 2);
+      const code = cell === '??' ? 'A' : (cell[0] !== ' ' ? cell[0] : (cell[1] !== ' ' ? cell[1] : '')); // ?? 未跟踪=新增
+      const path = raw.slice(3).replace(/^"|"$/g, '').trim();
+      if (!path || path === 'tree-doc.json') continue; // 排除映射文件自身
+      if (!/^[MAD]$/.test(code)) continue; // 只记 M/A/D（R/C/忽略项不算「需更新注释」的变动）
+      let mtime = '';
+      try { mtime = statSync(join(root, path)).mtime.toISOString(); } catch { /* 已删文件拿不到 mtime */ }
+      res[path] = { status: code, mtime, note: '注释可能需更新' };
+    }
+    return res;
+  } catch { return {}; }
+}
+
+/**
  * 索引自动同步（2026-09-15）：对齐 tree-doc.json 键集合与真实文件集。
  *   - 新增文件（git 未忽略、工作区存在）不在索引 → 自动补键，值=（待注释），等人补描述
  *   - 索引里有但文件已删 → 自动删键（描述连带删除），不再产生孤儿
@@ -92,8 +122,9 @@ export function syncIndex({ write = true, files = gitLsFiles(), map = loadMappin
       dir = i === -1 ? null : dir.slice(0, i);
     }
   }
-  // 删除孤儿键（文件或目录已不存在）
+  // 删除孤儿键（文件或目录已不存在；`_meta` 元数据键保留）
   for (const k of Object.keys(next)) {
+    if (k === '_meta') continue;
     if (realFiles.has(k) || realDirs.has(k)) continue;
     removed.push(k);
     delete next[k];
@@ -105,8 +136,19 @@ export function syncIndex({ write = true, files = gitLsFiles(), map = loadMappin
     next[p] = '（待注释）';
     added.push(p);
   }
-  if (write && (added.length || removed.length)) writeMapping(next, root);
-  return { added, removed, map: next };
+  // 2026-09-23：工作区变动文件记录进 `_meta.worktree`（mtime + 状态）——面向开发者/AI 的
+  //   提示「注释可能需更新」；apply 到 README 只同步原描述（buildTreeText 只查 map[path]），
+  //   `_meta` 不进 README。工作区干净时清空该段（避免陈旧提示）。
+  const wt = gitWorktreeChanges(root);
+  const wtKeys = Object.keys(wt);
+  const metaChanged = wtKeys.length
+    ? JSON.stringify(next._meta?.worktree || null) !== JSON.stringify(wt)
+    : Boolean(next._meta?.worktree);
+  if (wtKeys.length) next._meta = { ...(next._meta || {}), worktree: wt };
+  else if (next._meta?.worktree) delete next._meta.worktree;
+  if (next._meta && Object.keys(next._meta).length === 0) delete next._meta;
+  if (write && (added.length || removed.length || metaChanged)) writeMapping(next, root);
+  return { added, removed, map: next, worktreeChanges: wt };
 }
 
 /* ───────────────────────── 两层树构建 ───────────────────────── */
@@ -251,9 +293,10 @@ export function checkDrift({ readmePath = DEFAULT_README, root = ROOT } = {}) {
     if (s.endsWith('/')) { if (!isRealDir(s)) stale.push(s); }
     else if (!realSet.has(s)) stale.push(s);
   }
-  // 注释映射孤儿：路径既不是 git 文件，也不是真实目录（目录级注释合法）
+  // 注释映射孤儿：路径既不是 git 文件，也不是真实目录（目录级注释合法）；`_meta` 元数据键跳过
   const orphans = [];
   for (const p of Object.keys(map)) {
+    if (p === '_meta') continue; // 2026-09-23：_meta 是工作区变动元数据（非文件路径），不算孤儿
     const full = join(root, p);
     let realDir = false;
     try { realDir = statSync(full).isDirectory(); } catch { /* 路径不存在：不算真实目录 */ }
@@ -263,7 +306,7 @@ export function checkDrift({ readmePath = DEFAULT_README, root = ROOT } = {}) {
   if (missing.length) issues.push({ type: 'missing', msg: `真实存在但 README 未列（新增未更新）: ${missing.slice(0, 12).join(', ')}${missing.length > 12 ? `…(+${missing.length - 12})` : ''}` });
   if (stale.length) issues.push({ type: 'stale', msg: `README 列出但真实不存在（已删除）: ${stale.join(', ')}` });
   if (orphans.length) issues.push({ type: 'orphan', msg: `tree-doc.json 映射了不存在的路径（运行 tree-doc.mjs sync 自动清理）: ${orphans.slice(0, 8).join(', ')}${orphans.length > 8 ? `…(+${orphans.length - 8})` : ''}` });
-  return { ok: !drift, drift, issues, realTree: real };
+  return { ok: !drift, drift, issues, realTree: real, worktreeChanges: gitWorktreeChanges(root) };
 }
 
 /* ───────────────────────── CLI ───────────────────────── */

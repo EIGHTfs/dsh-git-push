@@ -32,7 +32,7 @@ import { fileURLToPath } from 'node:url';
 
 /** parseArgv 认识的选项白名单（cli-help-sync 机器比对基准，必须与 HELP 文本一致。
  * 注：-m 是单横线别名（helpSync 只比对 -- 双横线），不列入本表。 */
-export const KNOWN_FLAGS = ['--depth', '--full', '--ruleset', '--weights', '--include-ignored', '--push', '--no-push', '--dry-run', '--force', '--req-confirm', '--push-gate-confirmed', '--json', '--max', '--owner', '--offline', '--paths', '--history', '--since', '--until', '--out',
+export const KNOWN_FLAGS = ['--depth', '--full', '--ruleset', '--weights', '--include-ignored', '--push', '--no-push', '--dry-run', '--force', '--req-confirm', '--push-gate-confirmed', '--json', '--max', '--owner', '--offline', '--paths', '--history', '--since', '--until', '--out', '--skip-empty',
   // file-io 三标签过滤
   '--summary', '--write', '--type', '--kind', '--risk', '--op',
   // 2026-09-19 补齐的 5 个命令（clone / account-check / remote-create / set-visibility / gen-ssh-key）
@@ -56,6 +56,8 @@ const HELP = `git-sluice v${VERSION} — dsh-git-push 引擎独立 CLI（脱离 
                                   文件读写调用扫描（三标签：类型/操作/上下文）——同步 I/O 在异步路径会阻塞；写/删/改名涉及数据安全
   git-sluice link-check <路径>    检查 md/文本中的链接有效性（只 warning，flaky 域名打折）
   git-sluice module-splitter <analyze|split|verify> <file|plan> [--dry-run] [--json]
+  git-sluice functions <analyze|apply> [目录] [--skip-empty] [--json]
+                                  函数索引与函数文档：analyze 生成 functions-index.json（复用 scripts/func-index.js，含签名/注释槽位）；apply 读 JSON（人工补 comment 后）生成 docs/函数/*.md（文件删除归档 _archived，注释不丢）
                                   巨型单文件按顶层块拆分（python3 零依赖；analyze 先出块/依赖图 → AI 写 plan.json → split 切分 → verify 校验导出面；--dry-run=split 只预演）
   git-sluice clone <owner/repo> [dest] [--branch <名>] [--dest <目录>] [--max-file-mb N] [--concurrency N] [--preview] [--json]
                                   从 GitHub 克隆仓库（Git Data API 通道，不直连 github.com；--preview=只探测不写盘）
@@ -103,6 +105,7 @@ const BOOL_FLAGS = {
   '--summary': 'summary',
   '--write': 'write',
   '--preview': 'preview',
+  '--skip-empty': 'skipEmpty',
   '--no-check-ssh': null, // 特殊：置 false 而非 true（见下 applyBool）
 };
 
@@ -623,6 +626,32 @@ export function cmdFileIo(targets = [], flags = {}) {
 }
 
 /** module-splitter CLI（与插件工具 module_splitter 同实现，调 python3 零依赖脚本）。 */
+/** 子命令：functions — 函数索引（analyze）与函数文档（apply，复用 scripts/func-index.js / functions-doc.mjs）。 */
+export async function cmdFunctions(op, target, flags) {
+  if (!['analyze', 'apply'].includes(op)) {
+    console.error(`functions 子命令应为 analyze|apply（得「${op || '(空)'}」）`);
+    return 1;
+  }
+  const { spawnSync } = await import('node:child_process');
+  if (op === 'analyze') {
+    const dir = target || '.';
+    // 输出统一落到当前目录（cwd）根，与 apply 读取位置一致（scan 目标只影响扫描范围）
+    const outFile = join(process.cwd(), 'functions-index.json');
+    const script = fileURLToPath(new URL('./scripts/func-index.js', import.meta.url));
+    const r = spawnSync(process.execPath, [script, dir, '--out', outFile], { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024, timeout: 120_000 });
+    if (r.error) { console.error(`❌ analyze 失败: ${r.error.message}`); return 1; }
+    if (flags.json) { console.log(JSON.stringify({ ok: true, outFile }, null, 2)); return 0; }
+    console.log(`✅ 函数索引已生成 → ${outFile}`);
+    return 0;
+  }
+  const { applyFunctionsDocs } = await import('./scripts/functions-doc.mjs');
+  const r = applyFunctionsDocs(process.cwd(), { skipEmpty: flags.skipEmpty === true });
+  if (!r.ok) { console.error(`❌ ${r.error}`); return 1; }
+  if (flags.json) { console.log(JSON.stringify(r, null, 2)); return 0; }
+  console.log(`✅ 函数文档已生成：${r.written.length} 个文件${r.archived?.length ? `（归档 ${r.archived.length}）` : ''} → ${r.outDir}`);
+  return 0;
+}
+
 export async function cmdModuleSplitter(positional = [], flags = {}) {
   const sub = String(positional[0] || '').trim();
   const target = String(positional[1] || '').trim();
@@ -714,6 +743,11 @@ export async function main(argv = process.argv.slice(2)) {
     const { flags, error } = parseArgv(rest);
     if (error) return console.error(error);
     return await cmdCredEnv(flags);
+  }
+  if (cmd === 'functions') {
+    const { flags, positional, error } = parseArgv(rest);
+    if (error) return console.error(error);
+    return await cmdFunctions(positional[0] || '', positional[1] || '', flags);
   }
   if (cmd === 'remote-create') {
     const { flags, positional, error } = parseArgv(rest);
