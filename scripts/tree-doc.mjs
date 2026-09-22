@@ -160,9 +160,9 @@ function groupLines(name, paths, map, prefix = '') {
 }
 
 /** 生成完整树文本（顶层分组 + 根文件，两层折叠） */
-export function buildTreeText(files = gitLsFiles(), map = loadMapping()) {
+export function buildTreeText(files = gitLsFiles(), map = loadMapping(), rootLabel = basename(ROOT)) {
   const { groups, groupNames, rootFiles } = buildGroups(files);
-  const out = ['```text', 'dsh-git-push/'];
+  const out = ['```text', rootLabel + '/'];
   for (const groupName of groupNames) {
     out.push(`├── ${groupName}/ — ${map[groupName] || '（待注释）'}`);
     out.push(...groupLines(groupName, groups.get(groupName), map));
@@ -199,7 +199,7 @@ function applyBlock(text, newTree) {
 export function checkDrift({ readmePath = DEFAULT_README, root = ROOT } = {}) {
   const text = readReadme(readmePath);
   const block = findBlock(text);
-  const real = buildTreeText(gitLsFiles(root), loadMapping(root));
+  const real = buildTreeText(gitLsFiles(root), loadMapping(root), basename(root));
   const map = loadMapping(root);
   // 真实树内已解析条目（路径集合）
   const realPaths = new Set(gitLsFiles(root));
@@ -295,7 +295,7 @@ if (isMain) {
         let dir = f.includes('/') ? f.slice(0, f.lastIndexOf('/')) : null;
         while (dir) { dirs.add(dir + '/'); const i = dir.lastIndexOf('/'); dir = i === -1 ? null : dir.slice(0, i); }
       }
-      const tree = buildTreeText(files, map);
+      const tree = buildTreeText(files, map, basename(rootArg));
       if (added.length) console.log(`✅ 新增索引键 ${added.length} 个（值=（待注释），请补描述）:\n  ${added.join('\n  ')}`);
       if (removed.length) console.log(`🗑  删除索引键 ${removed.length} 个（文件已删，描述连带删除）:\n  ${removed.join('\n  ')}`);
       if (!added.length && !removed.length) console.log('✅ 索引已同步（无新增/删除）');
@@ -311,7 +311,7 @@ if (isMain) {
         if (forceAll) console.log('--all：已强制全量追加索引');
         console.log(`tree-doc.json 已同步（新增 ${added.length} / 删除 ${removed.length}；${added.length ? '待注释键请补描述' : ''}）`);
       } else {
-        console.log(buildTreeText(files, mapOf(rootArg)));
+        console.log(buildTreeText(files, mapOf(rootArg), basename(rootArg)));
       }
       break;
     }
@@ -326,7 +326,7 @@ if (isMain) {
     case 'apply': {
       // apply 前先同步索引，保证树用最新映射（描述缺失处标（待注释））
       if (args.includes('--sync') || forceAll) syncIndex({ write: true, files: filesOf(rootArg), map: mapOf(rootArg), root: rootArg });
-      const tree = buildTreeText(filesOf(rootArg), mapOf(rootArg));
+      const tree = buildTreeText(filesOf(rootArg), mapOf(rootArg), basename(rootArg));
       const text = readReadme(readmePath);
       const updated = applyBlock(text, tree);
       writeFileSync(readmePath, updated, 'utf8');
