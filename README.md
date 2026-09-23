@@ -916,6 +916,7 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
+| **1.8.14**（当前） | **作用域 P1+P2**：启动路径豁免大函数/圈复杂度（max-function-length/max-cyclomatic-complexity 规则加 scope_rules startup→exempt，函数名 apply/init/main/bootstrap/setup 等模式；size.js 函数名提取）+ variable-min-length 参数列表短名豁免（function f(c, d) 的形参位置）——scope_rules 机制首次真实接入规则 |
 | **1.8.13**（当前） | **审计作用域判断·最小实验**（方案 Step 1+3+4）：lib/ast/scope.js 变量作用域分类器（module/function/loop 行号区间 + 模块常量赋值判定）+ lib/rule/scope.js 机制层（scope_rules 规范化/resolveScopeAction，yml 透传）+ magic-number 接入（模块顶层命名常量如 const TIMEOUT_MS=45000 不报）；误报收敛第一步 |
 | **1.8.12**（当前） | **git_set_visibility 修复**：工具传 repoPath（本地仓库路径）但 setVisibility 只认 owner/repo——补 repoPath→origin remote 解析（api.github.com/github.com/ssh 三格式，parseOwnerRepoFromRemote）+ runGit 字段名修正；实测 EIGHTfs/dsh-theme-mediascape 切 public 成功 |
 | **1.8.11**（当前） | **UI 切公开/私有按钮修复**：RepoCloudPane 渲染行传参名写错（visSwitch→requestVisSwitch，父 props 无 visSwitch 名，按钮点击=undefined 没反应）——接回独立确认弹窗链路（1.5.4 改版后残留） |

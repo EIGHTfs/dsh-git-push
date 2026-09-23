@@ -122,6 +122,11 @@ rules:
     description: "过长的函数难以理解和维护"
     max_lines: 50
     exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx", "py", "go", "rs", "java", "kt", "swift", "php", "rb"]
+    # 2026-09-23 作用域（P1）：启动路径初始化函数（apply/init/main/bootstrap/setup 等）豁免
+    scope_rules:
+      - scope: "startup"
+        action: "exempt"
+        reason: "启动路径初始化函数（一次性执行），阈值不适用"
     fixable: true
 
   - id: readability/max-file-length
@@ -151,6 +156,11 @@ rules:
     severity: "warning"
     description: "过高的圈复杂度表示函数逻辑分支过多"
     max_complexity: 15
+    # 2026-09-23 作用域（P1）：启动路径初始化函数豁免圈复杂度
+    scope_rules:
+      - scope: "startup"
+        action: "exempt"
+        reason: "启动路径初始化函数（一次性执行），阈值不适用"
     fixable: false
 
   # ----- 3. 健壮性 -----

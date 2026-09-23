@@ -40,7 +40,8 @@ test('scope_rules：resolveScopeAction 按 scopeInfo 维度取 action', () => {
 });
 
 // 作用域分类器：lib/ast/scope.js（module/function/loop + 模块常量赋值）
-import { classifyLineScope, isModuleConstAssignment } from '../lib/ast/scope.js';
+import { classifyLineScope, isModuleConstAssignment, classifyFunctionPath } from '../lib/ast/scope.js';
+import { checkNameLengthAst } from '../lib/ast/naming.js';
 
 test('scope：声明行号归类（module/function/loop）', () => {
   const src = 'const MAX = 3\nfunction f() {\n  const x = 1;\n  for (let i = 0; i < 5; i++) {\n    const y = 2;\n  }\n}\n';
@@ -75,3 +76,48 @@ test('magic-number：模块顶层命名常量不报，函数内/循环内仍按�
   assert.ok(!lines.includes(2), '模块顶层 BACKOFF 不报');
   assert.ok(lines.includes(4) || lines.includes(5), '函数内魔数仍报（line 4/5）');
 });
+
+// ---------- P1：启动路径豁免大函数/圈复杂度（scope_rules 场景） ----------
+
+test('classifyFunctionPath：启动模式命名判 startup，其余 unknown', () => {
+  assert.equal(classifyFunctionPath('applyInit'), 'startup');
+  assert.equal(classifyFunctionPath('bootstrapServer'), 'startup');
+  assert.equal(classifyFunctionPath('handler'), 'unknown');
+  assert.equal(classifyFunctionPath('processOrder'), 'unknown');
+});
+
+test('P1：max-function-length scope_rules startup→exempt（applyInit 豁免 / handler 照报）', () => {
+  const { checkFuncLines } = loadCheckFuncLines();
+  const rule = { id: 'readability/max-function-length', threshold: 1, scopeRules: [{ scope: 'startup', action: 'exempt' }] };
+  // applyInit 3 行代码（应豁免）；handler 3 行代码（unknown 无匹配 → 照报）
+  const src = 'function applyInit() {\n  const a = 1;\n  const b = a + 2;\n  return b;\n}\nfunction handler() {\n  const a = 1;\n  const b = a + 2;\n  return b;\n}\n';
+  const r = checkFuncLines({ file: 'a.js', text: src, rules: [rule] });
+  const hitLines = r.map((x) => x.line);
+  assert.deepEqual(hitLines, [6], '仅 handler（line 6）报，applyInit 被 startup 豁免');
+});
+
+test('P1：max-cyclomatic-complexity 同样豁免启动路径函数', () => {
+  const { checkComplexity } = loadCheckFuncLines();
+  const rule = { id: 'maintainability/max-cyclomatic-complexity', threshold: 2, blockThreshold: 4, scopeRules: [{ scope: 'startup', action: 'exempt' }] };
+  const src = 'function setupAll() {\n  if (a) { if (b) { if (c) { if (d) { x(); } } } }\n}\nfunction manual() {\n  if (a) { if (b) { if (c) { if (d) { x(); } } } }\n}\n';
+  const r = checkComplexity({ file: 'a.js', text: src, rules: [rule] });
+  assert.deepEqual(r.map((x) => x.line), [4], '仅 manual 报（setupAll 被 startup 豁免）；实际 ' + JSON.stringify(r.map((x) => x.line)));
+});
+
+// ---------- P2：参数位置短名豁免（短函数参数可接受） ----------
+
+test('P2：参数列表内短名（function f(c, d)）豁免，声明位置短名仍报', () => {
+  const { checkNameLengthAst } = loadNaming();
+  const param = checkNameLengthAst('function f(c, d) { return c + d; }\n');
+  assert.equal(param.length, 0, '参数 c/d 豁免');
+  const decl = checkNameLengthAst('const c = 1;\n');
+  assert.equal(decl.length, 1, '声明 c 照报');
+});
+
+// ---------- 辅助 ----------
+import { createRequire } from 'node:module';
+const require2 = createRequire(import.meta.url);
+const checksMod = require2('../lib/checks/structural.js');
+const { checkFuncLines, checkComplexity } = checksMod;
+function loadCheckFuncLines() { return { checkFuncLines, checkComplexity }; }
+function loadNaming() { return { checkNameLengthAst }; }
