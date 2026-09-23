@@ -273,9 +273,29 @@
   "docs/方案-文档维度加分制.md": "（待注释）",
   "_meta": {
     "worktree": {
-      "lib/audit-rules/audit-rules-nodejs.yml": {
+      "lib/checks/magic-number.js": {
         "status": "M",
-        "mtime": "2026-09-23T02:23:42.639Z",
+        "mtime": "2026-09-23T10:10:36.871Z",
+        "note": "注释可能需更新"
+      },
+      "lib/rule/loader.js": {
+        "status": "M",
+        "mtime": "2026-09-23T10:07:13.158Z",
+        "note": "注释可能需更新"
+      },
+      "lib/ast/scope.js": {
+        "status": "A",
+        "mtime": "2026-09-23T10:10:08.547Z",
+        "note": "注释可能需更新"
+      },
+      "lib/rule/scope.js": {
+        "status": "A",
+        "mtime": "2026-09-23T10:04:51.455Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-scope.mjs": {
+        "status": "A",
+        "mtime": "2026-09-23T10:08:57.441Z",
         "note": "注释可能需更新"
       }
     }
@@ -283,5 +303,8 @@
   "test/test-cli-audit-parity.mjs": "CLI 与源码全量审计一致性测试（audit --full --json vs 直接 auditFull，含忽略排除）",
   "docs/方案-io-risk规则推断与准确率评估.md": "方案：io-risk 规则推断与准确率评估",
   "docs/方案-io-risk-规则优化.md": "方案：io-risk 规则优化（对照诊断的差距分析：元数据操作分档 + rename 降档）",
-  "scripts/rules-solo-audit.mjs": "规则单启控制变量扫描（基准全关+逐规则单启+全量对照，报告供 AI/人工审规则有效性与局限，按需运行非常驻）"
+  "scripts/rules-solo-audit.mjs": "规则单启控制变量扫描（基准全关+逐规则单启+全量对照，报告供 AI/人工审规则有效性与局限，按需运行非常驻）",
+  "lib/ast/scope.js": "变量作用域分类器（module/function/loop 行号区间 + 模块常量赋值判定）",
+  "lib/rule/scope.js": "审计作用域机制层（scope_rules 规范化 + resolveScopeAction）",
+  "test/test-scope.mjs": "作用域最小实验测试（分类器/机制/magic 接入）"
 }

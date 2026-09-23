@@ -167,6 +167,7 @@ dsh-git-push/
 │   │   ├── io-risk.js — IO 风险分级（四级）判定与评分：scanIoRiskAst 判定上下文/类别 → summarizeIoRisk 统计 → rankIoFixList 优先级清单；并再导出下列三个从属模块的公共符号
 │   │   ├── magic-number.js — 硬编码魔数识别（豁免版本号/日期/状态码）
 │   │   ├── naming.js — 命名检查（标识符长度/函数名过短/受控小文件读取）
+│   │   ├── scope.js — 变量作用域分类器（module/function/loop 行号区间 + 模块常量赋值判定）
 │   │   ├── shell.js — shell 精筛（cd 动态路径/写操作命中 .gitignore）
 │   │   ├── size.js — 规模检查（函数长度/文件长度/重复字符串）
 │   │   ├── tokenizer.js — 分词器（token 流 + LRU 缓存）
@@ -264,6 +265,7 @@ dsh-git-push/
 │   │   ├── homoglyph.js — 同形字符检测（yml kind/id 防 ASCII 混淆）
 │   │   ├── loader.js — 规则总入口（yml 装载/解析/槽位启停）
 │   │   ├── registry.js — 规则编译注册表核心（compileRule 主体）
+│   │   ├── scope.js — 审计作用域机制层（scope_rules 规范化 + resolveScopeAction）
 │   │   └── …（12 个更深文件）
 │   ├── score/ — 10 维度加权评分总入口
 │   │   ├── docs-score.js — 文档加分制检查器（文档集结构信号 + 版本一致性交叉验证，0 分起上限 10；不进 findings）
@@ -338,6 +340,7 @@ dsh-git-push/
 │   ├── test-repo-list.mjs — 仓库列表测试（本地扫描/索引读写/HTTP 端点/远端状态）
 │   ├── test-rule-packs.mjs — 规则总入口测试（编译注册/字段指派）
 │   ├── test-rule-slots-render.mjs — 规则包列表统计渲染回归
+│   ├── test-scope.mjs — 作用域最小实验测试（分类器/机制/magic 接入）
 │   ├── test-self.mjs — 自身总入口测试（VERSION/CLI/help 比对）
 │   ├── test-settings-persistence.mjs — 设置侧边栏持久化专项测试（L1 提交/L2 白名单/L3 回读/L4 消费四层断言）
 │   ├── test-sidebar-interaction.mjs — 侧边栏规则包列表交互自检
@@ -913,6 +916,7 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
+| **1.8.13**（当前） | **审计作用域判断·最小实验**（方案 Step 1+3+4）：lib/ast/scope.js 变量作用域分类器（module/function/loop 行号区间 + 模块常量赋值判定）+ lib/rule/scope.js 机制层（scope_rules 规范化/resolveScopeAction，yml 透传）+ magic-number 接入（模块顶层命名常量如 const TIMEOUT_MS=45000 不报）；误报收敛第一步 |
 | **1.8.12**（当前） | **git_set_visibility 修复**：工具传 repoPath（本地仓库路径）但 setVisibility 只认 owner/repo——补 repoPath→origin remote 解析（api.github.com/github.com/ssh 三格式，parseOwnerRepoFromRemote）+ runGit 字段名修正；实测 EIGHTfs/dsh-theme-mediascape 切 public 成功 |
 | **1.8.11**（当前） | **UI 切公开/私有按钮修复**：RepoCloudPane 渲染行传参名写错（visSwitch→requestVisSwitch，父 props 无 visSwitch 名，按钮点击=undefined 没反应）——接回独立确认弹窗链路（1.5.4 改版后残留） |
 | **1.8.10**（当前） | **评分去重粒度细化（规则级）**：countByDimension 每文件**每规则**每维度最多计 1（同文件 20 处短变量=1 个命名问题；不同规则各计=20）——更公平区分规则间问题；blocker 每次计 2 不合并。实测 dsh-git-push 78.6→77.1（规则级更严）；附：tree-doc 测试适配并行提交 3326ec6 树根动态化 |
