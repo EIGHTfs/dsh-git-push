@@ -156,6 +156,7 @@ dsh-git-push/
 │   │   ├── tools.js — 工具定义清单（名称/描述/参数 schema）
 │   ├── ast/ — AST 实现层（token 级判定：括号/控制流/数据流/凭据/魔数/命名/规模/分词）
 │   │   ├── brace.js — 括号配对与区间包含工具
+│   │   ├── callgraph.js — 调用链追踪（单文件调用图 + isInRequestPath，io-risk 请求路径判定升级）
 │   │   ├── code-lines.js — 代码行判定（真代码 vs 注释/字符串）+ 字符串字面量提取
 │   │   ├── control-flow.js — 控制流检查（同步 fs/空 catch/圈复杂度/嵌套深度）
 │   │   ├── credential.js — 凭据标识符判定（硬编码/引用/类型检查）
@@ -916,6 +917,7 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
+| **1.8.15**（当前） | **作用域 P3 调用链追踪**：lib/ast/callgraph.js（buildCallGraph 单文件调用图 + isInRequestPath 向上追溯）——io-risk 请求路径判定升级：函数体内 HTTP 特征 或 被请求路径函数调用 都判请求路径（修「请求处理调用的公共函数漏报」）；多层链（请求→A→B）也覆盖 |
 | **1.8.14**（当前） | **作用域 P1+P2**：启动路径豁免大函数/圈复杂度（max-function-length/max-cyclomatic-complexity 规则加 scope_rules startup→exempt，函数名 apply/init/main/bootstrap/setup 等模式；size.js 函数名提取）+ variable-min-length 参数列表短名豁免（function f(c, d) 的形参位置）——scope_rules 机制首次真实接入规则 |
 | **1.8.13**（当前） | **审计作用域判断·最小实验**（方案 Step 1+3+4）：lib/ast/scope.js 变量作用域分类器（module/function/loop 行号区间 + 模块常量赋值判定）+ lib/rule/scope.js 机制层（scope_rules 规范化/resolveScopeAction，yml 透传）+ magic-number 接入（模块顶层命名常量如 const TIMEOUT_MS=45000 不报）；误报收敛第一步 |
 | **1.8.12**（当前） | **git_set_visibility 修复**：工具传 repoPath（本地仓库路径）但 setVisibility 只认 owner/repo——补 repoPath→origin remote 解析（api.github.com/github.com/ssh 三格式，parseOwnerRepoFromRemote）+ runGit 字段名修正；实测 EIGHTfs/dsh-theme-mediascape 切 public 成功 |

@@ -65,6 +65,7 @@ test('scope：模块顶层命名常量赋值判定（magic 豁免依据）', () 
 
 // magic-number 接入：模块常量赋值豁免（端到端）
 import { checkMagicNumberSmart } from '../lib/checks/magic-number.js';
+import { scanIoRiskAst } from '../lib/ast/io-risk.js';
 
 test('magic-number：模块顶层命名常量不报，函数内/循环内仍按规则', () => {
   const rule = { id: 'readability/magic-number-smart' };
@@ -121,3 +122,26 @@ const checksMod = require2('../lib/checks/structural.js');
 const { checkFuncLines, checkComplexity } = checksMod;
 function loadCheckFuncLines() { return { checkFuncLines, checkComplexity }; }
 function loadNaming() { return { checkNameLengthAst }; }
+
+// ---------- P3：调用链追踪（io-risk 请求路径判定升级） ----------
+
+test('P3 callgraph：被请求路径函数调用的函数判请求路径（漏报修复）', () => {
+  const hits = scanIoRiskAst('const fs = require("fs");\nfunction handleRequest(req, res) {\n  readConfig();\n  res.end("ok");\n}\nfunction readConfig() {\n  fs.readFileSync("/data/x");\n}\n');
+  const h = hits.find((x) => x.call === 'readFileSync');
+  assert.ok(h, '应命中 readFileSync');
+  assert.equal(h.inRequest, true, '被请求函数调用应判请求路径');
+  assert.equal(h.risk, 'medium', '请求路径读配置 = 中风险（不再误判启动 low）');
+});
+
+test('P3 callgraph：启动路径函数不被误判请求路径', () => {
+  const hits = scanIoRiskAst('const fs = require("fs");\nfunction boot() {\n  fs.readFileSync("/cfg");\n}\n');
+  const h = hits.find((x) => x.call === 'readFileSync');
+  assert.equal(h.inRequest, false);
+  assert.equal(h.risk, 'low');
+});
+
+test('P3 callgraph：多层调用链（请求→A→B）B 也在请求路径', () => {
+  const hits = scanIoRiskAst('const fs = require("fs");\napp.get("/x", (req, res) => {\n  serviceA();\n  res.end("ok");\n});\nfunction serviceA() {\n  helperB();\n}\nfunction helperB() {\n  fs.readFileSync("/s");\n}\n');
+  const h = hits.find((x) => x.call === 'readFileSync');
+  assert.equal(h.inRequest, true, 'helperB 经 serviceA→handler 链判请求路径');
+});
