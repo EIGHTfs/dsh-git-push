@@ -918,6 +918,7 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
+| **1.9.1**（当前） | **系统提示词注入配置化 + 新功能用法**：注入文本可配（config.json `injectUsageText` 数组/字符串覆盖默认功能用法注入段）；系统提示词功能用法加浅包装 git（`git-sluice <任意 git 参数>` 未知命令透传 + 自动凭据）| 说明：1.9.0 后每次提交默认升第三位（版本纪律） |
 | **1.9.0**（当前） | **浅包装 git**：`git-sluice <任意 git 参数>`（未知命令透传为 git，自动注入凭据：SSH 私钥/HTTPS token，无需传 token 参数）+ 显式 `git-sluice git <args>` 子命令——git-sluice 成为 git 超集（已知子命令走插件，其余全交 git + 插件凭据）；退出码透传 |
 | **1.8.16**（当前） | **作用域 P4 闭包双重作用域**：analyzeFunctionalScope（词法 vs 功能）——被 return/挂 this/exports 暴露的函数标 public，**不享受 startup 豁免**（按模块级严格）；纯内部未标；作为参数传递标 callback（unknown）——修「闭包内 return 的公共 API 被误豁免」 |
 | **1.8.15**（当前） | **作用域 P3 调用链追踪**：lib/ast/callgraph.js（buildCallGraph 单文件调用图 + isInRequestPath 向上追溯）——io-risk 请求路径判定升级：函数体内 HTTP 特征 或 被请求路径函数调用 都判请求路径（修「请求处理调用的公共函数漏报」）；多层链（请求→A→B）也覆盖 |

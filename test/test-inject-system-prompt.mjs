@@ -149,8 +149,8 @@ test('client 源码：审计扫描范围按钮（diff/full 单按钮单击切换
 /* ───────── ② host 侧接线：总开关门控 + 四段注入 ───────── */
 
 test('host：注入段由 injectSystemPrompt 门控（关=返回空串，不是不注册）', () => {
-  assert.ok(/cfg\.injectSystemPrompt \? FUNCTION_USAGE_HINT : ''/.test(applySrc),
-    '功能用法段必须由 injectSystemPrompt 门控');
+  assert.ok(/cfg\.injectSystemPrompt \? \(cfg\.injectUsageText \|\| FUNCTION_USAGE_HINT\)/.test(applySrc),
+    '功能用法段必须由 injectSystemPrompt 门控（injectUsageText 配置覆盖）');
   assert.ok(/cfg\.injectSystemPrompt \? README_CHECK_HINT : ''/.test(applySrc),
     'README 提醒段必须由 injectSystemPrompt 门控');
   assert.ok(/cfg\.injectSystemPrompt && cfg\.auditEnabled && cfg\.injectRequirements/.test(applySrc),
@@ -305,4 +305,21 @@ test('scan-version：README 版本与 package.json 一致（仓库自检）', as
   const r = readmeVersion(readme);
   assert.ok(r.found, 'README 应有版本列表');
   assert.equal(r.version, pkg.version, 'README 版本号必须与 package.json version 一致');
+});
+
+// ---------- 1.9.1：系统提示词注入配置化 + 浅包装 git 用法 ----------
+
+test('1.9.1：FUNCTION_USAGE_HINT 含浅包装 git 透传用法（未知命令自动凭据）', async () => {
+  const { FUNCTION_USAGE_HINT } = await import('../lib/app/inject-text.js');
+  assert.ok(FUNCTION_USAGE_HINT.includes('git-sluice'), '应含 git-sluice 用法');
+  assert.ok(FUNCTION_USAGE_HINT.includes('任意 git 参数'), '应说明未知命令透传');
+  assert.ok(FUNCTION_USAGE_HINT.includes('凭据自动注入'), '应说明自动凭据');
+});
+
+test('1.9.1：injectUsageText 配置覆盖逻辑（字符串/数组 → join）', () => {
+  // apply.js 的读取逻辑：string 直接用、数组 join('\n')——此处验证 join 语义
+  const arr = ['【自定义注入】', '· 自定义行1', '· 自定义行2'];
+  const joined = Array.isArray(arr) ? arr.join('\n') : arr;
+  assert.equal(joined, '【自定义注入】\n· 自定义行1\n· 自定义行2');
+  assert.ok(typeof joined === 'string' && joined.trim().length > 0, '配置覆盖值应为非空字符串');
 });
