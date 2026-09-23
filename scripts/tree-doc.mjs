@@ -267,7 +267,10 @@ export function checkDrift({ readmePath = DEFAULT_README, root = ROOT } = {}) {
     }
     // 按「—」切出名字段（trim 后破折号后无空格，split(' — ') 会失效）
     const name = lineText.split('—')[0].trim();
-    if (!name || name === 'dsh-git-push' || name === 'dsh-git-push/') continue;
+    // 2026-09-23 修：树根节点豁免原硬编码本插件名（dsh-git-push）——扫描其它仓库（如
+    // dsh-theme-mediascape）时根节点 <repoName>/ 被误判 stale。改为动态豁免当前 git 根目录名。
+    const repoRoot = basename(root);
+    if (!name || name === repoRoot || name === repoRoot + '/') continue;
     stack = stack.slice(0, depth); // 回退到当前深度
     if (name.endsWith('/')) {
       const dir = name.slice(0, -1);
