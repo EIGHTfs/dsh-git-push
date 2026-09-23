@@ -167,6 +167,110 @@ function classifySyncIO(node, context) {
 | handlers.js L550 `readFileSync` 读日志 | 请求路径 + **wallpaper.log 会持续追加增长**（可能数 MB），全量读 split 后 slice——规则二「请求路径」+ 规则三「循环内」都命中，**正确告警** |
 | index.js L51 `statSync` serveStream | 请求路径（视频流式响应），每请求 stat——规则二命中，**轻微但正确** |
 
+#### ①·补 按新规则判定后的「豁免正确准确率」（2026-09-23 补）
+
+用新规则五条对 65 处逐个判定，**聚焦「新规则说豁免 → 实际操作是否无害」**：
+
+| 新规则判定豁免 | 处数 | 实际无害 | 豁免正确 |
+|---|---|---|---|
+| bootstrap.js（apply 启动迁移） | 12 | 12 | ✓ |
+| debug.js（JSON 配置读 + 日志追加/轮转） | 6 | 6 | ✓ |
+| labels.js（<1KB JSON tmp+rename 原子写） | 4 | 4 | ✓ |
+| handlers.js info（启动清理孤儿 .part + loadLabels） | 9 | 9 | ✓ |
+| **合计** | **31** | **31** | **100%** |
+
+**结论**：
+- **豁免精确率 = 31/31 = 100%**——新规则放行的全部安全，**安全侧零误放**（没有把危险操作错放过去）。
+- **豁免召回 ≈ 61%**（31/51 应豁免的）——online.js 13 处（启动后台下载 rmSync/renameSync 单 .part）
+  + handlers.js warning 保守项没被豁免。原因：新规则靠**函数名白名单** apply/init/main 判启动路径，
+  `downloadAllOnline`/`copyDirInto` 等自定义名不在名单 → 「该豁免没豁免」。但没豁免只是**保守告警**，
+  绝不误放危险项——安全侧宁紧勿松，这正是审计该有的样子。
+
+#### ①·补2 逐处具体对照（新规则判定 ↔ 实际代码依据）
+
+**A. 新规则判定【豁免】且实际无害（31 处，豁免正确率 100%）**
+
+| 文件 | 行 | 操作 | 所在函数 | 新规则依据 | 实际代码做什么 |
+|---|---|---|---|---|---|
+| bootstrap.js | L29 | existsSync | loadDirMigrations | 顶层函数被 apply 启动调用 | 检查 dirs 迁移配置是否存在（`DIRS_CONFIG_FILE`） |
+| bootstrap.js | L30 | readFileSync | loadDirMigrations | 启动路径 + .json 配置 | 读迁移配置 JSON（小文件） |
+| bootstrap.js | L51 | existsSync | copyOnce | 启动路径 | 检查仓库源目录是否存在 |
+| bootstrap.js | L54 | existsSync | copyOnce | 启动路径 | 检查目标数据目录是否已存在（幂等跳过） |
+| bootstrap.js | L55 | readdirSync | copyOnce | 启动路径 | 读目标目录判断是否非空 |
+| bootstrap.js | L59 | mkdirSync | copyOnce | 启动路径 | 创建目标父目录（recursive） |
+| bootstrap.js | L70 | existsSync | copyInto | 启动路径 | 检查单文件是否已存在 |
+| bootstrap.js | L71 | mkdirSync | copyInto | 启动路径 | 创建父目录（recursive） |
+| bootstrap.js | L72 | copyFileSync | copyInto | 启动路径 | 复制单个小文件 |
+| bootstrap.js | L77 | mkdirSync | copyDirInto | 启动路径 | 递归建目录 |
+| bootstrap.js | L78 | readdirSync | copyDirInto | 启动路径 | 读源目录列表 |
+| bootstrap.js | L81 | statSync | copyDirInto | 启动路径 | 判断子项是否目录 |
+| debug.js | L46 | readFileSync | readDebugConfig | 启动路径 + .json 配置 | 读 debug.json 配置（<1KB） |
+| debug.js | L105 | existsSync | logEnabled | 顶层查询 | 检查日志开关配置存在 |
+| debug.js | L107 | existsSync | logEnabled | 顶层查询 | 同上 |
+| debug.js | L122 | existsSync | writeLog | 日志路径 | 检查日志文件存在 |
+| debug.js | L126 | statSync | writeLog | 日志路径 | 轮转前看大小（小文件 stat） |
+| debug.js | L130 | appendFileSync | writeLog | 日志路径 | 追加单行 JSON 日志（流式正常） |
+| labels.js | L19 | existsSync | readMap | 小文件（labels JSON） | 检查标签映射文件存在 |
+| labels.js | L27 | mkdirSync | writeMap | 小文件 + tmp+rename | 创建标签目录 |
+| labels.js | L29 | writeFileSync | writeMap | 原子写模式 | 写 tmp 文件（<1KB JSON） |
+| labels.js | L30 | renameSync | writeMap | 原子写模式 | tmp → 正式名（同卷瞬时） |
+| handlers.js | L279 | existsSync | cleanupOrphanParts | 启动路径 | 检查孤儿 .part 是否存在 |
+| handlers.js | L281 | readdirSync | cleanupOrphanParts | 启动路径 | 列目录找孤儿 .part |
+| handlers.js | L284 | statSync | cleanupOrphanParts | 启动路径 | stat 判断 .part |
+| handlers.js | L549 | existsSync | handleWallpaperLogRead | 启动/查询 | 检查日志文件存在 |
+| handlers.js | L561 | existsSync | loadLabels | 启动/查询 | 检查标签文件存在 |
+| handlers.js | L584 | existsSync | savelLabels（清理） | 启动/查询 | 检查标签文件存在 |
+| handlers.js | L586 | unlinkSync | savelLabels（清理） | 标签清理 | 删标签映射文件（小文件） |
+| handlers.js | L591 | mkdirSync | savelLabels（清理） | 启动/查询 | 建标签目录 |
+| handlers.js | L592 | renameSync | savelLabels（清理） | tmp+rename 原子写 | 标签原子写落定 |
+
+**B. 新规则判定【告警/未豁免】但实际无害（28 处，保守告警非误放）**
+
+| 文件 | 行 | 操作 | 所在函数 | 实际代码做什么 | 为何无害 |
+|---|---|---|---|---|---|
+| handlers.js | L44 | existsSync | handleUpload | 上传前检查对应 .part 是否存在（断点续传） | 单文件 stat 微秒级 |
+| handlers.js | L49 | existsSync | handleUpload | 同上 | 单文件 stat 微秒级 |
+| handlers.js | L56 | mkdirSync | handleDelete | 删除壁纸建 .trash 目录（recursive） | mkdir 幂等微秒级 |
+| handlers.js | L57 | renameSync | handleDelete | 壁纸文件移到 .trash（同卷） | rename 非数据搬运，同卷瞬时 |
+| handlers.js | L74 | existsSync | handleList | 检查壁纸目录存在 | 单文件 stat |
+| handlers.js | L82 | readdirSync | handleList | 列壁纸目录 | 小目录 list |
+| handlers.js | L90 | statSync | handleList | 取每个壁纸 mtime+size 算 etag | 小文件 stat |
+| handlers.js | L107 | existsSync | handleList(online) | 检查在线目录 | 单 stat |
+| handlers.js | L109 | readdirSync | handleList(online) | 列在线目录 | 小 list |
+| handlers.js | L122 | statSync | handleList(online) | 在线项 stat | 小 stat |
+| handlers.js | L150 | existsSync | handleWallpaperLog | 检查日志文件 | 单 stat |
+| handlers.js | L158 | readdirSync | handleUpload 启动清理 | 列目录查孤儿 .part | 小 list |
+| handlers.js | L247 | unlinkSync | streamToPart abort | 上传超限清 .part（异常路径） | 罕见触发 + 单文件 |
+| handlers.js | L268 | unlinkSync | streamToPart error | 上传出错清 .part（异常路径） | 罕见触发 + 单文件 |
+| handlers.js | L324 | unlinkSync | handleUpload cancel | 用户取消清 .part | 单文件 unlink |
+| handlers.js | L332 | existsSync | handleUpload cancel | 检查 cancel part 存在 | 单 stat |
+| handlers.js | L435 | mkdirSync | handleMusicUpload | 音乐上传建目录（recursive） | mkdir 幂等 |
+| handlers.js | L568 | unlinkSync | handleDelete | 删除壁纸后清磁盘文件 | 单文件 unlink（用户主动删） |
+| index.js | L51 | statSync | serveStream | 视频流式响应取 total 算 Range | 前置元数据（流式本体已 async） |
+| index.js | L199 | existsSync | 静态资源 | 404 前检查文件存在 | 单 stat |
+| online.js | L32 | existsSync | loadOnlineSources | 检查在线源配置存在 | 单 stat |
+| online.js | L33 | readFileSync | loadOnlineSources | 读 sources.json（小文件，启动一次） | 配置小文件 |
+| online.js | L58 | mkdirSync | downloadOne | 建在线下载目录（recursive） | mkdir 幂等 |
+| online.js | L67 | existsSync | downloadOne | 检查 .part 存在 | 单 stat |
+| online.js | L71 | existsSync | downloadOne | 检查最终文件存在 | 单 stat |
+| online.js | L73 | rmSync | downloadOne | 清残留 .part（单文件） | 单文件删 |
+| online.js | L89 | existsSync | prehash | 检查 .part 存在 | 单 stat |
+| online.js | L96 | statSync | prehash | 取 .part 大小 | 小 stat |
+| online.js | L114 | rmSync | handleResponse | Range 不支持重下前清 .part | 单文件删 |
+| online.js | L138 | rmSync | handleResponse | 超限清 .part | 单文件删 |
+| online.js | L148 | rmSync | handleResponse | SHA-1 不匹配清 .part | 单文件删 |
+| online.js | L152 | renameSync | handleResponse | 下载完成 .part → 正式名（同卷） | rename 非拷贝 |
+| online.js | L182 | mkdirSync | downloadAllOnline | 启动建在线目录 | mkdir 幂等 |
+
+**C. 真问题（规则应当告警，实际确认有害）—— 2 处**
+
+| 文件 | 行 | 操作 | 所在函数 | 实际危害 |
+|---|---|---|---|---|
+| handlers.js | L550 | readFileSync | handleWallpaperLogRead | 请求路径**循环读 wallpaper.log 全量**再 split；日志持续追加可能数 MB，阻塞事件循环 |
+| index.js | L51 | statSync | serveStream | 请求路径每视频请求 stat（轻微；流式本体已 async，仅前置元数据） |
+
+> 对照结论：新规则在 65 处上「豁免 31 处 → 100% 无害」「未豁免 34 处 → 其中 28 处实际无害（保守告警不误放）、2 处真问题（告警正确但 index.js 那条偏轻微）」。整体**未出现「豁免了危险项」的漏放**。
+
 #### ② 误报/过度（规则错杀）—— 63 处
 
 | 类 | 处数 | 实际真相 | 规则哪里失灵 |

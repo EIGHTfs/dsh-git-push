@@ -5,7 +5,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
+import { spawnSync, execSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync, readFileSync, rmSync, existsSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -156,4 +156,31 @@ test('CLI --root：可对任意项目根 check/apply（其他项目复用本脚�
 // 清理
 test.after(() => {
   try { rmSync(TMP, { recursive: true, force: true }); } catch { /* 忽略 */ }
+});
+// ---------- 2026-09-23：工具生成物豁免 + 提交中间态 missing 降级 ----------
+//   现象：git_commit_push 审计报 tree-doc-drift（docs/函数/*、functions-index.json 孤儿 + 新文件 missing）。
+//   根因：checkDrift 把工具自产（docs/函数/、functions-index.json、_meta）当漂移；提交时未跟踪新文件
+//   被 gitLsFiles 计入但 README 树未及 apply → missing。修复：checkDrift 豁免生成物；appendTreeDocDrift
+//   将 missing 降 notice（提交后 sync/apply 消除），stale/orphan 保持 warning。
+test('checkDrift：工具生成物（docs/函数/、functions-index.json、_meta）不报孤儿/漂移', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-td-gen-'));
+  try {
+    execSync('git init -q', { cwd: dir });
+    execSync('git config user.email t@e.com', { cwd: dir });
+    execSync('git config user.name t', { cwd: dir });
+    writeFileSync(join(dir, 'README.md'), '# x\n<!-- dshgp-tree:start -->\n```text\nx/\n├── a.js — 正常文件\n```\n<!-- dshgp-tree:end -->\n');
+    writeFileSync(join(dir, 'a.js'), 'const a = 1;\n');
+    writeFileSync(join(dir, 'tree-doc.json'), JSON.stringify({
+      'a.js': '正常文件',
+      '_meta': { worktree: { 'a.js': { status: 'M', mtime: 'x', note: 'y' } } }, // 元数据键
+      'docs/函数/lib/gone.js.md': '（待注释）', // 生成物孤儿（源不存在）
+      'functions-index.json': '函数索引', // 生成物键
+    }, null, 2) + '\n');
+    execSync('git add -A && git commit -qm init', { cwd: dir });
+    // 删掉生成物源文件（模拟归档/生成物变化）——docs/函数/lib/gone.js.md 本就不存在
+    const r = checkDrift({ readmePath: join(dir, 'README.md'), root: dir });
+    // 生成物（_meta / docs/函数/ / functions-index.json）不得出现在任何漂移 issues；
+    // 测试仓库树块未 apply 完整（README.md/tree-doc.json 未列属夹具自身不完整，与生成物豁免无关）
+    assert.ok(!r.issues.some((i) => i.msg.includes('_meta') || i.msg.includes('docs/函数') || i.msg.includes('functions-index')), `生成物不得出现在漂移 issues：${JSON.stringify(r.issues)}`);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
 });

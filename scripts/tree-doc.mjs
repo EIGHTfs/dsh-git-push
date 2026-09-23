@@ -281,22 +281,28 @@ export function checkDrift({ readmePath = DEFAULT_README, root = ROOT } = {}) {
   const realSet = new Set();
   for (const p of realPaths) realSet.add(p);
   const isRealDir = (p) => { try { return statSync(join(root, p.replace(/\/$/, ''))).isDirectory(); } catch { return false; } };
-  // missing：真实文件不在树上（被折叠的设计除外）
+  // 2026-09-23：工具自产生成物不追漂移——tree-doc/functions 自产（README 树与索引的
+  //   增删由工具维护，不属手写树内容）：docs/函数/*（apply 生成/删除常态）、
+  //   functions-index.json（analyze 产物）。_meta 见 orphan 判定。
+  const isToolGenerated = (p) => p === 'functions-index.json' || p === '_meta'
+    || p.startsWith('docs/函数/') || p.includes('_archived/');
+  // missing：真实文件不在树上（被折叠的设计除外；工具生成物豁免）
   const missing = [];
   for (const p of realPaths) {
     const folded = foldedDirs.some((d) => p.startsWith(d));
-    if (!folded && !seen.has(p) && !isRealDir(p)) missing.push(p);
+    if (!folded && !seen.has(p) && !isRealDir(p) && !isToolGenerated(p)) missing.push(p);
   }
-  // stale：树上列出但真实不存在（文件或目录）
+  // stale：树上列出但真实不存在（文件或目录；工具生成物豁免）
   const stale = [];
   for (const s of seen) {
+    if (isToolGenerated(s)) continue;
     if (s.endsWith('/')) { if (!isRealDir(s)) stale.push(s); }
     else if (!realSet.has(s)) stale.push(s);
   }
-  // 注释映射孤儿：路径既不是 git 文件，也不是真实目录（目录级注释合法）；`_meta` 元数据键跳过
+  // 注释映射孤儿：路径既不是 git 文件，也不是真实目录（目录级注释合法）；`_meta`/生成物键跳过
   const orphans = [];
   for (const p of Object.keys(map)) {
-    if (p === '_meta') continue; // 2026-09-23：_meta 是工作区变动元数据（非文件路径），不算孤儿
+    if (isToolGenerated(p)) continue; // 2026-09-23：_meta 元数据 + docs/函数/ 等工具产物不算孤儿
     const full = join(root, p);
     let realDir = false;
     try { realDir = statSync(full).isDirectory(); } catch { /* 路径不存在：不算真实目录 */ }
