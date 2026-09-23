@@ -913,6 +913,7 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
+| **1.8.11**（当前） | **UI 切公开/私有按钮修复**：RepoCloudPane 渲染行传参名写错（visSwitch→requestVisSwitch，父 props 无 visSwitch 名，按钮点击=undefined 没反应）——接回独立确认弹窗链路（1.5.4 改版后残留） |
 | **1.8.10**（当前） | **评分去重粒度细化（规则级）**：countByDimension 每文件**每规则**每维度最多计 1（同文件 20 处短变量=1 个命名问题；不同规则各计=20）——更公平区分规则间问题；blocker 每次计 2 不合并。实测 dsh-git-push 78.6→77.1（规则级更严）；附：tree-doc 测试适配并行提交 3326ec6 树根动态化 |
 | **1.8.9**（当前） | **评分公平性修复**：countByDimension 文件级去重——warning/info 每文件每维度最多计 1 次（小问题不随条数线性累加，大项目不再被孤立小问题压低；一处修复覆盖全消）；blocker 保持每次计 2（安全硬问题不合并）。实测 dsh-git-push 74.8→78.6、theme（大项目）→80.4 |
 | **1.8.8**（当前） | **大函数拆分**（评分 74.8）：cli.mjs cmdClone（26→preview/结果 2 helper）、settings-bridge applySettingsToCfg（27→表驱动）、control-flow checkSyncFs（48→3 子函数）——回归全绿 |
