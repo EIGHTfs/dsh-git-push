@@ -268,3 +268,34 @@ test('评分：blocker 扣分重于 warning', () => {
   assert.ok(q.counts['可读性'] === 1);
   assert.ok(q.counts['安全性'] === 2);
 });
+
+// ---------- 2026-09-23：countByDimension 文件级去重（大项目公平性） ----------
+//   用户：审计对大项目不公平——小问题线性累加，但小问题不会同时出现。
+//   修：warning/info 每文件每维度最多计 1（一处覆盖全消）；blocker 每次计（安全硬问题不合并）。
+
+test('countByDimension：warning 同文件每维度只计 1（小问题不线性累加）', () => {
+  const findings = [
+    { file: 'a.js', severity: 'warning', scoreImpact: 1, dimensions: ['可读性'] },
+    { file: 'a.js', severity: 'warning', scoreImpact: 1, dimensions: ['可读性'] }, // 同文件第 2 个 → 去重
+    { file: 'b.js', severity: 'warning', scoreImpact: 1, dimensions: ['可读性'] },
+  ];
+  const c = countByDimension(findings);
+  assert.equal(c['可读性'], 2, `同文件去重：a.js 1 + b.js 1 = 2（非 3），得 ${c['可读性']}`);
+});
+
+test('countByDimension：blocker 不合并（同文件多个凭据分别计，每次 2）', () => {
+  const findings = [
+    { file: 'a.js', severity: 'blocker', scoreImpact: 2, dimensions: ['安全性'] },
+    { file: 'a.js', severity: 'blocker', scoreImpact: 2, dimensions: ['安全性'] },
+  ];
+  const c = countByDimension(findings);
+  assert.equal(c['安全性'], 4, `blocker 每次计 2×2 = 4，得 ${c['安全性']}`);
+});
+
+test('countByDimension：scoreImpact 0 提示不计入（照常展示不拉低评分）', () => {
+  const findings = [
+    { file: 'a.js', severity: 'notice', scoreImpact: 0, dimensions: ['可维护性'] },
+  ];
+  const c = countByDimension(findings);
+  assert.equal(c['可维护性'], 0, 'scoreImpact 0 不计入维度计数');
+});
