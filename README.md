@@ -281,6 +281,7 @@ dsh-git-push/
 │   ├── preview-server.mjs — 本地真实后端测试服务（preview.html 接真实 handleHttp）
 │   ├── probe-recheck.mjs — 探针：「重新检测」按钮链路实测（在线校验 token/SSH）
 │   ├── rule-switch.mjs — 规则槽位手动启停 CLI
+│   ├── rules-solo-audit.mjs — 规则单启控制变量扫描（基准全关+逐规则单启+全量对照，报告供 AI/人工审规则有效性与局限，按需运行非常驻）
 │   ├── scan-file-io.mjs — 文件读写扫描器（列出所有 fs 读写调用位置 + 路径参数）
 │   ├── scan-repos.mjs — （待注释）
 │   ├── scan-version.mjs — 版本一致性校验脚本
@@ -349,6 +350,7 @@ dsh-git-push/
 ├── docs/ — 开发文档
 │   ├── DETAILS-EXEMPT-AND-RULES.md — 细节补充：豁免注释与规则 yml 用法全录
 │   ├── 方案-audit-history-历史提交审计.md — （待注释）
+│   ├── 方案-io-risk-规则优化.md — 方案：io-risk 规则优化（对照诊断的差距分析：元数据操作分档 + rename 降档）
 │   ├── 方案-io-risk规则推断与准确率评估.md — 方案：io-risk 规则推断与准确率评估
 │   ├── 方案-repo-index-account-status-更新收口.md — （待注释）
 │   ├── 方案-tree-doc变动追踪与函数文档.md — （待注释）
@@ -911,6 +913,7 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
+| **1.8.4**（当前） | **规则单启控制变量扫描工具**（`node scripts/rules-solo-audit.mjs <repo>`——全关基准 + 逐规则单启 + 全量对照，报告每规则命中数/文件/样例，供 AI+人工审规则有效性与局限；按需运行非测试常驻；单启列无豁免上下文仅对照，以全量命中列为主） |
 | **1.8.3**（当前） | **tree-doc 审计漂移修复**：checkDrift 豁免工具生成物（docs/函数/、functions-index.json、_meta 不报孤儿/漂移）；审计对「新增文件未登记」missing 降 notice（提交中间态，sync/apply 后消除），stale/orphan 真漂移保持 warning——消除 git_commit_push 审计环境的瞬时 tree-doc-drift warning |
 | **1.8.2**（当前） | **CLI 新增 tree-doc 子命令**（`git-sluice tree-doc <sync\|gen\|check\|apply> [--root]`）+ **CLI 与源码全量审计一致性自动测试**（test-cli-audit-parity：`audit --full --json` 与直接调用 auditFull 结果完全一致，含忽略文件排除）+ 版本纪律修订（**每次提交默认升第三位**；major/minor 调整另行指定） |
 | **1.8.1**（当前） | **tree-doc --root 外调修复（syncIndex 写盘落指定目录）+ 中文路径 quotepath=false（git ls-files 不再八进制转义，tree-doc.json 键名正确）**。同期新增 **tree-doc 工作区变动追踪 + 函数索引/文档**：①`tree-doc sync` 记录工作区未提交变动文件（M/A/D）修改时间到 `_meta.worktree`（面向开发者提示「注释可能需更新」；**apply 只同步原描述**，元数据不进 README；审计加 notice）②`git-sluice functions analyze|apply`（复用 func-index.js + comment/signature 槽位 → functions-index.json → docs/函数/*.md，删除归档）。方案见 `docs/方案-tree-doc变动追踪与函数文档.md`。\

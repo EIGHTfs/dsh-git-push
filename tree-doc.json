@@ -273,38 +273,20 @@
   "docs/方案-文档维度加分制.md": "（待注释）",
   "_meta": {
     "worktree": {
-      "README.md": {
-        "status": "M",
-        "mtime": "2026-09-22T23:54:49.742Z",
-        "note": "注释可能需更新"
-      },
-      "cli.mjs": {
-        "status": "M",
-        "mtime": "2026-09-22T23:51:07.011Z",
-        "note": "注释可能需更新"
-      },
-      "lib/self/index.js": {
-        "status": "M",
-        "mtime": "2026-09-22T23:50:16.917Z",
-        "note": "注释可能需更新"
-      },
-      "package.json": {
-        "status": "M",
-        "mtime": "2026-09-22T23:50:16.918Z",
-        "note": "注释可能需更新"
-      },
-      "docs/方案-io-risk规则推断与准确率评估.md": {
+      "docs/方案-io-risk-规则优化.md": {
         "status": "A",
-        "mtime": "2026-09-22T23:53:58.328Z",
+        "mtime": "2026-09-23T00:08:40.404Z",
         "note": "注释可能需更新"
       },
-      "test/test-cli-audit-parity.mjs": {
+      "scripts/rules-solo-audit.mjs": {
         "status": "A",
-        "mtime": "2026-09-22T23:49:51.651Z",
+        "mtime": "2026-09-23T00:18:15.931Z",
         "note": "注释可能需更新"
       }
     }
   },
   "test/test-cli-audit-parity.mjs": "CLI 与源码全量审计一致性测试（audit --full --json vs 直接 auditFull，含忽略排除）",
-  "docs/方案-io-risk规则推断与准确率评估.md": "方案：io-risk 规则推断与准确率评估"
+  "docs/方案-io-risk规则推断与准确率评估.md": "方案：io-risk 规则推断与准确率评估",
+  "docs/方案-io-risk-规则优化.md": "方案：io-risk 规则优化（对照诊断的差距分析：元数据操作分档 + rename 降档）",
+  "scripts/rules-solo-audit.mjs": "规则单启控制变量扫描（基准全关+逐规则单启+全量对照，报告供 AI/人工审规则有效性与局限，按需运行非常驻）"
 }
