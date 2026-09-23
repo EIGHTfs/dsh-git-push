@@ -273,14 +273,25 @@ test('评分：blocker 扣分重于 warning', () => {
 //   用户：审计对大项目不公平——小问题线性累加，但小问题不会同时出现。
 //   修：warning/info 每文件每维度最多计 1（一处覆盖全消）；blocker 每次计（安全硬问题不合并）。
 
-test('countByDimension：warning 同文件每维度只计 1（小问题不线性累加）', () => {
+test('countByDimension：warning 同文件同规则只计 1（小问题不线性累加）', () => {
   const findings = [
-    { file: 'a.js', severity: 'warning', scoreImpact: 1, dimensions: ['可读性'] },
-    { file: 'a.js', severity: 'warning', scoreImpact: 1, dimensions: ['可读性'] }, // 同文件第 2 个 → 去重
-    { file: 'b.js', severity: 'warning', scoreImpact: 1, dimensions: ['可读性'] },
+    { file: 'a.js', rule: 'r1', severity: 'warning', scoreImpact: 1, dimensions: ['可读性'] },
+    { file: 'a.js', rule: 'r1', severity: 'warning', scoreImpact: 1, dimensions: ['可读性'] }, // 同文件同规则第 2 个 → 去重
+    { file: 'a.js', rule: 'r2', severity: 'warning', scoreImpact: 1, dimensions: ['可读性'] }, // 不同规则 → 各计
+    { file: 'b.js', rule: 'r1', severity: 'warning', scoreImpact: 1, dimensions: ['可读性'] },
   ];
   const c = countByDimension(findings);
-  assert.equal(c['可读性'], 2, `同文件去重：a.js 1 + b.js 1 = 2（非 3），得 ${c['可读性']}`);
+  assert.equal(c['可读性'], 3, `规则级去重：a.js(r1) 1 + a.js(r2) 1 + b.js(r1) 1 = 3，得 ${c['可读性']}`);
+});
+
+test('countByDimension：同文件同规则跨维度仍按维度各计', () => {
+  const findings = [
+    { file: 'a.js', rule: 'r1', severity: 'warning', scoreImpact: 1, dimensions: ['可读性', '可维护性'] },
+    { file: 'a.js', rule: 'r1', severity: 'warning', scoreImpact: 1, dimensions: ['可读性', '可维护性'] },
+  ];
+  const c = countByDimension(findings);
+  assert.equal(c['可读性'], 1, '同规则同维度去重');
+  assert.equal(c['可维护性'], 1, '同规则同维度去重（另一维度也计 1）');
 });
 
 test('countByDimension：blocker 不合并（同文件多个凭据分别计，每次 2）', () => {

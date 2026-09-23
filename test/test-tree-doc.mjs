@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import { spawnSync, execSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync, readFileSync, rmSync, existsSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { buildTreeText, checkDrift, syncIndex } from '../scripts/tree-doc.mjs';
@@ -123,7 +123,7 @@ test('CLI --root：可对任意项目根 check/apply（其他项目复用本脚�
   const proj = mkdtempSync(join(tmpdir(), 'tree-doc-root-'));
   const files = ['src/index.js', 'tree-doc.json', 'README.md'];
   const map = { 'src': '源码', 'src/index.js': '入口', 'tree-doc.json': '目录注释映射', 'README.md': '文档' };
-  const tree = buildTreeText(files, map);
+  const tree = buildTreeText(files, map, basename(proj)); // 2026-09-23：树根用临时仓库名（3326ec6 树根动态化后，硬编码 dsh-git-push 会 stale）
   writeFileSync(join(proj, 'README.md'), makeReadme(tree), 'utf8');
   writeFileSync(join(proj, 'tree-doc.json'), JSON.stringify(map, null, 2) + '\n', 'utf8');
   mkdirSync(join(proj, 'src'), { recursive: true });
