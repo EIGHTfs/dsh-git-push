@@ -705,6 +705,36 @@ export async function cmdModuleSplitter(positional = [], flags = {}) {
   return { ok: true, command: sub, target, output: r.stdout };
 }
 
+/** 命令分发表（2026-09-23 重构：main 54 圈复杂度 → 表驱动分发）。
+ * 每个条目 [命令名, handler(rest)]；统一 parse 模式用 parseVia 包装。 */
+const parseVia = (run) => (rest) => {
+  const { flags, positional, error } = parseArgv(rest);
+  if (error) return console.error(error);
+  return run(flags, positional);
+};
+const COMMANDS = new Map([
+  ['ruleset', (rest) => cmdRuleset(rest)],
+  ['scan', parseVia((f, p) => cmdScan(p[0] || '.', f))],
+  ['repos', parseVia((f, p) => cmdRepos(p[0] || '.', f))],
+  ['index', parseVia((f, p) => cmdIndex(p[0] || '.', f))],
+  ['audit', parseVia((f, p) => cmdAudit(p[0] || '.', f))],
+  ['commit', parseVia((f, p) => cmdCommit(p[0] || '', f))],
+  ['file-io', parseVia((f, p) => cmdFileIo(p, f))],
+  ['link-check', (rest) => cmdLinkCheck(rest[0] || '.')],
+  ['module-splitter', parseVia((f, p) => cmdModuleSplitter(p, f))],
+  ['clone', parseVia((f, p) => cmdClone(f, p))],
+  ['account-check', parseVia((f) => cmdAccountCheck(f))],
+  ['cred-env', parseVia((f) => cmdCredEnv(f))],
+  ['functions', parseVia((f, p) => cmdFunctions(p[0] || '', p[1] || '', f))],
+  ['tree-doc', parseVia((f, p) => cmdTreeDoc(p[0] || '', f))],
+  ['remote-create', parseVia((f, p) => cmdRemoteCreate(p[0] || '', f))],
+  ['set-visibility', parseVia((f, p) => cmdSetVisibility(p[0] || '', f))],
+  ['gen-ssh-key', parseVia((f) => cmdGenSshKey(f))],
+  ['yaml-template', () => cmdYamlTemplate()],
+  ['readme-template', () => cmdReadmeTemplate()],
+  ['self-check', () => cmdSelfCheck()],
+]);
+
 export async function main(argv = process.argv.slice(2)) {
   const [cmd, ...rest] = argv;
   if (!cmd || cmd === 'help' || cmd === '--help' || cmd === '-h') {
@@ -712,86 +742,8 @@ export async function main(argv = process.argv.slice(2)) {
     return;
   }
   if (cmd === 'version' || cmd === '-v' || cmd === '--version') return await cmdVersion();
-  if (cmd === 'ruleset') return await cmdRuleset(rest);
-  if (cmd === 'scan') {
-    const { flags, positional, error } = parseArgv(rest);
-    if (error) return console.error(error);
-    return await cmdScan(positional[0] || '.', flags);
-  }
-  if (cmd === 'repos') {
-    const { flags, positional, error } = parseArgv(rest);
-    if (error) return console.error(error);
-    return await cmdRepos(positional[0] || '.', flags);
-  }
-  if (cmd === 'index') {
-    const { flags, positional, error } = parseArgv(rest);
-    if (error) return console.error(error);
-    return await cmdIndex(positional[0] || '.', flags);
-  }
-  if (cmd === 'audit') {
-    const { flags, positional, error } = parseArgv(rest);
-    if (error) return console.error(error);
-    return await cmdAudit(positional[0] || '.', flags);
-  }
-  if (cmd === 'commit') {
-    const { flags, positional, error } = parseArgv(rest);
-    if (error) return console.error(error);
-    return await cmdCommit(positional[0] || '', flags);
-  }
-  if (cmd === 'file-io') {
-    const { flags, positional, error } = parseArgv(rest);
-    if (error) return console.error(error);
-    return await cmdFileIo(positional, flags);
-  }
-  if (cmd === 'link-check') return await cmdLinkCheck(rest[0] || '.');
-  if (cmd === 'module-splitter') {
-    const { flags, positional, error } = parseArgv(rest);
-    if (error) return console.error(error);
-    return await cmdModuleSplitter(positional, flags);
-  }
-  if (cmd === 'clone') {
-    const { flags, positional, error } = parseArgv(rest);
-    if (error) return console.error(error);
-    return await cmdClone(flags, positional);
-  }
-  if (cmd === 'account-check') {
-    const { flags, error } = parseArgv(rest);
-    if (error) return console.error(error);
-    return await cmdAccountCheck(flags);
-  }
-  if (cmd === 'cred-env') {
-    const { flags, error } = parseArgv(rest);
-    if (error) return console.error(error);
-    return await cmdCredEnv(flags);
-  }
-  if (cmd === 'functions') {
-    const { flags, positional, error } = parseArgv(rest);
-    if (error) return console.error(error);
-    return await cmdFunctions(positional[0] || '', positional[1] || '', flags);
-  }
-  if (cmd === 'tree-doc') {
-    const { flags, positional, error } = parseArgv(rest);
-    if (error) return console.error(error);
-    return await cmdTreeDoc(positional[0] || '', flags);
-  }
-  if (cmd === 'remote-create') {
-    const { flags, positional, error } = parseArgv(rest);
-    if (error) return console.error(error);
-    return await cmdRemoteCreate(positional[0] || '', flags);
-  }
-  if (cmd === 'set-visibility') {
-    const { flags, positional, error } = parseArgv(rest);
-    if (error) return console.error(error);
-    return await cmdSetVisibility(positional[0] || '', flags);
-  }
-  if (cmd === 'gen-ssh-key') {
-    const { flags, error } = parseArgv(rest);
-    if (error) return console.error(error);
-    return await cmdGenSshKey(flags);
-  }
-  if (cmd === 'yaml-template') return await cmdYamlTemplate();
-  if (cmd === 'readme-template') return await cmdReadmeTemplate();
-  if (cmd === 'self-check') return await cmdSelfCheck();
+  const handler = COMMANDS.get(cmd);
+  if (handler) return await handler(rest);
   console.error(`未知命令: ${cmd}\n`);
   console.log(HELP);
   process.exitCode = 1;

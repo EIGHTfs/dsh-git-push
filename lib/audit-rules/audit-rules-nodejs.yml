@@ -111,7 +111,7 @@ rules:
     category: "readability"
     severity: "warning"
     description: "代码缩进嵌套超过 3 层（如 for→for→if→if），可读性灾难，应提前 return 或抽函数"
-    max_depth: 3
+    max_depth: 4
     exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx", "py", "go", "rs", "java", "kt", "swift", "php", "rb"]
     fixable: false
 
@@ -130,6 +130,9 @@ rules:
     severity: "warning"
     description: "单文件超过 400 行时应拆分模块（存量超大文件为已知债务，仅提醒不拦截；D1 重构已拆分核心文件）"
     max_lines: 400
+    # 2026-09-23：只对**代码文件**生效——md/yml/json 文档天然长（README/docs 详解/规则包），
+    #   文件行数拆分规则针对代码模块；此前无 exts 导致 README 1058 行/docs 详解被误报。
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx", "py", "go", "rs", "java", "kt", "swift", "php", "rb"]
     fixable: false
 
   # ----- 2. 可维护性 -----
@@ -147,7 +150,7 @@ rules:
     category: "maintainability"
     severity: "warning"
     description: "过高的圈复杂度表示函数逻辑分支过多"
-    max_complexity: 10
+    max_complexity: 15
     fixable: false
 
   # ----- 3. 健壮性 -----

@@ -273,14 +273,9 @@
   "docs/方案-文档维度加分制.md": "（待注释）",
   "_meta": {
     "worktree": {
-      "docs/方案-io-risk-规则优化.md": {
-        "status": "A",
-        "mtime": "2026-09-23T00:08:40.404Z",
-        "note": "注释可能需更新"
-      },
-      "scripts/rules-solo-audit.mjs": {
-        "status": "A",
-        "mtime": "2026-09-23T00:18:15.931Z",
+      "lib/audit-rules/audit-rules-nodejs.yml": {
+        "status": "M",
+        "mtime": "2026-09-23T02:23:42.639Z",
         "note": "注释可能需更新"
       }
     }

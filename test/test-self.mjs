@@ -298,7 +298,9 @@ test('CLI 新命令：HELP 必须列出 5 个补齐命令', () => {
 
 test('CLI 新命令：main 分发必须接线（不能只写 HELP）', () => {
   for (const cmd of ['clone', 'account-check', 'remote-create', 'set-visibility', 'gen-ssh-key']) {
-    assert.ok(new RegExp(`cmd === '${cmd}'`).test(cliText),
+    // 2026-09-23：main 已重构为表驱动分发（COMMANDS Map）——兼容旧 if 链与 `['cmd', 分发表条目` 两种形态
+    const wired = cliText.includes(`cmd === '${cmd}'`) || cliText.includes(`['${cmd}',`);
+    assert.ok(wired,
       `main 必须分发 ${cmd}`);
   }
 });

@@ -38,7 +38,7 @@ test('module_splitter：tool-call 分发 case 存在', () => {
 
 test('module_splitter：CLI 命令 + HELP + parseArgv 兼容', () => {
   const cli = readFileSync(join(rootDir, 'cli.mjs'), 'utf8');
-  assert.match(cli, /cmd === 'module-splitter'/, 'cli.mjs 缺 module-splitter 分派');
+  assert.ok(/cmd === 'module-splitter'/.test(cli) || /\['module-splitter',/.test(cli), 'cli.mjs 缺 module-splitter 分派（if 链或表驱动均可）');
   assert.match(cli, /git-sluice module-splitter <analyze\|split\|verify>/, 'HELP 缺用法行');
   assert.match(cli, /export async function cmdModuleSplitter/, '缺 cmdModuleSplitter 实现');
 });
