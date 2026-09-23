@@ -40,7 +40,7 @@ test('scope_rules：resolveScopeAction 按 scopeInfo 维度取 action', () => {
 });
 
 // 作用域分类器：lib/ast/scope.js（module/function/loop + 模块常量赋值）
-import { classifyLineScope, isModuleConstAssignment, classifyFunctionPath } from '../lib/ast/scope.js';
+import { classifyLineScope, isModuleConstAssignment, classifyFunctionPath, analyzeFunctionalScope } from '../lib/ast/scope.js';
 import { checkNameLengthAst } from '../lib/ast/naming.js';
 
 test('scope：声明行号归类（module/function/loop）', () => {
@@ -144,4 +144,24 @@ test('P3 callgraph：多层调用链（请求→A→B）B 也在请求路径', (
   const hits = scanIoRiskAst('const fs = require("fs");\napp.get("/x", (req, res) => {\n  serviceA();\n  res.end("ok");\n});\nfunction serviceA() {\n  helperB();\n}\nfunction helperB() {\n  fs.readFileSync("/s");\n}\n');
   const h = hits.find((x) => x.call === 'readFileSync');
   assert.equal(h.inRequest, true, 'helperB 经 serviceA→handler 链判请求路径');
+});
+
+// ---------- P4：闭包双重作用域（return/挂 this/exports → public 不豁免） ----------
+
+test('P4：被 return 暴露的公共函数不享受 startup 豁免（按模块级）', () => {
+  const r = checkFuncLines({ file: 'a.js', text: 'function make() {\n  function applyInit() {\n    const a = 1;\n    const b = a + 2;\n    return b;\n  }\n  return { applyInit };\n}\n', rules: [{ id: 'max-function-length', threshold: 2, scopeRules: [{ scope: 'startup', action: 'exempt' }] }] });
+  assert.equal(r.length, 1, 'public applyInit 不豁免');
+  const r2 = checkFuncLines({ file: 'a.js', text: 'function applyInit() {\n  const a = 1;\n  const b = a + 2;\n  return b;\n}\n', rules: [{ id: 'max-function-length', threshold: 2, scopeRules: [{ scope: 'startup', action: 'exempt' }] }] });
+  assert.equal(r2.length, 0, '普通 applyInit 豁免');
+});
+
+test('P4：exports.xxx = fn 挂载视为 public（不豁免）', () => {
+  const r = checkFuncLines({ file: 'a.js', text: 'function syncAll() {\n  const a = 1;\n  const b = a + 2;\n  const c = b + 3;\n  return c;\n}\nexports.sync = syncAll;\n', rules: [{ id: 'max-function-length', threshold: 2, scopeRules: [{ scope: 'startup', action: 'exempt' }] }] });
+  assert.equal(r.length, 1, 'exports 挂载的 syncAll 不豁免');
+});
+
+test('P4：功能作用域分类（return 暴露 public / 纯内部未标记）', () => {
+  const sc = analyzeFunctionalScope('function create() {\n  function download() {}\n  function internal() {}\n  return { download };\n}\n');
+  assert.equal(sc.get('download'), 'public');
+  assert.equal(sc.has('internal'), false);
 });

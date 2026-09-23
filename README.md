@@ -917,6 +917,7 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
+| **1.8.16**（当前） | **作用域 P4 闭包双重作用域**：analyzeFunctionalScope（词法 vs 功能）——被 return/挂 this/exports 暴露的函数标 public，**不享受 startup 豁免**（按模块级严格）；纯内部未标；作为参数传递标 callback（unknown）——修「闭包内 return 的公共 API 被误豁免」 |
 | **1.8.15**（当前） | **作用域 P3 调用链追踪**：lib/ast/callgraph.js（buildCallGraph 单文件调用图 + isInRequestPath 向上追溯）——io-risk 请求路径判定升级：函数体内 HTTP 特征 或 被请求路径函数调用 都判请求路径（修「请求处理调用的公共函数漏报」）；多层链（请求→A→B）也覆盖 |
 | **1.8.14**（当前） | **作用域 P1+P2**：启动路径豁免大函数/圈复杂度（max-function-length/max-cyclomatic-complexity 规则加 scope_rules startup→exempt，函数名 apply/init/main/bootstrap/setup 等模式；size.js 函数名提取）+ variable-min-length 参数列表短名豁免（function f(c, d) 的形参位置）——scope_rules 机制首次真实接入规则 |
 | **1.8.13**（当前） | **审计作用域判断·最小实验**（方案 Step 1+3+4）：lib/ast/scope.js 变量作用域分类器（module/function/loop 行号区间 + 模块常量赋值判定）+ lib/rule/scope.js 机制层（scope_rules 规范化/resolveScopeAction，yml 透传）+ magic-number 接入（模块顶层命名常量如 const TIMEOUT_MS=45000 不报）；误报收敛第一步 |
