@@ -404,25 +404,44 @@ export async function cmdLinkCheck(root = '.') {
 }
 
 /** 子命令：clone — 从 GitHub 克隆仓库（Git Data API 通道，不直连 github.com）。 */
+/** clone --preview 预演下载清单（不写盘）。2026-09-23 拆分自 cmdClone（降圈复杂度）。 */
+async function runClonePreview(target, flags) {
+  // previewClone 不自己解析 token（内部无 resolveToken），私有仓不传就是 404
+  const tk = flags.token || resolveToken({ tokenPath: process.env.DSH_GIT_PUSH_TOKEN ? undefined : '', repoPath: '' }).token;
+  const pr = await previewClone({ target, token: tk, branch: flags.branch || '' });
+  if (flags.json) { console.log(JSON.stringify(pr, null, 2)); return pr.ok ? 0 : 1; }
+  if (!pr.ok) { console.error(`❌ 预演失败: ${pr.error || ''}`); return 1; }
+  console.log(`预演 ${target}（分支 ${pr.branch || '(默认)'}）`);
+  // 字段名以 previewClone 实际返回为准：totalFiles/downloadCount/downloadBytes/skipped
+  console.log(`  共 ${pr.totalFiles ?? 0} 个文件，将下载 ${pr.downloadCount ?? 0} 个`
+    + `（${((pr.downloadBytes || 0) / 1048576).toFixed(1)} MB）`);
+  if (pr.skipped?.length) console.log(`  ⚠️ 超限跳过 ${pr.skipped.length} 个（> ${flags.maxFileMB ?? DEFAULT_MAX_FILE_MB} MB）`);
+  if (pr.empty) console.log('  ⚠️ 全部文件均超限，无内容可下载');
+  return 0;
+}
+
+/** clone 结果输出（成功/失败/跳过清单）。2026-09-23 拆分自 cmdClone（降圈复杂度）。 */
+function printCloneResult(r, flags, target, dest) {
+  if (flags.json) { console.log(JSON.stringify(r, null, 2)); return r.ok ? 0 : 1; }
+  if (!r.ok) {
+    console.error(`\n❌ 克隆未完成：${r.error || ''}`);
+    if (r.failed?.length) for (const x of r.failed.slice(0, 10)) console.error(`  ${x.path} → ${x.reason}`);
+    if (r.kept) console.error('  （已下好的文件已保留，可再次运行续传）');
+    return 1;
+  }
+  console.error(''); // 结束进度行
+  console.log(`✅ 克隆完成：${r.dest || dest || target}`);
+  console.log(`   ${r.files ?? 0}/${r.total ?? 0} 个文件${r.skippedCount ? `，跳过 ${r.skippedCount} 个大文件` : ''}`);
+  if (r.skipped?.length) for (const x of r.skipped) console.log(`   ⚠️ 跳过 ${x.path}（${(x.size / 1048576).toFixed(1)} MB）`);
+  return 0;
+}
+
 export async function cmdClone(flags, positional) {
   const target = positional[0] || '';
   const dest = positional[1] || flags.dest || '';
   if (!target) { console.error('缺少 <owner/repo>（用法: git-sluice clone <owner/repo> [dest]）'); return 1; }
   // --preview：只探测不写盘（对应插件 git_clone 的预检语义）
-  if (flags.preview) {
-    // previewClone 不自己解析 token（内部无 resolveToken），私有仓不传就是 404
-    const tk = flags.token || resolveToken({ tokenPath: process.env.DSH_GIT_PUSH_TOKEN ? undefined : '', repoPath: '' }).token;
-    const pr = await previewClone({ target, token: tk, branch: flags.branch || '' });
-    if (flags.json) { console.log(JSON.stringify(pr, null, 2)); return pr.ok ? 0 : 1; }
-    if (!pr.ok) { console.error(`❌ 预演失败: ${pr.error || ''}`); return 1; }
-    console.log(`预演 ${target}（分支 ${pr.branch || '(默认)'}）`);
-    // 字段名以 previewClone 实际返回为准：totalFiles/downloadCount/downloadBytes/skipped
-    console.log(`  共 ${pr.totalFiles ?? 0} 个文件，将下载 ${pr.downloadCount ?? 0} 个`
-      + `（${((pr.downloadBytes || 0) / 1048576).toFixed(1)} MB）`);
-    if (pr.skipped?.length) console.log(`  ⚠️ 超限跳过 ${pr.skipped.length} 个（> ${flags.maxFileMB ?? DEFAULT_MAX_FILE_MB} MB）`);
-    if (pr.empty) console.log('  ⚠️ 全部文件均超限，无内容可下载');
-    return 0;
-  }
+  if (flags.preview) return await runClonePreview(target, flags);
   const r = await cloneViaApi({
     target,
     dest,
@@ -439,18 +458,7 @@ export async function cmdClone(flags, positional) {
     },
   });
   cmdClone._lastPct = -1;
-  if (flags.json) { console.log(JSON.stringify(r, null, 2)); return r.ok ? 0 : 1; }
-  if (!r.ok) {
-    console.error(`\n❌ 克隆未完成：${r.error || ''}`);
-    if (r.failed?.length) for (const x of r.failed.slice(0, 10)) console.error(`  ${x.path} → ${x.reason}`);
-    if (r.kept) console.error('  （已下好的文件已保留，可再次运行续传）');
-    return 1;
-  }
-  console.error(''); // 结束进度行
-  console.log(`✅ 克隆完成：${r.dest || dest || target}`);
-  console.log(`   ${r.files ?? 0}/${r.total ?? 0} 个文件${r.skippedCount ? `，跳过 ${r.skippedCount} 个大文件` : ''}`);
-  if (r.skipped?.length) for (const x of r.skipped) console.log(`   ⚠️ 跳过 ${x.path}（${(x.size / 1048576).toFixed(1)} MB）`);
-  return 0;
+  return printCloneResult(r, flags, target, dest);
 }
 
 /** 子命令：account-check — 校验 GitHub 账号与凭据（token 在线校验 + SSH 公钥指纹）。 */

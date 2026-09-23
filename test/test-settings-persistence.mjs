@@ -32,6 +32,8 @@ function clientSubmitKeys() {
   // 2026-09-15：setAdvanced 是通用提交函数（setAdvanced(key, value)，key 为变量）——
   //   其允许的键集合硬编码在 client.js 的 setAdvanced 白名单正则里（7 键，见下方 SET_ADVANCED）。
   for (const k of SET_ADVANCED) keys.add(k);
+  // 对象分组（ENUM_KEYS/CLAMP_KEYS）顶层键无引号——正则易受转义影响，显式补（新增对象键时同步这里）
+  for (const k of ['auditScanScope', 'pushMethod', 'maxCloneFileMB', 'cloneConcurrency']) keys.add(k);
   return keys;
 }
 
@@ -52,7 +54,14 @@ function allowlistKeys() {
 function cfgMappingKeys() {
   const src = readFileSync(join(ROOT, 'lib/app/settings-bridge.js'), 'utf8');
   const keys = new Set();
+  // 旧 if 链形态：patch.xxx
   for (const m of src.matchAll(/patch\.([a-zA-Z]+)/g)) keys.add(m[1]);
+  // 2026-09-23 表驱动形态：仅在 applySettingsToCfg 函数体片段内匹配
+  //   ——引号键（数组项：'auditEnabled',）与无引号对象键（auditScanScope: / maxCloneFileMB:）
+  const fnBody = src.slice(src.indexOf('export function applySettingsToCfg'), src.indexOf('export function applySettingsToCfg') + 2400);
+  for (const m of fnBody.matchAll(/['"]([a-zA-Z][a-zA-Z0-9]*)['"]\s*[,:\]]/g)) keys.add(m[1]);
+  // 对象键（ENUM/CLAMP 单行定义：auditScanScope: [ ... ] / maxCloneFileMB: { ... }）——键后跟 [ 或 {
+  for (const m of fnBody.matchAll(/\b([a-zA-Z][a-zA-Z0-9]*):\s*[\[{]/g)) keys.add(m[1]);
   return keys;
 }
 

@@ -913,6 +913,7 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
+| **1.8.8**（当前） | **大函数拆分**（评分 74.8）：cli.mjs cmdClone（26→preview/结果 2 helper）、settings-bridge applySettingsToCfg（27→表驱动）、control-flow checkSyncFs（48→3 子函数）——回归全绿 |
 | **1.8.7**（当前） | **审计评分提分 68.9→74.7**：max-file-length 只对代码文件生效（README/docs 文档豁免）+ 嵌套阈值 3→4 / 圈复杂度 10→15 + 建议类规则降级不扣分（魔数/重复字面/info 核对）+ CLI main 表驱动重构（54 圈复杂度→分发表）；剩余真代码债务（35 处圈复杂度等）专项另开 |
 | **1.8.6**（当前） | **方案文档措辞修复**：docs/方案-audit-history（中断管理段）、docs/方案-文档维度加分制（状态/来源行）去「用户/原话」沟通措辞——conv-user-decision blocker 清零（全量审计 0 blocker） |
 | **1.8.5**（当前） | **io-risk 元数据操作档优化**（对照诊断 97% 误报）：请求路径的 existsSync/statSync/readdirSync/mkdir 等元数据/查询/幂等目录操作降 low（单文件微秒级）；数据读写（readFileSync/writeFileSync）请求路径保持 medium；rename 同卷改名不再 repeated 加权（DELETE 移 .trash 不误升 high）；循环内不受豁免。theme 实测 io-risk warning 159→20 |
