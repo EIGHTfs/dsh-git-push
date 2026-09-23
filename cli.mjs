@@ -12,6 +12,7 @@ import { scoreQuality } from './lib/score/index.js';
 import { checkLinks, sumLinkPenalty } from './lib/link-check/index.js';
 import { collectTextFiles, readText } from './lib/audit/collector.js';
 import { commitWithAudit } from './lib/commit-push.js';
+import { runWrappedGit } from './lib/git/wrapped-git.js';
 import { scanRepos } from './lib/git/repos.js';
 import { maintainRepoIndex, updateRepoIndex } from './lib/git/repo-index.js';
 import { auditFull } from './lib/audit/index.js';
@@ -61,6 +62,8 @@ const HELP = `git-sluice v${VERSION} — dsh-git-push 引擎独立 CLI（脱离 
                                   README 目录结构维护：sync 索引同步（新增自动加键/删除自动删键）；gen 生成树；check 检查漂移；apply 覆盖 README 标记块（封装 scripts/tree-doc.mjs）
                                   函数索引与函数文档：analyze 生成 functions-index.json（复用 scripts/func-index.js，含签名/注释槽位）；apply 读 JSON（人工补 comment 后）生成 docs/函数/*.md（文件删除归档 _archived，注释不丢）
                                   巨型单文件按顶层块拆分（python3 零依赖；analyze 先出块/依赖图 → AI 写 plan.json → split 切分 → verify 校验导出面；--dry-run=split 只预演）
+  git-sluice git <git 参数...>  浅包装 git：参数与 git 完全一致，凭据自动注入（SSH 私钥 / config.json token），无需传 token/私钥参数
+                                  例：git-sluice git pull | git clone owner/repo | git fetch origin（stdio 直连，退出码透传）
   git-sluice clone <owner/repo> [dest] [--branch <名>] [--dest <目录>] [--max-file-mb N] [--concurrency N] [--preview] [--json]
                                   从 GitHub 克隆仓库（Git Data API 通道，不直连 github.com；--preview=只探测不写盘）
   git-sluice account-check [--token <t>] [--no-check-ssh] [--json]
@@ -357,6 +360,17 @@ export async function cmdIndex(root, flags) {
 }
 
 /** 子命令：commit — 审计门禁 → 提交（默认只 commit 不 push；--push 推远端；--force 强推）。 */
+/** 子命令：git <args> —— 浅包装 git（自动注入插件凭据：SSH 私钥 / HTTPS token），参数与 git 完全一致（1.9.0）。 */
+export async function cmdGit(args = []) {
+  if (!args.length || ['-h', '--help', 'help', '--version'].includes(args[0])) {
+    console.log('用法: git-sluice git <git 参数>   例: git-sluice git pull / git clone owner/repo / git fetch --all');
+    console.log('凭据自动注入（插件 SSH 私钥 / config.json token），无需传 token 参数；退出码与 git 一致。');
+    return args[0] === '--version' ? 0 : 0;
+  }
+  const r = runWrappedGit(args);
+  return r.ok ? 0 : (typeof r.status === 'number' ? r.status : 1);
+}
+
 export async function cmdCommit(root, flags) {
   const repo = root || '';
   if (!repo || !(await pathExists(join(repo, '.git')))) { console.error(`不是 git 仓库: ${repo || '(空)'}`); return 1; }
@@ -738,6 +752,7 @@ const COMMANDS = new Map([
   ['remote-create', parseVia((f, p) => cmdRemoteCreate(p[0] || '', f))],
   ['set-visibility', parseVia((f, p) => cmdSetVisibility(p[0] || '', f))],
   ['gen-ssh-key', parseVia((f) => cmdGenSshKey(f))],
+  ['git', (rest) => cmdGit(rest)], // 2026-09-23 1.9.0：浅包装 git（自动凭据透传）
   ['yaml-template', () => cmdYamlTemplate()],
   ['readme-template', () => cmdReadmeTemplate()],
   ['self-check', () => cmdSelfCheck()],
@@ -752,9 +767,12 @@ export async function main(argv = process.argv.slice(2)) {
   if (cmd === 'version' || cmd === '-v' || cmd === '--version') return await cmdVersion();
   const handler = COMMANDS.get(cmd);
   if (handler) return await handler(rest);
-  console.error(`未知命令: ${cmd}\n`);
-  console.log(HELP);
-  process.exitCode = 1;
+  // 2026-09-23 1.9.0：未知命令透传为浅包装 git（自动凭据）——`git-sluice pull` = `git pull`
+  //   （git-sluice 是 git 的超集：已知子命令走插件，其余全部交给 git + 插件凭据）
+  const wrapped = runWrappedGit([cmd, ...rest]);
+  if (wrapped.ok) return 0;
+  process.exitCode = typeof wrapped.status === 'number' ? wrapped.status : 1;
+  return process.exitCode;
 }
 
 // 直接运行时入口（被 import 时不执行）

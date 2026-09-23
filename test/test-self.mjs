@@ -347,3 +347,25 @@ test('CLI 新命令：--visibility 只接受 public|private', async () => {
   try { code = await main(['set-visibility', '/tmp', '--visibility', 'weird']); } finally { console.error = prevErr; }
   assert.equal(code, 1, '非法 visibility 必须拒绝（防误改可见性）');
 });
+
+// ---------- 1.9.0：浅包装 git（未知命令透传 + git 子命令 + 自动凭据） ----------
+
+test('1.9.0：main 未知命令透传为 git（git-sluice status = git status）', async () => {
+  const prev = process.exitCode;
+  const r = await main(['status']);
+  assert.equal(r, 0, 'git status 透传成功');
+  process.exitCode = prev ?? 0;
+});
+
+test('1.9.0：cmdGit 帮助提示（无参数输出用法）', async () => {
+  const { cmdGit } = await import('../cli.mjs');
+  const out = await cmdGit([]);
+  assert.equal(out, 0);
+});
+
+test('1.9.0：buildWrappedGitEnv 注入凭据通道（SSH 私钥或 HTTPS askpass 至少一个）', async () => {
+  const { buildWrappedGitEnv } = await import('../lib/git/wrapped-git.js');
+  const env = buildWrappedGitEnv({ workspaceRoot: '' });
+  const hasCred = Boolean(env.GIT_SSH_COMMAND || env.GIT_ASKPASS);
+  assert.equal(hasCred, true, '凭据通道应注入（插件配置有私钥或 token）');
+});

@@ -273,19 +273,14 @@
   "docs/方案-文档维度加分制.md": "（待注释）",
   "_meta": {
     "worktree": {
-      "lib/ast/io-risk.js": {
+      "cli.mjs": {
         "status": "M",
-        "mtime": "2026-09-23T10:47:56.699Z",
+        "mtime": "2026-09-23T11:23:05.290Z",
         "note": "注释可能需更新"
       },
-      "test/test-scope.mjs": {
-        "status": "M",
-        "mtime": "2026-09-23T10:48:17.784Z",
-        "note": "注释可能需更新"
-      },
-      "lib/ast/callgraph.js": {
+      "lib/git/wrapped-git.js": {
         "status": "A",
-        "mtime": "2026-09-23T10:42:06.196Z",
+        "mtime": "2026-09-23T11:12:53.529Z",
         "note": "注释可能需更新"
       }
     }
@@ -297,5 +292,6 @@
   "lib/ast/scope.js": "变量作用域分类器（module/function/loop 行号区间 + 模块常量赋值判定）",
   "lib/rule/scope.js": "审计作用域机制层（scope_rules 规范化 + resolveScopeAction）",
   "test/test-scope.mjs": "作用域最小实验测试（分类器/机制/magic 接入）",
-  "lib/ast/callgraph.js": "调用链追踪（单文件调用图 + isInRequestPath，io-risk 请求路径判定升级）"
+  "lib/ast/callgraph.js": "调用链追踪（单文件调用图 + isInRequestPath，io-risk 请求路径判定升级）",
+  "lib/git/wrapped-git.js": "浅包装 git（自动凭据透传：SSH 私钥/HTTPS token，git-sluice git <args> 与未知命令透传）"
 }

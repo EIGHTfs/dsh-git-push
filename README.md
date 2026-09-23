@@ -251,6 +251,7 @@ dsh-git-push/
 │   │   ├── scan-runner.js — （待注释）
 │   │   ├── sensitive.js — 敏感信息扫描（提交前拦截密钥/凭据/私密文件）
 │   │   ├── transport.js — 推送通道（dispatchPush 决策：SSH/API/auto + 结果核对）
+│   │   ├── wrapped-git.js — 浅包装 git（自动凭据透传：SSH 私钥/HTTPS token，git-sluice git <args> 与未知命令透传）
 │   ├── http/ — HTTP 总入口（鉴权中间件 + 端点处理器骨架）
 │   │   ├── index.js — HTTP 总入口（Origin/CSRF/写确认/413/路由分发）
 │   ├── link-check/ — 链接判断（文档链接有效性，只 warning 永不 blocker）
@@ -917,6 +918,7 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
+| **1.9.0**（当前） | **浅包装 git**：`git-sluice <任意 git 参数>`（未知命令透传为 git，自动注入凭据：SSH 私钥/HTTPS token，无需传 token 参数）+ 显式 `git-sluice git <args>` 子命令——git-sluice 成为 git 超集（已知子命令走插件，其余全交 git + 插件凭据）；退出码透传 |
 | **1.8.16**（当前） | **作用域 P4 闭包双重作用域**：analyzeFunctionalScope（词法 vs 功能）——被 return/挂 this/exports 暴露的函数标 public，**不享受 startup 豁免**（按模块级严格）；纯内部未标；作为参数传递标 callback（unknown）——修「闭包内 return 的公共 API 被误豁免」 |
 | **1.8.15**（当前） | **作用域 P3 调用链追踪**：lib/ast/callgraph.js（buildCallGraph 单文件调用图 + isInRequestPath 向上追溯）——io-risk 请求路径判定升级：函数体内 HTTP 特征 或 被请求路径函数调用 都判请求路径（修「请求处理调用的公共函数漏报」）；多层链（请求→A→B）也覆盖 |
 | **1.8.14**（当前） | **作用域 P1+P2**：启动路径豁免大函数/圈复杂度（max-function-length/max-cyclomatic-complexity 规则加 scope_rules startup→exempt，函数名 apply/init/main/bootstrap/setup 等模式；size.js 函数名提取）+ variable-min-length 参数列表短名豁免（function f(c, d) 的形参位置）——scope_rules 机制首次真实接入规则 |
