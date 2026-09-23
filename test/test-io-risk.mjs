@@ -208,7 +208,7 @@ test('checkIoRisk：每条命中转 warning 级 finding（不拦提交）', () =
 
 test('checkIoRisk：高风险计分、低风险仅提示（severity=info 且不计分）', () => {
   const high = checkIoRisk({ file: 'a.mjs', text: 'async function f() { fs.readFileSync("x"); }' });
-  const med = checkIoRisk({ file: 'a.mjs', text: 'function h(req, res) { fs.existsSync("x"); }' });
+  const med = checkIoRisk({ file: 'a.mjs', text: 'function h(req, res) { fs.readFileSync("x"); }' }); // 数据读写请求路径 = 中风险（元数据 existsSync 已降 low）
   const low = checkIoRisk({ file: 'a.mjs', text: 'const c = fs.readFileSync("x");' });
   assert.equal(high[0].scoreImpact, 2, '高风险计 2');
   assert.equal(high[0].severity, 'warning', '高风险按 warning 展示');
@@ -236,4 +236,37 @@ test('io-risk：徽标与中文标签四级齐全', () => {
     assert.ok(RISK_BADGE[r], `${r} 应有徽标`);
     assert.ok(RISK_LABEL[r], `${r} 应有中文标签`);
   }
+});
+
+// ---------- 2026-09-23：元数据操作档（io-risk 优化，对照诊断「97% 误报」） ----------
+//   请求路径的 existsSync/statSync/readdirSync/mkdir 等元数据/查询/幂等目录操作 → low（微秒级，
+//   不搬运数据内容）；数据读写（readFileSync）请求路径保持 medium；循环内不受本档豁免。
+
+test('io-risk：请求路径元数据操作（existsSync/statSync）降 low', () => {
+  const hits = scanIoRiskAst('const fs = require("fs");\nfunction h(req, res) {\n  if (fs.existsSync("/data/x")) { res.end("ok"); }\n}\n');
+  const h = hits.find((x) => x.call === 'existsSync');
+  assert.ok(h, '应识别 existsSync');
+  assert.equal(h.risk, 'low', `元数据操作应 low，得 ${h.risk}`);
+  assert.ok(h.reason.includes('元数据'), '应说明元数据操作');
+});
+
+test('io-risk：请求路径数据读写（readFileSync）保持 medium', () => {
+  const hits = scanIoRiskAst('const fs = require("fs");\nfunction h(req, res) {\n  const data = fs.readFileSync("/data/big.txt");\n  res.end(data);\n}\n');
+  const h = hits.find((x) => x.call === 'readFileSync');
+  assert.ok(h);
+  assert.equal(h.risk, 'medium', `数据读写请求路径应 medium，得 ${h.risk}`);
+});
+
+test('io-risk：循环内元数据操作不受 meta 档豁免（仍按循环分级）', () => {
+  const hits = scanIoRiskAst('const fs = require("fs");\nfor (const f of files) {\n  const s = fs.statSync(f);\n}\n');
+  const h = hits.find((x) => x.call === 'statSync');
+  assert.ok(h, '应识别循环内 statSync');
+  assert.notEqual(h.risk, 'low', `循环内元数据操作应按循环分级（非 low 豁免），得 ${h.risk}`);
+});
+
+test('io-risk：请求路径 rename（同卷改名）不升 high', () => {
+  const hits = scanIoRiskAst('const fs = require("fs");\nfunction h(req, res) {\n  fs.renameSync("/data/a", "/data/.trash/a");\n  res.end("ok");\n}\n');
+  const h = hits.find((x) => x.call === 'renameSync');
+  assert.ok(h);
+  assert.notEqual(h.risk, 'high', `同卷 rename 不应因 repeated 加权升 high，得 ${h.risk}`);
 });

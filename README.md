@@ -913,6 +913,7 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
+| **1.8.5**（当前） | **io-risk 元数据操作档优化**（对照诊断 97% 误报）：请求路径的 existsSync/statSync/readdirSync/mkdir 等元数据/查询/幂等目录操作降 low（单文件微秒级）；数据读写（readFileSync/writeFileSync）请求路径保持 medium；rename 同卷改名不再 repeated 加权（DELETE 移 .trash 不误升 high）；循环内不受豁免。theme 实测 io-risk warning 159→20 |
 | **1.8.4**（当前） | **规则单启控制变量扫描工具**（`node scripts/rules-solo-audit.mjs <repo>`——全关基准 + 逐规则单启 + 全量对照，报告每规则命中数/文件/样例，供 AI+人工审规则有效性与局限；按需运行非测试常驻；单启列无豁免上下文仅对照，以全量命中列为主） |
 | **1.8.3**（当前） | **tree-doc 审计漂移修复**：checkDrift 豁免工具生成物（docs/函数/、functions-index.json、_meta 不报孤儿/漂移）；审计对「新增文件未登记」missing 降 notice（提交中间态，sync/apply 后消除），stale/orphan 真漂移保持 warning——消除 git_commit_push 审计环境的瞬时 tree-doc-drift warning |
 | **1.8.2**（当前） | **CLI 新增 tree-doc 子命令**（`git-sluice tree-doc <sync\|gen\|check\|apply> [--root]`）+ **CLI 与源码全量审计一致性自动测试**（test-cli-audit-parity：`audit --full --json` 与直接调用 auditFull 结果完全一致，含忽略文件排除）+ 版本纪律修订（**每次提交默认升第三位**；major/minor 调整另行指定） |
