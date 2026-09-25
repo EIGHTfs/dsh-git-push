@@ -918,6 +918,7 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
+| **1.9.2**（当前） | **软链加载诊断结论**：node_modules/dsh-git-push 软链→工作区是 DSH 开发加载形态（theme 同款）；后端零依赖、前端/宿主包由 DSH 运行时条件提供（lib/plugin/index.js 对 dsh-tools try/catch 兜底）——「市场安装报缺依赖」= dshmarket 对宿主 peerDependencies（@deepseek-ai/dsh-tools/schemastery）的误报（插件正确形态 = 软链 + 保留 peer，勿移除） |
 | **1.9.1**（当前） | **系统提示词注入配置化 + 新功能用法**：注入文本可配（config.json `injectUsageText` 数组/字符串覆盖默认功能用法注入段）；系统提示词功能用法加浅包装 git（`git-sluice <任意 git 参数>` 未知命令透传 + 自动凭据）| 说明：1.9.0 后每次提交默认升第三位（版本纪律） |
 | **1.9.0**（当前） | **浅包装 git**：`git-sluice <任意 git 参数>`（未知命令透传为 git，自动注入凭据：SSH 私钥/HTTPS token，无需传 token 参数）+ 显式 `git-sluice git <args>` 子命令——git-sluice 成为 git 超集（已知子命令走插件，其余全交 git + 插件凭据）；退出码透传 |
 | **1.8.16**（当前） | **作用域 P4 闭包双重作用域**：analyzeFunctionalScope（词法 vs 功能）——被 return/挂 this/exports 暴露的函数标 public，**不享受 startup 豁免**（按模块级严格）；纯内部未标；作为参数传递标 callback（unknown）——修「闭包内 return 的公共 API 被误豁免」 |
