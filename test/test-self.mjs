@@ -229,6 +229,15 @@ test('同步：SYNC_ENTRIES 覆盖 package.json files 白名单', () => {
     assert.ok(SYNC_ENTRIES.includes(f),
       `package.json files 里的 ${f} 未在 SYNC_ENTRIES 中——同步会漏掉它（发布有、安装副本无）`);
   }
+  // 2026-09-27：审计豁免文件必须随插件发布——SYNC_ENTRIES 曾漏 .auditignore，安装副本豁免失效
+  assert.ok(SYNC_ENTRIES.includes('.auditignore'), 'SYNC_ENTRIES 必须含 .auditignore（审计豁免随插件发布）');
+  assert.ok(SYNC_ENTRIES.includes('.gitignore'), 'SYNC_ENTRIES 必须含 .gitignore');
+});
+
+test('同步：listSyncFiles 实际包含 .auditignore / .gitignore', async () => {
+  const files = await listSyncFiles(ROOT);
+  assert.ok(files.includes('.auditignore'), '同步清单应含 .auditignore（实测 listSyncFiles 漏它）');
+  assert.ok(files.includes('.gitignore'), '同步清单应含 .gitignore');
 });
 
 test('同步：detectTargets 对无 HOME 返回空数组（不崩）', () => {

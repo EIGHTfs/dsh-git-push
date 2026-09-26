@@ -30,7 +30,10 @@ export const SOURCE_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 //   · scripts 是随插件发布的独立脚本（scan-version / audit-runtime-check / scrub-user-wording / check /
 //     sync-plugin 本身），README 有专门章节教用户直接 `node scripts/<名>.mjs` 调用 → 安装副本里必须有，
 //     否则文档承诺的入口在装好的插件里不存在。
-export const SYNC_ENTRIES = ['lib', 'skills', 'scripts', 'cli.mjs', 'package.json', 'cordis.patch.yml', 'README.md'];
+// 2026-09-27：补 .auditignore / .gitignore——审计豁免文件此前不在白名单，sync 从未同步，
+//   安装副本缺 .auditignore → 宿主审计的 client.js/score/index.js 豁免全失效（全量警告虚高）。
+//   npm 发布同样必须带上（files 白名单显式列出），否则市场安装的插件豁免也失效。
+export const SYNC_ENTRIES = ['lib', 'skills', 'scripts', 'cli.mjs', 'package.json', 'cordis.patch.yml', 'README.md', '.auditignore', '.gitignore'];
 
 /**
  * 同步时排除的路径片段。

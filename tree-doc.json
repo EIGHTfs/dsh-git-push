@@ -283,5 +283,57 @@
   "lib/plugin/auto-detect.js": "任务完成自动推送·检测层（纯函数：✅任务完成 触发/❌⚠ 阻断/自定义正则/许可合成判断）",
   "lib/plugin/auto-push.js": "任务完成自动推送·核心（turn/end 监听→检测→autoPushEnabled 开关→调 commitWithAudit 完整门禁，不裸提交）",
   "test/test-auto-push.mjs": "任务完成自动推送测试（检测纯函数 + registerAutoPush 门控监听注册）",
-  "docs/audit-2026-09-26.md": "（待注释）"
+  "docs/audit-2026-09-26.md": "（待注释）",
+  "lib/app/audit-api.js": "（待注释）",
+  "test/test-audit-api-http.mjs": "（待注释）",
+  "test/test-audit-api.mjs": "（待注释）",
+  "_meta": {
+    "worktree": {
+      "README.md": {
+        "status": "M",
+        "mtime": "2026-09-26T18:43:38.860Z",
+        "note": "注释可能需更新"
+      },
+      "lib/app/http-handlers.js": {
+        "status": "M",
+        "mtime": "2026-09-26T18:31:29.578Z",
+        "note": "注释可能需更新"
+      },
+      "lib/self/index.js": {
+        "status": "M",
+        "mtime": "2026-09-26T18:43:51.162Z",
+        "note": "注释可能需更新"
+      },
+      "package.json": {
+        "status": "M",
+        "mtime": "2026-09-26T18:43:51.174Z",
+        "note": "注释可能需更新"
+      },
+      "scripts/sync-plugin.mjs": {
+        "status": "M",
+        "mtime": "2026-09-26T18:24:05.686Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-self.mjs": {
+        "status": "M",
+        "mtime": "2026-09-26T18:24:31.318Z",
+        "note": "注释可能需更新"
+      },
+      "lib/app/audit-api.js": {
+        "status": "A",
+        "mtime": "2026-09-26T18:30:15.327Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-audit-api-http.mjs": {
+        "status": "A",
+        "mtime": "2026-09-26T18:38:31.111Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-audit-api.mjs": {
+        "status": "A",
+        "mtime": "2026-09-26T18:30:54.552Z",
+        "note": "注释可能需更新"
+      }
+    }
+  }
 }

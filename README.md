@@ -39,6 +39,7 @@ DSH（DeepSeek Harness）git 提交推送与代码审计插件——提交前自
 | **提交推送** | token / SSH 密钥管理、提交、推送、clone、建仓、可见性切换、force 强推、版本历史 | `git_commit_push` 工具 / CLI / 侧边栏 |
 | **代码审计** | 提交前自动审计门禁、14 个规则槽位 107 条规则、10 维度质量评分、豁免机制、链接检查、**三层审计管线（L1 正则初筛 / L2 AST 数据流 / L3 运行时检测）** | `code_audit` 工具 / CLI / 侧边栏 / 输入框 `/git-audit` |
 | **任务完成自动推送** | 监听 AI 回合结束→检测回复含「✅任务完成」→自动 commit+push（复用审计门禁，不裸提交） | 侧边栏开关 `autoPushEnabled`（默认关）+ 自定义触发文本 |
+| **审计结果 API** | `/api/git-push/audit`——请求时自定义聚合审计结果：按**规则类型 / 文件名 / 严重级 / 规则包**分组，`severity` 白名单过滤，`top` 截断，`withFindings` 附明细 | HTTP `GET/POST /api/git-push/audit` |
 
 ## 一、提交推送
 
@@ -153,6 +154,7 @@ dsh-git-push/
 │   ├── user-requirements.json — 开发者特殊要求清单（提交推送前逐条核对）
 │   ├── app/ — 插件入口层（apply/HTTP 处理/工具调用分发/注入文本/默认扫描根）
 │   │   ├── apply.js — 插件装载入口（注册 schema/工具/HTTP/注入钩子）
+│   │   ├── audit-api.js — 审计结果 API 聚合层（/api/git-push/audit：按规则/文件/严重级/规则包分组 + severity 过滤 + top 截断）
 │   │   ├── constants.js — 插件名与设置命名空间常量
 │   │   ├── http-handlers.js — HTTP 路由分发（全部 /api/git-push/* 端点）
 │   │   ├── index.js — 插件入口再导出（宿主 main 指向）
@@ -317,6 +319,8 @@ dsh-git-push/
 ├── test/ — node:test 全量单元测试（541+ 条，覆盖审计/推送/账号/HTTP/后台任务）
 │   ├── .test — 空文件豁免标记（目录级豁免 .test 目录）
 │   ├── test-account-ssh.mjs — 账号检查 + SSH 密钥测试
+│   ├── test-audit-api-http.mjs — 审计结果 API 端点测试（/api/git-push/audit：聚合/过滤/GET query/容错）
+│   ├── test-audit-api.mjs — 审计结果 API 聚合层测试（rule/file/severity/slot 四维度 + severity 过滤 + top）
 │   ├── test-audit-bad-file.mjs — 审计拦截门禁测试（硬编码密码/API key/.env 凭据文件）
 │   ├── test-audit-empty.mjs — （待注释）
 │   ├── test-audit-scope.mjs — 审计作用域/凭据占位符回归测试
@@ -932,7 +936,8 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
-| **1.9.5**（当前） | **全量审计低风险优化**：重复硬编码文本提取命名常量（git quotepath 前缀 / 纯文本 content-type / 路径不存在文案 / node:child_process 顶部导入）；短变量/通用词改名（chCfg/hit/match/date/result/content/resp 等局部变量，零行为变化）；魔数提取命名常量（预览截图参数 / 子进程超时 / 打印上限 / 探测深度等）；**真高风险 I/O 异步化**（云端仓库列表循环内 existsSync → Promise.all + fs.promises.access，start-preview 异步路径 existsSync → access）；审计评分 76.8 → 91+ A 级，高风险 I/O 清零 | 回归 814 全绿 |
+| **1.10.0**（当前） | **审计结果 API 化 + 自定义聚合**：新增 `GET/POST /api/git-push/audit`——请求时按**规则类型 / 文件名 / 严重级 / 规则包**分组（`groupBy`）、`severity` 白名单过滤、`top` 截断、`withFindings`/`withYaml` 附明细，响应含 summary/quality/groups；聚合纯函数独立模块（lib/app/audit-api.js，11 个聚合单测 + 7 个端点测试）。**另修复 sync-plugin 漏同步 `.auditignore`**（SYNC_ENTRIES/package.json files 白名单补点文件——此前安装副本缺审计豁免文件，宿主全量审计的 client.js 豁免失效致警告虚高） | 回归 833 全绿 |
+| **1.9.5** | **全量审计低风险优化**：重复硬编码文本提取命名常量（git quotepath 前缀 / 纯文本 content-type / 路径不存在文案 / node:child_process 顶部导入）；短变量/通用词改名（chCfg/hit/match/date/result/content/resp 等局部变量，零行为变化）；魔数提取命名常量（预览截图参数 / 子进程超时 / 打印上限 / 探测深度等）；**真高风险 I/O 异步化**（云端仓库列表循环内 existsSync → Promise.all + fs.promises.access，start-preview 异步路径 existsSync → access）；审计评分 76.8 → 91+ A 级，高风险 I/O 清零 | 回归 814 全绿 |
 | **1.9.4** | **自动推送范围下拉渲染修复**：设置页「自动推送范围」select 下拉无选项（jsx(type,props,key) 第三参数是 key 不是 children——options 数组误放第三参数导致 children 丢失、下拉渲染为空，与 2026-09-16 审计进阶下拉同坑）——children 移入 props，与 pushMethod/审计进阶 sel 写法对齐 |
 | **1.9.3** | **任务完成自动推送（内置自 dsh-task-completion）**：监听会话回合结束→检测 AI 回复「✅任务完成」（UI 门禁开关旁可自定义触发文本/正则）→ autoPushEnabled 开启自动 commit+push（默认关）——复用 commitWithAudit 完整门禁（L0 审计 blocker 拦截 / requirements / pushGate 放行），不裸提交绕过门禁；范围默认 session（仅会话仓库），可 all；开关/触发文本/范围经 config.json 持久化; | 合并删除独立仓库 dsh-task-completion |
 | **1.9.2** | **软链加载诊断结论**：node_modules/dsh-git-push 软链→工作区是 DSH 开发加载形态（theme 同款）；后端零依赖、前端/宿主包由 DSH 运行时条件提供（lib/plugin/index.js 对 dsh-tools try/catch 兜底）——「市场安装报缺依赖」= dshmarket 对宿主 peerDependencies（@deepseek-ai/dsh-tools/schemastery）的误报（插件正确形态 = 软链 + 保留 peer，勿移除） |
