@@ -368,6 +368,7 @@ dsh-git-push/
 │   ├── test-smart-hint.mjs — 扫描智能提示 + 评分对数衰减测试
 │   ├── test-status-secret.mjs — token 明文不下发安全回归
 │   ├── test-task-queue.mjs — 后台化回归测试（官方 job 注册 / 无 jobs 同步保底 / blocker 拦截）
+│   ├── test-tool-probes.mjs — 工具探测 API 测试（/api/git-push/tool-probes + node execPath 兜底）
 │   ├── test-tree-doc.mjs — README 目录树脚本测试（gen/check/apply 闭环）
 ├── docs/ — 开发文档
 │   ├── DETAILS-EXEMPT-AND-RULES.md — 细节补充：豁免注释与规则 yml 用法全录
@@ -936,7 +937,8 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
-| **1.10.3**（当前） | **魔数规则再修 3 类误报**：① 对象字面量常量定义豁免（`const X = { width: 1400 }`，isNamedConstantValue 补 `{ } :` 与属性名识别）；② rgba 色值豁免（`rgba(255,255,255,.08)` 的 255 是 RGB 通道上限，非魔数上下文即豁免）；③ CLI `console.log(JSON.stringify(大对象))` 一次性输出行豁免（memory-bomb 精筛并集，序列化一次即打印退出不常驻内存）；warning **244→237**（-7），4 个防回归测试锁死 | 回归 842 全绿 |
+| **1.10.4**（当前） | **工具探测补 node + 探测 API**：① 工具探测 `node` 不再依赖 PATH——PATH 无 node 时回退 `process.execPath`（DSH 宿主自带 node 可探出，实测 v22.23.2）；② 新增 **`GET /api/git-push/tool-probes`**——返回本机各工具的实测路径/版本（真实探测，非工具定义清单，复用 collectToolPaths）；③ 短变量改名提升可读性（history/context/button-bind 的 q/s/r/u/c/m/w 等，零行为变化） | 回归 846 全绿 |
+| **1.10.3** | **魔数规则再修 3 类误报**：① 对象字面量常量定义豁免（`const X = { width: 1400 }`，isNamedConstantValue 补 `{ } :` 与属性名识别）；② rgba 色值豁免（`rgba(255,255,255,.08)` 的 255 是 RGB 通道上限，非魔数上下文即豁免）；③ CLI `console.log(JSON.stringify(大对象))` 一次性输出行豁免（memory-bomb 精筛并集，序列化一次即打印退出不常驻内存）；warning **244→237**（-7），4 个防回归测试锁死 | 回归 842 全绿 |
 | **1.10.2** | **审计误报专项优化（不产生新误报）**：① repeated-string 与 min-occurrences 两 kind 合并去重（同文本双报 44→22）；② io-risk / memory-bomb 声明 `exts` 代码文件白名单（README/docs 代码块示例误报清零，真实代码 I/O 全保留）；③ vague-variable 词表剔除 `res`（HTTP Response 标准缩写，10→6）；④ 短变量加循环迭代豁免（21→18）；warning **281→245**（-13%），4 个防回归测试锁死修复点 | 回归 838 全绿 |
 | **1.10.1** | **审计结果 API 补清洁**：audit-api 变量命名（result→auditResult）+ sync-plugin fileContentEqual 异步化（async 函数内 existsSync→fs.promises.access） | 回归全绿 |
 | **1.10.0** | **审计结果 API 化 + 自定义聚合**：新增 `GET/POST /api/git-push/audit`——请求时按**规则类型 / 文件名 / 严重级 / 规则包**分组（`groupBy`）、`severity` 白名单过滤、`top` 截断、`withFindings`/`withYaml` 附明细，响应含 summary/quality/groups；聚合纯函数独立模块（lib/app/audit-api.js，11 个聚合单测 + 7 个端点测试）。**另修复 sync-plugin 漏同步 `.auditignore`**（SYNC_ENTRIES/package.json files 白名单补点文件——此前安装副本缺审计豁免文件，宿主全量审计的 client.js 豁免失效致警告虚高） | 回归 833 全绿 |
