@@ -273,14 +273,59 @@
   "docs/方案-文档维度加分制.md": "（待注释）",
   "_meta": {
     "worktree": {
-      "cli.mjs": {
+      "lib/app/apply.js": {
         "status": "M",
-        "mtime": "2026-09-23T11:23:05.290Z",
+        "mtime": "2026-09-26T16:49:13.424Z",
         "note": "注释可能需更新"
       },
-      "lib/git/wrapped-git.js": {
+      "lib/app/http-handlers.js": {
+        "status": "M",
+        "mtime": "2026-09-26T17:09:38.334Z",
+        "note": "注释可能需更新"
+      },
+      "lib/app/schema.js": {
+        "status": "M",
+        "mtime": "2026-09-26T16:49:57.928Z",
+        "note": "注释可能需更新"
+      },
+      "lib/app/settings-bridge.js": {
+        "status": "M",
+        "mtime": "2026-09-26T16:50:27.248Z",
+        "note": "注释可能需更新"
+      },
+      "lib/client.js": {
+        "status": "M",
+        "mtime": "2026-09-26T17:12:02.340Z",
+        "note": "注释可能需更新"
+      },
+      "lib/client/index.js": {
+        "status": "M",
+        "mtime": "2026-09-26T16:51:07.582Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-client.mjs": {
+        "status": "M",
+        "mtime": "2026-09-26T17:13:35.063Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-settings-persistence.mjs": {
+        "status": "M",
+        "mtime": "2026-09-26T17:12:20.422Z",
+        "note": "注释可能需更新"
+      },
+      "lib/plugin/auto-detect.js": {
         "status": "A",
-        "mtime": "2026-09-23T11:12:53.529Z",
+        "mtime": "2026-09-26T17:16:44.717Z",
+        "note": "注释可能需更新"
+      },
+      "lib/plugin/auto-push.js": {
+        "status": "A",
+        "mtime": "2026-09-26T17:16:15.252Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-auto-push.mjs": {
+        "status": "A",
+        "mtime": "2026-09-26T16:59:50.911Z",
         "note": "注释可能需更新"
       }
     }
@@ -293,5 +338,9 @@
   "lib/rule/scope.js": "审计作用域机制层（scope_rules 规范化 + resolveScopeAction）",
   "test/test-scope.mjs": "作用域最小实验测试（分类器/机制/magic 接入）",
   "lib/ast/callgraph.js": "调用链追踪（单文件调用图 + isInRequestPath，io-risk 请求路径判定升级）",
-  "lib/git/wrapped-git.js": "浅包装 git（自动凭据透传：SSH 私钥/HTTPS token，git-sluice git <args> 与未知命令透传）"
+  "lib/git/wrapped-git.js": "浅包装 git（自动凭据透传：SSH 私钥/HTTPS token，git-sluice git <args> 与未知命令透传）",
+  "lib/plugin/auto-detect.js": "任务完成自动推送·检测层（纯函数：✅任务完成 触发/❌⚠ 阻断/自定义正则/许可合成判断）",
+  "lib/plugin/auto-push.js": "任务完成自动推送·核心（turn/end 监听→检测→autoPushEnabled 开关→调 commitWithAudit 完整门禁，不裸提交）",
+  "test/test-auto-push.mjs": "任务完成自动推送测试（检测纯函数 + registerAutoPush 门控监听注册）",
+  "docs/audit-2026-09-26.md": "（待注释）"
 }

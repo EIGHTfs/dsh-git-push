@@ -38,6 +38,7 @@ DSH（DeepSeek Harness）git 提交推送与代码审计插件——提交前自
 |---|---|---|
 | **提交推送** | token / SSH 密钥管理、提交、推送、clone、建仓、可见性切换、force 强推、版本历史 | `git_commit_push` 工具 / CLI / 侧边栏 |
 | **代码审计** | 提交前自动审计门禁、14 个规则槽位 107 条规则、10 维度质量评分、豁免机制、链接检查、**三层审计管线（L1 正则初筛 / L2 AST 数据流 / L3 运行时检测）** | `code_audit` 工具 / CLI / 侧边栏 / 输入框 `/git-audit` |
+| **任务完成自动推送** | 监听 AI 回合结束→检测回复含「✅任务完成」→自动 commit+push（复用审计门禁，不裸提交） | 侧边栏开关 `autoPushEnabled`（默认关）+ 自定义触发文本 |
 
 ## 一、提交推送
 
@@ -63,6 +64,15 @@ Git 全链路自动化，token / SSH 凭据管理 + 提交推送，无需手动�
 ### 提交前自动门禁
 
 提交推送前自动跑代码审计（见下节）：**有 blocker 拦截提交**（退出码 2），warning 只提示不拦截。审计通过才执行 commit + push。
+
+### 任务完成自动推送
+
+监听 AI 会话回合结束（`turn/end`），提取最后一条回复，检测是否含完成标记——默认「**✅任务完成**」（侧边栏可自定义触发文本/正则，如 `✅(任务完成|已解答)`）——含则触发**自动 commit + push**交付物（`autoPushEnabled` 开关，**默认关**）。
+
+- **复用完整门禁**：自动推送走 `commitWithAudit`（L0 审计 blocker 拦截 / requirements 核对 / pushGate 放行），**不裸提交**绕过门禁；用户开启开关即一次性授权该自动化通道
+- **范围**：`session`（默认，仅会话 cwd 所在仓库）/ `all`（workspace 全部有变更仓库）；范围、开关、触发文本经 `config.json` 持久化
+- **并发与去重**：同时只跑一个推送 + 同回合只触发一次 + 防抖
+- 阻断标记（`❌` / `⚠️ 未完成`）不触发；无完成标记不触发
 
 ## 二、代码审计
 
@@ -257,6 +267,8 @@ dsh-git-push/
 │   ├── link-check/ — 链接判断（文档链接有效性，只 warning 永不 blocker）
 │   │   ├── index.js — 链接判断总入口（分级扣分，断网不拦）
 │   ├── plugin/ — Host 侧接线层（插件注册到 DSH：工具/HTTP/配置 schema）
+│   │   ├── auto-detect.js — 任务完成自动推送·检测层（纯函数：✅任务完成 触发/❌⚠ 阻断/自定义正则/许可合成判断）
+│   │   ├── auto-push.js — 任务完成自动推送·核心（turn/end 监听→检测→autoPushEnabled 开关→调 commitWithAudit 完整门禁，不裸提交）
 │   │   ├── index.js — Host 侧接线（插件注册：工具/HTTP/配置注入宿主）
 │   ├── readme-gen/ — README 生成（git_gen_readme 工具模板渲染）
 │   │   ├── index.js — README 生成总入口（git_gen_readme 模板渲染）
@@ -310,6 +322,7 @@ dsh-git-push/
 │   ├── test-audit-scope.mjs — 审计作用域/凭据占位符回归测试
 │   ├── test-audit.mjs — 审计总入口测试（auditFull/changed/豁免/gitignore）
 │   ├── test-auditignore.mjs — （待注释）
+│   ├── test-auto-push.mjs — 任务完成自动推送测试（检测纯函数 + registerAutoPush 门控监听注册）
 │   ├── test-button-bind.mjs — 按钮绑定交叉比对（jsx 工厂形态/注释过滤/行号归属）
 │   ├── test-cli-audit-parity.mjs — CLI 与源码全量审计一致性测试（audit --full --json vs 直接 auditFull，含忽略排除）
 │   ├── test-client.mjs — 侧边栏测试（手写 DOM/零外部资源/开关默认）
@@ -354,6 +367,7 @@ dsh-git-push/
 │   ├── test-tree-doc.mjs — README 目录树脚本测试（gen/check/apply 闭环）
 ├── docs/ — 开发文档
 │   ├── DETAILS-EXEMPT-AND-RULES.md — 细节补充：豁免注释与规则 yml 用法全录
+│   ├── audit-2026-09-26.md — （待注释）
 │   ├── 方案-audit-history-历史提交审计.md — （待注释）
 │   ├── 方案-io-risk-规则优化.md — 方案：io-risk 规则优化（对照诊断的差距分析：元数据操作分档 + rename 降档）
 │   ├── 方案-io-risk规则推断与准确率评估.md — 方案：io-risk 规则推断与准确率评估
@@ -918,7 +932,8 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
-| **1.9.2**（当前） | **软链加载诊断结论**：node_modules/dsh-git-push 软链→工作区是 DSH 开发加载形态（theme 同款）；后端零依赖、前端/宿主包由 DSH 运行时条件提供（lib/plugin/index.js 对 dsh-tools try/catch 兜底）——「市场安装报缺依赖」= dshmarket 对宿主 peerDependencies（@deepseek-ai/dsh-tools/schemastery）的误报（插件正确形态 = 软链 + 保留 peer，勿移除） |
+| **1.9.3**（当前） | **任务完成自动推送（内置自 dsh-task-completion）**：监听会话回合结束→检测 AI 回复「✅任务完成」（UI 门禁开关旁可自定义触发文本/正则）→ autoPushEnabled 开启自动 commit+push（默认关）——复用 commitWithAudit 完整门禁（L0 审计 blocker 拦截 / requirements / pushGate 放行），不裸提交绕过门禁；范围默认 session（仅会话仓库），可 all；开关/触发文本/范围经 config.json 持久化; | 合并删除独立仓库 dsh-task-completion |
+| **1.9.2** | **软链加载诊断结论**：node_modules/dsh-git-push 软链→工作区是 DSH 开发加载形态（theme 同款）；后端零依赖、前端/宿主包由 DSH 运行时条件提供（lib/plugin/index.js 对 dsh-tools try/catch 兜底）——「市场安装报缺依赖」= dshmarket 对宿主 peerDependencies（@deepseek-ai/dsh-tools/schemastery）的误报（插件正确形态 = 软链 + 保留 peer，勿移除） |
 | **1.9.1**（当前） | **系统提示词注入配置化 + 新功能用法**：注入文本可配（config.json `injectUsageText` 数组/字符串覆盖默认功能用法注入段）；系统提示词功能用法加浅包装 git（`git-sluice <任意 git 参数>` 未知命令透传 + 自动凭据）| 说明：1.9.0 后每次提交默认升第三位（版本纪律） |
 | **1.9.0**（当前） | **浅包装 git**：`git-sluice <任意 git 参数>`（未知命令透传为 git，自动注入凭据：SSH 私钥/HTTPS token，无需传 token 参数）+ 显式 `git-sluice git <args>` 子命令——git-sluice 成为 git 超集（已知子命令走插件，其余全交 git + 插件凭据）；退出码透传 |
 | **1.8.16**（当前） | **作用域 P4 闭包双重作用域**：analyzeFunctionalScope（词法 vs 功能）——被 return/挂 this/exports 暴露的函数标 public，**不享受 startup 豁免**（按模块级严格）；纯内部未标；作为参数传递标 callback（unknown）——修「闭包内 return 的公共 API 被误豁免」 |

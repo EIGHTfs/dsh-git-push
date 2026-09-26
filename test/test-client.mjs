@@ -200,7 +200,8 @@ test('组件：enum 渲染选项齐全', () => {
   // 2026-09-13：新增「推送通道」enum（ssh/api/auto）。
   // 2026-09-17：审计强度 enum 已删除（quick/standard/deep 不再出现在界面），
   //   审计范围 enum（diff/full）与推送通道 enum（ssh/api/auto）保留。
-  assert.deepEqual(opts.sort(), ['api', 'auto', 'diff', 'full', 'ssh']);
+  // 2026-09-26：任务完成自动推送范围 enum（session/all）新增。
+  assert.deepEqual(opts.sort(), ['all', 'api', 'auto', 'diff', 'full', 'session', 'ssh']);
 });
 
 test('源码：不含 JSX 语法（无 <Tag> 形式）', () => {
