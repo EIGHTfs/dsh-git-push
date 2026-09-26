@@ -120,7 +120,8 @@ export function detectTargets(home = process.env.DSH_HOME || '', pluginName = 'd
  */
 async function fileContentEqual(from, to) {
   try {
-    if (!existsSync(to)) return false;
+    // 2026-09-27：异步函数内同步 existsSync 改 fs.promises.access（消除阻塞事件循环）
+    try { await access(to); } catch { return false; }
     const [a, b] = await Promise.all([readFile(from, 'utf8'), readFile(to, 'utf8')]);
     return a === b;
   } catch {
