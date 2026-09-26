@@ -177,8 +177,8 @@ dsh plugin --profile web add /tmp/dsh-git-push-<版本>.tgz
 
 | 文档 | 位置 | 维护脚本 | 标记块 |
 |---|---|---|---|
-| 版本记录（changelog） | `docs/版本表.md` | `scripts/doc-version.mjs`（gen/apply/check） | `dshgp-version` |
-| 函数列表 | `docs/函数列表.md` | `scripts/doc-func.mjs`（gen/apply/check） | `dshgp-functions` |
+| 版本记录（changelog） | `docs/CHANGELOG.md` | `scripts/doc-version.mjs`（gen/apply/check） | `dshgp-version` |
+| 函数列表 | `docs/FUNCTIONS.md` | `scripts/doc-func.mjs`（gen/apply/check） | `dshgp-functions` |
 | 文件目录树 | README「目录结构」节 或 docs/ 带块 md | `scripts/doc-tree.mjs`（gen/apply/check/sync，原 tree-doc） | `dshgp-tree` |
 | README.md | 只放「功能总览 + 用法 + 上述文档的链接引用」 | AI/human | — |
 
@@ -208,8 +208,8 @@ node scripts/readme-gen.mjs <repoPath> [--write <path>] [--template <path>]
 
 ### 9.4 版本检查适配
 
-`scripts/scan-version` 已适配多 md——版本记录在 `docs/版本表.md` 而非 README 也能探测，三处一致校验不再死绑 README.md。
+`scripts/scan-version` 已适配多 md——版本记录在 `docs/CHANGELOG.md` 等带块 md 而非 README 也能探测，三处一致校验不再死绑 README.md。
 
 ### 9.5 旧体系废弃（2026-09-29）
 
-旧函数文档体系（`functions_index` 插件工具 + `scripts/func-index.js` + `scripts/functions-doc.mjs` + `docs/函数/*.md` + `functions-index.json`）已**整体废弃删除**，由 `doc-func.mjs` 取代（单文件 `docs/函数列表.md` 带标记块，不再每文件一个 md）。审计分体检查（appendSplitDocsCheck）对 `dshgp-version` / `dshgp-functions` 宿主 md 做存在性校验。
+旧函数文档体系（`functions_index` 插件工具 + `scripts/func-index.js` + `scripts/functions-doc.mjs` + `docs/函数/*.md` + `functions-index.json`）已**整体废弃删除**，由 `doc-func.mjs` 取代（单文件 `docs/FUNCTIONS.md` 带标记块，不再每文件一个 md）。审计分体检查（appendSplitDocsCheck）对 `dshgp-version` / `dshgp-functions` 宿主 md 做存在性校验。

@@ -36,8 +36,8 @@ DSH（DeepSeek Harness）git 提交推送与代码审计插件——提交前自
 
 | 文档 | 位置 | 维护脚本 | 说明 |
 |---|---|---|---|
-| 版本列表 | [docs/版本表.md](docs/版本表.md) | `scripts/doc-version.mjs` | git log 聚合版本表（gen/apply/check） |
-| 函数列表 | [docs/函数列表.md](docs/函数列表.md) | `scripts/doc-func.mjs` | 扫描 lib/scripts/test 函数表（gen/apply/check） |
+| 版本列表 | [docs/CHANGELOG.md](docs/CHANGELOG.md) | `scripts/doc-version.mjs` | git log 聚合版本表（gen/apply/check） |
+| 函数列表 | [docs/FUNCTIONS.md](docs/FUNCTIONS.md) | `scripts/doc-func.mjs` | 扫描 lib/scripts/test 函数表（gen/apply/check） |
 | 文件目录树 | README「目录结构」节 | `scripts/doc-tree.mjs` | 目录树（原 tree-doc，2026-09-29 改名统一 doc- 前缀） |
 
 每个脚本命令统一：`gen`（打印）/ `apply`（写宿主 md，自动探测带标记块的 md）/ `check`（查漂移）。宿主 md 带标记块（`dshgp-version` / `dshgp-functions` / `dshgp-tree`），审计按标记块探测并纳入检查。
@@ -384,16 +384,16 @@ dsh-git-push/
 │   ├── test-tool-probes.mjs — （待注释）
 │   ├── test-tree-doc.mjs — README 目录树脚本测试（gen/check/apply 闭环）
 ├── docs/ — 开发文档
+│   ├── CHANGELOG.md — 版本列表宿主（doc-version apply 写 dshgp-version 标记块）
 │   ├── DETAILS-EXEMPT-AND-RULES.md — 细节补充：豁免注释与规则 yml 用法全录
+│   ├── FUNCTIONS.md — 函数列表宿主（doc-func apply 写 dshgp-functions 标记块）
 │   ├── audit-2026-09-26.md — （待注释）
-│   ├── 函数列表.md — （待注释）
 │   ├── 方案-audit-history-历史提交审计.md — （待注释）
 │   ├── 方案-io-risk-规则优化.md — 方案：io-risk 规则优化（对照诊断的差距分析：元数据操作分档 + rename 降档）
 │   ├── 方案-io-risk规则推断与准确率评估.md — 方案：io-risk 规则推断与准确率评估
 │   ├── 方案-repo-index-account-status-更新收口.md — （待注释）
 │   ├── 方案-tree-doc变动追踪与函数文档.md — （待注释）
 │   ├── 方案-文档维度加分制.md — （待注释）
-│   ├── 版本表.md — （待注释）
 ├── skills/ — 插件权威 skill（功能手册/规则/使用说明，安装副本的 skills/ 同步）
 │   ├── dsh-git-push-functions.md — 插件功能说明书（工具参数/HTTP API/源码定位）
 │   ├── dsh-git-push.md — 插件手册（工具/规则包/设置 UI/安装实录）

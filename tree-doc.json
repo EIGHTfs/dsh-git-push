@@ -280,67 +280,22 @@
     "worktree": {
       "README.md": {
         "status": "M",
-        "mtime": "2026-09-26T21:21:46.745Z",
+        "mtime": "2026-09-26T21:38:37.733Z",
         "note": "注释可能需更新"
       },
-      "docs/函数/lib/score/index.js.md": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "lib/app/tool-call.js": {
+      "lib/app/slash-commands.js": {
         "status": "M",
-        "mtime": "2026-09-26T21:12:49.655Z",
-        "note": "注释可能需更新"
-      },
-      "lib/app/tools.js": {
-        "status": "M",
-        "mtime": "2026-09-26T21:13:06.304Z",
+        "mtime": "2026-09-26T21:37:14.955Z",
         "note": "注释可能需更新"
       },
       "lib/audit/orchestrate.js": {
         "status": "M",
-        "mtime": "2026-09-26T21:09:09.209Z",
+        "mtime": "2026-09-26T21:38:37.736Z",
         "note": "注释可能需更新"
       },
       "skills/dsh-git-push.md": {
         "status": "M",
-        "mtime": "2026-09-26T21:22:24.069Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-tree-doc.mjs": {
-        "status": "M",
-        "mtime": "2026-09-26T21:09:19.419Z",
-        "note": "注释可能需更新"
-      },
-      "docs/函数列表.md": {
-        "status": "A",
-        "mtime": "2026-09-26T21:21:11.366Z",
-        "note": "注释可能需更新"
-      },
-      "docs/版本表.md": {
-        "status": "A",
-        "mtime": "2026-09-26T21:21:11.210Z",
-        "note": "注释可能需更新"
-      },
-      "scripts/doc-func.mjs": {
-        "status": "A",
-        "mtime": "2026-09-26T21:19:25.905Z",
-        "note": "注释可能需更新"
-      },
-      "scripts/doc-version.mjs": {
-        "status": "A",
-        "mtime": "2026-09-26T21:11:58.375Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-doc-func.mjs": {
-        "status": "A",
-        "mtime": "2026-09-26T21:15:33.735Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-doc-version.mjs": {
-        "status": "A",
-        "mtime": "2026-09-26T21:16:39.377Z",
+        "mtime": "2026-09-26T21:38:37.735Z",
         "note": "注释可能需更新"
       }
     }
@@ -360,6 +315,6 @@
   "scripts/doc-version.mjs": "（待注释）",
   "test/test-doc-func.mjs": "（待注释）",
   "test/test-doc-version.mjs": "（待注释）",
-  "docs/函数列表.md": "（待注释）",
-  "docs/版本表.md": "（待注释）"
+  "docs/CHANGELOG.md": "版本列表宿主（doc-version apply 写 dshgp-version 标记块）",
+  "docs/FUNCTIONS.md": "函数列表宿主（doc-func apply 写 dshgp-functions 标记块）"
 }
