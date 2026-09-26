@@ -74,3 +74,20 @@ test('magic-number-smart：yml 规则可编译且走 groupByKind 分组', () => 
   const grouped = groupByKind(compiled);
   assert.ok(Array.isArray(grouped['magic-number-smart']), 'grouped[magic-number-smart] 应存在');
 });
+
+// ---------- 2026-09-27 误报修复防回归 ----------
+test('magic-number-smart：对象字面量常量定义豁免（const X = { width: 1400 }）', () => {
+  const text = 'const SHOT_VIEWPORT = { width: 1400, height: 900 };\n';
+  assert.equal(hits(text).length, 0, '对象字面量常量定义值不报（建议提取常量自相矛盾）');
+});
+
+test('magic-number-smart：非常量声明的对象数字仍报', () => {
+  const text = 'function f() { return { width: 1400 }; }\n';
+  assert.ok(hits(text).length >= 1, '非命名常量的对象数字照报');
+});
+
+test('magic-number-smart：rgba 色值豁免（255 是 RGB 通道上限）', () => {
+  const text = '  --x: rgba(255,255,255,.08);\n';
+  assert.equal(hits(text).length, 0, 'rgba 色值 255 不报');
+  assert.ok(hits('setValue(255);\n').length >= 1, '非色值上下文的裸 255 照报');
+});

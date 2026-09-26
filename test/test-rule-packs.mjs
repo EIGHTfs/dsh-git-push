@@ -13,6 +13,7 @@ import { loadWordingRewrites } from '../scripts/scrub-user-wording.mjs';
 import { safeRe } from '../lib/rule/compilers.js';
 import { checkBlacklist } from '../lib/audit/checks.js';
 import { checkRegexRules } from '../lib/checks/regex.js';
+import { smallFileReadLines } from '../lib/checks/common.js';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -520,6 +521,16 @@ test('1.0.4：performance 槽位编译（memory-bomb 6 子模式 + busy-wait）'
   assert.ok(bomb, 'memory-bomb 应编译');
   assert.equal(bomb.kind, 'regex');
   assert.ok(Array.isArray(bomb.subPatterns) && bomb.subPatterns.length >= 6, `memory-bomb 应含 ≥6 个子模式（得 ${bomb.subPatterns?.length}）`);
+});
+
+// 2026-09-27 防回归：memory-bomb 精筛并集——console.log(JSON.stringify(大对象)) 一次性输出行豁免
+test('1.0.4：small-file-read 精筛并集 console.log(JSON.stringify) 输出行', () => {
+  // console.log 输出（CLI --json 出口，序列化一次即打印退出）→ 豁免
+  const out = 'console.log(JSON.stringify({ a: 1, b: 2 }, null, 2));\n';
+  assert.equal(smallFileReadLines(out).size, 1, 'console.log(JSON.stringify) 输出行应豁免');
+  // 变量赋值常驻（真实风险）→ 不豁免
+  const varCase = 'const s = JSON.stringify(big);\nreturn s;\n';
+  assert.equal(smallFileReadLines(varCase).size, 0, '赋值常驻不豁免');
 });
 
 // ---------- 2026-09-14：folder 槽位两条新规则（cd 动态路径 + 写 gitignored 目录） ----------
