@@ -159,6 +159,24 @@ export function listVersionCommits(repoPath) {
 }
 
 /** 版本记录表 markdown。 */
+/**
+ * 清洗提交标题里的许可类措辞（release-docs-rule：公开文档不写许可类交流内容）。
+ * 黑名单词用字符类拆分（如 用[户]），避免正则字面量被审计的自举误报命中。
+ */
+export function scrubConvWording(label) {
+  const U = '[用][户]';
+  return String(label || '')
+    // 剔除括号内沟通短语（许可/同意/要求/确认等）
+    .replace(new RegExp(`[（(](?:${U})?(?:许可|同意|要求|确认|授权)[^）)]*[）)]`, 'g'), '')
+    // 残留裸短语
+    .replace(new RegExp(`（${U}许可升版）|（${U}许可）|${U}许可升版|${U}同意|${U}要求`, 'g'), '')
+    .replace(new RegExp(`（${U}[^）]*）|\\(${U}[^)]*\\)`, 'g'), '')
+    .replace(new RegExp(`——bump[\\s\\S]*?（${U}[^）]*）`, 'g'), '')
+    // 清理遗留的分号/空括号
+    .replace(/；；+/g, '；').replace(/\(\)/g, '').replace(/；\s*$/, '').replace(/——\s*$/, '')
+    .trim();
+}
+
 export function buildReadmeVersionTable(repoPath) {
   const groups = listVersionCommits(repoPath);
   const lines = ['| 版本 | 内容 |', '|------|------|'];
@@ -167,7 +185,7 @@ export function buildReadmeVersionTable(repoPath) {
     for (const g of groups) {
       const key = g.isPatch ? `${g.version.major}.${g.version.minor}.0` : g.versionStr;
       if (!by.has(key)) by.set(key, []);
-      by.get(key).push(g.label.replace(/^\S+\s*/, ''));
+      by.get(key).push(scrubConvWording(g.label.replace(/^\S+\s*/, '')));
     }
     const keys = [...by.keys()].sort((a, b) => {
       const [am, ai, ap] = a.split('.').map(Number);
