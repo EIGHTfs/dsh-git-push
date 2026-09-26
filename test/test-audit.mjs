@@ -359,6 +359,28 @@ test('checkRepeated：ignoreValues 生效（忽略清单内的串不报）', () 
   assert.equal(checkRepeated({ file: 'a.js', text, rules }).length, 0);
 });
 
+// 2026-09-27 防回归：repeated-string 与 min-occurrences 合并去重（同一文本只报一条）
+test('checkRepeated：repeated-string + min-occurrences 合并传同一文本只报一条', () => {
+  const rules = [
+    { id: 'a/no-duplicate-code', kind: 'min-occurrences', severity: 'warning', threshold: 3, dimensions: ['可维护性'] },
+    { id: 'b/no-repeated', kind: 'repeated-string', severity: 'warning', threshold: 3, dimensions: ['可维护性'] },
+  ];
+  const text = 'const x = "api.example.com";\nconst y = "api.example.com";\nconst z = "api.example.com";\n';
+  const findings = checkRepeated({ file: 'a.js', text, rules });
+  assert.equal(findings.length, 1, '同一文本合并后只报一条（不再双报）');
+  assert.ok(['a/no-duplicate-code', 'b/no-repeated'].includes(findings[0].rule), '取第一条命中规则的 id');
+});
+
+test('checkRepeated：合并后阈值取最小（任一规则达到即报）', () => {
+  // min-occurrences 阈值 5（不达），repeated-string 阈值 3（达到）→ 报
+  const rules = [
+    { id: 'a/high-thresh', kind: 'min-occurrences', severity: 'warning', threshold: 5, dimensions: ['可维护性'] },
+    { id: 'b/low-thresh', kind: 'repeated-string', severity: 'warning', threshold: 3, dimensions: ['可维护性'] },
+  ];
+  const text = 'const x = "api.example.com";\nconst y = "api.example.com";\nconst z = "api.example.com";\n';
+  assert.equal(checkRepeated({ file: 'a.js', text, rules }).length, 1, '阈值取最小，3 次即报');
+});
+
 test('checkSemantic：产出 notice 级提示（不升为拦截）', () => {
   const rules = [{ id: 'sem-1', kind: 'semantic', message: '需人工确认的语义规则', dimensions: ['健壮性'] }];
   const out = checkSemantic({ file: 'a.js', relPath: 'a.js', rules });

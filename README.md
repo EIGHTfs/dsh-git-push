@@ -936,7 +936,8 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
-| **1.10.1**（当前） | **审计结果 API 补清洁**：audit-api 变量命名（result→auditResult）+ sync-plugin fileContentEqual 异步化（async 函数内 existsSync→fs.promises.access） | 回归全绿 |
+| **1.10.2**（当前） | **审计误报专项优化（不产生新误报）**：① repeated-string 与 min-occurrences 两 kind 合并去重（同文本双报 44→22）；② io-risk / memory-bomb 声明 `exts` 代码文件白名单（README/docs 代码块示例误报清零，真实代码 I/O 全保留）；③ vague-variable 词表剔除 `res`（HTTP Response 标准缩写，10→6）；④ 短变量加循环迭代豁免（21→18）；warning **281→245**（-13%），4 个防回归测试锁死修复点 | 回归 838 全绿 |
+| **1.10.1** | **审计结果 API 补清洁**：audit-api 变量命名（result→auditResult）+ sync-plugin fileContentEqual 异步化（async 函数内 existsSync→fs.promises.access） | 回归全绿 |
 | **1.10.0** | **审计结果 API 化 + 自定义聚合**：新增 `GET/POST /api/git-push/audit`——请求时按**规则类型 / 文件名 / 严重级 / 规则包**分组（`groupBy`）、`severity` 白名单过滤、`top` 截断、`withFindings`/`withYaml` 附明细，响应含 summary/quality/groups；聚合纯函数独立模块（lib/app/audit-api.js，11 个聚合单测 + 7 个端点测试）。**另修复 sync-plugin 漏同步 `.auditignore`**（SYNC_ENTRIES/package.json files 白名单补点文件——此前安装副本缺审计豁免文件，宿主全量审计的 client.js 豁免失效致警告虚高） | 回归 833 全绿 |
 | **1.9.5** | **全量审计低风险优化**：重复硬编码文本提取命名常量（git quotepath 前缀 / 纯文本 content-type / 路径不存在文案 / node:child_process 顶部导入）；短变量/通用词改名（chCfg/hit/match/date/result/content/resp 等局部变量，零行为变化）；魔数提取命名常量（预览截图参数 / 子进程超时 / 打印上限 / 探测深度等）；**真高风险 I/O 异步化**（云端仓库列表循环内 existsSync → Promise.all + fs.promises.access，start-preview 异步路径 existsSync → access）；审计评分 76.8 → 91+ A 级，高风险 I/O 清零 | 回归 814 全绿 |
 | **1.9.4** | **自动推送范围下拉渲染修复**：设置页「自动推送范围」select 下拉无选项（jsx(type,props,key) 第三参数是 key 不是 children——options 数组误放第三参数导致 children 丢失、下拉渲染为空，与 2026-09-16 审计进阶下拉同坑）——children 移入 props，与 pushMethod/审计进阶 sel 写法对齐 |

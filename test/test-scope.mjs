@@ -115,6 +115,15 @@ test('P2：参数列表内短名（function f(c, d)）豁免，声明位置短�
   assert.equal(decl.length, 1, '声明 c 照报');
 });
 
+// 2026-09-27 防回归：循环迭代变量豁免（for (const d of ...) 的单字母是强语义局部变量）
+test('P2：循环迭代变量（for (const d of list)）豁免，非循环短声明仍报', () => {
+  const { checkNameLengthAst } = loadNaming();
+  const loop = checkNameLengthAst('for (const d of densityHits) { sum(d); }\n');
+  assert.equal(loop.length, 0, '循环迭代变量 d 豁免');
+  const plain = checkNameLengthAst('const d = compute();\n');
+  assert.equal(plain.length, 1, '非循环短声明 d 照报');
+});
+
 // ---------- 辅助 ----------
 import { createRequire } from 'node:module';
 const require2 = createRequire(import.meta.url);

@@ -15,6 +15,8 @@ rules:
     category: "performance"
     severity: "warning"
     description: "短时间内占用大量内存的代码模式（受控的本地小 JSON/配置文件读取不算）"
+    # 2026-09-27：仅代码文件——docs 方案文的「全量读入文件」示例是讲解文本，不是运行代码
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx", "py"]
     # 2026-09-13：子模式精筛——full-file-read 命中后由引擎确认「读的是否受控小文件」
     astConfirmKind: "small-file-read"
     patterns:

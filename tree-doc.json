@@ -291,47 +291,57 @@
     "worktree": {
       "README.md": {
         "status": "M",
-        "mtime": "2026-09-26T18:43:38.860Z",
+        "mtime": "2026-09-26T19:11:03.296Z",
         "note": "注释可能需更新"
       },
-      "lib/app/http-handlers.js": {
+      "lib/ast/naming.js": {
         "status": "M",
-        "mtime": "2026-09-26T18:31:29.578Z",
+        "mtime": "2026-09-26T19:06:48.912Z",
+        "note": "注释可能需更新"
+      },
+      "lib/audit-rules/audit-rules-nodejs.yml": {
+        "status": "M",
+        "mtime": "2026-09-26T19:05:38.568Z",
+        "note": "注释可能需更新"
+      },
+      "lib/audit-rules/audit-rules-performance.yml": {
+        "status": "M",
+        "mtime": "2026-09-26T19:03:58.672Z",
+        "note": "注释可能需更新"
+      },
+      "lib/checks/dispatch.js": {
+        "status": "M",
+        "mtime": "2026-09-26T19:01:03.742Z",
+        "note": "注释可能需更新"
+      },
+      "lib/checks/structural.js": {
+        "status": "M",
+        "mtime": "2026-09-26T19:01:34.409Z",
         "note": "注释可能需更新"
       },
       "lib/self/index.js": {
         "status": "M",
-        "mtime": "2026-09-26T18:43:51.162Z",
+        "mtime": "2026-09-26T19:11:19.471Z",
         "note": "注释可能需更新"
       },
       "package.json": {
         "status": "M",
-        "mtime": "2026-09-26T18:43:51.174Z",
+        "mtime": "2026-09-26T19:11:31.276Z",
         "note": "注释可能需更新"
       },
-      "scripts/sync-plugin.mjs": {
+      "test/test-audit.mjs": {
         "status": "M",
-        "mtime": "2026-09-26T18:24:05.686Z",
+        "mtime": "2026-09-26T19:08:32.351Z",
         "note": "注释可能需更新"
       },
-      "test/test-self.mjs": {
+      "test/test-rule-packs.mjs": {
         "status": "M",
-        "mtime": "2026-09-26T18:24:31.318Z",
+        "mtime": "2026-09-26T19:09:34.930Z",
         "note": "注释可能需更新"
       },
-      "lib/app/audit-api.js": {
-        "status": "A",
-        "mtime": "2026-09-26T18:30:15.327Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-audit-api-http.mjs": {
-        "status": "A",
-        "mtime": "2026-09-26T18:38:31.111Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-audit-api.mjs": {
-        "status": "A",
-        "mtime": "2026-09-26T18:30:54.552Z",
+      "test/test-scope.mjs": {
+        "status": "M",
+        "mtime": "2026-09-26T19:09:01.786Z",
         "note": "注释可能需更新"
       }
     }

@@ -572,3 +572,26 @@ test('2026-09-14：folder/write-into-gitignored-dir——写目标命中仓库 .
     rmSync(repo, { recursive: true, force: true });
   }
 });
+
+// ---------- 2026-09-27 误报修复规则定义锁 ----------
+test('规则定义锁：io-risk / memory-bomb 声明 exts（md 文档代码块示例不扫）', () => {
+  const nodejs = loadRuleFiles(['nodejs'], {});
+  const ir = (nodejs.merged?.rules || []).find((r) => r.id === 'robustness/io-risk');
+  assert.ok(ir, 'io-risk 规则存在');
+  assert.ok(Array.isArray(ir.exts) && ir.exts.length > 0 && !ir.exts.includes('md'),
+    'io-risk 必须声明 exts 且不含 md（文档示例不扫）');
+  const perf = loadRuleFiles(['performance'], {});
+  const mb = (perf.merged?.rules || []).find((r) => r.id === 'performance/memory-bomb');
+  assert.ok(mb, 'memory-bomb 规则存在');
+  assert.ok(Array.isArray(mb.exts) && mb.exts.length > 0 && !mb.exts.includes('md'),
+    'memory-bomb 必须声明 exts 且不含 md');
+});
+
+test('规则定义锁：vague-variable 词表不含 res（HTTP Response 标准缩写不误报）', () => {
+  const nodejs = loadRuleFiles(['nodejs'], {});
+  const vague = (nodejs.merged?.rules || []).find((r) => r.id === 'readability/vague-variable-name');
+  assert.ok(vague, 'vague-variable-name 规则存在');
+  const p = String(vague.pattern || '');
+  assert.ok(!/\bres\b/.test(p), '词表不得含 res（HTTP 响应标准缩写）');
+  assert.ok(/\bresult\b/.test(p), 'result 保留（信息量确实低）');
+});

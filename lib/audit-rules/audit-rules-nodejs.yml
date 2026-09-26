@@ -82,7 +82,9 @@ rules:
     category: "readability"
     severity: "warning"
     description: "data/obj/flag/tmp/temp/val/value/item/thing 等通用词变量名信息量低，看不出具体内容"
-    pattern: "\\b(?:const|let|var)\\s+(data|obj|object|flag|tmp|temp|val|value|item|thing|stuff|res|result)\\b"
+    # 2026-09-27：词表剔除 res——HTTP/git 操作的「Response」标准缩写（res.json / await fetch 的
+    #   const res = await ...），语义从上下文清晰，不属 vague。保留 result（信息量确实低）。
+    pattern: "\\b(?:const|let|var)\\s+(data|obj|object|flag|tmp|temp|val|value|item|thing|stuff|result)\\b"
     fixable: false
     mitigation: "用内容命名：data→userList、flag→isAdmin、tmp→tempFile"
 
@@ -182,6 +184,9 @@ rules:
     #   不声明会落到 regex 编译器的默认 [可读性]（实测 190 条全记在可读性上，
     #   把可读性维度从 10 拖到 2.7——而真正的性能/健壮性维度却显示满分，评分失真）。
     dimensions: ["性能", "健壮性"]
+    # 2026-09-27：仅代码文件（md 文档的代码块示例是讲解文本，不是运行代码——
+    #   README 版本表 / docs 方案文的 fs.readFileSync 示例曾被当真实代码报 io-risk 误报）
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx", "py"]
     # 三段式：正则初筛（哪些文件可能含 fs 调用）→ AST 精筛（注释/字符串里的示例剔除）
     #   → 分级由 lib/ast/io-risk.js 完成，finding 由 lib/checks/io.js 产出
     astConfirm: true
