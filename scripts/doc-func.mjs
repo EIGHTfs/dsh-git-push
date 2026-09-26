@@ -50,12 +50,12 @@ function findBlockEnd(lines, startIdx) {
 
 function detectFunction(lines, i) {
   const t = stripComment(lines[i]).trim();
-  let m = t.match(/^(?:export\s+)?(?:default\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\(/);
-  if (m) return { name: m[1], kind: 'function', defLine: i };
-  m = t.match(/^(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s+)?function\s*\(/);
-  if (m) return { name: m[1], kind: 'var-function', defLine: i };
-  m = t.match(/^(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s*)?\([^=)]*?\)\s*=>\s*\{?[^;{}]*\}?;?\s*$/);
-  if (m) return { name: m[1], kind: 'arrow', defLine: i };
+  let match = t.match(/^(?:export\s+)?(?:default\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\(/);
+  if (match) return { name: match[1], kind: 'function', defLine: i };
+  match = t.match(/^(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s+)?function\s*\(/);
+  if (match) return { name: match[1], kind: 'var-function', defLine: i };
+  match = t.match(/^(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s*)?\([^=)]*?\)\s*=>\s*\{?[^;{}]*\}?;?\s*$/);
+  if (match) return { name: match[1], kind: 'arrow', defLine: i };
   return null;
 }
 

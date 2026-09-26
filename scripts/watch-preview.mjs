@@ -26,6 +26,8 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const GEN = resolve(ROOT, 'assets/preview-gen.mjs');
 const OUT = resolve(ROOT, 'assets/preview.html');
 
+const GEN_TIMEOUT_MS = 120_000; // 生成器子进程超时
+
 // 变更即重生成的源码（相对项目根）
 const TARGETS = [
   resolve(ROOT, 'lib', 'client.js'),
@@ -37,7 +39,7 @@ function regen() {
   try {
     const t0 = Date.now();
     // spawnSync + stdio inherit：生成器输出直接透传终端，不收集进内存（preview.html 可能几十 KB）
-    const r = spawnSync('node', [GEN], { cwd: ROOT, stdio: 'inherit', timeout: 120_000 });
+    const r = spawnSync('node', [GEN], { cwd: ROOT, stdio: 'inherit', timeout: GEN_TIMEOUT_MS });
     if (r.status !== 0) throw new Error(`exit ${r.status}`);
     console.log(`[watch] ${new Date().toTimeString().slice(0, 8)} 已重新生成 preview.html (${Date.now() - t0}ms) → 浏览器 Ctrl+R 刷新`);
   } catch (e) {

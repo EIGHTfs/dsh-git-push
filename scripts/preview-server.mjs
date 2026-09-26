@@ -42,7 +42,8 @@ function detectLanIp() {
 
 const __root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const argv = process.argv.slice(2);
-const port = Number((argv.find((a) => a.startsWith('--port')) || '').split('=')[1] || argv[argv.indexOf('--port') + 1] || 8090);
+const DEFAULT_PORT = 8090; // --port 默认监听端口
+const port = Number((argv.find((a) => a.startsWith('--port')) || '').split('=')[1] || argv[argv.indexOf('--port') + 1] || DEFAULT_PORT);
 const rootArgIdx = argv.indexOf('--root');
 const root = rootArgIdx !== -1 ? argv[rootArgIdx + 1]
   : (process.env.DSH_HOME ? dirname(process.env.DSH_HOME) : __root);

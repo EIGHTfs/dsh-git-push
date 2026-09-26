@@ -44,6 +44,10 @@ import { scanIoRiskAst, RISK_BADGE, RISK_LABEL, summarizeIoRisk, rankIoFixList }
 import { join, extname, resolve, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+/* ───────── 扫描脚本常量 ───────── */
+const REPORT_LIMIT_DEFAULT = 20; // --report-limit 默认条数
+const REPORT_BAR_WIDTH = 72;     // 报告分隔线宽度
+
 /* ───────────────────────── 配置 ───────────────────────── */
 
 /**
@@ -384,9 +388,9 @@ function collectVarAssignments(lines) {
     const declMatch = line.match(/^\s*(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(.+?)\s*;?\s*$/);
     if (!declMatch) continue;
     const name = declMatch[1];
-    const val = declMatch[2].trim();
-    if (/^['"`]/.test(val) || /^join\s*\(/.test(val) || /^resolve\s*\(/.test(val)) {
-      map.set(name, { value: val, line: i + 1 });
+    const valueExpr = declMatch[2].trim();
+    if (/^['"`]/.test(valueExpr) || /^join\s*\(/.test(valueExpr) || /^resolve\s*\(/.test(valueExpr)) {
+      map.set(name, { value: valueExpr, line: i + 1 });
     }
   }
   return map;
@@ -509,13 +513,13 @@ export function main(argv = process.argv.slice(2)) {
   //   `--kind delete,rename` 这种逗号多值整体不匹配黑名单，被当成路径去扫（结果空）。
   const consumed = new Set();
   const takeValue = (i) => { consumed.add(i + 1); return args[i + 1]; };
-  let reportLimit = 20;
+  let reportLimit = REPORT_LIMIT_DEFAULT;
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--op') opFilter.push(...splitMulti(takeValue(i)));
     else if (args[i] === '--kind') kindFilter.push(...splitMulti(takeValue(i)));
     else if (args[i] === '--type') typeFilter.push(...splitMulti(takeValue(i)));
     else if (args[i] === '--risk') riskOnly = takeValue(i);
-    else if (args[i] === '--report-limit') reportLimit = Number(takeValue(i)) || 20;
+    else if (args[i] === '--report-limit') reportLimit = Number(takeValue(i)) || REPORT_LIMIT_DEFAULT;
   }
   const targets = args.filter((a, i) => !a.startsWith('--') && !consumed.has(i));
   const root = dirname(fileURLToPath(import.meta.url));
@@ -596,10 +600,10 @@ export function summarize(hits) {
  * @param {{limit?:number}} opts limit=清单最多条数（默认 20）
  */
 function printReport(hits, opts = {}) {
-  const limit = Number(opts.limit) > 0 ? Number(opts.limit) : 20;
+  const limit = Number(opts.limit) > 0 ? Number(opts.limit) : REPORT_LIMIT_DEFAULT;
   const sum = summarizeIoRisk(hits);
 
-  const bar = '─'.repeat(72);
+  const bar = '─'.repeat(REPORT_BAR_WIDTH);
   console.log(bar);
   console.log('  I/O 风险报告（四级标准，与审计 robustness/io-risk 一致）');
   console.log(bar);

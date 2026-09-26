@@ -49,7 +49,7 @@ function collectJs(dir) {
   try {
     const st = statSync(dir);
     if (!st.isDirectory()) return [dir];
-    return readdirSync(dir).filter((n) => n.endsWith('.js')).map((n) => join(dir, n));
+    return readdirSync(dir).filter((n) => n.endsWith('.js')).map((n) => join(dir, n)); // dsh-skip-residue（自检脚本一次性收集）
   } catch { return []; }
 }
 

@@ -41,6 +41,12 @@ const AUDIT_PRINT_LIMIT = 20;
 const REPOS_DEFAULT_MAX = 200;
 /** --json 输出截断长度（防大对象刷屏）。 */
 const JSON_PRINT_SNIPPET = 2000;
+/** cmdIndex 默认下钻深度。 */
+const INDEX_DEPTH_DEFAULT = 20;
+/** 子命令失败输出前缀。 */
+const FAIL_PREFIX = '❌ 失败:';
+/** 子命令失败输出（统一格式：前缀 + 错误信息，重复 3 处收拢为函数）。 */
+const failOf = (r) => `${FAIL_PREFIX} ${r.error || ''}`;
 
 /** parseArgv 认识的选项白名单（cli-help-sync 机器比对基准，必须与 HELP 文本一致。
  * 注：-m 是单横线别名（helpSync 只比对 -- 双横线），不列入本表。 */
@@ -351,7 +357,7 @@ export function cmdRepos(root, flags) {
 
 /** 子命令：index — 重建仓库索引 dsh-repo-index.json。 */
 export async function cmdIndex(root, flags) {
-  const depth = flags.depth ?? 20;
+  const depth = flags.depth ?? INDEX_DEPTH_DEFAULT;
   const max = flags.max ?? REPOS_DEFAULT_MAX;
   const owner = flags.owner || 'EIGHTfs';
   // 2026-09-20：统一走 updateRepoIndex（mode='rebuild' 读-改-写合并不全量覆盖）
@@ -523,7 +529,7 @@ export async function cmdRemoteCreate(repo, flags) {
     dryRun: flags.dryRun === true,
   });
   if (flags.json) { console.log(JSON.stringify(r, null, 2)); return r.ok ? 0 : 1; }
-  if (!r.ok) { console.error(`❌ 失败: ${r.error || ''}`); return 1; }
+  if (!r.ok) { console.error(failOf(r)); return 1; }
   if (r.dryRun) { console.log(`预演：将创建 ${r.owner}/${r.name}（${r.visibility}）`); return 0; }
   if (r.exists) { console.log(`✅ 远端已存在，直接复用：${r.owner}/${r.name}（${r.visibility}）`); return 0; }
   console.log(`✅ 已创建远端仓库：${r.owner}/${r.name}（${r.visibility}）`);
@@ -543,7 +549,7 @@ export async function cmdSetVisibility(repo, flags) {
   if (!pr.ok) { console.error(`❌ ${pr.error}`); return 1; }
   const r = await setVisibility({ owner: pr.owner, repo: pr.name, visibility: vis });
   if (flags.json) { console.log(JSON.stringify({ ...r, owner: pr.owner, repo: pr.name }, null, 2)); return r.ok ? 0 : 1; }
-  if (!r.ok) { console.error(`❌ 失败: ${r.error || ''}`); return 1; }
+  if (!r.ok) { console.error(failOf(r)); return 1; }
   console.log(`✅ ${pr.owner}/${pr.name} 可见性已切换为 ${vis}`);
   return 0;
 }
@@ -554,7 +560,7 @@ export async function cmdGenSshKey(flags) {
   if (!email) { console.error('缺少 --email <x@y.z>（用法: git-sluice gen-ssh-key --email you@example.com [--force]）'); return 1; }
   const r = await generateSshKey(email, { force: flags.force === true });
   if (flags.json) { console.log(JSON.stringify(r, null, 2)); return r.ok ? 0 : 1; }
-  if (!r.ok) { console.error(`❌ 失败: ${r.error || ''}`); return 1; }
+  if (!r.ok) { console.error(failOf(r)); return 1; }
   console.log(`✅ SSH 密钥已生成（${email}）`);
   if (r.pubPath) console.log(`   公钥文件：${r.pubPath}`);
   if (r.privPath) console.log(`   私钥文件：${r.privPath}（权限 0600，不上传）`);

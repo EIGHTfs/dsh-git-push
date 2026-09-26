@@ -58,7 +58,7 @@ function main(argv = process.argv.slice(2)) {
   const cmd = argv[0] || 'list';
   const dir = resolveRulesDir(argv);
   console.log(`规则目录：${dir}`);
-  if (!readdirSync(dir).some((f) => f.startsWith('audit-rules-') && f.endsWith('.yml'))) {
+  if (!readdirSync(dir).some((f) => f.startsWith('audit-rules-') && f.endsWith('.yml'))) { // dsh-skip-residue（规则目录条目少，一次性判定）
     console.error(`❌ 目录无规则文件（audit-rules-*.yml）：${dir}`);
     process.exit(1);
   }

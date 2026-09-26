@@ -12,6 +12,9 @@
 import { apply } from '../lib/app/apply.js';
 import { setDefineToolOverride } from '../lib/plugin/index.js';
 
+/** 被验证的宿主事件名（pre-step：上下文注入发生在 agent 回合前）。 */
+const PRE_STEP_EVENT = 'agent/pre-step';
+
 /** 简易断言计数（不引测试框架）。 */
 const results = [];
 function check(name, ok) { results.push([name, !!ok]); if (!ok) console.log('  ❌', name); }
@@ -39,16 +42,16 @@ setDefineToolOverride(null);
 
 console.log('== 注册统计 ==');
 console.log('systemPrompt sections:', sections.map((s) => s.name).join(', ') || '(空)');
-console.log('agent/pre-step 接线:', typeof events['agent/pre-step'] === 'function' ? '✅ 是' : '❌ 否');
+console.log('agent/pre-step 接线:', typeof events[PRE_STEP_EVENT] === 'function' ? '✅ 是' : '❌ 否');
 console.log('工具注册数:', registered.length);
 
 // 环境段不应再注册为 systemPrompt section（2026-09-20 迁出）
 check('systemPrompt 不含环境段（dsh-git-push-env 已迁出）', !sections.some((s) => s.name === 'dsh-git-push-env'));
 check('systemPrompt 保留功能用法段', sections.some((s) => s.name === 'dsh-git-push-usage'));
-check('agent/pre-step 已接线', typeof events['agent/pre-step'] === 'function');
+check('agent/pre-step 已接线', typeof events[PRE_STEP_EVENT] === 'function');
 check('工具已注册', registered.length >= 8);
 
-if (typeof events['agent/pre-step'] !== 'function') {
+if (typeof events[PRE_STEP_EVENT] !== 'function') {
   console.log('\n❌ 未接线，退出（exit 1）');
   process.exit(1);
 }
@@ -59,7 +62,7 @@ const decision = {
   messages: [{ role: 'user', content: [{ type: 'text', text: '（原有消息）' }] }],
 };
 const agent = { id: 'verify-agent-1', session: { id: 'verify-session' } };
-const first = await events['agent/pre-step']({ agent, signal: undefined }, async () => decision);
+const first = await events[PRE_STEP_EVENT]({ agent, signal: undefined }, async () => decision);
 const count1 = first.messages.length;
 const injected = count1 > 1 ? first.messages[count1 - 1] : null;
 
@@ -72,7 +75,7 @@ if (injected) {
 }
 
 // 5) 再次触发同一 agent：WeakSet 防重复，不应再追加
-const second = await events['agent/pre-step']({ agent, signal: undefined }, async () => decision);
+const second = await events[PRE_STEP_EVENT]({ agent, signal: undefined }, async () => decision);
 check('二次触发不重复注入（回到原 1 条）', second.messages.length === 1);
 
 // 6) 注入正文内容校验（注入成功时）

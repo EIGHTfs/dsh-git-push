@@ -25,6 +25,8 @@ import { fileURLToPath } from 'node:url';
 const __dir = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = join(__dir, '..');
 
+const DEFAULT_MAX_REPOS = 200; // --max 默认仓库数上限
+
 function arg(name, def) {
   const i = process.argv.indexOf(name);
   return i !== -1 && process.argv[i + 1] ? process.argv[i + 1] : def;
@@ -33,6 +35,8 @@ function arg(name, def) {
 function liveFile(wr) { return join(cfgDir(wr), 'scan-live.json'); }
 function indexFile(wr) { return join(cfgDir(wr), 'dsh-repo-index.json'); }
 function cfgDir(wr) { return credentialsDir({ workspaceRoot: wr || REPO_ROOT }); }
+/** 原子写临时文件路径（目标文件 + pid 后缀，写完 rename 到位）。 */
+function tmpPathOf(p) { return `${p}.${process.pid}.tmp`; }
 
 let credentialsDir = null;
 let scanRepos = null;
@@ -44,7 +48,7 @@ async function main() {
   const root = arg('--root', '');
   const owner = arg('--owner', 'EIGHTfs');
   const depth = Number(arg('--depth', '10')) || 10;
-  const max = Number(arg('--max', '200')) || 200;
+  const max = Number(arg('--max', String(DEFAULT_MAX_REPOS))) || DEFAULT_MAX_REPOS;
   if (!root) { console.error('缺 --root（扫描根路径）'); process.exit(2); }
 
   // 顶层懒加载（独立进程 ESM，仅需的模块）
@@ -120,7 +124,7 @@ function pruneIndex({ workspaceRoot, owner, scanned }) {
   doc.repos = kept;
   doc.generatedAt = new Date().toISOString();
   const dir = dirname(p); mkdirSync(dir, { recursive: true });
-  const tmpPath = `${p}.${process.pid}.tmp`;
+  const tmpPath = tmpPathOf(p);
   writeFileSync(tmpPath, JSON.stringify(doc, null, 2) + '\n', 'utf8');
   renameSync(tmpPath, p);
   return removed;
@@ -135,7 +139,7 @@ function pushLive({ workspaceRoot, found, done }) {
   if (Array.isArray(found)) for (const f of found) if (!cur.found.includes(f)) cur.found.push(f);
   cur.done = !!done;
   const dir = dirname(p); mkdirSync(dir, { recursive: true });
-  const tmpPath = `${p}.${process.pid}.tmp`;
+  const tmpPath = tmpPathOf(p);
   writeFileSync(tmpPath, JSON.stringify(cur, null, 2) + '\n', 'utf8');
   renameSync(tmpPath, p);
 }
@@ -152,7 +156,7 @@ function appendIndexEntry({ workspaceRoot, entry, owner }) {
   if (i >= 0) doc.repos[i] = entry; else doc.repos.push(entry);
   doc.generatedAt = new Date().toISOString();
   const dir = dirname(p); mkdirSync(dir, { recursive: true });
-  const tmpPath = `${p}.${process.pid}.tmp`;
+  const tmpPath = tmpPathOf(p);
   writeFileSync(tmpPath, JSON.stringify(doc, null, 2) + '\n', 'utf8');
   renameSync(tmpPath, p);
 }

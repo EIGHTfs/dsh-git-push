@@ -28,6 +28,9 @@ import { tmpdir } from 'node:os';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 import { dirname } from 'node:path';
+
+/* ───────── 规则单测脚本常量 ───────── */
+const DESC_MAX_LEN = 80; // 规则描述截断长度
 import { loadRuleFiles } from '../lib/rule/loader.js';
 
 /** 规则对象 → 单条 yml 条目（保字段，数组/对象 JSON 内联，字符串引号）。 */
@@ -104,7 +107,7 @@ export async function runRulesSoloAudit(repo, opts = {}) {
     const fullHits = fullByRule.get(rule.id) || [];
     rows.push({
       id: rule.id, name: rule.name || '', severity: rule.severity || '', category: rule.category || '',
-      desc: (rule.description || '').slice(0, 80),
+      desc: (rule.description || '').slice(0, DESC_MAX_LEN),
       findings: solo.length, files: byFile.size,
       fullHits: fullHits.length, fullFiles: new Set(fullHits.map((f) => f.file)).size,
       baseDelta: solo.length - base.length,

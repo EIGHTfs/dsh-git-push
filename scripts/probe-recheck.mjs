@@ -8,6 +8,7 @@ const ORIGIN = 'http://127.0.0.1:30801';
 //   无超时的 fetch 会**永久挂起**，探针既不报错也不退出（只能 Ctrl+C），
 //   排查时看不到任何有用信息。60s 与 lib/git/api.js 的网络出口默认值一致。
 const TIMEOUT_MS = 60_000;
+const ACCOUNT_CHECK_PATH = '/api/git-push/account-check'; // 账号状态检测端点
 const post = (p, b) => fetch(BASE + p, {
   method: 'POST',
   headers: { 'Content-Type': 'application/json', Origin: ORIGIN },
@@ -22,8 +23,8 @@ const get = (p) => fetch(BASE + p, {
 console.log('══ 「重新检测」按钮链路实测 ══\n');
 
 console.log('① 按钮行为 POST /account-check（与 client.js recheckAccount 一致）');
-const c = await post('/api/git-push/account-check', { checkSsh: true, confirm: false });
-const ts = c.tokenStatus || {}, ss = c.sshStatus || {};
+const resp = await post(ACCOUNT_CHECK_PATH, { checkSsh: true, confirm: false });
+const ts = resp.tokenStatus || {}, ss = resp.sshStatus || {};
 const tv = ts.valid ? '✅ 有效' : (ts.timeout ? '⏳ 超时未测成（不是失效）' : '❌ 无效');
 const sv = ss.valid ? '✅ 有效' : (ss.timeout ? '⏳ 超时未测成' : '❌ 无效');
 console.log('   Token:', tv, ts.login ? `(${ts.login})` : '');
@@ -36,8 +37,8 @@ console.log('\n   字段: tokenTimeout=' + s.tokenStatus?.timeout, '| sshTimeout
 
 console.log('\n③ 防抖验证：连发两次（第二次应被前端忽略，后端仍应稳定）');
 const [r1, r2] = await Promise.all([
-  post('/api/git-push/account-check', { checkSsh: false, confirm: false }),
-  post('/api/git-push/account-check', { checkSsh: false, confirm: false }),
+  post(ACCOUNT_CHECK_PATH, { checkSsh: false, confirm: false }),
+  post(ACCOUNT_CHECK_PATH, { checkSsh: false, confirm: false }),
 ]);
 console.log('   两次返回 tokenStatus.valid:', r1.tokenStatus?.valid, '/', r2.tokenStatus?.valid);
 console.log('   （前端有 accountLoading 防抖，真实点击不会连发）');

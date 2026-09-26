@@ -110,6 +110,9 @@ const realSlots = listRuleSlots(undefined, [], null);
 const SLOT_ORDER = realSlots.order.filter((slot) => slot !== 'template');
 const SLOT_META = realSlots.meta;
 
+/** 演示配置的全量扫描文件上限（与默认配置一致）。 */
+const DEMO_MAX_SCAN_FILES = 3000;
+
 // 假数据：可变（点开关/调序会真的改它，UI 才反映结果，而不是点完回弹）
 const FAKE = {
   // 2026-09-13：改为演示「父开关关闭 + 子开关已勾选」——正是可勾选/只置灰/不生效的验证场景
@@ -118,7 +121,7 @@ const FAKE = {
   // 2026-09-13：injectFullSkill / injectRepoIndexFull 已废弃移除，改为注入总开关（默认开）
   injectSystemPrompt: true,
   auditScanScope: 'diff',
-  maxScanFiles: 3000,
+  maxScanFiles: DEMO_MAX_SCAN_FILES,
   weightOverrides: '',
   githubToken: 'ghp_ExampleToken1234567890abcdefGHIJ',
   sshPub: 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExamplePublicKeyForDemoOnly eightfs@example.com',

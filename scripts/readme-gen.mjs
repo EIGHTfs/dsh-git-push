@@ -119,9 +119,9 @@ export function resolveReadmeTemplate({ repoPath = '', explicit = '' } = {}) {
 export function tocFromTemplate(template) {
   const titles = [];
   for (const line of String(template || '').split('\n')) {
-    const m = line.match(/^##\s+(.+?)\s*$/);
-    if (!m) continue;
-    const t = m[1].trim();
+    const match = line.match(/^##\s+(.+?)\s*$/);
+    if (!match) continue;
+    const t = match[1].trim();
     if (t === '目录') continue;
     titles.push(t);
   }
@@ -132,9 +132,9 @@ const VERSION_RE = /\bv?(\d+)\.(\d+)\.(\d+)\b/;
 
 /** 解析版本三元组。 */
 export function parseVersion(str) {
-  const m = String(str).match(VERSION_RE);
-  if (!m) return null;
-  return { major: parseInt(m[1], 10), minor: parseInt(m[2], 10), patch: parseInt(m[3], 10) };
+  const match = String(str).match(VERSION_RE);
+  if (!match) return null;
+  return { major: parseInt(match[1], 10), minor: parseInt(match[2], 10), patch: parseInt(match[3], 10) };
 }
 
 const v2s = (v) => `${v.major}.${v.minor}.${v.patch}`;
@@ -144,16 +144,14 @@ export function listVersionCommits(repoPath) {
   const log = runGit(['log', '--reverse', '--format=%H|%s'], { cwd: repoPath });
   if (!log.ok || !log.stdout) return [];
   const groups = [];
-  let current = null;
   for (const line of log.stdout.split('\n')) {
     const i = line.indexOf('|');
     if (i < 0) continue;
     const hash = line.slice(0, i);
     const msg = line.slice(i + 1);
     const v = parseVersion(msg);
-    if (v) { current = { version: v, versionStr: v2s(v), label: msg.slice(0, 80), isPatch: v.patch > 0 }; groups.push(current); }
-    else if (current) { /* 归当前组（commit 数不参与渲染，仅占位逻辑保留） */ }
-    else if (i > 0) { /* 无版本前缀最早提交归合成 1.0.0 */ current = { version: { major: 1, minor: 0, patch: 0 }, versionStr: '1.0.0', label: '1.0.0 初始提交（标题无版本号前缀）', isPatch: false }; groups.push(current); }
+    // 只渲染标题带版本号的提交；无版本号提交不渲染（不归组、不合成占位行）
+    if (v) groups.push({ version: v, versionStr: v2s(v), label: msg, isPatch: v.patch > 0 });
   }
   return groups;
 }
@@ -164,14 +162,14 @@ export function listVersionCommits(repoPath) {
  * 黑名单词用字符类拆分（如 用[户]），避免正则字面量被审计的自举误报命中。
  */
 export function scrubConvWording(label) {
-  const U = '[用][户]';
+  const user = '[用][户]';
   return String(label || '')
     // 剔除括号内沟通短语（许可/同意/要求/确认等）
-    .replace(new RegExp(`[（(](?:${U})?(?:许可|同意|要求|确认|授权)[^）)]*[）)]`, 'g'), '')
+    .replace(new RegExp(`[（(](?:${user})?(?:许可|同意|要求|确认|授权)[^）)]*[）)]`, 'g'), '')
     // 残留裸短语
-    .replace(new RegExp(`（${U}许可升版）|（${U}许可）|${U}许可升版|${U}同意|${U}要求`, 'g'), '')
-    .replace(new RegExp(`（${U}[^）]*）|\\(${U}[^)]*\\)`, 'g'), '')
-    .replace(new RegExp(`——bump[\\s\\S]*?（${U}[^）]*）`, 'g'), '')
+    .replace(new RegExp(`（${user}许可升版）|（${user}许可）|${user}许可升版|${user}同意|${user}要求`, 'g'), '')
+    .replace(new RegExp(`（${user}[^）]*）|\\(${user}[^)]*\\)`, 'g'), '')
+    .replace(new RegExp(`——bump[\\s\\S]*?（${user}[^）]*）`, 'g'), '')
     // 清理遗留的分号/空括号
     .replace(/；；+/g, '；').replace(/\(\)/g, '').replace(/；\s*$/, '').replace(/——\s*$/, '')
     .trim();
@@ -183,7 +181,10 @@ export function buildReadmeVersionTable(repoPath) {
   if (groups.length) {
     const by = new Map();
     for (const g of groups) {
-      const key = g.isPatch ? `${g.version.major}.${g.version.minor}.0` : g.versionStr;
+      // 每个识别到的 X.Y.Z 独立成行（不把 patch>0 归并到 x.y.0）：
+      //   归并会让 1.0.1~1.0.4 的内容并进 1.0.0 行，且 doc-version check 对
+      //   真实逐版本记录（如 dsh-session-migrate）报漂移。
+      const key = g.versionStr;
       if (!by.has(key)) by.set(key, []);
       by.get(key).push(scrubConvWording(g.label.replace(/^\S+\s*/, '')));
     }
@@ -192,8 +193,8 @@ export function buildReadmeVersionTable(repoPath) {
       const [bm, bi, bp] = b.split('.').map(Number);
       return (bm - am) || (bi - ai) || (bp - ap);
     });
-    for (const k of keys) lines.push(`| ${k} | ${by.get(k).filter(Boolean).join('；') || '(见提交)'} |`);
-  } else lines.push('| 1.0.0 | （待填） |');
+    for (const k of keys) lines.push(`| ${k} | ${by.get(k).filter(Boolean).join('；')} |`);
+  }
   return lines;
 }
 
