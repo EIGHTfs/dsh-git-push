@@ -271,65 +271,6 @@
   "docs/方案-audit-history-历史提交审计.md": "（待注释）",
   "docs/方案-repo-index-account-status-更新收口.md": "（待注释）",
   "docs/方案-文档维度加分制.md": "（待注释）",
-  "_meta": {
-    "worktree": {
-      "lib/app/apply.js": {
-        "status": "M",
-        "mtime": "2026-09-26T16:49:13.424Z",
-        "note": "注释可能需更新"
-      },
-      "lib/app/http-handlers.js": {
-        "status": "M",
-        "mtime": "2026-09-26T17:09:38.334Z",
-        "note": "注释可能需更新"
-      },
-      "lib/app/schema.js": {
-        "status": "M",
-        "mtime": "2026-09-26T16:49:57.928Z",
-        "note": "注释可能需更新"
-      },
-      "lib/app/settings-bridge.js": {
-        "status": "M",
-        "mtime": "2026-09-26T16:50:27.248Z",
-        "note": "注释可能需更新"
-      },
-      "lib/client.js": {
-        "status": "M",
-        "mtime": "2026-09-26T17:12:02.340Z",
-        "note": "注释可能需更新"
-      },
-      "lib/client/index.js": {
-        "status": "M",
-        "mtime": "2026-09-26T16:51:07.582Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-client.mjs": {
-        "status": "M",
-        "mtime": "2026-09-26T17:13:35.063Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-settings-persistence.mjs": {
-        "status": "M",
-        "mtime": "2026-09-26T17:12:20.422Z",
-        "note": "注释可能需更新"
-      },
-      "lib/plugin/auto-detect.js": {
-        "status": "A",
-        "mtime": "2026-09-26T17:16:44.717Z",
-        "note": "注释可能需更新"
-      },
-      "lib/plugin/auto-push.js": {
-        "status": "A",
-        "mtime": "2026-09-26T17:16:15.252Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-auto-push.mjs": {
-        "status": "A",
-        "mtime": "2026-09-26T16:59:50.911Z",
-        "note": "注释可能需更新"
-      }
-    }
-  },
   "test/test-cli-audit-parity.mjs": "CLI 与源码全量审计一致性测试（audit --full --json vs 直接 auditFull，含忽略排除）",
   "docs/方案-io-risk规则推断与准确率评估.md": "方案：io-risk 规则推断与准确率评估",
   "docs/方案-io-risk-规则优化.md": "方案：io-risk 规则优化（对照诊断的差距分析：元数据操作分档 + rename 降档）",
