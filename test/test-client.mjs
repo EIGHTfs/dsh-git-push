@@ -204,6 +204,19 @@ test('组件：enum 渲染选项齐全', () => {
   assert.deepEqual(opts.sort(), ['all', 'api', 'auto', 'diff', 'full', 'session', 'ssh']);
 });
 
+// 2026-09-27 回归：手写 UI（lib/client.js dshgp_PushDefaultsBlock）的 select 选项
+//   必须经 props.children 渲染——jsx(type, props, key) 的第三参数是 **key 不是 children**，
+//   选项数组放第三参数会整体丢失、下拉渲染为空（「自动推送范围」下拉无内容，
+//   与 2026-09-16 审计进阶下拉同因）。该路径不走 SETTINGS_SCHEMA，须源码级断言防回归。
+test('client.js：select 选项必须经 props.children 渲染（防 jsx 第三参数坑）', () => {
+  // 坏写法（已发生两次）：jsx('select', { …props… }, […].map(…)) —— 第三参数被当作 key
+  assert.ok(!/jsx\.jsx\('select',\s*\{[\s\S]*?\}\s*,\s*\[/.test(rootClientSrc),
+    '不得把选项数组作为 jsx.jsx 第三参数传给 select（第三参数是 key，children 会丢失、下拉渲染为空）');
+  // 好写法：children: 数组 放进 props（pushMethod / 审计进阶 sel / 自动推送范围三处）
+  const good = rootClientSrc.match(/jsx\.jsx\('select',\s*\{[\s\S]*?children:\s*\[/g) || [];
+  assert.ok(good.length >= 3, `应有 ≥3 个 select 用 props.children 渲染选项，实际 ${good.length}`);
+});
+
 test('源码：不含 JSX 语法（无 <Tag> 形式）', () => {
   assert.ok(!/<[A-Z][A-Za-z]*[\s/>]/.test(clientSrc), '源码不应含 JSX 标签');
   assert.ok(!clientSrc.includes('jsx-runtime'), '不应依赖 jsx-runtime');

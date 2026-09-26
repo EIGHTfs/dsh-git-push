@@ -932,7 +932,8 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
-| **1.9.3**（当前） | **任务完成自动推送（内置自 dsh-task-completion）**：监听会话回合结束→检测 AI 回复「✅任务完成」（UI 门禁开关旁可自定义触发文本/正则）→ autoPushEnabled 开启自动 commit+push（默认关）——复用 commitWithAudit 完整门禁（L0 审计 blocker 拦截 / requirements / pushGate 放行），不裸提交绕过门禁；范围默认 session（仅会话仓库），可 all；开关/触发文本/范围经 config.json 持久化; | 合并删除独立仓库 dsh-task-completion |
+| **1.9.4**（当前） | **自动推送范围下拉渲染修复**：设置页「自动推送范围」select 下拉无选项（jsx(type,props,key) 第三参数是 key 不是 children——options 数组误放第三参数导致 children 丢失、下拉渲染为空，与 2026-09-16 审计进阶下拉同坑）——children 移入 props，与 pushMethod/审计进阶 sel 写法对齐 |
+| **1.9.3** | **任务完成自动推送（内置自 dsh-task-completion）**：监听会话回合结束→检测 AI 回复「✅任务完成」（UI 门禁开关旁可自定义触发文本/正则）→ autoPushEnabled 开启自动 commit+push（默认关）——复用 commitWithAudit 完整门禁（L0 审计 blocker 拦截 / requirements / pushGate 放行），不裸提交绕过门禁；范围默认 session（仅会话仓库），可 all；开关/触发文本/范围经 config.json 持久化; | 合并删除独立仓库 dsh-task-completion |
 | **1.9.2** | **软链加载诊断结论**：node_modules/dsh-git-push 软链→工作区是 DSH 开发加载形态（theme 同款）；后端零依赖、前端/宿主包由 DSH 运行时条件提供（lib/plugin/index.js 对 dsh-tools try/catch 兜底）——「市场安装报缺依赖」= dshmarket 对宿主 peerDependencies（@deepseek-ai/dsh-tools/schemastery）的误报（插件正确形态 = 软链 + 保留 peer，勿移除） |
 | **1.9.1**（当前） | **系统提示词注入配置化 + 新功能用法**：注入文本可配（config.json `injectUsageText` 数组/字符串覆盖默认功能用法注入段）；系统提示词功能用法加浅包装 git（`git-sluice <任意 git 参数>` 未知命令透传 + 自动凭据）| 说明：1.9.0 后每次提交默认升第三位（版本纪律） |
 | **1.9.0**（当前） | **浅包装 git**：`git-sluice <任意 git 参数>`（未知命令透传为 git，自动注入凭据：SSH 私钥/HTTPS token，无需传 token 参数）+ 显式 `git-sluice git <args>` 子命令——git-sluice 成为 git 超集（已知子命令走插件，其余全交 git + 插件凭据）；退出码透传 |
