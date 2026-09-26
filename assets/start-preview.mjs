@@ -24,6 +24,7 @@
 import { createServer } from 'node:http';
 import { request as httpRequest } from 'node:http';
 import { createReadStream, existsSync, statSync, readFileSync } from 'node:fs';
+import { access } from 'node:fs/promises';
 import { join, normalize, extname, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import os from 'node:os';
@@ -48,6 +49,13 @@ const MIME = {
   '.gif': 'image/gif', '.svg': 'image/svg+xml', '.ico': 'image/x-icon',
   '.json': 'application/json; charset=utf-8',
 };
+/** playwright 自检参数（截图窗口 / 加载超时 / 渲染等待 / 错误消息截断长度）。 */
+const SHOT_VIEWPORT = { width: 1400, height: 900 };
+const SHOT_NAV_TIMEOUT_MS = 30_000;
+const SHOT_SETTLE_MS = 4000;
+const SHOT_ERR_SNIPPET = 80;
+/** 启动横幅宽度（字符数，与 padEnd 对齐）。 */
+const BANNER_WIDTH = 46;
 
 // ── CLI 参数 ──
 const args = process.argv.slice(2);
@@ -65,9 +73,9 @@ function resolveToken() {
   try {
     if (!existsSync(PROXY_LOG)) return null;
     const txt = readFileSync(PROXY_LOG, 'utf8');
-    const m = txt.match(/token=([a-zA-Z0-9_-]{20,})/g);
-    if (m && m.length) {
-      const last = m[m.length - 1].replace('token=', '');
+    const matches = txt.match(/token=([a-zA-Z0-9_-]{20,})/g);
+    if (matches && matches.length) {
+      const last = matches[matches.length - 1].replace('token=', '');
       return last;
     }
   } catch { /* 读不到就 null */ }
@@ -91,8 +99,8 @@ async function ensureAuthCookie() {
       headers: { host: target.host, connection: 'close' }, // 强制新连接，避免复用反代坏 keep-alive
     }, (res) => {
       const setCookies = res.headers['set-cookie'] || [];
-      const c = setCookies.map(s => s.split(';')[0]).join('; ');
-      if (c) { authCookie = c; }
+      const cookieStr = setCookies.map(s => s.split(';')[0]).join('; ');
+      if (cookieStr) { authCookie = cookieStr; }
       res.resume();
       resolve(authCookie);
     });
@@ -109,7 +117,7 @@ function proxyToDsh(req, res, upstreamPath) {
   ensureAuthCookie().then((cookie) => {
     if (!cookie) {
       console.log(`[proxy] ${req.method} ${upstreamPath} → 502 no-cookie (${Date.now() - t0}ms)`);
-      res.writeHead(502, { 'content-type': 'text/plain; charset=utf-8' });
+      res.writeHead(502, { 'content-type': TEXT_PLAIN_UTF8 });
       res.end('preview: 无法认证 DSH 后端（未提供 --token 且 proxy.log 无 token）');
       return;
     }
@@ -134,7 +142,7 @@ function proxyToDsh(req, res, upstreamPath) {
     });
     upstream.on('error', (e) => {
       console.log(`[proxy] ${req.method} ${upstreamPath} → ERROR ${e.message} body=${bodyBytes}B ${Date.now() - t0}ms`);
-      res.writeHead(502, { 'content-type': 'text/plain; charset=utf-8' });
+      res.writeHead(502, { 'content-type': TEXT_PLAIN_UTF8 });
       res.end('preview: 转发 DSH 失败 ' + e.message);
     });
     req.pipe(upstream);
@@ -142,7 +150,7 @@ function proxyToDsh(req, res, upstreamPath) {
 }
 
 function send(res, status, body, type) {
-  res.writeHead(status, { 'content-type': type || 'text/plain; charset=utf-8', 'cache-control': 'no-cache' });
+  res.writeHead(status, { 'content-type': type || TEXT_PLAIN_UTF8, 'cache-control': 'no-cache' });
   res.end(body);
 }
 
@@ -183,14 +191,17 @@ const server = createServer((req, res) => {
 });
 
 async function openBrowser() {
-  if (noOpen || !existsSync(join(PROJECT_ROOT, '..', '..', 'pwviewer', 'node_modules', 'playwright'))) return;
+  // 2026-09-27：异步函数内同步 existsSync 改 fs.promises.access，消除阻塞事件循环
+  let hasPlaywright = false;
+  try { await access(join(PROJECT_ROOT, '..', '..', 'pwviewer', 'node_modules', 'playwright')); hasPlaywright = true; } catch { hasPlaywright = false; }
+  if (noOpen || !hasPlaywright) return;
   try {
     const { chromium } = await import('/volume1/VirtualDSM/DeepSeekHarness/pwviewer/node_modules/playwright/index.mjs');
     const CHROME = '/volume1/VirtualDSM/DeepSeekHarness/pwviewer/browsers/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell';
     const browser = await chromium.launch({ executablePath: CHROME, headless: true, args: ['--no-sandbox','--disable-dev-shm-usage','--disable-gpu','--disable-software-rasterizer','--no-zygote','--single-process','--disable-fontconfig'] });
-    const page = await browser.newPage({ viewport: { width: 1400, height: 900 } });
-    await page.goto('http://127.0.0.1:' + PORT + '/', { waitUntil: 'load', timeout: 30000 });
-    await page.waitForTimeout(4000);
+    const page = await browser.newPage({ viewport: SHOT_VIEWPORT });
+    await page.goto('http://127.0.0.1:' + PORT + '/', { waitUntil: 'load', timeout: SHOT_NAV_TIMEOUT_MS });
+    await page.waitForTimeout(SHOT_SETTLE_MS);
     const state = await page.evaluate((sel) => ({
       root: !!document.querySelector(sel),
       buttons: document.querySelector(sel) ? document.querySelector(sel).querySelectorAll('button').length : 0,
@@ -200,14 +211,14 @@ async function openBrowser() {
     await browser.close();
     if (shotPath) console.log('[shot] 截图已存:', shotPath);
   } catch (e) {
-    console.log('[shot] playwright 自检跳过（', e.message?.slice(0, 80), '）——真实浏览器打开即可预览');
+    console.log('[shot] playwright 自检跳过（', e.message?.slice(0, SHOT_ERR_SNIPPET), '）——真实浏览器打开即可预览');
   }
 }
 
 server.listen(PORT, '0.0.0.0', async () => {
   const token = resolveToken();
   console.log('╔══════════════════════════════════════════════════╗');
-  console.log('║  ' + PROJECT_LABEL.padEnd(46) + '║');
+  console.log('║  ' + PROJECT_LABEL.padEnd(BANNER_WIDTH) + '║');
   console.log('╚══════════════════════════════════════════════════╝');
   console.log('  预览页:  http://127.0.0.1:' + PORT + '/');
   console.log('  后端:    ' + TARGET + '（' + PROXY_PREFIX + '* 转发，数据真实）');

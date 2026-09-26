@@ -234,8 +234,8 @@ test('1.5.4 可见性切换：独立确认弹窗（行按钮弹窗 → 确认才
   assert.match(clientSrc, /dshgp_browsemask/, '弹窗必须用固定遮罩（独立面板弹出）');
   assert.match(clientSrc, /确认将 '\s*\+\s*fullName/, '弹窗缺确认文案');
   assert.match(clientSrc, /visibility:\s*target,\s*confirm:\s*true/, '切换请求必须带 confirm:true');
-  // ③ 就地更新列表（成功后刷新该项私有/公开徽标）
-  assert.match(clientSrc, /item\.private\s*=\s*res\.visibility\s*===\s*'private'/, '切换成功后应就地更新列表状态');
+  // ③ 就地更新列表（成功后刷新该项私有/公开徽标）——2026-09-27 变量 item→repo 改名同步
+  assert.match(clientSrc, /repo\.private\s*=\s*res\.visibility\s*===\s*'private'/, '切换成功后应就地更新列表状态');
 });
 
 test('1.5.4 可见性切换：后端端点挂 writeConfirmOps 写确认门禁', () => {

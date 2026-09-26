@@ -30,6 +30,17 @@ import { readFileSync } from 'node:fs';
 import { access } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+// node:child_process 内置模块：顶部静态导入（此前 4 处 await import 重复，统一入口）
+import { spawnSync, execFileSync } from 'node:child_process';
+
+/** 子进程最大等待时长（ms，spawnSync 3 处共用：tree-doc/functions/module-splitter）。 */
+const SUBPROC_TIMEOUT_MS = 120_000;
+/** 审计 full 扫描 findings 打印条数上限（防刷屏）。 */
+const AUDIT_PRINT_LIMIT = 20;
+/** git-sluice repos 子命令默认列出上限。 */
+const REPOS_DEFAULT_MAX = 200;
+/** --json 输出截断长度（防大对象刷屏）。 */
+const JSON_PRINT_SNIPPET = 2000;
 
 /** parseArgv 认识的选项白名单（cli-help-sync 机器比对基准，必须与 HELP 文本一致。
  * 注：-m 是单横线别名（helpSync 只比对 -- 双横线），不列入本表。 */
@@ -222,7 +233,7 @@ export async function cmdScan(root, flags) {
   const scanResult = await auditWithScope(root, { scope: 'full', depth });
   console.log(`扫描 ${root}（full，depth=${depth}）`);
   console.log(`  findings: ${scanResult.summary.total}（blocker ${scanResult.summary.blocker} / warning ${scanResult.summary.warning}）`);
-  for (const f of scanResult.findings.slice(0, 20)) {
+  for (const f of scanResult.findings.slice(0, AUDIT_PRINT_LIMIT)) {
     console.log(`  [${f.severity}] ${f.rule} ${f.file}:${f.line} ${f.message || ''}`);
   }
 }
@@ -321,7 +332,7 @@ export async function cmdAudit(root, flags) {
 /** 子命令：repos — 扫描本地 git 仓库（尊重 .gitignore）。 */
 export function cmdRepos(root, flags) {
   const depth = flags.depth ?? 10;
-  const max = flags.max ?? 200;
+  const max = flags.max ?? REPOS_DEFAULT_MAX;
   const list = scanRepos(root || '.', { depth, maxRepos: max });
   if (flags.json) {
     console.log(JSON.stringify({ ok: true, root, count: list.length, repos: list }, null, 2));
@@ -341,7 +352,7 @@ export function cmdRepos(root, flags) {
 /** 子命令：index — 重建仓库索引 dsh-repo-index.json。 */
 export async function cmdIndex(root, flags) {
   const depth = flags.depth ?? 20;
-  const max = flags.max ?? 200;
+  const max = flags.max ?? REPOS_DEFAULT_MAX;
   const owner = flags.owner || 'EIGHTfs';
   // 2026-09-20：统一走 updateRepoIndex（mode='rebuild' 读-改-写合并不全量覆盖）
   const r = await updateRepoIndex({
@@ -399,7 +410,7 @@ export async function cmdCommit(root, flags) {
   if (flags.json) console.log(JSON.stringify(commitOutcome, null, 2));
   else {
     if (!commitOutcome.ok && commitOutcome.error) console.error(`提交失败: ${typeof commitOutcome.error === 'string' ? commitOutcome.error : JSON.stringify(commitOutcome.error)}`);
-    console.log(JSON.stringify(commitOutcome, null, 2).slice(0, 2000));
+    console.log(JSON.stringify(commitOutcome, null, 2).slice(0, JSON_PRINT_SNIPPET));
   }
   return commitOutcome.ok ? 0 : 2;
 }
@@ -493,10 +504,10 @@ export async function cmdCredEnv(flags) {
   if (!r.provided.length) { console.log(`❌ ${r.hint}`); return 1; }
   console.log('凭据传递（插件保管，以下只有路径/命令串，无 token/私钥明文）：');
   for (const ch of r.provided) {
-    const c = r[ch];
+    const chCfg = r[ch];
     console.log(`\n[${ch === 'ssh' ? 'SSH 通道' : 'HTTPS 通道'}]`);
-    console.log(`  envPrefix: ${c.envPrefix}`);
-    console.log(`  用法示例: ${c.example}`);
+    console.log(`  envPrefix: ${chCfg.envPrefix}`);
+    console.log(`  用法示例: ${chCfg.example}`);
   }
   console.log(`\n提示：${r.hint}`);
   return 0;
@@ -553,7 +564,6 @@ export async function cmdGenSshKey(flags) {
 
 /** 从本地 remote 反推 owner/repo（set-visibility 用）。 */
 async function resolveRepoOwnerName(repoPath) {
-  const { execFileSync } = await import('node:child_process');
   let url = '';
   try {
     url = execFileSync('git', ['-C', repoPath, 'remote', 'get-url', 'origin'], { encoding: 'utf8' }).trim();
@@ -628,23 +638,23 @@ export function cmdFileIo(targets = [], flags = {}) {
   if (!hits.length) { console.log('（未命中任何文件操作）'); return hits; }
   // 按文件分组输出（组内按行号，风险降序已由 scanFileIo 排好）
   const byFile = new Map();
-  for (const h of hits) {
-    if (!byFile.has(h.file)) byFile.set(h.file, []);
-    byFile.get(h.file).push(h);
+  for (const hit of hits) {
+    if (!byFile.has(hit.file)) byFile.set(hit.file, []);
+    byFile.get(hit.file).push(hit);
   }
   const riskMark = (r) => (r === 'high' ? '🔴' : r === 'medium' ? '🟠' : '·');
-  const tagsOf = (h) => {
-    const t = [h.type === 'sync' ? '同步' : '异步', h.kind];
-    if (h.inAsync) t.push('async内');
-    if (h.inLoop) t.push('循环内');
-    if (h.inRequest) t.push('请求路径');
+  const tagsOf = (hit) => {
+    const t = [hit.type === 'sync' ? '同步' : '异步', hit.kind];
+    if (hit.inAsync) t.push('async内');
+    if (hit.inLoop) t.push('循环内');
+    if (hit.inRequest) t.push('请求路径');
     return t.join('·');
   };
   for (const [file, hs] of [...byFile.entries()].sort()) {
     console.log(`\n── ${file} (${hs.length}) ──`);
-    for (const h of hs.sort((a, b) => a.line - b.line)) {
-      console.log(`  ${riskMark(h.risk)} L${String(h.line).padEnd(4)} ${h.op.padEnd(14)} ${tagsOf(h)}`);
-      console.log(`       ${h.path}`);
+    for (const hit of hs.sort((a, b) => a.line - b.line)) {
+      console.log(`  ${riskMark(hit.risk)} L${String(hit.line).padEnd(4)} ${hit.op.padEnd(14)} ${tagsOf(hit)}`);
+      console.log(`       ${hit.path}`);
     }
   }
   console.log(`\n合计 ${hits.length} 处文件操作（🔴high=写/删且并发路径 · 🟠medium=同步阻塞或写类 · ·low=普通读）`);
@@ -658,13 +668,12 @@ export async function cmdTreeDoc(sub, flags) {
     console.error(`tree-doc 子命令应为 sync|gen|check|apply（得「${sub || '(空)'}」）`);
     return 1;
   }
-  const { spawnSync } = await import('node:child_process');
   const script = fileURLToPath(new URL('./scripts/tree-doc.mjs', import.meta.url));
   const args = [script, sub];
   if (flags.root) args.push('--root', String(flags.root));
   if (flags.readme) args.push('--readme', String(flags.readme));
   if (flags.write) args.push('--write');
-  const r = spawnSync(process.execPath, args, { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024, timeout: 120_000, stdio: 'inherit' });
+  const r = spawnSync(process.execPath, args, { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024, timeout: SUBPROC_TIMEOUT_MS, stdio: 'inherit' });
   return r.status === 0 ? 0 : 1;
 }
 
@@ -674,13 +683,12 @@ export async function cmdFunctions(op, target, flags) {
     console.error(`functions 子命令应为 analyze|apply（得「${op || '(空)'}」）`);
     return 1;
   }
-  const { spawnSync } = await import('node:child_process');
   if (op === 'analyze') {
     const dir = target || '.';
     // 输出统一落到当前目录（cwd）根，与 apply 读取位置一致（scan 目标只影响扫描范围）
     const outFile = join(process.cwd(), 'functions-index.json');
     const script = fileURLToPath(new URL('./scripts/func-index.js', import.meta.url));
-    const r = spawnSync(process.execPath, [script, dir, '--out', outFile], { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024, timeout: 120_000 });
+    const r = spawnSync(process.execPath, [script, dir, '--out', outFile], { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024, timeout: SUBPROC_TIMEOUT_MS });
     if (r.error) { console.error(`❌ analyze 失败: ${r.error.message}`); return 1; }
     if (flags.json) { console.log(JSON.stringify({ ok: true, outFile }, null, 2)); return 0; }
     console.log(`✅ 函数索引已生成 → ${outFile}`);
@@ -705,11 +713,10 @@ export async function cmdModuleSplitter(positional = [], flags = {}) {
     console.error('module-splitter 需要目标参数：analyze <file.js> / split <plan.json> / verify <plan.json>');
     return { ok: false, error: '缺目标文件/plan 路径' };
   }
-  const { spawnSync } = await import('node:child_process');
   const script = fileURLToPath(new URL('./scripts/module-splitter.py', import.meta.url));
   const args = [script, sub, target];
   if (flags.dryRun) args.push('--dry-run');
-  const r = spawnSync('python3', args, { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024, timeout: 120_000 });
+  const r = spawnSync('python3', args, { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024, timeout: SUBPROC_TIMEOUT_MS });
   if (r.error) {
     const msg = r.error.code === 'ENOENT' ? 'python3 不可用（module-splitter 依赖 python3 标准库）' : `执行失败: ${r.error.message}`;
     console.error(msg);
