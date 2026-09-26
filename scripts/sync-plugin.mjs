@@ -1,8 +1,8 @@
 /**
  * 双副本同步脚本（1.0.0）
  *
- * 源 = 本仓库（工作区/dsh-git-push-v2，即 dsh-git-push 本体）
- * 目标 = DSH 插件目录（.dsh/profiles/<profile>/node_modules/dsh-git-push）
+ * 源 = 本仓库（脚本所在插件仓库根）
+ * 目标 = DSH 插件目录（.dsh/profiles/<profile>/node_modules/<插件名>）
  *
  * 默认 **dryRun**（只打印将要同步的差异，不写入）；`--write` 才真同步。
  * 同步内容：lib/**  skills/**  scripts/**  cli.mjs  package.json  cordis.patch.yml  README.md
@@ -12,6 +12,8 @@
  *   node scripts/sync-plugin.mjs                    # dry-run（默认）
  *   node scripts/sync-plugin.mjs --write            # 真同步
  *   node scripts/sync-plugin.mjs --target <目录>    # 指定目标（默认自动探测）
+ *   node scripts/sync-plugin.mjs --source <目录>    # 指定源插件仓库（默认本仓库）；
+ *                                                   # 目标未显式给时按源目录名自动探测双副本
  */
 import { existsSync, readdirSync, statSync, readFileSync } from 'node:fs';
 import { mkdir, readFile } from 'node:fs/promises';
@@ -19,21 +21,15 @@ import { mkdir, readFile } from 'node:fs/promises';
 //   （尝试 SMB 服务端复制），必须用带读写回退的 copyFileCompat。
 import { copyFileCompat } from '../lib/fsx.js';
 import { readdir, stat, access } from 'node:fs/promises';
-import { join, relative, dirname } from 'node:path';
+import { join, relative, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const SOURCE_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
-/** 随插件发布的顶层条目。 */
-// 必须与 package.json 的 files 白名单保持一致（test-self.mjs 有一条测试守住）：
-//   · client.js（2026-09-19 起移到 lib/client.js）是侧边栏前端主文件，随 'lib' 整目录同步，不再单列；
-//   · scripts 是随插件发布的独立脚本（scan-version / audit-runtime-check / scrub-user-wording / check /
-//     sync-plugin 本身），README 有专门章节教用户直接 `node scripts/<名>.mjs` 调用 → 安装副本里必须有，
-//     否则文档承诺的入口在装好的插件里不存在。
-// 2026-09-27：补 .auditignore / .gitignore——审计豁免文件此前不在白名单，sync 从未同步，
-//   安装副本缺 .auditignore → 宿主审计的 client.js/score/index.js 豁免全失效（全量警告虚高）。
-//   npm 发布同样必须带上（files 白名单显式列出），否则市场安装的插件豁免也失效。
-export const SYNC_ENTRIES = ['lib', 'skills', 'scripts', 'cli.mjs', 'package.json', 'cordis.patch.yml', 'README.md', '.auditignore', '.gitignore'];
+/** 随插件发布的顶层条目（通用候选：按源目录存在性过滤，兼容任意 DSH 插件）。
+ *   候选含 lib/skills/scripts/assets/tools/cli.mjs/package.json/cordis.patch.yml/
+ *   README.md/.auditignore/.gitignore——源里没有的条目自动跳过。 */
+export const SYNC_ENTRIES = ['lib', 'skills', 'scripts', 'assets', 'tools', 'cli.mjs', 'package.json', 'cordis.patch.yml', 'README.md', '.auditignore', '.gitignore'];
 
 /**
  * 同步时排除的路径片段。
@@ -48,6 +44,25 @@ export const SYNC_EXCLUDE = ['.git', 'node_modules', 'WORKBOARD', 'test', '.tmp'
 /** 异步探测路径是否存在（node:fs/promises 不提供 exists）。 */
 async function exists(p) {
   try { await access(p); return true; } catch { return false; }
+}
+
+/**
+ * 随插件发布的顶层条目 = 源项目 package.json 的 `files` 白名单（每个插件自行声明
+ * 发布内容，与 npm 打包语义一致）；另强制包含 package.json 本身（部署副本加载必需）。
+ * files 缺失或读取失败时兜底保守最小集 ['lib', 'cordis.patch.yml']。
+ * @param {string} root 源仓库根
+ * @returns {string[]} 应同步的顶层条目
+ */
+export async function packageFilesOf(root) {
+  let files = [];
+  try {
+    const pkg = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
+    if (Array.isArray(pkg.files) && pkg.files.length > 0) files = pkg.files;
+  } catch {
+    // 读失败 → 走兜底最小集
+  }
+  if (files.length === 0) files = ['lib', 'cordis.patch.yml'];
+  return Array.from(new Set([...files, 'package.json']));
 }
 
 /**
@@ -68,7 +83,7 @@ export async function listSyncFiles(root = SOURCE_ROOT) {
       else out.push(rel);
     }
   };
-  for (const entryName of SYNC_ENTRIES) {
+  for (const entryName of await packageFilesOf(root)) {
     const full = join(root, entryName);
     if (!(await exists(full))) continue;
     if ((await stat(full)).isDirectory()) await walk(full);
@@ -82,7 +97,7 @@ export async function listSyncFiles(root = SOURCE_ROOT) {
  *
  * **两个位置都要同步**（最大教训：只同步 node_modules 导致改动看不到）：
  *   1) `<profile>/local-plugins/<插件名>`  ← **真实加载源**（profile 的 package.json
- *      写的是 `"dsh-git-push": "file:./local-plugins/dsh-git-push"`，DSH 加载这里）
+ *      写的是 `"<插件名>": "file:./local-plugins/<插件名>"`，DSH 加载这里）
  *   2) `<profile>/node_modules/<插件名>`   ← npm link 产物（部分运行路径会解析到这里）
  *
  * 历史上 UI 改动「刷新看不到」，根因就是只 rsync 了 node_modules。
@@ -90,9 +105,9 @@ export async function listSyncFiles(root = SOURCE_ROOT) {
  * @param {string} [pluginName] 插件名
  * @returns {string[]} 命中的目标目录（local-plugins 在前）
  */
-export function detectTargets(home = process.env.DSH_HOME || '', pluginName = 'dsh-git-push') {
+export function detectTargets(home = process.env.DSH_HOME || '', pluginName = '') {
   const hits = [];
-  if (!home) return hits;
+  if (!home || !pluginName) return hits;
   const profiles = join(home, '.dsh', 'profiles');
   if (!existsSync(profiles)) return hits;
   for (const profile of readdirSync(profiles, { withFileTypes: true })) {
@@ -156,19 +171,23 @@ export async function syncPlugin({ source = SOURCE_ROOT, target = '', write = fa
   return { ok: failures.length === 0, written, skipped, files, failures };
 }
 
-/** CLI 入口。 */
+/** CLI 入口。支持 --source <目录>（缺省=本仓库）、--target <目录>（缺省=自动探测）、--write。 */
 export async function main(argv = process.argv.slice(2)) {
   const write = argv.includes('--write');
+  const si = argv.indexOf('--source');
+  const source = si >= 0 ? argv[si + 1] : SOURCE_ROOT;
   const ti = argv.indexOf('--target');
-  const target = ti >= 0 ? argv[ti + 1] : (detectTargets()[0] || '');
-  const r = await syncPlugin({ target, write });
+  // 未显式给 target → 按源目录名自动探测 DSH 插件目录（local-plugins + node_modules 双副本）
+  const pluginName = basename(source);
+  const target = ti >= 0 ? argv[ti + 1] : (detectTargets(process.env.DSH_HOME || '', pluginName)[0] || '');
+  const r = await syncPlugin({ source, target, write });
   if (!r.ok) {
     console.log(`同步未执行：${r.error}`);
-    console.log(`可用目标（自动探测）：${detectTargets().join(' | ') || '(无)'}`);
+    console.log(`可用目标（自动探测）：${detectTargets(process.env.DSH_HOME || '', pluginName).join(' | ') || '(无)'}`);
     return 1;
   }
   console.log(`双副本同步${write ? '' : '（dry-run，加 --write 才写）'}`);
-  console.log(`  源：${SOURCE_ROOT}`);
+  console.log(`  源：${source}`);
   console.log(`  目标：${target}`);
   console.log(`  待写 ${r.written} 个文件，已一致 ${r.skipped} 个`);
   for (const f of r.files.slice(0, 10)) console.log(`    - ${f}`);

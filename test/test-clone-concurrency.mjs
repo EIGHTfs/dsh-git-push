@@ -395,37 +395,32 @@ test('clone 后台化：缺 target/dir 仍同步回 400（参数错误不该进�
 test('clone 后台化：提交成功后 HTTP 立即返回，且不残留未捕获的后台异常', async () => {
   // 这条用**非联网**方式验证契约：后台协程的 .catch 必须存在，否则
   //   异常会绕过 finishCloneJob → current 永不释放 → 之后所有 clone 永久 busy。
-  const src = readFileSync(join(ROOT, 'lib/app/http-handlers.js'), 'utf8');
-  // 用**括号配对**精确取出承载 cloneViaApi 的那个异步 IIFE，再检查它自己挂了 .catch。
-  //   教训：先前写成「端点段内出现 })().catch( 即可」——但该段内还有别的 IIFE（索引回写那条），
-  //   于是把 clone 的 .catch 删掉后断言**仍然通过**（反向验证才暴露）。必须绑定到同一个 IIFE。
-  const segRaw = src.slice(src.indexOf("'/api/git-push/repo-clone'"), src.indexOf("'/api/git-push/clone-logs'"));
-  // 必须**先剥注释**再定位：段内注释里写着「此前这里 await cloneViaApi」，
-  //   直接 indexOf 会命中那句注释（实测踩到），从而锚到上一个 IIFE、断言看错对象。
+  // 2026-09-29：repo-clone 逻辑迁到 lib/app/handlers/clone.js（handleRepoClone），
+  //   锚点从端点字符串改为「handleRepoClone 函数 → 文件尾」。
+  const src = readFileSync(join(ROOT, 'lib/app/handlers/clone.js'), 'utf8');
+  const segRaw = src.slice(src.indexOf('export async function handleRepoClone'), src.indexOf('export function handleCloneLogs'));
+  // 必须**先剥注释**再定位：函数头注释里可能含 cloneViaApi 字样
   const seg = segRaw
     .replace(/\/\*[\s\S]*?\*\//g, '')   // 块注释
-    .replace(/(^|[^:])\/\/[^\n]*/g, '$1'); // 行注释（避开 http:// 里的 //）
-  // 段内**有两个** IIFE（① 索引回写 ② clone 后台）。必须锚定②，即
-  //   「最后一个位于 await cloneViaApi 之前的 IIFE 起点」。
+    .replace(/(^|[^:])\/\/[^\n]*/g, '$1'); // 行注释
   const callAt = seg.indexOf('await cloneViaApi');
-  assert.ok(callAt > 0, 'repo-clone 内应调用 cloneViaApi');
+  assert.ok(callAt > 0, 'handleRepoClone 内应调用 cloneViaApi');
   const iifeStart = seg.lastIndexOf('(async () => {', callAt);
   assert.ok(iifeStart > 0, 'cloneViaApi 应被异步 IIFE 包裹（后台跑）');
-  // 括号配对精确取出该 IIFE 范围，确认 cloneViaApi 真在它体内（而非落在别处）
+  // 括号配对精确取出该 IIFE 范围，确认 cloneViaApi 真在它体内
   let depth = 0, end = -1;
   for (let k = seg.indexOf('{', iifeStart); k < seg.length; k++) {
     const ch = seg[k];
     if (ch === '{') depth++;
     else if (ch === '}') { depth--; if (depth === 0) { end = k; break; } }
   }
-  assert.ok(end > callAt, 'cloneViaApi 必须落在该异步 IIFE 的体内（否则请求仍被阻塞）');
+  assert.ok(end > callAt, 'cloneViaApi 必须落在该异步 IIFE 的体内');
   const tail = seg.slice(end, end + 20);
-  assert.match(tail, /^\}\)\(\)\.catch\(/, `承载 clone 的 IIFE 必须紧接 })().catch(（实际 "${tail.trim()}"）——异常逃逸会让任务永久卡 busy`);
-  // 且该 IIFE 体内确实包含 cloneViaApi
+  assert.match(tail, /^\}\)\(\)\.catch\(/, `承载 clone 的 IIFE 必须紧接 })().catch(`);
   assert.match(seg.slice(iifeStart, end), /cloneViaApi/, '该 IIFE 体内应调用 cloneViaApi');
-  assert.match(seg, /status: 202/, '提交成功应回 202（已受理，非 200 已完成）');
-  assert.match(seg, /async: true/, '响应体应标 async:true，前端据此转轮询');
-  assert.match(seg, /finishCloneJob/, '后台收尾必须调 finishCloneJob 落终态');
+  assert.match(seg, /status: 202/, '提交成功应回 202');
+  assert.match(seg, /async: true/, '响应体应标 async:true');
+  assert.match(seg, /finishCloneJob/, '后台收尾必须调 finishCloneJob：状态');
   const retAt = seg.indexOf('status: 202');
   assert.ok(retAt > iifeStart, '202 响应应在启动后台 IIFE 之后立即返回');
 });

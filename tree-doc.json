@@ -18,7 +18,7 @@
   "lib/app": "插件入口层（apply/HTTP 处理/工具调用分发/注入文本/默认扫描根）",
   "lib/app/apply.js": "插件装载入口（注册 schema/工具/HTTP/注入钩子）",
   "lib/app/constants.js": "插件名与设置命名空间常量",
-  "lib/app/http-handlers.js": "HTTP 路由分发（全部 /api/git-push/* 端点）",
+  "lib/app/http-handlers.js": "HTTP 路由分发（薄 router：前置校验 + switch 各端点调 handlers/ 模块）",
   "lib/app/index.js": "插件入口再导出（宿主 main 指向）",
   "lib/app/inject-text.js": "注入文本（工具用法提示 FUNCTION_USAGE_HINT）",
   "lib/app/scan-root.js": "默认扫描根解析（配置优先→DSH 家根自动识别）",
@@ -130,8 +130,6 @@
   "lib/link-check/index.js": "链接判断总入口（分级扣分，断网不拦）",
   "lib/plugin": "Host 侧接线层（插件注册到 DSH：工具/HTTP/配置 schema）",
   "lib/plugin/index.js": "Host 侧接线（插件注册：工具/HTTP/配置注入宿主）",
-  "lib/readme-gen": "README 生成（git_gen_readme 工具模板渲染）",
-  "lib/readme-gen/index.js": "README 生成总入口（git_gen_readme 模板渲染）",
   "lib/readme-templates": "README 模板 yml",
   "lib/readme-templates/readme.yml": "README 章节模板（git_gen_readme 用）",
   "lib/rule": "规则引擎（yml 装载/编译注册表/同形字符检测/槽位启停）",
@@ -167,7 +165,6 @@
   "scripts": "开发工具脚本（版本校验/双副本同步/预览服务/README 目录树维护）",
   "scripts/audit-runtime-check.mjs": "三层审计 L3 运行时检测脚本",
   "scripts/check.mjs": "语法检查脚本（npm run check）",
-  "scripts/func-index.js": "（待注释）",
   "scripts/preview-server.mjs": "本地真实后端测试服务（preview.html 接真实 handleHttp）",
   "scripts/probe-recheck.mjs": "探针：「重新检测」按钮链路实测（在线校验 token/SSH）",
   "scripts/rule-switch.mjs": "规则槽位手动启停 CLI",
@@ -176,7 +173,6 @@
   "scripts/scan-version.mjs": "版本一致性校验脚本",
   "scripts/scrub-user-wording.mjs": "清理「用户沟通措辞」独立脚本",
   "scripts/sync-plugin.mjs": "双副本同步脚本（源仓库 → 部署安装副本）",
-  "scripts/tree-doc.mjs": "README 目录结构维护脚本（gen/check/apply）",
   "scripts/watch-preview.mjs": "preview.html 自动重生成监听（源码变更即重建）",
   "skills": "插件权威 skill（功能手册/规则/使用说明，安装副本的 skills/ 同步）",
   "skills/dsh-git-push-functions.md": "插件功能说明书（工具参数/HTTP API/源码定位）",
@@ -260,14 +256,7 @@
   "test/test-docs-score.mjs": "文档加分制测试（文档集圈法/四检查/公式/不一致 review/不冲突）",
   "lib/git/cred-env.js": "凭据传递工具（SSH 私钥路径 GIT_SSH_COMMAND / HTTPS askpass 脚本，AI 执行外部 git 不接触明文）",
   "test/test-cred-env.mjs": "git_cred_env 凭据传递测试（双通道/无明文/askpass 调用/无凭据兜底）",
-  "docs/函数/lib/score": "（待注释）",
-  "docs/函数/lib": "（待注释）",
-  "docs/函数": "（待注释）",
-  "docs/函数/lib/score/index.js.md": "（待注释）",
   "docs/方案-tree-doc变动追踪与函数文档.md": "（待注释）",
-  "functions-index.json": "函数索引 JSON（func-index --out 生成：name/kind/行/signature/comment 槽位，人工补 comment 后 apply 生成函数文档）",
-  "scripts/functions-doc.mjs": "函数文档生成器（读 functions-index.json 生成 docs/函数/*.md，源文件删除归档 _archived 保留人工注释）",
-  "test/test-functions-doc.mjs": "函数索引/文档测试（analyze 字段/apply 生成/归档/注释/skipEmpty）",
   "docs/方案-audit-history-历史提交审计.md": "（待注释）",
   "docs/方案-repo-index-account-status-更新收口.md": "（待注释）",
   "docs/方案-文档维度加分制.md": "（待注释）",
@@ -284,57 +273,93 @@
   "lib/plugin/auto-push.js": "任务完成自动推送·核心（turn/end 监听→检测→autoPushEnabled 开关→调 commitWithAudit 完整门禁，不裸提交）",
   "test/test-auto-push.mjs": "任务完成自动推送测试（检测纯函数 + registerAutoPush 门控监听注册）",
   "docs/audit-2026-09-26.md": "（待注释）",
-  "lib/app/audit-api.js": "（待注释）",
+  "lib/app/audit-api.js": "审计结果 API 聚合层（/api/git-push/audit：按规则/文件/严重级/规则包分组 + severity 过滤 + top 截断）",
   "test/test-audit-api-http.mjs": "（待注释）",
   "test/test-audit-api.mjs": "（待注释）",
   "_meta": {
     "worktree": {
       "README.md": {
         "status": "M",
-        "mtime": "2026-09-26T19:49:57.096Z",
+        "mtime": "2026-09-26T21:21:46.745Z",
         "note": "注释可能需更新"
       },
-      "lib/app/http-handlers.js": {
+      "docs/函数/lib/score/index.js.md": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "lib/app/tool-call.js": {
         "status": "M",
-        "mtime": "2026-09-26T19:44:46.955Z",
+        "mtime": "2026-09-26T21:12:49.655Z",
         "note": "注释可能需更新"
       },
-      "lib/audit/history-report.js": {
+      "lib/app/tools.js": {
         "status": "M",
-        "mtime": "2026-09-26T19:38:42.535Z",
+        "mtime": "2026-09-26T21:13:06.304Z",
         "note": "注释可能需更新"
       },
-      "lib/audit/history.js": {
+      "lib/audit/orchestrate.js": {
         "status": "M",
-        "mtime": "2026-09-26T19:39:42.349Z",
+        "mtime": "2026-09-26T21:09:09.209Z",
         "note": "注释可能需更新"
       },
-      "lib/checks/button-bind.js": {
+      "skills/dsh-git-push.md": {
         "status": "M",
-        "mtime": "2026-09-26T19:40:58.207Z",
+        "mtime": "2026-09-26T21:22:24.069Z",
         "note": "注释可能需更新"
       },
-      "lib/context/index.js": {
+      "test/test-tree-doc.mjs": {
         "status": "M",
-        "mtime": "2026-09-26T19:44:13.107Z",
+        "mtime": "2026-09-26T21:09:19.419Z",
         "note": "注释可能需更新"
       },
-      "lib/self/index.js": {
-        "status": "M",
-        "mtime": "2026-09-26T19:49:56.821Z",
-        "note": "注释可能需更新"
-      },
-      "package.json": {
-        "status": "M",
-        "mtime": "2026-09-26T19:49:56.834Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-tool-probes.mjs": {
+      "docs/函数列表.md": {
         "status": "A",
-        "mtime": "2026-09-26T19:45:48.250Z",
+        "mtime": "2026-09-26T21:21:11.366Z",
+        "note": "注释可能需更新"
+      },
+      "docs/版本表.md": {
+        "status": "A",
+        "mtime": "2026-09-26T21:21:11.210Z",
+        "note": "注释可能需更新"
+      },
+      "scripts/doc-func.mjs": {
+        "status": "A",
+        "mtime": "2026-09-26T21:19:25.905Z",
+        "note": "注释可能需更新"
+      },
+      "scripts/doc-version.mjs": {
+        "status": "A",
+        "mtime": "2026-09-26T21:11:58.375Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-doc-func.mjs": {
+        "status": "A",
+        "mtime": "2026-09-26T21:15:33.735Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-doc-version.mjs": {
+        "status": "A",
+        "mtime": "2026-09-26T21:16:39.377Z",
         "note": "注释可能需更新"
       }
     }
   },
-  "test/test-tool-probes.mjs": "（待注释）"
+  "test/test-tool-probes.mjs": "（待注释）",
+  "lib/app/handlers/account.js": "HTTP 处理·账号端点（account-status/account-check/gen-ssh-key）",
+  "lib/app/handlers/clone.js": "HTTP 处理·克隆端点（repo-clone/clone-logs/abort/preview/progress）",
+  "lib/app/handlers/http-constants.js": "HTTP 处理·共享常量（list live 预算/探测并发/扫描等待）",
+  "lib/app/handlers/meta.js": "HTTP 处理·元信息/只读端点（status/scan/browse/tools/tool-probes/rule-slots/rule-detail/audit/toggle-rule + listRuleSlots）",
+  "lib/app/handlers/repo-actions.js": "HTTP 处理·仓库动作（repo-visibility/repo-push/repo-commit）",
+  "lib/app/handlers/repos.js": "HTTP 处理·仓库列表/扫描（repos-local/-scan/-wait/-refresh/repos-cloud）",
+  "lib/app/handlers/settings.js": "HTTP 处理·设置读写（settings-get/settings-set，白名单键）",
+  "lib/app/handlers": "（待注释）",
+  "scripts/readme-gen.mjs": "README 生成独立脚本（git_gen_readme 抽出：模板渲染/版本表/目录）",
+  "scripts/doc-tree.mjs": "（待注释）",
+  "scripts/doc-func.mjs": "（待注释）",
+  "scripts/doc-version.mjs": "（待注释）",
+  "test/test-doc-func.mjs": "（待注释）",
+  "test/test-doc-version.mjs": "（待注释）",
+  "docs/函数列表.md": "（待注释）",
+  "docs/版本表.md": "（待注释）"
 }

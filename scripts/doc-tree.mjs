@@ -25,7 +25,7 @@
  *   node scripts/tree-doc.mjs apply [--readme README.md]   # 覆盖 README 标记块
  */
 import { execFileSync } from 'node:child_process';
-import { readFileSync, writeFileSync, existsSync, statSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, statSync, readdirSync } from 'node:fs';
 import { join, dirname, resolve, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -34,7 +34,63 @@ const MAPPING_FILE = join(ROOT, 'tree-doc.json');
 const MARK_START = '<!-- dshgp-tree:start -->';
 const MARK_END = '<!-- dshgp-tree:end -->';
 const DEFAULT_README = join(ROOT, 'README.md');
-// 顶层展示目录（树只列这些分支；其余文件放根级）；未忽略清单里其余顶层路径自动归组
+/** 树标记块（宿主 md 识别用）。 */
+
+/**
+ * 自动探测「目录树宿主 md」（2026-09-29，分体式文档支持）：
+ *   · `--readme` 显式指定 → 直接用（向后兼容）。
+ *   · 缺省：优先 README.md；README 无标记块时，扫描根下全部 .md
+ *     （docs/ 优先），找第一个含 dshgp-tree 标记块的文件作为宿主——
+ *     即「版本/文件树/函数列表等文档放 docs/、README 只引用」格局下，
+ *     tree-doc 自动写到 docs/ 里真正承载树的那个 md，不再死认 README.md。
+ *   · 都无标记块 → 回退 README.md（apply 仍会报「无标记块」提示先插标记）。
+ * @param {string} root 项目根
+ * @param {string} [explicit] --readme 显式路径（空=自动探测）
+ * @returns {string} 宿主 md 绝对路径
+ */
+/** 收集根下全部 .md（排除 .git/node_modules/.dsh 等），含 docs/ 子目录，深度 ≤4。 */
+function collectMdFiles(root) {
+  const SKIP_DIRS = new Set(['.git', '.dsh', 'node_modules', 'dist', 'build', '.trash']);
+  const out = [];
+  const walk = (dir, depth) => {
+    if (depth > 4) return;
+    let entries = [];
+    try { entries = readdirSync(dir, { withFileTypes: true }); } catch { return; }
+    for (const e of entries) {
+      if (e.isDirectory() && SKIP_DIRS.has(e.name)) continue;
+      const full = join(dir, e.name);
+      if (e.isDirectory()) walk(full, depth + 1);
+      else if (e.name.endsWith('.md')) out.push(full);
+    }
+  };
+  walk(root, 0);
+  return out;
+}
+
+/**
+ * 探测含指定标记块的「文档宿主 md」（2026-09-29 公共函数，tree-doc/版本表/函数列表三类文档复用）。
+ * 优先 README.md；README 无该标记块时，扫描根下全部 .md 找第一个含该标记块的文件。
+ * 标记块形如 `<!-- <marker>:start --> … <!-- <marker>:end -->`（marker 如 'dshgp-tree'）。
+ * @param {string} root 项目根
+ * @param {string} marker 标记块名（缺省 dshgp-tree）
+ * @returns {string} 宿主 md 绝对路径（找不到含块 md 时回退 README.md）
+ */
+export function findMarkedHostMd(root, marker = 'dshgp-tree') {
+  const readme = join(root, 'README.md');
+  try {
+    if (existsSync(readme) && findBlock(readFileSync(readme, 'utf8'), marker)) return readme;
+  } catch { /* 不可读则继续探测 */ }
+  for (const f of collectMdFiles(root)) {
+    try { if (findBlock(readFileSync(f, 'utf8'), marker)) return f; } catch { /* 忽略坏文件 */ }
+  }
+  return readme;
+}
+
+/** 解析「树宿主 md」（2026-09-29：README 不再写死，自动探测含 dshgp-tree 标记块的 md）。 */
+export function resolveTargetMd(root, explicit = '', marker = 'dshgp-tree') {
+  if (explicit) return explicit;
+  return findMarkedHostMd(root, marker);
+}
 const TOP_DIRS = [
   'lib', 'scripts', 'assets', 'test', 'docs', 'skills',
   'cli.mjs', 'package.json', 'README.md', 'cordis.patch.yml',
@@ -218,11 +274,14 @@ export function buildTreeText(files = gitLsFiles(), map = loadMapping(), rootLab
 
 /* ───────────────────────── README 标记块读写 ───────────────────────── */
 
-function findBlock(text) {
-  const s = text.indexOf(MARK_START);
-  const e = text.indexOf(MARK_END);
+/** 找文本内的标记块（marker 如 'dshgp-tree'；块 = <!-- <marker>:start --> … <!-- <marker>:end -->）。 */
+function findBlock(text, marker = 'dshgp-tree') {
+  const sMark = `<!-- ${marker}:start -->`;
+  const eMark = `<!-- ${marker}:end -->`;
+  const s = text.indexOf(sMark);
+  const e = text.indexOf(eMark);
   if (s === -1 || e === -1 || e <= s) return null;
-  return { start: s, end: e, content: text.slice(s + MARK_START.length, e) };
+  return { start: s, end: e, content: text.slice(s + sMark.length, e) };
 }
 
 function readReadme(path) {
@@ -247,7 +306,7 @@ export function checkDrift({ readmePath = DEFAULT_README, root = ROOT } = {}) {
   const realPaths = new Set(gitLsFiles(root));
   const issues = [];
   if (!block) {
-    issues.push({ type: 'no-block', msg: `README 没有目录结构标记块（${MARK_START} … ${MARK_END}）` });
+    issues.push({ type: 'no-block', msg: `${basename(readmePath)} 没有目录结构标记块（${MARK_START} … ${MARK_END}）；可 apply 前先插入标记，或把树写到带标记的 docs/ md（自动探测）` });
     return { ok: false, drift: true, issues, realTree: real };
   }
   // 现有块内容 → 提取完整相对路径（按缩进深度拼层级），目录带尾斜杠
@@ -330,9 +389,10 @@ if (isMain) {
   //   缺省 = 自身项目（向后兼容）；显式 `--readme` 优先于 root 推导的 README 路径。
   const rootIdx = args.indexOf('--root');
   const rootArg = rootIdx !== -1 && args[rootIdx + 1] ? resolve(args[rootIdx + 1]) : ROOT;
-  const defReadme = rootArg === ROOT ? DEFAULT_README : join(rootArg, 'README.md');
+  // 2026-09-29：README 不再写死——自动探测宿主 md（README 无标记块时找 docs/ 里带标记块的）
   const readmeIdx = args.indexOf('--readme');
-  const readmePath = readmeIdx !== -1 ? resolve(args[readmeIdx + 1] || defReadme) : defReadme;
+  const readmeExplicit = readmeIdx !== -1 && args[readmeIdx + 1] ? resolve(args[readmeIdx + 1]) : '';
+  const readmePath = readmeExplicit || resolveTargetMd(rootArg);
   const forceAll = args.includes('--all');
   const filesOf = (r) => gitLsFiles(r);
   const mapOf = (r) => loadMapping(r);
@@ -382,7 +442,8 @@ if (isMain) {
       const text = readReadme(readmePath);
       const updated = applyBlock(text, tree);
       writeFileSync(readmePath, updated, 'utf8');
-      console.log(`✅ 已覆盖 README 目录结构块: ${readmePath}`);
+      console.log(`✅ 已覆盖目录结构块: ${readmePath}`);
+      if (!readmePath.endsWith('README.md')) console.log('  ℹ️ 宿主为非 README md——确保 README 以链接引用它（分体式文档，见插件 skill「文档组织」节）');
       break;
     }
     default:

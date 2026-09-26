@@ -126,10 +126,11 @@ test('回读键必须在 schema 中有定义（不得读不存在的键）', () 
 /* ─────────────────── ③ 凭据「已填写」判断口径 ─────────────────── */
 
 test('account-status 的「已填写」判断用配置真源，不用在线校验快照', () => {
-  const start = httpSrc.indexOf("case '/api/git-push/account-status':");
-  assert.ok(start >= 0, '未找到 account-status 分支');
-  const end = httpSrc.indexOf("case '/api/git-push/account-check':", start);
-  const block = httpSrc.slice(start, end > 0 ? end : start + 3000);
+  // 2026-09-29：account-status 逻辑迁到 lib/app/handlers/account.js（handleAccountStatus）
+  const accountSrc = readFileSync(join(ROOT, 'lib/app/handlers/account.js'), 'utf8');
+  const start = accountSrc.indexOf('export function handleAccountStatus');
+  const end = accountSrc.indexOf('export async function handleAccountCheck', start);
+  const block = accountSrc.slice(start, end > 0 ? end : start + 3000);
 
   // 必须读凭据真源
   assert.match(block, /fileHasToken|fileHasSsh/, 'account-status 必须从凭据文件真源判断「是否已填写」');

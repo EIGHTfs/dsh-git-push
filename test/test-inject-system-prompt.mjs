@@ -229,9 +229,9 @@ test('废弃：injectFullSkill / injectRepoIndexFull 不再出现在配置与 UI
 
 /* ───────── ④ 注入内容：功能用法 + 目录级环境 ───────── */
 
-test('功能用法段：覆盖全部 10 个工具（AI 才知道插件有什么）', async () => {
+test('功能用法段：覆盖全部 9 个工具（AI 才知道插件有什么）', async () => {
   const { FUNCTION_USAGE_HINT } = await import('../lib/app/inject-text.js');
-  for (const tool of ['git_scan', 'git_commit_push', 'code_audit', 'git_gen_readme', 'git_clone',
+  for (const tool of ['git_scan', 'git_commit_push', 'code_audit', 'git_clone',
     'git_remote_create', 'git_set_visibility', 'link_check', 'git_account_check', 'git_gen_ssh_key']) {
     assert.ok(FUNCTION_USAGE_HINT.includes(tool), `功能用法段应包含 ${tool}`);
   }

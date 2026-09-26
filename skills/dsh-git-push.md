@@ -168,3 +168,48 @@ dsh plugin --profile web add /tmp/dsh-git-push-<版本>.tgz
 | 审计报「0 blocker 0 warning 但 total > 0」 | error 级问题也计入拦截级；看 findings 的 severity 字段 |
 | 豁免写了没用 | 标记必须在前 3 行（整文件豁免）或写在**命中那一行**（行级豁免） |
 | 链接检查报错 | 链接问题只 warning 不拦截；flaky 域名（github 等）网络错误扣分 ×0.2 |
+
+## 九、文档组织（分体式，2026-09-29）
+
+> 本插件维护文档统一 **分体式**：版本记录、文件树、函数列表等**不直接写进 README**，各自存独立文档，README 只放链接引用。配套检查工具已适配。
+
+### 9.1 文档存哪（doc- 前缀三兄弟统一）
+
+| 文档 | 位置 | 维护脚本 | 标记块 |
+|---|---|---|---|
+| 版本记录（changelog） | `docs/版本表.md` | `scripts/doc-version.mjs`（gen/apply/check） | `dshgp-version` |
+| 函数列表 | `docs/函数列表.md` | `scripts/doc-func.mjs`（gen/apply/check） | `dshgp-functions` |
+| 文件目录树 | README「目录结构」节 或 docs/ 带块 md | `scripts/doc-tree.mjs`（gen/apply/check/sync，原 tree-doc） | `dshgp-tree` |
+| README.md | 只放「功能总览 + 用法 + 上述文档的链接引用」 | AI/human | — |
+
+**约定**：README 不直接内嵌长文档（版本表/文件树/函数列表），改为「## 分体式文档」节链接引用。三脚本命令统一 `gen`（打印）/ `apply`（写宿主，自动探测带标记块的 md）/ `check`（查漂移）；宿主探测复用公共函数 `findMarkedHostMd(root, marker)`（优先 README，README 无标记块时扫描 .md 找含块文件）。
+
+### 9.2 README 生成（已抽独立脚本，非插件工具）
+
+`git_gen_readme` 插件工具已于 2026-09-29 移除，改为**独立脚本**：
+
+```bash
+node scripts/readme-gen.mjs <repoPath> [--write <path>] [--template <path>]
+```
+
+- 只打印不写 → 不传 `--write`；`--write README.md` 才落盘
+- `--template` 指定自定义模板（缺省 `lib/readme-templates/readme.yml`）；占位符 `{{name}} {{description}} {{version}} {{toc}} {{versionTable}}`
+- 插件不再内置生成能力，push.js 的「仓库无 README」提示引用此脚本
+
+### 9.3 doc-tree 自动探测 md（2026-09-29）
+
+`doc-tree apply/sync/check`（原 tree-doc）不再死认 `README.md`，自动探测宿主 md：
+
+- `--readme <路径>` 显式指定 → 直接用（向后兼容）
+- 缺省：优先 README.md；README 无 `dshgp-tree` 标记块时，扫描根下 `.md`（排除 `.git/node_modules/.trash/.dsh`），找第一个含标记块文件作宿主
+- 都无标记块 → 回退 README.md（apply 提示先插标记）
+
+**适用**：文件树写 `docs/文件树.md` 后，`doc-tree apply` 自动写到它，README 链接引用。
+
+### 9.4 版本检查适配
+
+`scripts/scan-version` 已适配多 md——版本记录在 `docs/版本表.md` 而非 README 也能探测，三处一致校验不再死绑 README.md。
+
+### 9.5 旧体系废弃（2026-09-29）
+
+旧函数文档体系（`functions_index` 插件工具 + `scripts/func-index.js` + `scripts/functions-doc.mjs` + `docs/函数/*.md` + `functions-index.json`）已**整体废弃删除**，由 `doc-func.mjs` 取代（单文件 `docs/函数列表.md` 带标记块，不再每文件一个 md）。审计分体检查（appendSplitDocsCheck）对 `dshgp-version` / `dshgp-functions` 宿主 md 做存在性校验。

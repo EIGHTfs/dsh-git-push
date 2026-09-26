@@ -11,7 +11,7 @@ import { tmpdir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { buildTreeText, checkDrift, syncIndex } from '../scripts/tree-doc.mjs';
+import { buildTreeText, checkDrift, syncIndex, findMarkedHostMd } from '../scripts/doc-tree.mjs';
 
 // 脚本与项目根（CLI --root 外调用例需要）
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -134,7 +134,7 @@ test('CLI --root：可对任意项目根 check/apply（其他项目复用本脚�
   spawnSync('git', ['-C', proj, 'add', '-A'], { encoding: 'utf8' });
 
   // CLI check --root：外部项目无漂移
-  const script = join(ROOT, 'scripts/tree-doc.mjs');
+  const script = join(ROOT, 'scripts/doc-tree.mjs');
   const check = spawnSync(process.execPath, [script, 'check', '--root', proj], { encoding: 'utf8' });
   assert.equal(check.status, 0, 'check --root 应通过（无漂移）: ' + check.stdout + check.stderr);
 
@@ -182,5 +182,39 @@ test('checkDrift：工具生成物（docs/函数/、functions-index.json、_meta
     // 生成物（_meta / docs/函数/ / functions-index.json）不得出现在任何漂移 issues；
     // 测试仓库树块未 apply 完整（README.md/tree-doc.json 未列属夹具自身不完整，与生成物豁免无关）
     assert.ok(!r.issues.some((i) => i.msg.includes('_meta') || i.msg.includes('docs/函数') || i.msg.includes('functions-index')), `生成物不得出现在漂移 issues：${JSON.stringify(r.issues)}`);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+// ---------- 2026-09-29：findMarkedHostMd 自动探测（分体式文档宿主） ----------
+test('findMarkedHostMd：README 有 dshgp-tree 标记 → 返回 README（tree-doc 宿主）', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-td-host-'));
+  try {
+    writeFileSync(join(dir, 'README.md'), '# x\n<!-- dshgp-tree:start -->\n```text\nx/\n```\n<!-- dshgp-tree:end -->\n');
+    writeFileSync(join(dir, 'docs析'), '');
+    mkdirSync(join(dir, 'docs'), {}); writeFileSync(join(dir, 'docs/文件树.md'), '<!-- dshgp-tree:start -->\n<!-- dshgp-tree:end -->\n');
+    const host = findMarkedHostMd(dir, 'dshgp-tree');
+    assert.ok(host.endsWith('README.md'), 'README 有 dshgp-tree 块时应返回 README（实测 ' + host + '）');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('findMarkedHostMd：README 无标记块 → 自动探测 docs/ 带标记的 md（分体）', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-td-docs-'));
+  try {
+    writeFileSync(join(dir, 'README.md'), '# x\n[文件树](docs/文件树.md)\n'); // README 无 dshgp-tree 块
+    mkdirSync(join(dir, 'docs'), {});
+    writeFileSync(join(dir, 'docs/文件树.md'), '<!-- dshgp-tree:start -->\nfoo\n<!-- dshgp-tree:end -->\n'); // docs 宿主
+    const host = findMarkedHostMd(dir, 'dshgp-tree');
+    assert.ok(host.endsWith('docs/文件树.md'), 'README 无块时应探测到 docs/文件树.md（实际 ' + host + '）');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('findMarkedHostMd：通用 marker（dshgp-version/dshgp-functions 复用同逻辑）', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-td-mk-'));
+  try {
+    mkdirSync(join(dir, 'docs'), {});
+    writeFileSync(join(dir, 'docs/版本表.md'), '<!-- dshgp-version:start -->\n1.0.0\n<!-- dshgp-version:end -->\n');
+    writeFileSync(join(dir, 'docs/函数列表.md'), '<!-- dshgp-functions:start -->\nfoo\n<!-- dshgp-functions:end -->\n');
+    assert.ok(findMarkedHostMd(dir, 'dshgp-version').endsWith('docs/版本表.md'), '版本表宿主探测');
+    assert.ok(findMarkedHostMd(dir, 'dshgp-functions').endsWith('docs/函数列表.md'), '函数列表宿主探测');
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });

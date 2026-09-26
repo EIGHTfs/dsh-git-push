@@ -148,11 +148,12 @@ test('apply：无 commands 服务时斜杠注册静默跳过', async () => {
 });
 
 // ---------- 工具清单 ----------
-test('工具：8 个工具名齐全（含 git_gen_readme）', () => {
+test('工具：7 个工具名齐全（git_gen_readme 已抽独立脚本移除）', () => {
   const names = listTools().map((t) => t.name);
-  for (const n of ['git_scan', 'git_commit_push', 'code_audit', 'git_clone', 'git_remote_create', 'git_set_visibility', 'link_check', 'git_gen_readme']) {
+  for (const n of ['git_scan', 'git_commit_push', 'code_audit', 'git_clone', 'git_remote_create', 'git_set_visibility', 'link_check']) {
     assert.ok(names.includes(n), `缺工具 ${n}`);
   }
+  assert.ok(!names.includes('git_gen_readme'), 'git_gen_readme 已移除（README 生成抽为独立脚本 scripts/readme-gen.mjs）');
 });
 
 test('工具：每个工具都有 description 与 parameters', () => {
@@ -170,21 +171,10 @@ test('工具分发：git_scan 扫到本仓（含 .git）', async () => {
   assert.ok(r.repos.some((x) => x.path === ROOT));
 });
 
-test('工具分发：git_gen_readme 生成 README 内容（模板 + 版本表 + 目录）', async () => {
+test('工具分发：git_gen_readme 已移除（返回提示用独立脚本）', async () => {
   const r = await callTool('git_gen_readme', { repo: ROOT }, { workspaceRoot: '' }, {});
-  assert.equal(r.ok, true);
-  assert.equal(r.name, 'dsh-git-push');
-  assert.equal(typeof r.content, 'string');
-  assert.ok(r.content.length > 200, '内容应有足够长度');
-  assert.ok(r.versionTable.length >= 1, '应有版本表行');
-  assert.ok(r.toc.includes('架构设计'), '目录应含第一章');
-  assert.equal(r.written, false, '未传 writePath 不应写文件');
-  assert.ok(r.templateSource.includes('readme-templates') || r.templateSource === 'builtin', '模板源应来自内置 yml 或兜底');
-});
-
-test('工具分发：git_gen_readme 缺 repo 报错', async () => {
-  const r = await callTool('git_gen_readme', {}, { workspaceRoot: '' }, {});
-  assert.equal(r.ok, false);
+  assert.equal(r.ok, false, '已移除的工具应返回 ok:false');
+  assert.match(r.error, /readme-gen\.mjs/, '错误信息应提示独立脚本 scripts/readme-gen.mjs');
 });
 
 test('工具分发：缺 repo 参数明确报错（不静默）', async () => {

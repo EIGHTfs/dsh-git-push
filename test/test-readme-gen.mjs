@@ -14,7 +14,7 @@ import { execFileSync } from 'node:child_process';
 import {
   genReadme, renderReadmeTemplateYml, loadReadmeTemplateYml,
   resolveReadmeTemplate, tocFromTemplate, parseVersion, listVersionCommits, buildReadmeVersionTable,
-} from '../lib/readme-gen/index.js';
+} from '../scripts/readme-gen.mjs';
 
 let tmp = '';
 const runGit = (args, cwd) => execFileSync('git', ['-C', cwd, ...args], { encoding: 'utf8' }).trim();

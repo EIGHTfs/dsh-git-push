@@ -45,9 +45,9 @@ const SET_ADVANCED = ['maxScanFiles', 'maxCloneFileMB', 'cloneConcurrency', 'pus
 
 /** settings-set 白名单键（L2）。 */
 function allowlistKeys() {
-  const src = readFileSync(join(ROOT, 'lib/app/http-handlers.js'), 'utf8');
+  const src = readFileSync(join(ROOT, 'lib/app/handlers/settings.js'), 'utf8');
   const m = src.match(/allowedKeys = new Set\(\[([\s\S]*?)\]\)/);
-  assert.ok(m, 'http-handlers 中应有 allowedKeys 白名单');
+  assert.ok(m, 'handlers/settings.js 中应有 allowedKeys 白名单');
   return new Set([...m[1].matchAll(/'([a-zA-Z]+)'/g)].map((x) => x[1]));
 }
 
@@ -178,7 +178,7 @@ test('L4 权重：code_audit 流程真的消费 cfg.weightOverrides（权重设�
 test('L4 关键键 auditRuleOrder：规则加载顺序真正使用 cfg.auditRuleOrder', () => {
   const loader = readFileSync(join(ROOT, 'lib/rule/loader.js'), 'utf8');
   // 端点层把 cfg.auditRuleOrder 传给 resolveSlotOrder（listRuleSlots 第一参）
-  const http = readFileSync(join(ROOT, 'lib/app/http-handlers.js'), 'utf8');
+  const http = readFileSync(join(ROOT, 'lib/app/handlers/meta.js'), 'utf8');
   assert.ok(/listRuleSlots\(cfg\.auditRuleOrder/.test(http), 'rule-slots 端点应把 cfg.auditRuleOrder 传入 listRuleSlots');
   assert.ok(/resolveSlotOrder\(order/.test(loader), 'resolveSlotOrder 应消费传入 order');
 });

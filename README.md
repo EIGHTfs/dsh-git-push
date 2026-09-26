@@ -30,6 +30,18 @@ DSH（DeepSeek Harness）git 提交推送与代码审计插件——提交前自
 - [版本列表](#版本列表)
 - [注意事项](#注意事项)
 
+## 分体式文档（docs/）
+
+长文档不直接内嵌 README，各自存独立 md（README 仅链接引用），由 doc- 前缀脚本自动维护：
+
+| 文档 | 位置 | 维护脚本 | 说明 |
+|---|---|---|---|
+| 版本列表 | [docs/版本表.md](docs/版本表.md) | `scripts/doc-version.mjs` | git log 聚合版本表（gen/apply/check） |
+| 函数列表 | [docs/函数列表.md](docs/函数列表.md) | `scripts/doc-func.mjs` | 扫描 lib/scripts/test 函数表（gen/apply/check） |
+| 文件目录树 | README「目录结构」节 | `scripts/doc-tree.mjs` | 目录树（原 tree-doc，2026-09-29 改名统一 doc- 前缀） |
+
+每个脚本命令统一：`gen`（打印）/ `apply`（写宿主 md，自动探测带标记块的 md）/ `check`（查漂移）。宿主 md 带标记块（`dshgp-version` / `dshgp-functions` / `dshgp-tree`），审计按标记块探测并纳入检查。
+
 ## 功能总览
 
 插件围绕 DSH 日常开发的两个高频动作，分为**提交推送**与**代码审计**两大块：
@@ -136,7 +148,7 @@ src/vendor.js       # 单文件豁免审计
 
 ### 目录结构（自动生成）
 
-> 由 `scripts/tree-doc.mjs` 维护：`gen` 生成 / `check` 查漂移 / `apply` 覆盖本节 / `sync` 索引自动同步。
+> 由 `scripts/doc-tree.mjs` 维护：`gen` 生成 / `check` 查漂移 / `apply` 覆盖本节 / `sync` 索引自动同步（2026-09-29 自 tree-doc.mjs 改名，统一 doc- 前缀）。
 > 注释来源 `tree-doc.json`（路径 → 一句话介绍）：**键集合自动同步**（`sync`/`gen --write` 新增文件自动补键、删除文件自动删键），**描述由 AI/人补**（新键标「（待注释）」）。
 
 <!-- dshgp-tree:start -->
@@ -156,7 +168,7 @@ dsh-git-push/
 │   │   ├── apply.js — 插件装载入口（注册 schema/工具/HTTP/注入钩子）
 │   │   ├── audit-api.js — 审计结果 API 聚合层（/api/git-push/audit：按规则/文件/严重级/规则包分组 + severity 过滤 + top 截断）
 │   │   ├── constants.js — 插件名与设置命名空间常量
-│   │   ├── http-handlers.js — HTTP 路由分发（全部 /api/git-push/* 端点）
+│   │   ├── http-handlers.js — HTTP 路由分发（薄 router：前置校验 + switch 各端点调 handlers/ 模块）
 │   │   ├── index.js — 插件入口再导出（宿主 main 指向）
 │   │   ├── inject-text.js — 注入文本（工具用法提示 FUNCTION_USAGE_HINT）
 │   │   ├── scan-root.js — 默认扫描根解析（配置优先→DSH 家根自动识别）
@@ -166,6 +178,7 @@ dsh-git-push/
 │   │   ├── slot-stats.js — 规则槽位命中统计（模块级状态）
 │   │   ├── tool-call.js — 工具调用分发（git_scan/commit_push/audit/status 等全部工具）
 │   │   ├── tools.js — 工具定义清单（名称/描述/参数 schema）
+│   │   └── …（7 个更深文件）
 │   ├── ast/ — AST 实现层（token 级判定：括号/控制流/数据流/凭据/魔数/命名/规模/分词）
 │   │   ├── brace.js — 括号配对与区间包含工具
 │   │   ├── callgraph.js — 调用链追踪（单文件调用图 + isInRequestPath，io-risk 请求路径判定升级）
@@ -272,8 +285,6 @@ dsh-git-push/
 │   │   ├── auto-detect.js — 任务完成自动推送·检测层（纯函数：✅任务完成 触发/❌⚠ 阻断/自定义正则/许可合成判断）
 │   │   ├── auto-push.js — 任务完成自动推送·核心（turn/end 监听→检测→autoPushEnabled 开关→调 commitWithAudit 完整门禁，不裸提交）
 │   │   ├── index.js — Host 侧接线（插件注册：工具/HTTP/配置注入宿主）
-│   ├── readme-gen/ — README 生成（git_gen_readme 工具模板渲染）
-│   │   ├── index.js — README 生成总入口（git_gen_readme 模板渲染）
 │   ├── readme-templates/ — README 模板 yml
 │   │   ├── readme.yml — README 章节模板（git_gen_readme 用）
 │   ├── rule/ — 规则引擎（yml 装载/编译注册表/同形字符检测/槽位启停）
@@ -293,11 +304,13 @@ dsh-git-push/
 ├── scripts/ — 开发工具脚本（版本校验/双副本同步/预览服务/README 目录树维护）
 │   ├── audit-runtime-check.mjs — 三层审计 L3 运行时检测脚本
 │   ├── check.mjs — 语法检查脚本（npm run check）
-│   ├── func-index.js — （待注释）
-│   ├── functions-doc.mjs — 函数文档生成器（读 functions-index.json 生成 docs/函数/*.md，源文件删除归档 _archived 保留人工注释）
+│   ├── doc-func.mjs — （待注释）
+│   ├── doc-tree.mjs — （待注释）
+│   ├── doc-version.mjs — （待注释）
 │   ├── module-splitter.py — 巨型单文件按顶层块拆分脚本（analyze/split/verify 三命令，python3 零依赖；module_splitter 工具与 CLI 的底层实现）
 │   ├── preview-server.mjs — 本地真实后端测试服务（preview.html 接真实 handleHttp）
 │   ├── probe-recheck.mjs — 探针：「重新检测」按钮链路实测（在线校验 token/SSH）
+│   ├── readme-gen.mjs — README 生成独立脚本（git_gen_readme 抽出：模板渲染/版本表/目录）
 │   ├── rule-switch.mjs — 规则槽位手动启停 CLI
 │   ├── rules-solo-audit.mjs — 规则单启控制变量扫描（基准全关+逐规则单启+全量对照，报告供 AI/人工审规则有效性与局限，按需运行非常驻）
 │   ├── scan-file-io.mjs — 文件读写扫描器（列出所有 fs 读写调用位置 + 路径参数）
@@ -305,7 +318,6 @@ dsh-git-push/
 │   ├── scan-version.mjs — 版本一致性校验脚本
 │   ├── scrub-user-wording.mjs — 清理「用户沟通措辞」独立脚本
 │   ├── sync-plugin.mjs — 双副本同步脚本（源仓库 → 部署安装副本）
-│   ├── tree-doc.mjs — README 目录结构维护脚本（gen/check/apply）
 │   ├── verify-prestep.mjs — 上下文注入自检脚本（真实触发 agent/pre-step 验证注入）
 │   ├── watch-preview.mjs — preview.html 自动重生成监听（源码变更即重建）
 ├── assets/ — 预览页与配图（preview.html 交互模拟页 + 面板截图）
@@ -319,8 +331,8 @@ dsh-git-push/
 ├── test/ — node:test 全量单元测试（541+ 条，覆盖审计/推送/账号/HTTP/后台任务）
 │   ├── .test — 空文件豁免标记（目录级豁免 .test 目录）
 │   ├── test-account-ssh.mjs — 账号检查 + SSH 密钥测试
-│   ├── test-audit-api-http.mjs — 审计结果 API 端点测试（/api/git-push/audit：聚合/过滤/GET query/容错）
-│   ├── test-audit-api.mjs — 审计结果 API 聚合层测试（rule/file/severity/slot 四维度 + severity 过滤 + top）
+│   ├── test-audit-api-http.mjs — （待注释）
+│   ├── test-audit-api.mjs — （待注释）
 │   ├── test-audit-bad-file.mjs — 审计拦截门禁测试（硬编码密码/API key/.env 凭据文件）
 │   ├── test-audit-empty.mjs — （待注释）
 │   ├── test-audit-scope.mjs — 审计作用域/凭据占位符回归测试
@@ -335,12 +347,13 @@ dsh-git-push/
 │   ├── test-context.mjs — 上下文注入测试
 │   ├── test-cred-env.mjs — git_cred_env 凭据传递测试（双通道/无明文/askpass 调用/无凭据兜底）
 │   ├── test-dataflow.mjs — 三层审计 L2 数据流测试
+│   ├── test-doc-func.mjs — （待注释）
+│   ├── test-doc-version.mjs — （待注释）
 │   ├── test-docs-score.mjs — 文档加分制测试（文档集圈法/四检查/公式/不一致 review/不冲突）
 │   ├── test-exempt.mjs — 豁免总入口测试（7 标记 + 位置语义）
 │   ├── test-false-positive-fixes.mjs — 误报修复回归测试
 │   ├── test-file-health.mjs — 文件健康度矩阵评分测试
 │   ├── test-folder-scope.mjs — 目录级审计作用域回归测试
-│   ├── test-functions-doc.mjs — 函数索引/文档测试（analyze 字段/apply 生成/归档/注释/skipEmpty）
 │   ├── test-git.mjs — git 总入口测试（runGit/commitAndPush/凭据/克隆）
 │   ├── test-gitignore-match.mjs — gitignore 兜底匹配（与真 git 对拍 + 非 git 端到端）
 │   ├── test-history-audit.mjs — （待注释）
@@ -368,19 +381,19 @@ dsh-git-push/
 │   ├── test-smart-hint.mjs — 扫描智能提示 + 评分对数衰减测试
 │   ├── test-status-secret.mjs — token 明文不下发安全回归
 │   ├── test-task-queue.mjs — 后台化回归测试（官方 job 注册 / 无 jobs 同步保底 / blocker 拦截）
-│   ├── test-tool-probes.mjs — 工具探测 API 测试（/api/git-push/tool-probes + node execPath 兜底）
+│   ├── test-tool-probes.mjs — （待注释）
 │   ├── test-tree-doc.mjs — README 目录树脚本测试（gen/check/apply 闭环）
 ├── docs/ — 开发文档
 │   ├── DETAILS-EXEMPT-AND-RULES.md — 细节补充：豁免注释与规则 yml 用法全录
 │   ├── audit-2026-09-26.md — （待注释）
+│   ├── 函数列表.md — （待注释）
 │   ├── 方案-audit-history-历史提交审计.md — （待注释）
 │   ├── 方案-io-risk-规则优化.md — 方案：io-risk 规则优化（对照诊断的差距分析：元数据操作分档 + rename 降档）
 │   ├── 方案-io-risk规则推断与准确率评估.md — 方案：io-risk 规则推断与准确率评估
 │   ├── 方案-repo-index-account-status-更新收口.md — （待注释）
 │   ├── 方案-tree-doc变动追踪与函数文档.md — （待注释）
 │   ├── 方案-文档维度加分制.md — （待注释）
-│   ├── 函数/ — （待注释）
-│   │   └── …（1 个更深文件）
+│   ├── 版本表.md — （待注释）
 ├── skills/ — 插件权威 skill（功能手册/规则/使用说明，安装副本的 skills/ 同步）
 │   ├── dsh-git-push-functions.md — 插件功能说明书（工具参数/HTTP API/源码定位）
 │   ├── dsh-git-push.md — 插件手册（工具/规则包/设置 UI/安装实录）
@@ -411,7 +424,6 @@ dsh-git-push/
 ├── assemble.json — bench-template 下发清单（键=模板仓库相对路径，值=本插件落点；preview 启动两件套 → assets/）
 ├── cli.mjs — 独立 CLI（git-sluice，不依赖宿主可独立运行）
 ├── cordis.patch.yml — DSH 插件组合 patch（loader 注入定义）
-├── functions-index.json — 函数索引 JSON（func-index --out 生成：name/kind/行/signature/comment 槽位，人工补 comment 后 apply 生成函数文档）
 ├── package.json — 包声明（零依赖、files 白名单、scripts）
 ├── screenshots.json — 截图清单（README 配图引用）
 ├── tree-doc.json — 目录结构注释映射（路径→一句话介绍，AI 维护）
@@ -937,7 +949,8 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 | 版本 | 说明 |
 |---|---|
-| **1.10.4**（当前） | **工具探测补 node + 探测 API**：① 工具探测 `node` 不再依赖 PATH——PATH 无 node 时回退 `process.execPath`（DSH 宿主自带 node 可探出，实测 v22.23.2）；② 新增 **`GET /api/git-push/tool-probes`**——返回本机各工具的实测路径/版本（真实探测，非工具定义清单，复用 collectToolPaths）；③ 短变量改名提升可读性（history/context/button-bind 的 q/s/r/u/c/m/w 等，零行为变化） | 回归 846 全绿 |
+| **1.10.5**（当前） | **拆分 http-handlers.js 巨型 switch**（923→122 行）：`handleHttp` 755 行 28-case switch 按路由域抽到新增 `lib/app/handlers/` 6 模块（account / clone / meta / repo-actions / repos / settings + http-constants），handleHttp 变薄 router；`listRuleSlots` 迁 meta.js；file-health L3 清零。**分体式文档（2026-09-29）**：①`git_gen_readme` 工具移除，README 生成抽独立脚本 `scripts/readme-gen.mjs`（插件仅引用）；②`tree-doc` 不再写死 README——自动探测含 `dshgp-tree` 标记块的宿主 md（README 无块则找 docs/ 带块 md），apply/check 适配；③审计新增分体检查（版本表/函数列表建议存 docs/ 带 `dshgp-version`/`dshgp-functions` 标记块）；公共探测 `findMarkedHostMd(root, marker)` 三处复用。回归 848 全绿 | 回归 848 全绿 |
+| **1.10.4** | **工具探测补 node + 探测 API**：① 工具探测 `node` 不再依赖 PATH——PATH 无 node 时回退 `process.execPath`（DSH 宿主自带 node 可探出，实测 v22.23.2）；② 新增 **`GET /api/git-push/tool-probes`**——返回本机各工具的实测路径/版本（真实探测，非工具定义清单，复用 collectToolPaths）；③ 短变量改名提升可读性（history/context/button-bind 的 q/s/r/u/c/m/w 等，零行为变化） | 回归 846 全绿 |
 | **1.10.3** | **魔数规则再修 3 类误报**：① 对象字面量常量定义豁免（`const X = { width: 1400 }`，isNamedConstantValue 补 `{ } :` 与属性名识别）；② rgba 色值豁免（`rgba(255,255,255,.08)` 的 255 是 RGB 通道上限，非魔数上下文即豁免）；③ CLI `console.log(JSON.stringify(大对象))` 一次性输出行豁免（memory-bomb 精筛并集，序列化一次即打印退出不常驻内存）；warning **244→237**（-7），4 个防回归测试锁死 | 回归 842 全绿 |
 | **1.10.2** | **审计误报专项优化（不产生新误报）**：① repeated-string 与 min-occurrences 两 kind 合并去重（同文本双报 44→22）；② io-risk / memory-bomb 声明 `exts` 代码文件白名单（README/docs 代码块示例误报清零，真实代码 I/O 全保留）；③ vague-variable 词表剔除 `res`（HTTP Response 标准缩写，10→6）；④ 短变量加循环迭代豁免（21→18）；warning **281→245**（-13%），4 个防回归测试锁死修复点 | 回归 838 全绿 |
 | **1.10.1** | **审计结果 API 补清洁**：audit-api 变量命名（result→auditResult）+ sync-plugin fileContentEqual 异步化（async 函数内 existsSync→fs.promises.access） | 回归全绿 |
