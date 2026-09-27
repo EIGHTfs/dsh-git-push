@@ -204,23 +204,24 @@ window.__scopeMock = {
 //   · ?mock=1 → 走下方假数据（离线调试兜底，默认不再用假数据）。
 var __PRE_REAL__ = window.fetch;
 window.__dshgpScript = window.__dshgpScript || [];
-window.fetch = function (url, init) {
-  var urlStr = String(url), body = { ok: true };
-  // ?backend= 或 window.__DSHGP_BACKEND__（preview-server 注入）→ 转发指定后端
-  var __PRE_B__ = (location.search.match(/[?&]backend=([^&]+)/) || [])[1] || window.__DSHGP_BACKEND__ || '';
-  if (__PRE_B__) {
-    return __PRE_REAL__(__PRE_B__ + urlStr, {
-      method: ((init && init.method) || 'GET'),
-      headers: { 'Content-Type': 'application/json' },
-      body: (init && init.body) || undefined,
-    }).then(function (raw) {
-      return raw.json().then(function (data) {
-        return { ok: true, status: raw.status, json: function () { return Promise.resolve(data); } };
-      });
-    }).catch(function () { return { ok: true, status: 502, json: function () { return Promise.resolve({ ok: false, error: '后端未启动: ' + __PRE_B__ }); } }; });
-  }
-  // 默认放行同源：start-preview.mjs 反代到 DSH 真实后端（完全真实数据）；
-  //   仅显式 ?mock=1 才走下方假数据（离线调试）。
+window.__realFetch = __PRE_REAL__;
+// backend 转发：?backend= 或 window.__DSHGP_BACKEND__（preview-server 注入）→ 转发指定后端
+function forwardBackend(urlStr, init) {
+  var b = (location.search.match(/[?&]backend=([^&]+)/) || [])[1] || window.__DSHGP_BACKEND__ || '';
+  if (!b) return '';
+  return __PRE_REAL__(b + urlStr, {
+    method: ((init && init.method) || 'GET'),
+    headers: { 'Content-Type': 'application/json' },
+    body: (init && init.body) || undefined,
+  }).then(function (raw) {
+    return raw.json().then(function (data) {
+      return { ok: true, status: raw.status, json: function () { return Promise.resolve(data); } };
+    });
+  }).catch(function () { return { ok: true, status: 502, json: function () { return Promise.resolve({ ok: false, error: '后端未启动: ' + b }); } }; });
+}
+// 同源放行：start-preview.mjs 反代到 DSH 真实后端（完全真实数据）；
+//   仅显式 ?mock=1 才走下方假数据（离线调试）。
+function passthroughFetch(urlStr, init) {
   if (!/[?&]mock=1/.test(location.search)) {
     // 2026-09-21 修复：**file:// 双击打开**时相对 URL（/api/git-push/*）无 http 基址，
     //   fetch 直接抛「Failed to parse URL」——自动回退本机 preview 服务（start.sh 缺省
@@ -241,7 +242,10 @@ window.fetch = function (url, init) {
     }
     return __PRE_REAL__(urlStr, init);
   }
-  body = { ok: true };
+  return '';
+}
+function mockFetch(urlStr, init) { // dsh-skip-complexity: mock 路由表（8 路由 if/else 为结构必然，各路由是独立假数据）
+  var body = { ok: true };
   // 演示目录根（mock 假数据用；browse/repos-local 共用）
   var DEMO_HOME = '/home/user/项目';
   // /toggle-rule 必须真改假数据：toggleDisabled 本地翻转后会 loadSlots 对账，
@@ -311,6 +315,14 @@ window.fetch = function (url, init) {
     body = { ok: true, dest: '/home/user/项目/dsh-git-push' };
   }
   return Promise.resolve({ ok: true, status: 200, json: function () { return Promise.resolve(body); } });
+}
+window.fetch = function (url, init) {
+  var urlStr = String(url);
+  var forwarded = forwardBackend(urlStr, init);
+  if (forwarded) return forwarded;
+  var passed = passthroughFetch(urlStr, init);
+  if (passed) return passed;
+  return mockFetch(urlStr, init);
 };
 `;
 

@@ -25,10 +25,10 @@ function f(kind, rule, line = 3) {
 const SENSITIVE_TEXT = '// dsh-skip-sensitive: 测试含 mock token\n// 第二行\n// 第三行\nconst x = 1;';
 
 // ---------- 注册表完整性 ----------
-test('注册表：8 个标记齐全', () => {
+test('注册表：9 个标记齐全', () => {
   const markers = Object.keys(EXEMPT_MARKERS);
   assert.deepEqual(markers.sort(), [
-    'dsh-skip-func-length', 'dsh-skip-i18n', 'dsh-skip-quality', 'dsh-skip-residue',
+    'dsh-skip-complexity', 'dsh-skip-func-length', 'dsh-skip-i18n', 'dsh-skip-quality', 'dsh-skip-residue',
     'dsh-skip-sensitive', 'dsh-skip-size', 'dsh-skip-style', 'dsh-skip-syntax',
   ].sort());
 });
@@ -211,15 +211,15 @@ test('exemptHintFor：未知 kind 给默认敏感提示', () => {
 });
 
 // ---------- 12 场景计数 ----------
-test('场景矩阵：整文件 8 标记 + 行级 4 标记 = 12+ 场景全覆盖', () => {
+test('场景矩阵：整文件 8 标记 + 行级 5 标记 = 13+ 场景全覆盖', () => {
   const headerMarkers = ['dsh-skip-sensitive', 'dsh-skip-size', 'dsh-skip-func-length', 'dsh-skip-syntax', 'dsh-skip-quality', 'dsh-skip-residue', 'dsh-skip-style', 'dsh-skip-i18n'];
   const lineMarkers = Object.entries(EXEMPT_MARKERS).filter(([, m]) => m.lineLevel).map(([k]) => k);
-  // 整文件 7 场景
+  // 整文件 8 场景
   for (const m of headerMarkers) {
     assert.equal(hasHeaderExempt(`// ${m}\nx`, m), true, `${m} 文件头应豁免`);
   }
-  // 行级 4 场景（sensitive/func-length/residue/i18n）
-  assert.deepEqual(lineMarkers.sort(), ['dsh-skip-func-length', 'dsh-skip-i18n', 'dsh-skip-residue', 'dsh-skip-sensitive'].sort());
+  // 行级 5 场景（sensitive/func-length/complexity/residue/i18n）
+  assert.deepEqual(lineMarkers.sort(), ['dsh-skip-complexity', 'dsh-skip-func-length', 'dsh-skip-i18n', 'dsh-skip-residue', 'dsh-skip-sensitive'].sort());
   // 对应位置标记应豁免（行级标记在行内生效）
   for (const m of lineMarkers) {
     assert.equal(hasLineExempt(`const x = 1; // ${m}`, m), true, `${m} 行内应生效`);
@@ -256,10 +256,11 @@ test('端到端：无豁免 → secret 照常 block', async () => {
 });
 
 // ---------- 标记注册 / 头行判定 / 反查（原 test-framework）----------
-test('豁免：8 类标记注册齐全', () => {
-  assert.equal(Object.keys(EXEMPT_MARKERS).length, 8);
+test('豁免：9 类标记注册齐全', () => {
+  assert.equal(Object.keys(EXEMPT_MARKERS).length, 9);
   assert.ok(EXEMPT_MARKERS['dsh-skip-sensitive']);
   assert.ok(EXEMPT_MARKERS['dsh-skip-func-length']);
+  assert.ok(EXEMPT_MARKERS['dsh-skip-complexity']);
 });
 
 test('豁免：文件头检测只看前 3 行', () => {

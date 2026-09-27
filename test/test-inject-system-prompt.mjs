@@ -298,13 +298,17 @@ test('scan-version：无版本号时 found=false（调用方给明确报错）',
   assert.equal(readmeVersion('').found, false);
 });
 
-test('scan-version：README 版本与 package.json 一致（仓库自检）', async () => {
+test('scan-version：版本列表宿主与 package.json 一致（仓库自检，分体式优先 CHANGELOG）', async () => {
   const { readmeVersion } = await import('../scripts/scan-version.mjs');
   const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
-  const readme = readFileSync(join(ROOT, 'README.md'), 'utf8');
-  const r = readmeVersion(readme);
-  assert.ok(r.found, 'README 应有版本列表');
-  assert.equal(r.version, pkg.version, 'README 版本号必须与 package.json version 一致');
+  const changelog = readFileSync(join(ROOT, 'docs', 'CHANGELOG.md'), 'utf8');
+  const vs = changelog.indexOf('<!-- dshgp-version:start -->');
+  const ve = changelog.indexOf('<!-- dshgp-version:end -->');
+  assert.ok(vs >= 0 && ve > vs, 'docs/CHANGELOG.md 应有 dshgp-version 标记块');
+  const cl = changelog.slice(vs, ve);
+  const r = readmeVersion(cl);
+  assert.ok(r.found, '版本列表宿主（docs/CHANGELOG.md 标记块）应有版本列表');
+  assert.equal(r.version, pkg.version, '版本列表宿主版本号必须与 package.json version 一致');
 });
 
 // ---------- 1.9.1：系统提示词注入配置化 + 浅包装 git 用法 ----------

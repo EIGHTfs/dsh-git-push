@@ -113,3 +113,32 @@ test('collectTextFiles：文件级 .gitignore 规则生效（含中文文件名�
     assert.ok(!rels.some((r) => r.includes('node_modules')), 'node_modules/ 应忽略');
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
+
+// ---------- 2026-09-28：提交审计 .auditignore 对已跟踪文件生效（缺 --no-index 修复回归） ----------
+//   现象：提交前审计（auditChanged/diff 模式）中 .auditignore 目录豁免对 git 已跟踪文件全落空——
+//   git check-ignore 默认只对未跟踪文件生效，已跟踪文件即使命中规则也退出码 1（不忽略）。
+//   全量审计带 --no-index（强制按路径匹配），提交审计漏了 → 已跟踪的豁免文件在提交审计被误扫。
+//   修复：orchestrate.js isAuditIgnored 的 check-ignore 补 --no-index，与 collector.js 对齐。
+test('auditChanged：已跟踪文件命中 .auditignore（--no-index 修复）', async () => {
+  const { auditWithScope } = await import('../lib/audit/orchestrate.js');
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-audit-chg-'));
+  try {
+    execSync('git init -q', { cwd: dir });
+    execSync('git config user.email t@t && git config user.name t', { cwd: dir });
+    // 已跟踪但 .auditignore 豁免的目录（模拟 bench-template 场景）
+    mkdirSync(join(dir, 'templates', 'js', 'core'), { recursive: true });
+    mkdirSync(join(dir, 'src'), { recursive: true });
+    writeFileSync(join(dir, 'templates', 'js', 'core', 'app.js'), 'require("fs");\n');
+    writeFileSync(join(dir, 'src', 'normal.js'), 'const a = 1;\n');
+    execSync('git add -A && git commit -qm init', { cwd: dir });
+    // 提交后再声明 .auditignore（已跟踪文件 + 豁免规则 = 本次修复目标场景）
+    writeFileSync(join(dir, '.auditignore'), 'templates/js/\n');
+    // 改动 src/normal.js 触发 changed 扫描（被审计）；templates/js/ 已跟踪应被豁免
+    writeFileSync(join(dir, 'src', 'normal.js'), 'const a = 2;\n');
+    const r = await auditWithScope(dir, { scope: 'diff' });
+    const rels = (r.findings || []).map((f) => (f.file || '').replace(dir + '/', ''));
+    assert.ok(rels.some((x) => x === 'src/normal.js'), '未豁免的改动文件应进审计');
+    assert.ok(!rels.some((x) => x.includes('templates/js')), '已跟踪文件 templates/js/ 应被 .auditignore 豁免（--no-index 修复）');
+    assert.equal(r.files, 1, `改动文件应只有 1 个被审计（实际 ${r.files}）`);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});

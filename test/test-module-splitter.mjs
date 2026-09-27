@@ -33,14 +33,20 @@ test('module_splitter：工具清单注册（listTools 含 module_splitter 三�
 test('module_splitter：tool-call 分发 case 存在', () => {
   const src = readFileSync(join(rootDir, 'lib/app/tool-call.js'), 'utf8');
   assert.match(src, /case 'module_splitter':/, 'tool-call.js 缺 module_splitter case');
-  assert.match(src, /spawnSync\('python3'/, '必须 spawn python3（参数数组防注入）');
+  assert.match(src, /runModuleSplitter\(/, '必须引用公共 runModuleSplitter（参数数组 spawn 防注入在公共模块）');
+  // 公共实现必须在 lib/git/module-splitter.js（CLI 与工具共用，不各写一份）
+  const impl = readFileSync(join(rootDir, 'lib/git/module-splitter.js'), 'utf8');
+  assert.match(impl, /spawnSync\('python3'/, '公共模块必须 spawn python3（参数数组防注入）');
 });
 
 test('module_splitter：CLI 命令 + HELP + parseArgv 兼容', () => {
   const cli = readFileSync(join(rootDir, 'cli.mjs'), 'utf8');
   assert.ok(/cmd === 'module-splitter'/.test(cli) || /\['module-splitter',/.test(cli), 'cli.mjs 缺 module-splitter 分派（if 链或表驱动均可）');
   assert.match(cli, /git-sluice module-splitter <analyze\|split\|verify>/, 'HELP 缺用法行');
-  assert.match(cli, /export async function cmdModuleSplitter/, '缺 cmdModuleSplitter 实现');
+  // 2026-10-05 结构化：实现迁到 lib/cli/commands-doc.mjs，cli.mjs re-export 保持导出面
+  assert.match(cli, /cmdModuleSplitter/, 'cli.mjs 缺 cmdModuleSplitter 导出（re-export）');
+  const doc = readFileSync(join(rootDir, 'lib/cli/commands-doc.mjs'), 'utf8');
+  assert.match(doc, /export async function cmdModuleSplitter/, 'lib/cli/commands-doc.mjs 缺 cmdModuleSplitter 实现');
 });
 
 test('module_splitter：脚本存在且随插件同步（SYNC_ENTRIES 覆盖 scripts/）', () => {

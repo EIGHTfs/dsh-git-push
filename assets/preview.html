@@ -33308,7 +33308,7 @@ window.addEventListener('unhandledrejection', function (e) { __err('reject', Str
 var __oerr = console.error;
 console.error = function () { __err('console', Array.prototype.map.call(arguments, function (x) { return String((x && x.stack) || x); }).join(' ')); __oerr.apply(console, arguments); };
 
-window.__FAKE__ = {"auditEnabled":false,"injectRequirements":true,"injectSystemPrompt":true,"auditScanScope":"diff","maxScanFiles":3000,"weightOverrides":"","githubToken":"ghp_ExampleToken1234567890abcdefGHIJ","sshPub":"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExamplePublicKeyForDemoOnly eightfs@example.com","_order":["nodejs","frontend","npm","comment","dsh","structure","private","docs","filehealth","folder","i18n","performance","robustness","version"]};
+window.__FAKE__ = {"auditEnabled":false,"injectRequirements":true,"injectSystemPrompt":true,"auditScanScope":"diff","maxScanFiles":3000,"weightOverrides":"","githubToken":"ghp_ExampleToken1234567890abcdefGHIJ","sshPub":"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExamplePublicKeyForDemoOnly eightfs@example.com","_order":["nodejs","frontend","npm","comment","dsh","structure","private","docs","filehealth","folder","i18n","performance","python","robustness","version"]};
 window.__CAPTURED__ = null;
 window.__ModuleLoader__ = { load: function (m) { window.__CAPTURED__ = m; } };
 
@@ -33342,7 +33342,7 @@ window.__requireShim = function (name) {
 };
 
 // 宿主 settingsScope：真内存 store，set 后通知 → 界面真的跟着变
-window.__SLOTS__ = {"comment":{"name":"注释质量检测规则（AI 交流注释识别）","description":"检测『用户指示 2』『用户原话』等 AI 协作残留注释","author":"DeepSeek","stats":{"blocker":6,"warning":0,"pass":0,"total":6,"source":"rules"},"disabled":false},"docs":{"name":"docs 审计规则（链接判断槽位）","description":"","author":"","stats":{"blocker":0,"warning":1,"pass":0,"total":1,"source":"rules"},"disabled":false},"dsh":{"name":"dsh 插件专属审计规则集","description":"针对 DeepSeek Harness 插件（cordis 形态）的结构、依赖、工具契约、patch 语义审计；单行正则可执行","author":"EIGHTfs","stats":{"blocker":4,"warning":3,"pass":0,"total":7,"source":"rules"},"disabled":false},"filehealth":{"name":"文件健康度矩阵评分规则集","description":"单文件健康度评估（行数40% + 大小35% + 行长25%），score<9 提示、<5 blocker","author":"DeepSeek","stats":{"blocker":0,"warning":1,"pass":0,"total":1,"source":"rules"},"disabled":false},"folder":{"name":"文件夹数量审计规则（防止解包/依赖/构建产物入库）","description":"","author":"","stats":{"blocker":1,"warning":5,"pass":0,"total":6,"source":"rules"},"disabled":false},"frontend":{"name":"前端 HTML 审计规则（内嵌管理界面）","description":"用于服务端内嵌管理界面，不面向搜索引擎","author":"DeepSeek","stats":{"blocker":6,"warning":13,"pass":7,"total":26,"source":"rules"},"disabled":false},"i18n":{"name":"国际化审计规则（i18n 六条转规则）","description":"","author":"","stats":{"blocker":0,"warning":3,"pass":0,"total":3,"source":"rules"},"disabled":true},"nodejs":{"name":"Node.js 后端审计规则集","description":"覆盖命名规范、代码结构、安全性、健壮性、性能、测试、依赖等维度","author":"DeepSeek","stats":{"blocker":13,"warning":23,"pass":2,"total":38,"source":"rules"},"disabled":false},"npm":{"name":"npm 插件发布审计规则集","description":"针对要发布到 npm 的 dsh 插件：发布清单/依赖声明/凭据防泄漏/publishConfig 语义审计（只扫 package.json + .npmrc）","author":"EIGHTfs","stats":{"blocker":5,"warning":4,"pass":1,"total":10,"source":"rules"},"disabled":false},"performance":{"name":"性能审计规则（memory-bomb 示范落地）","description":"","author":"","stats":{"blocker":0,"warning":2,"pass":0,"total":2,"source":"rules"},"disabled":false},"private":{"name":"私密文件拦截审计（强制槽位）","description":"","author":"EIGHTfs","stats":{"blocker":13,"warning":0,"pass":0,"total":13,"source":"rules"},"disabled":false},"robustness":{"name":"健壮性审计规则（写文件目录保障等）","description":"","author":"","stats":{"blocker":0,"warning":1,"pass":0,"total":1,"source":"rules"},"disabled":false},"structure":{"name":"目录结构规范（本地定制版）","description":"dsh-git-push 目录结构取舍结论：lib/ 平铺即源码（不引入 src/）、docs/ skills/ 保留、无 script/config/dist/log 空目录；统一单数命名（tool/ test/ doc/，不用 tools/ tests/ docs/）","author":"EIGHTfs","stats":{"blocker":0,"warning":1,"pass":0,"total":1,"source":"rules"},"disabled":false},"template":{"name":"自定义审计规则集","description":"根据项目需求自定义填充规则","author":"DeepSeek","stats":{"blocker":0,"warning":0,"pass":1,"total":1,"source":"rules"},"disabled":false},"version":{"name":"版本控制审计规则集（versioning-rule 转写）","description":"版本号 X.Y.Z 语义 + 1 开头硬规则 + 版本只在提交时变化 + README 更新日志同步（源：versioning-rule.md）","author":"EIGHTfs","stats":{"blocker":2,"warning":3,"pass":3,"total":8,"source":"rules"},"disabled":false}};
+window.__SLOTS__ = {"comment":{"name":"注释质量检测规则（AI 交流注释识别）","description":"检测『用户指示 2』『用户原话』等 AI 协作残留注释","author":"DeepSeek","stats":{"blocker":6,"warning":0,"pass":0,"total":6,"source":"rules"},"disabled":false},"docs":{"name":"docs 审计规则（链接判断槽位）","description":"","author":"","stats":{"blocker":0,"warning":1,"pass":0,"total":1,"source":"rules"},"disabled":false},"dsh":{"name":"dsh 插件专属审计规则集","description":"针对 DeepSeek Harness 插件（cordis 形态）的结构、依赖、工具契约、patch 语义审计；单行正则可执行","author":"EIGHTfs","stats":{"blocker":4,"warning":3,"pass":0,"total":7,"source":"rules"},"disabled":false},"filehealth":{"name":"文件健康度矩阵评分规则集","description":"单文件健康度评估（行数40% + 大小35% + 行长25%），score<9 提示、<5 blocker","author":"DeepSeek","stats":{"blocker":0,"warning":1,"pass":0,"total":1,"source":"rules"},"disabled":false},"folder":{"name":"文件夹数量审计规则（防止解包/依赖/构建产物入库）","description":"","author":"","stats":{"blocker":1,"warning":5,"pass":0,"total":6,"source":"rules"},"disabled":false},"frontend":{"name":"前端 HTML 审计规则（内嵌管理界面）","description":"用于服务端内嵌管理界面，不面向搜索引擎","author":"DeepSeek","stats":{"blocker":6,"warning":13,"pass":7,"total":26,"source":"rules"},"disabled":false},"i18n":{"name":"国际化审计规则（i18n 六条转规则）","description":"","author":"","stats":{"blocker":0,"warning":3,"pass":0,"total":3,"source":"rules"},"disabled":true},"nodejs":{"name":"Node.js 后端审计规则集","description":"覆盖命名规范、代码结构、安全性、健壮性、性能、测试、依赖等维度","author":"DeepSeek","stats":{"blocker":13,"warning":23,"pass":2,"total":38,"source":"rules"},"disabled":false},"npm":{"name":"npm 插件发布审计规则集","description":"针对要发布到 npm 的 dsh 插件：发布清单/依赖声明/凭据防泄漏/publishConfig 语义审计（只扫 package.json + .npmrc）","author":"EIGHTfs","stats":{"blocker":5,"warning":4,"pass":1,"total":10,"source":"rules"},"disabled":false},"performance":{"name":"性能审计规则（memory-bomb 示范落地）","description":"","author":"","stats":{"blocker":0,"warning":2,"pass":0,"total":2,"source":"rules"},"disabled":false},"private":{"name":"私密文件拦截审计（强制槽位）","description":"","author":"EIGHTfs","stats":{"blocker":13,"warning":0,"pass":0,"total":13,"source":"rules"},"disabled":false},"python":{"name":"Python 审计规则集","description":"Python 项目语言无关规则：命名规范、魔数、函数长度、嵌套深度、圈复杂度、文件长度","author":"DeepSeek","stats":{"blocker":0,"warning":6,"pass":0,"total":6,"source":"rules"},"disabled":false},"robustness":{"name":"健壮性审计规则（写文件目录保障等）","description":"","author":"","stats":{"blocker":0,"warning":1,"pass":0,"total":1,"source":"rules"},"disabled":false},"structure":{"name":"目录结构规范（本地定制版）","description":"dsh-git-push 目录结构取舍结论：lib/ 平铺即源码（不引入 src/）、docs/ skills/ 保留、无 script/config/dist/log 空目录；统一单数命名（tool/ test/ doc/，不用 tools/ tests/ docs/）","author":"EIGHTfs","stats":{"blocker":0,"warning":1,"pass":0,"total":1,"source":"rules"},"disabled":false},"template":{"name":"自定义审计规则集","description":"根据项目需求自定义填充规则","author":"DeepSeek","stats":{"blocker":0,"warning":0,"pass":1,"total":1,"source":"rules"},"disabled":false},"version":{"name":"版本控制审计规则集（versioning-rule 转写）","description":"版本号 X.Y.Z 语义 + 1 开头硬规则 + 版本只在提交时变化 + README 更新日志同步（源：versioning-rule.md）","author":"EIGHTfs","stats":{"blocker":2,"warning":3,"pass":3,"total":8,"source":"rules"},"disabled":false}};
 window.__scopeSubs = [];
 window.__scopeMock = {
   getSnapshot: function () { return { status: 'ready', writable: true, value: window.__FAKE__ }; },
@@ -33361,23 +33361,24 @@ window.__scopeMock = {
 //   · ?mock=1 → 走下方假数据（离线调试兜底，默认不再用假数据）。
 var __PRE_REAL__ = window.fetch;
 window.__dshgpScript = window.__dshgpScript || [];
-window.fetch = function (url, init) {
-  var urlStr = String(url), body = { ok: true };
-  // ?backend= 或 window.__DSHGP_BACKEND__（preview-server 注入）→ 转发指定后端
-  var __PRE_B__ = (location.search.match(/[?&]backend=([^&]+)/) || [])[1] || window.__DSHGP_BACKEND__ || '';
-  if (__PRE_B__) {
-    return __PRE_REAL__(__PRE_B__ + urlStr, {
-      method: ((init && init.method) || 'GET'),
-      headers: { 'Content-Type': 'application/json' },
-      body: (init && init.body) || undefined,
-    }).then(function (raw) {
-      return raw.json().then(function (data) {
-        return { ok: true, status: raw.status, json: function () { return Promise.resolve(data); } };
-      });
-    }).catch(function () { return { ok: true, status: 502, json: function () { return Promise.resolve({ ok: false, error: '后端未启动: ' + __PRE_B__ }); } }; });
-  }
-  // 默认放行同源：start-preview.mjs 反代到 DSH 真实后端（完全真实数据）；
-  //   仅显式 ?mock=1 才走下方假数据（离线调试）。
+window.__realFetch = __PRE_REAL__;
+// backend 转发：?backend= 或 window.__DSHGP_BACKEND__（preview-server 注入）→ 转发指定后端
+function forwardBackend(urlStr, init) {
+  var b = (location.search.match(/[?&]backend=([^&]+)/) || [])[1] || window.__DSHGP_BACKEND__ || '';
+  if (!b) return '';
+  return __PRE_REAL__(b + urlStr, {
+    method: ((init && init.method) || 'GET'),
+    headers: { 'Content-Type': 'application/json' },
+    body: (init && init.body) || undefined,
+  }).then(function (raw) {
+    return raw.json().then(function (data) {
+      return { ok: true, status: raw.status, json: function () { return Promise.resolve(data); } };
+    });
+  }).catch(function () { return { ok: true, status: 502, json: function () { return Promise.resolve({ ok: false, error: '后端未启动: ' + b }); } }; });
+}
+// 同源放行：start-preview.mjs 反代到 DSH 真实后端（完全真实数据）；
+//   仅显式 ?mock=1 才走下方假数据（离线调试）。
+function passthroughFetch(urlStr, init) {
   if (!/[?&]mock=1/.test(location.search)) {
     // 2026-09-21 修复：**file:// 双击打开**时相对 URL（/api/git-push/*）无 http 基址，
     //   fetch 直接抛「Failed to parse URL」——自动回退本机 preview 服务（start.sh 缺省
@@ -33398,7 +33399,10 @@ window.fetch = function (url, init) {
     }
     return __PRE_REAL__(urlStr, init);
   }
-  body = { ok: true };
+  return '';
+}
+function mockFetch(urlStr, init) { // dsh-skip-complexity: mock 路由表（8 路由 if/else 为结构必然，各路由是独立假数据）
+  var body = { ok: true };
   // 演示目录根（mock 假数据用；browse/repos-local 共用）
   var DEMO_HOME = '/home/user/项目';
   // /toggle-rule 必须真改假数据：toggleDisabled 本地翻转后会 loadSlots 对账，
@@ -33468,6 +33472,14 @@ window.fetch = function (url, init) {
     body = { ok: true, dest: '/home/user/项目/dsh-git-push' };
   }
   return Promise.resolve({ ok: true, status: 200, json: function () { return Promise.resolve(body); } });
+}
+window.fetch = function (url, init) {
+  var urlStr = String(url);
+  var forwarded = forwardBackend(urlStr, init);
+  if (forwarded) return forwarded;
+  var passed = passthroughFetch(urlStr, init);
+  if (passed) return passed;
+  return mockFetch(urlStr, init);
 };
 </script>
 <script>/**
@@ -33807,8 +33819,8 @@ window.__ModuleLoader__.load({
       const toLocal = (iso) => {
         const t = Date.parse(String(iso || ''));
         if (!Number.isFinite(t)) return '';
-        const d = new Date(t); const p = (n) => String(n).padStart(2, '0');
-        return `${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+        const date = new Date(t); const p = (n) => String(n).padStart(2, '0');
+        return `${p(date.getMonth() + 1)}-${p(date.getDate())} ${p(date.getHours())}:${p(date.getMinutes())}`;
       };
       /** 单条凭据的展示单元：徽标（用户名/状态）+ 时间小字。 */
       const credPill = (configured, st) => {
@@ -34228,7 +34240,7 @@ window.__ModuleLoader__.load({
     /** 云端面板：账号名下所有 GitHub 仓库（token 拉取），clone 时弹目录选择器选目标目录。 */
     function dshgp_RepoCloudPane(props) {
       const s = props.state;
-      const rows = (s.cloudRepos || []).map((r) => jsx.jsx(dshgp_RepoCloudRow, { key: r.fullName, repo: r, state: s, onClone: props.cloneFlow, visSwitch: props.visSwitch }));
+      const rows = (s.cloudRepos || []).map((r) => jsx.jsx(dshgp_RepoCloudRow, { key: r.fullName, repo: r, state: s, onClone: props.cloneFlow, requestVisSwitch: props.requestVisSwitch })); // 2026-09-23 bugfix：传参名写错（visSwitch→requestVisSwitch），父 props 无 visSwitch，按钮点击 = undefined() 没反应
       return jsx.jsxs('div', {
         className: 'dshgp_repanepane',
         children: [
@@ -34740,6 +34752,35 @@ window.__ModuleLoader__.load({
               checked: !!s.pushGate, onChange: (ev) => props.setAdvanced('pushGate', ev.target.checked),
             }),
             jsx.jsx('p', { className: 'dshgp_hint', children: '开启后：commit 可正常提交，但 push 前必须显式传 pushConfirmed:true 放行——未放行的推送被拦截并提示「推送门禁已开启，需确认后重试」。用于防止未经放行直接推远端。' }),
+          ] }),
+          // 2026-09-26 任务完成自动推送（内置自 dsh-task-completion）：开关 + 自定义触发文本 + 范围。
+          jsx.jsxs('div', { className: 'dshgp_field', children: [
+            jsx.jsx('label', { className: 'dshgp_label', htmlFor: 'dshgp-autopush', children: '自动推送(✅任务完成)' }),
+            jsx.jsx('input', {
+              id: 'dshgp-autopush', type: 'checkbox', className: 'dshgp_check',
+              checked: !!s.autoPushEnabled, onChange: (ev) => props.setAdvanced('autoPushEnabled', ev.target.checked),
+            }),
+            jsx.jsx('p', { className: 'dshgp_hint', children: '开启后：AI 回复含指定完成文案（默认「✅任务完成」，可自定义）自动 commit+push——复用审计门禁（blocker 拦截、requirements 核对、pushGate 放行），不裸提交；默认关。' }),
+          ] }),
+          jsx.jsxs('div', { className: 'dshgp_field', children: [
+            jsx.jsx('label', { className: 'dshgp_label', htmlFor: 'dshgp-autopush-trigger', children: '自动推送触发文本' }),
+            jsx.jsx('input', {
+              id: 'dshgp-autopush-trigger', type: 'text', className: 'dshgp_input',
+              value: s.autoPushTriggerText ?? '✅任务完成', onChange: (ev) => props.setAdvanced('autoPushTriggerText', ev.target.value),
+            }),
+            jsx.jsx('p', { className: 'dshgp_hint', children: '检测「任务完成」的文本/正则（默认「✅任务完成」），可写成 ✅(任务完成|已解答) 等' }),
+          ] }),
+          jsx.jsxs('div', { className: 'dshgp_field', children: [
+            jsx.jsx('label', { className: 'dshgp_label', htmlFor: 'dshgp-autopush-scope', children: '自动推送范围' }),
+            // 2026-09-27 修复：jsx(type, props, key) 第三参数是 key 不是 children——
+            //   此前把 options 数组放第三参数导致 children 丢失、下拉渲染为空（与 2026-09-16 同坑）。
+            //   children 必须放进 props，与 pushMethod/审计进阶 sel 的写法对齐。
+            jsx.jsx('select', {
+              id: 'dshgp-autopush-scope', className: 'dshgp_input',
+              value: s.autoPushScope ?? 'session', onChange: (ev) => props.setAdvanced('autoPushScope', ev.target.value),
+              children: ['session', 'all'].map((v) => jsx.jsx('option', { key: v, value: v, children: String(v) })),
+            }),
+            jsx.jsx('p', { className: 'dshgp_hint', children: 'session=仅会话 cwd 所在仓库（默认，最安全）；all=workspace 全部有变更仓库' }),
           ] }),
         ],
       });
@@ -35399,16 +35440,16 @@ window.__ModuleLoader__.load({
         try {
           const res = await dshgp_postJson('/api/git-push/repo-commit', { path, message: String(message).trim(), confirm: true });
           // post 封装返回 {data, msg...} 或直出 body；data.ok 为准
-          const d = (res && res.ok !== undefined) ? res : (res && res.data ? res.data : res);
-          if (d && d.ok) {
+          const resp = (res && res.ok !== undefined) ? res : (res && res.data ? res.data : res);
+          if (resp && resp.ok) {
             ok = true;
-            const w = d.warningCount || 0;
-            msg = '✅ 已提交' + (d.commitSha ? ' ' + d.commitSha : '') + (w ? '（⚠️ ' + w + ' 条 warning，见审计）' : '');
-          } else if (d && d.blocked) {
-            const list = (d.blockers && d.blockers.length ? d.blockers.slice(0, 2).join('；') : (d.error || '审计拦截'));
+            const warnCount = resp.warningCount || 0;
+            msg = '✅ 已提交' + (resp.commitSha ? ' ' + resp.commitSha : '') + (warnCount ? '（⚠️ ' + warnCount + ' 条 warning，见审计）' : '');
+          } else if (resp && resp.blocked) {
+            const list = (resp.blockers && resp.blockers.length ? resp.blockers.slice(0, 2).join('；') : (resp.error || '审计拦截'));
             msg = '🚫 审计拦截：' + list;
           } else {
-            msg = '⚠️ ' + (d && d.error ? d.error : '提交失败');
+            msg = '⚠️ ' + (resp && resp.error ? resp.error : '提交失败');
           }
           this.localMsg = msg;
         } catch (e) {
@@ -35476,8 +35517,8 @@ window.__ModuleLoader__.load({
         if (res && res.ok) {
           // 就地更新列表该项（新数组引用触发订阅重渲染）
           const arr = Array.isArray(this.cloudRepos) ? this.cloudRepos.slice() : [];
-          for (const item of arr) {
-            if (String(item.fullName || '') === fullName) item.private = res.visibility === 'private';
+          for (const repo of arr) {
+            if (String(repo.fullName || '') === fullName) repo.private = res.visibility === 'private';
           }
           this.cloudRepos = arr;
           this.cloudMsg = '✅ 已切换为' + (res.visibility === 'private' ? '私有' : '公开') + '：' + fullName;
@@ -35795,11 +35836,11 @@ window.__ModuleLoader__.load({
        * @param {unknown} value 新值
        */
       setAdvanced(key, value) {
-        const ok = /^(maxScanFiles|maxCloneFileMB|cloneConcurrency|pushMethod|pushGate)$/.test(key);
+        const ok = /^(maxScanFiles|maxCloneFileMB|cloneConcurrency|pushMethod|pushGate|autoPushEnabled|autoPushTriggerText|autoPushScope)$/.test(key);
         if (!ok) { this.setStatus('❌ 未知设置键: ' + key); return; }
         const numKeys = { maxScanFiles: 1, maxCloneFileMB: 1, cloneConcurrency: 1 };
-        const boolKeys = { pushGate: 1 };
-        const enumKeys = { pushMethod: ['ssh', 'api', 'auto'] };
+        const boolKeys = { pushGate: 1, autoPushEnabled: 1 };
+        const enumKeys = { pushMethod: ['ssh', 'api', 'auto'], autoPushScope: ['session', 'all'] };
         let v = value;
         if (boolKeys[key]) v = value === true;
         else if (numKeys[key]) v = Number(value) || 0;

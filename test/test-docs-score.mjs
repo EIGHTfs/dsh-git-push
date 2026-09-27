@@ -131,3 +131,57 @@ test('不冲突：docs-score 不进 findings/扣分维度/问题计数（auditFu
       '报告问题区不得出现 docs-score（加分走独立段）');
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
+
+test('docs-score：CHANGELOG 多历史版本不误报不一致（2026-10-05 修）', () => {
+  // CHANGELOG 版本表天然含全部历史版本（几十条）——旧逻辑「记录语境版本数 >1 就报」会
+  // 永久误报。新逻辑只比对版本宿主的最新版本，CHANGELOG max==pkg 应无 review。
+  const root = makeProject({
+    'package.json': '{"version":"1.11.0"}\n',
+    'README.md': '# X v1.11.0\n\nnpm install\n',
+    'docs/CHANGELOG.md': [
+      '| 版本 | 内容 |',
+      '|------|------|',
+      '| 1.11.0 | 最新 |',
+      '| 1.10.5 | 旧 |',
+      '| 1.7.0 | 更旧 |',
+      '| 1.0.0 | 最初 |',
+    ].join('\n'),
+  });
+  try {
+    const r = checkDocsScore(root);
+    assert.ok(r.hits.includes('version-consistent'), '版本一致加分照给');
+    assert.ok(!r.review.some((x) => x.includes('版本号不一致')),
+      `CHANGELOG 多历史版本不应误报不一致（得 ${JSON.stringify(r.review)}）`);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test('docs-score：宿主文档声明当前版本真不一致仍报（README（当前） vs CHANGELOG 最新）', () => {
+  // README 显式标（当前）1.5.0，CHANGELOG 最新 1.6.0（==pkg）→ 两者矛盾应报
+  const root = makeProject({
+    'package.json': '{"version":"1.6.0"}\n',
+    'README.md': '| **1.5.0**（当前） | 说明 |\n\nnpm install\n',
+    'docs/CHANGELOG.md': '| 版本 | 内容 |\n|------|------|\n| 1.6.0 | 最新 |\n| 1.5.0 | 旧 |\n',
+  });
+  try {
+    const r = checkDocsScore(root);
+    assert.ok(r.review.some((x) => x.includes('版本号不一致')),
+      `README（当前）1.5.0 vs CHANGELOG 最新 1.6.0 应报不一致（得 ${JSON.stringify(r.review)}）`);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test('docs-score：普通 docs 文档（方案/细则含 IP）不参与不一致比对（2026-10-05 修）', () => {
+  // docs/ 下的方案文档标题带历史版本号、细则表格含 127.0.0.1——不是当前版本声明，
+  // 不得进入比对；仅 CHANGELOG 宿主参与，max==pkg 无 review。
+  const root = makeProject({
+    'package.json': '{"version":"1.11.0"}\n',
+    'README.md': '# X v1.11.0\n\nnpm install\n',
+    'docs/CHANGELOG.md': '| 版本 | 内容 |\n|------|------|\n| 1.11.0 | 最新 |\n',
+    'docs/方案-旧功能.md': '# 方案：某功能（1.7.0）\n',
+    'docs/DETAILS.md': '| 1 | 触发范围 | `127.0.0.1` 等值型特征 |\n',
+  });
+  try {
+    const r = checkDocsScore(root);
+    assert.ok(!r.review.some((x) => x.includes('版本号不一致')),
+      `历史方案/IP 示例不得引发不一致（得 ${JSON.stringify(r.review)}）`);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});

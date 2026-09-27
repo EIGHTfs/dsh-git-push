@@ -7,7 +7,8 @@
  *   1) lib/self/index.js 的 VERSION（单一事实源）
  *   2) package.json 的 version
  *   3) cli.mjs HELP 文本里的 v${VERSION}
- *   4) README.md 版本列表里的当前版本（2026-09-13 新增）
+ *   4) 版本列表宿主里的当前版本（2026-10-05 适配分体式：优先 docs/CHANGELOG.md
+ *      的 dshgp-version 标记块；无则回退 README「## 版本列表」章节）
  * 任一不一致 → exit 1（版本漂移拦截）。
  *
  * 用法：
@@ -81,20 +82,30 @@ function main() {
   if (!cliText.includes('v${VERSION}')) {
     errors.push('cli.mjs HELP 未引用 v${VERSION} 模板（应在 HELP 首行 git-sluice v${VERSION}）');
   }
-  // 4) README.md 版本列表（2026-09-13 新增：扫 README 版本号 vs package.json version）
+  // 4) 版本列表宿主（2026-10-05 适配分体式：优先 docs/CHANGELOG.md 的 dshgp-version
+  //    标记块——README 不再内嵌版本表，只有链接引用；无标记块回退 README 章节）
   //    优先认「（当前）」标记行；无标记则取版本列表章节内最高版本。
+  const changelogPath = join(ROOT, 'docs', 'CHANGELOG.md');
   const readmePath = join(ROOT, 'README.md');
-  let readmeText = '';
-  if (existsSync(readmePath)) {
-    try { readmeText = readFileSync(readmePath, 'utf8'); } catch (e) { errors.push(`读 README.md 失败: ${e?.message || e}`); }
-  } else {
-    errors.push('README.md 不存在');
+  let hostText = '';
+  let hostLabel = '';
+  if (existsSync(changelogPath)) {
+    try {
+      const cl = readFileSync(changelogPath, 'utf8');
+      const vs = cl.indexOf('<!-- dshgp-version:start -->');
+      const ve = cl.indexOf('<!-- dshgp-version:end -->');
+      if (vs >= 0 && ve > vs) { hostText = cl.slice(vs, ve); hostLabel = 'docs/CHANGELOG.md（dshgp-version 标记块）'; }
+    } catch { /* 读失败回退 README */ }
   }
-  const rv = readmeVersion(readmeText);
+  if (!hostText) {
+    try { hostText = readFileSync(readmePath, 'utf8'); hostLabel = 'README.md'; }
+    catch (e) { errors.push(`读版本列表宿主失败: ${e?.message || e}`); }
+  }
+  const rv = readmeVersion(hostText);
   if (!rv.found) {
-    errors.push('README.md 版本列表未找到版本号（应有「## 版本列表」章节，行形如 | **1.2.3**（当前） | … |）');
+    errors.push(`${hostLabel} 版本列表未找到版本号（应有「## 版本列表」章节，行形如 | **1.2.3**（当前） | … |）`);
   } else if (rv.version !== vi.pkgVersion) {
-    errors.push(`README.md 版本列表当前版本 ${rv.version}（${rv.source}）与 package.json ${vi.pkgVersion} 不一致——发版后须同步 README 版本记录`);
+    errors.push(`${hostLabel} 版本列表当前版本 ${rv.version}（${rv.source}）与 package.json ${vi.pkgVersion} 不一致——发版后须同步版本记录`);
   }
   const ok = errors.length === 0;
   if (json) {

@@ -1,0 +1,90 @@
+# ============================================================
+# Python 代码审计规则集
+# 作者：DeepSeek
+# 版本：1.0.0
+# 适用：Python 项目
+# 描述：按文件类型识别路由——.py 文件由本槽位承载语言无关规则，
+#       nodejs 槽位的同类规则不再接管 Python（2026-10-05 划分）。
+# 背景：全量审计 KToolBox（Python + TSX 混合，408 文件）时 nodejs slot 对 .py
+#       套 JS 规则，3009 条问题里 2882 条来自 nodejs（评分失真 56/C）。
+#       修复：① AST 层豁免 Python 枚举成员（magic-number 的
+#       collectPythonEnumAssignLines）、i18n 键/路由路径（repeated 豁免）、
+#       文档示例凭据（placeholder-credential 文档级豁免）；
+#       ② 本槽位承接 Python 文件的语言无关规则（命名/长度/复杂度/嵌套/魔数）。
+# 最后更新：2026-10-05
+# ============================================================
+
+metadata:
+  name: "Python 审计规则集"
+  version: "1.0.0"
+  language: "python"
+  author: "DeepSeek"
+  description: "Python 项目语言无关规则：命名规范、魔数、函数长度、嵌套深度、圈复杂度、文件长度"
+  last_updated: "2026-10-05"
+
+rules:
+  # ----- 1. 可读性 -----
+  # 全部规则 exts: ["py"]——本槽位只审计 Python 文件（文件类型识别路由的落点）。
+  # 检查器复用：max_depth/max_lines/max_complexity/min_length 字段由 numeric-kinds
+  #   编译器自动派发到 max-depth/max-lines/func-lines/max-complexity/min-length kind，
+  #   与 nodejs 槽位同一套检查器（tokenizer 支持 py 语法，class/def/缩进可解析）。
+
+  - id: python/variable-min-length
+    name: "Python 变量名长度不少于 2 个字符"
+    category: "readability"
+    severity: "warning"
+    description: "过短的变量名（如 a, b, x）降低代码可读性（Python 版）"
+    min_length: 2
+    exts: ["py"]
+    exceptions: ["i", "j", "k", "n", "e", "cb"]
+    fixable: false
+
+  - id: python/magic-number
+    name: "Python 硬编码魔数检测（枚举成员豁免版）"
+    kind: "magic-number-smart"
+    category: "readability"
+    severity: "warning"
+    description: "检测硬编码魔数，自动豁免版本号/日期/HTTP 状态码/常见常量/**Python 枚举成员**（class X(Enum/IntEnum) 体内的大写 NAME = 数字）"
+    magic_number_hints: ["timeout", "retry", "max", "min", "limit", "size", "count", "port", "interval", "delay", "duration", "threshold", "buffer", "chunk"]
+    legitimate_hints: ["version", "date", "year", "month", "day", "hour", "minute", "second", "http", "status"]
+    force_count: 3
+    exts: ["py"]
+    fixable: true
+    mitigation: "提取命名常量并注释含义：MAX_RETRY = 3; 版本号/日期/HTTP 状态码/常见常量/枚举成员自动豁免"
+
+  - id: python/max-nesting-depth
+    name: "Python 嵌套过深（缩进层级 > 4）"
+    category: "readability"
+    severity: "warning"
+    description: "代码缩进嵌套超过 4 层（如 for→for→if→if），可读性灾难，应提前 return 或抽函数（Python 版）"
+    max_depth: 4
+    exts: ["py"]
+    fixable: false
+
+  - id: python/max-function-length
+    name: "Python 函数长度不超过 50 行"
+    category: "readability"
+    severity: "warning"
+    description: "过长的函数难以理解和维护（Python 版）"
+    max_lines: 50
+    exts: ["py"]
+    fixable: true
+
+  - id: python/max-file-length
+    name: "Python 文件总行数不超过 400 行"
+    category: "readability"
+    severity: "warning"
+    description: "单文件超过 400 行时应拆分模块（Python 版；存量超大文件为已知债务，仅提醒不拦截）"
+    max_lines: 400
+    exts: ["py"]
+    fixable: false
+
+  # ----- 2. 可维护性 -----
+  - id: python/max-cyclomatic-complexity
+    name: "Python 圈复杂度不超过 15"
+    category: "maintainability"
+    severity: "warning"
+    description: "过高的圈复杂度表示函数逻辑分支过多（Python 版）"
+    max_complexity: 15
+    exts: ["py"]
+    fixable: false

@@ -9,10 +9,12 @@
 // dsh-skip-sensitive: 测试只断言工具路径/版本，无凭据
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { join } from 'node:path';
 import { handleHttp } from '../lib/app/http-handlers.js';
 import { probeToolPath } from '../lib/context/index.js';
 
-const ROOT = '/volume1/@appdata/DeepSeekHarness-NAS/0.1.6-alpha.1/工作区/dsh-git-push';
+// 2026-10-05：改相对路径派生（此前硬编码机器绝对路径 /volume1/...，换机即失效）
+const ROOT = join(import.meta.dirname, '..');
 
 test('/api/git-push/tool-probes：GET 返回探测清单（只读豁免 origin）', async () => {
   const r = await handleHttp({ method: 'GET', url: '/api/git-push/tool-probes' }, { workspaceRoot: ROOT }, {});

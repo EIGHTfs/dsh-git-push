@@ -48,7 +48,7 @@ rules:
     severity: "warning"
     description: "过短的变量名（如 a, b, x）降低代码可读性"
     min_length: 2
-    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx", "py", "go", "rs", "java", "kt", "swift", "php", "rb"]
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx"]
     exceptions: ["i", "j", "k", "n", "e", "cb"]
     fixable: false
 
@@ -104,7 +104,7 @@ rules:
     legitimate_hints: ["version", "date", "year", "month", "day", "hour", "minute", "second", "http", "status"]
     force_count: 3
     # 2026-09-13 误报修复：只对代码文件生效（README 版本表 / CSS 尺寸 / config.json 端口不报）
-    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx", "py", "go", "rs", "java", "kt", "swift", "php", "rb", "sh", "bash"]
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx"]
     fixable: true
     mitigation: "提取命名常量并注释含义：const MAX_RETRY = 3; const API_TIMEOUT_MS = 30000; 版本号/日期/HTTP 状态码/常见常量/状态枚举自动豁免"
 
@@ -114,7 +114,7 @@ rules:
     severity: "warning"
     description: "代码缩进嵌套超过 3 层（如 for→for→if→if），可读性灾难，应提前 return 或抽函数"
     max_depth: 4
-    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx", "py", "go", "rs", "java", "kt", "swift", "php", "rb"]
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx"]
     fixable: false
 
   - id: readability/max-function-length
@@ -123,7 +123,7 @@ rules:
     severity: "warning"
     description: "过长的函数难以理解和维护"
     max_lines: 50
-    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx", "py", "go", "rs", "java", "kt", "swift", "php", "rb"]
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx"]
     # 2026-09-23 作用域（P1）：启动路径初始化函数（apply/init/main/bootstrap/setup 等）豁免
     scope_rules:
       - scope: "startup"
@@ -139,17 +139,23 @@ rules:
     max_lines: 400
     # 2026-09-23：只对**代码文件**生效——md/yml/json 文档天然长（README/docs 详解/规则包），
     #   文件行数拆分规则针对代码模块；此前无 exts 导致 README 1058 行/docs 详解被误报。
-    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx", "py", "go", "rs", "java", "kt", "swift", "php", "rb"]
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx"]
     fixable: false
 
   # ----- 2. 可维护性 -----
+  # 2026-10-05：激活原「死规则」——此前无 kind/检查器，从未执行。
+  #   现在由 lib/checks/dup-code.js 消费：跨文件 AST 归一化哈希找「同一函数结构 ≥3 处」。
+  #   判定标准（用户确立，量化版）：重复 ≥3 处 + 函数体 ≥5 行 即报；排除参数>5 /
+  #   布尔 flag 参数 / test 夹具 / 纯语法糖。severity 恒 warning（只提示不拦截）。
   - id: maintainability/no-duplicate-code
-    name: "检测重复代码块"
+    name: "检测重复代码块（该抽公共函数）"
     category: "maintainability"
     severity: "warning"
-    description: "同一段逻辑在多处重复，建议抽取为公共函数"
+    description: "同一逻辑结构在多处重复（≥3 处 + ≥5 行），应抽取公共函数"
+    kind: "duplicate-code"
     min_lines: 5
     min_occurrences: 3
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx"]
     fixable: true
 
   - id: maintainability/max-cyclomatic-complexity
@@ -186,7 +192,10 @@ rules:
     dimensions: ["性能", "健壮性"]
     # 2026-09-27：仅代码文件（md 文档的代码块示例是讲解文本，不是运行代码——
     #   README 版本表 / docs 方案文的 fs.readFileSync 示例曾被当真实代码报 io-risk 误报）
-    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx", "py"]
+    # 2026-10-05：exts 移除 py——io-risk 的 AST 检查器是 JS/Node fs 语法特定
+    #   （scanIoRiskAst 只认 fs.xxx / require('node:fs')），Python 的 open/with 不识别；
+    #   声明 py 是误导（对 py 文件永不命中）。Python 文件 I/O 由语言规则集另行覆盖。
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx"]
     # 三段式：正则初筛（哪些文件可能含 fs 调用）→ AST 精筛（注释/字符串里的示例剔除）
     #   → 分级由 lib/ast/io-risk.js 完成，finding 由 lib/checks/io.js 产出
     astConfirm: true
