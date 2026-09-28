@@ -91,6 +91,8 @@ rules:
       - "eslint.config"
       - "jest.config"
       - "babel.config"
+      - "cli.js"
+      - "cli.mjs"
     fixable: false
     mitigation: "浏览器侧改用 fetch/WebSocket/indexedDB 等 web API；Node 侧能力留在 host 半部经 RPC 暴露"
 
