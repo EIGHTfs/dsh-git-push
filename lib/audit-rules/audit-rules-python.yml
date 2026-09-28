@@ -68,6 +68,12 @@ rules:
     description: "过长的函数难以理解和维护（Python 版）"
     max_lines: 50
     exts: ["py"]
+    # 2026-10-05（评审规则③）：序列化/反序列化职责函数豁免——意义明确、变量生命周期
+    #   仅当前会话时代码常超百行，过度拆分复杂化数据传递与生命周期（得不偿失）。
+    scope_rules:
+      - scope: "serialization"
+        action: "exempt"
+        reason: "序列化/反序列化职责函数：意义明确且变量生命周期仅当前会话，超百行是职责自然形态"
     fixable: true
 
   - id: python/max-file-length
@@ -76,6 +82,15 @@ rules:
     severity: "warning"
     description: "单文件超过 400 行时应拆分模块（Python 版；存量超大文件为已知债务，仅提醒不拦截）"
     max_lines: 400
+    exts: ["py"]
+    fixable: false
+
+  - id: python/comment-density
+    name: "Python 行注释密度过高（注释复述代码）"
+    category: "readability"
+    severity: "warning"
+    description: "变量即注释——语义明确的代码里变量名已表达内容，额外的行注释不加深理解；只保留具有隐性约束、复杂设计、外部契约、非显然决策的块注释，注释应解释「为什么」而非复述「做了什么」"
+    threshold: 0.4
     exts: ["py"]
     fixable: false
 

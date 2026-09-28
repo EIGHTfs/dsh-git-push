@@ -459,3 +459,90 @@ test('⑧ 硬编码凭据：URL 参数名/拼接不误报，真赋值仍报，UR
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+// ---------- 2026-10-05：Python 适配 + 混淆产物回归（KToolBox/Pawchive 实测驱动） ----------
+
+test('tokenizer：Python 三引号 docstring 整体消费（数字不泄漏为魔数）', async () => {
+  const { tokenize } = await import('../lib/ast/tokenizer.js');
+  const doc = '"""\n示例：`234234_2024-1-1_TheTitle` 可生成目录名\n"""\n';
+  const toks = tokenize(doc);
+  const strs = toks.filter((t) => t.type === 'str');
+  assert.equal(strs.length, 1, `三引号应整体消费为单个 str（得 ${strs.length}）`);
+  assert.ok(strs[0].value.includes('234234'), 'docstring 内容应在 str 内');
+  // 跨行闭合
+  const cross = '"""line1\nline2\nend"""\n';
+  assert.equal(tokenize(cross).filter((t) => t.type === 'str').length, 1, '跨行三引号应合并');
+});
+
+test('magic-number：Python 普通类枚举（驼峰成员）豁免', async () => {
+  const { checkMagicNumberSmartAst } = await import('../lib/ast/magic-number.js');
+  const py = 'class Error:\n    NetWorkError = 1001\n    JsonDecodeError = 1002\n    ValidationError = 1003\n';
+  assert.equal(checkMagicNumberSmartAst(py).length, 0, '普通类驼峰枚举成员应豁免');
+  // 类内小写属性仍报
+  const cfg = 'class Config:\n    port = 8080\n';
+  assert.ok(checkMagicNumberSmartAst(cfg).some((h) => h.num === '8080'), '小写属性 port=8080 应报');
+  // 参数默认值（含类型注解）豁免
+  const param = 'def client(timeout: float = 5.0, retry_interval: float = 2.0):\n    return timeout\n';
+  assert.equal(checkMagicNumberSmartAst(param).length, 0, 'Python 参数默认值应豁免');
+  // status_code == 429 豁免（状态码，即使变量名含 retry）
+  const st = 'retryable = response.status_code == 429\n';
+  assert.equal(checkMagicNumberSmartAst(st).length, 0, 'HTTP 状态码比较应豁免');
+  // datetime 构造豁免
+  const dt = 't = datetime(2024, 1, 1, 0, 0, 0)\n';
+  assert.equal(checkMagicNumberSmartAst(dt).length, 0, 'datetime 日期参数应豁免');
+});
+
+test('repeated：i18n/配置键（含 snake_case 段）豁免，域名仍报', async () => {
+  const { checkRepeatedStringsAst } = await import('../lib/ast/size.js');
+  const mk = (v) => `a='${v}';b='${v}';c='${v}';`;
+  assert.equal(checkRepeatedStringsAst(mk('api.retry_times')).length, 0, '配置键 api.retry_times 应豁免');
+  assert.equal(checkRepeatedStringsAst(mk('downloader.files_netloc')).length, 0, '配置键 downloader.files_netloc 应豁免');
+  assert.equal(checkRepeatedStringsAst(mk('common.cancel')).length, 0, 'i18n 键应豁免');
+  assert.ok(checkRepeatedStringsAst(mk('api.example.com')).some((x) => x.value === 'api.example.com'), '域名重复应报');
+});
+
+test('auditFile：混淆构建产物只留凭据/文件级检查（行级规则屏蔽）', async () => {
+  const { auditFull } = await import('../lib/audit/index.js');
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-minified-'));
+  try {
+    // 模拟 Vite 混淆产物：单行 10 万字符
+    const min = 'const a=' + 'x'.repeat(100000) + ';function f(){if(a){return 1}}';
+    mkdirSync(join(dir, 'assets'), { recursive: true });
+    writeFileSync(join(dir, 'assets', 'bundle.js'), min);
+    writeFileSync(join(dir, 'assets', 'app.js'), 'function real() { return 42; }\n');
+    const res = await auditFull(dir);
+    const minHits = res.findings.filter((f) => f.file.includes('assets/bundle.js'));
+    const minRules = [...new Set(minHits.map((f) => f.rule))];
+    assert.ok(!minRules.some((r) => r.includes('max-complexity') || r.includes('function-name') || r.includes('empty-catch')),
+      `混淆产物不应报行级规则（得 ${minRules.join(', ')}）`);
+    const appHits = res.findings.filter((f) => f.file.includes('assets/app.js'));
+    assert.ok(appHits.some((f) => f.rule === 'python/magic-number' || f.rule === 'readability/magic-number-smart'),
+      '正常源码（app.js 的 42）应正常审计（得 ' + appHits.map(f=>f.rule).join(',') + '）');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+// ---------- 2026-10-05：评审规则 ①②③④（注释密度/文件有效行/序列化豁免/常量语义） ----------
+
+test('comment-density：高密度行注释提示，块注释/短文件/合理注释不提示', async () => {
+  const { checkCommentDensityAst } = await import('../lib/ast/size.js');
+  // 高密度（8 注释 + 8 代码）→ 提示
+  const dense = Array.from({ length: 8 }, () => '# 注释说明').join('\n') + '\n' + Array.from({ length: 8 }, (_, i) => `x${i} = ${i}`).join('\n') + '\n';
+  assert.ok(checkCommentDensityAst(dense).length >= 1, '高密度行注释应提示');
+  // 块注释（JSDoc）不计入 → 不提示
+  const doc = '/**\n * 设计说明：三阶段流程\n * 1. 校验 2. 执行 3. 落盘\n */\nfunction run() { return 1; }\nconst a = 1; const b = 2; const c = 3; const d = 4; const e = 5; const f = 6;\n';
+  assert.equal(checkCommentDensityAst(doc).length, 0, '块注释不计入密度');
+  // 短文件（<5 行代码）不判定
+  assert.equal(checkCommentDensityAst('// 头\nconst a = 1;\nconst b = 2;\n').length, 0, '短文件不判定');
+  // 合理注释（2 注释 + 10 代码，ratio 0.2 < 0.4）
+  const ok = '# 重试契约\n# 限流 429\n' + Array.from({ length: 10 }, (_, i) => `y${i} = ${i}`).join('\n') + '\n';
+  assert.equal(checkCommentDensityAst(ok).length, 0, '合理注释不提示');
+});
+
+test('scope：序列化/反序列化职责函数豁免函数长度（评审规则③）', async () => {
+  const { classifyFunctionPath } = await import('../lib/ast/scope.js');
+  assert.equal(classifyFunctionPath('to_json'), 'serialization', 'to_json 应判序列化');
+  assert.equal(classifyFunctionPath('from_json_data'), 'serialization', 'from_json 应判序列化');
+  assert.equal(classifyFunctionPath('serialize_payload'), 'serialization', 'serialize 应判序列化');
+  assert.equal(classifyFunctionPath('deserialize'), 'serialization', 'deserialize 应判序列化');
+  assert.equal(classifyFunctionPath('handle_request'), 'unknown', '普通函数不误判');
+});

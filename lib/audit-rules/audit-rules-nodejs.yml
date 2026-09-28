@@ -125,10 +125,17 @@ rules:
     max_lines: 50
     exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx"]
     # 2026-09-23 作用域（P1）：启动路径初始化函数（apply/init/main/bootstrap/setup 等）豁免
+    # 2026-10-05 作用域（评审规则③）：序列化/反序列化职责函数（serialize/to_json/from_json/
+    #   dumps/loads/parse 等）——意义明确、变量生命周期仅当前会话时代码常超百行，过度拆分反而
+    #   复杂化数据传递与生命周期处理（得不偿失），豁免函数长度（classifyFunctionPath 返回
+    #   serialization 路径）。
     scope_rules:
       - scope: "startup"
         action: "exempt"
         reason: "启动路径初始化函数（一次性执行），阈值不适用"
+      - scope: "serialization"
+        action: "exempt"
+        reason: "序列化/反序列化职责函数：意义明确且变量生命周期仅当前会话，超百行是职责自然形态，过度拆分得不偿失"
     fixable: true
 
   - id: readability/max-file-length
@@ -142,10 +149,19 @@ rules:
     exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx"]
     fixable: false
 
+  - id: readability/comment-density
+    name: "行注释密度过高（注释复述代码）"
+    category: "readability"
+    severity: "warning"
+    description: "变量即注释——语义明确的代码里变量名已表达内容，额外的行注释不加深理解；只保留具有隐性约束、复杂设计、外部契约、非显然决策的块注释，注释应解释「为什么」而非复述「做了什么」"
+    threshold: 0.4
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx"]
+    fixable: false
+
   # ----- 2. 可维护性 -----
   # 2026-10-05：激活原「死规则」——此前无 kind/检查器，从未执行。
   #   现在由 lib/checks/dup-code.js 消费：跨文件 AST 归一化哈希找「同一函数结构 ≥3 处」。
-  #   判定标准（用户确立，量化版）：重复 ≥3 处 + 函数体 ≥5 行 即报；排除参数>5 /
+  #   判定标准（评审确立，量化版）：重复 ≥3 处 + 函数体 ≥5 行 即报；排除参数>5 /
   #   布尔 flag 参数 / test 夹具 / 纯语法糖。severity 恒 warning（只提示不拦截）。
   - id: maintainability/no-duplicate-code
     name: "检测重复代码块（该抽公共函数）"
