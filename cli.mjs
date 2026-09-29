@@ -8,7 +8,7 @@ import { VERSION, readmeTemplate, yamlTemplate, helpSync } from './lib/self/inde
 import { loadRuleFiles, discoverRuleSlots } from './lib/rule/loader.js';
 import { compileAllRules } from './lib/rule/registry.js';
 import { runWrappedGit } from './lib/git/wrapped-git.js';
-import { readFileSync } from 'node:fs';
+import { readFileSync, realpathSync } from 'node:fs';
 
 // 2026-10-05 结构化：命令实现按域抽到 lib/cli/commands-*.mjs（audit/account/vcs/doc），
 //   本文件保留入口编排（HELP/parseArgv/命令分发表/运行入口）。
@@ -300,7 +300,11 @@ export async function main(argv = process.argv.slice(2)) {
 }
 
 // 直接运行时入口（被 import 时不执行）
-if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith('cli.mjs')) {
+// 2026-09-29 修：符号链接场景（PATH 里 git-sluice → cli.mjs）下 process.argv[1] 是链接路径、
+//   import.meta.url 是真实文件路径，两者字符串不相等 → 入口静默不执行（exit 0 无输出）。
+//   用 realpath 归一化：链接/相对/绝对路径都解析到同一真实路径再比。
+if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith('cli.mjs')
+  || import.meta.url === `file://${realpathSync(process.argv[1])}`) {
   // 顶层 await：main 已异步，未 await 时 rejection 会变成 unhandled rejection
   //   （进程静默退出、退出码不对），故显式 await 并回传退出码。
   // 2026-09-20：命令函数（cmdFileIo/cmdModuleSplitter 等）返回业务对象/数组，

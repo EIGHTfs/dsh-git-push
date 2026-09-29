@@ -16,7 +16,7 @@
  *                                                   # 目标未显式给时按源目录名自动探测双副本
  */
 import { existsSync, readdirSync, statSync, readFileSync } from 'node:fs';
-import { mkdir, readFile } from 'node:fs/promises';
+import { mkdir, readFile, chmod } from 'node:fs/promises';
 // 目标目录常在工作区（CIFS 网络挂载）：copyFileSync 在 CIFS 内会 EPERM
 //   （尝试 SMB 服务端复制），必须用带读写回退的 copyFileCompat。
 import { copyFileCompat } from '../lib/fsx.js';
@@ -164,6 +164,11 @@ export async function syncPlugin({ source = SOURCE_ROOT, target = '', write = fa
         // 单个文件失败不再抛出中断整个同步：记录后继续，最后统一上报。
         failures.push({ file: rel, error: r.error });
         continue;
+      }
+      // 2026-09-29：cli.mjs 是 bin（git-sluice）入口，需可执行权限（shebang 执行）。
+      //   copyFile 不带原文件 mode，同步后恢复 +x（幂等 chmod；失败不阻塞）。
+      if (rel === 'cli.mjs' || rel.endsWith('/cli.mjs')) {
+        try { await chmod(to, 0o755); } catch { /* 权限恢复失败不强拦 */ }
       }
     }
     written++;
