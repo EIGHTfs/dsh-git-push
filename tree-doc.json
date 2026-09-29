@@ -278,24 +278,9 @@
   "test/test-audit-api.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "README.md": {
-        "status": "M",
-        "mtime": "2026-09-26T21:38:37.733Z",
-        "note": "注释可能需更新"
-      },
-      "lib/app/slash-commands.js": {
-        "status": "M",
-        "mtime": "2026-09-26T21:37:14.955Z",
-        "note": "注释可能需更新"
-      },
-      "lib/audit/orchestrate.js": {
-        "status": "M",
-        "mtime": "2026-09-26T21:38:37.736Z",
-        "note": "注释可能需更新"
-      },
-      "skills/dsh-git-push.md": {
-        "status": "M",
-        "mtime": "2026-09-26T21:38:37.735Z",
+      "test/test-symlink-resolution.mjs": {
+        "status": "A",
+        "mtime": "2026-09-29T20:51:57.048Z",
         "note": "注释可能需更新"
       }
     }
@@ -316,5 +301,19 @@
   "test/test-doc-func.mjs": "（待注释）",
   "test/test-doc-version.mjs": "（待注释）",
   "docs/CHANGELOG.md": "版本列表宿主（doc-version apply 写 dshgp-version 标记块）",
-  "docs/FUNCTIONS.md": "函数列表宿主（doc-func apply 写 dshgp-functions 标记块）"
+  "docs/FUNCTIONS.md": "函数列表宿主（doc-func apply 写 dshgp-functions 标记块）",
+  "test/test-symlink-resolution.mjs": "软链安装依赖解析回归测试（默认失败/--preserve-symlinks/NODE_PATH/真实副本四种场景）",
+  "lib/cli": "（待注释）",
+  "docs/方案-审计规则按语言划分与检查器语言化.md": "（待注释）",
+  "docs/诊断-提交审计-auditignore-缺no-index.md": "（待注释）",
+  "lib/ast/dup-code.js": "（待注释）",
+  "lib/audit-rules/audit-rules-python.yml": "（待注释）",
+  "lib/checks/dup-code.js": "（待注释）",
+  "lib/cli/commands-account.mjs": "（待注释）",
+  "lib/cli/commands-audit.mjs": "（待注释）",
+  "lib/cli/commands-doc.mjs": "（待注释）",
+  "lib/cli/commands-vcs.mjs": "（待注释）",
+  "lib/git/module-splitter.js": "（待注释）",
+  "scripts/clean-date-comments.py": "（待注释）",
+  "test/test-dup-code.mjs": "（待注释）"
 }

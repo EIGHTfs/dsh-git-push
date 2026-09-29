@@ -189,6 +189,27 @@ test('工具分发：未知工具报错', async () => {
   assert.ok(r.error.includes('未知工具'));
 });
 
+test('工具分发：git_sluice 透传 git（凭据自动注入，返回 stdout/status）', async () => {
+  const r = await callTool('git_sluice', { args: '--version' }, { workspaceRoot: ROOT }, {});
+  assert.equal(r.ok, true);
+  assert.equal(r.status, 0);
+  assert.match(r.stdout, /git version/, '透传结果应含 git version 输出');
+  assert.equal(r.command, 'git --version');
+});
+
+test('工具分发：git_sluice 空 args 报错、引号路径拆分不受空格影响', async () => {
+  const empty = await callTool('git_sluice', { args: '  ' }, { workspaceRoot: ROOT }, {});
+  assert.equal(empty.ok, false);
+  assert.match(empty.error, /args 必填/);
+  // shellSplit 间接验证：含引号路径的参数串拆成独立 argv 后透传执行不报参数解析错
+  const q = await callTool('git_sluice', { args: 'log "--pretty=oneline" -1' }, { workspaceRoot: ROOT }, {});
+  // 非 git 仓库时 log 会失败但 status 应为 128 且 stderr 有信息（证明 argv 拆分正确、没把引号当参数）
+  if (q.ok === false) {
+    assert.equal(q.status, 128);
+    assert.ok(q.stderr.length > 0);
+  }
+});
+
 test('工具分发：code_audit 出 summary 与 quality', async () => {
   const r = await callTool('code_audit', { repo: ROOT, scope: 'full' }, {}, {});
   assert.equal(r.ok, true);

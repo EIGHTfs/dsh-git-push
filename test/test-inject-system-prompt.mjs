@@ -229,10 +229,10 @@ test('废弃：injectFullSkill / injectRepoIndexFull 不再出现在配置与 UI
 
 /* ───────── ④ 注入内容：功能用法 + 目录级环境 ───────── */
 
-test('功能用法段：覆盖全部 9 个工具（AI 才知道插件有什么）', async () => {
+test('功能用法段：覆盖全部 10 个工具（AI 才知道插件有什么）', async () => {
   const { FUNCTION_USAGE_HINT } = await import('../lib/app/inject-text.js');
   for (const tool of ['git_scan', 'git_commit_push', 'code_audit', 'git_clone',
-    'git_remote_create', 'git_set_visibility', 'link_check', 'git_account_check', 'git_gen_ssh_key']) {
+    'git_remote_create', 'git_set_visibility', 'link_check', 'git_account_check', 'git_gen_ssh_key', 'git_sluice']) {
     assert.ok(FUNCTION_USAGE_HINT.includes(tool), `功能用法段应包含 ${tool}`);
   }
 });
@@ -313,10 +313,10 @@ test('scan-version：版本列表宿主与 package.json 一致（仓库自检，
 
 // ---------- 1.9.1：系统提示词注入配置化 + 浅包装 git 用法 ----------
 
-test('1.9.1：FUNCTION_USAGE_HINT 含浅包装 git 透传用法（未知命令自动凭据）', async () => {
+test('1.9.1：FUNCTION_USAGE_HINT 含 git_sluice 透传工具用法（AI 直接调用任意 git 命令）', async () => {
   const { FUNCTION_USAGE_HINT } = await import('../lib/app/inject-text.js');
-  assert.ok(FUNCTION_USAGE_HINT.includes('git-sluice'), '应含 git-sluice 用法');
-  assert.ok(FUNCTION_USAGE_HINT.includes('任意 git 参数'), '应说明未知命令透传');
+  assert.ok(FUNCTION_USAGE_HINT.includes('git_sluice'), '应含 git_sluice 工具用法');
+  assert.ok(FUNCTION_USAGE_HINT.includes('任意 git 命令'), '应说明任意 git 命令透传');
   assert.ok(FUNCTION_USAGE_HINT.includes('凭据自动注入'), '应说明自动凭据');
 });
 

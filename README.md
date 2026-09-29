@@ -249,7 +249,7 @@ dsh-git-push/
 │   │   ├── regex.js — 正则类规则执行（regex/path-regex/blacklist）
 │   │   ├── semantic.js — 语义类规则执行（patch insert/仓库级语义）
 │   │   ├── structural.js — 结构类规则（函数长度/复杂度/嵌套/同步 fs）
-│   ├── cli/ — 
+│   ├── cli/ — （待注释）
 │   │   ├── commands-account.mjs — （待注释）
 │   │   ├── commands-audit.mjs — （待注释）
 │   │   ├── commands-doc.mjs — （待注释）
@@ -391,6 +391,7 @@ dsh-git-push/
 │   ├── test-slash-commands.mjs — 用户输入框 /git-audit 斜杠命令（解析/接线/对本仓库跑 quick）
 │   ├── test-smart-hint.mjs — 扫描智能提示 + 评分对数衰减测试
 │   ├── test-status-secret.mjs — token 明文不下发安全回归
+│   ├── test-symlink-resolution.mjs — 软链安装依赖解析回归测试（默认失败/--preserve-symlinks/NODE_PATH/真实副本四种场景）
 │   ├── test-task-queue.mjs — 后台化回归测试（官方 job 注册 / 无 jobs 同步保底 / blocker 拦截）
 │   ├── test-tool-probes.mjs — （待注释）
 │   ├── test-tree-doc.mjs — README 目录树脚本测试（gen/check/apply 闭环）
@@ -732,7 +733,8 @@ node assets/preview-gen.mjs
 · git_commit_push —— 一键提交并推送（审计同步拦截，通过后 commit+push 走宿主官方后台 job：立即返回 async:true+jobId，结果完成会自动返回、无需特意查询；如需主动查用宿主 job_output <jobId>）
 · code_audit —— 审计仓库（L0 静态检查 + 质量评分），scope=full 全量，可传 ruleset / weights
 · git_account_check —— 校验 GitHub 账号与凭据（token 在线校验 + SSH 公钥指纹）
-· git_gen_ssh_key / git_remote_create / git_set_visibility / git_clone / git_gen_readme / link_check
+· git_sluice —— 浅包装 git 透传（AI 直接调用任意 git 命令，凭据自动注入）：args 传与 git 一致的参数串，返回 status + stdout/stderr；git 的 log/diff/branch/tag 等其余能力用它
+· git_gen_ssh_key / git_remote_create / git_set_visibility / git_clone / link_check
 【凭据由插件托管，不要到处找凭据】GitHub token 与 SSH 私钥存放在插件配置目录
 （git-push/ 下 github-token、id_rsa；0600 权限），由插件的推送/校验流程自动读取与选择通道
 （默认 SSH，token 401 回退 SSH）。判断登录态 → 调 git_account_check；推送 → 调 git_commit_push。

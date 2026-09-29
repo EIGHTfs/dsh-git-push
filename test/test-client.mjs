@@ -364,3 +364,75 @@ test('client.js apply：ctx.get 抛错不崩，settings.section 注册且渲染�
   assert.doesNotThrow(() => secReg.desc.component(), '侧边栏 section 渲染不得抛错');
   assert.ok(registered.some((r) => r.slot === 'settings.section' && r.desc.id === 'dsh-git-push'), 'settings.section 应注册');
 });
+
+// 1.11.4 修复（反代/memory 模式）：宿主按 isLoopback 决定 settingsScope 的 persistence——
+//   非 loopback 访问时恒 memory 模式、scope 快照 status 恒 'unavailable'、writable 恒 false。
+//   旧实现 available = snap.status === 'ready' → 恒 false → SectionPage return null → 设置侧边栏整页空白，
+//   writable 恒 false → 输入框全禁用。插件数据/写入已全走 HTTP（settings-get/settings-set/account-check/rule-slots），
+//   scope 快照只作初值兜底，故 available/writable 与快照解耦、恒可用。
+test('client.js：反代/memory 模式 scope（status 恒 unavailable）下设置页仍渲染（绕开 isLoopback=memory 陷阱）', () => {
+  let captured = null;
+  const prevWindow = globalThis.window;
+  globalThis.window = { __ModuleLoader__: { load: ({ id, factory }) => { captured = { id, factory }; } } };
+  // createElement 执行函数组件（SectionPage 会被真正调用），jsx-runtime 只返回 mock 元素
+  //   （不递归渲染 GitPushPage 整树，避免缺 UI 依赖 mock 爆炸）
+  const reactMock = {
+    createElement: (type, props) => {
+      if (typeof type === 'function') return type(props || {});
+      return { __mock: 'el', type, props: props || {} };
+    },
+    useState: (init) => [typeof init === 'function' ? init() : init, () => {}],
+    useEffect: () => {},
+    // uSES 桥：直接取 store 快照（与上方 apply 测试同构）
+    useSyncExternalStore: (subscribe, getSnapshot) => getSnapshot(),
+  };
+  const req = (name) => {
+    if (name === 'react') return reactMock;
+    if (name === 'react/jsx-runtime') return {
+      jsx: (type, props) => ({ __mock: 'jsx-el', type, props: props || {} }),
+      jsxs: (type, props) => ({ __mock: 'jsx-el', type, props: props || {} }),
+    };
+    if (name === '@deepseek-ai/dsh-client-ui-primitives') return { IconChevronDownOutline14: 'icon-mock' };
+    if (name === '@deepseek-ai/dsh-client-store') return {
+      createSnapshotStore: (initial) => {
+        let value = initial;
+        const listeners = new Set();
+        return {
+          getSnapshot: () => value,
+          set: (v) => { value = v; listeners.forEach((l) => l()); },
+          subscribe: (l) => { listeners.add(l); return () => listeners.delete(l); },
+        };
+      },
+    };
+    throw new Error('require: ' + name);
+  };
+  new Function('require', 'window', rootClientSrc)(req, globalThis.window); // dsh-skip-sensitive: 沙箱执行仓库内 client.js 顶层（受控源码，非外部输入）
+  globalThis.window = prevWindow;
+  assert.ok(captured, 'ModuleLoader.load 应被调用');
+  const mod = captured.factory(req);
+  assert.deepEqual(mod.inject, ['slots', 'settingsScope']);
+
+  // memory 模式 scope：status 恒 'unavailable'、writable 恒 false（isLoopback=memory 陷阱形态）
+  const scopeMock = {
+    getSnapshot: () => ({ status: 'unavailable', writable: false, value: {} }),
+    subscribe: () => () => {},
+    set: async () => {}, mutate: async () => {}, unset: async () => {},
+  };
+  const registered = [];
+  const ctx = {
+    effect: () => {},
+    get: () => { throw new Error('cannot get property "ruleSlotMeta" without inject'); },
+    slots: {
+      register: (desc, component) => ({ ...desc, component }),
+      inject: (name, registerFn) => { registered.push({ slot: name, desc: registerFn() }); },
+    },
+    settingsScope: { bind: () => scopeMock },
+  };
+  assert.doesNotThrow(() => mod.apply(ctx), 'memory 模式 scope 下 apply 不得崩溃');
+  const secReg = registered.find((r) => r.slot === 'settings.section');
+  assert.ok(secReg, 'settings.section 应注册');
+  // 关键断言：unavailable 快照下 SectionPage 必须渲染（不得 return null 空白页）
+  const rendered = secReg.desc.component();
+  assert.ok(rendered !== null && rendered !== undefined, 'SectionPage 在 memory 模式 scope 下必须渲染（不得 return null 空白）');
+  assert.equal(rendered.__mock, 'jsx-el', '应渲染 GitPushPage 元素而非空白');
+});
