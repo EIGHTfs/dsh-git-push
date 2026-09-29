@@ -120,6 +120,24 @@ rules:
     pattern: "(对话记录|聊天记录|沟通记录|对话内容|聊天内容)"
     fixable: false
 
+  # ----- 2026-10-05：注释日期检测（评审规则——AI 注释写日期的毛病）-----
+  # 日期属于 git commit（author date + diff），注释只解释「为什么」不该记录「什么时候」。
+  # 只扫代码注释载体：js/ts/py 等——md/txt 文档内容日期（CHANGELOG/LICENSE/文章）是正常书写，不扫。
+  # @since/@deprecated/@version 是 JSDoc 标准标签（版本语义非变更日志），整行白名单豁免。
+  - id: comment/no-date-in-comment
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx", "html", "htm", "py"]
+    name: "禁止注释中写日期"
+    category: "documentation"
+    severity: "warning"
+    description: "日期属于 git commit（author date + diff + message），不应写进代码注释；注释只解释「为什么这么做」，不记录「什么时候改的」——变更历史交给版本控制"
+    pattern: "(?://|\\*|#)\\s*[^\n]*\\d{4}[-/.]\\d{1,2}[-/.]\\d{1,2}"
+    whitelist_patterns:
+      - "@since"
+      - "@deprecated"
+      - "@version"
+      - "@date"
+    fixable: false
+
 # ----- 清洗改写表（scrub-user-wording.mjs 读取；审计不消费）-----
 # 顺序敏感：先特例后通配。match 为 JS 正则源码（脚本加 g 标志）。
 # replace 为替换模板：$1/$2… 对应捕获组；空串=删除。
