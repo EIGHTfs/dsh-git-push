@@ -313,6 +313,7 @@ dsh-git-push/
 ├── scripts/ — 开发工具脚本（版本校验/双副本同步/预览服务/README 目录树维护）
 │   ├── audit-runtime-check.mjs — 三层审计 L3 运行时检测脚本
 │   ├── check.mjs — 语法检查脚本（npm run check）
+│   ├── clean-date-comments.py — （待注释）
 │   ├── doc-func.mjs — （待注释）
 │   ├── doc-tree.mjs — （待注释）
 │   ├── doc-version.mjs — （待注释）
