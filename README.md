@@ -357,6 +357,7 @@ dsh-git-push/
 │   ├── test-audit.mjs — 审计总入口测试（auditFull/changed/豁免/gitignore）
 │   ├── test-auditignore.mjs — （待注释）
 │   ├── test-auto-push.mjs — 任务完成自动推送测试（检测纯函数 + registerAutoPush 门控监听注册）
+│   ├── test-build-artifact-skip.mjs — 构建/混淆产物跳过专项测试（Pawchive 样本 fixture）
 │   ├── test-button-bind.mjs — 按钮绑定交叉比对（jsx 工厂形态/注释过滤/行号归属）
 │   ├── test-cli-audit-parity.mjs — CLI 与源码全量审计一致性测试（audit --full --json vs 直接 auditFull，含忽略排除）
 │   ├── test-client.mjs — 侧边栏测试（手写 DOM/零外部资源/开关默认）
@@ -405,6 +406,8 @@ dsh-git-push/
 │   ├── test-task-queue.mjs — 后台化回归测试（官方 job 注册 / 无 jobs 同步保底 / blocker 拦截）
 │   ├── test-tool-probes.mjs — （待注释）
 │   ├── test-tree-doc.mjs — README 目录树脚本测试（gen/check/apply 闭环）
+│   ├── fixtures/ — （待注释）
+│   │   ├── TimeZoneComboBox-CRnoCikG.js — Pawchive 混淆产物样本（hash 文件名——跳过判定 fixture）
 ├── docs/ — 开发文档
 │   ├── CHANGELOG.md — 版本列表宿主（doc-version apply 写 dshgp-version 标记块）
 │   ├── DETAILS-EXEMPT-AND-RULES.md — 细节补充：豁免注释与规则 yml 用法全录

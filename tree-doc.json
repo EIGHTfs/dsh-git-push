@@ -278,29 +278,39 @@
   "test/test-audit-api.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "cli.mjs": {
+      "docs/CHANGELOG.md": {
         "status": "M",
-        "mtime": "2026-09-30T02:20:00.265Z",
+        "mtime": "2026-09-30T08:40:05.578Z",
         "note": "注释可能需更新"
       },
-      "test/test-module-splitter.mjs": {
+      "lib/audit/audit-file.js": {
         "status": "M",
-        "mtime": "2026-09-30T02:22:04.871Z",
+        "mtime": "2026-09-30T08:38:09.912Z",
         "note": "注释可能需更新"
       },
-      "test/test-self.mjs": {
+      "lib/self/index.js": {
         "status": "M",
-        "mtime": "2026-09-30T02:22:04.841Z",
+        "mtime": "2026-09-30T08:40:05.576Z",
         "note": "注释可能需更新"
       },
-      "lib/app/command-registry.js": {
+      "package.json": {
+        "status": "M",
+        "mtime": "2026-09-30T08:40:05.577Z",
+        "note": "注释可能需更新"
+      },
+      "scripts/audit-ext/variable-min-length.mjs": {
+        "status": "M",
+        "mtime": "2026-09-30T08:38:45.559Z",
+        "note": "注释可能需更新"
+      },
+      "test/fixtures/": {
         "status": "A",
-        "mtime": "2026-09-30T02:18:48.989Z",
+        "mtime": "2026-09-30T08:45:38.032Z",
         "note": "注释可能需更新"
       },
-      "test/test-command-registry.mjs": {
+      "test/test-build-artifact-skip.mjs": {
         "status": "A",
-        "mtime": "2026-09-30T02:16:28.069Z",
+        "mtime": "2026-09-30T08:45:59.877Z",
         "note": "注释可能需更新"
       }
     }
@@ -345,5 +355,8 @@
   "test/test-rename-locator.mjs": "rename-locator 测试（同名不同作用域分组/模块级/过滤）",
   "scripts/audit-ext/variable-min-length.mjs": "审计扩展：variable-min-length（内置规则抽出试点——统一动态入口）",
   "lib/app/command-registry.js": "工具命令注册表（方案 B——CLI/宿主工具/帮助同源，免维护）",
-  "test/test-command-registry.mjs": "命令注册表测试（工具入表/查找/parseRegistryArgs/清单生成）"
+  "test/test-command-registry.mjs": "命令注册表测试（工具入表/查找/parseRegistryArgs/清单生成）",
+  "test/fixtures": "（待注释）",
+  "test/fixtures/TimeZoneComboBox-CRnoCikG.js": "Pawchive 混淆产物样本（hash 文件名——跳过判定 fixture）",
+  "test/test-build-artifact-skip.mjs": "构建/混淆产物跳过专项测试（Pawchive 样本 fixture）"
 }

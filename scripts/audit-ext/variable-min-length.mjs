@@ -12,6 +12,9 @@ export const auditExt = {
   match: (repo) => Boolean(repo && repo !== '.'),
   run: async (repo) => {
     const { checkNameLengthAst } = await import('../../lib/ast/naming.js');
+    // 2026-10-05 修复：external 通道必须带内置的构建/混淆产物豁免（isBuildArtifactFile——
+    //   hash 文件名/单行混淆）——否则单行混淆产物短名密爆（Pawchive hash 产物 5896 条误报）
+    const { isBuildArtifactFile } = await import('../../lib/audit/audit-file.js');
     const { readFileSync, readdirSync, statSync } = await import('node:fs');
     const { join, extname, relative } = await import('node:path');
     const CODE_EXTS = new Set(['.js', '.mjs', '.cjs', '.ts', '.tsx', '.jsx']);
@@ -28,6 +31,7 @@ export const auditExt = {
         } else if (CODE_EXTS.has(extname(f))) {
           try {
             const text = readFileSync(p, 'utf8');
+            if (isBuildArtifactFile(relative(repo, p), text)) continue; // 构建/混淆产物跳过（行级规则必然误报）
             for (const hit of checkNameLengthAst(text, { min: 2 })) {
               findings.push({
                 file: relative(repo, p) || p, line: hit.line,
