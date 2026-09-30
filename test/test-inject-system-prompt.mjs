@@ -327,3 +327,20 @@ test('1.9.1：injectUsageText 配置覆盖逻辑（字符串/数组 → join）'
   assert.equal(joined, '【自定义注入】\n· 自定义行1\n· 自定义行2');
   assert.ok(typeof joined === 'string' && joined.trim().length > 0, '配置覆盖值应为非空字符串');
 });
+
+// ---------- 2026-09-30：审计输出 API 指引自动填充参数 ----------
+
+import { buildAuditApiGuide } from '../lib/app/inject-text.js';
+
+test('buildAuditApiGuide：聚合 API 参数自动填充（repo/scope/groupBy + 真实 IP），直接可复制', () => {
+  const g = buildAuditApiGuide('/repo/Pawchive', { scope: 'full', summary: { blocker: 0, warning: 437, notice: 121 }, quality: { score: 80.1, level: 'B' } });
+  assert.match(g, /repo=%2Frepo%2FPawchive/, 'repo 实际路径已 encode 填充');
+  assert.match(g, /scope=full/, 'scope 实际值填充');
+  assert.match(g, /groupBy=rule/, 'groupBy 默认填充');
+  assert.match(g, /api\/git-push\/audit\?/, '聚合端点');
+  // IP 不应是 localhost/占位符（真实网卡 IPv4 或至少非占位）
+  assert.ok(!g.includes('<本机IP>') && !g.includes('<仓库路径>'), '无占位符');
+  assert.ok(!g.includes('localhost'), '非 localhost（真实网卡地址）');
+  assert.match(g, /评分 80\.1\/B/, '数量+评分仍输出');
+  assert.match(g, /0 拦截 \/ 437 警告 \/ 121 提示/, '级别数量输出');
+});
