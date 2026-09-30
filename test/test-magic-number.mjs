@@ -107,3 +107,23 @@ test('magic-number-smart：配置语义属性值豁免（pageSize/apiTimeoutMs�
 test('magic-number-smart：member 赋值默认值（CONFIG.pageSize = 50）豁免', () => {
   assert.equal(hits('CONFIG.pageSize = 50;\n').length, 0, 'member 赋值配置字段不报');
 });
+
+// ---------- 2026-10-05：Pawchive 驱动豁免扩展（env 兜底已 1.12.1；本次 const 表意/嵌套常量/阈值/AbortSignal） ----------
+
+test('magic-number-smart：const 表意名豁免（barW），单字母 const 仍报', () => {
+  assert.equal(hits('const barW = 18;\n').length, 0, 'const 表意名（≥3 字符）不报');
+  assert.ok(hits('const a = 777;\n').length >= 1, '单字母 const 仍报（非表意）');
+});
+
+test('magic-number-smart：命名常量嵌套对象/数组内值豁免（MAGIC 文件头）', () => {
+  assert.equal(hits('const MAGIC = { JPEG: [0xff, 0xd8], PNG: [0x89, 0x50] };\n').length, 0, 'const 常量对象嵌套数组值不报');
+});
+
+test('magic-number-smart：比较阈值豁免（n < 1048576）', () => {
+  assert.equal(hits('const x = n < 1048576 ? 1 : 2;\n').length, 0, '比较运算符后阈值不报');
+});
+
+test('magic-number-smart：AbortSignal.timeout 配置豁免；setTimeout 回调用时长仍报', () => {
+  assert.equal(hits('signal: AbortSignal.timeout(5000),\n').length, 0, 'AbortSignal.timeout 参数不报');
+  assert.ok(hits('setTimeout(fn, 30000);\n').length >= 1, 'setTimeout 回调用时长是魔数上下文仍报');
+});
