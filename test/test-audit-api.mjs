@@ -126,3 +126,15 @@ test('exemptStatsOf：按豁免类型分组计数，无 exemptHint 不计数', a
   assert.equal(es.types.sensitive, 1);
   assert.equal(GROUP_BY_KEYS.join('|'), 'rule|file|severity|slot');
 });
+// ---------- 2026-10-05：code_audit includeFindings 参数（true 才输出全量审计结果） ----------
+
+test('code_audit：includeFindings=true 返回 findings+yaml；默认不返回', async () => {
+  const { callTool } = await import('../lib/app/tool-call.js');
+  const base = { repo: process.cwd() };
+  const full = await callTool('code_audit', { ...base, includeFindings: true }, {}, { defaultScanRoot: '' }, null, null, null);
+  assert.ok(Array.isArray(full.findings), 'includeFindings=true 应返回 findings 数组');
+  assert.ok(full.apiGuide, '仍带 apiGuide');
+  const slim = await callTool('code_audit', base, {}, { defaultScanRoot: '' }, null, null, null);
+  assert.equal(slim.findings, undefined, '默认不返回 findings（精简）');
+  assert.ok(slim.exemptStats && slim.groupByTypes, '默认仍带豁免统计/聚合类型');
+});

@@ -7,6 +7,7 @@
 
 | 版本 | 内容 |
 |------|------|
+| 2.0.4 | code_audit 恢复全量审计结果输出（参数化）——includeFindings=true 时返回 findings+yaml（1.11.5 前的直接全量输出加回，仅参数触发）；默认仍精简（apiGuide + 豁免/聚合/拦截）；注册表 code_audit 参数声明 includeFindings；回归 909 tests / 907 pass 全绿 |
 | 2.0.3 | API 指引 curl 加 -L（实测宿主反代 /api/git-push/audit 一次 302 中转——curl 不带 -L 显示 302 误判失败；加 -L 后 200 + 正常聚合 JSON）；API 仓库隔离确认：repo 参数独立审计 + 聚合限本次 findings + 返回带 repo 字段；回归 905 tests / 903 pass 全绿 |
 | 2.0.2 | external 字段值规范化——`external: true`（布尔）不合法，改为 `external: <具体标识>`（值 = 归属的 audit-ext 扩展脚本名，如 external: variable-min-length）；引擎停跑判定 `external === true` → 字段存在（非 undefined/false）即 external（内置停跑由 audit-ext 统一动态入口执行）；验证 variable-min-length 10 条全 ext 来源不变；回归 905 tests / 903 pass 全绿 |
 | 2.0.1 | 修复 external 通道丢失构建/混淆产物豁免——variable-min-length 走 audit-ext 脚本（自 walk 文件）未带内置 isHashArtifact/isMinified 判定 → Pawchive 混淆产物短名密爆 5896 条误报（6844 findings）；抽导出 isBuildArtifactFile（lib/audit/audit-file.js——hash 文件名/单行混淆统一判定，内置与 ext 复用防漂移），ext 脚本 walk 跳过；重审 Pawchive 6844→512（混淆产物 0）；回归 900 tests / 898 pass 全绿 |
