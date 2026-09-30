@@ -7,6 +7,7 @@
 
 | 版本 | 内容 |
 |------|------|
+| 1.12.4 | 审计 API 指引可选参数提示——groupBy 这类「选择性参数」除自动填默认（rule）外，输出补一行可选项说明（rule|file|severity|slot + severity 过滤示例 &severity=blocker,warning），默认已填按需改 URL 即可；回归 894 tests / 892 pass 全绿 |
 | 1.12.3 | 审计输出 API 指引参数自动填充——buildAuditApiGuide 不再留占位符：repo 实际路径（encodeURIComponent）、scope 实际值、groupBy 默认 rule 自动填入，本机 IP 用 os.networkInterfaces() 取真实网卡 IPv4（探测失败回退 localhost，不用 hostname spawn——沙箱不可靠）；输出直接可复制（GET + curl 两行）；回归 894 tests / 892 pass 全绿 |
 | 1.12.2 | 变量重命名位置定位工具（scripts/rename-locator.mjs）——按作用域聚合变量引用（对齐「按绑定聚合非按名字」方法论，零依赖 token 级近似 Babel scope.uid）：同名不同作用域变量分开分组（x@processUser / x@calculate 各一组），声明行 + 该函数作用域内全部引用行，供单字母变量人工重命名一次改完；--name 过滤 / --json；遮蔽场景按函数区间天然分开；实测 Pawchive cli.js m@module L51-1816 跨行聚合；回归 893 tests / 891 pass 全绿 |
 | 1.12.1 | 误报批量修复（Pawchive 全量核对驱动）——①构建产物 hash 文件名豁免：Vite/webpack assets `*-<HASH>.js`（hash 段 ≥6 字符大小写混合）与单行混淆同层处理，只留凭据/路径安全扫描（file-health 也排除——产物健康度无意义）；②magic-number 配置类形态豁免：`Number(env) \|\| N` / `x ?? N` env 兜底默认值、`obj.prop = N` member 赋值、配置语义属性值（pageSize/apiTimeoutMs 等）；Pawchive 全量 559→437 findings（构建产物 107 误报消除 + 魔数 123→59）；回归 886 tests / 884 pass 全绿 |

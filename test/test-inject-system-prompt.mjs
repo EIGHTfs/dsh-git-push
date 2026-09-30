@@ -343,4 +343,6 @@ test('buildAuditApiGuide：聚合 API 参数自动填充（repo/scope/groupBy + 
   assert.ok(!g.includes('localhost'), '非 localhost（真实网卡地址）');
   assert.match(g, /评分 80\.1\/B/, '数量+评分仍输出');
   assert.match(g, /0 拦截 \/ 437 警告 \/ 121 提示/, '级别数量输出');
+  assert.match(g, /可选参数/, '可选参数提示行（groupBy 可选值/severity 过滤说明）');
+  assert.match(g, /groupBy=rule/, '默认 groupBy=rule');
 });
