@@ -7,6 +7,7 @@
 
 | 版本 | 内容 |
 |------|------|
+| 2.0.2 | external 字段值规范化——`external: true`（布尔）不合法，改为 `external: <具体标识>`（值 = 归属的 audit-ext 扩展脚本名，如 external: variable-min-length）；引擎停跑判定 `external === true` → 字段存在（非 undefined/false）即 external（内置停跑由 audit-ext 统一动态入口执行）；验证 variable-min-length 10 条全 ext 来源不变；回归 905 tests / 903 pass 全绿 |
 | 2.0.1 | 修复 external 通道丢失构建/混淆产物豁免——variable-min-length 走 audit-ext 脚本（自 walk 文件）未带内置 isHashArtifact/isMinified 判定 → Pawchive 混淆产物短名密爆 5896 条误报（6844 findings）；抽导出 isBuildArtifactFile（lib/audit/audit-file.js——hash 文件名/单行混淆统一判定，内置与 ext 复用防漂移），ext 脚本 walk 跳过；重审 Pawchive 6844→512（混淆产物 0）；回归 900 tests / 898 pass 全绿 |
 | 2.0.0 | 方案 B：命令注册表元数据驱动（免维护 CLI + 独立于 DSH）——①lib/app/command-registry.js 注册 13 工具（name/cli/params schema），CLI 命令、宿主工具、帮助三处同源；②CLI 注册表驱动：parseRegistryArgs 通用解析（positional/--flag/boolean/enum/default/required 校验）→ callTool 直调（与插件工具同实现——逻辑改动自动对齐），scan/commit/clone/remote-create/set-visibility/account-check/cred-env/gen-ssh-key/link-check/module-splitter/file-io/clone-preview 12 命令迁注册表；③audit 特例：CLI audit 走 lib/cli（完整 findings——独立审计不依赖宿主 API），工具 code_audit 输出 API 指引；④测试 6+（注册表/parseRegistryArgs）+ 修复 test-self exitCode 残留（注册表分支设 exitCode 测试未恢复）；回归 901 tests / 899 pass 全绿 |
 | 1.12.6 | external 机制修正——yml external: true 具体字段的内置停跑不再经 groupByKind 过滤（编译后透传不可靠：astConfirmKind 型编译失败即漏），改为 auditFiles 装配层按原始 yml 字段（loadRuleFiles 可靠源）构造 external id 集合排除；groupByKind 恢复通用（不过滤）；variable-min-length 试点验证不变（10 条全 ext 来源）；回归 894 tests / 892 pass 全绿 |
