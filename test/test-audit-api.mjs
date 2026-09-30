@@ -106,3 +106,23 @@ test('audit-api：parseSeverityFilter 解析/去重/trim', () => {
   assert.equal(parseSeverityFilter(null), null);
   assert.equal(parseSeverityFilter(' , , '), null);
 });
+
+
+// ---------- 2026-10-05：豁免类型统计（audit 透明性） ----------
+
+test('exemptStatsOf：按豁免类型分组计数，无 exemptHint 不计数', async () => {
+  const { exemptStatsOf, GROUP_BY_KEYS } = await import('../lib/app/audit-api.js');
+  const findings = [
+    { exemptHint: 'dsh-skip-quality（文件头=整文件）', severity: 'warning' },
+    { exemptHint: 'dsh-skip-quality（文件头=整文件）', severity: 'warning' },
+    { exemptHint: 'dsh-skip-residue（行尾=本行）', severity: 'warning' },
+    { exemptHint: 'dsh-skip-sensitive（文件头=整文件）', severity: 'warning' },
+    { severity: 'warning' }, // 无豁免不计
+  ];
+  const es = exemptStatsOf(findings);
+  assert.equal(es.total, 4);
+  assert.equal(es.types.quality, 2);
+  assert.equal(es.types.residue, 1);
+  assert.equal(es.types.sensitive, 1);
+  assert.equal(GROUP_BY_KEYS.join('|'), 'rule|file|severity|slot');
+});

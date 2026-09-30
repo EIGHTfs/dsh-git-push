@@ -346,3 +346,23 @@ test('buildAuditApiGuide：聚合 API 参数自动填充（repo/scope/groupBy + 
   assert.match(g, /可选参数/, '可选参数提示行（groupBy 可选值/severity 过滤说明）');
   assert.match(g, /groupBy=rule/, '默认 groupBy=rule');
 });
+
+// ---------- 2026-10-05：审计输出增加 豁免类型统计 / 聚合类型 / 拦截列表 ----------
+
+test('buildAuditApiGuide：豁免类型 + 聚合类型 + 拦截列表输出', () => {
+  const g = buildAuditApiGuide('/repo/x', {
+    scope: 'full', summary: { blocker: 1, warning: 2, notice: 3 }, quality: { score: 80, level: 'B' },
+    exemptStats: { types: { quality: 11, residue: 3, sensitive: 2 }, total: 16 },
+    blocked: [{ file: 'lib/a.js', line: 5, rule: 'secret/xxx', message: '硬编码凭据' }],
+    groupByTypes: ['rule', 'file', 'severity', 'slot'],
+  });
+  assert.match(g, /豁免：16 条（quality 11 \/ residue 3 \/ sensitive 2）/, '豁免类型统计输出');
+  assert.match(g, /聚合类型：rule\|file\|severity\|slot/, '聚合类型输出');
+  assert.match(g, /拦截：1 个 blocker → lib\/a\.js:5（secret\/xxx）/, '拦截列表输出（文件/行/规则）');
+});
+
+test('buildAuditApiGuide：无豁免/无拦截时不输出对应行', () => {
+  const g = buildAuditApiGuide('/repo/x', { scope: 'full', summary: {}, quality: {} });
+  assert.ok(!g.includes('豁免：'), '无豁免统计不输出行');
+  assert.ok(!g.includes('拦截：'), '无拦截不输出行');
+});
