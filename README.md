@@ -323,6 +323,7 @@ dsh-git-push/
 │   ├── preview-server.mjs — 本地真实后端测试服务（preview.html 接真实 handleHttp）
 │   ├── probe-recheck.mjs — 探针：「重新检测」按钮链路实测（在线校验 token/SSH）
 │   ├── readme-gen.mjs — README 生成独立脚本（git_gen_readme 抽出：模板渲染/版本表/目录）
+│   ├── rename-locator.mjs — 变量重命名位置定位工具（按作用域聚合引用——单字母变量人工重命名辅助）
 │   ├── rule-switch.mjs — 规则槽位手动启停 CLI
 │   ├── rules-solo-audit.mjs — 规则单启控制变量扫描（基准全关+逐规则单启+全量对照，报告供 AI/人工审规则有效性与局限，按需运行非常驻）
 │   ├── scan-file-io.mjs — 文件读写扫描器（列出所有 fs 读写调用位置 + 路径参数）
@@ -385,6 +386,7 @@ dsh-git-push/
 │   ├── test-push-transport.mjs — 推送通道回归（SSH 优先/一致性语义）
 │   ├── test-quality.mjs — 评分总入口测试（AST 质量检查器）
 │   ├── test-readme-gen.mjs — README 生成测试（模板渲染/版本表）
+│   ├── test-rename-locator.mjs — rename-locator 测试（同名不同作用域分组/模块级/过滤）
 │   ├── test-repo-list.mjs — 仓库列表测试（本地扫描/索引读写/HTTP 端点/远端状态）
 │   ├── test-rule-packs.mjs — 规则总入口测试（编译注册/字段指派）
 │   ├── test-rule-slots-render.mjs — 规则包列表统计渲染回归

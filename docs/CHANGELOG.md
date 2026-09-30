@@ -7,6 +7,7 @@
 
 | 版本 | 内容 |
 |------|------|
+| 1.12.2 | 变量重命名位置定位工具（scripts/rename-locator.mjs）——按作用域聚合变量引用（对齐「按绑定聚合非按名字」方法论，零依赖 token 级近似 Babel scope.uid）：同名不同作用域变量分开分组（x@processUser / x@calculate 各一组），声明行 + 该函数作用域内全部引用行，供单字母变量人工重命名一次改完；--name 过滤 / --json；遮蔽场景按函数区间天然分开；实测 Pawchive cli.js m@module L51-1816 跨行聚合；回归 893 tests / 891 pass 全绿 |
 | 1.12.1 | 误报批量修复（Pawchive 全量核对驱动）——①构建产物 hash 文件名豁免：Vite/webpack assets `*-<HASH>.js`（hash 段 ≥6 字符大小写混合）与单行混淆同层处理，只留凭据/路径安全扫描（file-health 也排除——产物健康度无意义）；②magic-number 配置类形态豁免：`Number(env) \|\| N` / `x ?? N` env 兜底默认值、`obj.prop = N` member 赋值、配置语义属性值（pageSize/apiTimeoutMs 等）；Pawchive 全量 559→437 findings（构建产物 107 误报消除 + 魔数 123→59）；回归 886 tests / 884 pass 全绿 |
 | 1.12.0 | 审计扩展自动接入重构——①新增统一入口动态加载机制：scripts/audit-ext/ 下独立审计脚本导出契约 {name, match, run} 即自动接入（lib/audit/ext-runner.js 动态 import 加载 + 单脚本失败降级 + source 标记 ext:<name>），auditFull/auditChanged 自动并入（auditExtDir 可注入），scripts/audit-runner.mjs CLI 独立跑；_ 前缀脚本不参与实际审计（示例仅演示契约）；②契约示例 _example-readme-present.mjs + test-audit-ext 6 用例；回归 886 tests / 884 pass 全绿 |
 | 1.11.5 | 审计输出改为聚合 API 查询指引——①code_audit 工具不再内联输出审计内容（移除 findings 全文/yaml/审计结果块），返回「级别数量（blocker/warning/notice）+ 评分 + API 查询用法」（/api/git-push/audit：repo/scope/groupBy=rule\|file\|severity\|slot/severity 过滤参数 + curl 示例）；②git_commit_push 提交后审计同样只输出数量+评分+API 指引（blocked 摘要保留——拦截必需）；③新增公共输出函数 buildAuditApiGuide（inject-text.js）统一生成，两输出点共用防漂移；回归 880 tests / 878 pass 全绿 |
