@@ -43,6 +43,13 @@ export const KNOWN_FLAGS = ['--depth', '--full', '--ruleset', '--weights', '--in
 
 const HELP = `git-sluice v${VERSION} — dsh-git-push 引擎独立 CLI（脱离 DSH 运行）
 
+快速开始（第一次用——不用查源码）:
+  git-sluice account-check            ① 先校验 GitHub 凭据（token/SSH 是否可用）
+  git-sluice scan <目录>              ② 看有哪些 git 仓库（分支/未提交/未推送）
+  git-sluice audit <仓库> --full      ③ 全量审计一个仓库（评分/问题/API 指引）
+  git-sluice commit <仓库> -m "msg"   ④ 提交推送（自动过审计门禁）
+  git-sluice help                     全部命令与参数
+
 用法:
   git-sluice version              查看版本
   git-sluice ruleset [槽位...]    编译规则包并输出统计（默认全部槽位）

@@ -16,8 +16,28 @@ DSH（DeepSeek Harness）git 提交推送与代码审计插件——提交前自
 > **界面模拟页**：`assets/preview.html`（单文件自包含，双击即可打开；跑的是真实 `client.js` + 假数据，三选项卡全部可点）
 > **截图声明**：`screenshots.json`（仓库根、与 `package.json` 同级，列出 `assets/panel-*.png`）——DSH 插件榜单按此文件自动收录截图，作者推自己的仓库即生效，无需到榜单仓库提 PR
 
+## 快速开始（第一次用——不用查源码）
+
+插件装上并重启后，**三种方式直接可用**：
+
+**① AI 直接用**（DSH 会话里——不用记命令）
+- 工具已自动注册：`git_scan` / `code_audit` / `git_commit_push` / `git_account_check` 等
+- 直接说人话即可：「扫描我的仓库」「审计 Pawchive」「提交推送 xx 仓库」
+
+**② 独立 CLI**（`git-sluice`——脱离 DSH 也能跑）
+- `git-sluice account-check` —— 先校验 GitHub 凭据（第一步）
+- `git-sluice scan <目录>` —— 看有哪些 git 仓库
+- `git-sluice audit <仓库> --full` —— 全量审计（`--json` 拿明细）
+- `git-sluice commit <仓库> -m "msg"` —— 提交推送（自动过审计门禁）
+- 全部命令：`git-sluice help`
+
+**③ 侧边栏面板**
+- 审计面板：14 个规则包开关/排序/命中数
+- 设置：凭据 / SSH 公钥 / 审计开关与权重
+
 ## 目录
 
+- [快速开始（第一次用）](#快速开始第一次用不用查源码)
 - [功能总览](#功能总览)
 - [一、提交推送](#一提交推送)
 - [二、代码审计](#二代码审计)
