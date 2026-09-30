@@ -7,6 +7,7 @@
 
 | 版本 | 内容 |
 |------|------|
+| 2.0.6 | 工具清单单源化 + 描述精简全面重写——lib/app/tools.js 改为从 command-registry.js TOOL_REGISTRY 生成（删手写 148 行双源；增删工具只改注册表一处）；注册表补全 git_sluice（tools.js 有但注册表漏）→ 共 14 工具；宿主注册补齐 io_scan/git_clone_preview（此前 tools.js 未注册——宿主看不到）；14 工具 description 重写为「精简但全面」（一句话用途 + 关键用法/要求/风险——新手看得懂且信息全）；回归 909 tests / 908 pass 全绿 |
 | 2.0.5 | 新手指引——README 加「快速开始（第一次用）」（①AI 直接用工具 ②独立 CLI 四步 ③侧边栏面板——不用查源码）；CLI help 顶部加快速开始段（account-check → scan → audit → commit 四步 + help）；回归 909 tests / 907 pass 全绿 |
 | 2.0.4 | code_audit 恢复全量审计结果输出（参数化）——includeFindings=true 时返回 findings+yaml（1.11.5 前的直接全量输出加回，仅参数触发）；默认仍精简（apiGuide + 豁免/聚合/拦截）；注册表 code_audit 参数声明 includeFindings；回归 909 tests / 907 pass 全绿 |
 | 2.0.3 | API 指引 curl 加 -L（实测宿主反代 /api/git-push/audit 一次 302 中转——curl 不带 -L 显示 302 误判失败；加 -L 后 200 + 正常聚合 JSON）；API 仓库隔离确认：repo 参数独立审计 + 聚合限本次 findings + 返回带 repo 字段；回归 905 tests / 903 pass 全绿 |

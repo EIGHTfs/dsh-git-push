@@ -6,7 +6,11 @@ import assert from 'node:assert/strict';
 import { TOOL_REGISTRY, registryByName, registryByCli, parseRegistryArgs, buildToolsListText } from '../lib/app/command-registry.js';
 
 test('registry：14 工具全部入表，name/cli 唯一', () => {
-  assert.equal(TOOL_REGISTRY.length, 13, '13 个工具注册（git_gen_readme 已移除不入表）');
+  assert.equal(TOOL_REGISTRY.length, 14, '14 个工具注册（git_gen_readme 已移除不入表；单源补全 io_scan/git_clone_preview/git_sluice）');
+  const listNames = TOOL_REGISTRY.map((t) => t.name);
+  for (const expect of ['git_scan', 'git_commit_push', 'code_audit', 'io_scan', 'git_clone_preview', 'git_sluice']) {
+    assert.ok(listNames.includes(expect), `注册表应含 ${expect}（宿主工具清单单源——tools.js 从注册表生成）`);
+  }
   const names = new Set(TOOL_REGISTRY.map((t) => t.name));
   assert.equal(names.size, TOOL_REGISTRY.length, 'name 唯一');
   const clis = TOOL_REGISTRY.filter((t) => t.cli).map((t) => t.cli);
