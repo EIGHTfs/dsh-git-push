@@ -91,3 +91,19 @@ test('magic-number-smart：rgba 色值豁免（255 是 RGB 通道上限）', () 
   assert.equal(hits(text).length, 0, 'rgba 色值 255 不报');
   assert.ok(hits('setValue(255);\n').length >= 1, '非色值上下文的裸 255 照报');
 });
+// ---------- 2026-09-30：配置类形态豁免（Pawchive 误报核对落地） ----------
+
+test('magic-number-smart：env 兜底默认值（Number(env) || N / ?? N）豁免', () => {
+  assert.equal(hits('const a = Number(env) || 3000;\n').length, 0, '|| 兜底不报');
+  assert.equal(hits('const b = process.env.X ?? 60000;\n').length, 0, '?? 兜底不报');
+});
+
+test('magic-number-smart：配置语义属性值豁免（pageSize/apiTimeoutMs），普通对象照报', () => {
+  assert.equal(hits('const CONFIG = { pageSize: 50 };\n').length, 0, '配置字段 pageSize 不报');
+  assert.equal(hits('const CONFIG = { apiTimeoutMs: 30000 };\n').length, 0, '配置字段 apiTimeoutMs 不报');
+  assert.ok(hits('function f() { return { width: 1400 }; }\n').length >= 1, '普通对象 width 照报');
+});
+
+test('magic-number-smart：member 赋值默认值（CONFIG.pageSize = 50）豁免', () => {
+  assert.equal(hits('CONFIG.pageSize = 50;\n').length, 0, 'member 赋值配置字段不报');
+});
