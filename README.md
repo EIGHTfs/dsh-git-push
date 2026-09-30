@@ -167,6 +167,7 @@ dsh-git-push/
 │   ├── app/ — 插件入口层（apply/HTTP 处理/工具调用分发/注入文本/默认扫描根）
 │   │   ├── apply.js — 插件装载入口（注册 schema/工具/HTTP/注入钩子）
 │   │   ├── audit-api.js — 审计结果 API 聚合层（/api/git-push/audit：按规则/文件/严重级/规则包分组 + severity 过滤 + top 截断）
+│   │   ├── command-registry.js — 工具命令注册表（方案 B——CLI/宿主工具/帮助同源，免维护）
 │   │   ├── constants.js — 插件名与设置命名空间常量
 │   │   ├── http-handlers.js — HTTP 路由分发（薄 router：前置校验 + switch 各端点调 handlers/ 模块）
 │   │   ├── index.js — 插件入口再导出（宿主 main 指向）
@@ -361,6 +362,7 @@ dsh-git-push/
 │   ├── test-client.mjs — 侧边栏测试（手写 DOM/零外部资源/开关默认）
 │   ├── test-clone-concurrency.mjs — clone 并发互斥/可中止/失败保留文件（14 项，CIFS 对照用例可跳）
 │   ├── test-clone-preview-buttons.mjs — clone 预览确认框按钮可点（真渲染+真点击）
+│   ├── test-command-registry.mjs — 命令注册表测试（工具入表/查找/parseRegistryArgs/清单生成）
 │   ├── test-context.mjs — 上下文注入测试
 │   ├── test-cred-env.mjs — git_cred_env 凭据传递测试（双通道/无明文/askpass 调用/无凭据兜底）
 │   ├── test-dataflow.mjs — 三层审计 L2 数据流测试

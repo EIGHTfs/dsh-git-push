@@ -278,34 +278,29 @@
   "test/test-audit-api.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      ".tmp-test-bad-password.js": {
+      "cli.mjs": {
+        "status": "M",
+        "mtime": "2026-09-30T02:20:00.265Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-module-splitter.mjs": {
+        "status": "M",
+        "mtime": "2026-09-30T02:22:04.871Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-self.mjs": {
+        "status": "M",
+        "mtime": "2026-09-30T02:22:04.841Z",
+        "note": "注释可能需更新"
+      },
+      "lib/app/command-registry.js": {
         "status": "A",
-        "mtime": "",
+        "mtime": "2026-09-30T02:18:48.989Z",
         "note": "注释可能需更新"
       },
-      "lib/audit-rules/audit-rules-nodejs.yml": {
-        "status": "M",
-        "mtime": "2026-09-30T01:22:21.436Z",
-        "note": "注释可能需更新"
-      },
-      "lib/checks/common.js": {
-        "status": "M",
-        "mtime": "2026-09-30T01:22:21.437Z",
-        "note": "注释可能需更新"
-      },
-      "lib/rule/registry.js": {
-        "status": "M",
-        "mtime": "2026-09-30T01:25:51.971Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-audit-ext.mjs": {
-        "status": "M",
-        "mtime": "2026-09-30T01:27:05.936Z",
-        "note": "注释可能需更新"
-      },
-      "scripts/audit-ext/variable-min-length.mjs": {
+      "test/test-command-registry.mjs": {
         "status": "A",
-        "mtime": "2026-09-30T01:25:51.972Z",
+        "mtime": "2026-09-30T02:16:28.069Z",
         "note": "注释可能需更新"
       }
     }
@@ -348,5 +343,7 @@
   "test/test-audit-ext.mjs": "审计扩展自动接入测试（契约加载/降级/match/auditFull 并入）",
   "scripts/rename-locator.mjs": "变量重命名位置定位工具（按作用域聚合引用——单字母变量人工重命名辅助）",
   "test/test-rename-locator.mjs": "rename-locator 测试（同名不同作用域分组/模块级/过滤）",
-  "scripts/audit-ext/variable-min-length.mjs": "审计扩展：variable-min-length（内置规则抽出试点——统一动态入口）"
+  "scripts/audit-ext/variable-min-length.mjs": "审计扩展：variable-min-length（内置规则抽出试点——统一动态入口）",
+  "lib/app/command-registry.js": "工具命令注册表（方案 B——CLI/宿主工具/帮助同源，免维护）",
+  "test/test-command-registry.mjs": "命令注册表测试（工具入表/查找/parseRegistryArgs/清单生成）"
 }

@@ -131,9 +131,9 @@ test('parseArgv：--depth 缺值 → 报错', () => {
   assert.match(r.error, /--depth/);
 });
 
-test('main：未知命令 exit 1 且提示', () => {
+test('main：未知命令 exit 1 且提示', async () => {
   const prev = process.exitCode;
-  main(['nope-cmd']);
+  await main(['nope-cmd']); // await：runWrappedGit 异步部分完成后 exitCode 才稳定（不 await 会残留 exitCode 1 → 文件级 fail）
   assert.equal(process.exitCode, 1);
   process.exitCode = prev ?? 0;
 });
@@ -306,11 +306,13 @@ test('CLI 新命令：HELP 必须列出 5 个补齐命令', () => {
 });
 
 test('CLI 新命令：main 分发必须接线（不能只写 HELP）', () => {
+  // 注册表驱动命令接线：cmd 在 COMMANDS 条目，或注册表（lib/app/command-registry.js）有 cli 声明
+  const regText = readFileSync(join(ROOT, 'lib/app/command-registry.js'), 'utf8');
   for (const cmd of ['clone', 'account-check', 'remote-create', 'set-visibility', 'gen-ssh-key']) {
-    // 2026-09-23：main 已重构为表驱动分发（COMMANDS Map）——兼容旧 if 链与 `['cmd', 分发表条目` 两种形态
-    const wired = cliText.includes(`cmd === '${cmd}'`) || cliText.includes(`['${cmd}',`);
+    const wired = cliText.includes(`['${cmd}',`) || cliText.includes(`cmd === '${cmd}'`)
+      || regText.includes(`cli: '${cmd}'`);
     assert.ok(wired,
-      `main 必须分发 ${cmd}`);
+      `main 必须分发 ${cmd}（COMMANDS 或注册表 cli 声明）`);
   }
 });
 
@@ -342,18 +344,20 @@ test('CLI 新命令：缺必填参数时退出码非 0（脚本可判失败）',
   ];
   for (const [cmd, args] of cases) {
     const prevErr = console.error;
+    const prevCode = process.exitCode;
     console.error = () => {};
     let code;
-    try { code = await main([cmd, ...args]); } finally { console.error = prevErr; }
+    try { code = await main([cmd, ...args]); } finally { console.error = prevErr; process.exitCode = prevCode ?? 0; }
     assert.equal(code, 1, `${cmd} 缺参数必须返回 1（实际 ${code}）`);
   }
 });
 
 test('CLI 新命令：--visibility 只接受 public|private', async () => {
   const prevErr = console.error;
+  const prevCode = process.exitCode;
   console.error = () => {};
   let code;
-  try { code = await main(['set-visibility', '/tmp', '--visibility', 'weird']); } finally { console.error = prevErr; }
+  try { code = await main(['set-visibility', '/tmp', '--visibility', 'weird']); } finally { console.error = prevErr; process.exitCode = prevCode ?? 0; }
   assert.equal(code, 1, '非法 visibility 必须拒绝（防误改可见性）');
 });
 

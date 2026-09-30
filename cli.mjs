@@ -8,6 +8,8 @@ import { VERSION, readmeTemplate, yamlTemplate, helpSync } from './lib/self/inde
 import { loadRuleFiles, discoverRuleSlots } from './lib/rule/loader.js';
 import { compileAllRules } from './lib/rule/registry.js';
 import { runWrappedGit } from './lib/git/wrapped-git.js';
+import { registryByCli, parseRegistryArgs } from './lib/app/command-registry.js';
+import { callTool } from './lib/app/tool-call.js';
 import { readFileSync, realpathSync } from 'node:fs';
 
 // 2026-10-05 结构化：命令实现按域抽到 lib/cli/commands-*.mjs（audit/account/vcs/doc），
@@ -253,6 +255,21 @@ function readPkgJson() {
 
 /** 命令分发表（2026-09-23 重构：main 54 圈复杂度 → 表驱动分发）。
  * 每个条目 [命令名, handler(rest)]；统一 parse 模式用 parseVia 包装。 */
+
+
+/** 注册表工具返回输出（默认文本化 summary/apiGuide；--json 直出完整返回）。 */
+function printRegistryResult(r, json) {
+  if (json) { console.log(JSON.stringify(r, null, 2)); return; }
+  if (!r) return;
+  if (r.error) { console.error(r.error); return; }
+  if (r.apiGuide) { console.log(r.apiGuide); return; }
+  const L = [];
+  if (r.summary) L.push(`summary: ${JSON.stringify(r.summary)}`);
+  if (r.quality) L.push(`quality: ${r.quality.score ?? '?'}/${r.quality.level ?? '?'}`);
+  if (r.count != null) L.push(`count: ${r.count}`);
+  console.log(L.length ? L.join('\n') : JSON.stringify(r));
+}
+
 const parseVia = (run) => (rest) => {
   const { flags, positional, error } = parseArgv(rest);
   if (error) return console.error(error);
@@ -260,22 +277,11 @@ const parseVia = (run) => (rest) => {
 };
 const COMMANDS = new Map([
   ['ruleset', (rest) => cmdRuleset(rest)],
-  ['scan', parseVia((f, p) => cmdScan(p[0] || '.', f))],
+  ['audit', parseVia((f, p) => cmdAudit(p[0] || '.', f))], // 2026-10-05：audit 不走注册表——CLI 独立审计需完整 findings（不依赖宿主 API）；工具 code_audit 输出 API 指引
   ['repos', parseVia((f, p) => cmdRepos(p[0] || '.', f))],
   ['index', parseVia((f, p) => cmdIndex(p[0] || '.', f))],
-  ['audit', parseVia((f, p) => cmdAudit(p[0] || '.', f))],
-  ['commit', parseVia((f, p) => cmdCommit(p[0] || '', f))],
-  ['file-io', parseVia((f, p) => cmdFileIo(p, f))],
-  ['link-check', (rest) => cmdLinkCheck(rest[0] || '.')],
-  ['module-splitter', parseVia((f, p) => cmdModuleSplitter(p, f))],
-  ['clone', parseVia((f, p) => cmdClone(f, p))],
-  ['account-check', parseVia((f) => cmdAccountCheck(f))],
-  ['cred-env', parseVia((f) => cmdCredEnv(f))],
   ['functions', parseVia((f, p) => cmdFunctions(p[0] || '', p[1] || '', f))],
   ['tree-doc', parseVia((f, p) => cmdTreeDoc(p[0] || '', f))],
-  ['remote-create', parseVia((f, p) => cmdRemoteCreate(p[0] || '', f))],
-  ['set-visibility', parseVia((f, p) => cmdSetVisibility(p[0] || '', f))],
-  ['gen-ssh-key', parseVia((f) => cmdGenSshKey(f))],
   ['git', (rest) => cmdGit(rest)], // 2026-09-23 1.9.0：浅包装 git（自动凭据透传）
   ['yaml-template', () => cmdYamlTemplate()],
   ['readme-template', () => cmdReadmeTemplate()],
@@ -289,6 +295,18 @@ export async function main(argv = process.argv.slice(2)) {
     return;
   }
   if (cmd === 'version' || cmd === '-v' || cmd === '--version') return await cmdVersion();
+  // 2026-10-05 方案 B：注册表驱动命令优先（工具有对应 → 通用 parseArgs → callTool——
+  //   CLI 与插件工具同实现，自动对齐；CLI 独立于 DSH 运行：env 自备 + 本地配置）
+  const reg = registryByCli(cmd);
+  if (reg) {
+    const { args, error } = parseRegistryArgs(rest, reg.params);
+    if (error) { console.error(error); process.exitCode = 1; return 1; }
+    try {
+      const r = await callTool(reg.name, args, { workspaceRoot: process.cwd() }, cliPluginConfig(), console, null, null);
+      printRegistryResult(r, args.json === true);
+      return 0;
+    } catch (e) { console.error(String((e && e.message) || e)); process.exitCode = 1; return 1; }
+  }
   const handler = COMMANDS.get(cmd);
   if (handler) return await handler(rest);
   // 2026-09-23 1.9.0：未知命令透传为浅包装 git（自动凭据）——`git-sluice pull` = `git pull`
