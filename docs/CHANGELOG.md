@@ -7,6 +7,7 @@
 
 | 版本 | 内容 |
 |------|------|
+| 1.12.6 | external 机制修正——yml external: true 具体字段的内置停跑不再经 groupByKind 过滤（编译后透传不可靠：astConfirmKind 型编译失败即漏），改为 auditFiles 装配层按原始 yml 字段（loadRuleFiles 可靠源）构造 external id 集合排除；groupByKind 恢复通用（不过滤）；variable-min-length 试点验证不变（10 条全 ext 来源）；回归 894 tests / 892 pass 全绿 |
 | 1.12.5 | 内置审计规则抽出试点——readability/variable-min-length 标 external: true（yml），内置执行链停跑（groupByKind 过滤 + compileRule 透传 external），审计扩展脚本 scripts/audit-ext/variable-min-length.mjs 经统一动态入口（runAuditExt）执行（walk 代码文件 + import lib/ast checkNameLengthAst + findings 格式对齐内置）；验证不双跑不丢失（内置 10 条 → ext 全 10 条 ext 来源）；回归 894 tests / 892 pass 全绿 |
 | 1.12.4 | 审计 API 指引可选参数提示——groupBy 这类「选择性参数」除自动填默认（rule）外，输出补一行可选项说明（rule|file|severity|slot + severity 过滤示例 &severity=blocker,warning），默认已填按需改 URL 即可；回归 894 tests / 892 pass 全绿 |
 | 1.12.3 | 审计输出 API 指引参数自动填充——buildAuditApiGuide 不再留占位符：repo 实际路径（encodeURIComponent）、scope 实际值、groupBy 默认 rule 自动填入，本机 IP 用 os.networkInterfaces() 取真实网卡 IPv4（探测失败回退 localhost，不用 hostname spawn——沙箱不可靠）；输出直接可复制（GET + curl 两行）；回归 894 tests / 892 pass 全绿 |
