@@ -278,9 +278,29 @@
   "test/test-audit-api.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "test/test-symlink-resolution.mjs": {
+      "lib/audit/orchestrate.js": {
+        "status": "M",
+        "mtime": "2026-09-30T00:43:33.809Z",
+        "note": "注释可能需更新"
+      },
+      "lib/audit/ext-runner.js": {
         "status": "A",
-        "mtime": "2026-09-29T20:51:57.048Z",
+        "mtime": "2026-09-30T00:39:46.668Z",
+        "note": "注释可能需更新"
+      },
+      "scripts/audit-ext/": {
+        "status": "A",
+        "mtime": "2026-09-30T00:43:33.780Z",
+        "note": "注释可能需更新"
+      },
+      "scripts/audit-runner.mjs": {
+        "status": "A",
+        "mtime": "2026-09-30T00:38:42.729Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-audit-ext.mjs": {
+        "status": "A",
+        "mtime": "2026-09-30T00:43:49.484Z",
         "note": "注释可能需更新"
       }
     }
@@ -315,5 +335,10 @@
   "lib/cli/commands-vcs.mjs": "（待注释）",
   "lib/git/module-splitter.js": "（待注释）",
   "scripts/clean-date-comments.py": "（待注释）",
-  "test/test-dup-code.mjs": "（待注释）"
+  "test/test-dup-code.mjs": "（待注释）",
+  "scripts/audit-ext": "（待注释）",
+  "lib/audit/ext-runner.js": "审计扩展运行器（audit-ext 统一入口动态加载/契约执行/失败降级）",
+  "scripts/audit-ext/_example-readme-present.mjs": "审计扩展契约示例（_ 前缀：演示不参与实际审计）",
+  "scripts/audit-runner.mjs": "审计扩展 CLI 统一入口（独立跑 scripts/audit-ext/ 全部扩展）",
+  "test/test-audit-ext.mjs": "审计扩展自动接入测试（契约加载/降级/match/auditFull 并入）"
 }

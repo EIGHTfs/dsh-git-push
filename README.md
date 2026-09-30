@@ -202,6 +202,7 @@ dsh-git-push/
 │   │   ├── audit-file.js — 单文件审计执行（跑检查+豁免）
 │   │   ├── checks.js — 检查器入口（纯引用表）
 │   │   ├── collector.js — 文件收集（gitignore 感知）
+│   │   ├── ext-runner.js — 审计扩展运行器（audit-ext 统一入口动态加载/契约执行/失败降级）
 │   │   ├── file-context.js — 文件上下文豁免（外部调用超时/mkdir 同函数/版本路径）
 │   │   ├── finding.js — 统一问题对象构造器（makeFinding）
 │   │   ├── gitignore-match.js — gitignore 语法匹配器（非 git 目录 .auditignore 兜底，语义与 git 对拍）
@@ -311,6 +312,7 @@ dsh-git-push/
 │   ├── vendor/ — （待注释）
 │   │   └── …（2 个更深文件）
 ├── scripts/ — 开发工具脚本（版本校验/双副本同步/预览服务/README 目录树维护）
+│   ├── audit-runner.mjs — 审计扩展 CLI 统一入口（独立跑 scripts/audit-ext/ 全部扩展）
 │   ├── audit-runtime-check.mjs — 三层审计 L3 运行时检测脚本
 │   ├── check.mjs — 语法检查脚本（npm run check）
 │   ├── clean-date-comments.py — （待注释）
@@ -330,6 +332,8 @@ dsh-git-push/
 │   ├── sync-plugin.mjs — 双副本同步脚本（源仓库 → 部署安装副本）
 │   ├── verify-prestep.mjs — 上下文注入自检脚本（真实触发 agent/pre-step 验证注入）
 │   ├── watch-preview.mjs — preview.html 自动重生成监听（源码变更即重建）
+│   ├── audit-ext/ — （待注释）
+│   │   ├── _example-readme-present.mjs — 审计扩展契约示例（_ 前缀：演示不参与实际审计）
 ├── assets/ — 预览页与配图（preview.html 交互模拟页 + 面板截图）
 │   ├── panel-account.png — 账号卡片面板截图（README 配图）
 │   ├── panel-audit.png — 审计面板截图（README 配图）
@@ -345,6 +349,7 @@ dsh-git-push/
 │   ├── test-audit-api.mjs — （待注释）
 │   ├── test-audit-bad-file.mjs — 审计拦截门禁测试（硬编码密码/API key/.env 凭据文件）
 │   ├── test-audit-empty.mjs — （待注释）
+│   ├── test-audit-ext.mjs — 审计扩展自动接入测试（契约加载/降级/match/auditFull 并入）
 │   ├── test-audit-scope.mjs — 审计作用域/凭据占位符回归测试
 │   ├── test-audit.mjs — 审计总入口测试（auditFull/changed/豁免/gitignore）
 │   ├── test-auditignore.mjs — （待注释）
