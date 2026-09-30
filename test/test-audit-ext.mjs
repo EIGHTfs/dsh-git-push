@@ -14,8 +14,10 @@ test('ext-runner：DEFAULT_EXT_DIR 指向插件根 scripts/audit-ext', () => {
 
 test('ext-runner：动态加载契约脚本 + _ 前缀示例不加载', async () => {
   const exts = await loadAuditExt(DEFAULT_EXT_DIR);
-  // 示例以 _ 开头（演示契约，不参与实际审计）——默认加载应为空
-  assert.equal(exts.length, 0, '_ 前缀示例不自动加载');
+  // 真实扩展（非 _ 前缀）被加载：variable-min-length（内置规则抽出试点）
+  assert.ok(exts.some((e) => e.name === 'variable-min-length'), 'variable-min-length 扩展加载');
+  // 演示契约的 _ 前缀脚本不参与实际审计
+  assert.ok(!exts.some((e) => e.name === 'example-readme-present'), '_ 前缀示例不加载');
 });
 
 test('ext-runner：契约执行——有 README 不报，缺 README 报 info', async () => {

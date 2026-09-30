@@ -278,14 +278,34 @@
   "test/test-audit-api.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "scripts/rename-locator.mjs": {
+      ".tmp-test-bad-password.js": {
         "status": "A",
-        "mtime": "2026-09-30T01:03:13.202Z",
+        "mtime": "",
         "note": "注释可能需更新"
       },
-      "test/test-rename-locator.mjs": {
+      "lib/audit-rules/audit-rules-nodejs.yml": {
+        "status": "M",
+        "mtime": "2026-09-30T01:22:21.436Z",
+        "note": "注释可能需更新"
+      },
+      "lib/checks/common.js": {
+        "status": "M",
+        "mtime": "2026-09-30T01:22:21.437Z",
+        "note": "注释可能需更新"
+      },
+      "lib/rule/registry.js": {
+        "status": "M",
+        "mtime": "2026-09-30T01:25:51.971Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-audit-ext.mjs": {
+        "status": "M",
+        "mtime": "2026-09-30T01:27:05.936Z",
+        "note": "注释可能需更新"
+      },
+      "scripts/audit-ext/variable-min-length.mjs": {
         "status": "A",
-        "mtime": "2026-09-30T01:03:37.294Z",
+        "mtime": "2026-09-30T01:25:51.972Z",
         "note": "注释可能需更新"
       }
     }
@@ -327,5 +347,6 @@
   "scripts/audit-runner.mjs": "审计扩展 CLI 统一入口（独立跑 scripts/audit-ext/ 全部扩展）",
   "test/test-audit-ext.mjs": "审计扩展自动接入测试（契约加载/降级/match/auditFull 并入）",
   "scripts/rename-locator.mjs": "变量重命名位置定位工具（按作用域聚合引用——单字母变量人工重命名辅助）",
-  "test/test-rename-locator.mjs": "rename-locator 测试（同名不同作用域分组/模块级/过滤）"
+  "test/test-rename-locator.mjs": "rename-locator 测试（同名不同作用域分组/模块级/过滤）",
+  "scripts/audit-ext/variable-min-length.mjs": "审计扩展：variable-min-length（内置规则抽出试点——统一动态入口）"
 }

@@ -43,6 +43,7 @@ rules:
     fixable: false
 
   - id: readability/variable-min-length
+    external: true # 2026-09-30 试点：规则抽出为 audit-ext 独立脚本（统一动态入口，见 scripts/audit-ext/variable-min-length.mjs）
     name: "变量名长度不少于 2 个字符"
     category: "readability"
     severity: "warning"

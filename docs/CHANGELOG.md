@@ -7,6 +7,7 @@
 
 | 版本 | 内容 |
 |------|------|
+| 1.12.5 | 内置审计规则抽出试点——readability/variable-min-length 标 external: true（yml），内置执行链停跑（groupByKind 过滤 + compileRule 透传 external），审计扩展脚本 scripts/audit-ext/variable-min-length.mjs 经统一动态入口（runAuditExt）执行（walk 代码文件 + import lib/ast checkNameLengthAst + findings 格式对齐内置）；验证不双跑不丢失（内置 10 条 → ext 全 10 条 ext 来源）；回归 894 tests / 892 pass 全绿 |
 | 1.12.4 | 审计 API 指引可选参数提示——groupBy 这类「选择性参数」除自动填默认（rule）外，输出补一行可选项说明（rule|file|severity|slot + severity 过滤示例 &severity=blocker,warning），默认已填按需改 URL 即可；回归 894 tests / 892 pass 全绿 |
 | 1.12.3 | 审计输出 API 指引参数自动填充——buildAuditApiGuide 不再留占位符：repo 实际路径（encodeURIComponent）、scope 实际值、groupBy 默认 rule 自动填入，本机 IP 用 os.networkInterfaces() 取真实网卡 IPv4（探测失败回退 localhost，不用 hostname spawn——沙箱不可靠）；输出直接可复制（GET + curl 两行）；回归 894 tests / 892 pass 全绿 |
 | 1.12.2 | 变量重命名位置定位工具（scripts/rename-locator.mjs）——按作用域聚合变量引用（对齐「按绑定聚合非按名字」方法论，零依赖 token 级近似 Babel scope.uid）：同名不同作用域变量分开分组（x@processUser / x@calculate 各一组），声明行 + 该函数作用域内全部引用行，供单字母变量人工重命名一次改完；--name 过滤 / --json；遮蔽场景按函数区间天然分开；实测 Pawchive cli.js m@module L51-1816 跨行聚合；回归 893 tests / 891 pass 全绿 |

@@ -335,6 +335,7 @@ dsh-git-push/
 │   ├── watch-preview.mjs — preview.html 自动重生成监听（源码变更即重建）
 │   ├── audit-ext/ — （待注释）
 │   │   ├── _example-readme-present.mjs — 审计扩展契约示例（_ 前缀：演示不参与实际审计）
+│   │   ├── variable-min-length.mjs — 审计扩展：variable-min-length（内置规则抽出试点——统一动态入口）
 ├── assets/ — 预览页与配图（preview.html 交互模拟页 + 面板截图）
 │   ├── panel-account.png — 账号卡片面板截图（README 配图）
 │   ├── panel-audit.png — 审计面板截图（README 配图）
