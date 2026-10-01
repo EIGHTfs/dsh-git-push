@@ -253,6 +253,9 @@ rules:
     category: "robustness"
     severity: "warning"
     description: "外部请求无超时设置会导致请求永久挂起"
+    # 2026-10-02：限定 js 系代码文件——fetch/axios 是 Node/前端运行时 API，
+    #   md/json 等文档/配置里的「外部请求」字样与代码示例不应被扫（Pawchive docs md 实测误报）
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx"]
     # 负向后瞻排除自定义封装名（apiFetch/githubFetch 等）——"fetch(" 子串会把
     #   封装调用误报成无超时裸 fetch；封装内部的超时由 file-context.js
     #   hasExternalCallTimeout 语义豁免（行内/行前/行后 12 行含 signal/timeout 即豁免）

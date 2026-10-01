@@ -538,6 +538,9 @@ test('checkFuncLinesAst：函数长度按非注释行判定（注释行不占预
 test('client-node-builtin-require：根目录 Node 构建脚本不误报，真 client 代码仍拦截', async () => {
   const root = mkdtempSync(join(tmpdir(), 'dshgp-dshrule-'));
   try {
+    // 2026-10-02：dsh 槽位只对 dsh 插件项目加载（项目类型过滤）——测试仓库须声明
+    //   dsh- 前缀名，否则 dsh 槽位被整体过滤、本测试断言全空（Pawchive 误报修复的新行为）
+    writeFileSync(join(root, 'package.json'), JSON.stringify({ name: 'dsh-test-rules', version: '1.0.0' }) + '\n');
     // ① 根目录 .cjs 构建脚本（build.cjs 场景）：CommonJS Node 专属格式，require('fs') 正常
     writeFileSync(join(root, 'build.cjs'), 'const fs = require("fs");\nconst path = require("path");\nconst os = require("os");\n');
     // ② 根目录 .mjs 构建脚本：build. 前缀排除

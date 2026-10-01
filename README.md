@@ -159,8 +159,8 @@ src/vendor.js       # 单文件豁免审计
 | go / rust / swift / cpp / php | 各 0（占位） | 语言专用规则占位槽位——放 yml 即生效，规则待补（AST 语言路由已预留，2.1.0） |
 | frontend | 19 | 前端安全 / a11y / 依赖 |
 | npm | 10 | 依赖声明 / npmrc 凭据 / 测试入口 |
-| version | 8 | 版本号规范 |
-| dsh | 7 | DSH 插件契约 / 注入通道 |
+| version | 8 | 版本号规范（0.x 起步仅 dsh 插件查——独立工具 v0.x 合法，2.1.2） |
+| dsh | 7 | DSH 插件契约 / 注入通道（仅 dsh- 前缀插件项目加载——非 dsh 项目 require node 内置不误报，2.1.2） |
 | comment | 6 | 注释措辞 / 对话残留 |
 | folder | 6 | 目录总数 / 单目录文件数 / 解包特征 / .gitignore / cd 到可能不存在的目录 / 写文件到 .gitignore 忽略目录 |
 | i18n | 3 | 硬编码文案 / 插值 / 语言包 |
@@ -419,6 +419,7 @@ dsh-git-push/
 │   ├── test-module-splitter.mjs — module_splitter 工具 + CLI 接入测试（契约 + 行为 + 脚本随插件发布）
 │   ├── test-persist-credentials.mjs — 凭据持久化测试
 │   ├── test-plugin.mjs — 插件接线测试（入口导出/工具清单/双副本同步）
+│   ├── test-project-type-filter.mjs — 项目类型规则适配测试（非 dsh 项目不加载 dsh 槽位/0.x 版本规则、timeout 限 js 系、folder 尊重 gitignore——Pawchive 误报消除驱动）
 │   ├── test-push-transport.mjs — 推送通道回归（SSH 优先/一致性语义）
 │   ├── test-quality.mjs — 评分总入口测试（AST 质量检查器）
 │   ├── test-readme-gen.mjs — README 生成测试（模板渲染/版本表）

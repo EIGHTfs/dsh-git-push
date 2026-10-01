@@ -7,6 +7,7 @@
 
 | 版本 | 内容 |
 |------|------|
+| 2.1.2 | 项目类型规则适配（Pawchive 误报消除驱动，539→512/blocker 10→3）：①dsh 槽位只对 dsh 插件项目加载（package.json name dsh- 前缀判定，沿用分体文档先例）——非 dsh 项目 require('fs'/'node:sqlite') 不再误报（client-node-builtin-require 7 条含 6 blocker 全消）；②versioning 0.x 两条（embedded-major-zero/readme-zero-title）只对 dsh 插件查——0.x 独立工具 v0.x 合法（18 条全消）；③timeout-on-external-api 限定 js 系 exts——md 文档不再被正则命中；④folder 遍历尊重 .gitignore（parseGitignore + isIgnoredByRules，复用 collector 同款匹配器）——被忽略的上游克隆目录（docs/.probe-ktoolbox 形态）不计入 total-count；dsh 插件自身（dsh-git-push）dsh 槽位保留；测试 +5（test-project-type-filter.mjs：非 dsh 不加载 dsh/version 0.x、dsh 项目仍拦截、timeout exts、folder gitignore 对照）+ 调整 client-require 测试仓库声明 dsh 名；版本表 doc-version 聚合 |
 | 2.1.1 | 复杂度规则口径优化——阈值 10 + blocker 50 真生效 + 算法补全 + message 分档 |
 | 2.1.0 | Java/Kotlin 专项规则 + AST 语言路由 + 误报批量修复 + preview 数据自动生成；版本表 doc-version 聚合同步（2.1.0 由 git log 权威生成入表） |
 | 2.0.8 | 修 /git-audit 斜杠命令「无摘要」回归（format 适配 code_audit 新返回）→ 2.0.8 |

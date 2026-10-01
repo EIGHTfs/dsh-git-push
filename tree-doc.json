@@ -280,152 +280,37 @@
     "worktree": {
       "README.md": {
         "status": "M",
-        "mtime": "2026-10-01T17:16:23.056Z",
+        "mtime": "2026-10-01T19:13:09.168Z",
         "note": "注释可能需更新"
       },
-      "assets/preview.html": {
+      "lib/audit-rules/audit-rules-nodejs.yml": {
         "status": "M",
-        "mtime": "2026-10-01T17:35:44.415Z",
-        "note": "注释可能需更新"
-      },
-      "docs/CHANGELOG.md": {
-        "status": "M",
-        "mtime": "2026-10-01T17:18:29.600Z",
-        "note": "注释可能需更新"
-      },
-      "lib/ast/control-flow.js": {
-        "status": "M",
-        "mtime": "2026-10-01T16:45:18.073Z",
-        "note": "注释可能需更新"
-      },
-      "lib/ast/index.js": {
-        "status": "M",
-        "mtime": "2026-10-01T17:01:52.851Z",
-        "note": "注释可能需更新"
-      },
-      "lib/ast/naming.js": {
-        "status": "M",
-        "mtime": "2026-10-01T16:46:54.799Z",
-        "note": "注释可能需更新"
-      },
-      "lib/ast/size.js": {
-        "status": "M",
-        "mtime": "2026-10-01T17:01:42.238Z",
-        "note": "注释可能需更新"
-      },
-      "lib/audit-rules/audit-rules-folder.yml": {
-        "status": "M",
-        "mtime": "2026-10-01T17:27:13.431Z",
-        "note": "注释可能需更新"
-      },
-      "lib/audit-rules/audit-rules-frontend.yml": {
-        "status": "M",
-        "mtime": "2026-10-01T16:55:56.248Z",
-        "note": "注释可能需更新"
-      },
-      "lib/audit/audit-file.js": {
-        "status": "M",
-        "mtime": "2026-10-01T17:07:39.907Z",
+        "mtime": "2026-10-01T19:01:41.758Z",
         "note": "注释可能需更新"
       },
       "lib/audit/orchestrate.js": {
         "status": "M",
-        "mtime": "2026-10-01T16:58:23.437Z",
-        "note": "注释可能需更新"
-      },
-      "lib/checks/file-health.js": {
-        "status": "M",
-        "mtime": "2026-10-01T17:08:30.360Z",
+        "mtime": "2026-10-01T19:01:00.983Z",
         "note": "注释可能需更新"
       },
       "lib/checks/folder.js": {
         "status": "M",
-        "mtime": "2026-10-01T17:29:10.047Z",
-        "note": "注释可能需更新"
-      },
-      "lib/checks/structural.js": {
-        "status": "M",
-        "mtime": "2026-10-01T17:08:41.333Z",
-        "note": "注释可能需更新"
-      },
-      "lib/rule/compilers/func.js": {
-        "status": "M",
-        "mtime": "2026-10-01T16:49:18.903Z",
-        "note": "注释可能需更新"
-      },
-      "lib/rule/compilers/numeric-kinds.js": {
-        "status": "M",
-        "mtime": "2026-10-01T16:49:27.848Z",
+        "mtime": "2026-10-01T19:04:43.168Z",
         "note": "注释可能需更新"
       },
       "lib/self/index.js": {
         "status": "M",
-        "mtime": "2026-10-01T17:17:02.139Z",
+        "mtime": "2026-10-01T19:14:35.639Z",
         "note": "注释可能需更新"
       },
-      "package.json": {
+      "test/test-audit.mjs": {
         "status": "M",
-        "mtime": "2026-10-01T17:17:22.081Z",
+        "mtime": "2026-10-01T19:07:06.997Z",
         "note": "注释可能需更新"
       },
-      "test/test-build-artifact-skip.mjs": {
-        "status": "M",
-        "mtime": "2026-10-01T17:10:00.613Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-file-health.mjs": {
-        "status": "M",
-        "mtime": "2026-10-01T17:12:13.941Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-rule-slots-render.mjs": {
-        "status": "M",
-        "mtime": "2026-10-01T17:45:13.769Z",
-        "note": "注释可能需更新"
-      },
-      "lib/ast/lang.js": {
+      "test/test-project-type-filter.mjs": {
         "status": "A",
-        "mtime": "2026-10-01T17:11:28.693Z",
-        "note": "注释可能需更新"
-      },
-      "lib/audit-rules/audit-rules-cpp.yml": {
-        "status": "A",
-        "mtime": "2026-10-01T16:57:17.883Z",
-        "note": "注释可能需更新"
-      },
-      "lib/audit-rules/audit-rules-go.yml": {
-        "status": "A",
-        "mtime": "2026-10-01T16:56:39.048Z",
-        "note": "注释可能需更新"
-      },
-      "lib/audit-rules/audit-rules-java.yml": {
-        "status": "A",
-        "mtime": "2026-10-01T16:49:02.684Z",
-        "note": "注释可能需更新"
-      },
-      "lib/audit-rules/audit-rules-php.yml": {
-        "status": "A",
-        "mtime": "2026-10-01T16:57:17.894Z",
-        "note": "注释可能需更新"
-      },
-      "lib/audit-rules/audit-rules-rust.yml": {
-        "status": "A",
-        "mtime": "2026-10-01T16:56:50.228Z",
-        "note": "注释可能需更新"
-      },
-      "lib/audit-rules/audit-rules-swift.yml": {
-        "status": "A",
-        "mtime": "2026-10-01T16:57:00.570Z",
-        "note": "注释可能需更新"
-      },
-      "scripts/gen-preview.mjs": {
-        "status": "A",
-        "mtime": "2026-10-01T17:44:31.777Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-java-rules.mjs": {
-        "status": "A",
-        "mtime": "2026-10-01T17:11:44.008Z",
+        "mtime": "2026-10-01T19:10:27.081Z",
         "note": "注释可能需更新"
       }
     }
@@ -482,5 +367,6 @@
   "lib/audit-rules/audit-rules-rust.yml": "Rust 规则包（占位：规则待补，槽位就绪）（规则包 rust）",
   "lib/audit-rules/audit-rules-swift.yml": "Swift 规则包（占位：规则待补，槽位就绪）（规则包 swift）",
   "test/test-java-rules.mjs": "Java/Kotlin 语言路由与专项规则测试（javaKtFuncRanges/短名/复杂度/规则联动/聚合型降级）",
-  "scripts/gen-preview.mjs": "preview.html 槽位数据自动生成器（gen 打印 / --write 写盘 / check 查漂移——__SLOTS__/__FAKE__ 从 listRuleSlots 真实生成，新增规则槽位不再手工维护）"
+  "scripts/gen-preview.mjs": "preview.html 槽位数据自动生成器（gen 打印 / --write 写盘 / check 查漂移——__SLOTS__/__FAKE__ 从 listRuleSlots 真实生成，新增规则槽位不再手工维护）",
+  "test/test-project-type-filter.mjs": "项目类型规则适配测试（非 dsh 项目不加载 dsh 槽位/0.x 版本规则、timeout 限 js 系、folder 尊重 gitignore——Pawchive 误报消除驱动）"
 }
