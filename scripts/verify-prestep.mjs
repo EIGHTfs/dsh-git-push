@@ -1,5 +1,5 @@
 /**
- * 上下文注入自检脚本（2026-09-20，配合 1.5.2 工具探测改上下文注入）
+ * 上下文注入自检脚本（配合 1.5.2 工具探测改上下文注入）
  *
  * 真实调用 apply() 并触发 agent/pre-step，验证环境信息按上下文注入：
  *   - 工作区跑：验证接线正确 + 无 DSH 依赖时降级不崩（@deepseek-ai/dsh-llm 解析不到 → 注入跳过）
@@ -45,7 +45,7 @@ console.log('systemPrompt sections:', sections.map((s) => s.name).join(', ') || 
 console.log('agent/pre-step 接线:', typeof events[PRE_STEP_EVENT] === 'function' ? '✅ 是' : '❌ 否');
 console.log('工具注册数:', registered.length);
 
-// 环境段不应再注册为 systemPrompt section（2026-09-20 迁出）
+// 环境段不应再注册为 systemPrompt section（迁出）
 check('systemPrompt 不含环境段（dsh-git-push-env 已迁出）', !sections.some((s) => s.name === 'dsh-git-push-env'));
 check('systemPrompt 保留功能用法段', sections.some((s) => s.name === 'dsh-git-push-usage'));
 check('agent/pre-step 已接线', typeof events[PRE_STEP_EVENT] === 'function');

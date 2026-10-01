@@ -1,5 +1,5 @@
 /**
- * 审计结果 API 端点测试（2026-09-27）
+ * 审计结果 API 端点测试
  *
  * 覆盖 /api/git-push/audit：
  *   · 缺 repo 时回落默认扫描根 / 400
@@ -14,7 +14,7 @@ import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { handleHttp } from '../lib/app/http-handlers.js';
 
-// 2026-10-05：改相对路径派生（此前硬编码机器绝对路径 /volume1/...，换机即失效）
+// 改相对路径派生（此前硬编码机器绝对路径 /volume1/...，换机即失效）
 const ROOT = join(import.meta.dirname, '..');
 const ENV = { workspaceRoot: ROOT };
 

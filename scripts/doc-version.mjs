@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * dsh-git-push — 版本列表文档生成器（doc-version，2026-09-29）
+ * dsh-git-push — 版本列表文档生成器（doc-version：版本表由 git log 权威生成，聚合入表防手写版本记录漂移）
  * dsh-skip-i18n: 用户可见文案硬编码为产品设计
  *
  * 分体式文档三兄弟之一（doc-tree 文件树 / doc-func 函数列表 / doc-version 版本列表）。

@@ -1,5 +1,5 @@
 /**
- * 后台化回归测试（2026-09-15，方案 C：官方 job）。
+ * 后台化回归测试（方案 C：官方 job）。
  * 覆盖：git_commit_push 无宿主 ctx.jobs（CLI/测试环境）→ 同步执行保底返回 result；
  *   有 ctx.jobs（mock 宿主）→ 注册官方 job（kind=git-push）并立即返回 async:true + jobId；
  *   审计 blocker 仍同步拦截；任务体抛错 → job 结果为 failed。

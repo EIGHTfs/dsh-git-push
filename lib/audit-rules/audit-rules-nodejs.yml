@@ -175,6 +175,19 @@ rules:
     exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx"]
     fixable: true
 
+  # 2026-10-02：同名常量跨文件重复定义（DRY——阈值/长度/窗口等魔数散落多处难维护）。
+  #   场景实测：MAX_MSG_PREVIEW=80 在 audit-api/tool-call/commit-push 三处各自定义，
+  #   改一处漏三处。规则跨文件聚合 `const NAME = <值>`（同名校同值 ≥2 文件）→ 提示统一单一来源。
+  - id: maintainability/duplicate-constant-def
+    name: "同名常量跨文件重复定义（应统一单一来源）"
+    category: "maintainability"
+    severity: "warning"
+    description: "同一命名常量（const NAME = 值）在多个文件重复定义——阈值/长度/窗口等魔数散落多处难维护、改一处漏多处；应统一到公共常量模块或配置文件单处定义（DRY）"
+    kind: "duplicate-const"
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx", "py", "java", "kt", "go", "rs", "swift", "php", "rb"]
+    fixable: false
+    mitigation: "把重复定义提到公共常量模块（如 lib/app/constants.js）导出，各文件 import 复用"
+
   - id: maintainability/max-cyclomatic-complexity
     name: "圈复杂度不超过 10（50 以上 blocker）"
     category: "maintainability"

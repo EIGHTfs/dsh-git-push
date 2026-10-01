@@ -1,5 +1,5 @@
 /**
- * 工具探测 API + node 兜底测试（2026-09-28）
+ * 工具探测 API + node 兜底测试
  *
  * 覆盖：
  *   · /api/git-push/tool-probes 端点（GET 只读，返回 48 工具探测清单）
@@ -13,7 +13,7 @@ import { join } from 'node:path';
 import { handleHttp } from '../lib/app/http-handlers.js';
 import { probeToolPath } from '../lib/context/index.js';
 
-// 2026-10-05：改相对路径派生（此前硬编码机器绝对路径 /volume1/...，换机即失效）
+// 改相对路径派生（此前硬编码机器绝对路径 /volume1/...，换机即失效）
 const ROOT = join(import.meta.dirname, '..');
 
 test('/api/git-push/tool-probes：GET 返回探测清单（只读豁免 origin）', async () => {

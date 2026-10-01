@@ -1,5 +1,5 @@
 /**
- * `.auditignore` 非 git 目录兜底（2026-09-18）。
+ * `.auditignore` 非 git 目录兜底。
  *
  * 背景：`.auditignore` 原先只走 `git check-ignore`，因此**仅在 git 仓库内生效**——
  *   非 git 目录（解压的源码包、临时导出目录、未 init 的工程）下该文件形同不存在，

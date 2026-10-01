@@ -37,7 +37,7 @@ test('magic-number-smart：版本号/日期/HTTP 状态码/常见常量豁免', 
 });
 
 test('magic-number-smart：魔数上下文（magic_number_hints）命中', () => {
-  // 2026-09-16 更新：`const timeout = 30000` 这类「变量名表意」的赋值已是命名常量（定义值），
+  // 更新：`const timeout = 30000` 这类「变量名表意」的赋值已是命名常量（定义值），
   //   新规则豁免（isNamedConstantValue 放宽：含 timeout/limit/size/… 语义词尾的变量名算常量）。
   //   真魔数上下文 = 数字出现在 callback/调用/运算里且无表意变量名——如 setTimeout(…, 30000)。
   const text = [

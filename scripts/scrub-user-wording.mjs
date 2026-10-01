@@ -193,7 +193,7 @@ function lineExempt(line) {
 }
 
 const MARKUP_EXTS = ['md', 'markdown', 'txt'];
-// 2026-09-16：跳过目录统一走 lib/skip-dirs.js（node_modules/.git + yml 黑名单关键词），不再各自硬编码。
+// 跳过目录统一走 lib/skip-dirs.js（node_modules/.git + yml 黑名单关键词），不再各自硬编码。
 const SKIP_DIRS = getSkipSet();
 const SKIP_FILES_RE = /\.(bak\d*|orig)$/i;
 

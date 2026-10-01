@@ -166,7 +166,7 @@ test('schema：不再保留无人读写的死字段 ruleSlotMeta', () => {
 test('预览页：槽位数据取自真实规则文件，不得与真实实例脱节', async () => {
   // 手写槽位清单曾只写 6 个 → 预览里只显示 6 个槽位，被误当成「只显示 6 个」的回归。
   //   这里比对生成的 preview.html 与真实 listRuleSlots() 结果，锁死两者一致。
-  // 2026-10-06：数据由 scripts/gen-preview.mjs 自动生成（此前手工维护 33K JSON 串，
+  // 数据由 scripts/gen-preview.mjs 自动生成（此前手工维护 33K JSON 串，
   //   新增槽位漏改即失败）——本测试直接调脚本的 checkPreviewDrift 断言无漂移，
   //   并顺带锁死「脚本生成结果与测试预期一致」（防脚本自身改契约）。
   const { checkPreviewDrift, buildPreviewSlotData, readPreviewSlotData } = await import('../scripts/gen-preview.mjs');

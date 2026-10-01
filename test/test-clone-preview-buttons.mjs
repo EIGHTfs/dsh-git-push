@@ -1,5 +1,5 @@
 /**
- * clone 预览确认框按钮可点（2026-09-18）。
+ * clone 预览确认框按钮可点。
  *
  * 现象：点「开始克隆」「取消」都没反应。
  * 根因：调用点写成 `dshgp_ClonePreview({ ..., onConfirm: () => { void this.cloneConfirmed(); },

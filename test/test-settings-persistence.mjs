@@ -1,5 +1,5 @@
 /**
- * 设置侧边栏持久化专项测试（2026-09-15 用户指派「检查所有功能设置是否真正持久化」）。
+ * 设置侧边栏持久化专项测试（用户指派「检查所有功能设置是否真正持久化」）。
  *
  * 四层链路逐键断言：
  *   L1 前端提交点   client.js 是否存在该键的 commitSetting/persistSetting 调用（UI 可改）
@@ -29,7 +29,7 @@ function clientSubmitKeys() {
   const src = readFileSync(join(ROOT, 'lib', 'client.js'), 'utf8');
   const keys = new Set();
   for (const m of src.matchAll(/(?:commitSetting|persistSetting)\('([a-zA-Z]+)'/g)) keys.add(m[1]);
-  // 2026-09-15：setAdvanced 是通用提交函数（setAdvanced(key, value)，key 为变量）——
+  // setAdvanced 是通用提交函数（setAdvanced(key, value)，key 为变量）——
   //   其允许的键集合硬编码在 client.js 的 setAdvanced 白名单正则里（7 键，见下方 SET_ADVANCED）。
   for (const k of SET_ADVANCED) keys.add(k);
   // 对象分组（ENUM_KEYS/CLAMP_KEYS）顶层键无引号——正则易受转义影响，显式补（新增对象键时同步这里）
@@ -38,9 +38,9 @@ function clientSubmitKeys() {
 }
 
 /** setAdvanced 允许键（与 client.js setAdvanced 正则同步；新增键时两处都要加）。 */
-// 2026-09-17：auditLevel / auditRuleset / hardcodeFullScan 已从设置删除（非用户可配项）
-// 2026-09-18：新增 clone 体积守卫与并发（setAdvanced 白名单同步，见 client.js）
-// 2026-09-26：任务完成自动推送（autoPushEnabled/TriggerText/Scope）经 setAdvanced 提交，白名单同步
+// auditLevel / auditRuleset / hardcodeFullScan 已从设置删除（非用户可配项）
+// 新增 clone 体积守卫与并发（setAdvanced 白名单同步，见 client.js）
+// 任务完成自动推送（autoPushEnabled/TriggerText/Scope）经 setAdvanced 提交，白名单同步
 const SET_ADVANCED = ['maxScanFiles', 'maxCloneFileMB', 'cloneConcurrency', 'pushMethod', 'pushGate', 'autoPushEnabled', 'autoPushTriggerText', 'autoPushScope'];
 
 /** settings-set 白名单键（L2）。 */
@@ -57,7 +57,7 @@ function cfgMappingKeys() {
   const keys = new Set();
   // 旧 if 链形态：patch.xxx
   for (const m of src.matchAll(/patch\.([a-zA-Z]+)/g)) keys.add(m[1]);
-  // 2026-09-23 表驱动形态：仅在 applySettingsToCfg 函数体片段内匹配
+  // 表驱动形态：仅在 applySettingsToCfg 函数体片段内匹配
   //   ——引号键（数组项：'auditEnabled',）与无引号对象键（auditScanScope: / maxCloneFileMB:）
   const fnBody = src.slice(src.indexOf('export function applySettingsToCfg'), src.indexOf('export function applySettingsToCfg') + 2400);
   for (const m of fnBody.matchAll(/['"]([a-zA-Z][a-zA-Z0-9]*)['"]\s*[,:\]]/g)) keys.add(m[1]);
@@ -83,7 +83,7 @@ test('L0 集合：SETTINGS_SCHEMA 声明的每个键都有默认值（UI 事实�
   for (const item of SETTINGS_SCHEMA) {
     assert.ok(item.key in def, `schema 键 ${item.key} 应有默认值`);
   }
-  // 2026-09-17：审计强度/自定规则目录/硬编码全量扫三项已删除，声明数随之下调；
+  // 审计强度/自定规则目录/硬编码全量扫三项已删除，声明数随之下调；
   //   此处只守住下限，避免每删一项就要改这个魔数。
   assert.ok(SETTINGS_SCHEMA.length >= 7, `schema 应声明主要设置项（现 ${SETTINGS_SCHEMA.length} 项）`);
 });
@@ -187,7 +187,7 @@ test('L4 关键键 auditScanScope：审计 opts 带 scope；审计强度已删�
   const tool = readFileSync(join(ROOT, 'lib/app/tool-call.js'), 'utf8');
   // auditScanScope 由前端/工具参数决定，审计 opts 至少包含 scope 字段
   assert.ok(/scope:/.test(tool), '审计 opts 应有 scope 字段');
-  // 2026-09-17：审计固定完整流程，代码里不得再出现 auditLevel 透传
+  // 审计固定完整流程，代码里不得再出现 auditLevel 透传
   assert.ok(!/auditLevel/.test(tool.replace(/^\s*\/\/.*$/gm, '')),
     'code_audit 不得再消费 auditLevel（审计固定正则初筛 + AST）');
 });
@@ -223,7 +223,7 @@ test('凭据：sshPub 经 settings-set 落 config.json（且不再产出 *.pub �
     assert.equal(r.status, 200);
     const snap = readSettings({ workspaceRoot: '' });
     assert.ok(snap && snap.sshPub, 'config.json 应落 sshPub');
-    // 2026-09-16 凭据只读写 config.json：不再产出 *.pub 平铺文件
+    // 凭据只读写 config.json：不再产出 *.pub 平铺文件
     const files = readdirSync(env.credDir);
     assert.ok(!files.some((f) => f.endsWith('.pub')), `不应再有 *.pub 平铺文件: ${files.join(',')}`);
     assert.ok(files.includes('config.json'), `公钥真源应为 config.json: ${files.join(',')}`);

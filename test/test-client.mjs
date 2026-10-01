@@ -26,7 +26,7 @@ function mockReact() {
 }
 
 // ---------- 浏览器入口 client.js 的标识符完整性 ----------
-// 2026-09-18：clone 按钮报「dshgp_CLONE_TIMEOUT_MS is not defined」——1.4.1 为 clone
+// clone 按钮报「dshgp_CLONE_TIMEOUT_MS is not defined」——1.4.1 为 clone
 //   放宽超时改用该常量，却漏了定义。这类「用了没定义」只在点到那个按钮时才炸：
 //   node --check 查不出（运行时 ReferenceError 不是语法错误），回归也覆盖不到。
 //
@@ -74,7 +74,7 @@ test('client.js：dshgp_ 前缀标识符无「用了没定义」', () => {
 
 // clone 超时必须真正放宽：默认 fetch 超时 30s 对上百 MB 仓库必然不够
 test('client.js：clone 提交用短超时（后台化后不再阻塞下载）', () => {
-  // 2026-09-19 克隆后台化：repo-clone 现在是「提交即返回 202」，
+  // 克隆后台化：repo-clone 现在是「提交即返回 202」，
   //   下载在服务端后台跑，前端靠轮询取进度与终态。
   //   故提交调用**不该**再背 30 分钟超时——那是旧「请求阻塞到克隆结束」设计的产物，
   //   长超时还会掩盖「提交阶段就卡死」的真实故障。
@@ -99,11 +99,11 @@ test('默认关：审计开关/LLM/全量扫 全部默认 false', () => {
   assert.equal(c.auditEnabled, false);
   assert.equal(c.pushPermitEnabled, undefined, 'pushPermitEnabled 已移除（2026-09-11）');
   assert.equal(c.llmAudit, undefined, 'llmAudit 已移除（v2 不提供 LLM 深度审查）');
-  // 2026-09-17：hardcodeFullScan / auditLevel / auditRuleset 已删除（非用户可配项）
+  // hardcodeFullScan / auditLevel / auditRuleset 已删除（非用户可配项）
   assert.equal(c.hardcodeFullScan, undefined, 'hardcodeFullScan 已移除（2026-09-17：硬编码扫描随审计范围走）');
   assert.equal(c.auditLevel, undefined, 'auditLevel 已移除（2026-09-17：审计固定完整流程）');
   assert.equal(c.auditRuleset, undefined, 'auditRuleset 已移除（2026-09-17：设置项删除，只认工具 ruleset 参数）');
-  // 2026-09-13：injectFullSkill / injectRepoIndexFull 已按需求废弃移除（不做全量注入）
+  // injectFullSkill / injectRepoIndexFull 已按需求废弃移除（不做全量注入）
   assert.equal(c.injectFullSkill, undefined, 'injectFullSkill 已移除（2026-09-13：全量注入开关不要了）');
   assert.equal(c.injectRepoIndexFull, undefined, 'injectRepoIndexFull 已移除（2026-09-13）');
   // 新增：注入系统提示词总开关（默认开——注入目录/功能用法才能让 AI 用插件而非绕开）
@@ -140,7 +140,7 @@ test('合并：enum 非法值回落默认', () => {
 });
 
 test('合并：string 类型统一字符串', () => {
-  // 2026-09-17：auditRuleset 已删除，改用仍存在的 string 键（weightOverrides）
+  // auditRuleset 已删除，改用仍存在的 string 键（weightOverrides）
   assert.equal(resolveConfig({ weightOverrides: 123 }).weightOverrides, '123');
 });
 
@@ -166,7 +166,7 @@ test('组件：无 react.createElement 时明确报错（禁止 JSX 构建假设
 });
 
 test('组件：复选框 checked 反映配置真值（逐项等于 schema 默认值）', () => {
-  // 2026-09-13：不再假设「所有开关默认 false」——注入系统提示词默认 true（需求新增），
+  // 不再假设「所有开关默认 false」——注入系统提示词默认 true（需求新增），
   //   改为逐项对照 SETTINGS_SCHEMA 默认值断言，新增开关无需再改本测试。
   const react = mockReact();
   const cfg = defaultConfig();
@@ -197,14 +197,14 @@ test('组件：enum 渲染选项齐全', () => {
   const react = mockReact();
   createSettingsCard(react, {});
   const opts = react.calls.filter((c) => c.type === 'option').map((c) => c.props.value);
-  // 2026-09-13：新增「推送通道」enum（ssh/api/auto）。
-  // 2026-09-17：审计强度 enum 已删除（quick/standard/deep 不再出现在界面），
+  // 新增「推送通道」enum（ssh/api/auto）。
+  // 审计强度 enum 已删除（quick/standard/deep 不再出现在界面），
   //   审计范围 enum（diff/full）与推送通道 enum（ssh/api/auto）保留。
-  // 2026-09-26：任务完成自动推送范围 enum（session/all）新增。
+  // 任务完成自动推送范围 enum（session/all）新增。
   assert.deepEqual(opts.sort(), ['all', 'api', 'auto', 'diff', 'full', 'session', 'ssh']);
 });
 
-// 2026-09-27 回归：手写 UI（lib/client.js dshgp_PushDefaultsBlock）的 select 选项
+// 回归：手写 UI（lib/client.js dshgp_PushDefaultsBlock）的 select 选项
 //   必须经 props.children 渲染——jsx(type, props, key) 的第三参数是 **key 不是 children**，
 //   选项数组放第三参数会整体丢失、下拉渲染为空（「自动推送范围」下拉无内容，
 //   与 2026-09-16 审计进阶下拉同因）。该路径不走 SETTINGS_SCHEMA，须源码级断言防回归。
@@ -270,7 +270,7 @@ test('client.js：零外部资源（内联 CSS 无外链/url()/@import）', () =
 });
 
 test('client.js：审计相关开关默认关（2026-09-12 三选项卡版）', () => {
-  // 2026-09-12 三选项卡重写：v1 移植的注入/硬编码全量扫等开关已移出 client.js（纯展示/审计/设置三页）
+  // 三选项卡重写：v1 移植的注入/硬编码全量扫等开关已移出 client.js（纯展示/审计/设置三页）
   // 保留的审计默认关：Controller 初始 auditEnabled=false
   assert.ok(/this\.auditEnabled = false/.test(rootClientSrc), 'auditEnabled 应默认 false');
   assert.ok(!rootClientSrc.includes("'llmAudit'"), 'client.js 不应含 llmAudit（v2 不提供 LLM 深度审查）');
@@ -299,7 +299,7 @@ test('client.js：不实施 viewer', () => {
 
 // 1.0.10 回归：ctx.get('ruleSlotMeta') 对未 inject 声明抛 "cannot get property without inject"
 // （vendor/cordis/lib 675 行）曾导致 apply 崩溃 → 设置侧边栏空白。修复：try/catch 兜底。
-// 2026-09-12：配置卡已删除，只保留 settings.section（三选项卡侧边栏页）。
+// 配置卡已删除，只保留 settings.section（三选项卡侧边栏页）。
 test('client.js apply：ctx.get 抛错不崩，settings.section 注册且渲染不崩（1.0.10 回归 + 三选项卡）', () => {
   // 捕获 ModuleLoader.load 的 factory
   let captured = null;
@@ -314,7 +314,7 @@ test('client.js apply：ctx.get 抛错不崩，settings.section 注册且渲染�
   };
   const req = (name) => {
     if (name === 'react') return reactMock;
-    // v1 结构依赖（2026-09-12 完全移植 v1）：jsx-runtime / primitives / store
+ // v1 结构依赖（完全移植 v1）：jsx-runtime / primitives / store
     if (name === 'react/jsx-runtime') return { jsx: reactMock.createElement, jsxs: reactMock.createElement };
     if (name === '@deepseek-ai/dsh-client-ui-primitives') return { IconChevronDownOutline14: 'icon-mock' };
     if (name === '@deepseek-ai/dsh-client-store') return {
@@ -356,7 +356,7 @@ test('client.js apply：ctx.get 抛错不崩，settings.section 注册且渲染�
   };
   assert.doesNotThrow(() => mod.apply(ctx), 'apply 遇 ctx.get 抛错不得崩溃');
 
-  // 2026-09-12 三选项卡：只注册 settings.section；settings.plugin.item 已删除
+  // 三选项卡：只注册 settings.section；settings.plugin.item 已删除
   assert.ok(!registered.some((r) => r.slot === 'settings.plugin.item'), 'settings.plugin.item 不应注册（已删除）');
   const secReg = registered.find((r) => r.slot === 'settings.section');
   assert.ok(secReg, 'settings.section 应注册');

@@ -1,5 +1,5 @@
 /**
- * 账号检查 + SSH 密钥（2026-09-11 补齐 D34）：maskToken / readSshPub / persistSshPub /
+ * 账号检查 + SSH 密钥（补齐 D34）：maskToken / readSshPub / persistSshPub /
  * checkGithubAccount（离线分支）/ formatGithubAccountBlock / generateSshKey（校验与存在性分支）。
  * 在线 /user 校验与真实 ssh-keygen 属集成面，另由调用实测覆盖（不写进单测防网络/外部依赖）。
  */
@@ -43,7 +43,7 @@ test('readSshPub：无公钥 → configured:false', () => {
 test('readSshPub：config.json 有 sshPub → configured:true + 指纹', () => {
   const env = isolatedEnv();
   try {
-    // 2026-09-16 凭据只读写 config.json：公钥写入 config.json 的 sshPub 键
+    // 凭据只读写 config.json：公钥写入 config.json 的 sshPub 键
     writeFileSync(join(env.credDir, 'config.json'), JSON.stringify({ sshPub: 'ssh-rsa AAAAB3NzaC1yc2EAAAA test@example.com' }), 'utf8');
     const r = readSshPub({});
     assert.equal(r.configured, true);
@@ -94,7 +94,7 @@ test('checkGithubAccount：仅公钥无 token → 未登录 warn', async () => {
 });
 
 // ---------- formatGithubAccountBlock ----------
-// 2026-09-17：文案改为逐条列出（Token / SSH 各自用户名与时间），取消单一「已登录 GitHub：X」汇总行
+// 文案改为逐条列出（Token / SSH 各自用户名与时间），取消单一「已登录 GitHub：X」汇总行
 //   ——两条凭据可属不同 GitHub 用户，写唯一用户名会隐藏另一个账号。断言随新语义更新。
 test('formatGithubAccountBlock：未登录含凭据摘要', () => {
   const block = formatGithubAccountBlock({ cookieSet: true, loggedIn: false, warnLevel: 'err', detail: 'Token 无效（Bad credentials）', cred: { hasToken: true, tokenMasked: 'ghp_…abcd' } });

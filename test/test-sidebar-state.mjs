@@ -1,5 +1,5 @@
 /**
- * 设置侧边栏状态自检（2026-09-17）。
+ * 设置侧边栏状态自检。
  *
  * 背景：这一轮连续踩了三个「界面显示与配置真源不一致」的坑，且都属于**人工点页面才发现**
  * 的类型——本测试把它们固化成可回归的断言，改完直接 `node --test test/test-sidebar-state.mjs`：
@@ -59,7 +59,7 @@ test('推送门禁 pushGate 在设置回读列表中（修：勾了刷新又变�
 test('UI 可编辑的布尔/字符串设置键都在回读列表中（防再次遗漏）', () => {
   // 只要求「用户可在设置页改、且属于本插件界面状态镜像」的键必须回读；
   // 排除服务端专用/凭据明文/文件路径类（由各自专用通道处理）。
-  // 2026-09-17：审计强度 / 自定规则目录 / 硬编码全量扫三项已从设置中删除（非用户可配项），
+  // 审计强度 / 自定规则目录 / 硬编码全量扫三项已从设置中删除（非用户可配项），
   //   故不再要求回读——它们必须彻底消失，见下方「已删除项不得复活」断言。
   const mustReadback = [
     'auditEnabled', 'injectRequirements', 'injectSystemPrompt',
@@ -126,7 +126,7 @@ test('回读键必须在 schema 中有定义（不得读不存在的键）', () 
 /* ─────────────────── ③ 凭据「已填写」判断口径 ─────────────────── */
 
 test('account-status 的「已填写」判断用配置真源，不用在线校验快照', () => {
-  // 2026-09-29：account-status 逻辑迁到 lib/app/handlers/account.js（handleAccountStatus）
+  // account-status 逻辑迁到 lib/app/handlers/account.js（handleAccountStatus）
   const accountSrc = readFileSync(join(ROOT, 'lib/app/handlers/account.js'), 'utf8');
   const start = accountSrc.indexOf('export function handleAccountStatus');
   const end = accountSrc.indexOf('export async function handleAccountCheck', start);

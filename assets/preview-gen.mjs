@@ -6,7 +6,7 @@
  *
  * 用法：node assets/preview-gen.mjs
  *
- * 路径解析（2026-09-18 重写）：
+ * 路径解析（重写）：
  *   项目根 projectRoot = 本文件所在目录的上一级。
  *   DSH 安装根不能靠相对路径推导（数据目录与安装目录不同源），改为探测：
  *     判据「含 node_modules/ 与 package.json」，顺序 DSH_ROOT > 常见安装位 > 上溯兜底。
@@ -25,7 +25,7 @@ const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 // 字节 → MB 换算：1 MB = 1024 × 1024 字节
 const BYTES_PER_MB = 1024 * 1024;
 /**
- * 定位 DSH 安装根（2026-09-18 修）。
+ * 定位 DSH 安装根（修）。
  *
  * 为什么不能靠相对路径：本机**数据目录与安装目录不同源**——
  *   工作区在 /volume1/@appdata/DeepSeekHarness-NAS/<版本>/工作区/<项目>（@appdata），
@@ -60,7 +60,7 @@ const reactUmdDir = process.env.REACT_UMD_DIR || join(store, 'react@18.3.1', 'no
 const RD = process.env.REACT_DOM_UMD_DIR || join(store, 'react-dom@18.3.1_react@18.3.1', 'node_modules', 'react-dom');
 
 /**
- * 确保 react-dom UMD 就位（2026-09-18 修）。
+ * 确保 react-dom UMD 就位（修）。
  *
  * react-dom **常未随 DSH 安装**（本机实测全盘缺失，DSH 只装了 react），
  *   而 UMD 是单文件自包含（约 1MB）、不依赖包管理器，因此缺失时直接下载即可，
@@ -115,10 +115,10 @@ const DEMO_MAX_SCAN_FILES = 3000;
 
 // 假数据：可变（点开关/调序会真的改它，UI 才反映结果，而不是点完回弹）
 const FAKE = {
-  // 2026-09-13：改为演示「父开关关闭 + 子开关已勾选」——正是可勾选/只置灰/不生效的验证场景
+  // 改为演示「父开关关闭 + 子开关已勾选」——正是可勾选/只置灰/不生效的验证场景
   auditEnabled: false,
   injectRequirements: true,
-  // 2026-09-13：injectFullSkill / injectRepoIndexFull 已废弃移除，改为注入总开关（默认开）
+  // injectFullSkill / injectRepoIndexFull 已废弃移除，改为注入总开关（默认开）
   injectSystemPrompt: true,
   auditScanScope: 'diff',
   maxScanFiles: DEMO_MAX_SCAN_FILES,
@@ -197,7 +197,7 @@ window.__scopeMock = {
   },
 };
 
-// 接真实后端（2026-09-20 完全真实数据版）：
+// 接真实后端（完全真实数据版）：
 //   · 默认（无参数）：同源相对路径 /api/git-push/* 直接放行——在 start-preview.mjs 反代服务下
 //     打开时请求落到真实 DSH 后端，预览数据完全真实（账号/仓库/规则/审计/设置）。
 //   · URL 传 ?backend=http://127.0.0.1:PORT → 转发到所给后端（preview-server 直连实测）。
@@ -223,7 +223,7 @@ function forwardBackend(urlStr, init) {
 //   仅显式 ?mock=1 才走下方假数据（离线调试）。
 function passthroughFetch(urlStr, init) {
   if (!/[?&]mock=1/.test(location.search)) {
-    // 2026-09-21 修复：**file:// 双击打开**时相对 URL（/api/git-push/*）无 http 基址，
+    // 修复：**file:// 双击打开**时相对 URL（/api/git-push/*）无 http 基址，
     //   fetch 直接抛「Failed to parse URL」——自动回退本机 preview 服务（start.sh 缺省
     //   端口 30999；--port 错开或用 ?backend= 指定则覆盖）。连不上给清晰指引而非裸报错。
     if (location.protocol === 'file:') {
@@ -264,7 +264,7 @@ function mockFetch(urlStr, init) { // dsh-skip-complexity: mock 路由表（8 �
     body = { ok: true, loggedIn: true, block: '✅ 已登录 GitHub：EIGHTfs（Public 仓库 12 个 / 私有 3 个）' };
   } else if (urlStr.indexOf('gen-ssh-key') >= 0) {
     body = { ok: true, pub: 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINewlyGeneratedDemoKeyForPreview eightfs@example.com' };
-  // 2026-09-14 账号卡片（本地/云端）假数据：结构与真实端点一致，点按钮能真的出列表/弹窗
+  // 账号卡片（本地/云端）假数据：结构与真实端点一致，点按钮能真的出列表/弹窗
   } else if (urlStr.indexOf('browse') >= 0) {
     // 目录浏览：mock 按请求 path 返回真实层级（点目录真切换，与真实 browseDir 行为一致）
     var queryStr = String(urlStr).split('?')[1] || '';

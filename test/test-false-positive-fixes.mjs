@@ -112,7 +112,7 @@ test('② timeout-on-external-api：fetch + AbortSignal.timeout 同调用不报'
   // 对照：真无超时的 fetch 仍应报
   assert.ok(hasExternalCallTimeout("fetch('/a')", ["fetch('/a')"], 0) === false, '无超时行不豁免');
   assert.ok(hasExternalCallTimeout("fetch('/a', { signal: AbortSignal.timeout(1) })", [], 0) === true, '内联超时豁免');
-  // 2026-09-20 修误报（dsh-session-migrate 复现）：① init/options 定义在调用之前
+  // 修误报（dsh-session-migrate 复现）：① init/options 定义在调用之前
   //   （signal 在 fetch 前），只往后看会漏；② apiFetch 等自定义封装名含 "fetch("
   //   子串被正则误报，负向后瞻排除。
   const preInit = ['const init = { signal: AbortSignal.timeout(5000) };', 'const r = await fetch(url, init);'];
@@ -146,7 +146,7 @@ test('④ concat-in-t：split(\'{\'+\'k\' 的 t( 不误匹配（词边界）', a
 
 import { checkRegexRules } from '../lib/audit/checks.js';
 function checkRegexRulesSafe() {
-  // 2026-09-13（yml 为准）：参数显式列出不再强制加载 → 临时删 i18n 的 disabled 行（启用），测完写回（还原禁用）
+  // （yml 为准）：参数显式列出不再强制加载 → 临时删 i18n 的 disabled 行（启用），测完写回（还原禁用）
   const orig = loadRuleFiles([]);
   setSlotDisabled('i18n', false); // 启用
   let loaded;

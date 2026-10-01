@@ -1,5 +1,5 @@
 /**
- * dsh-git-push — preview.html 自动重生成监听（2026-09-14）
+ * dsh-git-push — preview.html 自动重生成监听
  *
  * 监听会改变预览内容的源码，变更即自动重跑 assets/preview-gen.mjs 更新 preview.html，
  * 无需手动重生成——浏览器刷新即见新代码。

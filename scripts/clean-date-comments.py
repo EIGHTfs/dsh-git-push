@@ -18,9 +18,9 @@ import sys
 LEADING_RE = re.compile(r'^(\s*)(//|#|\*|/\*)\s*20\d{2}[-/]\d{1,2}[-/]\d{1,2}\s*[:：]?\s*')
 # 行内注释日期前缀（代码后 // 日期）
 INLINE_RE = re.compile(r'(//)\s*20\d{2}[-/]\d{1,2}[-/]\d{1,2}\s*[:：]?\s*')
-# 行首注释内的括号括注日期（2026-10-05 增）：（2026-09-13 修）→（修）；（2026-09-13）→ 删括号
+# 行首注释内的括号括注日期（增）：（修）→（修）；→ 删括号
 PAREN_DATE = re.compile(r'[（(]\s*20\d{2}[-/.]\d{1,2}[-/.]\d{1,2}\s*[)）]')                               # （2026-09-13）
-PAREN_DATE_W = re.compile(r'[（(]\s*(20\d{2}[-/.]\d{1,2}[-/.]\d{1,2})\s+([^）)]*?)\s*[)）]')            # （2026-09-13 修）
+PAREN_DATE_W = re.compile(r'[（(]\s*(20\d{2}[-/.]\d{1,2}[-/.]\d{1,2})[，,、\s]+([^）)]*?)\s*[)）]')            # （2026-09-13 修）/ （2026-10-02，非 dsh 插件误报消除）
 # 文件级豁免：这些文件允许日期（变更记录/版权）
 EXEMPT_FILES = {'CHANGELOG.md', 'LICENSE', 'README.md', 'FUNCTIONS.md'}
 
@@ -35,7 +35,7 @@ def clean_line(line):
         # 行内注释（代码行尾）——只在非行首位置找 // 日期
         new, n2 = INLINE_RE.subn(r'\g<1> ', new)
         changed = changed or n2 > 0
-    # 行首注释里的括号括注日期（2026-10-05 增：规则 comment/no-date-in-comment 匹配注释内任意日期）
+ # 行首注释里的括号括注日期（增：规则 comment/no-date-in-comment 匹配注释内任意日期）
     if new.lstrip().startswith(('//', '#', '*', '/*')):
         new3, n3 = PAREN_DATE_W.subn(r'（\2）', new)
         new3, n3b = PAREN_DATE_W.subn(r'(\2)', new3)
@@ -61,7 +61,7 @@ def main():
     else:
         entries = []
         for dirpath, dirnames, filenames in os.walk(root):
-            dirnames[:] = [d for d in dirnames if d not in ('.git', 'node_modules', '.trash', 'dist', 'build', 'assets')]
+            dirnames[:] = [d for d in dirnames if d not in ('.git', 'node_modules', '.trash', 'dist', 'build')]
             entries.append((dirpath, filenames))
     for dirpath, filenames in entries:
         for fn in filenames:

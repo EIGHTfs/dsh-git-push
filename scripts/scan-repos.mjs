@@ -93,7 +93,7 @@ async function main() {
     foundCount += 1;
     process.stdout.write(`SCAN found ${r.name} (${foundCount})\n`);
   }
-  // 2026-09-16：清理索引残留——此前只「追加/更新」不删除，被 .gitignore 忽略后不再扫到的
+  // 清理索引残留——此前只「追加/更新」不删除，被 .gitignore 忽略后不再扫到的
   //   仓库（如 DeepSeekHarness-NAS 的 source 构建产物）会永远留在索引里。这里按本轮结果
   //   剔除「owner 一致但本轮未扫到」的条目，保证索引 = 本次扫描结果。
   const removed = pruneIndex({ workspaceRoot: REPO_ROOT, owner: scanOwner, scanned });

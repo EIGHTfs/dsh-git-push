@@ -1,4 +1,4 @@
-// dsh-git-push 测试：lib/readme-gen（README 生成）——按 v2 lib 文件夹对齐（2026-09-11）
+// dsh-git-push 测试：lib/readme-gen（README 生成）——按 v2 lib 文件夹对齐
 /**
  * 覆盖：genReadme / renderReadmeTemplateYml / loadReadmeTemplateYml / resolveReadmeTemplate /
  * tocFromTemplate / parseVersion / listVersionCommits / buildReadmeVersionTable。

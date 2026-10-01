@@ -1,5 +1,5 @@
 /**
- * git_cred_env 凭据传递测试（2026-09-21）：
+ * git_cred_env 凭据传递测试：
  *   buildCredEnv 返回结构（SSH/HTTPS 双通道）／输出无 token/私钥明文（核心目标）／
  *   askpass 脚本生成且可执行（Username→git、Password→token）／无凭据场景 provided 空 + hint。
  */

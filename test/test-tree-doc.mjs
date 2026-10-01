@@ -1,5 +1,5 @@
 /**
- * README 目录结构维护脚本（tree-doc）测试（2026-09-14，2026-09-15 加 syncIndex）。
+ * README 目录结构维护脚本（tree-doc）测试(加 syncIndex)。
  * 覆盖：gen 两层折叠树含注释 / check 无漂移 / 漂移检测（新增/删除/孤儿）/
  *   apply 覆盖标记块 / 解析容错（破折号/代码围栏/树根行）/ syncIndex 索引自动同步。
  */
@@ -87,7 +87,7 @@ test('解析容错：破折号/代码围栏/树根行不污染 seen', () => {
   assert.equal(r.ok, true);
 });
 
-// ---------- syncIndex 索引自动同步（2026-09-15） ----------
+// ---------- syncIndex 索引自动同步 ----------
 test('syncIndex：新增文件自动补键（值=待注释）；删除文件自动删键（描述连带）', () => {
   // 注入真实文件集 = 旧键（保留描述）+ 新文件；真实文件集里没有 b.js（已删）
   const files = ['lib/a.js', 'lib/c.js']; // b 已删（工作区不存在，不在真实文件集）
@@ -117,13 +117,13 @@ test('syncIndex：新目录自动补目录键（无尾斜杠）；write=true 变
   assert.ok(Array.isArray(removed));
 });
 
-// ---------- CLI `--root` 外调其他项目（2026-09-20，1.5.6） ----------
+// ---------- CLI `--root` 外调其他项目（1.5.6） ----------
 test('CLI --root：可对任意项目根 check/apply（其他项目复用本脚本）', () => {
   // 构造临时 git 仓库（模拟其他项目：有 README 树块 + tree-doc.json）
   const proj = mkdtempSync(join(tmpdir(), 'tree-doc-root-'));
   const files = ['src/index.js', 'tree-doc.json', 'README.md'];
   const map = { 'src': '源码', 'src/index.js': '入口', 'tree-doc.json': '目录注释映射', 'README.md': '文档' };
-  const tree = buildTreeText(files, map, basename(proj)); // 2026-09-23：树根用临时仓库名（3326ec6 树根动态化后，硬编码 dsh-git-push 会 stale）
+  const tree = buildTreeText(files, map, basename(proj)); // 树根用临时仓库名（3326ec6 树根动态化后，硬编码 dsh-git-push 会 stale）
   writeFileSync(join(proj, 'README.md'), makeReadme(tree), 'utf8');
   writeFileSync(join(proj, 'tree-doc.json'), JSON.stringify(map, null, 2) + '\n', 'utf8');
   mkdirSync(join(proj, 'src'), { recursive: true });

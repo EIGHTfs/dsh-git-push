@@ -270,6 +270,7 @@ dsh-git-push/
 │   │   ├── dataflow.js — 数据流规则包装（L2 token 级→finding）
 │   │   ├── dispatch.js — 调度（runChecks 按 kind 分发汇总）
 │   │   ├── dup-code.js — （待注释）
+│   │   ├── dup-const.js — 同名常量跨文件重复定义检查（DRY：findConstDefs 多语言常量提取 + 模块级过滤 + checkDuplicateConst 跨文件聚合——2026-10-02 新规则）
 │   │   ├── file-health.js — 文件健康度（行数/字节/行长三维打分）
 │   │   ├── filter.js — 规则作用域过滤（exts/exclude_paths）
 │   │   ├── folder.js — 目录级检查（文件夹数/单目录文件数/解包特征）
@@ -402,6 +403,7 @@ dsh-git-push/
 │   ├── test-doc-version.mjs — （待注释）
 │   ├── test-docs-score.mjs — 文档加分制测试（文档集圈法/四检查/公式/不一致 review/不冲突）
 │   ├── test-dup-code.mjs — （待注释）
+│   ├── test-dup-const.mjs — duplicate-const 规则测试（多语言提取 JS/Kotlin/Java/Go/Rust/Python、模块级过滤、跨文件聚合、test 目录排除、同值不同名不报）
 │   ├── test-exempt.mjs — 豁免总入口测试（7 标记 + 位置语义）
 │   ├── test-false-positive-fixes.mjs — 误报修复回归测试
 │   ├── test-file-health.mjs — 文件健康度矩阵评分测试

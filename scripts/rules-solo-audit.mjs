@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * rules-solo-audit —— yml 规则单启控制变量扫描（2026-09-23，按需运行，非测试常驻）
+ * rules-solo-audit —— yml 规则单启控制变量扫描（按需运行，非测试常驻）
  *
  * 用途：评估每条 audit-rules-*.yml 规则的有效性与局限——「控制变量法」：
  *   ① 基准：不启用任何规则跑审计（仅剩结构类 finding，如 tree-doc）

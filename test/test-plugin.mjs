@@ -11,7 +11,7 @@ import { execSync } from 'node:child_process';
 
 import { name, GIT_PUSH_SETTINGS_NS, Config, apply, callTool, handleHttp, listTools, listRuleSlots } from '../lib/index.js';
 
-// 2026-09-16：单测网络隔离——禁止 GitHub API / SSH 探测真实网络（否则假 token 的 /user、
+// 单测网络隔离——禁止 GitHub API / SSH 探测真实网络（否则假 token 的 /user、
 //   liveRemoteHead 的 ls-remote 会等满超时挂起）。本文件测的是工具分发/端点契约，
 //   一律走离线快速失败路径即可。
 process.env.DSH_GIT_PUSH_OFFLINE = '1';
@@ -52,7 +52,7 @@ test('apply：工具注册走 tools.register(defineTool(...))（真实 API）', 
   const registered = [];
   const defineCalls = [];
   const ctx = {
-    // cordis 服务属性必须经 get() 防御式读取（2026-09-11 修复：直读抛 without inject）
+ // cordis 服务属性必须经 get() 防御式读取（修复：直读抛 without inject）
     get: (k) => k === 'log' ? { info: () => {}, warn: () => {} } : undefined,
     inject: (keys, fn) => {
       if (keys[0] === 'tools') fn({ get: (k) => k === 'tools' ? { register: (t) => registered.push(t) } : undefined });
@@ -62,7 +62,7 @@ test('apply：工具注册走 tools.register(defineTool(...))（真实 API）', 
   };
   setDefineToolOverride((spec) => { defineCalls.push(spec); return spec; });
   const r = await apply(ctx, {});
-  // 2026-09-11 修复：apply 返回 undefined（cordis 标准：只收 disposer/Promise/undefined，对象抛 Invalid effect）
+  // 修复：apply 返回 undefined（cordis 标准：只收 disposer/Promise/undefined，对象抛 Invalid effect）
   assert.equal(r, undefined, 'apply 应返回 undefined（cordis 标准写法）');
   assert.ok(defineCalls.length >= 6, `应经 defineTool 包装（实际 ${defineCalls.length}）`);
   assert.equal(registered.length, defineCalls.length, 'register 数量应与 define 一致');
@@ -89,7 +89,7 @@ test('apply：systemPrompt 注入走 section({name,order,text})（真实 API）'
   assert.ok(sections.every((s) => typeof s.name === 'string' && typeof s.text === 'function'),
     '段必须含 name + 同步 text()');
   assert.ok(sections.some((s) => s.name === 'dsh-git-push-readme-check'), '应含 README 检查提醒段');
-  // 2026-09-20：环境段迁出 systemPrompt → agent/pre-step 上下文注入，不再注册 section
+  // 环境段迁出 systemPrompt → agent/pre-step 上下文注入，不再注册 section
   assert.ok(!sections.some((s) => s.name === 'dsh-git-push-env'), '环境段应已迁出 systemPrompt');
 });
 
@@ -260,7 +260,7 @@ test('HTTP：rule-slots 端点动态发现全部 yml（模板不入 order）+ di
   assert.ok(slots.order.length >= 14, `order 应含全部非模板槽位（${slots.order.length}）`);
   assert.ok(!slots.order.includes('template'), '模板不应进入 order（模板不显示）');
   assert.equal(slots.meta.comment.disabled, true, 'comment 应带 disabled 标记');
-  // 2026-09-18：清单驱动槽位（private）不能显示成 0 条。
+  // 清单驱动槽位（private）不能显示成 0 条。
   //   audit-rules-private.yml 用 `private_files:` 而非 `rules:`（rules 恒为 []），
   //   只数 rules.length 会让侧边栏显示「共 0 条规则」——而它实际有 13 条匹配清单
   //   且在正常工作（公仓命中即 blocker）。这类槽位按清单条目数计，归拦截级。
@@ -280,7 +280,7 @@ test('HTTP：rule-slots 端点动态发现全部 yml（模板不入 order）+ di
     assert.equal(typeof st[k], 'number', `stats.${k} 应为数字`);
   }
   assert.ok(st.total > 0, 'nodejs 槽位规则数应大于 0');
-  // 2026-09-18：口径统一为 yml 规则条数，source 恒为 rules。
+  // 口径统一为 yml 规则条数，source 恒为 rules。
   //   旧实现「有审计结果就显命中数」会让三列量纲打架（命中**次数** vs 规则**条数**），
   //   实测 nodejs 出现 245 警告 / 37 总规则这类越界假数据，故废弃该分支。
   assert.equal(st.source, 'rules', 'stats.source 恒为 rules（规则条数口径）');
@@ -471,7 +471,7 @@ test('commitWithAudit：dryRun 透传（对真实仓库）', async () => {
   assert.equal(r.dryRun, true);
 });
 
-// 2026-09-11：.samples 空文件目录豁免 —— 审计照常出结果，但该目录内 blocker 不拦截提交
+// .samples 空文件目录豁免 —— 审计照常出结果，但该目录内 blocker 不拦截提交
 function makeExemptRepo() {
   const root = mkdtempSync(join(tmpdir(), 'gp-cwa-exempt-'));
   execSync('git init -b master', { cwd: root, stdio: 'ignore' });
@@ -601,7 +601,7 @@ test('settings-set：GET 方法（空 key）→ 400（键白名单校验先行�
 
 test('settings-set：UI 提交日志落盘（settings-ui.log 留痕 + 凭据打码）', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'dshgp-setlog-'));
-  // 2026-09-17 修复（测试污染生产数据）：本用例写 githubToken 时，凭据落盘走的是
+  // 修复（测试污染生产数据）：本用例写 githubToken 时，凭据落盘走的是
   //   credentialsDir() → DSH_HOME（不是 setSettingsFileOverride 重定向的那个文件），
   //   因此**必须同时隔离 DSH_HOME**，否则测试假 token（ghp_SECRETTOKEN_XYZ）会直接
   //   覆盖用户真实 config.json 里的真 token（已实际发生）。
@@ -640,4 +640,4 @@ function fsStatMode(file) {
   return (statSync(file).mode & 0o777).toString(8);
 }
 
-// ---------- （2026-09-15 追加）插件私有配置持久化规则 ----------
+// ---------- （追加）插件私有配置持久化规则 ----------

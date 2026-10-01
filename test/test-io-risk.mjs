@@ -1,5 +1,5 @@
 /**
- * dsh-git-push — I/O 风险分级测试（2026-09-17）
+ * dsh-git-push — I/O 风险分级测试
  *
  * 覆盖 lib/ast/io-risk.js 的 AST 判定、汇总与排序，以及
  * lib/checks/io.js 的 finding 转换；防止后续调整时静默劣化分级准确度。
@@ -24,7 +24,7 @@ test('io-risk：异步路径中的同步 I/O 判 high', () => {
 });
 
 test('io-risk：循环内异步串行 await 判 low（只慢不阻塞，非请求路径）', () => {
-  // 2026-09-20 多维分级：风险不取决于「在不在循环里」——
+  // 多维分级：风险不取决于「在不在循环里」——
   //   异步串行 await 只是慢、不阻塞事件循环，非请求路径下从 high 降为 low
   const src = 'async function f(list) {\n  for (const p of list) { await fs.promises.readFile(p); }\n}\n';
   const hits = scanIoRiskAst(src);
@@ -85,7 +85,7 @@ test('io-risk：顶层同步 I/O 判 low（启动路径），不误判为 high',
 });
 
 test('io-risk：写类操作加权一档（仅重复执行的上下文）', () => {
-  // 2026-09-18 口径修正：加权只作用于**会重复执行**的上下文（循环内 / 请求路径）。
+  // 口径修正：加权只作用于**会重复执行**的上下文（循环内 / 请求路径）。
   //   原先无条件加权，把「启动路径的一次性落盘」「`.tmp` + rename 标准原子写」
   //   这类*正确做法*也升了一档（实测 25 条 atomic-json/account-status 等被误报中风险）。
   //   异步写不阻塞、不重复，本身无风险，保持 safe 才是准确的。

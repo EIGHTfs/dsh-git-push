@@ -278,39 +278,24 @@
   "test/test-audit-api.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "README.md": {
+      "lib/ast/callgraph.js": {
         "status": "M",
-        "mtime": "2026-10-01T19:13:09.168Z",
+        "mtime": "2026-10-01T22:38:16.581Z",
         "note": "注释可能需更新"
       },
-      "lib/audit-rules/audit-rules-nodejs.yml": {
+      "lib/ast/lang.js": {
         "status": "M",
-        "mtime": "2026-10-01T19:01:41.758Z",
+        "mtime": "2026-10-01T22:36:34.728Z",
         "note": "注释可能需更新"
       },
-      "lib/audit/orchestrate.js": {
+      "lib/ast/magic-number.js": {
         "status": "M",
-        "mtime": "2026-10-01T19:01:00.983Z",
+        "mtime": "2026-10-01T22:47:07.075Z",
         "note": "注释可能需更新"
       },
-      "lib/checks/folder.js": {
+      "lib/checks/dup-const.js": {
         "status": "M",
-        "mtime": "2026-10-01T19:04:43.168Z",
-        "note": "注释可能需更新"
-      },
-      "lib/self/index.js": {
-        "status": "M",
-        "mtime": "2026-10-01T19:14:35.639Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-audit.mjs": {
-        "status": "M",
-        "mtime": "2026-10-01T19:07:06.997Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-project-type-filter.mjs": {
-        "status": "A",
-        "mtime": "2026-10-01T19:10:27.081Z",
+        "mtime": "2026-10-01T22:35:31.273Z",
         "note": "注释可能需更新"
       }
     }
@@ -368,5 +353,7 @@
   "lib/audit-rules/audit-rules-swift.yml": "Swift 规则包（占位：规则待补，槽位就绪）（规则包 swift）",
   "test/test-java-rules.mjs": "Java/Kotlin 语言路由与专项规则测试（javaKtFuncRanges/短名/复杂度/规则联动/聚合型降级）",
   "scripts/gen-preview.mjs": "preview.html 槽位数据自动生成器（gen 打印 / --write 写盘 / check 查漂移——__SLOTS__/__FAKE__ 从 listRuleSlots 真实生成，新增规则槽位不再手工维护）",
-  "test/test-project-type-filter.mjs": "项目类型规则适配测试（非 dsh 项目不加载 dsh 槽位/0.x 版本规则、timeout 限 js 系、folder 尊重 gitignore——Pawchive 误报消除驱动）"
+  "test/test-project-type-filter.mjs": "项目类型规则适配测试（非 dsh 项目不加载 dsh 槽位/0.x 版本规则、timeout 限 js 系、folder 尊重 gitignore——Pawchive 误报消除驱动）",
+  "lib/checks/dup-const.js": "同名常量跨文件重复定义检查（DRY：findConstDefs 多语言常量提取 + 模块级过滤 + checkDuplicateConst 跨文件聚合——2026-10-02 新规则）",
+  "test/test-dup-const.mjs": "duplicate-const 规则测试（多语言提取 JS/Kotlin/Java/Go/Rust/Python、模块级过滤、跨文件聚合、test 目录排除、同值不同名不报）"
 }

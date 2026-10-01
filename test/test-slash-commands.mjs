@@ -28,7 +28,7 @@ test('parseGitAuditInput：路径 + --full（强度参数已删除，--quick 视
   assert.equal(ok.path, '工作区/dsh-git-push-v2');
   assert.equal(ok.scope, 'full');
   assert.equal(ok.error, undefined);
-  // 2026-09-17：审计固定完整流程，--quick/--standard/--deep 不再是合法参数
+  // 审计固定完整流程，--quick/--standard/--deep 不再是合法参数
   const bad = parseGitAuditInput('工作区/dsh-git-push-v2 --quick');
   assert.match(bad.error || '', /未知参数 --quick/);
 });
@@ -147,7 +147,7 @@ test('runGitAuditCommand：非 git 目录 + --force 放行（走 code_audit 全�
 });
 
 test('runGitAuditCommand：空路径 + 会话 cwd 对本仓库能出 success', async () => {
-  // 2026-09-17：不再传强度（--quick / cfg.auditLevel 均已删除），审计固定完整流程。
+  // 不再传强度（--quick / cfg.auditLevel 均已删除），审计固定完整流程。
   const r = await runGitAuditCommand({
     rawInput: '',
     invocation: inv(ROOT),
@@ -189,7 +189,7 @@ test('registerSlashCommands：无 inject 返回 0', () => {
   assert.equal(registerSlashCommands({}, {}), 0);
 });
 
-/* ── 新增只读命令（2026-09-18）── */
+/* ── 新增只读命令── */
 
 test('parseCommandInput：识别 flag 与带空格路径', () => {
   const r = parseCommandInput('/a b/repo --full', ['--full'], 'u');

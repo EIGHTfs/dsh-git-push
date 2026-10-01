@@ -1,5 +1,5 @@
 /**
- * 审计拦截测试（2026-09-14）：
+ * 审计拦截测试：
  * 故意提交含敏感信息的文件，验证审计门禁能拦截 blocker。
  * 测试完自动清理临时文件，不污染仓库。
  */
@@ -62,7 +62,7 @@ test('审计拦截：硬编码 API key → blocker', async () => {
 });
 
 test('审计拦截：敏感文件（.env）→ blocker', async () => {
-  // 2026-09-14：必须用真实 .env 文件名——凭据文件路径规则（credfile-common 的
+  // 必须用真实 .env 文件名——凭据文件路径规则（credfile-common 的
   //   path_pattern `(^|[\\/])\.env`）要求「.env 前是路径开头或斜杠」，`.tmp-test-bad.env`
   //   这类前缀名会绕过规则模式。真实 .env / .env.local / config/.env 均被拦截。
   const rel = '.env';

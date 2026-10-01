@@ -1,5 +1,5 @@
 /**
- * dsh-git-push — README 目录结构维护脚本（2026-09-14，2026-09-15 索引自动同步化）
+ * dsh-git-push — README 目录结构维护脚本(索引自动同步化)
  *
  * 功能（四个子命令）：
  *   gen   —— 用 `git ls-files` 读「所有 git 未忽略文件」，生成目录结构文本
@@ -8,7 +8,7 @@
  *   check —— 解析 README 标记块（<!-- dshgp-tree:start/end -->）内现有树，
  *             与真实文件树对比，报告漂移（新增/删除/改注释），**不改文件**。
  *   apply —— 用新生成的树覆盖 README 标记块内容（显式执行才写盘）。
- *   sync  —— **索引自动同步（2026-09-15）**：对齐 tree-doc.json 的键集合与真实
+ * sync —— **索引自动同步**：对齐 tree-doc.json 的键集合与真实
  *             文件集——新增文件自动补键（描述=（待注释），等人/AI 补一句介绍）；
  *             删除文件自动删键（描述连带删除）。不再需要手动增删键，只补描述。
  *
@@ -37,7 +37,7 @@ const DEFAULT_README = join(ROOT, 'README.md');
 /** 树标记块（宿主 md 识别用）。 */
 
 /**
- * 自动探测「目录树宿主 md」（2026-09-29，分体式文档支持）：
+ * 自动探测「目录树宿主 md」（分体式文档支持）：
  *   · `--readme` 显式指定 → 直接用（向后兼容）。
  *   · 缺省：优先 README.md；README 无标记块时，扫描根下全部 .md
  *     （docs/ 优先），找第一个含 dshgp-tree 标记块的文件作为宿主——
@@ -68,7 +68,7 @@ function collectMdFiles(root) {
 }
 
 /**
- * 探测含指定标记块的「文档宿主 md」（2026-09-29 公共函数，tree-doc/版本表/函数列表三类文档复用）。
+ * 探测含指定标记块的「文档宿主 md」（公共函数，tree-doc/版本表/函数列表三类文档复用）。
  * 优先 README.md；README 无该标记块时，扫描根下全部 .md 找第一个含该标记块的文件。
  * 标记块形如 `<!-- <marker>:start --> … <!-- <marker>:end -->`（marker 如 'dshgp-tree'）。
  * @param {string} root 项目根
@@ -86,7 +86,7 @@ export function findMarkedHostMd(root, marker = 'dshgp-tree') {
   return readme;
 }
 
-/** 解析「树宿主 md」（2026-09-29：README 不再写死，自动探测含 dshgp-tree 标记块的 md）。 */
+/** 解析「树宿主 md」——README 不再写死为唯一宿主：自动探测含 dshgp-tree 标记块的 md（分体式文档下宿主可随文档拆分迁移，脚本零改动）。 */
 export function resolveTargetMd(root, explicit = '', marker = 'dshgp-tree') {
   if (explicit) return explicit;
   return findMarkedHostMd(root, marker);
@@ -103,7 +103,7 @@ function gitLsFiles(root = ROOT) {
     // 已跟踪 + 未跟踪但未忽略（新文件/待提交都算「未忽略文件」，README 目录树应含它们）
     const out = execFileSync('git', ['-c', 'core.quotepath=false', '-C', root, 'ls-files', '--cached', '--others', '--exclude-standard'], { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
     return out.split('\n').map((l) => l.trim()).filter(Boolean).filter((p) => {
-      // 缺陷修复 2026-09-15：--cached 会把「已跟踪但工作区已删」的文件也列出
+      // 缺陷修复：--cached 会把「已跟踪但工作区已删」的文件也列出（应只取真实存在的文件）
       //   （如 mv 进 .trash 的旧文件仍留在索引），导致 check 误报「真实存在但未列」。
       //   目录树描述的是工作区现状，只保留工作区实际存在的文件。
       try { return statSync(join(root, p)).isFile(); } catch { return false; }
@@ -126,7 +126,7 @@ function writeMapping(map, root = ROOT) {
 }
 
 /**
- * 工作区未提交变动文件（2026-09-23）：git status --porcelain → {path: {status, mtime, note}}。
+ * 工作区未提交变动文件：git status --porcelain → {path: {status, mtime, note}}。
  * M/A/D + 文件 mtime——**面向开发者/AI 的元数据**：提示「该文件变动了，tree-doc 注释可能需更新」。
  * 与 tree-doc.json 的 `_meta.worktree` 配合；apply 到 README 只同步原描述，不含本信息。
  * @returns {Object<string, {status: string, mtime: string, note: string}>}
@@ -156,7 +156,7 @@ function gitWorktreeChanges(root = ROOT) {
 }
 
 /**
- * 索引自动同步（2026-09-15）：对齐 tree-doc.json 键集合与真实文件集。
+ * 索引自动同步：对齐 tree-doc.json 键集合与真实文件集。
  *   - 新增文件（git 未忽略、工作区存在）不在索引 → 自动补键，值=（待注释），等人补描述
  *   - 索引里有但文件已删 → 自动删键（描述连带删除），不再产生孤儿
  *   - 目录键（目录级注释合法）自动补齐：真实文件的所有父目录（无尾斜杠，与现有键一致）
@@ -192,7 +192,7 @@ export function syncIndex({ write = true, files = gitLsFiles(), map = loadMappin
     next[p] = '（待注释）';
     added.push(p);
   }
-  // 2026-09-23：工作区变动文件记录进 `_meta.worktree`（mtime + 状态）——面向开发者/AI 的
+  // 工作区变动文件记录进 `_meta.worktree`（mtime + 状态）——面向开发者/AI 的
   //   提示「注释可能需更新」；apply 到 README 只同步原描述（buildTreeText 只查 map[path]），
   //   `_meta` 不进 README。工作区干净时清空该段（避免陈旧提示）。
   const wt = gitWorktreeChanges(root);
@@ -326,7 +326,7 @@ export function checkDrift({ readmePath = DEFAULT_README, root = ROOT } = {}) {
     }
     // 按「—」切出名字段（trim 后破折号后无空格，split(' — ') 会失效）
     const name = lineText.split('—')[0].trim();
-    // 2026-09-23 修：树根节点豁免原硬编码本插件名（dsh-git-push）——扫描其它仓库（如
+    // 修：树根节点豁免原硬编码本插件名（dsh-git-push）——扫描其它仓库（如
     // dsh-theme-mediascape）时根节点 <repoName>/ 被误判 stale。改为动态豁免当前 git 根目录名。
     const repoRoot = basename(root);
     if (!name || name === repoRoot || name === repoRoot + '/') continue;
@@ -343,7 +343,7 @@ export function checkDrift({ readmePath = DEFAULT_README, root = ROOT } = {}) {
   const realSet = new Set();
   for (const p of realPaths) realSet.add(p);
   const isRealDir = (p) => { try { return statSync(join(root, p.replace(/\/$/, ''))).isDirectory(); } catch { return false; } };
-  // 2026-09-23：工具自产生成物不追漂移——tree-doc/functions 自产（README 树与索引的
+  // 工具自产生成物不追漂移——tree-doc/functions 自产（README 树与索引的
   //   增删由工具维护，不属手写树内容）：docs/函数/*（apply 生成/删除常态）、
   //   functions-index.json（analyze 产物）。_meta 见 orphan 判定。
   const isToolGenerated = (p) => p === 'functions-index.json' || p === '_meta'
@@ -364,7 +364,7 @@ export function checkDrift({ readmePath = DEFAULT_README, root = ROOT } = {}) {
   // 注释映射孤儿：路径既不是 git 文件，也不是真实目录（目录级注释合法）；`_meta`/生成物键跳过
   const orphans = [];
   for (const p of Object.keys(map)) {
-    if (isToolGenerated(p)) continue; // 2026-09-23：_meta 元数据 + docs/函数/ 等工具产物不算孤儿
+    if (isToolGenerated(p)) continue; // _meta 元数据 + docs/函数/ 等工具产物不算孤儿
     const full = join(root, p);
     let realDir = false;
     try { realDir = statSync(full).isDirectory(); } catch { /* 路径不存在：不算真实目录 */ }
@@ -384,12 +384,12 @@ const isMain = process.argv[1] && fileURLToPath(import.meta.url) === resolve(pro
 if (isMain) {
   const args = process.argv.slice(2);
   const cmd = args[0];
-  // 2026-09-20：`--root <路径>` 支持外调其他项目——其他仓库可直接用本脚本维护自己的
+  // `--root <路径>` 支持外调其他项目——其他仓库可直接用本脚本维护自己的
   //   README 目录树（`node <dsh-git-push>/scripts/tree-doc.mjs check --root <其他项目根>`）。
   //   缺省 = 自身项目（向后兼容）；显式 `--readme` 优先于 root 推导的 README 路径。
   const rootIdx = args.indexOf('--root');
   const rootArg = rootIdx !== -1 && args[rootIdx + 1] ? resolve(args[rootIdx + 1]) : ROOT;
-  // 2026-09-29：README 不再写死——自动探测宿主 md（README 无标记块时找 docs/ 里带标记块的）
+  // README 不再写死——自动探测宿主 md（README 无标记块时找 docs/ 里带标记块的）
   const readmeIdx = args.indexOf('--readme');
   const readmeExplicit = readmeIdx !== -1 && args[readmeIdx + 1] ? resolve(args[readmeIdx + 1]) : '';
   const readmePath = readmeExplicit || resolveTargetMd(rootArg);
@@ -418,7 +418,7 @@ if (isMain) {
     case 'gen': {
       const files = filesOf(rootArg);
       if (args.includes('--write')) {
-        // 索引同步 + 补（待注释）（2026-09-15：与 sync 同一逻辑，--all 为显式全量语义）
+        // 索引同步 + 补（待注释）（与 sync 同一逻辑——--all 为显式全量语义：显式声明时连已同步键也重写，默认只补缺）
         const { added, removed } = syncIndex({ write: true, files, map: mapOf(rootArg), root: rootArg });
         if (forceAll) console.log('--all：已强制全量追加索引');
         console.log(`tree-doc.json 已同步（新增 ${added.length} / 删除 ${removed.length}；${added.length ? '待注释键请补描述' : ''}）`);

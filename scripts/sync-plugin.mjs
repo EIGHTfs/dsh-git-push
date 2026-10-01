@@ -34,7 +34,7 @@ export const SYNC_ENTRIES = ['lib', 'skills', 'scripts', 'assets', 'tools', 'cli
 /**
  * 同步时排除的路径片段。
  *
- * 2026-09-14 补 .bak / .trash：原先只排 .git / node_modules / WORKBOARD / test / .tmp，
+ * 补 .bak / .trash：原先只排 .git / node_modules / WORKBOARD / test / .tmp，
  *   开发期备份 `scripts/sync-plugin.mjs.bak` 被当发布文件复制进安装副本
  *   （`<插件目录>/scripts/`），安装副本里混入非发布内容。`.bak` 用子串匹配，
  *   同时覆盖 `.bak` 与 `.bak-<后缀>`（如 test-git.mjs.bak-d13）。
@@ -135,7 +135,7 @@ export function detectTargets(home = process.env.DSH_HOME || '', pluginName = ''
  */
 async function fileContentEqual(from, to) {
   try {
-    // 2026-09-27：异步函数内同步 existsSync 改 fs.promises.access（消除阻塞事件循环）
+    // 异步函数内同步 existsSync 改 fs.promises.access（消除阻塞事件循环）
     try { await access(to); } catch { return false; }
     const [a, b] = await Promise.all([readFile(from, 'utf8'), readFile(to, 'utf8')]);
     return a === b;
@@ -165,7 +165,7 @@ export async function syncPlugin({ source = SOURCE_ROOT, target = '', write = fa
         failures.push({ file: rel, error: r.error });
         continue;
       }
-      // 2026-09-29：cli.mjs 是 bin（git-sluice）入口，需可执行权限（shebang 执行）。
+      // cli.mjs 是 bin（git-sluice）入口，需可执行权限（shebang 执行）。
       //   copyFile 不带原文件 mode，同步后恢复 +x（幂等 chmod；失败不阻塞）。
       if (rel === 'cli.mjs' || rel.endsWith('/cli.mjs')) {
         try { await chmod(to, 0o755); } catch { /* 权限恢复失败不强拦 */ }

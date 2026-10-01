@@ -4,7 +4,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-// ---------- 审计扩展自动接入（2026-09-30 重构：统一入口动态加载） ----------
+// ---------- 审计扩展自动接入（重构：统一入口动态加载） ----------
 
 import { loadAuditExt, runAuditExt, DEFAULT_EXT_DIR } from '../lib/audit/ext-runner.js';
 

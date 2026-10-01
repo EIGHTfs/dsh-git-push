@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * dsh-git-push — 函数列表文档生成器（doc-func，2026-09-29 替代 functions-doc + func-index）
+ * dsh-git-push — 函数列表文档生成器（doc-func：统一替代 functions-doc + func-index 两个旧脚本——函数清单由 AST 真实生成，避免手工维护漂移）
  * dsh-skip-i18n: 用户可见文案硬编码为产品设计
  *
  * 分体式文档三兄弟之一（doc-tree 文件树 / doc-func 函数列表 / doc-version 版本列表）。

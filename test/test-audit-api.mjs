@@ -1,5 +1,5 @@
 /**
- * 审计结果 API 聚合层测试（2026-09-27）
+ * 审计结果 API 聚合层测试
  *
  * 覆盖 aggregateFindings 的维度/过滤/top 与 parseSeverityFilter：
  *   · groupBy=rule/file/severity/slot 四种维度

@@ -19,7 +19,7 @@ test('registry：14 工具全部入表，name/cli 唯一', () => {
 
 test('registry：registryByName / registryByCli 查找', () => {
   assert.equal(registryByName('code_audit').name, 'code_audit');
-  // 2026-10-05：code_audit 无 cli（CLI audit 特例走 lib/cli——独立审计 findings，不依赖宿主 API）
+  // code_audit 无 cli（CLI audit 特例走 lib/cli——独立审计 findings，不依赖宿主 API）
   assert.equal(registryByName('code_audit').cli, undefined);
   assert.equal(registryByCli('audit'), undefined, 'audit 不生成 CLI 命令');
   assert.equal(registryByCli('scan').name, 'git_scan');

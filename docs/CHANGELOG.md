@@ -7,6 +7,7 @@
 
 | 版本 | 内容 |
 |------|------|
+| 2.1.4 | Pawchive 误报消除（505→453 消 52 条）——①checkMinLength 空规则短路（filterRulesByExt 裁剪后空数组 truthy → dispatch 仍调检查器、空 rules 照跑 threshold 默认 2 → JS 文件报「裸 min-length」27 条；与其他检查器同短路修复）②ext 脚本 gitignore 感知（variable-min-length 自 walk 不走 collector，把被忽略的上游克隆 docs/.probe-ktoolbox 68607 文件扫入 14 条泄漏；读 .gitignore/.auditignore 用 isIgnoredByRules 目录级跳过）③ext SKIP_DIRS 补 tools/scripts（一次性工具/测试脚本单字母豁免）+ naming Java 分支排除流程关键字（return q/if (h)/new Q( 被当「类型+短名」误报；DECL_KEYWORDS 集合）；ext variable-min-length 26→1；测试 +3；回归 945 除 3 个环境性失败（GitHub 403/clone 409，stash 验证与改动无关） |
 | 2.1.3 | versioning 规则重设计——0.x 合法开发期（SemVer §4 + Go/Cargo 官方，调研驱动） |
 | 2.1.2 | 项目类型规则适配——非 dsh 项目误报消除（Pawchive 539→512/blocker 10→3） |
 | 2.1.1 | 复杂度规则口径优化——阈值 10 + blocker 50 真生效 + 算法补全 + message 分档 |

@@ -55,7 +55,7 @@ after(() => {
 /**
  * mock fetch：按请求路径返回预置响应；记录调用。routes 按序匹配（靠前优先）。
  *
- * 2026-09-18：下载改走 raw.githubusercontent.com（只有它支持 Range 续传），
+ * 下载改走 raw.githubusercontent.com（只有它支持 Range 续传），
  *   故 mock 必须能返回**原始字节**而非 JSON。route 给 raw 字段即按二进制回，
  *   并支持 rawHeaders 用于模拟 Range/206 语义。
  */
@@ -115,7 +115,7 @@ test('runGit：cwd 缺省为当前目录也可执行', () => {
   assert.match(r.stdout, /^git version/);
 });
 
-// 2026-09-14 回归：runGit 返回形状契约 {ok,stdout,stderr}——绝无 status 字段。
+// 回归：runGit 返回形状契约 {ok,stdout,stderr}——绝无 status 字段。
 //   曾发生 describeRepo/push 误用 rc.status（永远 undefined→静默失效→「远端状态未知」），
 //   此断言守住接口形状，谁改 runGit 返回结构谁先撞测试。
 test('runGit：返回形状契约——只含 ok/stdout/stderr、绝无 status（防 .status 误用再犯）', () => {
@@ -324,7 +324,7 @@ test('ensureGitignore：.samples 目录豁免——敏感文件一律不写 .git
   assert.ok(r.files.includes('real.js'), '非豁免敏感文件照常报告');
   assert.equal(r.sampleExempted, 1, 'sampleExempted 计数 = 1');
   const gi = readFileSync(join(repo, '.gitignore'), 'utf8');
-  // 2026-09-12 用户指令：扫描到敏感文件不改动 git 忽略——豁免与非豁免都不写 .gitignore
+  // 用户指令：扫描到敏感文件不改动 git 忽略——豁免与非豁免都不写 .gitignore
   assert.ok(!gi.includes('fixtures/secret.js'), '豁免目录文件不写 .gitignore');
   assert.ok(!gi.includes('real.js'), '非豁免文件也不写 .gitignore（只报告）');
   rmSync(join(repo, 'fixtures'), { recursive: true, force: true });
@@ -552,7 +552,7 @@ test('cloneViaApi：blob 失败不再静默报成功（回归：超时留半成�
   assert.equal(r.ok, false, '缺文件不得报成功');
   assert.equal(r.failedCount, 1);
   assert.match(r.error, /克隆未完成/);
-  // 2026-09-18 语义变更：失败**不再删光目录**，改为保留已下文件以便续传。
+  // 语义变更：失败**不再删光目录**，改为保留已下文件以便续传。
   //   原实现删光 targetDir，实测导致已下的 104MB 内容全丢、gallery 目录整个消失。
   assert.equal(r.cleaned, false, '不应再标记为「已清理」');
   assert.equal(r.kept, true, '应标记为「已保留」');
@@ -750,7 +750,7 @@ test('commitAndPush：私有库豁免（private 不写 .gitignore 只扫描报�
   assert.ok(!existsSync(join(repo4, '.gitignore')), 'private 仓库不应写 .gitignore');
 });
 
-// 2026-09-11：force 强推参数（pushViaApi 内容级短路需被 force 跳过）
+// force 强推参数（pushViaApi 内容级短路需被 force 跳过）
 test('pushViaApi：force=true 跳过内容级短路（remoteHead===headSha 仍建 commit）', async () => {
   runGit(['remote', 'set-url', 'origin', 'https://api.github.com/repos/octo/repo'], { cwd: repo });
   const headSha = runGit(['rev-parse', 'HEAD'], { cwd: repo }).stdout;
@@ -787,7 +787,7 @@ test('commitWithAudit：force 参数透传到 commitAndPush（返回含 force �
   rmSync(root2, { recursive: true, force: true });
 });
 
-// 2026-09-11：gitRaw buffer 通道——防 pushViaApi blob 损坏回归（runGit utf8+trim 丢末尾换行）
+// gitRaw buffer 通道——防 pushViaApi blob 损坏回归（runGit utf8+trim 丢末尾换行）
 test('gitRaw：buffer 通道保留 blob 原始字节（含末尾换行/非 UTF-8 字节）', () => {
   const dir = join(tmpdir(), `gp-gitraw-${Date.now()}`);
   mkdirSync(dir);

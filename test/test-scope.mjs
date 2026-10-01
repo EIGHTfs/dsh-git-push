@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-// ---------- 作用域判断 · 最小实验（2026-09-23 方案 Step 1 + 3 + 4 最小版） ----------
+// ---------- 作用域判断 · 最小实验（方案 Step 1 + 3 + 4 最小版） ----------
 
 // 机制层：lib/rule/scope.js（scope_rules 规范化 + action 解析）
 import { normalizeScopeRules, resolveScopeAction } from '../lib/rule/scope.js';
@@ -115,7 +115,7 @@ test('P2：参数列表内短名（function f(c, d)）豁免，声明位置短�
   assert.equal(decl.length, 1, '声明 c 照报');
 });
 
-// 2026-09-27 防回归：循环迭代变量豁免（for (const d of ...) 的单字母是强语义局部变量）
+// 防回归：循环迭代变量豁免（for (const d of ...) 的单字母是强语义局部变量）
 test('P2：循环迭代变量（for (const d of list)）豁免，非循环短声明仍报', () => {
   const { checkNameLengthAst } = loadNaming();
   const loop = checkNameLengthAst('for (const d of densityHits) { sum(d); }\n');

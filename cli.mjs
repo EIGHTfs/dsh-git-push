@@ -12,7 +12,7 @@ import { registryByCli, parseRegistryArgs } from './lib/app/command-registry.js'
 import { callTool } from './lib/app/tool-call.js';
 import { readFileSync, realpathSync } from 'node:fs';
 
-// 2026-10-05 结构化：命令实现按域抽到 lib/cli/commands-*.mjs（audit/account/vcs/doc），
+// 结构化：命令实现按域抽到 lib/cli/commands-*.mjs（audit/account/vcs/doc），
 //   本文件保留入口编排（HELP/parseArgv/命令分发表/运行入口）。
 //   具名 import 而非 `export ... from`：COMMANDS 表直接引用 cmdXxx 变量名，
 //   re-export 不建立本模块作用域绑定，会 ReferenceError。
@@ -38,7 +38,7 @@ export { cmdFileIo, cmdTreeDoc, cmdFunctions, cmdModuleSplitter };
 export const KNOWN_FLAGS = ['--depth', '--full', '--ruleset', '--weights', '--include-ignored', '--push', '--no-push', '--dry-run', '--force', '--req-confirm', '--push-gate-confirmed', '--json', '--max', '--owner', '--offline', '--paths', '--history', '--since', '--until', '--out', '--skip-empty',
   // file-io 三标签过滤
   '--summary', '--write', '--type', '--kind', '--risk', '--op', '--root', '--readme',
-  // 2026-09-19 补齐的 5 个命令（clone / account-check / remote-create / set-visibility / gen-ssh-key）
+  // 补齐的 5 个命令（clone / account-check / remote-create / set-visibility / gen-ssh-key）
   '--dest', '--branch', '--preview', '--max-file-mb', '--concurrency', '--visibility', '--email', '--no-check-ssh', '--token'];
 
 const HELP = `git-sluice v${VERSION} — dsh-git-push 引擎独立 CLI（脱离 DSH 运行）
@@ -260,7 +260,7 @@ function readPkgJson() {
   } catch { return null; }
 }
 
-/** 命令分发表（2026-09-23 重构：main 54 圈复杂度 → 表驱动分发）。
+/** 命令分发表（重构：main 54 圈复杂度 → 表驱动分发）。
  * 每个条目 [命令名, handler(rest)]；统一 parse 模式用 parseVia 包装。 */
 
 
@@ -284,12 +284,12 @@ const parseVia = (run) => (rest) => {
 };
 const COMMANDS = new Map([
   ['ruleset', (rest) => cmdRuleset(rest)],
-  ['audit', parseVia((f, p) => cmdAudit(p[0] || '.', f))], // 2026-10-05：audit 不走注册表——CLI 独立审计需完整 findings（不依赖宿主 API）；工具 code_audit 输出 API 指引
+  ['audit', parseVia((f, p) => cmdAudit(p[0] || '.', f))], // audit 不走注册表——CLI 独立审计需完整 findings（不依赖宿主 API）；工具 code_audit 输出 API 指引
   ['repos', parseVia((f, p) => cmdRepos(p[0] || '.', f))],
   ['index', parseVia((f, p) => cmdIndex(p[0] || '.', f))],
   ['functions', parseVia((f, p) => cmdFunctions(p[0] || '', p[1] || '', f))],
   ['tree-doc', parseVia((f, p) => cmdTreeDoc(p[0] || '', f))],
-  ['git', (rest) => cmdGit(rest)], // 2026-09-23 1.9.0：浅包装 git（自动凭据透传）
+  ['git', (rest) => cmdGit(rest)], // 1.9.0：浅包装 git（自动凭据透传）
   ['yaml-template', () => cmdYamlTemplate()],
   ['readme-template', () => cmdReadmeTemplate()],
   ['self-check', () => cmdSelfCheck()],
@@ -302,7 +302,7 @@ export async function main(argv = process.argv.slice(2)) {
     return;
   }
   if (cmd === 'version' || cmd === '-v' || cmd === '--version') return await cmdVersion();
-  // 2026-10-05 方案 B：注册表驱动命令优先（工具有对应 → 通用 parseArgs → callTool——
+  // 方案 B：注册表驱动命令优先（工具有对应 → 通用 parseArgs → callTool——
   //   CLI 与插件工具同实现，自动对齐；CLI 独立于 DSH 运行：env 自备 + 本地配置）
   const reg = registryByCli(cmd);
   if (reg) {
@@ -316,7 +316,7 @@ export async function main(argv = process.argv.slice(2)) {
   }
   const handler = COMMANDS.get(cmd);
   if (handler) return await handler(rest);
-  // 2026-09-23 1.9.0：未知命令透传为浅包装 git（自动凭据）——`git-sluice pull` = `git pull`
+  // 1.9.0：未知命令透传为浅包装 git（自动凭据）——`git-sluice pull` = `git pull`
   //   （git-sluice 是 git 的超集：已知子命令走插件，其余全部交给 git + 插件凭据）
   const wrapped = runWrappedGit([cmd, ...rest]);
   if (wrapped.ok) return 0;
@@ -325,14 +325,14 @@ export async function main(argv = process.argv.slice(2)) {
 }
 
 // 直接运行时入口（被 import 时不执行）
-// 2026-09-29 修：符号链接场景（PATH 里 git-sluice → cli.mjs）下 process.argv[1] 是链接路径、
+// 修：符号链接场景（PATH 里 git-sluice → cli.mjs）下 process.argv[1] 是链接路径、
 //   import.meta.url 是真实文件路径，两者字符串不相等 → 入口静默不执行（exit 0 无输出）。
 //   用 realpath 归一化：链接/相对/绝对路径都解析到同一真实路径再比。
 if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith('cli.mjs')
   || import.meta.url === `file://${realpathSync(process.argv[1])}`) {
   // 顶层 await：main 已异步，未 await 时 rejection 会变成 unhandled rejection
   //   （进程静默退出、退出码不对），故显式 await 并回传退出码。
-  // 2026-09-20：命令函数（cmdFileIo/cmdModuleSplitter 等）返回业务对象/数组，
+  // 命令函数（cmdFileIo/cmdModuleSplitter 等）返回业务对象/数组，
   //   只有 number 才赋 exitCode——否则 `process.exitCode = 对象` 抛 ERR_INVALID_ARG_TYPE。
   const mainResult = await main();
   if (typeof mainResult === 'number' && Number.isInteger(mainResult)) process.exitCode = mainResult;

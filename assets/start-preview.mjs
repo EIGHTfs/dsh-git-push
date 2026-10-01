@@ -191,7 +191,7 @@ const server = createServer((req, res) => {
 });
 
 async function openBrowser() {
-  // 2026-09-27：异步函数内同步 existsSync 改 fs.promises.access，消除阻塞事件循环
+  // 异步函数内同步 existsSync 改 fs.promises.access，消除阻塞事件循环
   let hasPlaywright = false;
   try { await access(join(PROJECT_ROOT, '..', '..', 'pwviewer', 'node_modules', 'playwright')); hasPlaywright = true; } catch { hasPlaywright = false; }
   if (noOpen || !hasPlaywright) return;

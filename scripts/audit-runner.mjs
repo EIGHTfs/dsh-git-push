@@ -11,6 +11,9 @@
 
 import { runAuditExt } from '../lib/audit/ext-runner.js';
 
+/** findings 预览打印条数（调试输出——完整清单走 --json）。 */
+const PREVIEW_MAX = 20;
+
 async function main() {
   const argv = process.argv.slice(2);
   const repo = argv.find((a) => !a.startsWith('--')) || process.cwd();
@@ -24,7 +27,7 @@ async function main() {
     return;
   }
   console.log(`审计扩展 ${repo} → ${findings.length} 条 findings（source: ext:*）`);
-  for (const f of findings.slice(0, 20)) {
+  for (const f of findings.slice(0, PREVIEW_MAX)) {
     console.log(`  ${f.source} ${f.file || ''}:${f.line || ''} [${f.severity || 'warning'}] ${(f.message || '').slice(0, 60)}`);
   }
 }

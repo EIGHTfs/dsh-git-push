@@ -2,7 +2,7 @@
 /**
  * 覆盖：lib/ast/dup-code.js 的 collectDupCodeCandidates / findDuplicateBodies +
  *   lib/checks/dup-code.js 的 checkDuplicateCode。
- * 判定标准（2026-10-05 量化判定标准）：
+ * 判定标准（量化判定标准）：
  *   · 同一归一化结构 ≥3 处 + 函数体 ≥5 行 → 报（该抽公共函数）
  *   · 2 处 / 不足 5 行 / test 夹具 / 参数 >5 / 布尔 flag → 不报
  *   · severity 恒 warning（只提示不拦截）

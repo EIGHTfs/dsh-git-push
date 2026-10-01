@@ -1,8 +1,8 @@
 /**
- * 项目类型规则适配测试（2026-10-02，Pawchive 误报消除驱动）：
+ * 项目类型规则适配测试（Pawchive 误报消除驱动）：
  * ① dsh 槽位只对 dsh 插件项目加载（package.json name dsh- 前缀）——非 dsh 项目
  *   require('fs'/'node:sqlite') 是 Node 后端正常用法，不再误报（Pawchive 7 条实测）
- * ② version 0.x 全场景合法（2026-10-02 规则重设计——0.x 开发期不再报；原「非 dsh 放行」过滤逻辑保留于 orchestrate，规则已删故为兜底）
+ * ② version 0.x 全场景合法（规则重设计——0.x 开发期不再报；原「非 dsh 放行」过滤逻辑保留于 orchestrate，规则已删故为兜底）
  * ③ timeout-on-external-api 限 js 系——md 文档不再被正则命中（Pawchive docs md 实测）
  * ④ folder 遍历尊重 .gitignore——被忽略目录（上游克隆）不计入 total-count（Pawchive 76 目录实测）
  */

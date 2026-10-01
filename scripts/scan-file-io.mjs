@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * dsh-git-push — 文件读写调用扫描器（2026-09-16；同日升级三标签能力）
+ * dsh-git-push — 文件读写调用扫描器（同日升级三标签能力——识别读/写/删除三类调用）
  *
  * 用途：把项目代码里所有「读/写文件」的调用位置找出来，并尽力解析出读写的
  *   文件路径/文件名——用于核查「某配置写没写、某个文件被哪些地方读写」。
@@ -39,7 +39,7 @@
  * 输出（文本）：风险徽标 | 行号 | 操作 | 三标签串 | 路径参数（解析结果）
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs';
-// 2026-09-17：分级引擎改为复用 AST 层（四级标准），行级逻辑只保留路径解析
+// 分级引擎改为复用 AST 层（四级标准），行级逻辑只保留路径解析
 import { scanIoRiskAst, RISK_BADGE, RISK_LABEL, summarizeIoRisk, rankIoFixList } from '../lib/ast/io-risk.js';
 import { join, extname, resolve, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -308,7 +308,7 @@ function scanFile(file) {
       const rawArg = arg === null ? '(未解析)' : arg;
       const resolved = arg === null ? '(未解析)' : resolvePathArg(arg, varMap, i);
       const lineCtx = contextAt(lines, i);
-      // 2026-09-17：上下文与分级以 AST 为准（tokenizer + 花括号配对，比行级启发式准）；
+      // 上下文与分级以 AST 为准（tokenizer + 花括号配对，比行级启发式准）；
       //   查不到该 (行号,操作名) 才退回行级结果
       const graded = riskOfByAst(astHits, i + 1, entry.op, entry, lineCtx);
       const ctx = graded.ctx;
@@ -341,7 +341,7 @@ function scanFile(file) {
  */
 /**
  * 旧行级启发式分级（3 级）——仅作 AST 不可用时的兜底。
- *   自 2026-09-17 起，常规路径改用 lib/ast/io-risk.js 的四级标准（与审计一致），
+ *   自常规路径改用 lib/ast/io-risk.js 的四级标准（与审计一致），
  *   本函数保留以免 AST 解析异常时整条命中丢失分级信息。
  */
 function riskOfFallback(entry, ctx) {
@@ -583,7 +583,7 @@ export function summarize(hits) {
     + '  循环内 ' + hits.filter((h) => h.inLoop).length
     + '  请求路径 ' + hits.filter((h) => h.inRequest).length
     + '  启动路径 ' + hits.filter((h) => h.inStartup).length);
-  // 四级风险（2026-09-17 起与审计 robustness/io-risk 同一标准）
+ // 四级风险（起与审计 robustness/io-risk 同一标准）
   console.log('【风险】' + ['high', 'medium', 'low', 'safe']
     .map((r) => `${RISK_BADGE[r]}${RISK_LABEL[r]} ${hits.filter((h) => h.risk === r).length}`)
     .join('  '));

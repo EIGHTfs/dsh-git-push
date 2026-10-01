@@ -333,7 +333,7 @@ test('1.0.3：blacklist kind 编译（comment 槽位，2026-09-13 取消分数�
   assert.ok(!rule.additionalFeatures || rule.additionalFeatures.length === 0, 'additional_features 分数制应删除（当前为空数组）');
 });
 
-// 2026-09-13 约定：关键词取消分数制——白名单命中不拦截，黑名单命中直接拦截（专项测试）
+// 约定：关键词取消分数制——白名单命中不拦截，黑名单命中直接拦截（专项测试）
 test('comment yml 顶层 rewrites 不进审计 rules', () => {
   const r = loadRuleFiles(['comment']);
   assert.equal(r.ok, true, r.errors?.join('; '));
@@ -397,7 +397,7 @@ test('1.0.3：npm-json kind 编译（结构化判定取代弱 pattern）', () =>
 });
 
 test('1.0.3：i18n 槽位编译（国际化审计 3 条）', () => {
-  // 2026-09-13（yml 为准）：i18n 默认 disabled → 临时删 disabled 行（启用），测完写回（还原禁用）
+  // （yml 为准）：i18n 默认 disabled → 临时删 disabled 行（启用），测完写回（还原禁用）
   setSlotDisabled('i18n', false); // 启用
   let r;
   try { r = loadRuleFiles(); } finally { setSlotDisabled('i18n', true); } // 还原禁用
@@ -523,7 +523,7 @@ test('1.0.4：performance 槽位编译（memory-bomb 6 子模式 + busy-wait）'
   assert.ok(Array.isArray(bomb.subPatterns) && bomb.subPatterns.length >= 6, `memory-bomb 应含 ≥6 个子模式（得 ${bomb.subPatterns?.length}）`);
 });
 
-// 2026-09-27 防回归：memory-bomb 精筛并集——console.log(JSON.stringify(大对象)) 一次性输出行豁免
+// 防回归：memory-bomb 精筛并集——console.log(JSON.stringify(大对象)) 一次性输出行豁免
 test('1.0.4：small-file-read 精筛并集 console.log(JSON.stringify) 输出行', () => {
   // console.log 输出（CLI --json 出口，序列化一次即打印退出）→ 豁免
   const out = 'console.log(JSON.stringify({ a: 1, b: 2 }, null, 2));\n';

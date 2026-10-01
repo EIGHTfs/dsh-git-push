@@ -1,7 +1,7 @@
 /**
  * 审计扩展：variable-min-length（试点——内置审计规则抽出为独立脚本，统一动态入口）
  *
- * 2026-09-30 试点：audit-rules-nodejs.yml 的 readability/variable-min-length 标 external: true
+ * 试点：audit-rules-nodejs.yml 的 readability/variable-min-length 标 external: true
  *   ——内置执行链停跑（groupByKind 过滤），本脚本经 runAuditExt 统一加载（auditFull 自动并入）。
  * 复用 lib/ast 检查器函数（checkNameLengthAst）——实现不重复，仅换执行载体。
  * findings 格式与内置 checkMinLength 对齐（file 相对路径 / severity warning / scoreImpact 0）。
@@ -12,14 +12,28 @@ export const auditExt = {
   match: (repo) => Boolean(repo && repo !== '.'),
   run: async (repo) => {
     const { checkNameLengthAst } = await import('../../lib/ast/naming.js');
-    // 2026-10-05 修复：external 通道必须带内置的构建/混淆产物豁免（isBuildArtifactFile——
+    // 修复：external 通道必须带内置的构建/混淆产物豁免（isBuildArtifactFile——
     //   hash 文件名/单行混淆）——否则单行混淆产物短名密爆（Pawchive hash 产物 5896 条误报）
     const { isBuildArtifactFile } = await import('../../lib/audit/audit-file.js');
-    const { readFileSync, readdirSync, statSync } = await import('node:fs');
+    // 修复：external 通道必须尊重 .gitignore/.auditignore——ext 自 walk 文件
+    //   不走 collector，此前把被 gitignore 忽略的上游克隆（Pawchive docs/.probe-ktoolbox
+    //   KToolBox 源码 68607 文件）扫入审计（14 条短名泄漏）。复用内置匹配器判目录忽略。
+    const { parseGitignore, isIgnoredByRules } = await import('../../lib/audit/gitignore-match.js');
+    const { readFileSync, readdirSync, statSync, existsSync } = await import('node:fs');
     const { join, extname, relative } = await import('node:path');
     const CODE_EXTS = new Set(['.js', '.mjs', '.cjs', '.ts', '.tsx', '.jsx']);
-    // 排除目录（构建产物/依赖/测试——与内置 collector 忽略语义近似；精确忽略留给核心审计）
-    const SKIP_DIRS = new Set(['node_modules', '.git', 'dist', 'build', 'output', 'test', 'tests', '__tests__', 'spec', '.trash']);
+    // 排除目录（构建产物/依赖/测试/一次性工具——与内置 collector 忽略语义近似；精确忽略留给核心审计）
+    const SKIP_DIRS = new Set(['node_modules', '.git', 'dist', 'build', 'output', 'test', 'tests', '__tests__', 'spec', 'tools', 'scripts', '.trash']);
+    // gitignore 规则（.gitignore + .auditignore 叠加）——目录级跳过；缺省空 = 不忽略
+    let gitignoreRules = null;
+    try {
+      const giText = [];
+      for (const giFile of ['.gitignore', '.auditignore']) {
+        const p = join(repo, giFile);
+        if (existsSync(p)) giText.push(readFileSync(p, 'utf8'));
+      }
+      if (giText.length) gitignoreRules = parseGitignore(giText.join('\n'));
+    } catch { /* 读忽略文件失败 = 不忽略，保守放行 */ }
     const findings = [];
     const walk = (dir) => {
       for (const f of readdirSync(dir)) {
@@ -27,7 +41,10 @@ export const auditExt = {
         let st;
         try { st = statSync(p); } catch { continue; }
         if (st.isDirectory()) {
-          if (!SKIP_DIRS.has(f)) walk(p);
+          if (SKIP_DIRS.has(f)) continue;
+          // gitignore 忽略目录（上游克隆/内部数据）跳过——与 collector 目录剪枝同语义
+          if (gitignoreRules && isIgnoredByRules(gitignoreRules, relative(repo, p).replace(/\\/g, '/'), true)) continue;
+          walk(p);
         } else if (CODE_EXTS.has(extname(f))) {
           try {
             const text = readFileSync(p, 'utf8');

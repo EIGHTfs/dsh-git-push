@@ -1,5 +1,5 @@
 /**
- * dsh-git-push — 本地真实后端测试服务（2026-09-14）
+ * dsh-git-push — 本地真实后端测试服务
  *
  * 起一个真实 HTTP 服务，直接调插件 handleHttp（走真实代码路径：repos-local 真实扫描、
  *   browse 真实目录、repo-push 真实推送、后台任务等等），供 preview.html 用
@@ -70,7 +70,7 @@ let previewHtml = '';
 try { previewHtml = readFileSync(previewPath, 'utf8'); } catch { /* preview.html 不存在则不 serve 首页 */ }
 // 在 </head> 前注入 <script> 设置 backend（preview.html fetch mock 优先读 location.search，
 //   fallback 读 window.__DSHGP_BACKEND__，两者都自动接本服务）
-// 2026-09-16 修复：注入**同源地址**（location.origin），不再硬编码 127.0.0.1——
+// 修复：注入**同源地址**（location.origin），不再硬编码 127.0.0.1——
 //   经局域网地址（如 http://10.10.10.63:8090）打开页面时，硬编码回环会让浏览器把请求
 //   打到访问设备自己（连不上）；同源地址则本机/局域网都正确指向本服务。
 const injectScript = `<script>window.__DSHGP_BACKEND__=location.origin;</script>`;
@@ -106,7 +106,7 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(port, '0.0.0.0', () => {
-  // 2026-09-16：优先给**局域网地址**（远程/手机也能打开），本机回环降为备选；
+  // 优先给**局域网地址**（远程/手机也能打开），本机回环降为备选；
   //   IP 用 os.networkInterfaces() 动态探测（不写死某台机器的地址）。
   const lan = detectLanIp();
   console.log('dsh-git-push 预览服务已启动:');

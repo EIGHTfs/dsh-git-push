@@ -1,5 +1,5 @@
 /**
- * preview.html 数据自动生成器（2026-10-06 新增——此前 __SLOTS__/__FAKE__ 数据手工维护，
+ * preview.html 数据自动生成器（新增——此前 __SLOTS__/__FAKE__ 数据手工维护，
  * 每次新增规则槽位都要手改 33K 行的 JSON 串，漏改即 test-rule-slots-render 失败）。
  *
  * 数据契约：与 test/test-rule-slots-render.mjs 的「预览页：槽位数据取自真实规则文件」
@@ -54,18 +54,18 @@ function readPreviewHtml() {
 
 /** 生成（打印）或写盘。 */
 export function genPreview({ write = false } = {}) {
-  const data = buildPreviewSlotData();
+  const slotData = buildPreviewSlotData();
   const html = readPreviewHtml();
   if (!html) return { ok: false, error: `preview.html 缺失: ${PREVIEW}` };
   const cur = readPreviewSlotData(html);
-  const drift = cur && (JSON.stringify(cur.meta) !== data.slotsJson || JSON.stringify(cur.order) !== data.fakeJson);
+  const drift = cur && (JSON.stringify(cur.meta) !== slotData.slotsJson || JSON.stringify(cur.order) !== slotData.fakeJson);
   if (write) {
     const out = html
-      .replace(/window\.__SLOTS__ = \{.*?\};/s, 'window.__SLOTS__ = ' + data.slotsJson + ';')
-      .replace(/window\.__FAKE__ = \{.*?\};/s, 'window.__FAKE__ = ' + data.fakeJson + ';');
+      .replace(/window\.__SLOTS__ = \{.*?\};/s, 'window.__SLOTS__ = ' + slotData.slotsJson + ';')
+      .replace(/window\.__FAKE__ = \{.*?\};/s, 'window.__FAKE__ = ' + slotData.fakeJson + ';');
     writeFileSync(PREVIEW, out, 'utf8');
   }
-  return { ok: true, write, drift, order: data.realOrder, metaCount: Object.keys(data.meta).length };
+  return { ok: true, write, drift, order: slotData.realOrder, metaCount: Object.keys(slotData.meta).length };
 }
 
 /** check：preview.html 数据与真实规则文件是否漂移。 */
@@ -74,18 +74,18 @@ export function checkPreviewDrift() {
   if (!html) return { ok: false, drift: true, message: `preview.html 缺失: ${PREVIEW}` };
   const cur = readPreviewSlotData(html);
   if (!cur) return { ok: false, drift: true, message: 'preview.html 缺少 __SLOTS__/__FAKE__ 数据段' };
-  const data = buildPreviewSlotData();
-  const keysDrift = JSON.stringify(Object.keys(cur.meta).sort()) !== JSON.stringify(Object.keys(data.meta).sort());
-  const orderDrift = JSON.stringify(cur.order) !== JSON.stringify(data.realOrder);
-  const nameDrift = data.realOrder.some((s) => cur.meta[s]?.name !== data.meta[s]?.name);
+  const slotData = buildPreviewSlotData();
+  const keysDrift = JSON.stringify(Object.keys(cur.meta).sort()) !== JSON.stringify(Object.keys(slotData.meta).sort());
+  const orderDrift = JSON.stringify(cur.order) !== JSON.stringify(slotData.realOrder);
+  const nameDrift = slotData.realOrder.some((s) => cur.meta[s]?.name !== slotData.meta[s]?.name);
   if (keysDrift || orderDrift || nameDrift) {
     const msg = `preview.html 槽位数据与真实规则文件漂移：`
-      + `${keysDrift ? `槽位集合 ${Object.keys(cur.meta).length} vs ${Object.keys(data.meta).length}；` : ''}`
+      + `${keysDrift ? `槽位集合 ${Object.keys(cur.meta).length} vs ${Object.keys(slotData.meta).length}；` : ''}`
       + `${orderDrift ? '顺序不一致；' : ''}${nameDrift ? '显示名不一致；' : ''}`
       + `运行 node scripts/gen-preview.mjs --write 重新生成`;
     return { ok: false, drift: true, message: msg };
   }
-  return { ok: true, drift: false, message: `preview.html 槽位数据与真实一致（${data.realOrder.length} 槽位）` };
+  return { ok: true, drift: false, message: `preview.html 槽位数据与真实一致（${slotData.realOrder.length} 槽位）` };
 }
 
 // ---------- CLI 入口 ----------

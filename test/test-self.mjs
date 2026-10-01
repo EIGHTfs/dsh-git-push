@@ -109,7 +109,7 @@ test('parseArgv：--ruleset / --weights 识别（G7 CLI 对齐）', () => {
 });
 
 test('parseArgv：--level 已删除（审计固定完整流程，不再是合法参数）', () => {
-  // 2026-09-17：审计强度不是用户可配项，CLI 的 --level 随之删除。
+  // 审计强度不是用户可配项，CLI 的 --level 随之删除。
   // 仍传 --level 应被当作未知参数拒绝（而非静默忽略），避免用户以为强度生效了。
   const r = parseArgv(['--level', 'quick']);
   assert.ok(r.error, '--level 应报错');
@@ -206,12 +206,12 @@ test('同步：真实写入到临时目录（幂等）', async () => {
 test('同步：常量声明齐全', () => {
   assert.ok(SYNC_ENTRIES.includes('lib'));
   assert.ok(SYNC_EXCLUDE.includes('node_modules'));
-  // 2026-09-14：备份与回收站不得进安装副本（scripts/*.bak 曾被同步进 <插件目录>/scripts/）
+  // 备份与回收站不得进安装副本（scripts/*.bak 曾被同步进 <插件目录>/scripts/）
   assert.ok(SYNC_EXCLUDE.includes('.bak'), 'SYNC_EXCLUDE 必须排除 .bak（含 .bak-<后缀>）');
   assert.ok(SYNC_EXCLUDE.includes('.trash'), 'SYNC_EXCLUDE 必须排除 .trash 回收站');
 });
 
-// 2026-09-14：实测返回集，确保排除规则真的作用于 listSyncFiles（不只是常量里写了名字）
+// 实测返回集，确保排除规则真的作用于 listSyncFiles（不只是常量里写了名字）
 test('同步：listSyncFiles 返回集不含 .bak / .trash 残留', async () => {
   const files = await listSyncFiles(ROOT);
   const bad = files.filter((f) => f.includes('.bak') || f.includes('.trash'));
@@ -219,9 +219,9 @@ test('同步：listSyncFiles 返回集不含 .bak / .trash 残留', async () => 
   assert.ok(files.length > 0, '同步清单不应为空');
 });
 
-// 2026-09-13：SYNC_ENTRIES 曾漏 client.js（侧边栏前端主文件当时在仓库根），
+// SYNC_ENTRIES 曾漏 client.js（侧边栏前端主文件当时在仓库根），
 //   而 package.json 的 files 白名单里有它 → 同步到已安装副本时前端改动装不进去。
-//   2026-09-19：client.js 移到 lib/client.js，随 'lib' 整目录同步，此类漏列风险消除；
+// client.js 移到 lib/client.js，随 'lib' 整目录同步，此类漏列风险消除；
 //   断言保留——仍锁死 files 白名单与 SYNC_ENTRIES 一致，避免以后新增发布文件又漏同步。
 test('同步：SYNC_ENTRIES 覆盖 package.json files 白名单', () => {
   const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
@@ -229,7 +229,7 @@ test('同步：SYNC_ENTRIES 覆盖 package.json files 白名单', () => {
     assert.ok(SYNC_ENTRIES.includes(f),
       `package.json files 里的 ${f} 未在 SYNC_ENTRIES 中——同步会漏掉它（发布有、安装副本无）`);
   }
-  // 2026-09-27：审计豁免文件必须随插件发布——SYNC_ENTRIES 曾漏 .auditignore，安装副本豁免失效
+  // 审计豁免文件必须随插件发布——SYNC_ENTRIES 曾漏 .auditignore，安装副本豁免失效
   assert.ok(SYNC_ENTRIES.includes('.auditignore'), 'SYNC_ENTRIES 必须含 .auditignore（审计豁免随插件发布）');
   assert.ok(SYNC_ENTRIES.includes('.gitignore'), 'SYNC_ENTRIES 必须含 .gitignore');
 });
@@ -262,7 +262,7 @@ test('推送准备：cordis.patch.yml 存在且含 insert 写法', () => {
   assert.ok(yml.includes('dsh-git-push'));
 });
 
-// 2026-09-18：克隆防护回归 —— 目标位于既有 git 仓库工作树内时必须拒绝。
+// 克隆防护回归 —— 目标位于既有 git 仓库工作树内时必须拒绝。
 //   背景：cloneViaApi 末尾要 git init/add/commit 建初始提交；目标若在既有仓库内
 //   （哪怕目标目录尚不存在），git init 在 CIFS 上会 chmod 失败静默留下未初始化目录，
 //   随后的 add/commit 便向上命中父仓库 .git，把父仓库全部内容作为一次提交写进其历史
@@ -292,7 +292,7 @@ test('clone 防护：目标位于既有仓库工作树内必须拒绝', async ()
     '被拒绝时不得留下目标目录');
 });
 
-// 2026-09-19：CLI 补齐的 5 个命令（clone / account-check / remote-create /
+// CLI 补齐的 5 个命令（clone / account-check / remote-create /
 //   set-visibility / gen-ssh-key）——与插件同名工具一一对应。
 //   这些用例全部**离线**：只验证「命令已接线、参数校验、退出码」三件事，
 //   不发网络请求、不写远端、不动本机凭据（联网部分由 clone e2e 覆盖）。

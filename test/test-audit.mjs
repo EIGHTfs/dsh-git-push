@@ -102,7 +102,7 @@ test('auditFull：func-lines 检测超长函数（sub/c.js 60+ 行函数）', as
 });
 
 test('func-lines 误报回归：函数体内正则含反斜杠花括号不得把短函数算成超长', () => {
-  // 2026-09-17 实测踩坑：scripts/scan-file-io.mjs 的 isFnSignature（真身 8 行）里有一条判断
+  // 实测踩坑：scripts/scan-file-io.mjs 的 isFnSignature（真身 8 行）里有一条判断
   //   函数签名的正则，模式中含转义的 `\{`。旧实现按整行 match(/\{/g) 计数，把正则内部的花括号
   //   也算进来 → depth 永不归零 → 一路吞并后面 234 行，报「单函数 242 行」blocker，提交被自身
   //   审计拦下。本用例用最小样本锁住该行为，防止回归。
@@ -127,7 +127,7 @@ test('func-lines 误报回归：函数体内正则含反斜杠花括号不得把
 });
 
 test('架构收敛：函数长度/密度的判定全部来自 AST 层，checks 层不自行出结论', () => {
-  // 2026-09-17：checkFuncLines 曾是「AST 版 + 自建正则版」两套独立判定并行——正则版自己找
+  // checkFuncLines 曾是「AST 版 + 自建正则版」两套独立判定并行——正则版自己找
   //   函数起点、自己数花括号、自己判行数，既与 AST 版重复报同一函数，又因未剥离字面量产生
   //   严重误报。现要求判定权收归 AST（checkFuncLinesAst / checkFuncDensityAst），
   //   checks 层只做「调 AST → 转 finding」。本用例锁住该分工，防止再长出第二套实现。
@@ -183,7 +183,7 @@ test('collectChangedFiles：git 仓库变动列表（M + ??）', () => {
   assert.deepEqual(statuses, ['??', 'M']);
 });
 
-// 2026-09-18：两条审计路径都必须能跑完。上一版接入「静默失明」检测时，
+// 两条审计路径都必须能跑完。上一版接入「静默失明」检测时，
 //   在 auditChanged 里误用了 auditFull 才有的变量名（files 而非 targets），
 //   导致 diff 审计抛 ReferenceError——而当时的测试只覆盖了 auditFull，
 //   漏网直到真实提交时才炸。此用例锁死两条路径的返回值与不抛异常。
@@ -359,7 +359,7 @@ test('checkRepeated：ignoreValues 生效（忽略清单内的串不报）', () 
   assert.equal(checkRepeated({ file: 'a.js', text, rules }).length, 0);
 });
 
-// 2026-09-27 防回归：repeated-string 与 min-occurrences 合并去重（同一文本只报一条）
+// 防回归：repeated-string 与 min-occurrences 合并去重（同一文本只报一条）
 test('checkRepeated：repeated-string + min-occurrences 合并传同一文本只报一条', () => {
   const rules = [
     { id: 'a/no-duplicate-code', kind: 'min-occurrences', severity: 'warning', threshold: 3, dimensions: ['可维护性'] },
@@ -538,7 +538,7 @@ test('checkFuncLinesAst：函数长度按非注释行判定（注释行不占预
 test('client-node-builtin-require：根目录 Node 构建脚本不误报，真 client 代码仍拦截', async () => {
   const root = mkdtempSync(join(tmpdir(), 'dshgp-dshrule-'));
   try {
-    // 2026-10-02：dsh 槽位只对 dsh 插件项目加载（项目类型过滤）——测试仓库须声明
+    // dsh 槽位只对 dsh 插件项目加载（项目类型过滤）——测试仓库须声明
     //   dsh- 前缀名，否则 dsh 槽位被整体过滤、本测试断言全空（Pawchive 误报修复的新行为）
     writeFileSync(join(root, 'package.json'), JSON.stringify({ name: 'dsh-test-rules', version: '1.0.0' }) + '\n');
     // ① 根目录 .cjs 构建脚本（build.cjs 场景）：CommonJS Node 专属格式，require('fs') 正常

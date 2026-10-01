@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * README 生成脚本（独立运行，2026-09-29 自 lib/readme-gen/index.js 抽出）
+ * README 生成脚本（独立运行——自 lib/readme-gen/index.js 抽出，插件代码与文档生成脚本分离）
  *
  * 从插件工具 git_gen_readme 抽离为独立脚本；插件仅引用文档/skill，不再内置生成能力。
  * 用途：按模板生成仓库 README（占位符 {{name}}/{{description}}/{{version}}/{{toc}}/{{versionTable}}）。

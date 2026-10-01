@@ -1,5 +1,5 @@
 /**
- * CLI 与源码直接调用全量审计结果一致性测试（2026-09-23）：
+ * CLI 与源码直接调用全量审计结果一致性测试：
  *   git-sluice audit <repo> --full --json 的输出必须与直接 import auditFull 调用完全一致
  *   （files / findings / summary）——防止 CLI 通道丢字段、stdout 被进度噪音污染导致 JSON 不可解析。
  * 测试仓库：临时 git 仓库（含 .gitignore 忽略文件 + 中文文件名 + 普通文件），小规模跑得快。

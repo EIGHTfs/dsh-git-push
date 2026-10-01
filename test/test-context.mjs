@@ -1,6 +1,6 @@
 /**
  * 上下文注入测试（0.1.7）：环境注入文本生成/解析、路径归属判定。
- * 2026-09-20：追加工具清单 json 模板（lib/tool-probes.json）读取与运行目录落盘测试。
+ * 追加工具清单 json 模板（lib/tool-probes.json）读取与运行目录落盘测试。
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';

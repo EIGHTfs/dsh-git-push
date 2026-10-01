@@ -1,7 +1,7 @@
 /**
  * 1.1.9 回归：注入系统提示词（总开关 + 三段内容 + README 版本校验）。
  *
- * 需求（2026-09-13）：①侧边栏「审计」选项卡新增「注入系统提示词」开关（默认开）
+ * 需求：①侧边栏「审计」选项卡新增「注入系统提示词」开关（默认开）
  *   ②注入内容只到目录级：工具安装路径 + 工作区目录 + skill 总入口一行 + 插件功能用法
  *   ③原「注入全部 skill 内容 / 注入 repo-index 全文」两开关废弃移除
  *   ④scan-version 增加「README 版本号 vs package.json version」校验。
@@ -115,9 +115,9 @@ test('client 源码：toggle 动作在 inject() 中暴露（漏了会 onChange �
   assert.ok(rootClientSrc.includes('toggleInjectSystemPrompt: (checked) => this.toggleInjectSystemPrompt(checked)'),
     'inject() 必须暴露 toggleInjectSystemPrompt');
   assert.ok(/toggleInjectSystemPrompt\(checked\)\s*\{/.test(rootClientSrc), 'controller 必须有该方法实现');
-  // 2026-09-14：持久化统一走 persistSetting（HTTP /settings-set 落盘，兼容 scope.set 双通道）；
+  // 持久化统一走 persistSetting（HTTP /settings-set 落盘，兼容 scope.set 双通道）；
   //   绕过 client isLoopback=memory 下 scope.set 不发 wire、设置重启丢失的问题
-  // 2026-09-15：toggle 统一走 commitSetting 公共入口（内部调 persistSetting 落盘）
+  // toggle 统一走 commitSetting 公共入口（内部调 persistSetting 落盘）
   assert.ok(rootClientSrc.includes('this.commitSetting(\'injectSystemPrompt\''),
     'toggle 必须走 commitSetting（HTTP 落盘，非 memory 陷阱）');
   assert.ok(rootClientSrc.includes('commitSetting(key, value, okMsg = \'\')'),
@@ -163,11 +163,11 @@ test('host：注册三段（功能用法 990 / README 991 / 要求清单 992）+
   for (const name of ['dsh-git-push-usage', 'dsh-git-push-readme-check', 'dsh-git-push-requirements']) {
     assert.ok(applySrc.includes(`name: '${name}'`), `应注册 ${name} 段`);
   }
-  // 2026-09-20：环境段迁出 systemPrompt → agent/pre-step 上下文注入（不再注册 dsh-git-push-env section）
+  // 环境段迁出 systemPrompt → agent/pre-step 上下文注入（不再注册 dsh-git-push-env section）
   assert.ok(!/name: 'dsh-git-push-env'/.test(applySrc), '环境段不应再注册为 systemPrompt section');
   assert.ok(applySrc.includes('registerPreStepInjection'), 'apply 必须接线上下文注入');
   assert.ok(applySrc.includes('collectToolPaths(null, { resultFile:'), '环境注入必须探测并落盘运行目录 tools.json');
-  // 2026-09-16：order 值提取为命名常量（ORDER_USAGE/ORDER_README_CHECK/ORDER_REQUIREMENTS），
+  // order 值提取为命名常量（ORDER_USAGE/ORDER_README_CHECK/ORDER_REQUIREMENTS），
   //   断言改为「常量定义 + 各段引用」——顺序语义不变（要求清单 992 > README 991 > 用法 990）
   assert.ok(/const ORDER_USAGE = 990/.test(applySrc), '功能用法段排序常量应为 990');
   assert.ok(/const ORDER_README_CHECK = 991/.test(applySrc), 'README 段排序常量应为 991');
@@ -199,7 +199,7 @@ test('上下文注入：cwd 必须取会话工作区（agent.session.header.cwd�
 });
 
 test('host：设置页切换总开关即时生效（启动 merge + HTTP，watch 不灌开关）', () => {
-  // 2026-09-15：开关真源是 config.json（启动 merge + HTTP settings-set）；
+  // 开关真源是 config.json（启动 merge + HTTP settings-set）；
   //   watch 不得再 applySettingsToCfg(cfg, next)——yaml 缺键会用 schema 默认 false 盖掉勾选
   assert.ok(applySrc.includes('const changed = applySettingsToCfg(cfg, fileSettings)'),
     '启动必须从 config.json merge 进 cfg');

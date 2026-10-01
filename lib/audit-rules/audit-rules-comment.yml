@@ -130,7 +130,10 @@ rules:
     category: "documentation"
     severity: "warning"
     description: "日期属于 git commit（author date + diff + message），不应写进代码注释；注释只解释「为什么这么做」，不记录「什么时候改的」——变更历史交给版本控制"
-    pattern: "(?://|\\*|#)\\s*[^\n]*\\d{4}[-/.]\\d{1,2}[-/.]\\d{1,2}"
+    # 2026-10-02 修：负向断言 `(?![\d.])`——日分量后不能是数字（防 \d{1,2} 只匹配日的一部分
+    #   绕过断言）也不能是 `.`（排除文件名引用 BUGFIX-NOTES-2026-09-14.md——文件名含日期是
+    #   历史命名，删了引用失真；注释里引用文件名不算「写日期」）。
+    pattern: "(?://|\\*|#)\\s*[^\n]*\\d{4}[-/.]\\d{1,2}[-/.]\\d{1,2}(?![\\d.])"
     whitelist_patterns:
       - "@since"
       - "@deprecated"

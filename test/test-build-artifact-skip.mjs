@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-// ---------- 构建/混淆产物跳过专项测试（2026-10-05，Pawchive 混淆产物样本固化） ----------
+// ---------- 构建/混淆产物跳过专项测试（Pawchive 混淆产物样本固化） ----------
 // 背景：1.12.1 内置 hash 产物豁免失效（external 化后 ext 通道丢豁免）→ Pawchive 混淆产物
 //   短名密爆 5896 条误报。抽取 Pawchive 真实 hash 产物样本（TimeZoneComboBox-CRnoCikG.js 407B）
 //   作 fixture，固化「跳过混淆」判定与执行路径（内置 auditFile + ext 通道都不报混淆产物）。

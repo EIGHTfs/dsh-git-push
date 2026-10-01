@@ -1,5 +1,5 @@
 /**
- * Java/Kotlin 语言路由与专项规则测试（2026-10-06）：
+ * Java/Kotlin 语言路由与专项规则测试：
  * ① AST 层 lib/ast/lang.js——javaKtFuncRanges（方法签名+括号配对）、detectLang；
  * ② checkNameLengthAst 的 Java/Kotlin 分支（类型+短名声明、fun 函数名）；
  * ③ checkComplexityAst 的 Java/Kotlin 路由（按方法区间数分支点）；
@@ -174,7 +174,7 @@ test('auditFile：JS 文件不受 java 规则影响（exts 过滤）', async () 
   assert.ok(!findings.some((f) => f.rule && f.rule.startsWith('java/')), 'JS 文件不应触发 java/* 规则');
 });
 
-// ---------- 复杂度口径（2026-10-02 用户标准） ----------
+// ---------- 复杂度口径（用户标准） ----------
 test('checkComplexityAst：do-while 计 1（do 不进分支集合）', async () => {
   const { checkComplexityAst } = await import('../lib/ast/control-flow.js');
   const dw = 'function f() { do { x(); } while (a); }';
@@ -271,4 +271,32 @@ test('checkMaxLines：无函数纯脚本超长不豁免（保持 warning）', as
   const f = checkMaxLines({ file: 'top.js', text: top.join('\n'), rules: [rule] });
   assert.equal(f.length, 1);
   assert.equal(f[0].severity, 'warning', '无函数脚本超长不豁免');
+});
+
+// ---------- 2026-10-02 Pawchive 误报修复 ----------
+test('checkMinLength：空 rules 短路（filterRulesByExt 裁剪后空数组不再误跑）', async () => {
+  const { checkMinLength } = await import('../lib/checks/structural.js');
+  // JS 文件只剩 java/python 规则（exts 不适用）→ 空数组 → 应短路不产出（此前 threshold 默认 2 照跑报裸 min-length）
+  const js = 'const c = 1;\nlet h = 2;\n';
+  assert.equal(checkMinLength({ file: 'a.js', relPath: 'a.js', text: js, rules: [] }).length, 0, '空 rules 应短路不产出');
+  // 非空规则正常产出（JS 真短名该报）
+  const r = [{ id: 'readability/variable-min-length', threshold: 2, severity: 'warning', dimensions: ['可读性'] }];
+  const hits = checkMinLength({ file: 'a.js', relPath: 'a.js', text: js, rules: r });
+  assert.ok(hits.length >= 1, 'JS const 短名（真短名）应正常报');
+  assert.ok(hits.every((x) => x.rule === 'readability/variable-min-length'), '带规则 id 不应 fallback 裸 min-length');
+});
+
+test('checkNameLengthAst：Java 分支排除流程关键字（return/if/new 后短名不误报）', async () => {
+  const { checkNameLengthAst } = await import('../lib/ast/naming.js');
+  // return q / if (h) / new Q( 不是「类型 短名」声明——Java 分支不应报
+  const flow = 'function f() { return q; if (h) { g(); } const n = new Q(); }';
+  const hits = checkNameLengthAst(flow, { min: 2 });
+  assert.ok(!hits.some((x) => ['q', 'h'].includes(x.name)), `return/if 后短名不应被 Java 分支当声明报：${JSON.stringify(hits)}`);
+});
+
+test('checkNameLengthAst：Java 真类型+短名仍报（int q / int w）', async () => {
+  const { checkNameLengthAst } = await import('../lib/ast/naming.js');
+  const java = 'public class T { private int q; public void f() { int w = 5; } }';
+  const hits = checkNameLengthAst(java, { min: 2 });
+  assert.deepEqual(hits.map((x) => x.name).sort(), ['q', 'w'], 'Java int q/w 真短名应报');
 });

@@ -1,5 +1,5 @@
 /**
- * clone 并发与中止（2026-09-18）。
+ * clone 并发与中止。
  *
  * 现象（用户实测）：点克隆报「创建目录失败: ENOTEMPTY: directory not empty,
  *   rmdir '.../gallery/.dsh-parts'」，但**报错之后下载仍在继续**：
@@ -349,7 +349,7 @@ test('clone 续传：残留清理必须保留 .dsh-parts 分片', () => {
     '只含 .dsh-parts 的目录必须被识别为可自愈残留，否则用户重试会一直撞「目录非空」');
 });
 
-// ---------- 后台 job 化（2026-09-19）：克隆不再阻塞 HTTP 请求 ----------
+// ---------- 后台 job 化：克隆不再阻塞 HTTP 请求 ----------
 test('clone 后台化：占用中提交被 409 拒绝（不能因后台化而丢掉互斥）', async () => {
   __resetCloneJobs();
   const { handleHttp } = await import('../lib/app/http-handlers.js');
@@ -395,7 +395,7 @@ test('clone 后台化：缺 target/dir 仍同步回 400（参数错误不该进�
 test('clone 后台化：提交成功后 HTTP 立即返回，且不残留未捕获的后台异常', async () => {
   // 这条用**非联网**方式验证契约：后台协程的 .catch 必须存在，否则
   //   异常会绕过 finishCloneJob → current 永不释放 → 之后所有 clone 永久 busy。
-  // 2026-09-29：repo-clone 逻辑迁到 lib/app/handlers/clone.js（handleRepoClone），
+  // repo-clone 逻辑迁到 lib/app/handlers/clone.js（handleRepoClone），
   //   锚点从端点字符串改为「handleRepoClone 函数 → 文件尾」。
   const src = readFileSync(join(ROOT, 'lib/app/handlers/clone.js'), 'utf8');
   const segRaw = src.slice(src.indexOf('export async function handleRepoClone'), src.indexOf('export function handleCloneLogs'));
