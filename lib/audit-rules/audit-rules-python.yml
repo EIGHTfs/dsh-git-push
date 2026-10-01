@@ -96,10 +96,11 @@ rules:
 
   # ----- 2. 可维护性 -----
   - id: python/max-cyclomatic-complexity
-    name: "Python 圈复杂度不超过 15"
+    name: "Python 圈复杂度不超过 10（50 以上 blocker）"
     category: "maintainability"
-    severity: "warning"
-    description: "过高的圈复杂度表示函数逻辑分支过多（Python 版）"
-    max_complexity: 15
+    severity: "blocker"
+    description: "圈复杂度评级（2026-10-02 用户口径）：1~10 良好、11~20 中等（warning）、21~50 高风险（warning，应拆分）、50+ 极难维护（blocker 拦提交）——分支点：if/elif 每分支、for/while、try/except、with/assert、and/or"
+    max_complexity: 10
+    block_complexity: 50
     exts: ["py"]
     fixable: false

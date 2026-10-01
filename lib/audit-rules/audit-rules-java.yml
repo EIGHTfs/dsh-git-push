@@ -95,10 +95,11 @@ rules:
 
   # ----- 2. 可维护性 -----
   - id: java/max-cyclomatic-complexity
-    name: "Java/Kotlin 圈复杂度不超过 15"
+    name: "Java/Kotlin 圈复杂度不超过 10（50 以上 blocker）"
     category: "maintainability"
-    severity: "warning"
-    description: "过高的圈复杂度表示方法逻辑分支过多（Java/Kotlin 版；Kotlin when 计入分支点）"
-    max_complexity: 15
+    severity: "blocker"
+    description: "圈复杂度评级（2026-10-02 用户口径）：1~10 良好、11~20 中等（warning）、21~50 高风险（warning，应拆分）、50+ 极难维护（blocker 拦提交）——分支点：if/else if 每分支、for/while/do-while、case 每分支、catch、&&/||/??、三元 ?、带标签 break/continue、Kotlin when 计入"
+    max_complexity: 10
+    block_complexity: 50
     exts: ["java", "kt"]
     fixable: false

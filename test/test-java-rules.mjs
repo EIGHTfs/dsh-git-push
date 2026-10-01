@@ -174,7 +174,67 @@ test('auditFile：JS 文件不受 java 规则影响（exts 过滤）', async () 
   assert.ok(!findings.some((f) => f.rule && f.rule.startsWith('java/')), 'JS 文件不应触发 java/* 规则');
 });
 
-// ---------- 聚合型 vs 臃肿型（max-lines） ----------
+// ---------- 复杂度口径（2026-10-02 用户标准） ----------
+test('checkComplexityAst：do-while 计 1（do 不进分支集合）', async () => {
+  const { checkComplexityAst } = await import('../lib/ast/control-flow.js');
+  const dw = 'function f() { do { x(); } while (a); }';
+  const hits = checkComplexityAst(dw, { warn: 1, block: 50 });
+  assert.equal(hits[0]?.complexity, 2, 'do-while 应计 2（基数1+while1），do 不重复计');
+});
+
+test('checkComplexityAst：带标签 break/continue +1，普通 break 不计', async () => {
+  const { checkComplexityAst } = await import('../lib/ast/control-flow.js');
+  const lb = 'function g() { outer: for (let i=0;i<3;i++) { for (let j=0;j<3;j++) { if (j>1) break outer; } } }';
+  const hits = checkComplexityAst(lb, { warn: 1, block: 50 });
+  assert.equal(hits[0]?.complexity, 5, '带标签 break 计 5（基数1+for2+if1+break1）');
+  // 普通 break（switch case 收尾）不计；default 不是 case 分支也不计
+  const sw = 'function h(x) { switch (x) { case 1: break; case 2: break; default: break; } }';
+  const hits2 = checkComplexityAst(sw, { warn: 1, block: 50 });
+  assert.equal(hits2[0]?.complexity, 3, 'switch 计 3（基数1+case2），普通 break 与 default 不计');
+});
+
+test('checkComplexityAst：else if 每分支 +1', async () => {
+  const { checkComplexityAst } = await import('../lib/ast/control-flow.js');
+  const ei = 'function h(a) { if (a===1) return 1; else if (a===2) return 2; else if (a===3) return 3; return 0; }';
+  const hits = checkComplexityAst(ei, { warn: 1, block: 50 });
+  assert.equal(hits[0]?.complexity, 4, 'else if 计 4（基数1+if×3）');
+});
+
+test('max-complexity 规则：threshold 10 / block 50 编译透传 + severity blocker', async () => {
+  const { loadRuleFiles } = await import('../lib/rule/loader.js');
+  const { compileAllRules } = await import('../lib/rule/registry.js');
+  await import('../lib/rule/compilers.js');
+  const loaded = loadRuleFiles();
+  const compiled = compileAllRules(loaded.merged.rules, { errors: [] });
+  for (const id of ['maintainability/max-cyclomatic-complexity', 'java/max-cyclomatic-complexity', 'python/max-cyclomatic-complexity']) {
+    const r = compiled.find((x) => x.id === id);
+    assert.ok(r, id + ' 应编译');
+    assert.equal(r.threshold, 10, id + ' warning 阈值应为 10');
+    assert.equal(r.block, 50, id + ' blocker 阈值应为 50');
+    assert.equal(r.severity, 'blocker', id + ' severity 应为 blocker（cap 后 10-50 warning / 50+ blocker）');
+  }
+});
+
+test('checkComplexity：分档——良好不报/中等/高风险/极难维护 blocker', async () => {
+  const { loadRuleFiles } = await import('../lib/rule/loader.js');
+  const { compileAllRules } = await import('../lib/rule/registry.js');
+  const { checkComplexity } = await import('../lib/checks/structural.js');
+  await import('../lib/rule/compilers.js');
+  const loaded = loadRuleFiles();
+  const compiled = compileAllRules(loaded.merged.rules, { errors: [] });
+  const nr = compiled.find((r) => r.id === 'maintainability/max-cyclomatic-complexity');
+  const mk = (n) => ['function f() {', ...Array.from({ length: n }, (_, i) => `if (v${i} > ${i}) { w${i}(); }`), '}'].join('\n');
+  assert.equal(checkComplexity({ file: 'ok.js', relPath: 'ok.js', text: mk(9), rules: [nr] }).length, 0, '9 分支（10）良好不报');
+  const mid = checkComplexity({ file: 'mid.js', relPath: 'mid.js', text: mk(11), rules: [nr] })[0];
+  assert.equal(mid.severity, 'warning', '11 分支（12）中等 warning');
+  assert.ok(mid.message.includes('中等'), 'message 应标中等');
+  const hi = checkComplexity({ file: 'hi.js', relPath: 'hi.js', text: mk(25), rules: [nr] })[0];
+  assert.equal(hi.severity, 'warning', '25 分支（26）高风险 warning');
+  assert.ok(hi.message.includes('高风险'), 'message 应标高风险');
+  const mon = checkComplexity({ file: 'mon.js', relPath: 'mon.js', text: mk(60), rules: [nr] })[0];
+  assert.equal(mon.severity, 'blocker', '60 分支（61）极难维护 blocker（拦提交）');
+  assert.ok(mon.message.includes('极难维护'), 'message 应标极难维护');
+});
 test('checkMaxLines：聚合型（文件大但函数都合规）降级 info', async () => {
   const { checkMaxLines } = await import('../lib/checks/structural.js');
   const lines = ['public class Agg {'];
