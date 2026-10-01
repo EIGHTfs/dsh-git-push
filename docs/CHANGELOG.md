@@ -7,7 +7,7 @@
 
 | 版本 | 内容 |
 |------|------|
-| 2.1.1 | 复杂度规则口径优化（用户标准）：①阈值对齐——max_complexity 10（1~10 良好）、新增 block_complexity 50（50+ 极难维护 blocker 拦提交，severity 升 blocker 让两档真生效，此前恒 warning 形同虚设）②算法补全——else if 每分支、do-while 计 1（do 不进分支集合）、case 每分支、catch、&&/||/??、三元 ?、带标签 break/continue +1（普通 break 不计）、Python else 不计（elif 才是新分支）③message 分档——中等（11~20）/高风险（21~50 应拆分）/极难维护（50+ 拦提交）；nodejs/java/python 三规则统一 |
+| 2.1.1 | 复杂度规则口径优化——阈值 10 + blocker 50 真生效 + 算法补全 + message 分档 |
 | 2.1.0 | Java/Kotlin 专项规则 + AST 语言路由 + 误报批量修复 + preview 数据自动生成；版本表 doc-version 聚合同步（2.1.0 由 git log 权威生成入表） |
 | 2.0.8 | 修 /git-audit 斜杠命令「无摘要」回归（format 适配 code_audit 新返回）→ 2.0.8 |
 | 2.0.6 | 工具清单单源化 + 14 工具描述精简全面重写 → 2.0.6 |
