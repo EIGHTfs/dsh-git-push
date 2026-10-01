@@ -7,7 +7,7 @@
 
 | 版本 | 内容 |
 |------|------|
-| 2.1.3 | versioning 规则重设计——0.x 合法开发期（调研驱动，来源 ai-work-archive/开发者文档/版本号设计调研-SemVer与业界实践-20261002.md）：①删 3 条 0.x 禁止规则（version/major-zero、embedded-major-zero、readme-zero-title）——SemVer 2.0.0 §4 明确 0.y.z 是开发初始阶段、一切可随时改变；Go v0=无兼容承诺、v1+ 可破坏 v0 用户；Cargo 0.y.z 语义压缩（y 当 major、z 当 minor、0.0.z 永远 major）②version 槽位 8→5（保留格式/提交节奏/README 同步）③skill versioning-rule.md 重写第二节「1 开头硬规则」→「0.x 合法开发期 → 1.0 稳定线」（1.0 稳定线=正式环境/稳定 API 被依赖/担心兼容）+ 检修清单/更新步骤/基线表同步 ④orchestrate 清理 version 0.x 冗余过滤、audit-file 清理 isVersionInPathContext 死豁免 ⑤测试更新（0.x 全场景合法断言） |
+| 2.1.3 | versioning 规则重设计——0.x 合法开发期（SemVer §4 + Go/Cargo 官方，调研驱动） |
 | 2.1.2 | 项目类型规则适配——非 dsh 项目误报消除（Pawchive 539→512/blocker 10→3） |
 | 2.1.1 | 复杂度规则口径优化——阈值 10 + blocker 50 真生效 + 算法补全 + message 分档 |
 | 2.1.0 | Java/Kotlin 专项规则 + AST 语言路由 + 误报批量修复 + preview 数据自动生成；版本表 doc-version 聚合同步（2.1.0 由 git log 权威生成入表） |
