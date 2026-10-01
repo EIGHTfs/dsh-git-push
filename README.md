@@ -159,7 +159,7 @@ src/vendor.js       # 单文件豁免审计
 | go / rust / swift / cpp / php | 各 0（占位） | 语言专用规则占位槽位——放 yml 即生效，规则待补（AST 语言路由已预留，2.1.0） |
 | frontend | 19 | 前端安全 / a11y / 依赖 |
 | npm | 10 | 依赖声明 / npmrc 凭据 / 测试入口 |
-| version | 8 | 版本号规范（0.x 起步仅 dsh 插件查——独立工具 v0.x 合法，2.1.2） |
+| version | 5 | 版本号规范（X.Y.Z 格式 / tag / 提交节奏；**0.x 合法开发期**——SemVer §4，1.0 稳定线，2.1.3） |
 | dsh | 7 | DSH 插件契约 / 注入通道（仅 dsh- 前缀插件项目加载——非 dsh 项目 require node 内置不误报，2.1.2） |
 | comment | 6 | 注释措辞 / 对话残留 |
 | folder | 6 | 目录总数 / 单目录文件数 / 解包特征 / .gitignore / cd 到可能不存在的目录 / 写文件到 .gitignore 忽略目录 |

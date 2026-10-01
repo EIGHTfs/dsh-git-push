@@ -2,7 +2,7 @@
  * 项目类型规则适配测试（2026-10-02，Pawchive 误报消除驱动）：
  * ① dsh 槽位只对 dsh 插件项目加载（package.json name dsh- 前缀）——非 dsh 项目
  *   require('fs'/'node:sqlite') 是 Node 后端正常用法，不再误报（Pawchive 7 条实测）
- * ② versioning 0.x 两条只对 dsh 插件查——0.x 独立工具 v0.x 合法（Pawchive 18 条实测）
+ * ② version 0.x 全场景合法（2026-10-02 规则重设计——0.x 开发期不再报；原「非 dsh 放行」过滤逻辑保留于 orchestrate，规则已删故为兜底）
  * ③ timeout-on-external-api 限 js 系——md 文档不再被正则命中（Pawchive docs md 实测）
  * ④ folder 遍历尊重 .gitignore——被忽略目录（上游克隆）不计入 total-count（Pawchive 76 目录实测）
  */
@@ -30,14 +30,14 @@ test('非 dsh 项目：dsh/* 规则不加载（require node 内置不误报）',
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
 
-test('非 dsh 项目：version 0.x 规则放行（v0.x 合法）', async () => {
-  const root = mkRepo({ name: 'my-tool' }); // 独立工具（非 dsh 插件）
+test('version 0.x 全场景合法：v0.x 不再报（2026-10-02 规则重设计——SemVer §4 0.x 开发期合法）', async () => {
+  const root = mkRepo({ name: 'my-tool' }); // 独立工具
   try {
     writeFileSync(join(root, 'README.md'), '# My Tool\n\n## v0.2.0\n- first release\n\n## v0.1.0\n- init\n');
     writeFileSync(join(root, 'lib.js'), 'const VERSION = "v0.2.0";\n');
     const res = await auditFull(root);
-    const v0 = (res.findings || []).filter((f) => /version\/(embedded-major-zero|readme-zero-title)/.test(String(f.rule)));
-    assert.equal(v0.length, 0, `非 dsh 独立工具的 v0.x 不应报：${v0.map((f) => f.rule).join(',')}`);
+    const v0 = (res.findings || []).filter((f) => /version\/(embedded-major-zero|readme-zero-title|major-zero)/.test(String(f.rule)));
+    assert.equal(v0.length, 0, `0.x 合法开发期不应有 version 0.x 命中（规则已删）：${v0.map((f) => f.rule).join(',')}`);
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
 
