@@ -17,6 +17,9 @@ rules:
     threshold: 30
     # 排除项在遍历时剪枝（不含其子目录）——见 lib/checks/folder.js 的 excludedNames。
     # .trash：安全删除约定的回收站（gitignore），是回收站不是源码，计入会虚增目录数。
+    # ⚠️ 工程/资源目录（gradle/docs/res 等）不在此列：exclude_dirs 会被 collector 的
+    #    SKIP_DIRS 消费（loadYamlBlacklistDirs）→ 全局跳过审计。工程目录的 total-count
+    #    排除在 folder.js 按名称过滤（只影响计数，不影响 collector 遍历）。
     exclude_dirs:
       - "node_modules"
       - "node_modules.orig"

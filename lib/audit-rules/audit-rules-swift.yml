@@ -1,0 +1,22 @@
+# ============================================================
+# Swift 代码审计规则集（占位）
+# 版本：0.1.0
+# 适用：Swift 项目（iOS/macOS）
+# 描述：⚠️ 占位槽位——语言专项规则待补。放入此文件即完成「槽位就绪」：
+#       审计系统自动发现本槽位（放 audit-rules-*.yml 即生效，零代码改动）。
+#       当前 Swift 文件由 nodejs 槽位的语言无关规则（凭据/路径穿越/文件健康度等）兜底审计，
+#       语言相关规则（短名/魔数/函数长度/复杂度/嵌套）待补 AST 层 swiftFuncRanges 后启用。
+# 待办（补规则时）：① AST 层 lang.js 的 LANG_FUNC_RANGES.swift 实现函数范围收集
+#       （func 关键字 + 花括号配对，含 `func name()` 与 `func name() async throws`）；
+#       ② 本槽位按 python/java 先例写规则，exts: ["swift"]。
+# ============================================================
+
+metadata:
+  name: "Swift 审计规则集（占位）"
+  version: "0.1.0"
+  language: "swift"
+  author: "DeepSeek"
+  description: "Swift 项目语言专用规则（占位——规则待补，槽位已就绪）"
+  last_updated: "2026-10-06"
+
+rules: []

@@ -292,6 +292,7 @@ rules:
     category: "security"
     severity: "warning"
     description: "inline 事件属性（onclick= 等）在油猴脚本环境可能受限"
+    exts: ["html", "htm"]
     patterns:
       - "on(click|change|input|submit)\\s*=\\s*['\"]"
     fixable: true

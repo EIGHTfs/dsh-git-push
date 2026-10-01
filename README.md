@@ -154,6 +154,9 @@ src/vendor.js       # 单文件豁免审计
 | 槽位 | 规则数 | 检查内容 |
 |---|---|---|
 | nodejs | 37 | 凭据硬编码 / 路径穿越 / 魔数 / 依赖 / 异步等 |
+| java | 7 | Java/Kotlin 专属：短名 / 魔数 / 嵌套 / 方法长度 / 文件长度 / 注释密度 / 圈复杂度（exts: [java, kt]，2.1.0 新增） |
+| python | 7 | Python 专属：短名 / 魔数 / 嵌套 / 函数长度 / 文件长度 / 注释密度 / 圈复杂度（exts: [py]） |
+| go / rust / swift / cpp / php | 各 0（占位） | 语言专用规则占位槽位——放 yml 即生效，规则待补（AST 语言路由已预留，2.1.0） |
 | frontend | 19 | 前端安全 / a11y / 依赖 |
 | npm | 10 | 依赖声明 / npmrc 凭据 / 测试入口 |
 | version | 8 | 版本号规范 |
@@ -213,6 +216,7 @@ dsh-git-push/
 │   │   ├── io-risk-fn.js — IO 风险分级·函数边界识别与 token 配对：认普通/箭头/方法简写/类方法，圆括号花括号方括号前后向配对
 │   │   ├── io-risk-loop.js — IO 风险分级·循环判定：循环内/迭代器表达式（只执行一次）/小字面量数组降级/collectRanges 范围收集
 │   │   ├── io-risk.js — IO 风险分级（四级）判定与评分：scanIoRiskAst 判定上下文/类别 → summarizeIoRisk 统计 → rankIoFixList 优先级清单；并再导出下列三个从属模块的公共符号
+│   │   ├── lang.js — 语言路由（2026-10-06）：detectLang 内容启发式检测 + javaKtFuncRanges（Java/Kotlin 方法签名+括号配对函数范围）+ LANG_FUNC_RANGES 主流语言占位
 │   │   ├── magic-number.js — 硬编码魔数识别（豁免版本号/日期/状态码）
 │   │   ├── naming.js — 命名检查（标识符长度/函数名过短/受控小文件读取）
 │   │   ├── scope.js — 变量作用域分类器（module/function/loop 行号区间 + 模块常量赋值判定）
@@ -238,19 +242,25 @@ dsh-git-push/
 │   │   ├── slot.js — 按规则包聚合审计命中（拦截/警告/通过）
 │   ├── audit-rules/ — 规则包 yml（nodejs/npm/frontend/comment/dsh/private/structure 等动态槽位）
 │   │   ├── audit-rules-comment.yml — 注释类规则（黑名单措辞/对话残留）（规则包 comment）
+│   │   ├── audit-rules-cpp.yml — C/C++ 规则包（占位：规则待补，槽位就绪）（规则包 cpp）
 │   │   ├── audit-rules-docs.yml — 文档类规则（README/文档措辞）（规则包 docs）
 │   │   ├── audit-rules-dsh.yml — DSH 生态规则（宿主/插件约定）（规则包 dsh）
 │   │   ├── audit-rules-filehealth.yml — 文件健康度规则（三维分级）（规则包 filehealth）
 │   │   ├── audit-rules-folder.yml — 目录级规则（目录数/单目录文件数）（规则包 folder）
 │   │   ├── audit-rules-frontend.yml — 前端规则（按钮绑定/魔数）（规则包 frontend）
+│   │   ├── audit-rules-go.yml — Go 规则包（占位：规则待补，槽位就绪）（规则包 go）
 │   │   ├── audit-rules-i18n.yml — i18n 规则（文案硬编码检查）（规则包 i18n）
+│   │   ├── audit-rules-java.yml — Java/Kotlin 规则（短名/魔数/方法长度/复杂度，exts: [java,kt]）（规则包 java）
 │   │   ├── audit-rules-nodejs.yml — Node.js 规则（同步 fs/空 catch）（规则包 nodejs）
 │   │   ├── audit-rules-npm.yml — npm 规则（package.json 规范）（规则包 npm）
 │   │   ├── audit-rules-performance.yml — 性能规则（规则包 performance）
+│   │   ├── audit-rules-php.yml — PHP 规则包（占位：规则待补，槽位就绪）（规则包 php）
 │   │   ├── audit-rules-private.yml — 私密文件规则（凭据/私密清单）（规则包 private）
 │   │   ├── audit-rules-python.yml — （待注释）
 │   │   ├── audit-rules-robustness.yml — 健壮性规则（规则包 robustness）
+│   │   ├── audit-rules-rust.yml — Rust 规则包（占位：规则待补，槽位就绪）（规则包 rust）
 │   │   ├── audit-rules-structure.yml — 结构规则（命名/规模/复杂度）（规则包 structure）
+│   │   ├── audit-rules-swift.yml — Swift 规则包（占位：规则待补，槽位就绪）（规则包 swift）
 │   │   ├── audit-rules-template.yml — 规则模板（新规则包起点）（规则包 template）
 │   │   ├── audit-rules-version.yml — 版本规则（版本一致性）（规则包 version）
 │   ├── checks/ — 检查层（按 kind 调用检查器：正则/语义/结构/文件健康/按钮绑定/私密文件）
@@ -340,6 +350,7 @@ dsh-git-push/
 │   ├── doc-func.mjs — （待注释）
 │   ├── doc-tree.mjs — （待注释）
 │   ├── doc-version.mjs — （待注释）
+│   ├── gen-preview.mjs — preview.html 槽位数据自动生成器（gen 打印 / --write 写盘 / check 查漂移——__SLOTS__/__FAKE__ 从 listRuleSlots 真实生成，新增规则槽位不再手工维护）
 │   ├── module-splitter.py — 巨型单文件按顶层块拆分脚本（analyze/split/verify 三命令，python3 零依赖；module_splitter 工具与 CLI 的底层实现）
 │   ├── preview-server.mjs — 本地真实后端测试服务（preview.html 接真实 handleHttp）
 │   ├── probe-recheck.mjs — 探针：「重新检测」按钮链路实测（在线校验 token/SSH）
@@ -402,6 +413,7 @@ dsh-git-push/
 │   ├── test-inject-switch.mjs — 注入开发者要求清单子开关回归
 │   ├── test-inject-system-prompt.mjs — 注入系统提示词回归
 │   ├── test-io-risk.mjs — IO 风险分级测试（四级判定/字段完整性/汇总/排序/finding 转换）
+│   ├── test-java-rules.mjs — Java/Kotlin 语言路由与专项规则测试（javaKtFuncRanges/短名/复杂度/规则联动/聚合型降级）
 │   ├── test-link-check.mjs — 链接判断测试（分级扣分/断网不拦）
 │   ├── test-magic-number.mjs — 硬编码魔数检测测试
 │   ├── test-module-splitter.mjs — module_splitter 工具 + CLI 接入测试（契约 + 行为 + 脚本随插件发布）

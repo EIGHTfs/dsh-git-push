@@ -24,6 +24,24 @@ test('isBuildArtifactFile：手写文件判 false（不误伤）', async () => {
   assert.equal(isBuildArtifactFile('lib/client.js', 'export function add(a, b) { return a + b; }\n'), false, '普通源码不判产物');
   assert.equal(isBuildArtifactFile('scripts/KToolBox-env-compat.js', 'const x = 1;\n'), false, '纯小写连字符词（env-compat）不是产物 hash');
   assert.equal(isBuildArtifactFile('scripts/fast-skip-benchmark.js', 'const y = 2;\n'), false, 'benchmark 手写文件不误伤');
+  assert.equal(isBuildArtifactFile('lib/helper.utils.js', 'const c = 3;\n'), false, '4 字符点分段（utils）不是产物 hash');
+  assert.equal(isBuildArtifactFile('lib/my.module.helpers.js', 'const d = 4;\n'), false, 'helpers 纯小写段不是产物 hash');
+});
+
+test('isBuildArtifactFile：webpack 点分隔 hash 文件名判 true（2026-10-06 漏判修复）', async () => {
+  const { isBuildArtifactFile } = await import('../lib/audit/audit-file.js');
+  // pix-ezviewer 实测漏判源：webpack/CRA 标准产物是 *.<HASH>.js 点分隔（连字符正则匹配不到）
+  assert.equal(isBuildArtifactFile('docs/static/js/runtime-main.d37830b0.js', 'const x=1;\n'), true, '点分隔 hash（runtime-main.d37830b0.js）判产物');
+  assert.equal(isBuildArtifactFile('docs/static/js/main.83b810ac.chunk.js', 'const y=2;\n'), true, 'chunk 形态点分隔 hash 判产物');
+  assert.equal(isBuildArtifactFile('docs/static/js/2.5d35b740.chunk.js', 'const z=3;\n'), true, '数字前缀 chunk 判产物');
+});
+
+test('isBuildArtifactFile：html 引用 hash 静态资源判 true（2026-10-06 新增）', async () => {
+  const { isBuildArtifactFile } = await import('../lib/audit/audit-file.js');
+  const cra = '<script defer="defer" src="/static/js/main.83b810ac.chunk.js"></script>\n<script src="/static/js/runtime-main.d37830b0.js"></script>';
+  assert.equal(isBuildArtifactFile('docs/index.html', cra), true, 'CRA/docusaurus index.html 引用 hash js 判产物');
+  assert.equal(isBuildArtifactFile('docs/index.html', '<script src="/static/js/main.js"></script>'), false, '引用普通 js 非产物');
+  assert.equal(isBuildArtifactFile('index.html', ''), false, '空 html 非产物');
 });
 
 test('isBuildArtifactFile：单行混淆（>5000 字符）判 true', async () => {

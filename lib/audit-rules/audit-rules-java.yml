@@ -1,0 +1,104 @@
+# ============================================================
+# Java/Kotlin 代码审计规则集
+# 版本：1.0.0
+# 适用：Java / Kotlin 项目（含 Android）
+# 描述：按文件类型识别路由——.java/.kt 文件由本槽位承载语言无关规则，
+#       nodejs 槽位的同类规则不再接管 Java/Kotlin（2026-10-06 划分，对齐 Python 先例）。
+# 背景：全量审计 pix-ezviewer（Android，143 kt + 25 java）时 nodejs slot 对 Java
+#       套 JS 规则（方法长度/复杂度/短名全失效），而 AST 层此前只支持 JS+Python。
+#       修复：① AST 层加语言路由 lib/ast/lang.js——javaKtFuncRanges（方法签名 +
+#       括号配对）供函数长度/复杂度/嵌套使用，checkNameLengthAst 加 Java/Kotlin
+#       分支（类型+短名声明、fun 函数名）；② 本槽位承接 Java/Kotlin 文件的语言
+#       无关规则（命名/长度/复杂度/嵌套/魔数）。
+# 检查器复用：max_depth/max_lines/max_complexity/min_length 由 numeric-kinds
+#       编译器自动派发（同 nodejs/pyl 一套检查器，tokenizer 支持 Java/Kotlin 语法：
+#       //、/* */、字符串、泛型尖括号、Kotlin fun/val/var）。
+# ============================================================
+
+metadata:
+  name: "Java/Kotlin 审计规则集"
+  version: "1.0.0"
+  language: "java"
+  author: "DeepSeek"
+  description: "Java/Kotlin 项目语言无关规则：命名规范、魔数、方法长度、嵌套深度、圈复杂度"
+  last_updated: "2026-10-06"
+
+rules:
+  # ----- 1. 可读性 -----
+  # 全部规则 exts: ["java", "kt"]——本槽位只审计 Java/Kotlin 文件（文件类型识别路由的落点）。
+  # Kotlin 的 .kts / Gradle 构建脚本（.gradle.kts）不在列——构建脚本是配置不是应用代码。
+
+  - id: java/variable-min-length
+    name: "Java/Kotlin 标识符长度不少于 2 个字符"
+    category: "readability"
+    severity: "warning"
+    description: "过短的标识符（如单字母变量/字段/参数）降低代码可读性（Java/Kotlin 版）"
+    min_length: 2
+    exts: ["java", "kt"]
+    exceptions: ["i", "j", "k", "n", "e", "x", "y", "z", "s", "id", "ok"]
+    fixable: false
+
+  - id: java/magic-number
+    name: "Java/Kotlin 硬编码魔数检测（枚举成员豁免版）"
+    kind: "magic-number-smart"
+    category: "readability"
+    severity: "warning"
+    description: "检测硬编码魔数，自动豁免版本号/日期/HTTP 状态码/常见常量/枚举成员（Java enum/Kotlin enum class 体内的大写 NAME = 数字）"
+    magic_number_hints: ["timeout", "retry", "max", "min", "limit", "size", "count", "port", "interval", "delay", "duration", "threshold", "buffer", "chunk", "padding", "spacing"]
+    legitimate_hints: ["version", "date", "year", "month", "day", "hour", "minute", "second", "http", "status"]
+    force_count: 3
+    exts: ["java", "kt"]
+    fixable: true
+    mitigation: "提取命名常量并注释含义：private static final int MAX_RETRY = 3; 版本号/日期/HTTP 状态码/常见常量/枚举成员自动豁免"
+
+  - id: java/max-nesting-depth
+    name: "Java/Kotlin 嵌套过深（> 4 层）"
+    category: "readability"
+    severity: "warning"
+    description: "代码嵌套超过 4 层（如 for→for→if→if），可读性灾难，应提前 return 或抽方法（Java/Kotlin 版）"
+    max_depth: 4
+    exts: ["java", "kt"]
+    fixable: false
+
+  - id: java/max-function-length
+    name: "Java/Kotlin 方法长度不超过 50 行"
+    category: "readability"
+    severity: "warning"
+    description: "过长的方法难以理解和维护（Java/Kotlin 版）"
+    max_lines: 50
+    exts: ["java", "kt"]
+    # 序列化/反序列化职责方法豁免——Api response 模型类（Pixiv 项目）的
+    #   Json 序列化代码行数天然超长，拆分复杂化数据传递与生命周期（同 python 先例）
+    scope_rules:
+      - scope: "serialization"
+        action: "exempt"
+        reason: "序列化/反序列化职责方法：Json 模型类是数据载体，超 50 行是职责自然形态"
+    fixable: true
+
+  - id: java/max-file-length
+    name: "Java/Kotlin 文件总行数不超过 400 行"
+    category: "readability"
+    severity: "warning"
+    description: "单文件超过 400 行时应拆分（Java/Kotlin 版；存量超大文件为已知债务，仅提醒不拦截）"
+    max_lines: 400
+    exts: ["java", "kt"]
+    fixable: false
+
+  - id: java/comment-density
+    name: "Java/Kotlin 行注释密度过高（注释复述代码）"
+    category: "readability"
+    severity: "warning"
+    description: "变量即注释——语义明确的代码里标识符已表达内容，额外的行注释不加深理解；只保留具有隐性约束、复杂设计、外部契约、非显然决策的块注释（Javadoc/doc comment 不计，属设计说明）"
+    threshold: 0.4
+    exts: ["java", "kt"]
+    fixable: false
+
+  # ----- 2. 可维护性 -----
+  - id: java/max-cyclomatic-complexity
+    name: "Java/Kotlin 圈复杂度不超过 15"
+    category: "maintainability"
+    severity: "warning"
+    description: "过高的圈复杂度表示方法逻辑分支过多（Java/Kotlin 版；Kotlin when 计入分支点）"
+    max_complexity: 15
+    exts: ["java", "kt"]
+    fixable: false

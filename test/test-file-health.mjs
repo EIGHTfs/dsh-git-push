@@ -80,3 +80,44 @@ test('file-health：规则条目可覆盖阈值（warn_score 降低→更敏感�
 test('file-health：空 rules / 无匹配规则 → 空结果', () => {
   assert.equal(checkFileHealth({ file: 'a.js', relPath: 'a.js', text: big(100), rules: [] }).length, 0);
 });
+
+// ---------- 2026-10-06 误报修复：注释/行长/聚合型 ----------
+test('file-health：行长按代码行计——注释内嵌示例 JSON 不再 L4（Java response 类误报源）', () => {
+  // Javadoc 注释里 dump 整个 API 响应 JSON（单行 27 万字符），代码行长却很短
+  const commentJson = '    /** response : {"id":1,"name":"x","data":' + 'A'.repeat(200000) + '} */';
+  const body = [
+    'public class Resp {',
+    '    private int id;',
+    commentJson,
+    '    public int getId() { return id; }',
+    '}',
+  ].join('\n');
+  const f = checkFileHealth({ file: 'Resp.java', relPath: 'app/responses/Resp.java', text: body, rules: [rule()] });
+  assert.equal(f.length, 0, '注释内嵌超长 JSON 不应触发行长 L4（注释不计行长/行数/大小）');
+});
+
+test('file-health：聚合型（文件大但函数都合规）行数/大小豁免', () => {
+  // 1200 行：3 个小函数 + 大量顶层小语句（有函数且都 ≤50 行）→ 聚合型 → 健康
+  const lines = ['function a(){const x=1;}', 'function b(){const y=2;}', 'function c(){const z=3;}'];
+  for (let i = 0; i < 1200; i++) lines.push(`const v${i} = ${i};`);
+  const f = checkFileHealth({ file: 'agg.js', relPath: 'agg.js', text: lines.join('\n'), rules: [rule()] });
+  assert.equal(f.length, 0, '聚合型（最大函数 ≤50）不按行数/大小扣分');
+});
+
+test('file-health：无函数纯脚本超长不豁免（保持 warning）', () => {
+  // 无函数（maxFunctionLength=0）→ 无「函数多」证据 → 不豁免
+  const f = checkFileHealth({ file: 'top.js', relPath: 'top.js', text: big(1200), rules: [rule()] });
+  assert.equal(f.length, 1);
+  assert.equal(f[0].severity, 'warning');
+});
+
+test('file-health：臃肿型（文件大因藏超大函数）不豁免——正常按行数计', () => {
+  const lines = ['function bigOne(){'];
+  for (let i = 0; i < 80; i++) lines.push(`const v${i} = ${i};`);
+  lines.push('}');
+  for (let i = 0; i < 1100; i++) lines.push(`const w${i} = ${i};`);
+  const f = checkFileHealth({ file: 'fat.js', relPath: 'fat.js', text: lines.join('\n'), rules: [rule()] });
+  assert.equal(f.length, 1);
+  assert.equal(f[0].severity, 'warning', '存在超大函数时文件大仍按行数计分');
+  assert.ok(f[0].message.includes('最大函数'), 'message 应显示最大函数行数');
+});

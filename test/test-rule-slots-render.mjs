@@ -166,17 +166,20 @@ test('schema：不再保留无人读写的死字段 ruleSlotMeta', () => {
 test('预览页：槽位数据取自真实规则文件，不得与真实实例脱节', async () => {
   // 手写槽位清单曾只写 6 个 → 预览里只显示 6 个槽位，被误当成「只显示 6 个」的回归。
   //   这里比对生成的 preview.html 与真实 listRuleSlots() 结果，锁死两者一致。
+  // 2026-10-06：数据由 scripts/gen-preview.mjs 自动生成（此前手工维护 33K JSON 串，
+  //   新增槽位漏改即失败）——本测试直接调脚本的 checkPreviewDrift 断言无漂移，
+  //   并顺带锁死「脚本生成结果与测试预期一致」（防脚本自身改契约）。
+  const { checkPreviewDrift, buildPreviewSlotData, readPreviewSlotData } = await import('../scripts/gen-preview.mjs');
+  const drift = checkPreviewDrift();
+  assert.ok(drift.ok, drift.message);
+
   const { listRuleSlots } = await import('../lib/app/http-handlers.js');
   const real = listRuleSlots(undefined, [], null);
   const realOrder = real.order.filter((s) => s !== 'template');
 
   const html = readFileSync(join(ROOT, 'assets/preview.html'), 'utf8');
-  const metaMatch = html.match(/window\.__SLOTS__ = (\{.*?\});/s);
-  const fakeMatch = html.match(/window\.__FAKE__ = (\{.*?\});/s);
-  assert.ok(metaMatch, 'preview.html 应包含 __SLOTS__ 假数据');
-  assert.ok(fakeMatch, 'preview.html 应包含 __FAKE__ 快照假数据');
-  const previewMeta = JSON.parse(metaMatch[1]);
-  const previewOrder = JSON.parse(fakeMatch[1])._order || [];
+  const previewMeta = readPreviewSlotData(html)?.meta || {};
+  const previewOrder = readPreviewSlotData(html)?.order || [];
 
   assert.deepEqual(previewOrder, realOrder, '预览的槽位顺序应与真实生效顺序一致');
   assert.deepEqual(Object.keys(previewMeta).sort(), Object.keys(real.meta).sort(),
@@ -184,4 +187,9 @@ test('预览页：槽位数据取自真实规则文件，不得与真实实例�
   for (const slot of realOrder) {
     assert.equal(previewMeta[slot]?.name, real.meta[slot]?.name, `${slot} 的显示名应与真实一致`);
   }
+
+  // 脚本生成的数据 = 测试直接比对的真实数据（数据源单一，防脚本改契约）
+  const generated = buildPreviewSlotData();
+  assert.deepEqual(generated.realOrder, realOrder, 'gen-preview 的 order 应与 listRuleSlots 一致');
+  assert.deepEqual(Object.keys(generated.meta).sort(), Object.keys(real.meta).sort(), 'gen-preview 的槽位集合应与 listRuleSlots 一致');
 });
