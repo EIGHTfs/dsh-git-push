@@ -70,19 +70,22 @@ test('resolveAuditRepo：空路径 = 会话 cwd，不再回落家根', () => {
   assert.equal(resolveAuditRepo('sub', {}), '');
 });
 
-test('formatGitAuditCommandText：失败走 error；成功含 block + blocker 文件', () => {
+test('formatGitAuditCommandText：失败走 error；成功含评分计数 + 拦截列表（新返回结构）', () => {
   assert.equal(formatGitAuditCommandText({ ok: false, error: '缺仓库' }), '缺仓库');
   const text = formatGitAuditCommandText({
     ok: true,
-    block: '【审计】ok',
-    findings: [
-      { file: 'a.js', line: 3, rule: 'secret-key', severity: 'blocker' },
-      { file: 'b.js', line: 1, rule: 'style', severity: 'warning' },
-    ],
+    repo: '/repo/x', scope: 'full',
+    summary: { blocker: 1, warning: 2, notice: 3, total: 6 },
+    quality: { score: 62, level: 'C' },
+    blocked: [{ file: 'a.js', line: 3, rule: 'secret-key', message: 'x' }],
   });
-  assert.match(text, /【审计】ok/);
+  assert.match(text, /审计 \/repo\/x（全量）/);
+  assert.match(text, /评分 62\/C · 1 拦截 \/ 2 警告 \/ 3 提示/);
   assert.match(text, /a\.js:3（secret-key）/);
   assert.doesNotMatch(text, /b\.js/);
+  // 空结果不再输出「无摘要」（修复回归——block/findings 已从 code_audit 移除）
+  const empty = formatGitAuditCommandText({ ok: true, summary: {}, quality: {} });
+  assert.doesNotMatch(empty, /无摘要/);
 });
 
 test('runGitAuditCommand：未分类空路径 → error，不扫家根', async () => {

@@ -7,6 +7,7 @@
 
 | 版本 | 内容 |
 |------|------|
+| 2.0.8 | 修 /git-audit 斜杠命令「无摘要」回归——formatGitAuditCommandText 依赖 code_audit 旧返回 block/findings（1.11.5 已移除）→ lines 空输出「审计完成（无摘要）」；改用新返回 summary（计数）+ quality（评分）+ blocked（拦截列表），空结果不再「无摘要」；测试更新（新结构断言 + 无摘要不出现）；回归 913 tests / 911 pass 全绿 |
 | 2.0.7 | magic-number 豁免扩展（Pawchive 驱动——env 兜底 1.12.1 已豁免，本次收剩余形态）——①const 表意名豁免（const barW=18——≥3 字符即命名常量；单字母 const a 仍报）②命名常量嵌套对象/数组内值豁免（MAGIC={JPEG:[0xff…]}——回跳窗口 12→40）③比较阈值豁免（n < 1048576——比较即界限）④AbortSignal.timeout 配置参数豁免（setTimeout 回调用时长是魔数上下文仍报——525 用例保持）；Pawchive magic 75→63；回归 913 tests / 911 pass 全绿 |
 | 2.0.6 | 工具清单单源化 + 描述精简全面重写——lib/app/tools.js 改为从 command-registry.js TOOL_REGISTRY 生成（删手写 148 行双源；增删工具只改注册表一处）；注册表补全 git_sluice（tools.js 有但注册表漏）→ 共 14 工具；宿主注册补齐 io_scan/git_clone_preview（此前 tools.js 未注册——宿主看不到）；14 工具 description 重写为「精简但全面」（一句话用途 + 关键用法/要求/风险——新手看得懂且信息全）；回归 909 tests / 908 pass 全绿 |
 | 2.0.5 | 新手指引——README 加「快速开始（第一次用）」（①AI 直接用工具 ②独立 CLI 四步 ③侧边栏面板——不用查源码）；CLI help 顶部加快速开始段（account-check → scan → audit → commit 四步 + help）；回归 909 tests / 907 pass 全绿 |
