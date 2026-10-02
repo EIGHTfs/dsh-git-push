@@ -7,7 +7,7 @@
 
 | 版本 | 内容 |
 |------|------|
-| 2.2.1 | token API 配额实时查询显示（/rate_limit）+ 凭据区去重（删重复分项行）+ 预览服务 --local 免重启模式 |
+| 2.3.0 | 版本兼容自动切换——client 不再依赖 settingsScope 注入服务（DSH 0.2.0 已移除，entry pending 报 Failed to load plugins），特性检测：0.1.6 用真 scope / 0.2.0 用 fallback（配置真源本就走 HTTP config.json，行为一致） |
 | 2.2.0 | git_clone 后台 job 化 + UI 显示 API 通道配额 |
 | 2.1.4 | 插件自身优化 + 存量债务整理（合并 4 批本地提交为一次推送） |
 | 2.1.3 | versioning 规则重设计——0.x 合法开发期（SemVer §4 + Go/Cargo 官方，调研驱动） |
