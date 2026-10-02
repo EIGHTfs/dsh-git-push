@@ -1,7 +1,9 @@
 ---
 name: dsh-git-push
-description: dsh-git-push 插件手册（10 总入口 + 7 工具 + YAML 规则包 + 客户端设置 UI）。说明 git_scan / git_commit_push / code_audit / git_clone / git_remote_create / git_set_visibility / link_check 七个工具的调用方法，审计规则包（lib/audit-rules/*.yml 动态槽位）、豁免标记（dsh-skip-*）、质量评分（10 维度加权）、HTTP API 鉴权（Origin + confirm）、独立运行（git-sluice CLI）、官方 CLI 安装与客户端 UI 修复实录（2026-09-12：Controller+hooks+独立 section 页，修复 scope.use 崩溃与 Host 缺 settings.register 两个根因）。处理「提交推送代码」「扫描仓库状态」「审计代码」「规则包怎么加规则」「被审计拦截怎么豁免」「链接检查」「插件装了不生效」「设置侧边栏空白」「配置卡不出」「侧边栏没有 git-push」类请求时加载。
-whenToUse: 需要用插件做 git 提交推送 / 代码审计 / 规则包定制 / 报错排查时。
+description: dsh-git-push 插件开发与使用手册：工具参数/返回、HTTP 路由与鉴权、设置项、规则包与豁免、源码定位。处理插件用法与改插件类请求时加载。
+whenToUse: 查工具参数细节、排查插件报错、改插件源码（定位到文件与函数）时。
+updated: 2026-10-02
+generatedBy: deepseek-official/deepseek-v4-flash · EIGHTfs 2026-10-02
 ---
 
 # dsh-git-push 插件手册
@@ -213,3 +215,65 @@ node scripts/readme-gen.mjs <repoPath> [--write <path>] [--template <path>]
 ### 9.5 旧体系废弃（2026-09-29）
 
 旧函数文档体系（`functions_index` 插件工具 + `scripts/func-index.js` + `scripts/functions-doc.mjs` + `docs/函数/*.md` + `functions-index.json`）已**整体废弃删除**，由 `doc-func.mjs` 取代（单文件 `docs/FUNCTIONS.md` 带标记块，不再每文件一个 md）。审计分体检查（appendSplitDocsCheck）对 `dshgp-version` / `dshgp-functions` 宿主 md 做存在性校验。
+
+---
+
+## 附录 A、工具参数与返回（原「功能说明书」并入）
+
+> 本节原为独立 skill `dsh-git-push-functions`，按同类合并并入本手册。架构：**10 总入口**（规则/审计/git/自身/侧边栏/评分/豁免/上下文/HTTP/测试），每个入口一个 `lib/` 子目录。
+
+| 工具 | 参数（必填加粗） | 返回 / 实现 |
+|------|------------------|-------------|
+| `git_scan` | `root?`、`paths?`（逗号分隔额外仓库）、`extraReposFile?`（每行一个，`#` 注释，实时读） | 各仓库分支/remote/未提交数/最近活动；`lib/git/index.js` `scanRepos` |
+| `git_commit_push` | **`repo`**、**`message`**、`audit`(默认 true)、`push`(默认 true)、`dryRun`(false)、`force`、`requirementsConfirmed`、`paths?` | 审计 → 敏感文件加 .gitignore → add → commit → push；push 前 fetch 检查 ahead/behind，远端领先不推；`commitAndPush` |
+| `code_audit` | **`repo`**、`scope`(`full`/缺省=仅变动，非 git 目录退化全量)、`llm?`、`ruleset?`（自定规则目录=整体替换）、`weights?`（JSON 覆盖） | blocker/warning 清单 + quality 0-100（A/B/C/D）；`auditWithScope`/`auditFull`/`auditChanged` |
+| `git_clone` | **`target`**、`dest?`（非空目录拒绝防覆盖）、`branch?` | 只走 api.github.com Git Data API（`git/trees`+`git/blobs`），不跟随 302、不直连 codeload；`cloneViaApi` |
+| `git_remote_create` | **`repo`**、`visibility?`(默认 private)、`dryRun?` | 同名存在则复用，否则创建并把 origin 指向 API 地址；`ensureRemoteRepo` |
+| `git_set_visibility` | **`repo`**、**`visibility`** | `PATCH /repos/{owner}/{repo}` 的 private 字段；改 public 前须确认无凭据暴露；`setVisibility` |
+| `link_check` | `path?`（缺省 workspaceRoot） | 分级扣分（404/403 −3、DNS −2、超时/5xx −1，flaky 域名 ×0.2）；**只 warning 永不 blocker**；并发 10；`checkLinks`/`probeLinks` |
+| `git_gen_readme` | **`repo`**、`writePath?`（缺省只返回内容） | 模板优先级：插件 `template/README.md` > 内置 `readme.yml` > 代码兜底；版本表由 `git log --reverse` 聚合；`genReadme` |
+
+**接线层**（`lib/plugin/index.js`，Host 侧四段真实 API）：工具 `ctx.inject(['tools'])` → `register(defineTool(spec))`（`output.render` **必须返回块数组**）；提示词注入 `inject(['systemPrompt'])` → `section({name, order, text})`；HTTP `inject(['webServer'])` → `register({kind:'prefix', path, handler})`；客户端**不在此注册**（由 package.json `dsh.client` + `exports["./client"]` 自动发现）。
+
+## 附录 B、HTTP API 与鉴权
+
+| 方法 | 路由 | 说明 |
+|------|------|------|
+| GET | `/api/git-push/scan` | 扫描仓库 |
+| POST | `/api/git-push/audit` | 审计（`{repo, scope?, llm?}`） |
+| POST | `/api/git-push/commit` | 提交推送（`{repo, message, push?, confirm?}`） |
+| POST | `/api/git-push/clone`、`/repo-clone` | 克隆（`/repo-clone` 走后台任务，返回 202 + jobId） |
+| POST | `/api/git-push/remote-create` | 建仓 |
+| POST | `/api/git-push/visibility` | 切可见性（需 `confirm: true`） |
+| POST | `/api/git-push/rebuild-history` | 重建历史（需 `confirm: true`） |
+| GET | `/api/git-push/link-check`、`/clone-progress`、`/clone-logs`、`/account-status`、`/api-quota` | 只读查询 |
+
+鉴权（`lib/http/index.js` `authPipeline`）：① 写方法必须带同源 `Origin`（缺 → 403，跨域 → 403）；② 破坏性操作需 body `confirm: true`（否则 400）；③ body > 5 MB → 413；④ GET/OPTIONS 免鉴权。
+
+## 附录 C、设置项与三处同源
+
+- 设置项：`auditEnabled`（默认 false）、`auditScanScope`（diff|full）、`maxScanFiles`、`weightOverrides`、`pushMethod`、`pushGate`、`maxCloneFileMB`、`cloneConcurrency` 等
+- **三处同源**（新增项必须三处同加，`test-client.mjs` 断言一致性）：`lib/index.js` 的 `Config`（服务端 schema）+ `lib/client/index.js` 的 `SETTINGS_SCHEMA` + `client.js` 的 `SCHEMA`/`zh`
+- 审计固定完整流程（无强度档位）：正则/黑名单/凭据/路径/同步 IO/空 catch + AST 语义检查（func-lines / 复杂度 / 嵌套深度 / 文件行数 / 重复串 / 语义 / 凭据文件 / 命名长度）
+- 自定规则包：目录里每个 `audit-rules-<名>.yml` 即一个槽位，放文件即生效、删文件即移除；指向空目录会装载 0 条规则（`errors` 有记录），不静默沿用内置包
+
+## 附录 D、规则包 / 豁免 / 评分（源码定位）
+
+| 模块 | 关键实现 |
+|------|----------|
+| `lib/rule/` | `loader.js` `discoverRuleSlots` / `resolveSlotOrder` / `loadRuleFiles`（合并多槽位，返回 `{ok, merged, order, files, errors}`）；`registry.js` `compileRule`（统一入口，永不修改）+ `registerCompiler`（扩展点，**有序匹配**：宽泛 detect 必须排在专用之后）；`compilers.js` 各 kind 实现，`safeRe()` 默认大小写不敏感 |
+| `lib/exempt/` | `EXEMPT_MARKERS` 注册 `dsh-skip-*`（含可豁免 kind 与是否行级）；`CATEGORY_EXEMPT` + `isCategoryExempt()` 处理文件类别豁免（test/、scripts/ 的 console-log / sync-fs / 空 catch）；`exemptForFinding()` 单条判定 |
+| `lib/audit/` | `index.js` `makeFinding`/`summarize`/`auditFile`/`auditFull`/`auditChanged`/`auditWithScope`；`checks.js` `runChecks` 按 kind 分发 + `checkPrivateFiles`；`glob.js` 零依赖 glob→RegExp；`collector.js` `collectTextFiles`（gitignore 感知）/`collectChangedFiles` |
+| `lib/score/` | `ast.js` `tokenize` + 各 AST 检查器；`index.js` `DEFAULT_WEIGHTS`（10 维度合计 100）/`countByDimension`/`scoreQuality` |
+| `lib/self/` + `cli.mjs` | `VERSION` 是版本号单一事实源（`scripts/scan-version.mjs` 校验）；`cli.mjs` 子命令 version/ruleset/scan/audit/link-check/readme-template/yaml-template/self-check；CLI 选项白名单与 HELP 文本由 `self-check` 机器比对 |
+
+## 附录 E、坑速查（补充）
+
+| 现象 | 原因 / 处理 |
+|------|-------------|
+| 插件改动刷新看不到 | 真实加载源是 `<profile>/local-plugins/<插件名>`，只同步 `node_modules/` 无效；用 `scripts/sync-plugin.mjs --write` 同步两处 |
+| 规则不生效 | 槽位动态发现，确认文件名 `audit-rules-<名>.yml` 且在 `lib/audit-rules/` |
+| 统计数字矛盾（0 blocker 0 warning 但 total > 0） | error 级计入拦截级，看 findings 的 `severity` |
+| 豁免写了没用 | 整文件豁免须在前 3 行；行级豁免须写在命中行 |
+| 函数/复杂度被报为 blocker | 规则 `severity` 是上限，检查器不越级；报 blocker 说明 yml 里写的就是 error/blocker |
+| 克隆大文件反复失败 | 失败项的分片必须保留（`.dsh-parts`）才能跨轮 Range 续传；同轮清理分片会让大文件永远从 0 重来 |

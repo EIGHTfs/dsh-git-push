@@ -175,7 +175,6 @@
   "scripts/sync-plugin.mjs": "双副本同步脚本（源仓库 → 部署安装副本）",
   "scripts/watch-preview.mjs": "preview.html 自动重生成监听（源码变更即重建）",
   "skills": "插件权威 skill（功能手册/规则/使用说明，安装副本的 skills/ 同步）",
-  "skills/dsh-git-push-functions.md": "插件功能说明书（工具参数/HTTP API/源码定位）",
   "skills/dsh-repo-index.md": "dsh-repo-index skill（源码索引权威说明）",
   "test": "node:test 全量单元测试（541+ 条，覆盖审计/推送/账号/HTTP/后台任务）",
   "test/.test": "空文件豁免标记（目录级豁免 .test 目录）",
@@ -259,122 +258,17 @@
     "worktree": {
       "README.md": {
         "status": "M",
-        "mtime": "2026-10-02T11:57:10.056Z",
+        "mtime": "2026-10-02T12:13:12.276Z",
         "note": "注释可能需更新"
       },
-      "docs/FUNCTIONS.md": {
+      "skills/dev/dsh-git-push.md": {
         "status": "M",
-        "mtime": "2026-10-02T11:57:09.967Z",
+        "mtime": "2026-10-02T12:13:04.672Z",
         "note": "注释可能需更新"
       },
-      "scripts/browser-page-probe.mjs": {
-        "status": "M",
-        "mtime": "2026-10-02T11:53:41.590Z",
-        "note": "注释可能需更新"
-      },
-      "skills/dsh-repo-index.md": {
-        "status": "M",
-        "mtime": "2026-10-02T11:50:43.104Z",
-        "note": "注释可能需更新"
-      },
-      "skills/git-workflow-gitpush/README.md": {
+      "skills/dsh-git-push-functions.md": {
         "status": "D",
         "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "skills/git-workflow-gitpush/commit-checkpoint-before-push-reorg.md": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "skills/git-workflow-gitpush/file-organize-git-first.md": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "skills/git-workflow-gitpush/git-collab-conflict.md": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "skills/git-workflow-gitpush/git-commit-before-batch-ops.md": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "skills/git-workflow-gitpush/git-commit-feature-progress.md": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "skills/git-workflow-gitpush/git-project-read-history.md": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "skills/git-workflow-gitpush/git-rebuild-process.md": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "skills/git-workflow-gitpush/git-remote-align-first.md": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "skills/git-workflow-gitpush/github-api-only.md": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "skills/git-workflow-gitpush/github-fallback-restore.md": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "skills/git-workflow-gitpush/github-pin-repos.md": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "skills/git-workflow-gitpush/move-delete-git-checkpoint.md": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "skills/git-workflow-gitpush/readme-sync-git-md.md": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "skills/git-workflow-gitpush/skill-every-change-commit-repo.md": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "skills/git-workflow-gitpush/versioning-rule.md": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "skills/task-completion-report.md": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "skills/tool-json-add-ask.md": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "skills/guide/": {
-        "status": "A",
-        "mtime": "2026-10-02T11:52:43.592Z",
-        "note": "注释可能需更新"
-      },
-      "skills/workflow/": {
-        "status": "A",
-        "mtime": "2026-10-02T11:56:45.826Z",
         "note": "注释可能需更新"
       }
     }
@@ -463,5 +357,6 @@
   "test/test-func-doc-drift.mjs": "（待注释）",
   "test/test-private-gate.mjs": "（待注释）",
   "test/test-quota-write.mjs": "（待注释）",
-  "test/test-visibility-unified.mjs": "（待注释）"
+  "test/test-visibility-unified.mjs": "（待注释）",
+  "docs/诊断-审计误报-第三方项目语料.md": "（待注释）"
 }

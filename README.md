@@ -464,9 +464,9 @@ dsh-git-push/
 │   ├── 方案-tree-doc变动追踪与函数文档.md — （待注释）
 │   ├── 方案-审计规则按语言划分与检查器语言化.md — （待注释）
 │   ├── 方案-文档维度加分制.md — （待注释）
+│   ├── 诊断-审计误报-第三方项目语料.md — （待注释）
 │   ├── 诊断-提交审计-auditignore-缺no-index.md — （待注释）
 ├── skills/ — 插件权威 skill（功能手册/规则/使用说明，安装副本的 skills/ 同步）
-│   ├── dsh-git-push-functions.md — 插件功能说明书（工具参数/HTTP API/源码定位）
 │   ├── dsh-repo-index.md — dsh-repo-index skill（源码索引权威说明）
 │   ├── dev/ — （待注释）
 │   │   ├── dsh-git-push.md — （待注释）
