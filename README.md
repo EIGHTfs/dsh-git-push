@@ -424,6 +424,7 @@ dsh-git-push/
 │   ├── test-module-splitter.mjs — module_splitter 工具 + CLI 接入测试（契约 + 行为 + 脚本随插件发布）
 │   ├── test-persist-credentials.mjs — 凭据持久化测试
 │   ├── test-plugin.mjs — 插件接线测试（入口导出/工具清单/双副本同步）
+│   ├── test-private-gate.mjs — （待注释）
 │   ├── test-project-type-filter.mjs — 项目类型规则适配测试（非 dsh 项目不加载 dsh 槽位/0.x 版本规则、timeout 限 js 系、folder 尊重 gitignore——Pawchive 误报消除驱动）
 │   ├── test-push-transport.mjs — 推送通道回归（SSH 优先/一致性语义）
 │   ├── test-quality.mjs — 评分总入口测试（AST 质量检查器）
@@ -696,6 +697,8 @@ console.log(x); // dsh-skip-residue: 本行为刻意保留的调试输出样本
 
 - **public** → `blocker` 拦截提交（私钥/凭据已可被任何人获取，必须移除或转私有）
 - **private / unknown** → `warning` 仅提醒（私有边界内放行，转公开前须先移除）——即「私有库豁免」：私密文件与工作留痕（会话记录/凭据/留痕）在**私有仓库可正常提交推送**，不需要额外豁免标记；单文件想彻底不报再用 `dsh-skip-sensitive` 注释
+
+**门禁级豁免（同一可见性分级，覆盖全部槽位）**：拦截判定同样按远端可见性分级——`private` 仓库的审计**只报告不拦截**（返回 `privateExempt` 标记，明细仍可在审计 API 查），`public` / `unknown` 保守拦截（不误放公开库）；可见性取 `origin` 的 GitHub 查询结果，探测失败按 `unknown`。此前门禁只看「示例目录」、没有任何可见性分级，而 comment / docs / security 等槽位规则不受 private 槽位（凭据 glob）约束，于是私有留痕仓库会被 `conv-*` 等 blocker 拦下（回归，见 `test/test-private-gate.mjs`）。
 
 **技能/规则文档豁免**：`skills/` 与 `rules/` 目录下的 md 文档里的沟通措辞（如触发场景描述）是设计文本而非代码残留，不触发用户沟通词规则。
 
