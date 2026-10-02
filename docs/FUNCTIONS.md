@@ -43,15 +43,15 @@
 | `handleAccountCheck` | 121-130 | 10 | `export async function handleAccountCheck(ctx) {` |
 | `handleGenSshKey` | 133-138 | 6 | `export function handleGenSshKey(ctx) {` |
 
-### lib/app/handlers/clone.js（114 行 · 5 个函数）
+### lib/app/handlers/clone.js（116 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `handleRepoClone` | 19-78 | 60 | `export async function handleRepoClone(ctx) {` |
-| `handleCloneLogs` | 81-85 | 5 | `export function handleCloneLogs(ctx) {` |
-| `handleCloneAbort` | 88-91 | 4 | `export function handleCloneAbort() {` |
-| `handleClonePreview` | 94-106 | 13 | `export async function handleClonePreview(ctx) {` |
-| `handleCloneProgress` | 109-114 | 6 | `export function handleCloneProgress(ctx) {` |
+| `handleRepoClone` | 19-80 | 62 | `export async function handleRepoClone(ctx) {` |
+| `handleCloneLogs` | 83-87 | 5 | `export function handleCloneLogs(ctx) {` |
+| `handleCloneAbort` | 90-93 | 4 | `export function handleCloneAbort() {` |
+| `handleClonePreview` | 96-108 | 13 | `export async function handleClonePreview(ctx) {` |
+| `handleCloneProgress` | 111-116 | 6 | `export function handleCloneProgress(ctx) {` |
 
 ### lib/app/handlers/meta.js（138 行 · 11 个函数）
 
@@ -948,16 +948,17 @@
 | `setPreview` | 237-245 | 9 | `export function setPreview(key, data) {` |
 | `__resetCloneJobs` | 248-250 | 3 | `export function __resetCloneJobs() {` |
 
-### lib/git/clone.js（364 行 · 6 个函数）
+### lib/git/clone.js（380 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `isPartialCloneDir` | 47-54 | 8 | `export function isPartialCloneDir(dir) {` |
-| `enclosingGitRoot` | 71-89 | 19 | `export function enclosingGitRoot(dir) {` |
-| `cloneViaApi` | 98-262 | 165 | `export async function cloneViaApi({` |
-| `cleanupPartial` | 275-279 | 5 | `async function cleanupPartial(dir) {` |
-| `classifyCloneFailure` | 293-306 | 14 | `export function classifyCloneFailure(failed = []) {` |
-| `previewClone` | 334-363 | 30 | `export async function previewClone({ target = '', token = '', branch = '', maxFileMB = DEFAULT_MAX_FILE_MB } = {}) {` |
+| `resolveMaxCloneFileMB` | 67-70 | 4 | `export function resolveMaxCloneFileMB(cfg = {}) {` |
+| `enclosingGitRoot` | 87-105 | 19 | `export function enclosingGitRoot(dir) {` |
+| `cloneViaApi` | 114-278 | 165 | `export async function cloneViaApi({` |
+| `cleanupPartial` | 291-295 | 5 | `async function cleanupPartial(dir) {` |
+| `classifyCloneFailure` | 309-322 | 14 | `export function classifyCloneFailure(failed = []) {` |
+| `previewClone` | 350-379 | 30 | `export async function previewClone({ target = '', token = '', branch = '', maxFileMB = DEFAULT_MAX_FILE_MB } = {}) {` |
 
 ### lib/git/cloud.js（47 行 · 1 个函数）
 

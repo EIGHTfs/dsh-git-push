@@ -256,19 +256,39 @@
   "test/test-audit-api.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "README.md": {
+      "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-02T12:13:12.276Z",
+        "mtime": "2026-10-02T12:30:33.458Z",
         "note": "注释可能需更新"
       },
-      "skills/dev/dsh-git-push.md": {
+      "lib/app/handlers/clone.js": {
         "status": "M",
-        "mtime": "2026-10-02T12:13:04.672Z",
+        "mtime": "2026-10-02T12:27:52.749Z",
         "note": "注释可能需更新"
       },
-      "skills/dsh-git-push-functions.md": {
-        "status": "D",
-        "mtime": "",
+      "lib/app/tool-call.js": {
+        "status": "M",
+        "mtime": "2026-10-02T12:27:21.219Z",
+        "note": "注释可能需更新"
+      },
+      "lib/git/clone.js": {
+        "status": "M",
+        "mtime": "2026-10-02T12:26:25.136Z",
+        "note": "注释可能需更新"
+      },
+      "lib/git/index.js": {
+        "status": "M",
+        "mtime": "2026-10-02T12:27:01.251Z",
+        "note": "注释可能需更新"
+      },
+      "package.json": {
+        "status": "M",
+        "mtime": "2026-10-02T12:30:26.545Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-clone-maxfilemb.mjs": {
+        "status": "A",
+        "mtime": "2026-10-02T12:28:03.608Z",
         "note": "注释可能需更新"
       }
     }
@@ -358,5 +378,6 @@
   "test/test-private-gate.mjs": "（待注释）",
   "test/test-quota-write.mjs": "（待注释）",
   "test/test-visibility-unified.mjs": "（待注释）",
-  "docs/诊断-审计误报-第三方项目语料.md": "（待注释）"
+  "docs/诊断-审计误报-第三方项目语料.md": "（待注释）",
+  "test/test-clone-maxfilemb.mjs": "（待注释）"
 }
