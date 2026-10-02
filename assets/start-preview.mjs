@@ -23,6 +23,7 @@
  */
 import { createServer } from 'node:http';
 import { request as httpRequest } from 'node:http';
+import { spawn } from 'node:child_process';
 import { createReadStream, existsSync, statSync, readFileSync } from 'node:fs';
 import { access } from 'node:fs/promises';
 import { join, normalize, extname, dirname } from 'node:path';
@@ -49,6 +50,9 @@ const MIME = {
   '.gif': 'image/gif', '.svg': 'image/svg+xml', '.ico': 'image/x-icon',
   '.json': 'application/json; charset=utf-8',
 };
+// 纯文本响应类型（脚本自身产生的 404/502 文本——修：此前三处引用该常量但未定义，
+//   任何走 send() 的请求（如 favicon 404）都会抛 ReferenceError 使服务进程整体崩溃）。
+const TEXT_PLAIN_UTF8 = 'text/plain; charset=utf-8';
 /** playwright 自检参数（截图窗口 / 加载超时 / 渲染等待 / 错误消息截断长度）。 */
 const SHOT_VIEWPORT = { width: 1400, height: 900 };
 const SHOT_NAV_TIMEOUT_MS = 30_000;
@@ -64,6 +68,14 @@ const noOpen = args.includes('--no-open');
 const shotPath = args.find(a => a.startsWith('--shot'))?.split('=')[1] || (args.includes('--shot') ? args[args.indexOf('--shot') + 1] : null);
 const dshArg = args.find(a => a.startsWith('--dsh'))?.split('=')[1] || (args.includes('--dsh') ? args[args.indexOf('--dsh') + 1] : null);
 const tokenArg = args.find(a => a.startsWith('--token'))?.split('=')[1] || (args.includes('--token') ? args[args.indexOf('--token') + 1] : null);
+// ── 本地模式（--local）──
+//   不反代 DSH 宿主，改为**直接执行工作区当前的插件代码**（每个请求 fork 一次性子进程，
+//   子进程模块天然新鲜）——这样改完代码刷新页面即生效，既不用重启宿主、也不用重启本服务。
+//   用于开发自检；真实宿主 UI/工具仍需宿主重启才生效（DSH 插件在启动时 import 并注册路由）。
+const LOCAL_MODE = args.includes('--local') || process.env.DSH_PREVIEW_LOCAL === '1';
+const LOCAL_WORKSPACE = process.env.DSH_PREVIEW_WORKSPACE || '';
+const LOCAL_RUNNER = 'preview-local-runner.mjs';
+const LOCAL_TIMEOUT_MS = 120_000;
 const TARGET = dshArg || DSH_BASE;
 
 // ── token 解析：--token > env > dsh-proxy.log ──
@@ -180,8 +192,9 @@ const server = createServer((req, res) => {
     }
   }
 
-  // 代理前缀 → 全部转发 DSH 真实后端（读与写都真实）
+  // 代理前缀 → --local 时直跑工作区插件代码，否则转发 DSH 真实后端（读与写都真实）
   if (pathname.startsWith(PROXY_PREFIX)) {
+    if (LOCAL_MODE) { serveLocalApi(req, res); return; }
     proxyToDsh(req, res, req.url); // 原样转发（保留 query）
     return;
   }
@@ -226,3 +239,42 @@ server.listen(PORT, '0.0.0.0', async () => {
   console.log('  停止: Ctrl+C 或 start.sh stop');
   await openBrowser();
 });
+/**
+ * --local 模式：fork 一次性子进程执行**工作区当前的插件代码**，把 {status, body} 回写给浏览器。
+ *
+ * 为什么每次请求都 fork：子进程冷启动会让整个插件模块图（含 handlers/*、git/* 等子模块）都
+ *   从磁盘重新加载，天然绕开 ESM 模块缓存——于是「改代码 → 刷新页面」立即生效，
+ *   既不用重启 DSH 宿主，也不用重启本预览服务。代价是每请求约 100ms 进程启动开销。
+ */
+function serveLocalApi(req, res) {
+  const t0 = Date.now();
+  const child = spawn(process.execPath, [join(SCRIPT_DIR, LOCAL_RUNNER)], { stdio: ['pipe', 'pipe', 'pipe'] });
+  let out = '';
+  let err = '';
+  let settled = false;
+  const finish = (status, body, tag) => {
+    if (settled) return;
+    settled = true;
+    if (!res.writableEnded) {
+      res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-cache' });
+      res.end(typeof body === 'string' ? body : JSON.stringify(body));
+    }
+    console.log(`[local] ${req.method} ${req.url} → ${status} ${Date.now() - t0}ms${tag ? ' ' + tag : ''}`);
+  };
+  const timer = setTimeout(() => {
+    try { child.kill('SIGKILL'); } catch { /* 已退出 */ }
+    finish(504, { ok: false, error: `本地执行超时（${LOCAL_TIMEOUT_MS}ms）` }, 'timeout');
+  }, LOCAL_TIMEOUT_MS);
+  child.stdout.on('data', (d) => { out += d; });
+  child.stderr.on('data', (d) => { err += d; });
+  child.on('error', (e) => { clearTimeout(timer); finish(500, { ok: false, error: '本地执行器启动失败: ' + (e?.message || e) }); });
+  child.on('close', (code) => {
+    clearTimeout(timer);
+    if (settled) return;
+    if (code !== 0) { finish(500, { ok: false, error: `本地执行器退出码 ${code}${err ? '：' + err.slice(0, 300) : ''}` }); return; }
+    let parsed;
+    try { parsed = JSON.parse(out); } catch { finish(500, { ok: false, error: '本地执行器输出非 JSON：' + out.slice(0, 200) }); return; }
+    finish(parsed.status || 200, parsed.body ?? {});
+  });
+  child.stdin.end(JSON.stringify({ method: req.method, url: req.url, headers: req.headers, workspaceRoot: LOCAL_WORKSPACE }));
+}

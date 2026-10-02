@@ -8,3 +8,6 @@ dist/
 .trash/
 *.bak
 *.bak-*
+
+# 运行期 PID 文件（start.sh 启停脚本产生，不入库）
+*.pid
