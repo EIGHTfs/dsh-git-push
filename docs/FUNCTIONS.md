@@ -638,14 +638,14 @@
 | `checkFileHealth` | 36-146 | 111 | `export function checkFileHealth({ file, relPath, text, rules }) {` |
 | `levelOf` | 83-86 | 4 | `const levelOf = (val, levels) => {` |
 
-### lib/checks/filter.js（107 行 · 4 个函数）
+### lib/checks/filter.js（124 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `filterRulesByExt` | 32-44 | 13 | `export function filterRulesByExt(grouped, relPath) {` |
-| `filterRulesByPath` | 52-69 | 18 | `export function filterRulesByPath(grouped, relPath) {` |
-| `norm` | 60-60 | 1 | `const norm = (s) => String(s \|\| '').replace(/\\/g, '/').replace(/^\.?\//, '').replace(/\/+$/, '');` |
-| `filterRulesByFileText` | 87-106 | 20 | `export function filterRulesByFileText(grouped, text) {` |
+| `filterRulesByPath` | 52-86 | 35 | `export function filterRulesByPath(grouped, relPath) {` |
+| `norm` | 58-58 | 1 | `const norm = (s) => String(s \|\| '').replace(/\\/g, '/').replace(/^\.?\//, '').replace(/\/+$/, '');` |
+| `filterRulesByFileText` | 104-123 | 20 | `export function filterRulesByFileText(grouped, text) {` |
 
 ### lib/checks/folder.js（174 行 · 3 个函数）
 

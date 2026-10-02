@@ -60,7 +60,6 @@
   "lib/audit-rules/audit-rules-robustness.yml": "健壮性规则（规则包 robustness）",
   "lib/audit-rules/audit-rules-structure.yml": "结构规则（命名/规模/复杂度）（规则包 structure）",
   "lib/audit-rules/audit-rules-template.yml": "规则模板（新规则包起点）（规则包 template）",
-  "lib/audit-rules/audit-rules-version.yml": "版本规则（版本一致性）（规则包 version）",
   "lib/audit/audit-file.js": "单文件审计执行（跑检查+豁免）",
   "lib/audit/checks.js": "检查器入口（纯引用表）",
   "lib/audit/collector.js": "文件收集（gitignore 感知）",
@@ -256,39 +255,44 @@
   "test/test-audit-api.mjs": "（待注释）",
   "_meta": {
     "worktree": {
+      "README.md": {
+        "status": "M",
+        "mtime": "2026-10-02T12:49:33.110Z",
+        "note": "注释可能需更新"
+      },
+      "assets/preview.html": {
+        "status": "M",
+        "mtime": "2026-10-02T12:46:56.603Z",
+        "note": "注释可能需更新"
+      },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-02T12:30:33.458Z",
+        "mtime": "2026-10-02T12:49:33.036Z",
         "note": "注释可能需更新"
       },
-      "lib/app/handlers/clone.js": {
+      "lib/audit-rules/audit-rules-npm.yml": {
         "status": "M",
-        "mtime": "2026-10-02T12:27:52.749Z",
+        "mtime": "2026-10-02T12:45:28.539Z",
         "note": "注释可能需更新"
       },
-      "lib/app/tool-call.js": {
+      "lib/audit-rules/audit-rules-version.yml": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "lib/checks/filter.js": {
         "status": "M",
-        "mtime": "2026-10-02T12:27:21.219Z",
+        "mtime": "2026-10-02T12:47:06.181Z",
         "note": "注释可能需更新"
       },
-      "lib/git/clone.js": {
+      "lib/rule/compilers/regex.js": {
         "status": "M",
-        "mtime": "2026-10-02T12:26:25.136Z",
+        "mtime": "2026-10-02T12:45:20.612Z",
         "note": "注释可能需更新"
       },
-      "lib/git/index.js": {
-        "status": "M",
-        "mtime": "2026-10-02T12:27:01.251Z",
-        "note": "注释可能需更新"
-      },
-      "package.json": {
-        "status": "M",
-        "mtime": "2026-10-02T12:30:26.545Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-clone-maxfilemb.mjs": {
+      "test/test-rule-include-paths.mjs": {
         "status": "A",
-        "mtime": "2026-10-02T12:28:03.608Z",
+        "mtime": "2026-10-02T12:46:21.152Z",
         "note": "注释可能需更新"
       }
     }
@@ -379,5 +383,6 @@
   "test/test-quota-write.mjs": "（待注释）",
   "test/test-visibility-unified.mjs": "（待注释）",
   "docs/诊断-审计误报-第三方项目语料.md": "（待注释）",
-  "test/test-clone-maxfilemb.mjs": "（待注释）"
+  "test/test-clone-maxfilemb.mjs": "（待注释）",
+  "test/test-rule-include-paths.mjs": "（待注释）"
 }

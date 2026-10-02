@@ -158,8 +158,8 @@ src/vendor.js       # 单文件豁免审计
 | python | 7 | Python 专属：短名 / 魔数 / 嵌套 / 函数长度 / 文件长度 / 注释密度 / 圈复杂度（exts: [py]） |
 | go / rust / swift / cpp / php | 各 0（占位） | 语言专用规则占位槽位——放 yml 即生效，规则待补（AST 语言路由已预留，2.1.0） |
 | frontend | 19 | 前端安全 / a11y / 依赖 |
-| npm | 10 | 依赖声明 / npmrc 凭据 / 测试入口 |
-| version | 5 | 版本号规范（X.Y.Z 格式 / tag / 提交节奏；**0.x 合法开发期**——SemVer §4，1.0 稳定线，2.1.3） |
+| npm | 12 | 依赖声明 / npmrc 凭据 / 测试入口 / **包版本语义**（`npm/version-format-triple` 只查 package.json、`npm/version-commit-mismatch`） |
+| ~~version~~ | 0 | **已撤销**：原 5 条全是自家提交/发布纪律（「一次提交=一个小版本」等），不该固化成对任何仓库生效的审计规则——纪律留在 skill（`versioning-rule` / `git-commit-discipline`）；其中 2 条 npm 通用约定迁入 npm 槽位 |
 | dsh | 7 | DSH 插件契约 / 注入通道（仅 dsh- 前缀插件项目加载——非 dsh 项目 require node 内置不误报，2.1.2） |
 | comment | 6 | 注释措辞 / 对话残留 |
 | folder | 6 | 目录总数 / 单目录文件数 / 解包特征 / .gitignore / cd 到可能不存在的目录 / 写文件到 .gitignore 忽略目录 |
@@ -168,6 +168,19 @@ src/vendor.js       # 单文件豁免审计
 | docs / robustness / structure / template / private | 各 0-4 | 链接检查 / 写前 mkdir / 循环依赖 / 规则模板 / 私密文件拦截 |
 
 **加规则 = 放文件**；**加字段类型（新 kind）才需加函数**（compilers.js 注册制：`registerCompiler(kind, detect, compile)`，加字段=加函数+注册一行，`compileRule` 主体永不修改）。
+
+#### 规则作用域字段（写规则时最容易漏、也最容易误报）
+
+| 字段 | 语义 | 典型用途 |
+|------|------|----------|
+| `exts` | 扩展名白名单（如 `["json"]`） | 只对某类文件跑 |
+| `include_paths` | **路径白名单**：不含 `/` 按**文件名**匹配（任意层级），含 `/` 按路径相等 / 前缀 / 后缀匹配 | 只对 `package.json` 跑（`include_paths: ["package.json"]`） |
+| `exclude_paths` | 路径黑名单（前缀匹配） | 排除 `server/`、`test/` 等目录 |
+| `file_patterns` | **文件内容**初筛正则（不是路径！L1 只求召回） | 只在正文含某特征时才做重检查 |
+
+**为什么要有 `include_paths`**：`exts`（指定后缀）本来就支持，但它只能收窄到**扩展名级**——`.json` 这个粒度太粗：同一个 `.json` 既可能是 npm 的 `package.json`，也可能是 Live2D 的 `model.json`、Unity 的 `.asset` 清单。`npm/version-format-triple`（package.json 的 version 必须 SemVer 三段）原先是 `exts: ["json"]`，于是把规则套到了**所有 json**——第三方资源仓库（实测 0 个 package.json）被报 **1435 条 error**。补上 `include_paths: ["package.json"]`（**文件名级**作用域）后规则只对真正的 package.json 生效。
+
+**规则设计原则**：**自家提交/发布纪律不要固化成审计规则**——审计规则对任何仓库生效，而自家纪律（「一次提交=一个小版本」「README 必须有版本记录」等）只适用于本机自研项目，写进规则必然在第三方仓库上大面积误报。这类约定放 skill，规则只保留**生态通用**的检查（如 npm 的 SemVer 格式）。
 
 ### 目录结构（自动生成）
 
@@ -262,7 +275,6 @@ dsh-git-push/
 │   │   ├── audit-rules-structure.yml — 结构规则（命名/规模/复杂度）（规则包 structure）
 │   │   ├── audit-rules-swift.yml — Swift 规则包（占位：规则待补，槽位就绪）（规则包 swift）
 │   │   ├── audit-rules-template.yml — 规则模板（新规则包起点）（规则包 template）
-│   │   ├── audit-rules-version.yml — 版本规则（版本一致性）（规则包 version）
 │   ├── checks/ — 检查层（按 kind 调用检查器：正则/语义/结构/文件健康/按钮绑定/私密文件）
 │   │   ├── button-bind.js — 按钮事件绑定交叉比对（声明了但没绑定）
 │   │   ├── common.js — 检查器公共设施（豁免提示/severity 封顶/分组）
@@ -436,6 +448,7 @@ dsh-git-push/
 │   ├── test-readme-gen.mjs — README 生成测试（模板渲染/版本表）
 │   ├── test-rename-locator.mjs — rename-locator 测试（同名不同作用域分组/模块级/过滤）
 │   ├── test-repo-list.mjs — 仓库列表测试（本地扫描/索引读写/HTTP 端点/远端状态）
+│   ├── test-rule-include-paths.mjs — （待注释）
 │   ├── test-rule-packs.mjs — 规则总入口测试（编译注册/字段指派）
 │   ├── test-rule-slots-render.mjs — 规则包列表统计渲染回归
 │   ├── test-scope.mjs — 作用域最小实验测试（分类器/机制/magic 接入）
@@ -561,7 +574,7 @@ dsh-git-push/
 |---|---|
 | `common.js` | 公共设施（豁免提示、severity 封顶、各 astConfirm 精筛集合的取值函数） |
 | `dispatch.js` | **调度 `runChecks`——只写引用**：按 kind 依次调用各检查器并汇总，不含任何检查逻辑 |
-| `filter.js` | 规则作用域过滤（`exts` / `exclude_paths` / **`file_patterns`**）——yml 声明的作用域唯一落地点 |
+| `filter.js` | 规则作用域过滤（`exts` / **`include_paths`** / `exclude_paths` / `file_patterns`）——yml 声明的作用域唯一落地点 |
 | `regex.js` | 正则类规则（含 astConfirm 精筛消费） |
 | `structural.js` | 结构类（函数长度/复杂度/嵌套/文件行数/同步 fs/空 catch） |
 | `semantic.js` | 语义类（yml 声明的语义检查、patch insert） |

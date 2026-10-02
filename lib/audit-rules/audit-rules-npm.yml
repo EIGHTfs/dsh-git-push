@@ -120,3 +120,28 @@ rules:
     exts: ["json"]
     fixable: false
     mitigation: "增加 \"repository\": { \"type\": \"git\", \"url\": \"https://github.com/<owner>/<repo>.git\" }"
+
+  # ── 版本字段（npm 包版本语义；从 version 槽位迁入——这是 npm 通用约定，不是自家纪律）──
+  # 作用域：格式类只认 package.json（filePatterns）。原实现 exts:["json"] 会扫所有 json，
+  #   第三方资源仓库里成千上万个带 "version" 字段的 json 被逐条判 error（实测 1435 条误报）。
+  - id: npm/version-format-triple
+    name: "package.json version 非 X.Y.Z 三段格式"
+    category: "npm"
+    severity: "error"
+    description: "npm 包 version 必须 SemVer 三段 X.Y.Z（两段 1.0 / 四段 1.0.0.1 / 带前缀均不合规）；X 可为 0（0.x = 开发初始阶段，SemVer §4）。只对 package.json 生效"
+    include_paths: ["package.json"]
+    exts: ["json"]
+    patterns:
+      - "\"version\"\\s*:\\s*\"(?![0-9]+\\.[0-9]+\\.[0-9]+\")"
+    fixable: true
+    mitigation: "改为 X.Y.Z（如 1.2.0 或 0.3.0——0.x 合法开发期）"
+  - id: npm/version-commit-mismatch
+    name: "提交信息里的版本号需与 package.json 一致"
+    category: "npm"
+    severity: "info"
+    description: "提交信息含版本号时，应与 package.json 的 version 一致（提交即存档新版本）；引擎为单文件正则、无法跨文件比对，命中即提示人工核对"
+    exts: ["md"]
+    patterns:
+      - "版本\\s*[:：]?\\s*v?[0-9]+\\.[0-9]+\\.[0-9]+"
+    fixable: false
+    mitigation: "提交前核对 package.json version = 提交信息里的版本号"
