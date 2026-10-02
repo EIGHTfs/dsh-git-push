@@ -146,3 +146,29 @@ test('git_commit_push：jobs.start 抛错（no job controller serves this agent�
     assert.match(log, /降级同步提交/, '降级路径应真实完成提交');
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
+
+// ---------- 回归：git_clone 的 job owner 形状（与 git_commit_push 同一契约）----------
+test('git_clone：exec.agent 存在时 owner 必须是会话 id（clone job 路径回归）', async () => {
+  // 只记录不执行 spec.run()：避免用例真的发起网络 clone（owner 形状与 async 返回不受影响）
+  const mj = {
+    state: [],
+    start(spec) {
+      if (spec.owner !== undefined && typeof spec.owner !== 'string') {
+        throw new Error(`session "${String(spec.owner)}" has no live agent (background job owner must be live)`);
+      }
+      mj.state.push({ spec });
+      return 'git-clone-1';
+    },
+  };
+  const r = await callTool(
+    'git_clone',
+    { target: 'owner/repo', dest: '/tmp/dshgp-clone-fixture' },
+    { workspaceRoot: tmpdir() }, Config(), null, mj,
+    { agent: { id: 'session-clone-9' } },
+  );
+  assert.equal(r.async, true, 'owner 形状正确时 clone 必须走后台 job，不得静默降级同步');
+  assert.equal(r.jobId, 'git-clone-1');
+  assert.equal(r.jobFallback, undefined, '不得出现 jobFallback（降级标记）');
+  assert.equal(mj.state[0].spec.kind, 'git-clone');
+  assert.equal(mj.state[0].spec.owner, 'session-clone-9', 'owner 必须是 exec.agent.id 字符串');
+});
