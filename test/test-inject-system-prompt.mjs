@@ -182,7 +182,7 @@ test('上下文注入：agent/pre-step + WeakSet 防重复 + createUserMessage�
   assert.ok(pluginSrc.includes('new WeakSet()'), '必须用 WeakSet 防重复注入');
   assert.ok(pluginSrc.includes('injectedAgents.has(agent)'), '已注入的 agent 必须跳过');
   assert.ok(pluginSrc.includes('createUserMessage'), '必须用 createUserMessage 追加 user 消息');
-  assert.ok(pluginSrc.includes("source: { kind: 'plugin', plugin: 'dsh-git-push', form: 'instructions' }"), '消息必须带插件 source 标记');
+  assert.ok(pluginSrc.includes("source: { kind: 'plugin:dsh-git-push', plugin: 'dsh-git-push', form: 'instructions' }"), '消息必须带插件 source 标记（V4 producer-owned kind）');
   assert.ok(pluginSrc.includes("decision?.kind === 'reject'"), '被拒/中止必须原样放行');
 });
 
