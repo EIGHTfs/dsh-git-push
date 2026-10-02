@@ -346,6 +346,7 @@ dsh-git-push/
 ├── scripts/ — 开发工具脚本（版本校验/双副本同步/预览服务/README 目录树维护）
 │   ├── audit-runner.mjs — 审计扩展 CLI 统一入口（独立跑 scripts/audit-ext/ 全部扩展）
 │   ├── audit-runtime-check.mjs — 三层审计 L3 运行时检测脚本
+│   ├── browser-page-probe.mjs — （待注释）
 │   ├── check.mjs — 语法检查脚本（npm run check）
 │   ├── clean-date-comments.py — （待注释）
 │   ├── doc-func.mjs — （待注释）
@@ -370,10 +371,12 @@ dsh-git-push/
 │   │   ├── _example-readme-present.mjs — 审计扩展契约示例（_ 前缀：演示不参与实际审计）
 │   │   ├── variable-min-length.mjs — 审计扩展：variable-min-length（内置规则抽出试点——统一动态入口）
 ├── assets/ — 预览页与配图（preview.html 交互模拟页 + 面板截图）
+│   ├── minihost.sh — （待注释）
 │   ├── panel-account.png — 账号卡片面板截图（README 配图）
 │   ├── panel-audit.png — 审计面板截图（README 配图）
 │   ├── panel-settings.png — 设置面板截图（README 配图）
 │   ├── preview-gen.mjs — 生成 preview.html（真 client.js + 假数据垫片）
+│   ├── preview-local-runner.mjs — （待注释）
 │   ├── preview.html — 侧边栏交互模拟页（可点，支持 ?backend= 接真实后端）
 │   ├── start-preview.mjs — 预览反代服务器（模板 bench-template server/lib/preview 下发改用：本地服务 preview.html，/api/git-push/* 转发 DSH 真实后端 + token 认证）
 │   ├── start.sh — 预览服务器启停脚本（start/stop/restart/status + --port + PID/日志/健康检查 /preview-ping）

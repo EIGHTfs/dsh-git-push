@@ -335,7 +335,7 @@ test('client.js apply：ctx.get 抛错不崩，settings.section 注册且渲染�
   globalThis.window = prevWindow;
   assert.ok(captured, 'ModuleLoader.load 应被调用');
   const mod = captured.factory(req);
-  assert.deepEqual(mod.inject, ['slots', 'settingsScope'], 'inject 依赖声明（2026-09-12 纯中文：不再依赖 locale）');
+  assert.deepEqual(mod.inject, ['slots'], 'inject 依赖声明（2.3.1：DSH 0.2.0 已移除 settingsScope 服务，故不再声明依赖，改特性检测自动切换）');
 
   // mock ctx：get 必抛（模拟 cordis 未 inject 行为）
   const registered = [];
@@ -347,7 +347,11 @@ test('client.js apply：ctx.get 抛错不崩，settings.section 注册且渲染�
   };
   const ctx = {
     effect: () => {},
-    get: () => { throw new Error('cannot get property "ruleSlotMeta" without inject'); },
+    // 真实 cordis：已 inject 的服务可经 get() 取到（settingsScope）；未 inject 的仍抛（保留 1.0.10 回归断言）
+    get: (name) => {
+      if (name === 'settingsScope') return { bind: () => scopeMock };
+      throw new Error('cannot get property "ruleSlotMeta" without inject');
+    },
     slots: {
       register: (desc, component) => ({ ...desc, component }),
       inject: (name, registerFn) => { registered.push({ slot: name, desc: registerFn() }); },
@@ -410,7 +414,7 @@ test('client.js：反代/memory 模式 scope（status 恒 unavailable）下设�
   globalThis.window = prevWindow;
   assert.ok(captured, 'ModuleLoader.load 应被调用');
   const mod = captured.factory(req);
-  assert.deepEqual(mod.inject, ['slots', 'settingsScope']);
+  assert.deepEqual(mod.inject, ['slots'], 'inject 声明只剩 slots（2.3.1：settingsScope 服务在 0.2.0 已移除）');
 
   // memory 模式 scope：status 恒 'unavailable'、writable 恒 false（isLoopback=memory 陷阱形态）
   const scopeMock = {
@@ -421,7 +425,11 @@ test('client.js：反代/memory 模式 scope（status 恒 unavailable）下设�
   const registered = [];
   const ctx = {
     effect: () => {},
-    get: () => { throw new Error('cannot get property "ruleSlotMeta" without inject'); },
+    // 真实 cordis：已 inject 的服务可经 get() 取到（settingsScope）；未 inject 的仍抛（保留 1.0.10 回归断言）
+    get: (name) => {
+      if (name === 'settingsScope') return { bind: () => scopeMock };
+      throw new Error('cannot get property "ruleSlotMeta" without inject');
+    },
     slots: {
       register: (desc, component) => ({ ...desc, component }),
       inject: (name, registerFn) => { registered.push({ slot: name, desc: registerFn() }); },
@@ -435,4 +443,67 @@ test('client.js：反代/memory 模式 scope（status 恒 unavailable）下设�
   const rendered = secReg.desc.component();
   assert.ok(rendered !== null && rendered !== undefined, 'SectionPage 在 memory 模式 scope 下必须渲染（不得 return null 空白）');
   assert.equal(rendered.__mock, 'jsx-el', '应渲染 GitPushPage 元素而非空白');
+});
+
+// 2.3.1（DSH 0.2.0 兼容）：0.2.0 宿主已移除 settingsScope 服务——apply 必须走「特性检测 fallback」：
+//   不崩、仍注册 settings.section。背景：若 inject 仍声明 settingsScope，0.2.0 上 entry 会停在
+//   pending（web boot: 1 entry did not activate / dsh-git-push: pending (waiting for service: settingsScope)）。
+test('client.js：0.2.0 宿主（无 settingsScope 服务）下 apply 不崩且仍注册 settings.section（特性检测 fallback）', () => {
+  let captured = null;
+  const prevWindow = globalThis.window;
+  globalThis.window = { __ModuleLoader__: { load: ({ id, factory }) => { captured = { id, factory }; } } };
+  const reactMock = {
+    createElement: (type, props) => (typeof type === 'function' ? type(props || {}) : { __mock: 'el', type, props: props || {} }),
+    useState: (init) => [typeof init === 'function' ? init() : init, () => {}],
+    useEffect: () => {},
+    useSyncExternalStore: (subscribe, getSnapshot) => getSnapshot(),
+  };
+  const req = (name) => {
+    if (name === 'react') return reactMock;
+    if (name === 'react/jsx-runtime') return {
+      jsx: (type, props) => ({ __mock: 'jsx-el', type, props: props || {} }),
+      jsxs: (type, props) => ({ __mock: 'jsx-el', type, props: props || {} }),
+    };
+    if (name === '@deepseek-ai/dsh-client-store') return {
+      createSnapshotStore: (initial) => {
+        let value = initial;
+        const listeners = new Set();
+        return {
+          getSnapshot: () => value,
+          set: (v) => { value = v; listeners.forEach((l) => l()); },
+          subscribe: (l) => { listeners.add(l); return () => listeners.delete(l); },
+        };
+      },
+    };
+    throw new Error('require: ' + name);
+  };
+  new Function('require', 'window', rootClientSrc)(req, globalThis.window); // dsh-skip-sensitive: 沙箱执行仓库内 client.js 顶层（受控源码，非外部输入）
+  globalThis.window = prevWindow;
+  const mod = captured.factory(req);
+  assert.deepEqual(mod.inject, ['slots'], 'inject 不得再声明 settingsScope（0.2.0 无此服务）');
+  const registered = [];
+  const ctx = {
+    effect: () => {},
+    // 真实 cordis 语义：get(未 inject 的服务) 返回 undefined（不抛）；抛的是「属性直读」
+    get: () => undefined,
+    slots: {
+      register: (desc, component) => ({ ...desc, component }),
+      inject: (name, registerFn) => { registered.push({ slot: name, desc: registerFn() }); },
+    },
+    // 关键：完全不提供 settingsScope —— 模拟 DSH 0.2.0 宿主形态
+  };
+  // cordis 同款语义：**读未 inject 的服务属性会直接抛**（cannot get property "x" without inject）。
+  //   必须用这种 ctx 才能测出「用 ctx.settingsScope 做特性检测」这类 bug——普通对象上直读
+  //   只是 undefined，测不出来（实测事故：0.2.0 上 client entry 因此 failed，页面报
+  //   web boot: 1 entry did not activate / dsh-git-push: failed）。
+  const cordisLike = new Proxy(ctx, {
+    get(target, prop) {
+      if (typeof prop === 'symbol' || prop in target) return Reflect.get(target, prop);
+      throw new Error(`cannot get property "${String(prop)}" without inject`);
+    },
+  });
+  assert.doesNotThrow(() => mod.apply(cordisLike), '无 settingsScope 服务时 apply 不得崩溃（0.2.0 兼容）');
+  const secReg = registered.find((r) => r.slot === 'settings.section');
+  assert.ok(secReg, 'settings.section 仍应注册（设置页不得因版本差异消失）');
+  assert.equal(secReg.desc.id, 'dsh-git-push');
 });

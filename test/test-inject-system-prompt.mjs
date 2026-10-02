@@ -59,7 +59,11 @@ function renderAuditInputs(value) {
   let renderSection = null;
   const ctx = {
     effect: () => {},
-    get: () => { throw new Error('cannot get property without inject'); },
+    // 真实 cordis：已 inject 的服务可经 get() 取到（settingsScope）；未 inject 的仍抛（保留旧回归断言）
+    get: (name) => {
+      if (name === 'settingsScope') return { bind: () => scopeMock };
+      throw new Error('cannot get property without inject');
+    },
     slots: {
       register: (desc, component) => ({ ...desc, component }),
       inject: (name, registerFn) => { renderSection = registerFn()?.component; },
