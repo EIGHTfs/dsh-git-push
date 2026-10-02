@@ -915,18 +915,18 @@
 |------|------|------|------|
 | `browseDir` | 17-38 | 22 | `export function browseDir(p = '', { root = '' } = {}) {` |
 
-### lib/git/clone-download.js（309 行 · 8 个函数）
+### lib/git/clone-download.js（313 行 · 8 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `partitionBySize` | 54-65 | 12 | `export function partitionBySize(blobs = [], maxFileMB = DEFAULT_MAX_FILE_MB) {` |
-| `downloadBlobs` | 82-159 | 78 | `export async function downloadBlobs(o) {` |
+| `downloadBlobs` | 82-163 | 82 | `export async function downloadBlobs(o) {` |
 | `one` | 106-138 | 33 | `const one = async (entry) => {` |
 | `worker` | 141-148 | 8 | `const worker = async () => {` |
-| `fetchBlobJson` | 164-179 | 16 | `async function fetchBlobJson(owner, repo, sha, token) {` |
-| `removeDirForce` | 205-224 | 20 | `export async function removeDirForce(dir, attempts = 3) {` |
-| `fetchToFile` | 226-308 | 83 | `async function fetchToFile({ owner, repo, branch, relPath, token, out, partPath, size, onBytes, signal = null }) {` |
-| `mkHeaders` | 260-267 | 8 | `const mkHeaders = (raw, withRange) => {` |
+| `fetchBlobJson` | 168-183 | 16 | `async function fetchBlobJson(owner, repo, sha, token) {` |
+| `removeDirForce` | 209-228 | 20 | `export async function removeDirForce(dir, attempts = 3) {` |
+| `fetchToFile` | 230-312 | 83 | `async function fetchToFile({ owner, repo, branch, relPath, token, out, partPath, size, onBytes, signal = null }) {` |
+| `mkHeaders` | 264-271 | 8 | `const mkHeaders = (raw, withRange) => {` |
 
 ### lib/git/clone-jobs.js（251 行 · 15 个函数）
 
@@ -1455,16 +1455,17 @@
 | `runFile` | 60-98 | 39 | `async function runFile(file, obj) {` |
 | `main` | 101-127 | 27 | `async function main() {` |
 
-### scripts/browser-page-probe.mjs（246 行 · 6 个函数）
+### scripts/browser-page-probe.mjs（265 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `parseArgv` | 33-44 | 12 | `function parseArgv(argv) {` |
 | `findDirUnder` | 61-75 | 15 | `function findDirUnder(root, names, maxDepth = 4) {` |
 | `sharedRootCandidates` | 78-100 | 23 | `function sharedRootCandidates() {` |
-| `discover` | 108-156 | 49 | `function discover() {` |
-| `loadPlaywright` | 165-173 | 9 | `function loadPlaywright(pwroot) {` |
-| `stripHtml` | 176-182 | 7 | `function stripHtml(html) {` |
+| `readBrowserEnvRecord` | 106-112 | 7 | `function readBrowserEnvRecord() {` |
+| `discover` | 120-175 | 56 | `function discover() {` |
+| `loadPlaywright` | 184-192 | 9 | `function loadPlaywright(pwroot) {` |
+| `stripHtml` | 195-201 | 7 | `function stripHtml(html) {` |
 
 ### scripts/check.mjs（37 行 · 1 个函数）
 
@@ -1721,6 +1722,12 @@
 | `probe` | 129-153 | 25 | `const probe = async (useNew) => {` |
 | `writer` | 134-140 | 7 | `const writer = (async () => {` |
 | `call` | 433-433 | 1 | `const call = async (body) => (await handleHttp(` |
+
+### test/test-clone-parts-keep.mjs（64 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `stubFetch` | 16-24 | 9 | `function stubFetch() {` |
 
 ### test/test-clone-preview-buttons.mjs（134 行 · 5 个函数）
 

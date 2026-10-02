@@ -1,31 +1,35 @@
 ---
 name: dsh-repo-index
-description: 本机所有 DSH 插件/项目的 GitHub 源码索引（唯一权威，JSON）。md 表格已废弃。权威文件是插件配置目录 git-push/dsh-repo-index.json（即 DSH_HOME/git-push/dsh-repo-index.json，原同级仓 dsh-git-push-User/<owner>/ 已废除）。任何 AI 遇到「插件文件丢失/需要重新拉取源码/确认某项目仓库地址」时读那个 JSON；其他 skill 写源码位置一律引用本索引，不要各自复制仓库地址。注：v2 引擎生成/维护该 JSON 的能力待实现（见 WORKBOARD 旧验收项），当前以既有 JSON 为准。
-whenToUse: 需要恢复/克隆某个 dsh-* 插件源码、确认某项目仓库地址与可见性、本地插件目录丢失需要重建、写文档需要引用源码位置时。
-generatedBy: grok-4.6 · 2026-09-07 · 迁入插件 skills/ 并修正权威路径
+description: 本机 DSH 插件/项目源码索引（权威 JSON）：位置、字段、用法与存放规则。处理查仓库地址或恢复源码类请求时加载。
+whenToUse: 需要恢复/克隆某个插件源码、确认某项目仓库地址与可见性、本地插件目录丢失需重建、写文档要引用源码位置时。
+updated: 2026-10-02
+generatedBy: deepseek-official/deepseek-v4-flash · EIGHTfs 2026-10-02
 ---
 
 # DSH 插件/项目源码索引（dsh-repo-index）
 
-> **md 表格已废弃。** 权威源是 JSON，由 dsh-git-push 自动生成，不要手改。
+> 核心一句话：**仓库地址与源码位置的唯一权威是 JSON 索引，不是 md 表格、更不是各处复制的地址。**
 
-## 权威文件
+## 一、权威文件
 
-插件配置目录：`git-push/dsh-repo-index.json`（解析顺序：`DSH_HOME/git-push/` → `~/.dsh/git-push/`）
+插件配置目录下的 `git-push/dsh-repo-index.json`（解析顺序：`DSH_HOME/git-push/` → `~/.dsh/git-push/`）
 
-- 原同级仓 `dsh-git-push-User/<owner>/dsh-repo-index.json` 已废除（凭据/索引收敛插件自持）
-- v2 引擎暂未实现「推送后自动重写」（1.0.x 遗留项），读既有 JSON 即可
-- 不入 git（插件配置目录整体不入库）
-- 会话默认只注入这个文件名；设置「注入 repo-index JSON 全文」才注入正文
+| 事实 | 说明 |
+|------|------|
+| md 表格 | 已废弃，不要用 |
+| 旧位置 | 同级仓 `dsh-git-push-User/<owner>/dsh-repo-index.json` 已废除（索引与凭据收敛到插件自持） |
+| 入 git | 不入库（插件配置目录整体不入库） |
+| 注入 | 会话默认只注入该文件名；开启「注入 repo-index JSON 全文」才注入正文 |
+| 生成 | 由插件生成，不要手改；「推送后自动重写」尚未实现，读既有 JSON 即可 |
 
-## 怎么用
+## 二、怎么用
 
 1. 读 JSON 的 `repos[]`：`name` / `repoUrl` / `visibility` / `cloneCmd` / `skills`
-2. 公开/私有统一走 `git_clone`（api.github.com Git Data API）
+2. 公开与私有统一走 `git_clone`（走 GitHub API，不直连 github.com）
 3. 其他 skill 写源码位置只写「见 dsh-repo-index」，不复制地址
 
-## 相关
+## 三、相关
 
-- 生成代码：`dsh-git-push/lib/repo-index.js`（旧路径；当前未实现，待补）
+- 生成实现：`lib/git/repo-index.js`
 - 注入开关：设置 → 插件配置 →「注入 repo-index JSON 全文」（`injectRepoIndexFull`）
-- 存放规则：本 skill 权威位置 = dsh-git-push 插件 `skills/`；`.dsh/skills/` 是加载副本（部署时同步），不要直接改
+- 存放规则：本 skill 权威位置是插件项目 `skills/`；`.dsh/skills/` 是加载副本（部署时同步），不要直接改副本

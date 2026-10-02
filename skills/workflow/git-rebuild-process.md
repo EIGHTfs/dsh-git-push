@@ -5,8 +5,6 @@ whenToUse: 用户说「重新建库/重建仓库」、原仓库需按提交历�
 generatedBy: EIGHTfs 2026-08-21（规则整理；权威归属 = dsh-git-push 插件权威 skill）
 ---
 
-> ⭐ **先记住我**：任何会话开始前，先读用户档案 `.dsh/skills/remember-me.md`（优先级最高的 skill）：我是谁、我怎么用你、我立过的规矩。
-
 # 重新建库流程（git-rebuild-process）
 
 > 2026-08-21 用户（EIGHTfs）确立。开发者文档留档：`ai-work-archive/开发者文档/重新建库流程-20260821.md`。
@@ -57,4 +55,3 @@ generatedBy: EIGHTfs 2026-08-21（规则整理；权威归属 = dsh-git-push 插
 
 ## 相关
 
-- remember-me（先记住我）：用户档案，优先级最高的 skill

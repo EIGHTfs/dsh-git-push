@@ -398,6 +398,7 @@ dsh-git-push/
 │   ├── test-cli-audit-parity.mjs — CLI 与源码全量审计一致性测试（audit --full --json vs 直接 auditFull，含忽略排除）
 │   ├── test-client.mjs — 侧边栏测试（手写 DOM/零外部资源/开关默认）
 │   ├── test-clone-concurrency.mjs — clone 并发互斥/可中止/失败保留文件（14 项，CIFS 对照用例可跳）
+│   ├── test-clone-parts-keep.mjs — （待注释）
 │   ├── test-clone-preview-buttons.mjs — clone 预览确认框按钮可点（真渲染+真点击）
 │   ├── test-command-registry.mjs — 命令注册表测试（工具入表/查找/parseRegistryArgs/清单生成）
 │   ├── test-context.mjs — 上下文注入测试
@@ -466,28 +467,27 @@ dsh-git-push/
 │   ├── 诊断-提交审计-auditignore-缺no-index.md — （待注释）
 ├── skills/ — 插件权威 skill（功能手册/规则/使用说明，安装副本的 skills/ 同步）
 │   ├── dsh-git-push-functions.md — 插件功能说明书（工具参数/HTTP API/源码定位）
-│   ├── dsh-git-push.md — 插件手册（工具/规则包/设置 UI/安装实录）
 │   ├── dsh-repo-index.md — dsh-repo-index skill（源码索引权威说明）
-│   ├── git-push-live-fix.md — git-push 工具问题当场提出并改插件的规则
-│   ├── task-completion-report.md — 任务收尾汇报规则（✅+交付/验证/遗留）
-│   ├── tool-json-add-ask.md — （待注释）
-│   ├── git-workflow-gitpush/ — git-workflow-gitpush 工作流 skill（dsh-git-push 提交纪律）
-│   │   ├── README.md — git 工作流 skill 子目录说明
-│   │   ├── commit-checkpoint-before-push-reorg.md — 推送重组前提交检查点规则
-│   │   ├── file-organize-git-first.md — 文件整理前先 git 提交规则
-│   │   ├── git-collab-conflict.md — git 协作冲突审查规则
-│   │   ├── git-commit-before-batch-ops.md — 批量操作前先 git 提交规则
-│   │   ├── git-commit-feature-progress.md — 功能进度三态提交规则
-│   │   ├── git-project-read-history.md — 进项目先读提交历史规则
-│   │   ├── git-rebuild-process.md — git 重建流程规则
-│   │   ├── git-remote-align-first.md — 远端对齐优先规则
-│   │   ├── github-api-only.md — 只走 GitHub API 规则
-│   │   ├── github-fallback-restore.md — GitHub 回退恢复规则
-│   │   ├── github-pin-repos.md — GitHub 固定仓库规则
-│   │   ├── move-delete-git-checkpoint.md — 移动删除前 git 检查点规则
-│   │   ├── readme-sync-git-md.md — README 同步 git 提交规则
-│   │   ├── skill-every-change-commit-repo.md — 每次变更提交仓库规则
-│   │   ├── versioning-rule.md — 版本规范规则
+│   ├── dev/ — （待注释）
+│   │   ├── dsh-git-push.md — （待注释）
+│   │   ├── git-push-live-fix.md — （待注释）
+│   ├── guide/ — （待注释）
+│   │   ├── guide-audit.md — （待注释）
+│   │   ├── guide-cli-scripts.md — （待注释）
+│   │   ├── guide-clone-repos.md — （待注释）
+│   │   ├── guide-commit-push.md — （待注释）
+│   │   ├── guide-inject-ui.md — （待注释）
+│   │   ├── guide-slash-completion.md — （待注释）
+│   ├── workflow/ — （待注释）
+│   │   ├── README.md — （待注释）
+│   │   ├── git-commit-discipline.md — （待注释）
+│   │   ├── git-project-startup.md — （待注释）
+│   │   ├── git-rebuild-process.md — （待注释）
+│   │   ├── github-operations.md — （待注释）
+│   │   ├── readme-sync-git-md.md — （待注释）
+│   │   ├── task-completion-report.md — （待注释）
+│   │   ├── tool-json-add-ask.md — （待注释）
+│   │   ├── versioning-rule.md — （待注释）
 ├── .auditignore — 审计豁免清单（不影响 git 入库，仅跳过审计扫描）——排除内置第三方代码
 ├── .gitignore — 忽略规则（node_modules/产物/备份/回收站等）
 ├── README.md — 插件 README（功能总览/用法/版本记录）

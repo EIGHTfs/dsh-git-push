@@ -99,9 +99,21 @@ function sharedRootCandidates() {
   return [...new Set(list)];
 }
 
+// 读本机浏览器环境的**固定记录**：<DSH_HOME>/browser-env.json（无则返回 {}）。
+// 为什么需要它：这些路径（chrome / 运行库 / 字体 / playwright 根）每次会话都重新探测一遍
+//   既慢又容易找错；记录一次后所有会话直接读，换机/换版本时改那个文件即可。
+// 优先级：环境变量 DSH_PAGE_* > 本文件 > 自动探测。
+function readBrowserEnvRecord() {
+  const home = process.env.DSH_HOME;
+  if (!home) return {};
+  const p = join(home, 'browser-env.json');
+  if (!existsSync(p)) return {};
+  try { return JSON.parse(readFileSync(p, 'utf8')) || {}; } catch { return {}; }
+}
+
 // 探测浏览器运行环境（chrome / libs / fontconfig / playwright 根）。
-// **环境变量优先、自动探测兜底**——env（DSH_PAGE_*）便于换机/CI 显式指定，
-//   未设时按候选共享根逐个找（探测结果全部打印，便于核对「到底用了哪份资源」）。
+// 顺序：环境变量 DSH_PAGE_* → <DSH_HOME>/browser-env.json 固定记录 → 按候选共享根自动探测。
+// 探测结果全部打印，便于核对「到底用了哪份资源」。
 // 边界：探测不到 chrome 时直接报错退出并提示设 env（**不静默降级成假成功**）；
 //   libs/fonts 缺失只影响能否启动/中文渲染，交给调用方按报错处理。
 // @returns {{chrome:string, libs:string, fontconf:string, pwroot:string}}
@@ -111,6 +123,13 @@ function discover() {
   if (process.env.DSH_PAGE_LIBS) found.libs = process.env.DSH_PAGE_LIBS;
   if (process.env.DSH_PAGE_FONTCONF) found.fontconf = resolve(process.env.DSH_PAGE_FONTCONF);
   if (process.env.DSH_PAGE_PWROOT) found.pwroot = resolve(process.env.DSH_PAGE_PWROOT);
+
+  // 固定记录：一次记录、后续会话不再重新探测（env 已设的项不被覆盖）
+  const rec = readBrowserEnvRecord();
+  if (!found.chrome && rec.chrome) found.chrome = resolve(String(rec.chrome));
+  if (!found.libs && rec.libs) found.libs = String(rec.libs);
+  if (!found.fontconf && rec.fontconf) found.fontconf = resolve(String(rec.fontconf));
+  if (!found.pwroot && rec.pwroot) found.pwroot = resolve(String(rec.pwroot));
 
   for (const root of sharedRootCandidates()) {
     if (!found.chrome) {

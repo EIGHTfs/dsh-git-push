@@ -176,27 +176,7 @@
   "scripts/watch-preview.mjs": "preview.html 自动重生成监听（源码变更即重建）",
   "skills": "插件权威 skill（功能手册/规则/使用说明，安装副本的 skills/ 同步）",
   "skills/dsh-git-push-functions.md": "插件功能说明书（工具参数/HTTP API/源码定位）",
-  "skills/dsh-git-push.md": "插件手册（工具/规则包/设置 UI/安装实录）",
   "skills/dsh-repo-index.md": "dsh-repo-index skill（源码索引权威说明）",
-  "skills/git-push-live-fix.md": "git-push 工具问题当场提出并改插件的规则",
-  "skills/git-workflow-gitpush": "git-workflow-gitpush 工作流 skill（dsh-git-push 提交纪律）",
-  "skills/git-workflow-gitpush/README.md": "git 工作流 skill 子目录说明",
-  "skills/git-workflow-gitpush/commit-checkpoint-before-push-reorg.md": "推送重组前提交检查点规则",
-  "skills/git-workflow-gitpush/file-organize-git-first.md": "文件整理前先 git 提交规则",
-  "skills/git-workflow-gitpush/git-collab-conflict.md": "git 协作冲突审查规则",
-  "skills/git-workflow-gitpush/git-commit-before-batch-ops.md": "批量操作前先 git 提交规则",
-  "skills/git-workflow-gitpush/git-commit-feature-progress.md": "功能进度三态提交规则",
-  "skills/git-workflow-gitpush/git-project-read-history.md": "进项目先读提交历史规则",
-  "skills/git-workflow-gitpush/git-rebuild-process.md": "git 重建流程规则",
-  "skills/git-workflow-gitpush/git-remote-align-first.md": "远端对齐优先规则",
-  "skills/git-workflow-gitpush/github-api-only.md": "只走 GitHub API 规则",
-  "skills/git-workflow-gitpush/github-fallback-restore.md": "GitHub 回退恢复规则",
-  "skills/git-workflow-gitpush/github-pin-repos.md": "GitHub 固定仓库规则",
-  "skills/git-workflow-gitpush/move-delete-git-checkpoint.md": "移动删除前 git 检查点规则",
-  "skills/git-workflow-gitpush/readme-sync-git-md.md": "README 同步 git 提交规则",
-  "skills/git-workflow-gitpush/skill-every-change-commit-repo.md": "每次变更提交仓库规则",
-  "skills/git-workflow-gitpush/versioning-rule.md": "版本规范规则",
-  "skills/task-completion-report.md": "任务收尾汇报规则（✅+交付/验证/遗留）",
   "test": "node:test 全量单元测试（541+ 条，覆盖审计/推送/账号/HTTP/后台任务）",
   "test/.test": "空文件豁免标记（目录级豁免 .test 目录）",
   "test/test-account-ssh.mjs": "账号检查 + SSH 密钥测试",
@@ -245,7 +225,6 @@
   "scripts/verify-prestep.mjs": "上下文注入自检脚本（真实触发 agent/pre-step 验证注入）",
   "scripts/module-splitter.py": "巨型单文件按顶层块拆分脚本（analyze/split/verify 三命令，python3 零依赖；module_splitter 工具与 CLI 的底层实现）",
   "test/test-module-splitter.mjs": "module_splitter 工具 + CLI 接入测试（契约 + 行为 + 脚本随插件发布）",
-  "skills/tool-json-add-ask.md": "（待注释）",
   "assemble.json": "bench-template 下发清单（键=模板仓库相对路径，值=本插件落点；preview 启动两件套 → assets/）",
   "assets/start-preview.mjs": "预览反代服务器（模板 bench-template server/lib/preview 下发改用：本地服务 preview.html，/api/git-push/* 转发 DSH 真实后端 + token 认证）",
   "assets/start.sh": "预览服务器启停脚本（start/stop/restart/status + --port + PID/日志/健康检查 /preview-ping）",
@@ -278,24 +257,124 @@
   "test/test-audit-api.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "lib/ast/callgraph.js": {
+      "README.md": {
         "status": "M",
-        "mtime": "2026-10-01T22:38:16.581Z",
+        "mtime": "2026-10-02T11:57:10.056Z",
         "note": "注释可能需更新"
       },
-      "lib/ast/lang.js": {
+      "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-01T22:36:34.728Z",
+        "mtime": "2026-10-02T11:57:09.967Z",
         "note": "注释可能需更新"
       },
-      "lib/ast/magic-number.js": {
+      "scripts/browser-page-probe.mjs": {
         "status": "M",
-        "mtime": "2026-10-01T22:47:07.075Z",
+        "mtime": "2026-10-02T11:53:41.590Z",
         "note": "注释可能需更新"
       },
-      "lib/checks/dup-const.js": {
+      "skills/dsh-repo-index.md": {
         "status": "M",
-        "mtime": "2026-10-01T22:35:31.273Z",
+        "mtime": "2026-10-02T11:50:43.104Z",
+        "note": "注释可能需更新"
+      },
+      "skills/git-workflow-gitpush/README.md": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "skills/git-workflow-gitpush/commit-checkpoint-before-push-reorg.md": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "skills/git-workflow-gitpush/file-organize-git-first.md": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "skills/git-workflow-gitpush/git-collab-conflict.md": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "skills/git-workflow-gitpush/git-commit-before-batch-ops.md": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "skills/git-workflow-gitpush/git-commit-feature-progress.md": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "skills/git-workflow-gitpush/git-project-read-history.md": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "skills/git-workflow-gitpush/git-rebuild-process.md": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "skills/git-workflow-gitpush/git-remote-align-first.md": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "skills/git-workflow-gitpush/github-api-only.md": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "skills/git-workflow-gitpush/github-fallback-restore.md": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "skills/git-workflow-gitpush/github-pin-repos.md": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "skills/git-workflow-gitpush/move-delete-git-checkpoint.md": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "skills/git-workflow-gitpush/readme-sync-git-md.md": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "skills/git-workflow-gitpush/skill-every-change-commit-repo.md": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "skills/git-workflow-gitpush/versioning-rule.md": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "skills/task-completion-report.md": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "skills/tool-json-add-ask.md": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "skills/guide/": {
+        "status": "A",
+        "mtime": "2026-10-02T11:52:43.592Z",
+        "note": "注释可能需更新"
+      },
+      "skills/workflow/": {
+        "status": "A",
+        "mtime": "2026-10-02T11:56:45.826Z",
         "note": "注释可能需更新"
       }
     }
@@ -355,5 +434,34 @@
   "scripts/gen-preview.mjs": "preview.html 槽位数据自动生成器（gen 打印 / --write 写盘 / check 查漂移——__SLOTS__/__FAKE__ 从 listRuleSlots 真实生成，新增规则槽位不再手工维护）",
   "test/test-project-type-filter.mjs": "项目类型规则适配测试（非 dsh 项目不加载 dsh 槽位/0.x 版本规则、timeout 限 js 系、folder 尊重 gitignore——Pawchive 误报消除驱动）",
   "lib/checks/dup-const.js": "同名常量跨文件重复定义检查（DRY：findConstDefs 多语言常量提取 + 模块级过滤 + checkDuplicateConst 跨文件聚合——2026-10-02 新规则）",
-  "test/test-dup-const.mjs": "duplicate-const 规则测试（多语言提取 JS/Kotlin/Java/Go/Rust/Python、模块级过滤、跨文件聚合、test 目录排除、同值不同名不报）"
+  "test/test-dup-const.mjs": "duplicate-const 规则测试（多语言提取 JS/Kotlin/Java/Go/Rust/Python、模块级过滤、跨文件聚合、test 目录排除、同值不同名不报）",
+  "skills/guide": "（待注释）",
+  "skills/workflow": "（待注释）",
+  "skills/dev": "（待注释）",
+  "skills/guide/guide-audit.md": "（待注释）",
+  "skills/guide/guide-cli-scripts.md": "（待注释）",
+  "skills/guide/guide-clone-repos.md": "（待注释）",
+  "skills/guide/guide-commit-push.md": "（待注释）",
+  "skills/guide/guide-inject-ui.md": "（待注释）",
+  "skills/guide/guide-slash-completion.md": "（待注释）",
+  "skills/workflow/README.md": "（待注释）",
+  "skills/workflow/git-commit-discipline.md": "（待注释）",
+  "skills/workflow/git-project-startup.md": "（待注释）",
+  "skills/workflow/git-rebuild-process.md": "（待注释）",
+  "skills/workflow/github-operations.md": "（待注释）",
+  "skills/workflow/readme-sync-git-md.md": "（待注释）",
+  "skills/workflow/task-completion-report.md": "（待注释）",
+  "skills/workflow/tool-json-add-ask.md": "（待注释）",
+  "skills/workflow/versioning-rule.md": "（待注释）",
+  "assets/minihost.sh": "（待注释）",
+  "assets/preview-local-runner.mjs": "（待注释）",
+  "lib/git/visibility.js": "（待注释）",
+  "scripts/browser-page-probe.mjs": "（待注释）",
+  "skills/dev/dsh-git-push.md": "（待注释）",
+  "skills/dev/git-push-live-fix.md": "（待注释）",
+  "test/test-clone-parts-keep.mjs": "（待注释）",
+  "test/test-func-doc-drift.mjs": "（待注释）",
+  "test/test-private-gate.mjs": "（待注释）",
+  "test/test-quota-write.mjs": "（待注释）",
+  "test/test-visibility-unified.mjs": "（待注释）"
 }

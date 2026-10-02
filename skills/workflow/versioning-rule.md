@@ -5,8 +5,6 @@ whenToUse: 更新任意 DSH 自研插件或 gbmd 组件的版本号、打包 CRX
 generatedBy: deepseek-official/deepseek-v4-flash + EIGHTfs 2026-08-20（补充大版本换代判定）+ 2026-08-21（确立：版本只在提交时变化）+ 2026-10-02（修订：0.x 合法开发期——调研 SemVer 2.0.0 §4、Go v0、Cargo 0.y.z 语义后重设计）
 ---
 
-> ⭐ **先记住我**：任何会话开始前，先读用户档案 `.dsh/skills/remember-me.md`（优先级最高的 skill）：我是谁、我怎么用你、我立过的规矩。
-
 # 版本号规则（versioning-rule）
 
 > **权威源 = dsh-git-push 插件项目 skills/**（版本控制 skill 归 dsh-git-push 插件权威，2026-08-21 确立）；公用目录 .dsh/skills 与 ai-work-archive 为副本。（X.Y.Z 语义 + 版本只在提交时变化 + 0.x 合法开发期/1.0 稳定线 + 大版本换代判定）
@@ -211,4 +209,3 @@ generatedBy: deepseek-official/deepseek-v4-flash + EIGHTfs 2026-08-20（补充�
 
 ## 相关
 
-- remember-me（先记住我）：用户档案，优先级最高的 skill
