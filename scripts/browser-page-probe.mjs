@@ -1,37 +1,35 @@
 #!/usr/bin/env node
-/**
- * 浏览器页面探针（无头）——读「网页实际渲染出来的内容」+ 抓前端运行时错误。
- *
- * 用途（为什么需要它）：
- *   curl 只能拿到原始 HTML/响应，看不到 JS 渲染后的页面与前端异常。DSH 插件的前端
- *   entry 激活失败时，页面只显示 `web boot: 1 entry did not activate` / `<插件>: failed`，
- *   真实异常只在浏览器控制台——本脚本把「渲染后文本 + console/pageerror」一起抓出来。
- *
- * 设计约束（硬要求）：
- *   - **零硬编码路径**：浏览器/运行库/字体/playwright 全部按
- *     「环境变量 → 自动探测」解析，探测结果打印出来可核对。
- *   - **零必需依赖**：解析不到 playwright 时自动降级为 chrome `--dump-dom` 模式
- *     （仍能读渲染后文本，只是拿不到 console 错误与点击能力）。
- *
- * 用法：
- *   node scripts/browser-page-probe.mjs --url "http://127.0.0.1:30901/?token=XXX"
- *   node scripts/browser-page-probe.mjs --port 30901 --token XXX --click Settings --click "Git 提交推送"
- *   node scripts/browser-page-probe.mjs --url ... --out /tmp/page.txt --wait 15000
- *
- * 环境变量（可选，用于显式指定；不设则自动探测）：
- *   DSH_PAGE_SHARED_ROOT  共享根目录（其下含 pwviewer/ chromium-libs/ fonts/）
- *   DSH_PAGE_CHROME       浏览器可执行文件
- *   DSH_PAGE_LIBS         运行库目录（多个用 : 分隔，喂给 LD_LIBRARY_PATH）
- *   DSH_PAGE_FONTCONF     fontconfig 配置文件（中文字体，避免 CJK 渲染崩溃）
- *   DSH_PAGE_PWROOT       含 node_modules/playwright 的目录
- */
+// 浏览器页面探针（无头）——读「网页实际渲染出来的内容」+ 抓前端运行时错误。
+//
+// 用途（为什么需要它）：
+//   curl 只能拿到原始 HTML/响应，看不到 JS 渲染后的页面与前端异常。DSH 插件的前端
+//   entry 激活失败时，页面只显示 `web boot: 1 entry did not activate` / `<插件>: failed`，
+//   真实异常只在浏览器控制台——本脚本把「渲染后文本 + console/pageerror」一起抓出来。
+//
+// 设计约束（硬要求）：
+//   - **零硬编码路径**：浏览器/运行库/字体/playwright 全部按
+//     「环境变量 → 自动探测」解析，探测结果打印出来可核对。
+//   - **零必需依赖**：解析不到 playwright 时自动降级为 chrome `--dump-dom` 模式
+//     （仍能读渲染后文本，只是拿不到 console 错误与点击能力）。
+//
+// 用法：
+//   node scripts/browser-page-probe.mjs --url "http://127.0.0.1:30901/?token=XXX"
+//   node scripts/browser-page-probe.mjs --port 30901 --token XXX --click Settings --click "Git 提交推送"
+//   node scripts/browser-page-probe.mjs --url ... --out /tmp/page.txt --wait 15000
+//
+// 环境变量（可选，用于显式指定；不设则自动探测）：
+//   DSH_PAGE_SHARED_ROOT  共享根目录（其下含 pwviewer/ chromium-libs/ fonts/）
+//   DSH_PAGE_CHROME       浏览器可执行文件
+//   DSH_PAGE_LIBS         运行库目录（多个用 : 分隔，喂给 LD_LIBRARY_PATH）
+//   DSH_PAGE_FONTCONF     fontconfig 配置文件（中文字体，避免 CJK 渲染崩溃）
+//   DSH_PAGE_PWROOT       含 node_modules/playwright 的目录
 
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 
-/** 解析命令行参数（--k v / --flag）。 */
+// 解析命令行参数（--k v / --flag）。
 function parseArgv(argv) {
   const out = { click: [] };
   for (let i = 0; i < argv.length; i += 1) {
@@ -52,7 +50,14 @@ const URL = args.url
   ? String(args.url)
   : `http://127.0.0.1:${args.port || 30801}/?token=${args.token || ''}`;
 
-/** 有界目录探测：在候选根下找子目录名（深度受限，避免全盘扫描）。 */
+// 有界目录探测：在候选根下找子目录名。
+// 必须限深（maxDepth）——共享根下挂着大量卷/套件目录，无界遍历会扫全盘卡死
+//   （实测：早期全盘 find 找 chromium 既慢又命中错根目录）。找到即返回，不做全量收集。
+// 只按「目录名」在候选根下找，不写任何绝对路径。
+// @param {string} root 候选根目录
+// @param {string[]} names 目标子目录名（如 ['pwviewer'] / ['chromium-libs']）
+// @param {number} [maxDepth] 最大下探层数（默认 4，防大目录树拖慢）
+// @returns {string|undefined} 命中目录的绝对路径
 function findDirUnder(root, names, maxDepth = 4) {
   const queue = [[root, 0]];
   while (queue.length) {
@@ -69,7 +74,7 @@ function findDirUnder(root, names, maxDepth = 4) {
   return undefined;
 }
 
-/** 候选共享根：环境变量 → DSH_HOME 上溯 → 常见共享挂载点（模式化，不写死绝对路径）。 */
+// 候选共享根：环境变量 → DSH_HOME 上溯 → 常见共享挂载点（模式化，不写死绝对路径）。
 function sharedRootCandidates() {
   const list = [];
   if (process.env.DSH_PAGE_SHARED_ROOT) list.push(resolve(process.env.DSH_PAGE_SHARED_ROOT));
@@ -94,7 +99,12 @@ function sharedRootCandidates() {
   return [...new Set(list)];
 }
 
-/** 探测浏览器运行环境（chrome / libs / fontconfig / playwright 根）。 */
+// 探测浏览器运行环境（chrome / libs / fontconfig / playwright 根）。
+// **环境变量优先、自动探测兜底**——env（DSH_PAGE_*）便于换机/CI 显式指定，
+//   未设时按候选共享根逐个找（探测结果全部打印，便于核对「到底用了哪份资源」）。
+// 边界：探测不到 chrome 时直接报错退出并提示设 env（**不静默降级成假成功**）；
+//   libs/fonts 缺失只影响能否启动/中文渲染，交给调用方按报错处理。
+// @returns {{chrome:string, libs:string, fontconf:string, pwroot:string}}
 function discover() {
   const found = { chrome: '', libs: '', fontconf: '', pwroot: '' };
   if (process.env.DSH_PAGE_CHROME) found.chrome = resolve(process.env.DSH_PAGE_CHROME);
@@ -145,7 +155,13 @@ function discover() {
   return found;
 }
 
-/** 解析 playwright（可缺省）。 */
+// 解析 playwright（可缺省）。
+// playwright 只装在共享根的 `pwviewer/node_modules` 下，**不在本插件依赖里**——
+//   故用 createRequire 从「探测到的 pwroot」解析（而不是 import，避免把 playwright 变成硬依赖）。
+//   解析不到不报错：调用方降级为 chrome `--dump-dom`（仍能读渲染后文本）。
+// 边界：显式设了 DSH_PAGE_PWROOT 时只认它；否则依次试 pwroot → cwd → 本脚本位置。
+// @param {string} pwroot 含 node_modules/playwright 的目录（可为空）
+// @returns {object|null} playwright 模块，或 null（→ 降级模式）
 function loadPlaywright(pwroot) {
   const roots = [pwroot, process.cwd()].filter(Boolean);
   for (const root of roots) {
@@ -156,7 +172,7 @@ function loadPlaywright(pwroot) {
   try { return createRequire(import.meta.url)('playwright'); } catch { return null; }
 }
 
-/** 从渲染后的 HTML 里剥离标签，取可见文本（降级模式用）。 */
+// 从渲染后的 HTML 里剥离标签，取可见文本（降级模式用）。
 function stripHtml(html) {
   return html
     .replace(/<script[\s\S]*?<\/script>/gi, ' ')

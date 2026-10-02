@@ -6,13 +6,28 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 import { execSync } from 'node:child_process';
 
 import { buildVersionListText, applyVersionBlock, checkVersionDrift } from '../scripts/doc-version.mjs';
+import { findMarkedHostMd } from '../scripts/doc-tree.mjs';
+
+// 项目根：end-to-end 用例直接查真实仓库的版本列表与 git log 聚合是否一致
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 const mkTmp = () => mkdtempSync(join(tmpdir(), 'dshgp-docver-'));
+
+// end-to-end：真实项目根的版本列表必须与 git log 聚合一致。
+//   为什么放测试里：doc-version check 只是脚本，不跑就没人发现漂移；改成测试后
+//   每次全量测试都会拦住「提交了新版本但没同步版本表」。
+// 条件：仓库存在带 dshgp-version 标记块的 md 才检查（其他仓库无此文档自然跳过）。
+test('end-to-end：真实项目根 checkVersionDrift 无漂移（版本表与 git log 一致）', () => {
+  const host = findMarkedHostMd(ROOT, 'dshgp-version');
+  const r = checkVersionDrift({ hostPath: host, root: ROOT });
+  assert.equal(r.ok, true, `版本列表漂移（先跑 doc-version.mjs apply）：${JSON.stringify(r.issues)}`);
+});
 
 /** 建 git 仓库 + 两条带版本号的提交。 */
 function gitRepoWithVersions(dir) {

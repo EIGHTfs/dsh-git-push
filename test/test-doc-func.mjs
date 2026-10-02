@@ -7,14 +7,29 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 
 import {
   scanFileFuncs, collectFuncFiles, buildFuncListText, applyFuncBlock, checkFuncDrift,
 } from '../scripts/doc-func.mjs';
+import { findMarkedHostMd } from '../scripts/doc-tree.mjs';
+
+// 项目根：end-to-end 用例直接查真实仓库的函数列表与代码是否同步（漂移即测试失败）
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 const mkTmp = () => mkdtempSync(join(tmpdir(), 'dshgp-docfunc-'));
+
+// end-to-end：真实项目根的函数列表必须与最新扫描一致。
+//   为什么放测试里：doc-func check 只是脚本，不跑就没人发现漂移；改成测试后
+//   每次全量测试都会拦住「改了函数没同步 FUNCTIONS.md」。
+// 条件：仓库存在带 dshgp-functions 标记块的 md 才检查（其他仓库无此文档自然跳过）。
+test('end-to-end：真实项目根 checkFuncDrift 无漂移（函数列表与代码同步）', () => {
+  const host = findMarkedHostMd(ROOT, 'dshgp-functions');
+  const r = checkFuncDrift({ hostPath: host, root: ROOT });
+  assert.equal(r.ok, true, `函数列表漂移（先跑 doc-func.mjs apply）：${JSON.stringify(r.issues)}`);
+});
 
 test('doc-func：scanFileFuncs 提取函数（function/var/arrow）', () => {
   const dir = mkTmp();

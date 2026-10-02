@@ -1,15 +1,14 @@
-/**
- * 私有库豁免回归检测（README「④ 私有库豁免（private 槽位按远端可见性分级）」）。
- *
- * 回归现场：GitHub private 仓库（ai-work-archive）被 192 条 conv-* blocker 拦下——
- *   runAudit 的拦截判定只看「示例目录」，**没有任何可见性分级**；而 comment 槽位（conv-*）、
- *   docs 槽位、security 槽位等规则不受 private 槽位（凭据 glob）的可见性分级约束，于是
- *   「工作留痕（会话记录）」在私有仓库里照样被拦。README 明确承诺：
- *   「私密文件与工作留痕（会话记录/凭据/留痕）在私有仓库可正常提交推送，不需要额外豁免标记」。
- *
- * 本测试用 visibility 注入（免网络、免真实远端、免 git 仓库）验证三档行为：
- *   private → 只报告不拦截；public / unknown → 保守拦截（不误放公开库）。
- */
+// 私有库豁免回归检测（README「④ 私有库豁免（private 槽位按远端可见性分级）」）。
+//
+// 回归现场：GitHub private 仓库（ai-work-archive）被 192 条 conv-* blocker 拦下——
+//   README 承诺的私有库豁免在门禁层失效即本回归。
+//   runAudit 的拦截判定只看「示例目录」，**没有任何可见性分级**；而 comment 槽位（conv-*）、
+//   docs 槽位、security 槽位等规则不受 private 槽位（凭据 glob）的可见性分级约束，于是
+//   「工作留痕（会话记录）」在私有仓库里照样被拦。README 明确承诺：
+//   「私密文件与工作留痕（会话记录/凭据/留痕）在私有仓库可正常提交推送，不需要额外豁免标记」。
+//
+// 本测试用 visibility 注入（免网络、免真实远端、免 git 仓库）验证三档行为：
+//   private → 只报告不拦截；public / unknown → 保守拦截（不误放公开库）。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
@@ -18,19 +17,17 @@ import { join } from 'node:path';
 
 import { runAudit } from '../lib/commit-push.js';
 
-/** 审计配置：全量 + 不限文件数，确保扫到 fixture（不走 diff 范围）。 */
+// 审计配置：全量 + 不限文件数，确保扫到 fixture（不走 diff 范围）。
 const CFG = { auditEnabled: true, auditScanScope: 'full', maxScanFiles: 0, auditDisabledSlots: [] };
 
-/**
- * 造一个含 blocker 触发点的临时目录。
- * 触发词运行时拼接：避免测试源码自身命中 documentation/comment-suspicious-detection 黑名单。
- * 不建 git 仓库——audit collector 对非 git 目录有兜底（`.auditignore` 同源实现）。
- * @returns {string} 临时目录绝对路径
- */
+// 造一个含 blocker 触发点的临时目录。
+// 触发词按单字运行时拼接：避免测试源码自身命中 documentation/comment-suspicious-detection 黑名单。
+// 不建 git 仓库——audit collector 对非 git 目录有兜底（`.auditignore` 同源实现）。
+// @returns {string} 临时目录绝对路径
 function fixture() {
   const dir = mkdtempSync(join(tmpdir(), 'gitpush-private-gate-'));
   mkdirSync(join(dir, 'src'), { recursive: true });
-  const trigger = `${['用户', '原话'].join('')}：该注释命中 comment-suspicious-detection`;
+  const trigger = `${['用', '户', '原', '话'].join('')}：该注释命中 comment-suspicious-detection`;
   writeFileSync(join(dir, 'src', 'sample.js'), `// ${trigger}\nexport const a = 1;\n`);
   return dir;
 }

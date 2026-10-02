@@ -80,6 +80,7 @@ test('git_commit_push：有 jobs → 注册 kind=git-push 官方 job、返回 as
 });
 
 // ---------- 回归：owner 形状（exec.agent → 会话 id 字符串）----------
+// 实测根因：owner 传了 Agent 对象（宿主要会话 id）→ 抛错被吞 → 后台 job 静默降级同步。
 test('git_commit_push：exec.agent 存在时 owner 必须是会话 id（宿主 resolveOwner 契约回归）', async () => {
   const dir = mkRepo();
   const mj = mockJobs();
@@ -148,6 +149,7 @@ test('git_commit_push：jobs.start 抛错（no job controller serves this agent�
 });
 
 // ---------- 回归：git_clone 的 job owner 形状（与 git_commit_push 同一契约）----------
+// clone 与 commit_push 共用同一 owner 契约，必须一起锁住。
 test('git_clone：exec.agent 存在时 owner 必须是会话 id（clone job 路径回归）', async () => {
   // 只记录不执行 spec.run()：避免用例真的发起网络 clone（owner 形状与 async 返回不受影响）
   const mj = {

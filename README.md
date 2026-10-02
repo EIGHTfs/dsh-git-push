@@ -318,6 +318,7 @@ dsh-git-push/
 │   │   ├── scan-runner.js — （待注释）
 │   │   ├── sensitive.js — 敏感信息扫描（提交前拦截密钥/凭据/私密文件）
 │   │   ├── transport.js — 推送通道（dispatchPush 决策：SSH/API/auto + 结果核对）
+│   │   ├── visibility.js — （待注释）
 │   │   ├── wrapped-git.js — 浅包装 git（自动凭据透传：SSH 私钥/HTTPS token，git-sluice git <args> 与未知命令透传）
 │   ├── http/ — HTTP 总入口（鉴权中间件 + 端点处理器骨架）
 │   │   ├── index.js — HTTP 总入口（Origin/CSRF/写确认/413/路由分发）
@@ -411,6 +412,7 @@ dsh-git-push/
 │   ├── test-false-positive-fixes.mjs — 误报修复回归测试
 │   ├── test-file-health.mjs — 文件健康度矩阵评分测试
 │   ├── test-folder-scope.mjs — 目录级审计作用域回归测试
+│   ├── test-func-doc-drift.mjs — （待注释）
 │   ├── test-git.mjs — git 总入口测试（runGit/commitAndPush/凭据/克隆）
 │   ├── test-gitignore-match.mjs — gitignore 兜底匹配（与真 git 对拍 + 非 git 端到端）
 │   ├── test-history-audit.mjs — （待注释）
@@ -428,6 +430,7 @@ dsh-git-push/
 │   ├── test-project-type-filter.mjs — 项目类型规则适配测试（非 dsh 项目不加载 dsh 槽位/0.x 版本规则、timeout 限 js 系、folder 尊重 gitignore——Pawchive 误报消除驱动）
 │   ├── test-push-transport.mjs — 推送通道回归（SSH 优先/一致性语义）
 │   ├── test-quality.mjs — 评分总入口测试（AST 质量检查器）
+│   ├── test-quota-write.mjs — （待注释）
 │   ├── test-readme-gen.mjs — README 生成测试（模板渲染/版本表）
 │   ├── test-rename-locator.mjs — rename-locator 测试（同名不同作用域分组/模块级/过滤）
 │   ├── test-repo-list.mjs — 仓库列表测试（本地扫描/索引读写/HTTP 端点/远端状态）
@@ -445,6 +448,7 @@ dsh-git-push/
 │   ├── test-task-queue.mjs — 后台化回归测试（官方 job 注册 / 无 jobs 同步保底 / blocker 拦截）
 │   ├── test-tool-probes.mjs — （待注释）
 │   ├── test-tree-doc.mjs — README 目录树脚本测试（gen/check/apply 闭环）
+│   ├── test-visibility-unified.mjs — （待注释）
 │   ├── fixtures/ — （待注释）
 │   │   ├── TimeZoneComboBox-CRnoCikG.js — Pawchive 混淆产物样本（hash 文件名——跳过判定 fixture）
 ├── docs/ — 开发文档
