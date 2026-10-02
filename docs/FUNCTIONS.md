@@ -1809,12 +1809,12 @@
 |------|------|------|------|
 | `countSourceDirs` | 28-47 | 20 | `function countSourceDirs(tree, { threshold = 1, excludeDirs = [] } = {}) {` |
 
-### test/test-func-doc-drift.mjs（68 行 · 2 个函数）
+### test/test-func-doc-drift.mjs（70 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `fixture` | 18-68 | 51 | `function fixture(block) {` |
-| `driftFindings` | 34-37 | 4 | `async function driftFindings(dir) {` |
+| `fixture` | 18-70 | 53 | `function fixture(block) {` |
+| `driftFindings` | 36-39 | 4 | `async function driftFindings(dir) {` |
 
 ### test/test-git.mjs（844 行 · 2 个函数）
 
