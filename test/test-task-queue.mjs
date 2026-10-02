@@ -29,6 +29,13 @@ function mockJobs() {
   return {
     state: jobs,
     start(spec) {
+      // 复刻宿主 jobs-local.resolveOwner 的契约：owner 必须是**会话 id 字符串**
+      //   （resolveOwner(session) → agents.get(session)）。传 Agent 对象时查不到活 agent，
+      //   宿主会抛 `session "<x>" has no live agent` → 插件降级同步、后台 job 静默失效。
+      //   这里显式校验，避免「owner 形状错了但 mock 不看」造成的假绿（实测踩过）。
+      if (spec.owner !== undefined && typeof spec.owner !== 'string') {
+        throw new Error(`session "${String(spec.owner)}" has no live agent (background job owner must be live)`);
+      }
       const id = `git-push-${jobs.length + 1}`;
       const hooks = spec.run();
       jobs.push({ id, spec, hooks });
@@ -69,6 +76,23 @@ test('git_commit_push：有 jobs → 注册 kind=git-push 官方 job、返回 as
     assert.equal(parsed.ok, true);
     const log = execSync(`git -C "${dir}" log --oneline -1`, { encoding: 'utf8' });
     assert.match(log, /官方job提交/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+// ---------- 回归：owner 形状（exec.agent → 会话 id 字符串）----------
+test('git_commit_push：exec.agent 存在时 owner 必须是会话 id（宿主 resolveOwner 契约回归）', async () => {
+  const dir = mkRepo();
+  const mj = mockJobs();
+  try {
+    const r = await callTool(
+      'git_commit_push',
+      { repo: dir, message: 'owner契约', audit: false, push: false, requirementsConfirmed: true },
+      { workspaceRoot: dir }, Config(), null, mj,
+      { agent: { id: 'session-abc123' } }, // 宿主 exec.agent：Agent 对象（带会话 id）
+    );
+    assert.equal(r.async, true, 'owner 形状正确时必须走后台 job，不得静默降级同步');
+    assert.equal(r.jobFallback, undefined, '不得出现 jobFallback（降级标记）');
+    assert.equal(mj.state[0].spec.owner, 'session-abc123', 'owner 必须是 exec.agent.id 字符串');
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
