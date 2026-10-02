@@ -7,6 +7,7 @@
 
 | 版本 | 内容 |
 |------|------|
+| 2.2.0 | 功能新增——①git_clone 工具注册宿主后台 job（同 git_commit_push 模式：jobs.start + jobId 返回，AI 用 job_output/job_list/job_kill 查询中止；宿主无 job 控制器时降级同步执行；clone 只读无审计门禁）②UI 显示 API 通道配额（githubFetch 响应头透传 X-RateLimit-* → account.js 在线校验提取 core 通道剩余/上限/重置时刻 → account-status.json 持久化 apiQuota → /api/git-push/account-status 返回 → 设置页账号 tab 显示「API 配额：core X/5000｜重置 HH:MM」，代理剥离响应头时显示「—」） |
 | 2.1.4 | Pawchive 误报消除（505→453 消 52 条）——①checkMinLength 空规则短路（filterRulesByExt 裁剪后空数组 truthy → dispatch 仍调检查器、空 rules 照跑 threshold 默认 2 → JS 文件报「裸 min-length」27 条；与其他检查器同短路修复）②ext 脚本 gitignore 感知（variable-min-length 自 walk 不走 collector，把被忽略的上游克隆 docs/.probe-ktoolbox 68607 文件扫入 14 条泄漏；读 .gitignore/.auditignore 用 isIgnoredByRules 目录级跳过）③ext SKIP_DIRS 补 tools/scripts（一次性工具/测试脚本单字母豁免）+ naming Java 分支排除流程关键字（return q/if (h)/new Q( 被当「类型+短名」误报；DECL_KEYWORDS 集合）；ext variable-min-length 26→1；测试 +3；回归 945 除 3 个环境性失败（GitHub 403/clone 409，stash 验证与改动无关） |
 | 2.1.3 | versioning 规则重设计——0.x 合法开发期（SemVer §4 + Go/Cargo 官方，调研驱动） |
 | 2.1.2 | 项目类型规则适配——非 dsh 项目误报消除（Pawchive 539→512/blocker 10→3） |
