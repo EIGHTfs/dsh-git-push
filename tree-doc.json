@@ -255,44 +255,29 @@
   "test/test-audit-api.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "README.md": {
-        "status": "M",
-        "mtime": "2026-10-02T12:49:33.110Z",
-        "note": "注释可能需更新"
-      },
-      "assets/preview.html": {
-        "status": "M",
-        "mtime": "2026-10-02T12:46:56.603Z",
-        "note": "注释可能需更新"
-      },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-02T12:49:33.036Z",
+        "mtime": "2026-10-02T14:27:40.591Z",
         "note": "注释可能需更新"
       },
-      "lib/audit-rules/audit-rules-npm.yml": {
+      "lib/ast/naming.js": {
         "status": "M",
-        "mtime": "2026-10-02T12:45:28.539Z",
+        "mtime": "2026-10-02T14:22:56.413Z",
         "note": "注释可能需更新"
       },
-      "lib/audit-rules/audit-rules-version.yml": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "lib/checks/filter.js": {
+      "lib/audit-rules/audit-rules-nodejs.yml": {
         "status": "M",
-        "mtime": "2026-10-02T12:47:06.181Z",
+        "mtime": "2026-10-02T14:24:33.586Z",
         "note": "注释可能需更新"
       },
-      "lib/rule/compilers/regex.js": {
+      "scripts/audit-ext/variable-min-length.mjs": {
         "status": "M",
-        "mtime": "2026-10-02T12:45:20.612Z",
+        "mtime": "2026-10-02T14:23:47.317Z",
         "note": "注释可能需更新"
       },
-      "test/test-rule-include-paths.mjs": {
+      "test/test-ext-variable-min-length.mjs": {
         "status": "A",
-        "mtime": "2026-10-02T12:46:21.152Z",
+        "mtime": "2026-10-02T14:25:27.893Z",
         "note": "注释可能需更新"
       }
     }
@@ -384,5 +369,7 @@
   "test/test-visibility-unified.mjs": "（待注释）",
   "docs/诊断-审计误报-第三方项目语料.md": "（待注释）",
   "test/test-clone-maxfilemb.mjs": "（待注释）",
-  "test/test-rule-include-paths.mjs": "（待注释）"
+  "test/test-rule-include-paths.mjs": "（待注释）",
+  "test/test-ext-variable-min-length.mjs": "（待注释）",
+  "test/test-dup-const-idiom.mjs": "（待注释）"
 }

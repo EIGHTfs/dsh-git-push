@@ -369,14 +369,14 @@
 | `isNamedConstantValue` | 217-224 | 8 | `function isNamedConstantValue(tokens, numIdx) {` |
 | `collectPythonEnumAssignLines` | 246-272 | 27 | `function collectPythonEnumAssignLines(text) {` |
 
-### lib/ast/naming.js（241 行 · 4 个函数）
+### lib/ast/naming.js（242 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `checkNameLengthAst` | 26-147 | 122 | `export function checkNameLengthAst(text = '', { min = 2, allow = [] } = {}) {` |
-| `checkShortFunctionNameAst` | 161-176 | 16 | `export function checkShortFunctionNameAst(text = '', { max = 2, allow = [] } = {}) {` |
-| `checkSmallFileReadAst` | 192-215 | 24 | `export function checkSmallFileReadAst(text = '') {` |
-| `checkConsoleLogJsonAst` | 224-240 | 17 | `export function checkConsoleLogJsonAst(text = '') {` |
+| `checkNameLengthAst` | 26-148 | 123 | `export function checkNameLengthAst(text = '', { min = 2, allow = [] } = {}) {` |
+| `checkShortFunctionNameAst` | 162-177 | 16 | `export function checkShortFunctionNameAst(text = '', { max = 2, allow = [] } = {}) {` |
+| `checkSmallFileReadAst` | 193-216 | 24 | `export function checkSmallFileReadAst(text = '') {` |
+| `checkConsoleLogJsonAst` | 225-241 | 17 | `export function checkConsoleLogJsonAst(text = '') {` |
 
 ### lib/ast/scope.js（242 行 · 11 个函数）
 
@@ -620,16 +620,16 @@
 |------|------|------|------|
 | `checkDuplicateCode` | 28-69 | 42 | `export function checkDuplicateCode(fileTexts = [], rules = null) {` |
 
-### lib/checks/dup-const.js（172 行 · 6 个函数）
+### lib/checks/dup-const.js（187 行 · 6 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `extractFromConst` | 26-46 | 21 | `function extractFromConst(tokens, i, atTopLevel, push) {` |
-| `extractFromJavaFinal` | 52-60 | 9 | `function extractFromJavaFinal(tokens, i, push) {` |
-| `findConstDefs` | 73-120 | 48 | `export function findConstDefs(text = '') {` |
-| `atTopLevel` | 78-81 | 4 | `const atTopLevel = (line) => {` |
-| `push` | 82-86 | 5 | `const push = (name, val, line) => {` |
-| `checkDuplicateConst` | 128-171 | 44 | `export function checkDuplicateConst(fileTexts = [], rules = null) {` |
+| `extractFromConst` | 33-53 | 21 | `function extractFromConst(tokens, i, atTopLevel, push) {` |
+| `extractFromJavaFinal` | 59-67 | 9 | `function extractFromJavaFinal(tokens, i, push) {` |
+| `findConstDefs` | 80-135 | 56 | `export function findConstDefs(text = '') {` |
+| `atTopLevel` | 85-88 | 4 | `const atTopLevel = (line) => {` |
+| `push` | 89-101 | 13 | `const push = (name, val, line) => {` |
+| `checkDuplicateConst` | 143-186 | 44 | `export function checkDuplicateConst(fileTexts = [], rules = null) {` |
 
 ### lib/checks/file-health.js（147 行 · 2 个函数）
 
@@ -1435,11 +1435,12 @@
 | `requireJsYaml` | 2999-3038 | 40 | `function requireJsYaml() {` |
 | `renamed` | 3004-3008 | 5 | `function renamed(from, to) {` |
 
-### scripts/audit-ext/variable-min-length.mjs（70 行 · 1 个函数）
+### scripts/audit-ext/variable-min-length.mjs（94 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `walk` | 38-66 | 29 | `const walk = (dir) => {` |
+| `isExcludedPath` | 29-36 | 8 | `const isExcludedPath = (rel) => {` |
+| `walk` | 60-90 | 31 | `const walk = (dir) => {` |
 
 ### scripts/audit-runner.mjs（35 行 · 1 个函数）
 

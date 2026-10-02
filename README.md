@@ -421,8 +421,10 @@ dsh-git-push/
 │   ├── test-doc-version.mjs — （待注释）
 │   ├── test-docs-score.mjs — 文档加分制测试（文档集圈法/四检查/公式/不一致 review/不冲突）
 │   ├── test-dup-code.mjs — （待注释）
+│   ├── test-dup-const-idiom.mjs — （待注释）
 │   ├── test-dup-const.mjs — duplicate-const 规则测试（多语言提取 JS/Kotlin/Java/Go/Rust/Python、模块级过滤、跨文件聚合、test 目录排除、同值不同名不报）
 │   ├── test-exempt.mjs — 豁免总入口测试（7 标记 + 位置语义）
+│   ├── test-ext-variable-min-length.mjs — （待注释）
 │   ├── test-false-positive-fixes.mjs — 误报修复回归测试
 │   ├── test-file-health.mjs — 文件健康度矩阵评分测试
 │   ├── test-folder-scope.mjs — 目录级审计作用域回归测试

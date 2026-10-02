@@ -51,6 +51,10 @@ rules:
     min_length: 2
     exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx"]
     exceptions: ["i", "j", "k", "n", "e", "cb"]
+    # token 级判定层的惯用短名按层豁免：lib/ast/* 与 lib/checks/* 是 token/行级扫描代码，
+    #   m（正则匹配）、c/d（token）、q（query）等单字母名作用域极小且是该层通行写法，
+    #   改名是高 churn 且易改错 ⇒ 归为误报（自审实测命中 8 条），不按缺陷计
+    exclude_paths: ["lib/ast", "lib/checks"]
     fixable: false
 
   # 坏命名检出增强（bad-naming 样本实测补全）——函数名缩写/万能词/通用词/魔数/嵌套深度
