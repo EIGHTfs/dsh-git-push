@@ -257,27 +257,12 @@
     "worktree": {
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-03T21:59:25.750Z",
+        "mtime": "2026-10-03T22:11:32.610Z",
         "note": "注释可能需更新"
       },
-      "lib/app/tool-call.js": {
+      "lib/app/handlers/clone.js": {
         "status": "M",
-        "mtime": "2026-10-03T21:57:08.334Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-account-refresh-on-push.mjs": {
-        "status": "A",
-        "mtime": "2026-10-03T21:34:07.998Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-clone-token.mjs": {
-        "status": "A",
-        "mtime": "2026-10-03T21:57:19.088Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-settings-roundtrip.mjs": {
-        "status": "A",
-        "mtime": "2026-10-03T21:36:11.993Z",
+        "mtime": "2026-10-03T22:09:27.933Z",
         "note": "注释可能需更新"
       }
     }
