@@ -257,12 +257,17 @@
     "worktree": {
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-03T22:11:32.610Z",
+        "mtime": "2026-10-03T22:12:10.367Z",
         "note": "注释可能需更新"
       },
-      "lib/app/handlers/clone.js": {
+      "lib/self/index.js": {
         "status": "M",
-        "mtime": "2026-10-03T22:09:27.933Z",
+        "mtime": "2026-10-03T22:11:56.595Z",
+        "note": "注释可能需更新"
+      },
+      "package.json": {
+        "status": "M",
+        "mtime": "2026-10-03T22:12:04.308Z",
         "note": "注释可能需更新"
       }
     }
