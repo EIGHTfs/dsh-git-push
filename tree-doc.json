@@ -257,27 +257,27 @@
     "worktree": {
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-02T14:27:40.591Z",
+        "mtime": "2026-10-03T21:59:25.750Z",
         "note": "注释可能需更新"
       },
-      "lib/ast/naming.js": {
+      "lib/app/tool-call.js": {
         "status": "M",
-        "mtime": "2026-10-02T14:22:56.413Z",
+        "mtime": "2026-10-03T21:57:08.334Z",
         "note": "注释可能需更新"
       },
-      "lib/audit-rules/audit-rules-nodejs.yml": {
-        "status": "M",
-        "mtime": "2026-10-02T14:24:33.586Z",
-        "note": "注释可能需更新"
-      },
-      "scripts/audit-ext/variable-min-length.mjs": {
-        "status": "M",
-        "mtime": "2026-10-02T14:23:47.317Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-ext-variable-min-length.mjs": {
+      "test/test-account-refresh-on-push.mjs": {
         "status": "A",
-        "mtime": "2026-10-02T14:25:27.893Z",
+        "mtime": "2026-10-03T21:34:07.998Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-clone-token.mjs": {
+        "status": "A",
+        "mtime": "2026-10-03T21:57:19.088Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-settings-roundtrip.mjs": {
+        "status": "A",
+        "mtime": "2026-10-03T21:36:11.993Z",
         "note": "注释可能需更新"
       }
     }
@@ -371,5 +371,10 @@
   "test/test-clone-maxfilemb.mjs": "（待注释）",
   "test/test-rule-include-paths.mjs": "（待注释）",
   "test/test-ext-variable-min-length.mjs": "（待注释）",
-  "test/test-dup-const-idiom.mjs": "（待注释）"
+  "test/test-dup-const-idiom.mjs": "（待注释）",
+  "docs/design-doc-coverage-audit.md": "（待注释）",
+  "lib/git/endpoints.js": "（待注释）",
+  "test/test-account-refresh-on-push.mjs": "（待注释）",
+  "test/test-clone-token.mjs": "（待注释）",
+  "test/test-settings-roundtrip.mjs": "（待注释）"
 }

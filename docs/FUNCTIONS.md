@@ -172,26 +172,26 @@
 | `getLastSlotHitStats` | 28-30 | 3 | `export function getLastSlotHitStats() {` |
 | `getLastSlotHitMeta` | 33-35 | 3 | `export function getLastSlotHitMeta() {` |
 
-### lib/app/tool-call.js（451 行 · 16 个函数）
+### lib/app/tool-call.js（463 行 · 16 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `pushWithPostSteps` | 53-88 | 36 | `async function pushWithPostSteps(args, env, cfg) {` |
 | `buildCommitPushJobSpec` | 91-106 | 16 | `function buildCommitPushJobSpec(repo, doPush) {` |
 | `done` | 96-102 | 7 | `const done = (async () => {` |
-| `callCloneJob` | 114-136 | 23 | `async function callCloneJob(args, jobs, exec, log) {` |
-| `buildCloneJobSpec` | 139-155 | 17 | `function buildCloneJobSpec(target, dest, doClone) {` |
-| `done` | 144-151 | 8 | `const done = (async () => {` |
-| `callCommitPush` | 162-209 | 48 | `async function callCommitPush(args, env, cfg, log, jobs, exec) {` |
-| `doPush` | 178-178 | 1 | `const doPush = () => pushWithPostSteps(args, env, cfg);` |
-| `buildAuditOpts` | 220-229 | 10 | `function buildAuditOpts(args, cfg, scope) {` |
-| `runHistoryAuditTool` | 235-267 | 33 | `async function runHistoryAuditTool(args, env, cfg, jobs, exec, weights) {` |
-| `doHistory` | 241-244 | 4 | `const doHistory = async () => {` |
-| `callCodeAudit` | 269-281 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
-| `runStandardAuditTool` | 284-316 | 33 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
-| `callTool` | 318-422 | 105 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null) {` |
-| `shellSplit` | 425-443 | 19 | `function shellSplit(input) {` |
-| `readTextSafe` | 446-450 | 5 | `function readTextSafe(path = '') {` |
+| `callCloneJob` | 120-146 | 27 | `async function callCloneJob(args, jobs, exec, log, env = {}, cfg = {}) {` |
+| `buildCloneJobSpec` | 149-165 | 17 | `function buildCloneJobSpec(target, dest, doClone) {` |
+| `done` | 154-161 | 8 | `const done = (async () => {` |
+| `callCommitPush` | 172-219 | 48 | `async function callCommitPush(args, env, cfg, log, jobs, exec) {` |
+| `doPush` | 188-188 | 1 | `const doPush = () => pushWithPostSteps(args, env, cfg);` |
+| `buildAuditOpts` | 230-239 | 10 | `function buildAuditOpts(args, cfg, scope) {` |
+| `runHistoryAuditTool` | 245-277 | 33 | `async function runHistoryAuditTool(args, env, cfg, jobs, exec, weights) {` |
+| `doHistory` | 251-254 | 4 | `const doHistory = async () => {` |
+| `callCodeAudit` | 279-291 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
+| `runStandardAuditTool` | 294-326 | 33 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
+| `callTool` | 328-434 | 107 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null) {` |
+| `shellSplit` | 437-455 | 19 | `function shellSplit(input) {` |
+| `readTextSafe` | 458-462 | 5 | `function readTextSafe(path = '') {` |
 
 ### lib/app/tools.js（27 行 · 2 个函数）
 
@@ -890,14 +890,14 @@
 | `quotaChannel` | 195-203 | 9 | `function quotaChannel(resources, key) {` |
 | `fetchApiQuota` | 215-230 | 16 | `export async function fetchApiQuota({ workspaceRoot = '', token = '' } = {}) {` |
 
-### lib/git/api.js（108 行 · 4 个函数）
+### lib/git/api.js（111 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `githubFetch` | 19-64 | 46 | `export async function githubFetch(path, { token = '', method = 'GET', body, timeout = 60_000, headers: extraHeaders } = {}) {` |
-| `parseGithubOwnerRepo` | 67-81 | 15 | `export function parseGithubOwnerRepo(originUrl) {` |
-| `isBadCredentials` | 84-86 | 3 | `export function isBadCredentials(reason = '') {` |
-| `detectRepoVisibility` | 93-107 | 15 | `export async function detectRepoVisibility({ repoPath = '', token = '' } = {}) {` |
+| `githubFetch` | 22-67 | 46 | `export async function githubFetch(path, { token = '', method = 'GET', body, timeout = 60_000, headers: extraHeaders } = {}) {` |
+| `parseGithubOwnerRepo` | 70-84 | 15 | `export function parseGithubOwnerRepo(originUrl) {` |
+| `isBadCredentials` | 87-89 | 3 | `export function isBadCredentials(reason = '') {` |
+| `detectRepoVisibility` | 96-110 | 15 | `export async function detectRepoVisibility({ repoPath = '', token = '' } = {}) {` |
 
 ### lib/git/atomic-json.js（99 行 · 5 个函数）
 
@@ -915,18 +915,18 @@
 |------|------|------|------|
 | `browseDir` | 17-38 | 22 | `export function browseDir(p = '', { root = '' } = {}) {` |
 
-### lib/git/clone-download.js（313 行 · 8 个函数）
+### lib/git/clone-download.js（314 行 · 8 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `partitionBySize` | 54-65 | 12 | `export function partitionBySize(blobs = [], maxFileMB = DEFAULT_MAX_FILE_MB) {` |
-| `downloadBlobs` | 82-163 | 82 | `export async function downloadBlobs(o) {` |
-| `one` | 106-138 | 33 | `const one = async (entry) => {` |
-| `worker` | 141-148 | 8 | `const worker = async () => {` |
-| `fetchBlobJson` | 168-183 | 16 | `async function fetchBlobJson(owner, repo, sha, token) {` |
-| `removeDirForce` | 209-228 | 20 | `export async function removeDirForce(dir, attempts = 3) {` |
-| `fetchToFile` | 230-312 | 83 | `async function fetchToFile({ owner, repo, branch, relPath, token, out, partPath, size, onBytes, signal = null }) {` |
-| `mkHeaders` | 264-271 | 8 | `const mkHeaders = (raw, withRange) => {` |
+| `partitionBySize` | 55-66 | 12 | `export function partitionBySize(blobs = [], maxFileMB = DEFAULT_MAX_FILE_MB) {` |
+| `downloadBlobs` | 83-164 | 82 | `export async function downloadBlobs(o) {` |
+| `one` | 107-139 | 33 | `const one = async (entry) => {` |
+| `worker` | 142-149 | 8 | `const worker = async () => {` |
+| `fetchBlobJson` | 169-184 | 16 | `async function fetchBlobJson(owner, repo, sha, token) {` |
+| `removeDirForce` | 210-229 | 20 | `export async function removeDirForce(dir, attempts = 3) {` |
+| `fetchToFile` | 231-313 | 83 | `async function fetchToFile({ owner, repo, branch, relPath, token, out, partPath, size, onBytes, signal = null }) {` |
+| `mkHeaders` | 265-272 | 8 | `const mkHeaders = (raw, withRange) => {` |
 
 ### lib/git/clone-jobs.js（251 行 · 15 个函数）
 
@@ -995,13 +995,25 @@
 | `persistSshPub` | 173-186 | 14 | `export function persistSshPub(pub, { workspaceRoot = '' } = {}) {` |
 | `generateSshKey` | 195-234 | 40 | `export function generateSshKey(email, { workspaceRoot = '', force = false } = {}) {` |
 
-### lib/git/exec.js（79 行 · 3 个函数）
+### lib/git/endpoints.js（77 行 · 6 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `runGit` | 17-32 | 16 | `export function runGit(args, { cwd = '', timeoutMs = 120_000, env = {} } = {}) {` |
-| `gitRaw` | 40-54 | 15 | `export function gitRaw(args, { cwd = '', timeoutMs = 600_000 } = {}) {` |
-| `runGitAsync` | 64-78 | 15 | `export function runGitAsync(args, { cwd = '', timeoutMs = 120_000, env = {} } = {}) {` |
+| `mirrorPrefix` | 20-24 | 5 | `export function mirrorPrefix() {` |
+| `withMirror` | 33-40 | 8 | `export function withMirror(url) {` |
+| `mirrorGitConfigEnv` | 46-54 | 9 | `export function mirrorGitConfigEnv(env) {` |
+| `blobApiUrl` | 64-66 | 3 | `export function blobApiUrl(owner, repo, sha) {` |
+| `contentsApiUrl` | 69-71 | 3 | `export function contentsApiUrl(owner, repo, encodedPath, encodedRef) {` |
+| `rawFileUrl` | 74-76 | 3 | `export function rawFileUrl(owner, repo, encodedRef, encodedPath) {` |
+
+### lib/git/exec.js（121 行 · 4 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `resolveGitBin` | 26-40 | 15 | `export function resolveGitBin() {` |
+| `runGit` | 53-70 | 18 | `export function runGit(args, { cwd = '', timeoutMs = 120_000, env = {} } = {}) {` |
+| `gitRaw` | 78-94 | 17 | `export function gitRaw(args, { cwd = '', timeoutMs = 600_000 } = {}) {` |
+| `runGitAsync` | 104-120 | 17 | `export function runGitAsync(args, { cwd = '', timeoutMs = 120_000, env = {} } = {}) {` |
 
 ### lib/git/ignore.js（70 行 · 1 个函数）
 
@@ -1024,15 +1036,15 @@
 | `ensureAuxSshRemote` | 49-65 | 17 | `export function ensureAuxSshRemote(repoPath, owner, repo, result = {}) {` |
 | `autoTagDSHProject` | 72-101 | 30 | `export async function autoTagDSHProject({ repoPath = '', version = '', commitSha = '', owner = '', repo = '', token = '' } = {}) {` |
 
-### lib/git/push.js（269 行 · 5 个函数）
+### lib/git/push.js（273 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `commitAndPush` | 26-134 | 109 | `export async function commitAndPush({ repoPath = '', message = '', push = true, dryRun = false, token = '', customIgnorePatterns = '', requirementsConfirmed = false, force = false, pushMethod = 'ssh', pushGate = false, pushConfirmed = false, paths = '' } = {}) {` |
-| `fetchRemoteBranchRef` | 147-160 | 14 | `async function fetchRemoteBranchRef(repoPath, branch, owner, repo) {` |
-| `enhanceAfterPushSuccess` | 168-198 | 31 | `async function enhanceAfterPushSuccess({ repoPath, pr, token, steps, commitSha }) {` |
-| `readmeCheckHint` | 203-208 | 6 | `export function readmeCheckHint(repoPath) {` |
-| `pushCurrentBranch` | 217-268 | 52 | `export async function pushCurrentBranch({ repoPath = '', pushMethod = 'ssh' } = {}) {` |
+| `commitAndPush` | 26-138 | 113 | `export async function commitAndPush({ repoPath = '', message = '', push = true, dryRun = false, token = '', customIgnorePatterns = '', requirementsConfirmed = false, force = false, pushMethod = 'ssh', pushGate = false, pushConfirmed = false, paths = '' } = {}) {` |
+| `fetchRemoteBranchRef` | 151-164 | 14 | `async function fetchRemoteBranchRef(repoPath, branch, owner, repo) {` |
+| `enhanceAfterPushSuccess` | 172-202 | 31 | `async function enhanceAfterPushSuccess({ repoPath, pr, token, steps, commitSha }) {` |
+| `readmeCheckHint` | 207-212 | 6 | `export function readmeCheckHint(repoPath) {` |
+| `pushCurrentBranch` | 221-272 | 52 | `export async function pushCurrentBranch({ repoPath = '', pushMethod = 'ssh' } = {}) {` |
 
 ### lib/git/remote.js（74 行 · 3 个函数）
 
@@ -1126,13 +1138,13 @@
 |------|------|------|------|
 | `resolveRepoVisibility` | 24-35 | 12 | `export async function resolveRepoVisibility(repoPath, token = '') {` |
 
-### lib/git/wrapped-git.js（56 行 · 3 个函数）
+### lib/git/wrapped-git.js（68 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `buildWrappedGitEnv` | 14-26 | 13 | `export function buildWrappedGitEnv({ workspaceRoot = '' } = {}) {` |
-| `runWrappedGit` | 29-37 | 9 | `export function runWrappedGit(args = [], { workspaceRoot = '' } = {}) {` |
-| `runWrappedGitCapture` | 43-56 | 14 | `export function runWrappedGitCapture(args = [], { workspaceRoot = '' } = {}) {` |
+| `buildWrappedGitEnv` | 16-31 | 16 | `export function buildWrappedGitEnv({ workspaceRoot = '' } = {}) {` |
+| `runWrappedGit` | 34-47 | 14 | `export function runWrappedGit(args = [], { workspaceRoot = '' } = {}) {` |
+| `runWrappedGitCapture` | 53-68 | 16 | `export function runWrappedGitCapture(args = [], { workspaceRoot = '' } = {}) {` |
 
 ### lib/http/index.js（170 行 · 9 个函数）
 

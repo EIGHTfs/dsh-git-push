@@ -318,6 +318,7 @@ dsh-git-push/
 │   │   ├── config.js — 路径与配置（PLUGIN_ROOT + 开发者要求清单读取）
 │   │   ├── cred-env.js — 凭据传递工具（SSH 私钥路径 GIT_SSH_COMMAND / HTTPS askpass 脚本，AI 执行外部 git 不接触明文）
 │   │   ├── credentials.js — 凭据解析（token/SSH 私钥：环境变量→凭据文件→settings）
+│   │   ├── endpoints.js — （待注释）
 │   │   ├── exec.js — git 进程调用（runGit 统一超时/错误规整 + gitRaw 原始字节）
 │   │   ├── ignore.js — .gitignore 兜底（DEFAULT_IGNORE_PATTERNS 补齐）
 │   │   ├── index.js — Git 执行层统一出口
@@ -395,6 +396,7 @@ dsh-git-push/
 │   ├── start.sh — 预览服务器启停脚本（start/stop/restart/status + --port + PID/日志/健康检查 /preview-ping）
 ├── test/ — node:test 全量单元测试（541+ 条，覆盖审计/推送/账号/HTTP/后台任务）
 │   ├── .test — 空文件豁免标记（目录级豁免 .test 目录）
+│   ├── test-account-refresh-on-push.mjs — （待注释）
 │   ├── test-account-ssh.mjs — 账号检查 + SSH 密钥测试
 │   ├── test-audit-api-http.mjs — （待注释）
 │   ├── test-audit-api.mjs — （待注释）
@@ -413,6 +415,7 @@ dsh-git-push/
 │   ├── test-clone-maxfilemb.mjs — （待注释）
 │   ├── test-clone-parts-keep.mjs — （待注释）
 │   ├── test-clone-preview-buttons.mjs — clone 预览确认框按钮可点（真渲染+真点击）
+│   ├── test-clone-token.mjs — （待注释）
 │   ├── test-command-registry.mjs — 命令注册表测试（工具入表/查找/parseRegistryArgs/清单生成）
 │   ├── test-context.mjs — 上下文注入测试
 │   ├── test-cred-env.mjs — git_cred_env 凭据传递测试（双通道/无明文/askpass 调用/无凭据兜底）
@@ -456,6 +459,7 @@ dsh-git-push/
 │   ├── test-scope.mjs — 作用域最小实验测试（分类器/机制/magic 接入）
 │   ├── test-self.mjs — 自身总入口测试（VERSION/CLI/help 比对）
 │   ├── test-settings-persistence.mjs — 设置侧边栏持久化专项测试（L1 提交/L2 白名单/L3 回读/L4 消费四层断言）
+│   ├── test-settings-roundtrip.mjs — （待注释）
 │   ├── test-sidebar-interaction.mjs — 侧边栏规则包列表交互自检
 │   ├── test-sidebar-state.mjs — 设置侧边栏状态自检（设置键回读/凭据已填写判断/统一刷新入口/产物同步）
 │   ├── test-slash-commands.mjs — 用户输入框 /git-audit 斜杠命令（解析/接线/对本仓库跑 quick）
@@ -473,6 +477,7 @@ dsh-git-push/
 │   ├── DETAILS-EXEMPT-AND-RULES.md — 细节补充：豁免注释与规则 yml 用法全录
 │   ├── FUNCTIONS.md — 函数列表宿主（doc-func apply 写 dshgp-functions 标记块）
 │   ├── audit-2026-09-26.md — （待注释）
+│   ├── design-doc-coverage-audit.md — （待注释）
 │   ├── 方案-audit-history-历史提交审计.md — （待注释）
 │   ├── 方案-io-risk-规则优化.md — 方案：io-risk 规则优化（对照诊断的差距分析：元数据操作分档 + rename 降档）
 │   ├── 方案-io-risk规则推断与准确率评估.md — 方案：io-risk 规则推断与准确率评估
