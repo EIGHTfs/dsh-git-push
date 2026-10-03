@@ -36,12 +36,14 @@ const SCRIPTS = [
   },
 ];
 
-test('脚本自解析根与命令行对象不算重复定义（只报真共享常量）', () => {
+test('脚本自解析根与命令行对象不算重复定义（脚本间同名常量也不报）', () => {
   const found = checkDuplicateConst(SCRIPTS, {});
   const names = found.map((f) => String(f.message || '').match(/常量「([^ ]+) /)?.[1]).filter(Boolean);
   assert.ok(!names.some((n) => ['HERE', 'ROOT', 'args', 'env'].includes(n)),
     `脚本惯用法不该报（实得：${names.join(', ')}）`);
-  assert.ok(names.includes('MAX'), '同名同值的真常量仍要报（不误杀）');
+  // 两个 scripts/ 下的文件各写一份 MAX 也不报：脚本要能单独运行（随插件发布、安装副本里同样可跑），
+  //   强行合并会让脚本依赖 lib 而失去独立性——真共享常量只在 lib 内部判定（见下一条测试）
+  assert.ok(!names.includes('MAX'), `脚本间同名常量不该报（实得：${names.join(', ')}）`);
 });
 
 test('lib 内真重复仍会报（不因豁免而漏掉领域常量）', () => {
@@ -51,5 +53,22 @@ test('lib 内真重复仍会报（不因豁免而漏掉领域常量）', () => {
   ];
   const found = checkDuplicateConst(libs, {});
   assert.equal(found.length, 1, 'lib 内同名同值仍应报出来供提公共常量');
-  assert.match(found[0].message, /FN_BODY_LOOKAHEAD/);
+});
+
+test('首 token 判不了内容的常量不报（对象/数组字面量、new 构造）', () => {
+  // 实测背景：WRITE_METHODS 在 lib/ast（数组方法 push/add/set）与 lib/http（HTTP 方法 POST/PUT）
+  //   是两个完全不同的域，仅名字撞车被报；SKIP_DIRS 在 lib/score 与 lib/skip-dirs 内容也不同；
+  //   auditExt = { ... } 各扩展脚本行为完全不同。检查器只取首 token（`{`/`[`/`new`）判不了内容。
+  const cases = [
+    ['WRITE_METHODS', "const WRITE_METHODS = new Set(['push', 'add']);", "const WRITE_METHODS = new Set(['POST', 'PUT']);"],
+    ['SKIP_DIRS', "const SKIP_DIRS = new Set(['a']);", "const SKIP_DIRS = new Set(['b']);"],
+    ['auditExt', 'const auditExt = { name: "a" };', 'const auditExt = { name: "b" };'],
+  ];
+  for (const [name, a, b] of cases) {
+    const found = checkDuplicateConst([
+      { path: `lib/x/${name.toLowerCase()}-a.js`, text: `${a}\n` },
+      { path: `lib/y/${name.toLowerCase()}-b.js`, text: `${b}\n` },
+    ], {});
+    assert.equal(found.length, 0, `${name} 首 token 判不了内容，不该报（实得 ${found.length} 条）`);
+  }
 });

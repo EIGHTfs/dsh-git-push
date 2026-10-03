@@ -193,6 +193,7 @@ dsh-git-push/
 ├── lib/ — 核心实现（10 总入口 + 审计引擎 + git 执行层 + 规则编译层）
 │   ├── ARCHITECTURE.md — 架构说明文档
 │   ├── BUGFIX-NOTES-2026-09-14.md — Bug 修复说明（diff 审计提速 / 凭据文件拦截三层根因）
+│   ├── audit-defaults.js — （待注释）
 │   ├── client.js — 侧边栏设置 UI 源码（账号卡片/审计/规则包三选项卡，零依赖手写 DOM）
 │   ├── commit-push.js — 审计提交总入口（commitWithAudit + runAudit 同步审计）
 │   ├── fsx.js — 文件系统适配层（CIFS/SMB 兼容：copyFile 读写回退、chmod 尽力而为、元数据能力探测）
@@ -220,6 +221,7 @@ dsh-git-push/
 │   │   ├── brace.js — 括号配对与区间包含工具
 │   │   ├── callgraph.js — 调用链追踪（单文件调用图 + isInRequestPath，io-risk 请求路径判定升级）
 │   │   ├── code-lines.js — 代码行判定（真代码 vs 注释/字符串）+ 字符串字面量提取
+│   │   ├── consts.js — （待注释）
 │   │   ├── control-flow.js — 控制流检查（同步 fs/空 catch/圈复杂度/嵌套深度）
 │   │   ├── credential.js — 凭据标识符判定（硬编码/引用/类型检查）
 │   │   ├── dataflow.js — 数据流检查（清空后访问，三层审计 L2）
@@ -381,6 +383,8 @@ dsh-git-push/
 │   ├── sync-plugin.mjs — 双副本同步脚本（源仓库 → 部署安装副本）
 │   ├── verify-prestep.mjs — 上下文注入自检脚本（真实触发 agent/pre-step 验证注入）
 │   ├── watch-preview.mjs — preview.html 自动重生成监听（源码变更即重建）
+│   ├── __pycache__/ — （待注释）
+│   │   ├── module-splitter.cpython-38.pyc — （待注释）
 │   ├── audit-ext/ — （待注释）
 │   │   ├── _example-readme-present.mjs — 审计扩展契约示例（_ 前缀：演示不参与实际审计）
 │   │   ├── variable-min-length.mjs — 审计扩展：variable-min-length（内置规则抽出试点——统一动态入口）
@@ -401,6 +405,7 @@ dsh-git-push/
 │   ├── test-audit-api-http.mjs — （待注释）
 │   ├── test-audit-api.mjs — （待注释）
 │   ├── test-audit-bad-file.mjs — 审计拦截门禁测试（硬编码密码/API key/.env 凭据文件）
+│   ├── test-audit-defaults.mjs — （待注释）
 │   ├── test-audit-empty.mjs — （待注释）
 │   ├── test-audit-ext.mjs — 审计扩展自动接入测试（契约加载/降级/match/auditFull 并入）
 │   ├── test-audit-scope.mjs — 审计作用域/凭据占位符回归测试
@@ -426,6 +431,7 @@ dsh-git-push/
 │   ├── test-dup-code.mjs — （待注释）
 │   ├── test-dup-const-idiom.mjs — （待注释）
 │   ├── test-dup-const.mjs — duplicate-const 规则测试（多语言提取 JS/Kotlin/Java/Go/Rust/Python、模块级过滤、跨文件聚合、test 目录排除、同值不同名不报）
+│   ├── test-exempt-hint-classify.mjs — （待注释）
 │   ├── test-exempt.mjs — 豁免总入口测试（7 标记 + 位置语义）
 │   ├── test-ext-variable-min-length.mjs — （待注释）
 │   ├── test-false-positive-fixes.mjs — 误报修复回归测试
@@ -467,6 +473,7 @@ dsh-git-push/
 │   ├── test-status-secret.mjs — token 明文不下发安全回归
 │   ├── test-symlink-resolution.mjs — 软链安装依赖解析回归测试（默认失败/--preserve-symlinks/NODE_PATH/真实副本四种场景）
 │   ├── test-task-queue.mjs — 后台化回归测试（官方 job 注册 / 无 jobs 同步保底 / blocker 拦截）
+│   ├── test-tokenizer-multiline-template.mjs — （待注释）
 │   ├── test-tool-probes.mjs — （待注释）
 │   ├── test-tree-doc.mjs — README 目录树脚本测试（gen/check/apply 闭环）
 │   ├── test-visibility-unified.mjs — （待注释）

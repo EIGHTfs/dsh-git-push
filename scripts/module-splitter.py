@@ -588,6 +588,29 @@ def cmd_analyze(argv):
     print('\n下一步：据上表把块分到 plan.json 的 plan 里，再跑 split。')
 
 
+def check_split_output(written, outdir):
+    """写盘后逐文件语法校验（node --check）——抓「块边界划错导致产出非法 JS」的静默坏文件。
+
+    为什么单独成函数：这是 cmd_split 里唯一与「拼装/写盘」无关的独立阶段（自审
+    python/max-function-length 报 cmd_split 过长），提出来既降函数长度，也让这段
+    「产物合法性」判定能被单独阅读与复用。
+
+    失败即 sys.exit（不返回）：模块文本已落盘但不是合法 JS，继续跑只会让坏文件进入
+    后续提交；提示里带上「修好 plan 后重跑」与文件位置。
+    """
+    for mod, content in written.items():
+        if not mod.endswith(('.js', '.mjs', '.cjs')):
+            continue
+        probe = subprocess.run(['node', '--check', '--input-type=module'],
+                               input=content, capture_output=True, text=True)
+        if probe.returncode != 0:
+            err = (probe.stderr or '').strip().splitlines()
+            detail = next((l for l in err if 'Error' in l), err[0] if err else '')
+            sys.exit(f'❌ {mod} 语法校验失败——模块文本已写出但**不是合法 JS**，'
+                     f'通常是块边界/行范围把闭合括号划走了：{detail}\n'
+                     f'   该文件已留在 {outdir}/{mod}，修好 plan 后重跑。')
+
+
 def cmd_split(argv):
     dry = '--dry-run' in argv
     argv = [a for a in argv if a != '--dry-run']
@@ -649,19 +672,9 @@ def cmd_split(argv):
     # 写盘后语法校验：这是唯一能抓住「块边界被划错导致少了个闭合括号」这类
     # 静默产坏文件的手段——上面所有行级覆盖审计都只看「行有没有被承载」，
     # 看不出承载之后拼出来的文本是否仍是合法程序（实测漏过：块尾 `}` 被划给别的模块，
-    # 审计全过、写出的文件 node 直接 SyntaxError）。
+    # 审计全过、写出的文件 node 直接 SyntaxError）。实现见 check_split_output。
     if not dry and not cfg.get('skip_syntax_check'):
-        for mod, content in written.items():
-            if not mod.endswith(('.js', '.mjs', '.cjs')):
-                continue
-            probe = subprocess.run(['node', '--check', '--input-type=module'],
-                                   input=content, capture_output=True, text=True)
-            if probe.returncode != 0:
-                err = (probe.stderr or '').strip().splitlines()
-                detail = next((l for l in err if 'Error' in l), err[0] if err else '')
-                sys.exit(f'❌ {mod} 语法校验失败——模块文本已写出但**不是合法 JS**，'
-                         f'通常是块边界/行范围把闭合括号划走了：{detail}\n'
-                         f'   该文件已留在 {outdir}/{mod}，修好 plan 后重跑。')
+        check_split_output(written, outdir)
 
     orig_exports = [b['name'] for b in parse_blocks(src) if b['exported']]
     clauses = parse_export_clauses(src)

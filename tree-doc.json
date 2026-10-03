@@ -257,17 +257,12 @@
     "worktree": {
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-03T22:12:10.367Z",
+        "mtime": "2026-10-03T23:16:39.395Z",
         "note": "注释可能需更新"
       },
-      "lib/self/index.js": {
+      "lib/app/handlers/meta.js": {
         "status": "M",
-        "mtime": "2026-10-03T22:11:56.595Z",
-        "note": "注释可能需更新"
-      },
-      "package.json": {
-        "status": "M",
-        "mtime": "2026-10-03T22:12:04.308Z",
+        "mtime": "2026-10-03T23:16:11.073Z",
         "note": "注释可能需更新"
       }
     }
@@ -366,5 +361,12 @@
   "lib/git/endpoints.js": "（待注释）",
   "test/test-account-refresh-on-push.mjs": "（待注释）",
   "test/test-clone-token.mjs": "（待注释）",
-  "test/test-settings-roundtrip.mjs": "（待注释）"
+  "test/test-settings-roundtrip.mjs": "（待注释）",
+  "test/test-tokenizer-multiline-template.mjs": "（待注释）",
+  "lib/audit-defaults.js": "（待注释）",
+  "test/test-audit-defaults.mjs": "（待注释）",
+  "lib/ast/consts.js": "（待注释）",
+  "scripts/__pycache__": "（待注释）",
+  "scripts/__pycache__/module-splitter.cpython-38.pyc": "（待注释）",
+  "test/test-exempt-hint-classify.mjs": "（待注释）"
 }
