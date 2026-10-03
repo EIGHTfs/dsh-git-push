@@ -7,6 +7,7 @@
 
 | 版本 | 内容 |
 |------|------|
+| 2.4.0 | 2.4.0 — clone 链路三修（工具漏传 token / 防护顺序 / 互斥判定）+ 账号与读改写回归测试 |
 | 2.3.0 | 版本兼容自动切换——client 不再依赖 settingsScope 注入服务（DSH 0.2.0 移除，entry pending 报 Failed to load plugins），特性检测 0.1.6 真 scope / 0.2.0 fallback；配置真源本就走 HTTP config.json 行为一致；版本表同步（doc-version 聚合入表 2.3.0）；DSH 0.2.0 兼容修复——settings API 版本自动切换 + client 改 ctx.get 防御式读取 + apply 常驻诊断层 |
 | 2.2.1 | token API 配额实时查询显示 + 凭据区去重 + 预览服务 --local 免重启模式 |
 | 2.2.0 | git_clone 后台 job 化 + UI 显示 API 通道配额 |
