@@ -132,15 +132,19 @@ test('account-status 的「已填写」判断用配置真源，不用在线校�
   const end = accountSrc.indexOf('export async function handleAccountCheck', start);
   const block = accountSrc.slice(start, end > 0 ? end : start + 3000);
 
-  // 必须读凭据真源
+  // 必须读凭据真源（该判断已提成模块级函数 readCredentialFlags——自审 max-cyclomatic-complexity
+  //   报 handleAccountStatus 复杂度 28，把凭据真源读取与凭据块渲染两段提出去后降到阈值内）
+  const helperStart = accountSrc.indexOf('function readCredentialFlags');
+  const helperBlock = accountSrc.slice(helperStart, accountSrc.indexOf('\n}', helperStart) + 2);
+  assert.match(block, /readCredentialFlags\(/, 'handleAccountStatus 必须调 readCredentialFlags 读凭据真源');
   assert.match(block, /fileHasToken|fileHasSsh/, 'account-status 必须从凭据文件真源判断「是否已填写」');
-  assert.match(block, /resolveToken\(/, 'token 的已填写判断必须查配置真源（resolveToken）');
-  assert.match(block, /readSshPub\(/, 'SSH 公钥的已填写判断必须查配置真源（readSshPub）');
+  assert.match(helperBlock, /resolveToken\(/, 'token 的已填写判断必须查配置真源（resolveToken）');
+  assert.match(helperBlock, /readSshPub\(/, 'SSH 公钥的已填写判断必须查配置真源（readSshPub）');
 
   // 契约：readSshPub 返回对象，必须取 .configured（历史上误当字符串 .trim() 抛异常被吞 → 恒 false）
-  assert.match(block, /readSshPub\([^)]*\)\s*\??\.configured/,
+  assert.match(helperBlock, /readSshPub\([^)]*\)\s*\??\.configured/,
     'readSshPub 返回对象，必须读 .configured；直接当字符串处理会抛异常导致「已填写」恒为 false');
-  assert.doesNotMatch(block, /readSshPub\([^)]*\)\s*\|\|\s*''\s*\)\s*\.trim\(\)/,
+  assert.doesNotMatch(helperBlock, /readSshPub\([^)]*\)\s*\|\|\s*''\s*\)\s*\.trim\(\)/,
     '不得把 readSshPub 的返回值当字符串做 .trim()');
 
   // 不得退回「只看快照」的旧口径
