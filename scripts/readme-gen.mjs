@@ -175,8 +175,27 @@ export function scrubConvWording(label) {
     .trim();
 }
 
+/**
+ * 读可选的「版本量化记录」（`<repo>/version-metrics.json`）。
+ *
+ * 为什么需要：版本表由 git log 聚合，行内容取自提交信息——偏叙述，看不出这版到底改善了多少。
+ *   本函数允许为某版本补一句**前后对比**（如「误报 16 → 0」），渲染时拼到该行内容最前。
+ *   数据放独立 json（而不是写死在脚本里）：改数字不用改代码，且与版本号一一对应可校验。
+ *
+ * @returns {Record<string,string>} 版本号 → 一句话量化（缺文件/格式错时返回空对象，不阻断生成）
+ */
+export function readVersionMetrics(repoPath) {
+  try {
+    const p = join(repoPath, 'version-metrics.json');
+    if (!existsSync(p)) return {};
+    const data = JSON.parse(readFileSync(p, 'utf8'));
+    return data && typeof data === 'object' && !Array.isArray(data) ? data : {};
+  } catch { return {}; }
+}
+
 export function buildReadmeVersionTable(repoPath) {
   const groups = listVersionCommits(repoPath);
+  const metrics = readVersionMetrics(repoPath);
   const lines = ['| 版本 | 内容 |', '|------|------|'];
   if (groups.length) {
     const by = new Map();
@@ -193,7 +212,12 @@ export function buildReadmeVersionTable(repoPath) {
       const [bm, bi, bp] = b.split('.').map(Number);
       return (bm - am) || (bi - ai) || (bp - ap);
     });
-    for (const k of keys) lines.push(`| ${k} | ${by.get(k).filter(Boolean).join('；')} |`);
+    for (const k of keys) {
+      const body = by.get(k).filter(Boolean).join('；');
+      // 有量化记录就拼到最前（一眼看出这版改善了什么），没有则保持原样
+      const metric = metrics[k] ? `${metrics[k]}——${body}` : body;
+      lines.push(`| ${k} | ${metric} |`);
+    }
   }
   return lines;
 }

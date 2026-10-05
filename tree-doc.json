@@ -233,13 +233,7 @@
   "test/test-docs-score.mjs": "文档加分制测试（文档集圈法/四检查/公式/不一致 review/不冲突）",
   "lib/git/cred-env.js": "凭据传递工具（SSH 私钥路径 GIT_SSH_COMMAND / HTTPS askpass 脚本，AI 执行外部 git 不接触明文）",
   "test/test-cred-env.mjs": "git_cred_env 凭据传递测试（双通道/无明文/askpass 调用/无凭据兜底）",
-  "docs/方案-tree-doc变动追踪与函数文档.md": "（待注释）",
-  "docs/方案-audit-history-历史提交审计.md": "（待注释）",
-  "docs/方案-repo-index-account-status-更新收口.md": "（待注释）",
-  "docs/方案-文档维度加分制.md": "（待注释）",
   "test/test-cli-audit-parity.mjs": "CLI 与源码全量审计一致性测试（audit --full --json vs 直接 auditFull，含忽略排除）",
-  "docs/方案-io-risk规则推断与准确率评估.md": "方案：io-risk 规则推断与准确率评估",
-  "docs/方案-io-risk-规则优化.md": "方案：io-risk 规则优化（对照诊断的差距分析：元数据操作分档 + rename 降档）",
   "scripts/rules-solo-audit.mjs": "规则单启控制变量扫描（基准全关+逐规则单启+全量对照，报告供 AI/人工审规则有效性与局限，按需运行非常驻）",
   "lib/ast/scope.js": "变量作用域分类器（module/function/loop 行号区间 + 模块常量赋值判定）",
   "lib/rule/scope.js": "审计作用域机制层（scope_rules 规范化 + resolveScopeAction）",
@@ -249,20 +243,199 @@
   "lib/plugin/auto-detect.js": "任务完成自动推送·检测层（纯函数：✅任务完成 触发/❌⚠ 阻断/自定义正则/许可合成判断）",
   "lib/plugin/auto-push.js": "任务完成自动推送·核心（turn/end 监听→检测→autoPushEnabled 开关→调 commitWithAudit 完整门禁，不裸提交）",
   "test/test-auto-push.mjs": "任务完成自动推送测试（检测纯函数 + registerAutoPush 门控监听注册）",
-  "docs/audit-2026-09-26.md": "（待注释）",
   "lib/app/audit-api.js": "审计结果 API 聚合层（/api/git-push/audit：按规则/文件/严重级/规则包分组 + severity 过滤 + top 截断）",
   "test/test-audit-api-http.mjs": "（待注释）",
   "test/test-audit-api.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "docs/FUNCTIONS.md": {
-        "status": "M",
-        "mtime": "2026-10-03T23:16:39.395Z",
+      "CONTRIBUTING.md": {
+        "status": "A",
+        "mtime": "2026-10-05T01:24:58.711Z",
         "note": "注释可能需更新"
       },
-      "lib/app/handlers/meta.js": {
+      "README.md": {
         "status": "M",
-        "mtime": "2026-10-03T23:16:11.073Z",
+        "mtime": "2026-10-05T01:51:56.628Z",
+        "note": "注释可能需更新"
+      },
+      "SECURITY.md": {
+        "status": "A",
+        "mtime": "2026-10-05T01:24:49.226Z",
+        "note": "注释可能需更新"
+      },
+      "docs/CHANGELOG.md": {
+        "status": "M",
+        "mtime": "2026-10-05T01:54:46.551Z",
+        "note": "注释可能需更新"
+      },
+      "docs/FUNCTIONS.md": {
+        "status": "M",
+        "mtime": "2026-10-05T01:54:46.716Z",
+        "note": "注释可能需更新"
+      },
+      "docs/SPEC.md": {
+        "status": "A",
+        "mtime": "2026-10-05T01:26:47.843Z",
+        "note": "注释可能需更新"
+      },
+      "docs/audit-2026-09-26.md": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "docs/design-doc-coverage-audit.md": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "docs/功能-仓库索引与账号状态.md": {
+        "status": "A",
+        "mtime": "2026-10-05T01:16:25.396Z",
+        "note": "注释可能需更新"
+      },
+      "docs/功能-历史提交审计.md": {
+        "status": "A",
+        "mtime": "2026-10-05T01:16:08.592Z",
+        "note": "注释可能需更新"
+      },
+      "docs/功能-审计规则体系.md": {
+        "status": "A",
+        "mtime": "2026-10-05T01:16:00.245Z",
+        "note": "注释可能需更新"
+      },
+      "docs/功能-文档与结构追踪.md": {
+        "status": "A",
+        "mtime": "2026-10-05T01:16:16.280Z",
+        "note": "注释可能需更新"
+      },
+      "docs/方案-audit-history-历史提交审计.md": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "docs/方案-io-risk-规则优化.md": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "docs/方案-io-risk规则推断与准确率评估.md": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "docs/方案-repo-index-account-status-更新收口.md": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "docs/方案-tree-doc变动追踪与函数文档.md": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "docs/方案-审计规则按语言划分与检查器语言化.md": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "docs/方案-文档维度加分制.md": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "docs/诊断-审计误报-第三方项目语料.md": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "docs/诊断-提交审计-auditignore-缺no-index.md": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "lib/app/settings-bridge.js": {
+        "status": "M",
+        "mtime": "2026-10-05T01:40:19.860Z",
+        "note": "注释可能需更新"
+      },
+      "lib/checks/dup-const.js": {
+        "status": "M",
+        "mtime": "2026-10-05T01:29:51.716Z",
+        "note": "注释可能需更新"
+      },
+      "lib/git/clone-download.js": {
+        "status": "M",
+        "mtime": "2026-10-05T01:38:02.165Z",
+        "note": "注释可能需更新"
+      },
+      "lib/git/sensitive.js": {
+        "status": "M",
+        "mtime": "2026-10-05T01:45:43.265Z",
+        "note": "注释可能需更新"
+      },
+      "lib/self/index.js": {
+        "status": "M",
+        "mtime": "2026-10-05T01:54:31.201Z",
+        "note": "注释可能需更新"
+      },
+      "package.json": {
+        "status": "M",
+        "mtime": "2026-10-05T01:54:16.886Z",
+        "note": "注释可能需更新"
+      },
+      "scripts/readme-gen.mjs": {
+        "status": "M",
+        "mtime": "2026-10-05T01:22:47.243Z",
+        "note": "注释可能需更新"
+      },
+      "scripts/scan-file-io.mjs": {
+        "status": "M",
+        "mtime": "2026-10-05T01:51:38.781Z",
+        "note": "注释可能需更新"
+      },
+      "scripts/scrub-user-wording.mjs": {
+        "status": "M",
+        "mtime": "2026-10-05T01:48:36.824Z",
+        "note": "注释可能需更新"
+      },
+      "test/regression-2.4.1.mjs": {
+        "status": "A",
+        "mtime": "2026-10-05T01:20:04.195Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-command-registry.mjs": {
+        "status": "M",
+        "mtime": "2026-10-05T01:11:56.325Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-plugin.mjs": {
+        "status": "M",
+        "mtime": "2026-10-05T01:12:15.313Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-settings-persistence.mjs": {
+        "status": "M",
+        "mtime": "2026-10-05T01:42:18.346Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-tool-contract.mjs": {
+        "status": "A",
+        "mtime": "2026-10-05T01:11:10.447Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-tools-e2e.mjs": {
+        "status": "A",
+        "mtime": "2026-10-05T01:19:44.837Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-version-metrics.mjs": {
+        "status": "A",
+        "mtime": "2026-10-05T01:23:11.658Z",
+        "note": "注释可能需更新"
+      },
+      "version-metrics.json": {
+        "status": "A",
+        "mtime": "2026-10-05T01:54:39.132Z",
         "note": "注释可能需更新"
       }
     }
@@ -286,8 +459,6 @@
   "docs/FUNCTIONS.md": "函数列表宿主（doc-func apply 写 dshgp-functions 标记块）",
   "test/test-symlink-resolution.mjs": "软链安装依赖解析回归测试（默认失败/--preserve-symlinks/NODE_PATH/真实副本四种场景）",
   "lib/cli": "（待注释）",
-  "docs/方案-审计规则按语言划分与检查器语言化.md": "（待注释）",
-  "docs/诊断-提交审计-auditignore-缺no-index.md": "（待注释）",
   "lib/ast/dup-code.js": "（待注释）",
   "lib/audit-rules/audit-rules-python.yml": "（待注释）",
   "lib/checks/dup-code.js": "（待注释）",
@@ -352,12 +523,10 @@
   "test/test-private-gate.mjs": "（待注释）",
   "test/test-quota-write.mjs": "（待注释）",
   "test/test-visibility-unified.mjs": "（待注释）",
-  "docs/诊断-审计误报-第三方项目语料.md": "（待注释）",
   "test/test-clone-maxfilemb.mjs": "（待注释）",
   "test/test-rule-include-paths.mjs": "（待注释）",
   "test/test-ext-variable-min-length.mjs": "（待注释）",
   "test/test-dup-const-idiom.mjs": "（待注释）",
-  "docs/design-doc-coverage-audit.md": "（待注释）",
   "lib/git/endpoints.js": "（待注释）",
   "test/test-account-refresh-on-push.mjs": "（待注释）",
   "test/test-clone-token.mjs": "（待注释）",
@@ -368,5 +537,17 @@
   "lib/ast/consts.js": "（待注释）",
   "scripts/__pycache__": "（待注释）",
   "scripts/__pycache__/module-splitter.cpython-38.pyc": "（待注释）",
-  "test/test-exempt-hint-classify.mjs": "（待注释）"
+  "test/test-exempt-hint-classify.mjs": "（待注释）",
+  "test/test-tool-contract.mjs": "（待注释）",
+  "docs/功能-仓库索引与账号状态.md": "（待注释）",
+  "docs/功能-历史提交审计.md": "（待注释）",
+  "docs/功能-审计规则体系.md": "（待注释）",
+  "docs/功能-文档与结构追踪.md": "（待注释）",
+  "test/regression-2.4.1.mjs": "（待注释）",
+  "test/test-tools-e2e.mjs": "（待注释）",
+  "test/test-version-metrics.mjs": "（待注释）",
+  "version-metrics.json": "（待注释）",
+  "CONTRIBUTING.md": "（待注释）",
+  "SECURITY.md": "（待注释）",
+  "docs/SPEC.md": "（待注释）"
 }

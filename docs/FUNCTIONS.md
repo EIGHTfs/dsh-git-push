@@ -136,17 +136,19 @@
 | `fn` | 33-33 | 1 | `const fn = (v) => (v === undefined ? meta.default : v);` |
 | `redactConfig` | 140-147 | 8 | `export function redactConfig(cfg = {}) {` |
 
-### lib/app/settings-bridge.js（151 行 · 7 个函数）
+### lib/app/settings-bridge.js（167 行 · 9 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `applySettingsToCfg` | 37-70 | 34 | `export function applySettingsToCfg(cfg, patch) {` |
-| `setSettingsFileOverride` | 74-76 | 3 | `export function setSettingsFileOverride(path) {` |
-| `settingsFilePath` | 79-82 | 4 | `export function settingsFilePath({ workspaceRoot = '' } = {}) {` |
-| `settingsLogFilePath` | 90-93 | 4 | `export function settingsLogFilePath({ workspaceRoot = '' } = {}) {` |
-| `appendSettingsLog` | 100-124 | 25 | `export function appendSettingsLog(entry, env = {}) {` |
-| `readSettings` | 131-133 | 3 | `export function readSettings(env = {}) {` |
-| `writeSettingsKey` | 142-151 | 10 | `export async function writeSettingsKey(key, jsonValue, env = {}) {` |
+| `applyTypedKeys` | 57-66 | 10 | `function applyTypedKeys(cfg, patch) {` |
+| `applyClampedNumbers` | 69-77 | 9 | `function applyClampedNumbers(cfg, patch) {` |
+| `applySettingsToCfg` | 79-86 | 8 | `export function applySettingsToCfg(cfg, patch) {` |
+| `setSettingsFileOverride` | 90-92 | 3 | `export function setSettingsFileOverride(path) {` |
+| `settingsFilePath` | 95-98 | 4 | `export function settingsFilePath({ workspaceRoot = '' } = {}) {` |
+| `settingsLogFilePath` | 106-109 | 4 | `export function settingsLogFilePath({ workspaceRoot = '' } = {}) {` |
+| `appendSettingsLog` | 116-140 | 25 | `export function appendSettingsLog(entry, env = {}) {` |
+| `readSettings` | 147-149 | 3 | `export function readSettings(env = {}) {` |
+| `writeSettingsKey` | 158-167 | 10 | `export async function writeSettingsKey(key, jsonValue, env = {}) {` |
 
 ### lib/app/slash-commands.js（396 行 · 19 个函数）
 
@@ -628,16 +630,17 @@
 |------|------|------|------|
 | `checkDuplicateCode` | 28-69 | 42 | `export function checkDuplicateCode(fileTexts = [], rules = null) {` |
 
-### lib/checks/dup-const.js（208 行 · 6 个函数）
+### lib/checks/dup-const.js（231 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `extractFromConst` | 46-66 | 21 | `function extractFromConst(tokens, i, atTopLevel, push) {` |
 | `extractFromJavaFinal` | 72-80 | 9 | `function extractFromJavaFinal(tokens, i, push) {` |
-| `findConstDefs` | 93-150 | 58 | `export function findConstDefs(text = '') {` |
-| `atTopLevel` | 98-101 | 4 | `const atTopLevel = (line) => {` |
-| `push` | 102-116 | 15 | `const push = (name, val, line) => {` |
-| `checkDuplicateConst` | 158-207 | 50 | `export function checkDuplicateConst(fileTexts = [], rules = null) {` |
+| `createConstPusher` | 100-116 | 17 | `function createConstPusher(out) {` |
+| `extractConstAtToken` | 124-148 | 25 | `function extractConstAtToken(tokens, i, { lang, atTopLevel, push }) {` |
+| `findConstDefs` | 150-173 | 24 | `export function findConstDefs(text = '') {` |
+| `atTopLevel` | 155-158 | 4 | `const atTopLevel = (line) => {` |
+| `checkDuplicateConst` | 181-230 | 50 | `export function checkDuplicateConst(fileTexts = [], rules = null) {` |
 
 ### lib/checks/file-health.js（148 行 · 2 个函数）
 
@@ -925,18 +928,24 @@
 |------|------|------|------|
 | `browseDir` | 17-38 | 22 | `export function browseDir(p = '', { root = '' } = {}) {` |
 
-### lib/git/clone-download.js（314 行 · 8 个函数）
+### lib/git/clone-download.js（381 行 · 14 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `partitionBySize` | 55-66 | 12 | `export function partitionBySize(blobs = [], maxFileMB = DEFAULT_MAX_FILE_MB) {` |
-| `downloadBlobs` | 83-164 | 82 | `export async function downloadBlobs(o) {` |
-| `one` | 107-139 | 33 | `const one = async (entry) => {` |
-| `worker` | 142-149 | 8 | `const worker = async () => {` |
-| `fetchBlobJson` | 169-184 | 16 | `async function fetchBlobJson(owner, repo, sha, token) {` |
-| `removeDirForce` | 210-229 | 20 | `export async function removeDirForce(dir, attempts = 3) {` |
-| `fetchToFile` | 231-313 | 83 | `async function fetchToFile({ owner, repo, branch, relPath, token, out, partPath, size, onBytes, signal = null }) {` |
-| `mkHeaders` | 265-272 | 8 | `const mkHeaders = (raw, withRange) => {` |
+| `downloadSymlinkEntry` | 93-105 | 13 | `async function downloadSymlinkEntry(entry, { owner, repo, token, out, rel }) {` |
+| `downloadRegularEntry` | 113-126 | 14 | `async function downloadRegularEntry(entry, { owner, repo, branch, token, out, partPath, signal, rel, onBytes }) {` |
+| `runDownloadPool` | 134-145 | 12 | `async function runDownloadPool(blobs, one, concurrency, signal) {` |
+| `worker` | 136-143 | 8 | `const worker = async () => {` |
+| `cleanupPartsIfAllSucceeded` | 157-160 | 4 | `async function cleanupPartsIfAllSucceeded(partsDir, failed, signal) {` |
+| `downloadOneEntry` | 172-198 | 27 | `async function downloadOneEntry(entry, ctx) {` |
+| `downloadBlobs` | 200-231 | 32 | `export async function downloadBlobs(o) {` |
+| `emit` | 211-215 | 5 | `const emit = () => {` |
+| `one` | 222-222 | 1 | `const one = (entry) => downloadOneEntry(entry, ctx);` |
+| `fetchBlobJson` | 236-251 | 16 | `async function fetchBlobJson(owner, repo, sha, token) {` |
+| `removeDirForce` | 277-296 | 20 | `export async function removeDirForce(dir, attempts = 3) {` |
+| `fetchToFile` | 298-380 | 83 | `async function fetchToFile({ owner, repo, branch, relPath, token, out, partPath, size, onBytes, signal = null }) {` |
+| `mkHeaders` | 332-339 | 8 | `const mkHeaders = (raw, withRange) => {` |
 
 ### lib/git/clone-jobs.js（251 行 · 15 个函数）
 
@@ -1113,14 +1122,15 @@
 | `collect` | 130-139 | 10 | `const collect = () => {` |
 | `stopScanWatch` | 156-159 | 4 | `export function stopScanWatch({ workspaceRoot = '' } = {}) {` |
 
-### lib/git/sensitive.js（121 行 · 4 个函数）
+### lib/git/sensitive.js（135 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `escapeRegExp` | 43-45 | 3 | `function escapeRegExp(s) {` |
 | `sensitiveLineMatch` | 48-67 | 20 | `function sensitiveLineMatch(line) {` |
-| `scanSensitiveFiles` | 75-120 | 46 | `export async function scanSensitiveFiles(repoPath) {` |
-| `walk` | 79-117 | 39 | `const walk = async (dir, rel) => {` |
+| `scanOneSensitiveFile` | 84-110 | 27 | `async function scanOneSensitiveFile(dir, it, relPath) {` |
+| `scanSensitiveFiles` | 112-134 | 23 | `export async function scanSensitiveFiles(repoPath) {` |
+| `walk` | 116-131 | 16 | `const walk = async (dir, rel) => {` |
 
 ### lib/git/transport.js（409 行 · 15 个函数）
 
@@ -1284,15 +1294,15 @@
 | `countByDimension` | 42-72 | 31 | `export function countByDimension(findings = []) {` |
 | `scoreQuality` | 89-131 | 43 | `export function scoreQuality(findings = [], weights = {}, context = {}) {` |
 
-### lib/self/index.js（155 行 · 5 个函数）
+### lib/self/index.js（164 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `readmeTemplate` | 35-100 | 66 | `export function readmeTemplate({ name = 'dsh-git-push', description = 'DSH git 自动提交推送插件——统一函数入口架构', version = VERSION, versionTable = '' } = {}) {` |
-| `yamlTemplate` | 103-115 | 13 | `export function yamlTemplate() {` |
-| `selfVersion` | 118-120 | 3 | `export function selfVersion() {` |
-| `versionInfo` | 127-139 | 13 | `export function versionInfo(pkgJson = '') {` |
-| `helpSync` | 148-154 | 7 | `export function helpSync(helpText = '', knownFlags = []) {` |
+| `readmeTemplate` | 44-109 | 66 | `export function readmeTemplate({ name = 'dsh-git-push', description = 'DSH git 自动提交推送插件——统一函数入口架构', version = VERSION, versionTable = '' } = {}) {` |
+| `yamlTemplate` | 112-124 | 13 | `export function yamlTemplate() {` |
+| `selfVersion` | 127-129 | 3 | `export function selfVersion() {` |
+| `versionInfo` | 136-148 | 13 | `export function versionInfo(pkgJson = '') {` |
+| `helpSync` | 157-163 | 7 | `export function helpSync(helpText = '', knownFlags = []) {` |
 
 ### lib/skip-dirs.js（65 行 · 3 个函数）
 
@@ -1566,7 +1576,7 @@
 |------|------|------|------|
 | `detectLanIp` | 29-41 | 13 | `function detectLanIp() {` |
 
-### scripts/readme-gen.mjs（242 行 · 12 个函数）
+### scripts/readme-gen.mjs（266 行 · 13 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1578,10 +1588,11 @@
 | `parseVersion` | 134-138 | 5 | `export function parseVersion(str) {` |
 | `listVersionCommits` | 143-157 | 15 | `export function listVersionCommits(repoPath) {` |
 | `scrubConvWording` | 164-176 | 13 | `export function scrubConvWording(label) {` |
-| `buildReadmeVersionTable` | 178-199 | 22 | `export function buildReadmeVersionTable(repoPath) {` |
-| `genReadme` | 202-218 | 17 | `export function genReadme({ repoPath, template = '' } = {}) {` |
-| `toString` | 220-221 | 2 | `function toString(arr) { return Array.isArray(arr) ? arr.join('\n') : String(arr \|\| ''); }` |
-| `main` | 222-234 | 13 | `function main(argv) {` |
+| `readVersionMetrics` | 187-194 | 8 | `export function readVersionMetrics(repoPath) {` |
+| `buildReadmeVersionTable` | 196-223 | 28 | `export function buildReadmeVersionTable(repoPath) {` |
+| `genReadme` | 226-242 | 17 | `export function genReadme({ repoPath, template = '' } = {}) {` |
+| `toString` | 244-245 | 2 | `function toString(arr) { return Array.isArray(arr) ? arr.join('\n') : String(arr \|\| ''); }` |
+| `main` | 246-258 | 13 | `function main(argv) {` |
 
 ### scripts/rename-locator.mjs（97 行 · 4 个函数）
 
@@ -1609,11 +1620,11 @@
 | `auditWithRuleset` | 64-69 | 6 | `async function auditWithRuleset(repo, rulesetDir) {` |
 | `runRulesSoloAudit` | 76-150 | 75 | `export async function runRulesSoloAudit(repo, opts = {}) {` |
 
-### scripts/scan-file-io.mjs（684 行 · 25 个函数）
+### scripts/scan-file-io.mjs（714 行 · 27 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `isFnSignature` | 116-439 | 324 | `function isFnSignature(s) {` |
+| `isFnSignature` | 116-469 | 354 | `function isFnSignature(s) {` |
 | `stripCommentLines` | 129-153 | 25 | `function stripCommentLines(lines, uptoIdx) {` |
 | `scanEnclosure` | 156-173 | 18 | `function scanEnclosure(lines, lineIdx) {` |
 | `inRequestPath` | 181-194 | 14 | `function inRequestPath(lines, lineIdx) {` |
@@ -1621,23 +1632,25 @@
 | `ioTypeOf` | 203-205 | 3 | `function ioTypeOf(opName = '') {` |
 | `collectFiles` | 213-231 | 19 | `function collectFiles(targets) {` |
 | `walk` | 215-228 | 14 | `const walk = (p) => {` |
-| `stripLiterals` | 235-280 | 46 | `function stripLiterals(line) {` |
-| `scanFile` | 286-334 | 49 | `function scanFile(file) {` |
-| `riskOfFallback` | 347-354 | 8 | `function riskOfFallback(entry, ctx) {` |
-| `riskOfByAst` | 367-380 | 14 | `function riskOfByAst(astHits, line, op, entry, ctx) {` |
-| `collectVarAssignments` | 383-397 | 15 | `function collectVarAssignments(lines) {` |
-| `extractArg` | 400-424 | 25 | `function extractArg(line, op, opName) {` |
-| `resolvePathArg` | 427-433 | 7 | `function resolvePathArg(arg, varMap, lineIdx) {` |
-| `tagsOf` | 444-450 | 7 | `function tagsOf(h) {` |
-| `riskMark` | 453-455 | 3 | `function riskMark(risk) {` |
-| `printText` | 462-487 | 26 | `function printText(hits, { writeOnly = false, riskOnly = '', summary = false } = {}) {` |
-| `printJson` | 490-492 | 3 | `function printJson(hits) {` |
-| `main` | 500-547 | 48 | `export function main(argv = process.argv.slice(2)) {` |
-| `splitMulti` | 511-511 | 1 | `const splitMulti = (v) => String(v \|\| '').split(',').map((x) => x.trim()).filter(Boolean);` |
-| `scanFileIo` | 550-570 | 21 | `export function scanFileIo(opts = {}) {` |
-| `summarize` | 573-590 | 18 | `export function summarize(hits) {` |
-| `count` | 574-578 | 5 | `const count = (key) => {` |
-| `printReport` | 602-678 | 77 | `function printReport(hits, opts = {}) {` |
+| `isRegexStart` | 248-254 | 7 | `function isRegexStart(out, next) {` |
+| `advanceInsideState` | 268-287 | 20 | `function advanceInsideState(line, i, st) {` |
+| `stripLiterals` | 289-310 | 22 | `function stripLiterals(line) {` |
+| `scanFile` | 316-364 | 49 | `function scanFile(file) {` |
+| `riskOfFallback` | 377-384 | 8 | `function riskOfFallback(entry, ctx) {` |
+| `riskOfByAst` | 397-410 | 14 | `function riskOfByAst(astHits, line, op, entry, ctx) {` |
+| `collectVarAssignments` | 413-427 | 15 | `function collectVarAssignments(lines) {` |
+| `extractArg` | 430-454 | 25 | `function extractArg(line, op, opName) {` |
+| `resolvePathArg` | 457-463 | 7 | `function resolvePathArg(arg, varMap, lineIdx) {` |
+| `tagsOf` | 474-480 | 7 | `function tagsOf(h) {` |
+| `riskMark` | 483-485 | 3 | `function riskMark(risk) {` |
+| `printText` | 492-517 | 26 | `function printText(hits, { writeOnly = false, riskOnly = '', summary = false } = {}) {` |
+| `printJson` | 520-522 | 3 | `function printJson(hits) {` |
+| `main` | 530-577 | 48 | `export function main(argv = process.argv.slice(2)) {` |
+| `splitMulti` | 541-541 | 1 | `const splitMulti = (v) => String(v \|\| '').split(',').map((x) => x.trim()).filter(Boolean);` |
+| `scanFileIo` | 580-600 | 21 | `export function scanFileIo(opts = {}) {` |
+| `summarize` | 603-620 | 18 | `export function summarize(hits) {` |
+| `count` | 604-608 | 5 | `const count = (key) => {` |
+| `printReport` | 632-708 | 77 | `function printReport(hits, opts = {}) {` |
 
 ### scripts/scan-repos.mjs（167 行 · 9 个函数）
 
@@ -1661,7 +1674,7 @@
 | `cmp` | 56-63 | 8 | `const cmp = (a, b) => {` |
 | `main` | 68-120 | 53 | `function main() {` |
 
-### scripts/scrub-user-wording.mjs（399 行 · 14 个函数）
+### scripts/scrub-user-wording.mjs（421 行 · 17 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1669,16 +1682,19 @@
 | `wordingRewrites` | 63-66 | 4 | `function wordingRewrites() {` |
 | `scrubText` | 69-76 | 8 | `function scrubText(text) {` |
 | `commentSyntax` | 81-90 | 10 | `function commentSyntax(ext) {` |
-| `codeCommentRanges` | 97-160 | 64 | `function codeCommentRanges(text, syn) {` |
-| `markupFenceLines` | 165-182 | 18 | `function markupFenceLines(text) {` |
-| `fileHeaderExempt` | 185-188 | 4 | `function fileHeaderExempt(text) {` |
-| `lineExempt` | 191-193 | 3 | `function lineExempt(line) {` |
-| `processFile` | 206-252 | 47 | `function processFile(filePath) {` |
-| `applyConfirmed` | 255-270 | 16 | `function applyConfirmed(file, confirmedSet) {` |
-| `collectFiles` | 273-285 | 13 | `function collectFiles(root, out = []) {` |
-| `repoDiffFiles` | 288-295 | 8 | `function repoDiffFiles(repoPath) {` |
-| `main` | 297-395 | 99 | `async function main(argv) {` |
-| `ask` | 363-363 | 1 | `const ask = (q) => new Promise((res) => rl.question(q, res));` |
+| `skipRegexLiteral` | 106-116 | 11 | `function skipRegexLiteral(text, i, n) {` |
+| `skipStringLiteral` | 119-128 | 10 | `function skipStringLiteral(text, i, n) {` |
+| `matchCommentRange` | 138-143 | 6 | `function matchCommentRange(text, i, n, syn) {` |
+| `codeCommentRanges` | 155-184 | 30 | `function codeCommentRanges(text, syn) {` |
+| `markupFenceLines` | 187-204 | 18 | `function markupFenceLines(text) {` |
+| `fileHeaderExempt` | 207-210 | 4 | `function fileHeaderExempt(text) {` |
+| `lineExempt` | 213-215 | 3 | `function lineExempt(line) {` |
+| `processFile` | 228-274 | 47 | `function processFile(filePath) {` |
+| `applyConfirmed` | 277-292 | 16 | `function applyConfirmed(file, confirmedSet) {` |
+| `collectFiles` | 295-307 | 13 | `function collectFiles(root, out = []) {` |
+| `repoDiffFiles` | 310-317 | 8 | `function repoDiffFiles(repoPath) {` |
+| `main` | 319-417 | 99 | `async function main(argv) {` |
+| `ask` | 385-385 | 1 | `const ask = (q) => new Promise((res) => rl.question(q, res));` |
 
 ### scripts/sync-plugin.mjs（208 行 · 8 个函数）
 
@@ -1909,13 +1925,13 @@
 |------|------|------|------|
 | `withIsolatedDshHome` | 19-30 | 12 | `function withIsolatedDshHome(fn) {` |
 
-### test/test-plugin.mjs（644 行 · 3 个函数）
+### test/test-plugin.mjs（651 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `makeExemptRepo` | 475-481 | 7 | `function makeExemptRepo() {` |
-| `addSecretFile` | 482-485 | 4 | `function addSecretFile(root, path) {` |
-| `fsStatMode` | 639-641 | 3 | `function fsStatMode(file) {` |
+| `makeExemptRepo` | 482-488 | 7 | `function makeExemptRepo() {` |
+| `addSecretFile` | 489-492 | 4 | `function addSecretFile(root, path) {` |
+| `fsStatMode` | 646-648 | 3 | `function fsStatMode(file) {` |
 
 ### test/test-private-gate.mjs（72 行 · 1 个函数）
 
@@ -1965,14 +1981,14 @@
 | `loadCheckFuncLines` | 132-133 | 2 | `function loadCheckFuncLines() { return { checkFuncLines, checkComplexity }; }` |
 | `loadNaming` | 133-134 | 2 | `function loadNaming() { return { checkNameLengthAst }; }` |
 
-### test/test-settings-persistence.mjs（250 行 · 4 个函数）
+### test/test-settings-persistence.mjs（252 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `clientSubmitKeys` | 28-38 | 11 | `function clientSubmitKeys() {` |
 | `allowlistKeys` | 47-52 | 6 | `function allowlistKeys() {` |
-| `cfgMappingKeys` | 55-250 | 196 | `function cfgMappingKeys() {` |
-| `isolatedEnv` | 70-77 | 8 | `function isolatedEnv() {` |
+| `cfgMappingKeys` | 55-252 | 198 | `function cfgMappingKeys() {` |
+| `isolatedEnv` | 72-79 | 8 | `function isolatedEnv() {` |
 
 ### test/test-sidebar-interaction.mjs（192 行 · 7 个函数）
 
@@ -2014,6 +2030,12 @@
 | `mkRepo` | 16-23 | 8 | `function mkRepo() {` |
 | `wait` | 24-25 | 2 | `function wait(ms) { return new Promise((r) => setTimeout(r, ms)); }` |
 | `mockJobs` | 27-45 | 19 | `function mockJobs() {` |
+
+### test/test-tools-e2e.mjs（86 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `makeRepo` | 26-32 | 7 | `function makeRepo(name) {` |
 
 ### test/test-tree-doc.mjs（221 行 · 1 个函数）
 

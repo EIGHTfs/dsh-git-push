@@ -57,12 +57,14 @@ function cfgMappingKeys() {
   const keys = new Set();
   // 旧 if 链形态：patch.xxx
   for (const m of src.matchAll(/patch\.([a-zA-Z]+)/g)) keys.add(m[1]);
-  // 表驱动形态：仅在 applySettingsToCfg 函数体片段内匹配
+  // 表驱动形态：扫**整个模块**而不是只扫 applySettingsToCfg 函数体——
+  //   键表（BOOL_KEYS/ENUM_KEYS/CLAMP_KEYS…）在降复杂度时已提到模块级，
+  //   只扫函数体会漏掉全部键（实测：该测试因此误报 15 个键缺失）。
+  //   多扫到无关键无害：本测试只断言「白名单键都被映射到」。
   //   ——引号键（数组项：'auditEnabled',）与无引号对象键（auditScanScope: / maxCloneFileMB:）
-  const fnBody = src.slice(src.indexOf('export function applySettingsToCfg'), src.indexOf('export function applySettingsToCfg') + 2400);
-  for (const m of fnBody.matchAll(/['"]([a-zA-Z][a-zA-Z0-9]*)['"]\s*[,:\]]/g)) keys.add(m[1]);
+  for (const m of src.matchAll(/['"]([a-zA-Z][a-zA-Z0-9]*)['"]\s*[,:\]]/g)) keys.add(m[1]);
   // 对象键（ENUM/CLAMP 单行定义：auditScanScope: [ ... ] / maxCloneFileMB: { ... }）——键后跟 [ 或 {
-  for (const m of fnBody.matchAll(/\b([a-zA-Z][a-zA-Z0-9]*):\s*[\[{]/g)) keys.add(m[1]);
+  for (const m of src.matchAll(/\b([a-zA-Z][a-zA-Z0-9]*):\s*[\[{]/g)) keys.add(m[1]);
   return keys;
 }
 

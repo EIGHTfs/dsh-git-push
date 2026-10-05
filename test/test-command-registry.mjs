@@ -5,12 +5,10 @@ import assert from 'node:assert/strict';
 
 import { TOOL_REGISTRY, registryByName, registryByCli, parseRegistryArgs, buildToolsListText } from '../lib/app/command-registry.js';
 
-test('registry：14 工具全部入表，name/cli 唯一', () => {
-  assert.equal(TOOL_REGISTRY.length, 14, '14 个工具注册（git_gen_readme 已移除不入表；单源补全 io_scan/git_clone_preview/git_sluice）');
-  const listNames = TOOL_REGISTRY.map((t) => t.name);
-  for (const expect of ['git_scan', 'git_commit_push', 'code_audit', 'io_scan', 'git_clone_preview', 'git_sluice']) {
-    assert.ok(listNames.includes(expect), `注册表应含 ${expect}（宿主工具清单单源——tools.js 从注册表生成）`);
-  }
+// 说明：工具**公开面形状**（数量固定 / 命名 provider-safe / 必需清单 / 两面一致 /
+//   package.json 声明真实存在）集中在 test/test-tool-contract.mjs 断言；
+//   本文件只保留**行为类**断言（唯一性、查找函数、参数解析、清单文本）。
+test('registry：name/cli 唯一（形状断言见 test-tool-contract.mjs）', () => {
   const names = new Set(TOOL_REGISTRY.map((t) => t.name));
   assert.equal(names.size, TOOL_REGISTRY.length, 'name 唯一');
   const clis = TOOL_REGISTRY.filter((t) => t.cli).map((t) => t.cli);

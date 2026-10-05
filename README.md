@@ -62,6 +62,19 @@ DSH（DeepSeek Harness）git 提交推送与代码审计插件——提交前自
 
 每个脚本命令统一：`gen`（打印）/ `apply`（写宿主 md，自动探测带标记块的 md）/ `check`（查漂移）。宿主 md 带标记块（`dshgp-version` / `dshgp-functions` / `dshgp-tree`），审计按标记块探测并纳入检查。
 
+### 功能介绍文档（手写，面向使用者）
+
+讲「这个功能是什么、怎么用、边界在哪」，与上表的生成物分开维护：
+
+| 文档 | 讲什么 |
+|---|---|
+| [docs/SPEC.md](docs/SPEC.md) | **当前有效规格唯一入口**：身份 / 14 个工具 / 28 条 HTTP 接口 / 18 个设置键 / 4 个数据文件 / 审计规则体系 / 文档产物 / 版本纪律 / 测试基线 |
+| [docs/功能-审计规则体系.md](docs/功能-审计规则体系.md) | 21 个规则槽位 / 122 条规则的组织方式、作用域字段、三层结构、运行入口、结果怎么读、怎么豁免 |
+| [docs/功能-历史提交审计.md](docs/功能-历史提交审计.md) | 逐提交回放审计：解决什么、怎么跑、与普通审计的差异与成本 |
+| [docs/功能-文档与结构追踪.md](docs/功能-文档与结构追踪.md) | tree-doc / doc-func / doc-version 三份自动生成文档怎么更新、漂移怎么办 |
+| [docs/功能-仓库索引与账号状态.md](docs/功能-仓库索引与账号状态.md) | `dsh-repo-index.json` 与 `account-status.json` 的写入时机、读取入口、统一收口约定 |
+| [docs/DETAILS-EXEMPT-AND-RULES.md](docs/DETAILS-EXEMPT-AND-RULES.md) | 豁免注释与规则 yml 的写法全录（参考手册） |
+
 ## 功能总览
 
 插件围绕 DSH 日常开发的两个高频动作，分为**提交推送**与**代码审计**两大块：
@@ -400,6 +413,7 @@ dsh-git-push/
 │   ├── start.sh — 预览服务器启停脚本（start/stop/restart/status + --port + PID/日志/健康检查 /preview-ping）
 ├── test/ — node:test 全量单元测试（541+ 条，覆盖审计/推送/账号/HTTP/后台任务）
 │   ├── .test — 空文件豁免标记（目录级豁免 .test 目录）
+│   ├── regression-2.4.1.mjs — （待注释）
 │   ├── test-account-refresh-on-push.mjs — （待注释）
 │   ├── test-account-ssh.mjs — 账号检查 + SSH 密钥测试
 │   ├── test-audit-api-http.mjs — （待注释）
@@ -474,8 +488,11 @@ dsh-git-push/
 │   ├── test-symlink-resolution.mjs — 软链安装依赖解析回归测试（默认失败/--preserve-symlinks/NODE_PATH/真实副本四种场景）
 │   ├── test-task-queue.mjs — 后台化回归测试（官方 job 注册 / 无 jobs 同步保底 / blocker 拦截）
 │   ├── test-tokenizer-multiline-template.mjs — （待注释）
+│   ├── test-tool-contract.mjs — （待注释）
 │   ├── test-tool-probes.mjs — （待注释）
+│   ├── test-tools-e2e.mjs — （待注释）
 │   ├── test-tree-doc.mjs — README 目录树脚本测试（gen/check/apply 闭环）
+│   ├── test-version-metrics.mjs — （待注释）
 │   ├── test-visibility-unified.mjs — （待注释）
 │   ├── fixtures/ — （待注释）
 │   │   ├── TimeZoneComboBox-CRnoCikG.js — Pawchive 混淆产物样本（hash 文件名——跳过判定 fixture）
@@ -483,17 +500,11 @@ dsh-git-push/
 │   ├── CHANGELOG.md — 版本列表宿主（doc-version apply 写 dshgp-version 标记块）
 │   ├── DETAILS-EXEMPT-AND-RULES.md — 细节补充：豁免注释与规则 yml 用法全录
 │   ├── FUNCTIONS.md — 函数列表宿主（doc-func apply 写 dshgp-functions 标记块）
-│   ├── audit-2026-09-26.md — （待注释）
-│   ├── design-doc-coverage-audit.md — （待注释）
-│   ├── 方案-audit-history-历史提交审计.md — （待注释）
-│   ├── 方案-io-risk-规则优化.md — 方案：io-risk 规则优化（对照诊断的差距分析：元数据操作分档 + rename 降档）
-│   ├── 方案-io-risk规则推断与准确率评估.md — 方案：io-risk 规则推断与准确率评估
-│   ├── 方案-repo-index-account-status-更新收口.md — （待注释）
-│   ├── 方案-tree-doc变动追踪与函数文档.md — （待注释）
-│   ├── 方案-审计规则按语言划分与检查器语言化.md — （待注释）
-│   ├── 方案-文档维度加分制.md — （待注释）
-│   ├── 诊断-审计误报-第三方项目语料.md — （待注释）
-│   ├── 诊断-提交审计-auditignore-缺no-index.md — （待注释）
+│   ├── SPEC.md — （待注释）
+│   ├── 功能-仓库索引与账号状态.md — （待注释）
+│   ├── 功能-历史提交审计.md — （待注释）
+│   ├── 功能-审计规则体系.md — （待注释）
+│   ├── 功能-文档与结构追踪.md — （待注释）
 ├── skills/ — 插件权威 skill（功能手册/规则/使用说明，安装副本的 skills/ 同步）
 │   ├── dsh-repo-index.md — dsh-repo-index skill（源码索引权威说明）
 │   ├── dev/ — （待注释）
@@ -518,13 +529,16 @@ dsh-git-push/
 │   │   ├── versioning-rule.md — （待注释）
 ├── .auditignore — 审计豁免清单（不影响 git 入库，仅跳过审计扫描）——排除内置第三方代码
 ├── .gitignore — 忽略规则（node_modules/产物/备份/回收站等）
+├── CONTRIBUTING.md — （待注释）
 ├── README.md — 插件 README（功能总览/用法/版本记录）
+├── SECURITY.md — （待注释）
 ├── assemble.json — bench-template 下发清单（键=模板仓库相对路径，值=本插件落点；preview 启动两件套 → assets/）
 ├── cli.mjs — 独立 CLI（git-sluice，不依赖宿主可独立运行）
 ├── cordis.patch.yml — DSH 插件组合 patch（loader 注入定义）
 ├── package.json — 包声明（零依赖、files 白名单、scripts）
 ├── screenshots.json — 截图清单（README 配图引用）
 ├── tree-doc.json — 目录结构注释映射（路径→一句话介绍，AI 维护）
+├── version-metrics.json — （待注释）
 ```
 <!-- dshgp-tree:end -->
 

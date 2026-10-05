@@ -94,6 +94,64 @@ function commentSyntax(ext) {
  * 逐字符扫描：先认字符串字面量（' " `，处理 \ 转义），字符串内的 // # /* 不识别；
  * 再认注释（// 行注释、块注释、<!-- -->、# 行注释须在行首/前导空白后）。
  */
+/**
+ * 跳过正则字面量 `/…/flags`（须单行内闭合）。
+ *
+ * 为什么单独成函数：原 codeCommentRanges 把「正则/字符串两种整体跳过」与「三种注释识别」
+ *   混在一个 while 里（自审 max-cyclomatic-complexity 报 30）。两个跳过器各自有内层循环，
+ *   提出来既降复杂度，也让「什么算字面量」可单独阅读。
+ *
+ * @returns {number} 闭合时返回字面量之后的下标；不是正则或未闭合返回 -1（交给后续判定）
+ */
+function skipRegexLiteral(text, i, n) {
+  if (text[i] !== '/' || text[i + 1] === '/' || text[i + 1] === '*') return -1;
+  let j = i + 1;
+  while (j < n) {
+    if (text[j] === '\\') { j += 2; continue; }
+    if (text[j] === '/') return j + 1;
+    if (text[j] === '\n') return -1; // 正则须单行内闭合
+    j++;
+  }
+  return -1;
+}
+
+/** 跳过字符串/模板字面量（含转义）。@returns {number} 闭合处之后的下标（未闭合则到文末） */
+function skipStringLiteral(text, i, n) {
+  const quoteChar = text[i];
+  let j = i + 1;
+  while (j < n) {
+    if (text[j] === '\\') { j += 2; continue; }
+    if (text[j] === quoteChar) return j + 1;
+    j++;
+  }
+  return n;
+}
+
+/**
+ * 识别当前位置是否是注释起点（行注释 `//` / 块注释 `/*` / HTML 注释 `<!--`），是则返回区间。
+ *
+ * 为什么单独成函数：三种注释判定原与两个字面量跳过器混在同一个 while 里，
+ *   是该函数圈复杂度偏高（自审报 30）的主因。
+ *
+ * @returns {{start:number,end:number}|null} 注释区间；未闭合的块注释/HTML 注释取到文末
+ */
+function matchCommentRange(text, i, n, syn) {
+  if (syn.slash && text.startsWith('//', i)) {
+    let j = text.indexOf('\n', i);
+    if (j < 0) j = n;
+    return { start: i, end: j };
+  }
+  if (syn.slash && text.startsWith('/*', i)) {
+    const end = text.indexOf('*/', i + 2);
+    return { start: i, end: end < 0 ? n : end + 2 };
+  }
+  if (syn.html && text.startsWith('<!--', i)) {
+    const end = text.indexOf('-->', i + 4);
+    return { start: i, end: end < 0 ? n : end + 3 };
+  }
+  return null;
+}
+
 function codeCommentRanges(text, syn) {
   const n = text.length;
   const ranges = [];
@@ -102,52 +160,16 @@ function codeCommentRanges(text, syn) {
     const ch = text[i];
     // 正则字面量：整体跳过（/…/flags）——否则其中的引号（如 ['"]）会把字符串配对搞乱，
     // 吞掉后续注释起点（真实事故：plugin-gate.js 块注释因此漏识别）
-    if (ch === '/' && text[i + 1] !== '/' && text[i + 1] !== '*') {
-      let j = i + 1;
-      let closed = false;
-      while (j < n) {
-        if (text[j] === '\\') { j += 2; continue; }
-        if (text[j] === '/') { closed = true; break; }
-        if (text[j] === '\n') break; // 正则须单行内闭合
-        j++;
-      }
-      if (closed) { i = j + 1; continue; }
-    }
+    const afterRegex = skipRegexLiteral(text, i, n);
+    if (afterRegex >= 0) { i = afterRegex; continue; }
     // 字符串字面量：整体跳过
     if (ch === '"' || ch === "'" || ch === '`') {
-      const quoteChar = ch;
-      let j = i + 1;
-      while (j < n) {
-        if (text[j] === '\\') { j += 2; continue; }
-        if (text[j] === quoteChar) { j++; break; }
-        j++;
-      }
-      i = j;
+      i = skipStringLiteral(text, i, n);
       continue;
     }
-    // 行注释 //
-    if (syn.slash && text.startsWith('//', i)) {
-      let j = text.indexOf('\n', i);
-      if (j < 0) j = n;
-      ranges.push({ start: i, end: j });
-      i = j;
-      continue;
-    }
-    // 块注释与 HTML 注释
-    if (syn.slash && text.startsWith('/*', i)) {
-      const end = text.indexOf('*/', i + 2);
-      const j = end < 0 ? n : end + 2;
-      ranges.push({ start: i, end: j });
-      i = j;
-      continue;
-    }
-    if (syn.html && text.startsWith('<!--', i)) {
-      const end = text.indexOf('-->', i + 4);
-      const j = end < 0 ? n : end + 3;
-      ranges.push({ start: i, end: j });
-      i = j;
-      continue;
-    }
+    // 注释：行注释 // 、块注释 /* 、HTML <!-- （判定见 matchCommentRange）
+    const comment = matchCommentRange(text, i, n, syn);
+    if (comment) { ranges.push(comment); i = comment.end; continue; }
     // # 行注释：须在行首或前导空白后
     if (syn.hash && ch === '#' && (i === 0 || /[\s]/.test(text[i - 1]))) {
       let j = text.indexOf('\n', i);

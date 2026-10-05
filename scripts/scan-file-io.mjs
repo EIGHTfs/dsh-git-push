@@ -232,47 +232,77 @@ function collectFiles(targets) {
 
 /** 剔除代码中被字符串/注释/正则字面量包裹的部分，返回「可匹配」的代码片段。
  * 用于避免正则字面量（/mkdir\(/）、字符串、注释里的操作名被误识别为调用。 */
+/**
+ * 判断当前位置的 `/` 是「正则字面量开头」还是「除号」。
+ *
+ * 规则（原内联在 stripLiterals 里，提取后既可单独阅读也便于复用）：
+ *   只有**表达式起始位置**的 `/` 才是正则开头——行首，或前一个非空字符属于
+ *   `( , : ; [ ! & | ? { } + - * / % < > ~ ^`，或前面刚结束 return/typeof/case/in/of/new/
+ *   delete/void/do/else/yield/await；标识符/数字/`)`/`]` 之后的 `/` 是**除号**。
+ *   此前不加区分一律当正则，导致 `readFile('/tmp/x')` 里的 `/tmp` 被当成正则开始，
+ *   把整行剩余部分吞掉 → 漏报（真实事故）。
+ *
+ * @param {string} out  已输出的代码前缀（字面量已被剥离）
+ * @param {string} next `/` 的下一个字符
+ */
+function isRegexStart(out, next) {
+  if (!/[A-Za-z0-9\\^$.|?*+()[\]{}]/.test(next || '')) return false;
+  const trimmed = out.trimEnd();
+  const prev = trimmed.slice(-1);
+  if (prev === '' || /[=(,:;[!&|?{}+\-*/%<>~^]/.test(prev)) return true;
+  return /\b(?:return|typeof|case|in|of|new|delete|void|do|else|yield|await)$/.test(trimmed);
+}
+
+/**
+ * 处于「字符串 / 行注释 / 块注释 / 正则」某一态时的推进。
+ *
+ * 为什么单独成函数：这四个态的处理原与「识别态起点」混在 stripLiterals 的同一个 while 里
+ *   （自审 max-cyclomatic-complexity 报 25）。提取后主循环只剩「怎么进态」，
+ *   态内推进（含转义跳两字符、块注释闭合判定）集中在这里。
+ *
+ * @param {string} line 当前行
+ * @param {number} i    当前位置
+ * @param {object} st   可变状态 { quote, lineComment, blockComment, regexMode }
+ * @returns {number} 新下标；-1 表示当前不在任何态内（交给主循环判态起点）
+ */
+function advanceInsideState(line, i, st) {
+  const char = line[i];
+  const next = line[i + 1];
+  if (st.lineComment) return i + 1;
+  if (st.blockComment) {
+    if (char === '*' && next === '/') { st.blockComment = false; return i + 2; }
+    return i + 1;
+  }
+  if (st.quote) {
+    if (char === '\\') return i + 2;
+    if (char === st.quote) st.quote = null;
+    return i + 1;
+  }
+  if (st.regexMode) {
+    if (char === '\\') return i + 2;
+    if (char === '/') st.regexMode = false;
+    return i + 1;
+  }
+  return -1;
+}
+
 function stripLiterals(line) {
   let out = '';
   let i = 0;
-  let quote = null; // ' " ` 
-  let lineComment = false;
-  let blockComment = false;
-  let regexMode = false;
+  const st = { quote: null, lineComment: false, blockComment: false, regexMode: false };
   while (i < line.length) {
     const char = line[i];
     const next = line[i + 1];
-    if (lineComment) { i++; continue; }
-    if (blockComment) {
-      if (char === '*' && next === '/') { blockComment = false; i += 2; continue; }
-      i++; continue;
-    }
-    if (quote) {
-      if (char === '\\') { i += 2; continue; }
-      if (char === quote) quote = null;
-      i++; continue;
-    }
-    if (regexMode) {
-      if (char === '\\') { i += 2; continue; }
-      if (char === '/') regexMode = false;
-      i++; continue;
-    }
-    if (char === '/' && next === '/') { lineComment = true; i += 2; continue; }
-    if (char === '/' && next === '*') { blockComment = true; i += 2; continue; }
-    // 正则字面量判定：**必须看前一个非空字符**——只有表达式起始位置（行首、`(`、`,`、`=`、
-    //   `:`、`[`、`!`、`&`、`|`、`?`、`{`、`;`、`return` 等之后）的 `/` 才是正则开头；
-    //   标识符/数字/`)`/`]` 之后的 `/` 是**除号**。此前不加区分一律当正则，导致
-    //   `readFile('/tmp/x')` 里的 `/tmp` 被当成正则开始，把整行剩余部分吞掉 → 漏报。
-    if (char === '/' && /[A-Za-z0-9\\^$.|?*+()[\]{}]/.test(next || '')) {
-      const prev = out.trimEnd().slice(-1);
-      const regexAllowed = prev === '' || /[=(,:;[!&|?{}+\-*/%<>~^]/.test(prev) || /\b(?:return|typeof|case|in|of|new|delete|void|do|else|yield|await)$/.test(out.trimEnd());
-      if (regexAllowed) { regexMode = true; i++; continue; }
-      // 否则视作除号，正常输出
-      out += char;
-      i++;
-      continue;
-    }
-    if (char === "'" || char === '"' || char === '`') { quote = char; i++; continue; }
+    // 态内推进（字符串/注释/正则）
+    const advanced = advanceInsideState(line, i, st);
+    if (advanced >= 0) { i = advanced; continue; }
+    // 态起点识别
+    if (char === '/' && next === '/') { st.lineComment = true; i += 2; continue; }
+    if (char === '/' && next === '*') { st.blockComment = true; i += 2; continue; }
+    // 正则字面量判定（规则与事故说明见 isRegexStart）：是正则则进入正则态，
+    //   否则当除号——落在末尾的 `out += char` 正常输出。
+    if (char === '/' && isRegexStart(out, next)) { st.regexMode = true; i++; continue; }
+    if (char === "'" || char === '"' || char === '`') { st.quote = char; i++; continue; }
     out += char;
     i++;
   }
