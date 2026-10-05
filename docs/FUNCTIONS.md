@@ -22,16 +22,16 @@
 | `aggregateFindings` | 70-91 | 22 | `export function aggregateFindings(findings = [], opts = {}) {` |
 | `runAuditApi` | 99-158 | 60 | `export async function runAuditApi(repo, params = {}, cfg = {}) {` |
 
-### lib/app/command-registry.js（211 行 · 6 个函数）
+### lib/app/command-registry.js（219 行 · 6 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `applyFlagToken` | 152-165 | 14 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
-| `validateParamConstraints` | 168-174 | 7 | `function validateParamConstraints(args, params) {` |
-| `parseRegistryArgs` | 176-196 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
-| `registryByName` | 199-201 | 3 | `export function registryByName(name) {` |
-| `registryByCli` | 204-206 | 3 | `export function registryByCli(cli) {` |
-| `buildToolsListText` | 209-211 | 3 | `export function buildToolsListText() {` |
+| `applyFlagToken` | 160-173 | 14 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
+| `validateParamConstraints` | 176-182 | 7 | `function validateParamConstraints(args, params) {` |
+| `parseRegistryArgs` | 184-204 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
+| `registryByName` | 207-209 | 3 | `export function registryByName(name) {` |
+| `registryByCli` | 212-214 | 3 | `export function registryByCli(cli) {` |
+| `buildToolsListText` | 217-219 | 3 | `export function buildToolsListText() {` |
 
 ### lib/app/handlers/account.js（166 行 · 10 个函数）
 
@@ -47,6 +47,15 @@
 | `handleApiQuota` | 119-146 | 28 | `export async function handleApiQuota(ctx) {` |
 | `handleAccountCheck` | 149-158 | 10 | `export async function handleAccountCheck(ctx) {` |
 | `handleGenSshKey` | 161-166 | 6 | `export function handleGenSshKey(ctx) {` |
+
+### lib/app/handlers/arch-json.js（79 行 · 4 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `repositoryEvidence` | 18-32 | 15 | `function repositoryEvidence(repoPath, { execFileSync }) {` |
+| `run` | 19-24 | 6 | `const run = (args) => {` |
+| `readTreeDoc` | 35-40 | 6 | `function readTreeDoc(repoPath) {` |
+| `exportArchJson` | 48-78 | 31 | `export async function exportArchJson(args = {}, deps = {}) {` |
 
 ### lib/app/handlers/clone.js（137 行 · 5 个函数）
 
@@ -182,26 +191,26 @@
 | `getLastSlotHitStats` | 28-30 | 3 | `export function getLastSlotHitStats() {` |
 | `getLastSlotHitMeta` | 33-35 | 3 | `export function getLastSlotHitMeta() {` |
 
-### lib/app/tool-call.js（463 行 · 16 个函数）
+### lib/app/tool-call.js（472 行 · 16 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `pushWithPostSteps` | 53-88 | 36 | `async function pushWithPostSteps(args, env, cfg) {` |
-| `buildCommitPushJobSpec` | 91-106 | 16 | `function buildCommitPushJobSpec(repo, doPush) {` |
-| `done` | 96-102 | 7 | `const done = (async () => {` |
-| `callCloneJob` | 120-146 | 27 | `async function callCloneJob(args, jobs, exec, log, env = {}, cfg = {}) {` |
-| `buildCloneJobSpec` | 149-165 | 17 | `function buildCloneJobSpec(target, dest, doClone) {` |
-| `done` | 154-161 | 8 | `const done = (async () => {` |
-| `callCommitPush` | 172-219 | 48 | `async function callCommitPush(args, env, cfg, log, jobs, exec) {` |
-| `doPush` | 188-188 | 1 | `const doPush = () => pushWithPostSteps(args, env, cfg);` |
-| `buildAuditOpts` | 230-239 | 10 | `function buildAuditOpts(args, cfg, scope) {` |
-| `runHistoryAuditTool` | 245-277 | 33 | `async function runHistoryAuditTool(args, env, cfg, jobs, exec, weights) {` |
-| `doHistory` | 251-254 | 4 | `const doHistory = async () => {` |
-| `callCodeAudit` | 279-291 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
-| `runStandardAuditTool` | 294-326 | 33 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
-| `callTool` | 328-434 | 107 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null) {` |
-| `shellSplit` | 437-455 | 19 | `function shellSplit(input) {` |
-| `readTextSafe` | 458-462 | 5 | `function readTextSafe(path = '') {` |
+| `pushWithPostSteps` | 55-90 | 36 | `async function pushWithPostSteps(args, env, cfg) {` |
+| `buildCommitPushJobSpec` | 93-108 | 16 | `function buildCommitPushJobSpec(repo, doPush) {` |
+| `done` | 98-104 | 7 | `const done = (async () => {` |
+| `callCloneJob` | 122-148 | 27 | `async function callCloneJob(args, jobs, exec, log, env = {}, cfg = {}) {` |
+| `buildCloneJobSpec` | 151-167 | 17 | `function buildCloneJobSpec(target, dest, doClone) {` |
+| `done` | 156-163 | 8 | `const done = (async () => {` |
+| `callCommitPush` | 174-221 | 48 | `async function callCommitPush(args, env, cfg, log, jobs, exec) {` |
+| `doPush` | 190-190 | 1 | `const doPush = () => pushWithPostSteps(args, env, cfg);` |
+| `buildAuditOpts` | 232-241 | 10 | `function buildAuditOpts(args, cfg, scope) {` |
+| `runHistoryAuditTool` | 247-279 | 33 | `async function runHistoryAuditTool(args, env, cfg, jobs, exec, weights) {` |
+| `doHistory` | 253-256 | 4 | `const doHistory = async () => {` |
+| `callCodeAudit` | 281-293 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
+| `runStandardAuditTool` | 296-328 | 33 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
+| `callTool` | 330-443 | 114 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null) {` |
+| `shellSplit` | 446-464 | 19 | `function shellSplit(input) {` |
+| `readTextSafe` | 467-471 | 5 | `function readTextSafe(path = '') {` |
 
 ### lib/app/tools.js（27 行 · 2 个函数）
 
@@ -209,6 +218,76 @@
 |------|------|------|------|
 | `paramsToParameters` | 12-18 | 7 | `function paramsToParameters(params = []) {` |
 | `listTools` | 21-27 | 7 | `export function listTools() {` |
+
+### lib/arch/aggregate.js（90 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `aggregateModules` | 17-76 | 60 | `export function aggregateModules(facts, { min = 8, max = 15 } = {}) {` |
+| `componentId` | 84-89 | 6 | `function componentId(layer, mods) {` |
+
+### lib/arch/extract.js（455 行 · 14 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `detectSourceRoot` | 40-63 | 24 | `export function detectSourceRoot(repoPath) {` |
+| `collectSync` | 66-77 | 12 | `function collectSync(dir, out = [], depth = 0) {` |
+| `ioPathFromLine` | 88-455 | 368 | `export function ioPathFromLine(text, line) {` |
+| `statementAt` | 113-132 | 20 | `export function statementAt(text, line) {` |
+| `startsStatement` | 117-117 | 1 | `const startsStatement = (s) => /^\s*(const\|let\|var\|function\|return\|if\|for\|while\|await\|export)\b/.test(s);` |
+| `count` | 124-124 | 1 | `const count = (s, re) => (s.match(re) \|\| []).length;` |
+| `collectPathConsts` | 147-455 | 309 | `export function collectPathConsts(text) {` |
+| `ioPathsFromLine` | 169-455 | 287 | `export function ioPathsFromLine(text, line) {` |
+| `extractFileIo` | 192-236 | 45 | `export function extractFileIo(text) {` |
+| `resolveIoPath` | 248-261 | 14 | `export function resolveIoPath(baseDir, p, repoFiles = []) {` |
+| `normalizeIoPath` | 269-279 | 11 | `export function normalizeIoPath(baseDir, p) {` |
+| `importSpecifiers` | 281-285 | 5 | `export function importSpecifiers(text) {` |
+| `resolveModule` | 288-301 | 14 | `export function resolveModule(fromRel, spec, sourceRoot) {` |
+| `extractArchFacts` | 309-454 | 146 | `export async function extractArchFacts(repoPath, { maxFiles = 4000 } = {}) {` |
+
+### lib/arch/ir.js（150 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `toArchFacts` | 35-149 | 115 | `export function toArchFacts(agg, facts, opts = {}) {` |
+
+### lib/arch/lists.js（97 行 · 4 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `scanUrls` | 14-27 | 14 | `export function scanUrls(text, file, moduleId) {` |
+| `scanApis` | 37-66 | 30 | `export function scanApis(text, file, moduleId) {` |
+| `functionsFromScan` | 73-83 | 11 | `export function functionsFromScan(scan, moduleId) {` |
+| `fileEntries` | 89-96 | 8 | `export function fileEntries(entries) {` |
+
+### lib/arch/to-json.js（136 行 · 4 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `dataFileId` | 17-27 | 11 | `export function dataFileId(path) {` |
+| `collectDataFiles` | 38-62 | 25 | `export function collectDataFiles(agg, facts, { repoPath = '' } = {}) {` |
+| `isRepoRelative` | 65-74 | 10 | `function isRepoRelative(p, repoPath = '') {` |
+| `toArchifyJson` | 83-135 | 53 | `export function toArchifyJson(agg, facts, { name = 'repo', repoPath = '', evidence = null, treeDoc = null } = {}) {` |
+
+### lib/arch/validate-facts.js（118 行 · 4 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `evidenceFile` | 13-20 | 8 | `function evidenceFile(entry) {` |
+| `validateFacts` | 28-117 | 90 | `export function validateFacts(ir, { repoPath = '' } = {}) {` |
+| `exists` | 37-37 | 1 | `const exists = (p) => !repoPath \|\| !p \|\| existsSync(join(repoPath, p));` |
+| `dfs` | 85-95 | 11 | `const dfs = (node, stack) => {` |
+
+### lib/arch/validate.js（120 行 · 6 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `validateSchema` | 20-41 | 22 | `function validateSchema(doc) {` |
+| `validateReferences` | 44-53 | 10 | `function validateReferences(doc) {` |
+| `validateFacts` | 56-67 | 12 | `function validateFacts(doc, repoPath) {` |
+| `validateTopology` | 70-100 | 31 | `function validateTopology(doc) {` |
+| `dfs` | 80-90 | 11 | `const dfs = (node, stack) => {` |
+| `validateArchJson` | 109-119 | 11 | `export function validateArchJson(doc, { repoPath = '', allowDangling = false } = {}) {` |
 
 ### lib/ast/brace.js（106 行 · 5 个函数）
 
@@ -451,26 +530,25 @@
 | `isBuildArtifactFile` | 43-64 | 22 | `export function isBuildArtifactFile(relPathOrFile = '', text = '') {` |
 | `auditFile` | 66-170 | 105 | `export function auditFile({ file, relPath, text, grouped }, opts = {}) {` |
 
-### lib/audit/collector.js（388 行 · 16 个函数）
+### lib/audit/collector.js（403 行 · 15 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `isGitWorkTree` | 47-58 | 12 | `function isGitWorkTree(dir) {` |
-| `tryLoadAuditIgnoreFallback` | 74-99 | 26 | `function tryLoadAuditIgnoreFallback(root) {` |
-| `walkDirs` | 85-96 | 12 | `const walkDirs = (dir) => {` |
-| `tryLoadGitIgnoreSet` | 111-185 | 75 | `function tryLoadGitIgnoreSet(root) {` |
-| `walkDirs` | 143-155 | 13 | `const walkDirs = (dir) => {` |
-| `isHardSkipped` | 194-196 | 3 | `function isHardSkipped(name) {` |
-| `computeGitIgnored` | 199-204 | 6 | `function computeGitIgnored(full, gitIgnoreRoot, includeIgnored) {` |
-| `shouldSkipDirByYml` | 207-211 | 5 | `function shouldSkipDirByYml(name, ignoredByGit, gitIgnoreRoot) {` |
-| `isFileGitIgnored` | 214-225 | 12 | `function isFileGitIgnored(full, gitIgnoreRoot, includeIgnored) {` |
-| `collectTextFiles` | 227-311 | 85 | `export async function collectTextFiles(dir, { depth = 10, gitIgnoreRoot = null, includeIgnored = false, testExemptRoot = null } = {}) {` |
-| `relOf` | 241-241 | 1 | `const relOf = (full) => relative(gitIgnoreRoot, full).replace(/\\/g, '/');` |
-| `walk` | 274-310 | 37 | `async function walk(cur, level) {` |
-| `isGitRepo` | 314-316 | 3 | `export function isGitRepo(dir) {` |
-| `collectChangedFiles` | 324-362 | 39 | `export function collectChangedFiles(repoPath) {` |
-| `isTextFile` | 365-383 | 19 | `export function isTextFile(full) {` |
-| `readText` | 386-388 | 3 | `export function readText(full) {` |
+| `tryLoadAuditIgnoreFallback` | 74-105 | 32 | `function tryLoadAuditIgnoreFallback(root) {` |
+| `walkDirs` | 85-102 | 18 | `const walkDirs = (dir) => {` |
+| `tryLoadGitIgnoreSet` | 117-206 | 90 | `function tryLoadGitIgnoreSet(root, respectAuditIgnore = true) {` |
+| `walkDirs` | 158-173 | 16 | `const walkDirs = (dir) => {` |
+| `isHardSkipped` | 215-217 | 3 | `function isHardSkipped(name) {` |
+| `computeGitIgnored` | 220-225 | 6 | `function computeGitIgnored(full, gitIgnoreRoot, includeIgnored, respectAuditIgnore = true) {` |
+| `shouldSkipDirByYml` | 228-232 | 5 | `function shouldSkipDirByYml(name, ignoredByGit, gitIgnoreRoot) {` |
+| `isFileGitIgnored` | 235-246 | 12 | `function isFileGitIgnored(full, gitIgnoreRoot, includeIgnored, respectAuditIgnore = true) {` |
+| `collectTextFiles` | 248-307 | 60 | `export async function collectTextFiles(dir, { depth = 10, gitIgnoreRoot = null, includeIgnored = false, testExemptRoot = null, respectAuditIgnore = true } = {}) {` |
+| `walk` | 270-306 | 37 | `async function walk(cur, level) {` |
+| `isGitRepo` | 310-312 | 3 | `export function isGitRepo(dir) {` |
+| `collectChangedFiles` | 320-377 | 58 | `export function collectChangedFiles(repoPath) {` |
+| `isTextFile` | 380-398 | 19 | `export function isTextFile(full) {` |
+| `readText` | 401-403 | 3 | `export function readText(full) {` |
 
 ### lib/audit/ext-runner.js（78 行 · 2 个函数）
 
@@ -1294,15 +1372,15 @@
 | `countByDimension` | 42-72 | 31 | `export function countByDimension(findings = []) {` |
 | `scoreQuality` | 89-131 | 43 | `export function scoreQuality(findings = [], weights = {}, context = {}) {` |
 
-### lib/self/index.js（164 行 · 5 个函数）
+### lib/self/index.js（165 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `readmeTemplate` | 44-109 | 66 | `export function readmeTemplate({ name = 'dsh-git-push', description = 'DSH git 自动提交推送插件——统一函数入口架构', version = VERSION, versionTable = '' } = {}) {` |
-| `yamlTemplate` | 112-124 | 13 | `export function yamlTemplate() {` |
-| `selfVersion` | 127-129 | 3 | `export function selfVersion() {` |
-| `versionInfo` | 136-148 | 13 | `export function versionInfo(pkgJson = '') {` |
-| `helpSync` | 157-163 | 7 | `export function helpSync(helpText = '', knownFlags = []) {` |
+| `readmeTemplate` | 45-110 | 66 | `export function readmeTemplate({ name = 'dsh-git-push', description = 'DSH git 自动提交推送插件——统一函数入口架构', version = VERSION, versionTable = '' } = {}) {` |
+| `yamlTemplate` | 113-125 | 13 | `export function yamlTemplate() {` |
+| `selfVersion` | 128-130 | 3 | `export function selfVersion() {` |
+| `versionInfo` | 137-149 | 13 | `export function versionInfo(pkgJson = '') {` |
+| `helpSync` | 158-164 | 7 | `export function helpSync(helpText = '', knownFlags = []) {` |
 
 ### lib/skip-dirs.js（65 行 · 3 个函数）
 
@@ -1466,6 +1544,83 @@
 | `dump2` | 2984-2994 | 11 | `function dump2(input, options) {` |
 | `requireJsYaml` | 2999-3038 | 40 | `function requireJsYaml() {` |
 | `renamed` | 3004-3008 | 5 | `function renamed(from, to) {` |
+
+### scripts/arch-mcp.mjs（89 行 · 3 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `textResult` | 47-49 | 3 | `function textResult(obj) {` |
+| `handleRequest` | 52-71 | 20 | `async function handleRequest(req) {` |
+| `main` | 73-86 | 14 | `function main() {` |
+
+### scripts/archify-gen.mjs（976 行 · 37 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `deriveExternals` | 52-74 | 23 | `function deriveExternals(repoPath, sourceRoot) {` |
+| `deriveCrossLayerEdges` | 88-124 | 37 | `function deriveCrossLayerEdges(repoPath, sourceRootName, moduleIds) {` |
+| `inferComponentType` | 127-130 | 4 | `export function inferComponentType(dirName) {` |
+| `layoutByLayer` | 156-181 | 26 | `function layoutByLayer(components, connections = []) {` |
+| `readRepositoryEvidence` | 188-209 | 22 | `function readRepositoryEvidence(repoPath) {` |
+| `run` | 189-194 | 6 | `const run = (args) => {` |
+| `appendDataFileNodes` | 224-245 | 22 | `async function appendDataFileNodes(repoPath, components, connections, ids, src, graph) {` |
+| `linkOrDropIsolated` | 254-288 | 35 | `function linkOrDropIsolated(repoPath, components, connections, boundaries, topLevelIds = new Set()) {` |
+| `buildFuncCards` | 301-313 | 13 | `async function buildFuncCards(repoPath) {` |
+| `parentBoundaries` | 322-334 | 13 | `function parentBoundaries(components) {` |
+| `deriveExternalNodes` | 341-364 | 24 | `function deriveExternalNodes(repoPath, sourceRootName) {` |
+| `aggregateByLayer` | 375-436 | 62 | `export function aggregateByLayer(components, connections) {` |
+| `groupOf` | 382-393 | 12 | `const groupOf = (c) => {` |
+| `slug` | 403-403 | 1 | `const slug = (g) => g.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-\|-$/g, '') \|\| 'root';` |
+| `dirComponents` | 442-450 | 9 | `function dirComponents(repoPath, dirs, src) {` |
+| `placeOnGrid` | 458-490 | 33 | `function placeOnGrid(components, connections, maxCols = 6) {` |
+| `resolveView` | 514-530 | 17 | `function resolveView(components, connections) {` |
+| `useFine` | 520-523 | 4 | `const useFine = () => {` |
+| `regroupForView` | 532-601 | 70 | `function regroupForView(fine, connections) {` |
+| `topOf` | 534-544 | 11 | `const topOf = (c) => {` |
+| `typeOf` | 546-551 | 6 | `const typeOf = (ms) => {` |
+| `slug` | 560-560 | 1 | `const slug = (s) => s.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-\|-$/g, '') \|\| 'grp';` |
+| `buildArchitectureDoc` | 603-767 | 165 | `export async function buildArchitectureDoc(repoPath, name = basename(resolve(repoPath))) {` |
+| `treeDoc` | 650-652 | 3 | `const treeDoc = (() => {` |
+| `representativeFile` | 776-803 | 28 | `function representativeFile(repoPath, dir) {` |
+| `tracked` | 777-787 | 11 | `const tracked = (() => {` |
+| `countFiles` | 806-820 | 15 | `function countFiles(dir) {` |
+| `walk` | 809-816 | 8 | `const walk = (d) => {` |
+| `validateHeader` | 823-829 | 7 | `function validateHeader(doc, errs) {` |
+| `validateComponents` | 837-856 | 20 | `function validateComponents(doc, errs) {` |
+| `validateConnections` | 859-866 | 8 | `function validateConnections(doc, ids, errs) {` |
+| `validateBoundaries` | 869-874 | 6 | `function validateBoundaries(doc, errs) {` |
+| `validateRepositoryEvidence` | 880-887 | 8 | `function validateRepositoryEvidence(doc, errs) {` |
+| `validateAgainstSpec` | 897-905 | 9 | `export function validateAgainstSpec(doc) {` |
+| `checkDrift` | 911-936 | 26 | `export function checkDrift(repoPath, doc) {` |
+| `outputPath` | 939-941 | 3 | `export function outputPath(repoPath, name = basename(resolve(repoPath))) {` |
+| `main` | 943-973 | 31 | `async function main() {` |
+
+### scripts/archify-imports.mjs（343 行 · 14 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `inferLayer` | 31-33 | 3 | `export function inferLayer(dirName) {` |
+| `listSourceFiles` | 36-50 | 15 | `export function listSourceFiles(dir) {` |
+| `walk` | 38-47 | 10 | `const walk = (d) => {` |
+| `importSpecifiers` | 57-62 | 6 | `export function importSpecifiers(text) {` |
+| `resolveLibModule` | 70-84 | 15 | `export function resolveLibModule(fromFile, spec, sourceRoot = 'lib') {` |
+| `moduleAnchor` | 92-108 | 17 | `function moduleAnchor(repoPath, mod, sourceRoot) {` |
+| `addResourceEdges` | 127-151 | 25 | `function addResourceEdges(repoPath, sourceRoot, components, edges) {` |
+| `deriveLibGraph` | 153-270 | 118 | `export function deriveLibGraph(repoPath) {` |
+| `trackedSet` | 167-173 | 7 | `const trackedSet = (() => {` |
+| `isTracked` | 174-174 | 1 | `const isTracked = (rel) => !trackedSet \|\| trackedSet.has(rel);` |
+| `slug` | 209-209 | 1 | `const slug = (x) => String(x).replace(/\.(m?js\|cjs)$/, '').replace(/[^a-zA-Z0-9_-]/g, '-');` |
+| `detectSourceRoot` | 280-282 | 3 | `export function detectSourceRoot(repoPath) {` |
+| `layersToBoundaries` | 315-322 | 8 | `export function layersToBoundaries(components) {` |
+| `main` | 324-340 | 17 | `function main() {` |
+
+### scripts/archify-preview.mjs（133 行 · 3 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `readPreviewConfig` | 31-40 | 10 | `function readPreviewConfig() {` |
+| `refreshProject` | 56-105 | 50 | `function refreshProject(repoPath, { checkOnly = false } = {}) {` |
+| `main` | 107-130 | 24 | `function main() {` |
 
 ### scripts/audit-ext/variable-min-length.mjs（94 行 · 2 个函数）
 
@@ -1727,6 +1882,27 @@
 |------|------|------|------|
 | `isolatedEnv` | 17-24 | 8 | `function isolatedEnv() {` |
 
+### test/test-arch-generic.mjs（72 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `signature` | 20-26 | 7 | `function signature(facts) {` |
+
+### test/test-arch-ir.mjs（93 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `makeFixture` | 17-24 | 8 | `function makeFixture() {` |
+| `buildIr` | 26-30 | 5 | `async function buildIr(dir) {` |
+
+### test/test-arch-json-fresh.mjs（94 行 · 3 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `regenerate` | 29-50 | 22 | `async function regenerate() {` |
+| `evidence` | 35-48 | 14 | `const evidence = (() => {` |
+| `run` | 36-40 | 5 | `const run = (args) => {` |
+
 ### test/test-audit-bad-file.mjs（107 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -1784,6 +1960,13 @@
 | `extractFunction` | 36-134 | 99 | `function extractFunction(src, signature) {` |
 | `walk` | 50-55 | 6 | `function walk(node, out = []) {` |
 | `renderPreview` | 58-134 | 77 | `function renderPreview(handlers = {}) {` |
+
+### test/test-collector-ignore.mjs（68 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `makeRepo` | 21-31 | 11 | `function makeRepo() {` |
+| `paths` | 33-33 | 1 | `const paths = (list) => list.map((f) => String(f.path).replace(/\\/g, '/'));` |
 
 ### test/test-dataflow.mjs（116 行 · 1 个函数）
 

@@ -25,3 +25,9 @@ lib/client.js
 # 日期清理工具自身：注释/正则必须含日期示例（20\d{2}-... 匹配模式与示例），
 #   否则工具失去文档价值——no-date-in-comment 对该文件豁免（工具本质）。
 scripts/clean-date-comments.py
+
+# archify 生成的架构图 HTML（按用户要求入库）：它是 **archify 渲染器的产物**，不是本项目源码——
+#   内含内联 <script>（被 security/script-unsafe-inline 拦）与压缩后的内联 JS（复杂度极高）。
+#   这两类命中对生成物没有意义（改不动、也不该改），故整文件豁免审计；
+#   数据源 .archify/*.architecture.json 仍照常受审（那是我们生成的、可改的结构数据）。
+.archify/*.html

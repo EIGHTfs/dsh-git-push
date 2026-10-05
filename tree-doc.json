@@ -246,200 +246,6 @@
   "lib/app/audit-api.js": "审计结果 API 聚合层（/api/git-push/audit：按规则/文件/严重级/规则包分组 + severity 过滤 + top 截断）",
   "test/test-audit-api-http.mjs": "（待注释）",
   "test/test-audit-api.mjs": "（待注释）",
-  "_meta": {
-    "worktree": {
-      "CONTRIBUTING.md": {
-        "status": "A",
-        "mtime": "2026-10-05T01:24:58.711Z",
-        "note": "注释可能需更新"
-      },
-      "README.md": {
-        "status": "M",
-        "mtime": "2026-10-05T01:51:56.628Z",
-        "note": "注释可能需更新"
-      },
-      "SECURITY.md": {
-        "status": "A",
-        "mtime": "2026-10-05T01:24:49.226Z",
-        "note": "注释可能需更新"
-      },
-      "docs/CHANGELOG.md": {
-        "status": "M",
-        "mtime": "2026-10-05T01:54:46.551Z",
-        "note": "注释可能需更新"
-      },
-      "docs/FUNCTIONS.md": {
-        "status": "M",
-        "mtime": "2026-10-05T01:54:46.716Z",
-        "note": "注释可能需更新"
-      },
-      "docs/SPEC.md": {
-        "status": "A",
-        "mtime": "2026-10-05T01:26:47.843Z",
-        "note": "注释可能需更新"
-      },
-      "docs/audit-2026-09-26.md": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "docs/design-doc-coverage-audit.md": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "docs/功能-仓库索引与账号状态.md": {
-        "status": "A",
-        "mtime": "2026-10-05T01:16:25.396Z",
-        "note": "注释可能需更新"
-      },
-      "docs/功能-历史提交审计.md": {
-        "status": "A",
-        "mtime": "2026-10-05T01:16:08.592Z",
-        "note": "注释可能需更新"
-      },
-      "docs/功能-审计规则体系.md": {
-        "status": "A",
-        "mtime": "2026-10-05T01:16:00.245Z",
-        "note": "注释可能需更新"
-      },
-      "docs/功能-文档与结构追踪.md": {
-        "status": "A",
-        "mtime": "2026-10-05T01:16:16.280Z",
-        "note": "注释可能需更新"
-      },
-      "docs/方案-audit-history-历史提交审计.md": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "docs/方案-io-risk-规则优化.md": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "docs/方案-io-risk规则推断与准确率评估.md": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "docs/方案-repo-index-account-status-更新收口.md": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "docs/方案-tree-doc变动追踪与函数文档.md": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "docs/方案-审计规则按语言划分与检查器语言化.md": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "docs/方案-文档维度加分制.md": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "docs/诊断-审计误报-第三方项目语料.md": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "docs/诊断-提交审计-auditignore-缺no-index.md": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "lib/app/settings-bridge.js": {
-        "status": "M",
-        "mtime": "2026-10-05T01:40:19.860Z",
-        "note": "注释可能需更新"
-      },
-      "lib/checks/dup-const.js": {
-        "status": "M",
-        "mtime": "2026-10-05T01:29:51.716Z",
-        "note": "注释可能需更新"
-      },
-      "lib/git/clone-download.js": {
-        "status": "M",
-        "mtime": "2026-10-05T01:38:02.165Z",
-        "note": "注释可能需更新"
-      },
-      "lib/git/sensitive.js": {
-        "status": "M",
-        "mtime": "2026-10-05T01:45:43.265Z",
-        "note": "注释可能需更新"
-      },
-      "lib/self/index.js": {
-        "status": "M",
-        "mtime": "2026-10-05T01:54:31.201Z",
-        "note": "注释可能需更新"
-      },
-      "package.json": {
-        "status": "M",
-        "mtime": "2026-10-05T01:54:16.886Z",
-        "note": "注释可能需更新"
-      },
-      "scripts/readme-gen.mjs": {
-        "status": "M",
-        "mtime": "2026-10-05T01:22:47.243Z",
-        "note": "注释可能需更新"
-      },
-      "scripts/scan-file-io.mjs": {
-        "status": "M",
-        "mtime": "2026-10-05T01:51:38.781Z",
-        "note": "注释可能需更新"
-      },
-      "scripts/scrub-user-wording.mjs": {
-        "status": "M",
-        "mtime": "2026-10-05T01:48:36.824Z",
-        "note": "注释可能需更新"
-      },
-      "test/regression-2.4.1.mjs": {
-        "status": "A",
-        "mtime": "2026-10-05T01:20:04.195Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-command-registry.mjs": {
-        "status": "M",
-        "mtime": "2026-10-05T01:11:56.325Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-plugin.mjs": {
-        "status": "M",
-        "mtime": "2026-10-05T01:12:15.313Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-settings-persistence.mjs": {
-        "status": "M",
-        "mtime": "2026-10-05T01:42:18.346Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-tool-contract.mjs": {
-        "status": "A",
-        "mtime": "2026-10-05T01:11:10.447Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-tools-e2e.mjs": {
-        "status": "A",
-        "mtime": "2026-10-05T01:19:44.837Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-version-metrics.mjs": {
-        "status": "A",
-        "mtime": "2026-10-05T01:23:11.658Z",
-        "note": "注释可能需更新"
-      },
-      "version-metrics.json": {
-        "status": "A",
-        "mtime": "2026-10-05T01:54:39.132Z",
-        "note": "注释可能需更新"
-      }
-    }
-  },
   "test/test-tool-probes.mjs": "（待注释）",
   "lib/app/handlers/account.js": "HTTP 处理·账号端点（account-status/account-check/gen-ssh-key）",
   "lib/app/handlers/clone.js": "HTTP 处理·克隆端点（repo-clone/clone-logs/abort/preview/progress）",
@@ -549,5 +355,63 @@
   "version-metrics.json": "（待注释）",
   "CONTRIBUTING.md": "（待注释）",
   "SECURITY.md": "（待注释）",
-  "docs/SPEC.md": "（待注释）"
+  "docs/SPEC.md": "（待注释）",
+  "scripts/archify-gen.mjs": "（待注释）",
+  "scripts/archify-imports.mjs": "（待注释）",
+  "test/test-archify-imports.mjs": "（待注释）",
+  ".archify": "（待注释）",
+  ".archify/dsh-git-push.architecture.json": "（待注释）",
+  "lib/arch": "（待注释）",
+  "lib/arch/extract.js": "（待注释）",
+  ".archify/dsh-git-push.html": "（待注释）",
+  "scripts/arch-mcp.mjs": "（待注释）",
+  "lib/arch/aggregate.js": "（待注释）",
+  "lib/arch/to-json.js": "（待注释）",
+  "lib/arch/validate.js": "（待注释）",
+  "lib/app/handlers/arch-json.js": "（待注释）",
+  "test/test-arch-json-fresh.mjs": "（待注释）",
+  "archify-preview.example.json": "（待注释）",
+  "scripts/archify-preview.mjs": "（待注释）",
+  "test/test-arch-func-source.mjs": "（待注释）",
+  "test/test-arch-generic.mjs": "（待注释）",
+  "docs/ARCH-FACTS-SPEC.md": "（待注释）",
+  "lib/arch/ir.js": "（待注释）",
+  "lib/arch/validate-facts.js": "（待注释）",
+  "test/test-arch-ir.mjs": "（待注释）",
+  "lib/arch/lists.js": "（待注释）",
+  "_meta": {
+    "worktree": {
+      ".archify/dsh-git-push.architecture.json": {
+        "status": "M",
+        "mtime": "2026-10-05T07:50:59.790Z",
+        "note": "注释可能需更新"
+      },
+      ".archify/dsh-git-push.html": {
+        "status": "M",
+        "mtime": "2026-10-05T07:51:00.337Z",
+        "note": "注释可能需更新"
+      },
+      "docs/CHANGELOG.md": {
+        "status": "M",
+        "mtime": "2026-10-05T07:56:52.761Z",
+        "note": "注释可能需更新"
+      },
+      "docs/FUNCTIONS.md": {
+        "status": "M",
+        "mtime": "2026-10-05T07:57:27.855Z",
+        "note": "注释可能需更新"
+      },
+      "lib/self/index.js": {
+        "status": "M",
+        "mtime": "2026-10-05T07:56:30.875Z",
+        "note": "注释可能需更新"
+      },
+      "package.json": {
+        "status": "M",
+        "mtime": "2026-10-05T07:56:45.430Z",
+        "note": "注释可能需更新"
+      }
+    }
+  },
+  "test/test-collector-ignore.mjs": "（待注释）"
 }

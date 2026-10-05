@@ -199,8 +199,12 @@ test('同步：真实写入到临时目录（幂等）', async () => {
   const r2 = await syncPlugin({ source: ROOT, target, write: true });
   assert.equal(r2.written, 0, '第二次应全部一致（幂等）');
   assert.ok(r2.skipped > 0);
-  // 清理
-  import('node:fs').then((fs) => fs.rmSync(target, { recursive: true, force: true }));
+  // 清理：必须**同步**删——原实现写成 `import('node:fs').then(...)`（异步且不等），
+  //   测试早已结束、清理还没跑完，于是每次跑全量都留下一个整仓副本 `.tmp-sync-write/`；
+  //   它会让 .auditignore 里 lib/vendor/ 的豁免因路径前缀变化失效，制造 5 个审计 blocker。
+  //   （rmSync 本文件第 16 行已经导入，无需再动态 import。）
+  rmSync(target, { recursive: true, force: true });
+  assert.equal(existsSync(target), false, '清理后临时目录不应存在');
 });
 
 test('同步：常量声明齐全', () => {

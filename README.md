@@ -229,7 +229,15 @@ dsh-git-push/
 │   │   ├── slot-stats.js — 规则槽位命中统计（模块级状态）
 │   │   ├── tool-call.js — 工具调用分发（git_scan/commit_push/audit/status 等全部工具）
 │   │   ├── tools.js — 工具定义清单（名称/描述/参数 schema）
-│   │   └── …（7 个更深文件）
+│   │   └── …（8 个更深文件）
+│   ├── arch/ — （待注释）
+│   │   ├── aggregate.js — （待注释）
+│   │   ├── extract.js — （待注释）
+│   │   ├── ir.js — （待注释）
+│   │   ├── lists.js — （待注释）
+│   │   ├── to-json.js — （待注释）
+│   │   ├── validate-facts.js — （待注释）
+│   │   ├── validate.js — （待注释）
 │   ├── ast/ — AST 实现层（token 级判定：括号/控制流/数据流/凭据/魔数/命名/规模/分词）
 │   │   ├── brace.js — 括号配对与区间包含工具
 │   │   ├── callgraph.js — 调用链追踪（单文件调用图 + isInRequestPath，io-risk 请求路径判定升级）
@@ -373,6 +381,10 @@ dsh-git-push/
 │   ├── vendor/ — （待注释）
 │   │   └── …（2 个更深文件）
 ├── scripts/ — 开发工具脚本（版本校验/双副本同步/预览服务/README 目录树维护）
+│   ├── arch-mcp.mjs — （待注释）
+│   ├── archify-gen.mjs — （待注释）
+│   ├── archify-imports.mjs — （待注释）
+│   ├── archify-preview.mjs — （待注释）
 │   ├── audit-runner.mjs — 审计扩展 CLI 统一入口（独立跑 scripts/audit-ext/ 全部扩展）
 │   ├── audit-runtime-check.mjs — 三层审计 L3 运行时检测脚本
 │   ├── browser-page-probe.mjs — （待注释）
@@ -416,6 +428,11 @@ dsh-git-push/
 │   ├── regression-2.4.1.mjs — （待注释）
 │   ├── test-account-refresh-on-push.mjs — （待注释）
 │   ├── test-account-ssh.mjs — 账号检查 + SSH 密钥测试
+│   ├── test-arch-func-source.mjs — （待注释）
+│   ├── test-arch-generic.mjs — （待注释）
+│   ├── test-arch-ir.mjs — （待注释）
+│   ├── test-arch-json-fresh.mjs — （待注释）
+│   ├── test-archify-imports.mjs — （待注释）
 │   ├── test-audit-api-http.mjs — （待注释）
 │   ├── test-audit-api.mjs — （待注释）
 │   ├── test-audit-bad-file.mjs — 审计拦截门禁测试（硬编码密码/API key/.env 凭据文件）
@@ -435,6 +452,7 @@ dsh-git-push/
 │   ├── test-clone-parts-keep.mjs — （待注释）
 │   ├── test-clone-preview-buttons.mjs — clone 预览确认框按钮可点（真渲染+真点击）
 │   ├── test-clone-token.mjs — （待注释）
+│   ├── test-collector-ignore.mjs — （待注释）
 │   ├── test-command-registry.mjs — 命令注册表测试（工具入表/查找/parseRegistryArgs/清单生成）
 │   ├── test-context.mjs — 上下文注入测试
 │   ├── test-cred-env.mjs — git_cred_env 凭据传递测试（双通道/无明文/askpass 调用/无凭据兜底）
@@ -497,6 +515,7 @@ dsh-git-push/
 │   ├── fixtures/ — （待注释）
 │   │   ├── TimeZoneComboBox-CRnoCikG.js — Pawchive 混淆产物样本（hash 文件名——跳过判定 fixture）
 ├── docs/ — 开发文档
+│   ├── ARCH-FACTS-SPEC.md — （待注释）
 │   ├── CHANGELOG.md — 版本列表宿主（doc-version apply 写 dshgp-version 标记块）
 │   ├── DETAILS-EXEMPT-AND-RULES.md — 细节补充：豁免注释与规则 yml 用法全录
 │   ├── FUNCTIONS.md — 函数列表宿主（doc-func apply 写 dshgp-functions 标记块）
@@ -527,11 +546,15 @@ dsh-git-push/
 │   │   ├── task-completion-report.md — （待注释）
 │   │   ├── tool-json-add-ask.md — （待注释）
 │   │   ├── versioning-rule.md — （待注释）
+├── .archify/ — （待注释）
+│   ├── dsh-git-push.architecture.json — （待注释）
+│   ├── dsh-git-push.html — （待注释）
 ├── .auditignore — 审计豁免清单（不影响 git 入库，仅跳过审计扫描）——排除内置第三方代码
 ├── .gitignore — 忽略规则（node_modules/产物/备份/回收站等）
 ├── CONTRIBUTING.md — （待注释）
 ├── README.md — 插件 README（功能总览/用法/版本记录）
 ├── SECURITY.md — （待注释）
+├── archify-preview.example.json — （待注释）
 ├── assemble.json — bench-template 下发清单（键=模板仓库相对路径，值=本插件落点；preview 启动两件套 → assets/）
 ├── cli.mjs — 独立 CLI（git-sluice，不依赖宿主可独立运行）
 ├── cordis.patch.yml — DSH 插件组合 patch（loader 注入定义）
@@ -1060,6 +1083,83 @@ node scripts/audit-runtime-check.mjs --all <目录>
   - `scripts/check.mjs`：全仓语法检查（`node --check` 批量）
   - `scripts/sync-plugin.mjs`：源码仓库 → 安装副本的双副本同步（默认 dry-run，`--write` 才写）
 - **测试**：`npm test` 一条命令复现全绿（524 断言，0 失败）
+
+## archify 架构图（产出合法 JSON + 防漂移）
+
+> **职责边界（重要）**：本插件**只负责产出 JSON**（事实层）——把仓库的真实结构导出成符合
+> [archify](https://github.com/tt-a1i/archify) 规范的 `architecture.json`。**渲染 HTML 不归我们**：
+> 把这份 JSON 喂给 archify（或任何兼容渲染器）即可。本仓库里的 `.archify/*.html` 与预览服务
+> 只是「顺手喂一次」的便利，**不是本插件的职责**。
+>
+> 三种取 JSON 的方式（同一份事实层，口径一致）：
+> · 工具 `arch_json`（宿主工具，也可经 MCP server 供**任意 agent** 调用）
+> · CLI `node cli.mjs arch-json <仓库>`
+> · 脚本 `node scripts/archify-gen.mjs gen <仓库>`
+>
+> **红线**：组件与连线**全部来自确定性事实提取**（目录 + git 跟踪状态 + 真实 import + IO 调用），
+> **AI 不参与拓扑**；`component.id` 必须能反查到真实文件/模块。
+
+`scripts/archify-gen.mjs`：把仓库**真实结构**（顶层源码目录 + git 仓库证据）产出成符合
+[archify](https://github.com/tt-a1i/archify) 规范的 `architecture.json`，并复用本插件的防漂移口径做校验。
+
+```bash
+node scripts/archify-gen.mjs gen   <仓库>        # 打印 JSON
+node scripts/archify-gen.mjs apply <仓库>        # 写入 <仓库>/.archify/<名字>.architecture.json
+node scripts/archify-gen.mjs check <仓库>        # 两层校验：规范层 + 事实层
+```
+
+- **产物落在被分析仓库的 `.archify/`**（生成物，已加入 `.gitignore`，不入库）
+- **两层校验**：规范层内置 archify schema 的关键约束（必填字段、`type`/`variant`/`kind` 枚举、
+  引用完整性、`sources` 形状与仓库证据要求）；事实层比对真实目录（声明的路径必须存在、
+  顶层源码目录必须都有组件）——**这就是「复用防漂移检验」的落点**
+- **实测踩坑（都写进脚本注释）**：`sources` 必须是**对象数组**（每项含 `path`）、**不能带尾斜杠**、
+  必须指向 **pinned revision 下真实存在的文件**（故优先取 git 已跟踪的代表文件）；
+  组件带 `sources` 时**必须**给 `meta.repository`（`url` + 40 位 `revision`），且 `url` 要与本地 origin
+  逐字一致——本插件按约定把 origin 写成 `api.github.com/repos/o/r`，故用 `link_mode: "local-only"`
+  且不声明 `provider`（公开主机 `github.com` / `gitee.com` 才声明 provider）；组件需给 `pos`/`size`
+  （否则其渲染器内部报错）；连线文字标签在自动网格下易与组件矩形重叠，故默认不写 `label`
+
+**渲染（archify 零依赖：克隆下来直接跑，无需安装）**：
+
+```bash
+node <archify>/archify/bin/archify.mjs validate architecture <仓库>/.archify/<名字>.architecture.json --repo-root <仓库>
+node <archify>/archify/bin/archify.mjs render   architecture <仓库>/.archify/<名字>.architecture.json <输出.html> --repo-root <仓库>
+```
+
+实测：本插件自身产出的 JSON 通过 archify 官方 `validate`（9 项产物检查，0 error / 0 warning），
+并渲染出 752 KB 的自包含交互式 HTML。
+
+### 细化计划（待办：从粗到细 + 增加图类型）
+
+现状问题：图只到**顶层目录**一层（8 组件 / 4 连线），看不出插件真实结构。
+
+目标（四项，全部**从代码自动推导**，以便 `check` 能查漂移）：
+
+| # | 要做的 | 推导口径（都来自真实代码，不手写） |
+|---|--------|-----------------------------------|
+| 1 | architecture 细化到 `lib/` 子模块 | 组件 = `lib/` 下 18 个子模块 + 顶层目录；**连线 = 解析各模块实际 import 关系**（谁 import 谁）；分组 = 用 `boundaries` 按目录语义分层（入口层 app/cli/http、规则层 rule/audit-rules、检查层 checks/ast、审计层 audit/score/exempt、git 层 git、客户端层 client/plugin/readme-templates、基础层 context/self/vendor） |
+| 2 | 加上工具 / 路由 / 数据文件 | 工具名 = 解析 `lib/app/command-registry.js` 的注册项；路由 = 解析 `lib/app/http-handlers.js` 的 `case '/api/git-push/...'`；数据文件 = 4 个（config / account-status / dsh-repo-index / scan-live）——各归到其所属模块下 |
+| 3 | 新增 `dataflow` 数据流图 | 仓库扫描 → 索引落盘 → 审计 → 评分的真实数据流（字段级：路径/分支/ahead-behind → dsh-repo-index.json → findings → 评分） |
+| 4 | 新增 `sequence` 时序图 | 「提交 → 审计 → 拦截/放行 → 提交 → 推送」的真实时序（参与者 = 工具入口 / 审计编排 / git 层 / 远端） |
+| 5 | 新增 `lib/arch/to-html.js`（**自带折叠**的第二渲染器）—— **2.5.0 不做，留到以后** | 用 ArchFacts IR 直接渲染单文件 HTML：每张函数卡用 `<details>/<summary>` 包裹、可按模块折叠、样式内联、零依赖。**为什么需要**：① 实测 archify 的 `cards` 是静态列表——其 `render-architecture.mjs` 里 `details`/`summary`/`toggle`/`collapse` 一处都没有，不可折叠 ② 用它验证「渲染器可插拔」这个设计：**加渲染器 = 加一个文件**，不动 `extract.js` / `aggregate.js` / `validate.js`。**前置**：事实层已取消数量上限（全部模块、全部函数都进 IR），折叠只由渲染器负责。**状态**：明确留到 2.5.0 之后；2.5.0 只交付「事实导出 + 交给 archify 渲染」这条主线 |
+
+#### 布局优化待办（2026-10-05 记录）
+
+一批布局优化在讨论中提出，实测后有明确受阻点，统一记在这里备查（均未实施）：
+
+| # | 想做的 | 实测结论 / 受阻原因 |
+|---|--------|---------------------|
+| 6.1 | 换 dagre / ELK 分层布局（「自顶向下或从左到右，让流程有方向感，而不是散落一地图」） | **archify 3.0.1 只支持 `layout.mode: "grid"`**——`schemas/architecture.schema.json` 的 `mode` 枚举只有 grid，`renderers/architecture/grid.mjs:36` 明确报 `layout.mode must be "grid" when layout is set`。⇒ **换不了布局引擎**。当前用 grid 的 `row`/`col` + 依赖层排序模拟分层方向感 |
+| 6.2 | 加 boundaries 分组框、表达语义分层（「缺少抽象层级：没有明显的 boundaries 或语义分层」） | 归并视图里组件本身已是顶层目录，再套 region 是重复表达；细粒度视图实测 24 个框里大量是单节点框（`{"wraps":["app"]}`）等于没分组。需要按「**顶层目录 = region、子模块 = 框内节点**」两级结构重新设计 |
+| 6.3 | 点击节点展开子文件夹（「单节点，但是能点击后显示里面含的文件夹文件」） | **archify 无节点级详情**：`references/viewer-runtime.md` 的 Semantic Passport「opens on focus」但只展示**作者编写的上下游关系事实**，不展示节点内部构成；`cards` 是**顶层**字段，挂到组件上会被 schema 拒绝（实测 `must NOT have additional properties {"additionalProperty":"cards"}`）。要做需自研第二渲染器（见上面第 5 项 to-html.js） |
+| 6.4 | 减少连线拐弯（「线不要拐太多弯，组件给线上下左右让路，不是改半径」） | 需按契约的连接语义放置：主路径邻居相邻（阅读顺序）、分支/存储放**正上/正下并居中**（边才是一条直线）、返回放无分支侧、二次入边换一侧、扇出按 `32 + 14×(k−1)`px 分散。当前只做到「按依赖层排序」，未按连接语义逐条 trace |
+| 6.5 | 细粒度图直接渲染通过（保留全部组件、不归并） | showcase 档下 36 组件 / 98 连线报 8 条几何诊断（6×edge-through-node + ambiguous-corridor + arrowhead-collision），standard 档也报 8×edge-through-node ⇒ **两种档位都过不了**，多次有依据的修复均无效。当前用「抽象层级自适应」绕过：组件少则细粒度、多则归并为子系统 |
+
+实现要点（沿用现有 `scripts/archify-gen.mjs` 的三段式与两层校验）：
+
+- 每种图一个生成函数 + 一份**类型对应的规范层校验**（archify 的 `dataflow` / `sequence` schema 约束需实测其 schema 后内置）
+- 事实层校验扩展到新图：子模块列表与目录一致、import 边与真实 import 一致、工具/路由条数与注册表一致
+- 仍未定：是否需要把生成器包成插件工具（`archify_gen`）
 
 ## 注意事项
 

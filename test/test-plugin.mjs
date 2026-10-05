@@ -148,14 +148,14 @@ test('apply：无 commands 服务时斜杠注册静默跳过', async () => {
 });
 
 // ---------- 工具清单 ----------
-test('工具：宿主 listTools 注册了全部 14 个工具（git_gen_readme 已抽独立脚本移除）', () => {
-  // 全量清单：此前这里只列 7 个、标题也写「7 个」，与注册表实际 14 个不一致 ⇒ 已修正。
-  //   公开面形状（数量/命名/两面一致/声明真实）由 test/test-tool-contract.mjs 统一门禁；
-  //   本测试保留「宿主 listTools 真把这 14 个注册上」这一层的验证价值。
+test('工具：宿主 listTools 注册了全部 15 个工具（git_gen_readme 已抽独立脚本移除）', () => {
+  // 全量清单：此前这里只列 7 个、标题也写「7 个」，与注册表实际数不一致 ⇒ 已修正过两次
+  //   （14 → 15：新增 arch_json）。公开面形状（数量/命名/两面一致/声明真实）由
+  //   test/test-tool-contract.mjs 统一门禁；本测试保留「宿主 listTools 真把这 15 个注册上」这一层。
   const names = listTools().map((t) => t.name);
   const expected = [
     'git_scan', 'git_commit_push', 'code_audit', 'git_clone', 'git_remote_create',
-    'git_set_visibility', 'io_scan', 'git_clone_preview', 'link_check', 'module_splitter',
+    'git_set_visibility', 'io_scan', 'arch_json', 'git_clone_preview', 'link_check', 'module_splitter',
     'git_account_check', 'git_cred_env', 'git_gen_ssh_key', 'git_sluice',
   ];
   for (const n of expected) assert.ok(names.includes(n), `宿主未注册工具 ${n}`);

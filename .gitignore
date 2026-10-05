@@ -11,3 +11,17 @@ dist/
 
 # 运行期 PID 文件（start.sh 启停脚本产生，不入库）
 *.pid
+
+# archify 架构图产物（由 scripts/archify-gen.mjs 生成）——按用户要求**入库**：
+#   HTML 交互式图与 JSON 数据源都提交进来，便于直接分发与离线查看；
+#   仍用 check 子命令查漂移（产物与代码不一致时非零退出）。
+# 注：这里不忽略 .archify/，只忽略它的临时/中间文件
+.archify/*.tmp
+__pycache__/
+*.pyc
+
+# 架构图预览的本机配置（项目路径每台机器不同，属本机配置不入库；
+#   仓库里只放 archify-preview.example.json 作为模板）
+archify-preview.json
+# 某同步流程留下的整仓临时副本（test-self 已修为同步清理；这里兜底防它再进审计范围）
+.tmp-sync-write/
