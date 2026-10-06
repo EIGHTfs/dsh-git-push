@@ -530,25 +530,25 @@
 | `isBuildArtifactFile` | 43-73 | 31 | `export function isBuildArtifactFile(relPathOrFile = '', text = '') {` |
 | `auditFile` | 75-179 | 105 | `export function auditFile({ file, relPath, text, grouped }, opts = {}) {` |
 
-### lib/audit/collector.js（403 行 · 15 个函数）
+### lib/audit/collector.js（413 行 · 15 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `isGitWorkTree` | 47-58 | 12 | `function isGitWorkTree(dir) {` |
-| `tryLoadAuditIgnoreFallback` | 74-105 | 32 | `function tryLoadAuditIgnoreFallback(root) {` |
-| `walkDirs` | 85-102 | 18 | `const walkDirs = (dir) => {` |
-| `tryLoadGitIgnoreSet` | 117-206 | 90 | `function tryLoadGitIgnoreSet(root, respectAuditIgnore = true) {` |
-| `walkDirs` | 158-173 | 16 | `const walkDirs = (dir) => {` |
-| `isHardSkipped` | 215-217 | 3 | `function isHardSkipped(name) {` |
-| `computeGitIgnored` | 220-225 | 6 | `function computeGitIgnored(full, gitIgnoreRoot, includeIgnored, respectAuditIgnore = true) {` |
-| `shouldSkipDirByYml` | 228-232 | 5 | `function shouldSkipDirByYml(name, ignoredByGit, gitIgnoreRoot) {` |
-| `isFileGitIgnored` | 235-246 | 12 | `function isFileGitIgnored(full, gitIgnoreRoot, includeIgnored, respectAuditIgnore = true) {` |
-| `collectTextFiles` | 248-307 | 60 | `export async function collectTextFiles(dir, { depth = 10, gitIgnoreRoot = null, includeIgnored = false, testExemptRoot = null, respectAuditIgnore = true } = {}) {` |
-| `walk` | 270-306 | 37 | `async function walk(cur, level) {` |
-| `isGitRepo` | 310-312 | 3 | `export function isGitRepo(dir) {` |
-| `collectChangedFiles` | 320-377 | 58 | `export function collectChangedFiles(repoPath) {` |
-| `isTextFile` | 380-398 | 19 | `export function isTextFile(full) {` |
-| `readText` | 401-403 | 3 | `export function readText(full) {` |
+| `tryLoadAuditIgnoreFallback` | 74-115 | 42 | `function tryLoadAuditIgnoreFallback(root, respectAuditIgnore = true) {` |
+| `walkDirs` | 95-112 | 18 | `const walkDirs = (dir) => {` |
+| `tryLoadGitIgnoreSet` | 127-216 | 90 | `function tryLoadGitIgnoreSet(root, respectAuditIgnore = true) {` |
+| `walkDirs` | 168-183 | 16 | `const walkDirs = (dir) => {` |
+| `isHardSkipped` | 225-227 | 3 | `function isHardSkipped(name) {` |
+| `computeGitIgnored` | 230-235 | 6 | `function computeGitIgnored(full, gitIgnoreRoot, includeIgnored, respectAuditIgnore = true) {` |
+| `shouldSkipDirByYml` | 238-242 | 5 | `function shouldSkipDirByYml(name, ignoredByGit, gitIgnoreRoot) {` |
+| `isFileGitIgnored` | 245-256 | 12 | `function isFileGitIgnored(full, gitIgnoreRoot, includeIgnored, respectAuditIgnore = true) {` |
+| `collectTextFiles` | 258-317 | 60 | `export async function collectTextFiles(dir, { depth = 10, gitIgnoreRoot = null, includeIgnored = false, testExemptRoot = null, respectAuditIgnore = true } = {}) {` |
+| `walk` | 280-316 | 37 | `async function walk(cur, level) {` |
+| `isGitRepo` | 320-322 | 3 | `export function isGitRepo(dir) {` |
+| `collectChangedFiles` | 330-387 | 58 | `export function collectChangedFiles(repoPath) {` |
+| `isTextFile` | 390-408 | 19 | `export function isTextFile(full) {` |
+| `readText` | 411-413 | 3 | `export function readText(full) {` |
 
 ### lib/audit/ext-runner.js（78 行 · 2 个函数）
 
@@ -617,7 +617,7 @@
 | `excludePathOf` | 38-47 | 10 | `function excludePathOf(root) {` |
 | `detectIgnoreBlindSpot` | 54-101 | 48 | `export function detectIgnoreBlindSpot(root) {` |
 
-### lib/audit/orchestrate.js（434 行 · 13 个函数）
+### lib/audit/orchestrate.js（438 行 · 13 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -625,15 +625,15 @@
 | `appendIgnoreBlindSpot` | 61-77 | 17 | `function appendIgnoreBlindSpot(findings, repoPath, scanned) {` |
 | `auditFiles` | 89-240 | 152 | `async function auditFiles(repoPath, files, opts = {}) {` |
 | `isDshPlugin` | 114-120 | 7 | `const isDshPlugin = (() => {` |
-| `auditFull` | 242-260 | 19 | `export async function auditFull(repoPath, opts = {}) {` |
-| `appendTreeDocDrift` | 265-307 | 43 | `function appendTreeDocDrift(findings, repoPath) {` |
-| `by` | 298-298 | 1 | `const by = (code) => wt.filter(([, v]) => v?.status === code).length;` |
-| `appendFuncDocDrift` | 316-332 | 17 | `function appendFuncDocDrift(findings, repoPath) {` |
-| `appendSplitDocsCheck` | 340-383 | 44 | `function appendSplitDocsCheck(findings, repoPath) {` |
-| `hasMarkBlock` | 386-388 | 3 | `function hasMarkBlock(text, marker) {` |
-| `auditChanged` | 393-428 | 36 | `export async function auditChanged(repoPath, opts = {}) {` |
-| `isAuditIgnored` | 409-422 | 14 | `const isAuditIgnored = (rel) => {` |
-| `auditWithScope` | 431-433 | 3 | `export async function auditWithScope(repoPath, { scope = 'diff', ...opts } = {}) {` |
+| `auditFull` | 242-264 | 23 | `export async function auditFull(repoPath, opts = {}) {` |
+| `appendTreeDocDrift` | 269-311 | 43 | `function appendTreeDocDrift(findings, repoPath) {` |
+| `by` | 302-302 | 1 | `const by = (code) => wt.filter(([, v]) => v?.status === code).length;` |
+| `appendFuncDocDrift` | 320-336 | 17 | `function appendFuncDocDrift(findings, repoPath) {` |
+| `appendSplitDocsCheck` | 344-387 | 44 | `function appendSplitDocsCheck(findings, repoPath) {` |
+| `hasMarkBlock` | 390-392 | 3 | `function hasMarkBlock(text, marker) {` |
+| `auditChanged` | 397-432 | 36 | `export async function auditChanged(repoPath, opts = {}) {` |
+| `isAuditIgnored` | 413-426 | 14 | `const isAuditIgnored = (rel) => {` |
+| `auditWithScope` | 435-437 | 3 | `export async function auditWithScope(repoPath, { scope = 'diff', ...opts } = {}) {` |
 
 ### lib/audit/repo-level.js（31 行 · 2 个函数）
 
@@ -1133,15 +1133,15 @@
 | `ensureAuxSshRemote` | 49-65 | 17 | `export function ensureAuxSshRemote(repoPath, owner, repo, result = {}) {` |
 | `autoTagDSHProject` | 72-101 | 30 | `export async function autoTagDSHProject({ repoPath = '', version = '', commitSha = '', owner = '', repo = '', token = '' } = {}) {` |
 
-### lib/git/push.js（273 行 · 5 个函数）
+### lib/git/push.js（317 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `commitAndPush` | 26-138 | 113 | `export async function commitAndPush({ repoPath = '', message = '', push = true, dryRun = false, token = '', customIgnorePatterns = '', requirementsConfirmed = false, force = false, pushMethod = 'ssh', pushGate = false, pushConfirmed = false, paths = '' } = {}) {` |
-| `fetchRemoteBranchRef` | 151-164 | 14 | `async function fetchRemoteBranchRef(repoPath, branch, owner, repo) {` |
-| `enhanceAfterPushSuccess` | 172-202 | 31 | `async function enhanceAfterPushSuccess({ repoPath, pr, token, steps, commitSha }) {` |
-| `readmeCheckHint` | 207-212 | 6 | `export function readmeCheckHint(repoPath) {` |
-| `pushCurrentBranch` | 221-272 | 52 | `export async function pushCurrentBranch({ repoPath = '', pushMethod = 'ssh' } = {}) {` |
+| `commitAndPush` | 28-152 | 125 | `export async function commitAndPush({ repoPath = '', message = '', push = true, dryRun = false, token = '', customIgnorePatterns = '', requirementsConfirmed = false, force = false, pushMethod = 'ssh', pushGate = false, pushConfirmed = false, paths = '' } = {}) {` |
+| `fetchRemoteBranchRef` | 165-178 | 14 | `async function fetchRemoteBranchRef(repoPath, branch, owner, repo) {` |
+| `enhanceAfterPushSuccess` | 186-246 | 61 | `async function enhanceAfterPushSuccess({ repoPath, pr, token, steps, commitSha }) {` |
+| `readmeCheckHint` | 251-256 | 6 | `export function readmeCheckHint(repoPath) {` |
+| `pushCurrentBranch` | 265-316 | 52 | `export async function pushCurrentBranch({ repoPath = '', pushMethod = 'ssh' } = {}) {` |
 
 ### lib/git/remote.js（74 行 · 3 个函数）
 
@@ -2064,7 +2064,7 @@
 | `fixture` | 18-70 | 53 | `function fixture(block) {` |
 | `driftFindings` | 36-39 | 4 | `async function driftFindings(dir) {` |
 
-### test/test-git.mjs（844 行 · 2 个函数）
+### test/test-git.mjs（846 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -2079,6 +2079,12 @@
 | `makeTree` | 29-37 | 9 | `function makeTree() {` |
 | `ig` | 41-41 | 1 | `const ig = (text, f) => isIgnored(text, f);` |
 | `hits` | 135-135 | 1 | `const hits = (rel) => isIgnoredByRules(rules, rel);` |
+
+### test/test-gitignore-nongit-dir.mjs（40 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `rel` | 17-17 | 1 | `const rel = (list) => list.map((f) => String(f?.path ?? f).replace(SANDBOX + '/', '')).sort();` |
 
 ### test/test-history-audit.mjs（111 行 · 1 个函数）
 

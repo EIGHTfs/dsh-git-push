@@ -479,6 +479,8 @@ test('commitAndPush：推送成功后 remoteRef + aux remote + autoTag（dsh- �
     { match: (u, m) => m === 'GET' && u.includes('/git/ref/tags/v0.3.0'), status: 404, body: {} },
     // fetchRemoteHeads（commits 列表）
     { match: (u) => u.includes('/commits?'), status: 200, body: [{ sha: commitSha15, commit: { message: 'init', author: { date: '2026-01-01' } } }] },
+    // 推送后「远端 sha 硬校验」：远端分支必须指向本次推送的 sha（假成功防线）
+    { match: (u, m) => m === 'GET' && u.includes('/branches/main'), status: 200, body: { commit: { sha: commitSha15 } } },
   ]);
   const r = await commitAndPush({ repoPath: repoD15, message: 'add b.js', push: true, token: 'ghp_d15', requirementsConfirmed: true });
   assert.equal(r.ok, true, `应推送成功（实际: ${JSON.stringify(r)?.slice(0, 400)}）`);

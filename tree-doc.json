@@ -383,22 +383,27 @@
     "worktree": {
       "README.md": {
         "status": "M",
-        "mtime": "2026-10-06T12:29:05.835Z",
+        "mtime": "2026-10-06T21:11:07.724Z",
         "note": "注释可能需更新"
       },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-06T12:33:04.031Z",
+        "mtime": "2026-10-06T21:13:39.760Z",
         "note": "注释可能需更新"
       },
-      "lib/audit/audit-file.js": {
+      "lib/git/push.js": {
         "status": "M",
-        "mtime": "2026-10-06T12:30:40.719Z",
+        "mtime": "2026-10-06T21:13:17.182Z",
         "note": "注释可能需更新"
       },
-      "test/test-generated-html-artifact.mjs": {
+      "test/test-git.mjs": {
+        "status": "M",
+        "mtime": "2026-10-06T21:13:23.241Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-push-false-success.mjs": {
         "status": "A",
-        "mtime": "2026-10-06T12:28:57.999Z",
+        "mtime": "2026-10-06T21:10:52.786Z",
         "note": "注释可能需更新"
       }
     }
@@ -406,5 +411,7 @@
   "test/test-collector-ignore.mjs": "（待注释）",
   "test/test-empty-catch-single-source.mjs": "（待注释）",
   "test/test-conv-rule-scope.mjs": "（待注释）",
-  "test/test-generated-html-artifact.mjs": "（待注释）"
+  "test/test-generated-html-artifact.mjs": "（待注释）",
+  "test/test-push-false-success.mjs": "（待注释）",
+  "test/test-gitignore-nongit-dir.mjs": "（待注释）"
 }

@@ -475,6 +475,7 @@ dsh-git-push/
 │   ├── test-generated-html-artifact.mjs — （待注释）
 │   ├── test-git.mjs — git 总入口测试（runGit/commitAndPush/凭据/克隆）
 │   ├── test-gitignore-match.mjs — gitignore 兜底匹配（与真 git 对拍 + 非 git 端到端）
+│   ├── test-gitignore-nongit-dir.mjs — （待注释）
 │   ├── test-history-audit.mjs — （待注释）
 │   ├── test-http.mjs — HTTP 总入口测试（Origin/CSRF/413/路由）
 │   ├── test-inject-switch.mjs — 注入开发者要求清单子开关回归
@@ -488,6 +489,7 @@ dsh-git-push/
 │   ├── test-plugin.mjs — 插件接线测试（入口导出/工具清单/双副本同步）
 │   ├── test-private-gate.mjs — （待注释）
 │   ├── test-project-type-filter.mjs — 项目类型规则适配测试（非 dsh 项目不加载 dsh 槽位/0.x 版本规则、timeout 限 js 系、folder 尊重 gitignore——Pawchive 误报消除驱动）
+│   ├── test-push-false-success.mjs — （待注释）
 │   ├── test-push-transport.mjs — 推送通道回归（SSH 优先/一致性语义）
 │   ├── test-quality.mjs — 评分总入口测试（AST 质量检查器）
 │   ├── test-quota-write.mjs — （待注释）
