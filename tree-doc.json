@@ -381,37 +381,23 @@
   "lib/arch/lists.js": "（待注释）",
   "_meta": {
     "worktree": {
-      ".archify/dsh-git-push.architecture.json": {
-        "status": "M",
-        "mtime": "2026-10-05T07:50:59.790Z",
-        "note": "注释可能需更新"
-      },
-      ".archify/dsh-git-push.html": {
-        "status": "M",
-        "mtime": "2026-10-05T07:51:00.337Z",
-        "note": "注释可能需更新"
-      },
-      "docs/CHANGELOG.md": {
-        "status": "M",
-        "mtime": "2026-10-05T07:56:52.761Z",
-        "note": "注释可能需更新"
-      },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-05T07:57:27.855Z",
+        "mtime": "2026-10-06T12:21:05.304Z",
         "note": "注释可能需更新"
       },
-      "lib/self/index.js": {
+      "lib/audit-rules/audit-rules-nodejs.yml": {
         "status": "M",
-        "mtime": "2026-10-05T07:56:30.875Z",
+        "mtime": "2026-10-06T12:18:37.862Z",
         "note": "注释可能需更新"
       },
-      "package.json": {
-        "status": "M",
-        "mtime": "2026-10-05T07:56:45.430Z",
+      "test/test-empty-catch-single-source.mjs": {
+        "status": "A",
+        "mtime": "2026-10-06T12:20:23.041Z",
         "note": "注释可能需更新"
       }
     }
   },
-  "test/test-collector-ignore.mjs": "（待注释）"
+  "test/test-collector-ignore.mjs": "（待注释）",
+  "test/test-empty-catch-single-source.mjs": "（待注释）"
 }

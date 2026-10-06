@@ -2013,6 +2013,12 @@
 | `mk` | 142-142 | 1 | `const mk = (fnName) => `` |
 | `mk` | 160-160 | 1 | `const mk = (fnName, params) => `` |
 
+### test/test-empty-catch-single-source.mjs（29 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `read` | 14-14 | 1 | `const read = (p) => readFileSync(join(ROOT, p), 'utf8');` |
+
 ### test/test-exempt.mjs（407 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |

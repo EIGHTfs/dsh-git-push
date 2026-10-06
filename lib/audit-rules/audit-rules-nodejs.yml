@@ -246,14 +246,16 @@ rules:
     fixable: true
     mitigation: "🔴 高风险改用 fs.promises.xxx + await，循环内改为 Promise.all 并发；🟡 启动路径的一次性读取可豁免"
 
-  - id: robustness/no-empty-catch
-    name: "禁止空的 catch 块"
-    category: "robustness"
-    severity: "warning"
-    description: "空的 catch 块会静默吞掉错误"
-    pattern: "catch\\s*\\([^)]*\\)\\s*\\{\\s*\\}"
-    fixable: true
-    mitigation: "至少添加 console.error(e)"
+  # 【已撤销】robustness/no-empty-catch —— 与内置 AST 检查器重复报同一批位置。
+  #   原规则：pattern "catch\s*\([^)]*\)\s*\{\s*\}"，kind=regex，warning。
+  #   撤销理由（实测）：在 archify（641 文件）上，本规则报 1902 条、内置 quality/empty-catch
+  #   （lib/checks/structural.js 的 checkEmptyCatchAst，kind=empty-catch）报 1926 条，
+  #   两者 (file:line) 交集 1899 条 ⇒ 同一批空 catch 被两条规则各报一遍（合计占总量 24.6%）。
+  #   按架构（yml 只声明、判定落 lib/ast）保留**AST 版**：它能识别注释占位/换行/嵌套形态，
+  #   正则版只匹配「catch(...){ }」同行闭合，既漏报又重复计数。
+  #   如需恢复：把下面三行取消注释即可（保留原字段）。
+  #   name: "禁止空的 catch 块" ｜ severity: warning ｜ description: "空的 catch 块会静默吞掉错误"
+  #   pattern: "catch\\s*\\([^)]*\\)\\s*\\{\\s*\\}" ｜ mitigation: "至少添加 console.error(e)"
 
   - id: robustness/input-validation-required
     name: "外部输入必须验证"
