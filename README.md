@@ -494,6 +494,7 @@ dsh-git-push/
 │   ├── test-quality.mjs — 评分总入口测试（AST 质量检查器）
 │   ├── test-quota-write.mjs — （待注释）
 │   ├── test-readme-gen.mjs — README 生成测试（模板渲染/版本表）
+│   ├── test-remote-name-ascii.mjs — （待注释）
 │   ├── test-rename-locator.mjs — rename-locator 测试（同名不同作用域分组/模块级/过滤）
 │   ├── test-repo-list.mjs — 仓库列表测试（本地扫描/索引读写/HTTP 端点/远端状态）
 │   ├── test-rule-include-paths.mjs — （待注释）

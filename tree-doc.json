@@ -381,29 +381,19 @@
   "lib/arch/lists.js": "（待注释）",
   "_meta": {
     "worktree": {
-      "README.md": {
-        "status": "M",
-        "mtime": "2026-10-06T21:11:07.724Z",
-        "note": "注释可能需更新"
-      },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-06T21:13:39.760Z",
+        "mtime": "2026-10-06T21:16:21.822Z",
         "note": "注释可能需更新"
       },
-      "lib/git/push.js": {
+      "lib/git/remote.js": {
         "status": "M",
-        "mtime": "2026-10-06T21:13:17.182Z",
+        "mtime": "2026-10-06T21:15:58.521Z",
         "note": "注释可能需更新"
       },
-      "test/test-git.mjs": {
-        "status": "M",
-        "mtime": "2026-10-06T21:13:23.241Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-push-false-success.mjs": {
+      "test/test-remote-name-ascii.mjs": {
         "status": "A",
-        "mtime": "2026-10-06T21:10:52.786Z",
+        "mtime": "2026-10-06T21:16:14.233Z",
         "note": "注释可能需更新"
       }
     }
@@ -413,5 +403,6 @@
   "test/test-conv-rule-scope.mjs": "（待注释）",
   "test/test-generated-html-artifact.mjs": "（待注释）",
   "test/test-push-false-success.mjs": "（待注释）",
-  "test/test-gitignore-nongit-dir.mjs": "（待注释）"
+  "test/test-gitignore-nongit-dir.mjs": "（待注释）",
+  "test/test-remote-name-ascii.mjs": "（待注释）"
 }

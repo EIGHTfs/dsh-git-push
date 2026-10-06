@@ -1143,13 +1143,13 @@
 | `readmeCheckHint` | 251-256 | 6 | `export function readmeCheckHint(repoPath) {` |
 | `pushCurrentBranch` | 265-316 | 52 | `export async function pushCurrentBranch({ repoPath = '', pushMethod = 'ssh' } = {}) {` |
 
-### lib/git/remote.js（74 行 · 3 个函数）
+### lib/git/remote.js（88 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `ensureRemoteRepo` | 17-44 | 28 | `export async function ensureRemoteRepo({ repoPath = '', owner = '', visibility = 'private', dryRun = false, token = '' } = {}) {` |
-| `parseOwnerRepoFromRemote` | 47-54 | 8 | `export function parseOwnerRepoFromRemote(remoteUrl) {` |
-| `setVisibility` | 57-73 | 17 | `export async function setVisibility({ owner = '', repo = '', visibility = '', token = '', repoPath = '' } = {}) {` |
+| `ensureRemoteRepo` | 17-58 | 42 | `export async function ensureRemoteRepo({ repoPath = '', owner = '', visibility = 'private', dryRun = false, token = '' } = {}) {` |
+| `parseOwnerRepoFromRemote` | 61-68 | 8 | `export function parseOwnerRepoFromRemote(remoteUrl) {` |
+| `setVisibility` | 71-87 | 17 | `export async function setVisibility({ owner = '', repo = '', visibility = '', token = '', repoPath = '' } = {}) {` |
 
 ### lib/git/repo-index.js（508 行 · 19 个函数）
 
