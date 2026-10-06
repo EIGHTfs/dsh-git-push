@@ -472,6 +472,7 @@ dsh-git-push/
 │   ├── test-file-health.mjs — 文件健康度矩阵评分测试
 │   ├── test-folder-scope.mjs — 目录级审计作用域回归测试
 │   ├── test-func-doc-drift.mjs — （待注释）
+│   ├── test-generated-html-artifact.mjs — （待注释）
 │   ├── test-git.mjs — git 总入口测试（runGit/commitAndPush/凭据/克隆）
 │   ├── test-gitignore-match.mjs — gitignore 兜底匹配（与真 git 对拍 + 非 git 端到端）
 │   ├── test-history-audit.mjs — （待注释）

@@ -381,24 +381,30 @@
   "lib/arch/lists.js": "（待注释）",
   "_meta": {
     "worktree": {
+      "README.md": {
+        "status": "M",
+        "mtime": "2026-10-06T12:29:05.835Z",
+        "note": "注释可能需更新"
+      },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-06T12:25:16.575Z",
+        "mtime": "2026-10-06T12:33:04.031Z",
         "note": "注释可能需更新"
       },
-      "lib/audit-rules/audit-rules-comment.yml": {
+      "lib/audit/audit-file.js": {
         "status": "M",
-        "mtime": "2026-10-06T12:23:47.043Z",
+        "mtime": "2026-10-06T12:30:40.719Z",
         "note": "注释可能需更新"
       },
-      "test/test-conv-rule-scope.mjs": {
+      "test/test-generated-html-artifact.mjs": {
         "status": "A",
-        "mtime": "2026-10-06T12:24:49.366Z",
+        "mtime": "2026-10-06T12:28:57.999Z",
         "note": "注释可能需更新"
       }
     }
   },
   "test/test-collector-ignore.mjs": "（待注释）",
   "test/test-empty-catch-single-source.mjs": "（待注释）",
-  "test/test-conv-rule-scope.mjs": "（待注释）"
+  "test/test-conv-rule-scope.mjs": "（待注释）",
+  "test/test-generated-html-artifact.mjs": "（待注释）"
 }

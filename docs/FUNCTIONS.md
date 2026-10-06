@@ -521,14 +521,14 @@
 | `consumeTemplate` | 237-248 | 12 | `function consumeTemplate(src, i, n, push) {` |
 | `consumeRegex` | 251-256 | 6 | `function consumeRegex(src, i, n, tokens, push) { // dsh-skip-complexity: 正则状态机（转义/字符组/闭包三态，天然多分支）` |
 
-### lib/audit/audit-file.js（170 行 · 4 个函数）
+### lib/audit/audit-file.js（179 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `isMinifiedOneLine` | 25-35 | 11 | `function isMinifiedOneLine(text) {` |
 | `isHashSegment` | 39-41 | 3 | `function isHashSegment(seg) {` |
-| `isBuildArtifactFile` | 43-64 | 22 | `export function isBuildArtifactFile(relPathOrFile = '', text = '') {` |
-| `auditFile` | 66-170 | 105 | `export function auditFile({ file, relPath, text, grouped }, opts = {}) {` |
+| `isBuildArtifactFile` | 43-73 | 31 | `export function isBuildArtifactFile(relPathOrFile = '', text = '') {` |
+| `auditFile` | 75-179 | 105 | `export function auditFile({ file, relPath, text, grouped }, opts = {}) {` |
 
 ### lib/audit/collector.js（403 行 · 15 个函数）
 
