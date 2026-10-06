@@ -88,7 +88,11 @@ rules:
     pattern: "(本会话|本次会话|本对话|开发会话|session-[0-9a-f]{8,})"
     fixable: false
   - id: conv-user-decision
-    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx", "html", "htm", "md", "markdown", "txt"]
+    # 只查**文档**：代码文件（js/mjs/ts/jsx/html 等）的同类命中由 documentation/comment-suspicious-detection
+    #   负责（它带 blacklist + AST 精筛，能区分注释与字符串字面量）。
+    #   此前本规则 exts 里含代码扩展名 ⇒ 与前者报同一批位置：实测 archify 上两条各报 7 条、
+    #   (file:line) 交集 5 条，同一条注释被两个 blocker 各拦一次。
+    exts: ["md", "markdown", "txt"]
     name: "文档引用用户决策"
     category: "documentation"
     severity: "blocker"

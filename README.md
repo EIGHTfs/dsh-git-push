@@ -455,6 +455,7 @@ dsh-git-push/
 │   ├── test-collector-ignore.mjs — （待注释）
 │   ├── test-command-registry.mjs — 命令注册表测试（工具入表/查找/parseRegistryArgs/清单生成）
 │   ├── test-context.mjs — 上下文注入测试
+│   ├── test-conv-rule-scope.mjs — （待注释）
 │   ├── test-cred-env.mjs — git_cred_env 凭据传递测试（双通道/无明文/askpass 调用/无凭据兜底）
 │   ├── test-dataflow.mjs — 三层审计 L2 数据流测试
 │   ├── test-doc-func.mjs — （待注释）

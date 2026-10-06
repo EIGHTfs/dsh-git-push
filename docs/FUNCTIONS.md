@@ -1968,6 +1968,12 @@
 | `makeRepo` | 21-31 | 11 | `function makeRepo() {` |
 | `paths` | 33-33 | 1 | `const paths = (list) => list.map((f) => String(f.path).replace(/\\/g, '/'));` |
 
+### test/test-conv-rule-scope.mjs（46 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `extsOf` | 17-27 | 11 | `function extsOf(id) {` |
+
 ### test/test-dataflow.mjs（116 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
