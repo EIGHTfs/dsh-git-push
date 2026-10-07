@@ -383,17 +383,17 @@
     "worktree": {
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-06T21:16:21.822Z",
+        "mtime": "2026-10-07T03:22:14.829Z",
         "note": "注释可能需更新"
       },
-      "lib/git/remote.js": {
+      "lib/ast/control-flow.js": {
         "status": "M",
-        "mtime": "2026-10-06T21:15:58.521Z",
+        "mtime": "2026-10-07T03:21:24.809Z",
         "note": "注释可能需更新"
       },
-      "test/test-remote-name-ascii.mjs": {
+      "test/test-empty-catch-promise.mjs": {
         "status": "A",
-        "mtime": "2026-10-06T21:16:14.233Z",
+        "mtime": "2026-10-07T03:21:58.826Z",
         "note": "注释可能需更新"
       }
     }
@@ -404,5 +404,6 @@
   "test/test-generated-html-artifact.mjs": "（待注释）",
   "test/test-push-false-success.mjs": "（待注释）",
   "test/test-gitignore-nongit-dir.mjs": "（待注释）",
-  "test/test-remote-name-ascii.mjs": "（待注释）"
+  "test/test-remote-name-ascii.mjs": "（待注释）",
+  "test/test-empty-catch-promise.mjs": "（待注释）"
 }

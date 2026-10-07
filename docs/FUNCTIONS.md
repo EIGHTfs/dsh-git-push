@@ -319,7 +319,7 @@
 | `makeProseCodeFilter` | 77-100 | 24 | `function makeProseCodeFilter(text, candidateLines) {` |
 | `codeStringLiterals` | 107-114 | 8 | `export function codeStringLiterals(text = '') {` |
 
-### lib/ast/control-flow.js（449 行 · 13 个函数）
+### lib/ast/control-flow.js（457 行 · 13 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -327,15 +327,15 @@
 | `collectAsyncRanges` | 61-79 | 19 | `function collectAsyncRanges(tokens) { // dsh-skip-complexity: async 函数体边界扫描器（token 遍历+配对，结构必然嵌套）` |
 | `scanSyncCalls` | 82-108 | 27 | `function scanSyncCalls(tokens, namedSync, asyncRanges) { // dsh-skip-complexity: 同步 fs 调用扫描器（定位调用点+区间归属判定，结构必然嵌套）` |
 | `checkSyncFs` | 111-116 | 6 | `export function checkSyncFs(text = '') {` |
-| `checkEmptyCatchAst` | 123-164 | 42 | `export function checkEmptyCatchAst(text = '') { // dsh-skip-complexity: 空 catch 检测器本体（token 遍历 + catch 体空判定多条件链，职责单一）` |
-| `checkComplexityAst` | 166-449 | 284 | `export function checkComplexityAst(text = '', { warn = 10, block = 20 } = {}) {` |
-| `inInner` | 199-199 | 1 | `const inInner = (k) => innerRanges.some(([a, b]) => k >= a && k < b);` |
-| `checkNestingDepthAst` | 243-449 | 207 | `export function checkNestingDepthAst(text = '', { warn = 4, block = 6 } = {}) { // dsh-skip-complexity: 嵌套深度统计器本体（统计 if/for 嵌套必然自身嵌套）` |
-| `pythonDetectDef` | 314-316 | 3 | `function pythonDetectDef(text) {` |
-| `checkPythonComplexity` | 330-354 | 25 | `function checkPythonComplexity(text, { warn, block }) {` |
-| `checkPythonNesting` | 365-394 | 30 | `function checkPythonNesting(text, { warn, block }) {` |
-| `indentOf` | 397-399 | 3 | `function indentOf(line) {` |
-| `checkJavaKtComplexity` | 413-446 | 34 | `function checkJavaKtComplexity(tokens, ranges, { warn, block }) {` |
+| `checkEmptyCatchAst` | 123-172 | 50 | `export function checkEmptyCatchAst(text = '') { // dsh-skip-complexity: 空 catch 检测器本体（token 遍历 + catch 体空判定多条件链，职责单一）` |
+| `checkComplexityAst` | 174-457 | 284 | `export function checkComplexityAst(text = '', { warn = 10, block = 20 } = {}) {` |
+| `inInner` | 207-207 | 1 | `const inInner = (k) => innerRanges.some(([a, b]) => k >= a && k < b);` |
+| `checkNestingDepthAst` | 251-457 | 207 | `export function checkNestingDepthAst(text = '', { warn = 4, block = 6 } = {}) { // dsh-skip-complexity: 嵌套深度统计器本体（统计 if/for 嵌套必然自身嵌套）` |
+| `pythonDetectDef` | 322-324 | 3 | `function pythonDetectDef(text) {` |
+| `checkPythonComplexity` | 338-362 | 25 | `function checkPythonComplexity(text, { warn, block }) {` |
+| `checkPythonNesting` | 373-402 | 30 | `function checkPythonNesting(text, { warn, block }) {` |
+| `indentOf` | 405-407 | 3 | `function indentOf(line) {` |
+| `checkJavaKtComplexity` | 421-454 | 34 | `function checkJavaKtComplexity(tokens, ranges, { warn, block }) {` |
 
 ### lib/ast/credential.js（200 行 · 6 个函数）
 

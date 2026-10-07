@@ -464,6 +464,7 @@ dsh-git-push/
 │   ├── test-dup-code.mjs — （待注释）
 │   ├── test-dup-const-idiom.mjs — （待注释）
 │   ├── test-dup-const.mjs — duplicate-const 规则测试（多语言提取 JS/Kotlin/Java/Go/Rust/Python、模块级过滤、跨文件聚合、test 目录排除、同值不同名不报）
+│   ├── test-empty-catch-promise.mjs — （待注释）
 │   ├── test-empty-catch-single-source.mjs — （待注释）
 │   ├── test-exempt-hint-classify.mjs — （待注释）
 │   ├── test-exempt.mjs — 豁免总入口测试（7 标记 + 位置语义）
