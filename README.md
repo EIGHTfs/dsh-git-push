@@ -81,7 +81,7 @@ DSH（DeepSeek Harness）git 提交推送与代码审计插件——提交前自
 
 | 功能块 | 做什么 | 入口 |
 |---|---|---|
-| **提交推送** | token / SSH 密钥管理、提交、推送、clone、建仓、可见性切换、force 强推、版本历史 | `git_commit_push` 工具 / CLI / 侧边栏 |
+| **提交推送** | token / SSH 密钥管理、提交、推送、clone、建仓、可见性切换、force 强推、版本历史、**提交身份自动用登录账号（未配身份的仓库自动写入局部配置）** | `git_commit_push` 工具 / CLI / 侧边栏 |
 | **代码审计** | 提交前自动审计门禁、14 个规则槽位 107 条规则、10 维度质量评分、豁免机制、链接检查、**三层审计管线（L1 正则初筛 / L2 AST 数据流 / L3 运行时检测）** | `code_audit` 工具 / CLI / 侧边栏 / 输入框 `/git-audit` |
 | **任务完成自动推送** | 监听 AI 回合结束→检测回复含「✅任务完成」→自动 commit+push（复用审计门禁，不裸提交） | 侧边栏开关 `autoPushEnabled`（默认关）+ 自定义触发文本 |
 | **审计结果 API** | `/api/git-push/audit`——请求时自定义聚合审计结果：按**规则类型 / 文件名 / 严重级 / 规则包**分组，`severity` 白名单过滤，`top` 截断，`withFindings` 附明细 | HTTP `GET/POST /api/git-push/audit` |
@@ -100,12 +100,31 @@ Git 全链路自动化，token / SSH 凭据管理 + 提交推送，无需手动�
 
 | 能力 | 说明 |
 |---|---|
-| `git_commit_push` | 一键提交+推送（审计门禁默认开启；敏感文件自动 .gitignore；`--push/--no-push/--dry-run/--force/--req-confirm/--json`） |
+| `git_commit_push` | 一键提交+推送（审计门禁默认开启；敏感文件自动 .gitignore；`--push/--no-push/--dry-run/--force/--req-confirm/--json`；返回带 `identity`=本次提交身份与来源） |
 | 推送通道 | `ssh（默认）`= 只走 SSH 私钥 / `token`= 先走 Git Data API（用 token 推）失败回落 SSH / `auto`= 先 ssh 失败回落 token；远端分叉时不静默回落，如实报错 |
 | force 强推 | API 通道重建 commit 去旧 parent / SSH 通道 `git push --force` |
 | clone / 建仓 | `cloneViaApi`（trees+blobs 写文件转 git 仓）/ `ensureRemoteRepo`（建仓+设 origin） |
 | 可见性 | `setVisibility` PATCH 切换 public/private |
 | 网络硬闸 | 只允许 api.github.com（`githubFetch` 拒绝非该域名，不跟随 302） |
+
+### 提交身份（自动带登录账号，AI 不用猜）
+
+提交必须带身份；仓库没配时 git 会直接以 `Author identity unknown` 拒提交。插件按下列优先级决定身份，
+并**在未配身份时把账号身份写进该仓库的局部配置**（`git config --local`；只改该仓库 `.git/config`，不入库、不动全局）：
+
+1. **仓库已配** `user.name` + `user.email` → 原样尊重（不覆盖项目/用户自己的选择）
+2. **未配（或只缺一侧）** → 用**登录的 GitHub 账号**：`name = 登录名`，
+   `email = <账号数字 id>+<登录名>@users.noreply.github.com`（GitHub 官方 noreply 形式：
+   不暴露真实邮箱、提交能关联到账号；拿不到数字 id 时退化为 `<登录名>@users.noreply.github.com`）
+3. **账号不可用**（未登录 / 离线 / 没探测过）→ 兜底 `DSH Agent <agent@dsh.local>`，
+   且**不写进仓库配置**（避免把兜底身份固化；此时提交由命令行 `-c` 临时带上，仍能提交）
+
+身份同时**主动告知 AI**，不用它自己猜：`git_commit_push` 返回 `identity{name,email,source,written}`；
+`GET /api/git-push/status` 暴露 `commitIdentity`；插件注入给 AI 的提示词里带一行「本机 git 提交身份：…」。
+
+> 为什么加这一条：实测 AI 经常不知道「该用什么身份」，只能自己编 —— 本机曾同时存在
+> `DSH Agent <agent@dsh.local>`、`eightfs@local`、`v2-clone@local`、小写 noreply 等多种身份
+> （如某仓库 226 个提交里 21 个是 DSH Agent）。插件现在自己解析 + 落盘 + 告知，AI 只需按提示走。
 
 ### 提交前自动门禁
 
