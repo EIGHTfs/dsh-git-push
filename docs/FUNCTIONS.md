@@ -200,26 +200,29 @@
 | `getLastSlotHitStats` | 28-30 | 3 | `export function getLastSlotHitStats() {` |
 | `getLastSlotHitMeta` | 33-35 | 3 | `export function getLastSlotHitMeta() {` |
 
-### lib/app/tool-call.js（476 行 · 16 个函数）
+### lib/app/tool-call.js（531 行 · 19 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `pushWithPostSteps` | 56-91 | 36 | `async function pushWithPostSteps(args, env, cfg) {` |
-| `buildCommitPushJobSpec` | 94-109 | 16 | `function buildCommitPushJobSpec(repo, doPush) {` |
-| `done` | 99-105 | 7 | `const done = (async () => {` |
-| `callCloneJob` | 123-149 | 27 | `async function callCloneJob(args, jobs, exec, log, env = {}, cfg = {}) {` |
-| `buildCloneJobSpec` | 152-168 | 17 | `function buildCloneJobSpec(target, dest, doClone) {` |
-| `done` | 157-164 | 8 | `const done = (async () => {` |
-| `callCommitPush` | 175-222 | 48 | `async function callCommitPush(args, env, cfg, log, jobs, exec) {` |
-| `doPush` | 191-191 | 1 | `const doPush = () => pushWithPostSteps(args, env, cfg);` |
-| `buildAuditOpts` | 233-242 | 10 | `function buildAuditOpts(args, cfg, scope) {` |
-| `runHistoryAuditTool` | 248-280 | 33 | `async function runHistoryAuditTool(args, env, cfg, jobs, exec, weights) {` |
-| `doHistory` | 254-257 | 4 | `const doHistory = async () => {` |
-| `callCodeAudit` | 282-294 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
-| `runStandardAuditTool` | 297-329 | 33 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
-| `callTool` | 331-447 | 117 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null) {` |
-| `shellSplit` | 450-468 | 19 | `function shellSplit(input) {` |
-| `readTextSafe` | 471-475 | 5 | `function readTextSafe(path = '') {` |
+| `pushJobOutcome` | 111-130 | 20 | `export function pushJobOutcome(r = {}) {` |
+| `short` | 113-113 | 1 | `const short = (sha) => String(sha \|\| '').slice(0, 8);` |
+| `cloneJobOutcome` | 138-143 | 6 | `export function cloneJobOutcome(r = {}) {` |
+| `buildCommitPushJobSpec` | 146-163 | 18 | `function buildCommitPushJobSpec(repo, doPush) {` |
+| `done` | 151-159 | 9 | `const done = (async () => {` |
+| `callCloneJob` | 177-203 | 27 | `async function callCloneJob(args, jobs, exec, log, env = {}, cfg = {}) {` |
+| `buildCloneJobSpec` | 206-223 | 18 | `function buildCloneJobSpec(target, dest, doClone) {` |
+| `done` | 211-219 | 9 | `const done = (async () => {` |
+| `callCommitPush` | 230-277 | 48 | `async function callCommitPush(args, env, cfg, log, jobs, exec) {` |
+| `doPush` | 246-246 | 1 | `const doPush = () => pushWithPostSteps(args, env, cfg);` |
+| `buildAuditOpts` | 288-297 | 10 | `function buildAuditOpts(args, cfg, scope) {` |
+| `runHistoryAuditTool` | 303-335 | 33 | `async function runHistoryAuditTool(args, env, cfg, jobs, exec, weights) {` |
+| `doHistory` | 309-312 | 4 | `const doHistory = async () => {` |
+| `callCodeAudit` | 337-349 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
+| `runStandardAuditTool` | 352-384 | 33 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
+| `callTool` | 386-502 | 117 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null) {` |
+| `shellSplit` | 505-523 | 19 | `function shellSplit(input) {` |
+| `readTextSafe` | 526-530 | 5 | `function readTextSafe(path = '') {` |
 
 ### lib/app/tools.js（27 行 · 2 个函数）
 
@@ -1415,15 +1418,15 @@
 | `countByDimension` | 42-72 | 31 | `export function countByDimension(findings = []) {` |
 | `scoreQuality` | 89-131 | 43 | `export function scoreQuality(findings = [], weights = {}, context = {}) {` |
 
-### lib/self/index.js（172 行 · 5 个函数）
+### lib/self/index.js（175 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `readmeTemplate` | 52-117 | 66 | `export function readmeTemplate({ name = 'dsh-git-push', description = 'DSH git 自动提交推送插件——统一函数入口架构', version = VERSION, versionTable = '' } = {}) {` |
-| `yamlTemplate` | 120-132 | 13 | `export function yamlTemplate() {` |
-| `selfVersion` | 135-137 | 3 | `export function selfVersion() {` |
-| `versionInfo` | 144-156 | 13 | `export function versionInfo(pkgJson = '') {` |
-| `helpSync` | 165-171 | 7 | `export function helpSync(helpText = '', knownFlags = []) {` |
+| `readmeTemplate` | 55-120 | 66 | `export function readmeTemplate({ name = 'dsh-git-push', description = 'DSH git 自动提交推送插件——统一函数入口架构', version = VERSION, versionTable = '' } = {}) {` |
+| `yamlTemplate` | 123-135 | 13 | `export function yamlTemplate() {` |
+| `selfVersion` | 138-140 | 3 | `export function selfVersion() {` |
+| `versionInfo` | 147-159 | 13 | `export function versionInfo(pkgJson = '') {` |
+| `helpSync` | 168-174 | 7 | `export function helpSync(helpText = '', knownFlags = []) {` |
 
 ### lib/skip-dirs.js（65 行 · 3 个函数）
 
