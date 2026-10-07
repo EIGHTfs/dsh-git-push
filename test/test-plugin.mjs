@@ -16,7 +16,7 @@ import { name, GIT_PUSH_SETTINGS_NS, Config, apply, callTool, handleHttp, listTo
 //   一律走离线快速失败路径即可。
 process.env.DSH_GIT_PUSH_OFFLINE = '1';
 import { setDefineToolOverride } from '../lib/plugin/index.js';
-import { listSyncFiles, syncPlugin, detectTargets, SYNC_ENTRIES, SYNC_EXCLUDE } from '../scripts/sync-plugin.mjs';
+import { listSyncFiles, syncPlugin, detectTargets, SYNC_ENTRIES } from '../scripts/sync-plugin.mjs';
 import { VERSION } from '../lib/self/index.js';
 import { setSettingsFileOverride } from '../lib/app/settings-bridge.js';
 

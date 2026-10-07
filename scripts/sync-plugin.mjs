@@ -32,14 +32,33 @@ export const SOURCE_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 export const SYNC_ENTRIES = ['lib', 'skills', 'scripts', 'assets', 'tools', 'cli.mjs', 'package.json', 'cordis.patch.yml', 'README.md', '.auditignore', '.gitignore'];
 
 /**
- * 同步时排除的路径片段。
+ * npm 打包的**硬性排除项**（npm-packlist 默认忽略集，与项目自定义无关）。
  *
- * 补 .bak / .trash：原先只排 .git / node_modules / WORKBOARD / test / .tmp，
- *   开发期备份 `scripts/sync-plugin.mjs.bak` 被当发布文件复制进安装副本
- *   （`<插件目录>/scripts/`），安装副本里混入非发布内容。`.bak` 用子串匹配，
- *   同时覆盖 `.bak` 与 `.bak-<后缀>`（如 test-git.mjs.bak-d13）。
+ * 【设计】同步清单的唯一权威 = 源项目 package.json 的 `files` 字段（npm 发布语义）：
+ *   「要发布什么，就写进 files」；同步工具**不维护任何自定义排除表**。
+ *
+ *   为什么删掉旧的自定义排除（2026-10-07 事故）：旧实现在 `files` 白名单之外另有一套
+ *   子串排除 `['.git','node_modules','WORKBOARD','test','.tmp','.bak','.trash']`，
+ *   判定写成 `rel.split('/').includes(x) || rel.includes(x)`——`rel.includes('test')`
+ *   把随插件发布的正式模块 `lib/shared/test-hooks.js` 当成 test 目录排掉了。后果：
+ *   同步报「成功」、安装副本却少一个文件，两个版本之间 lib/ 永远对不齐（只有逐文件
+ *   diff 副本才发现，宿主运行看不出）。教训：**发布内容只由 package.json 决定**，
+ *   `files` 白名单与自定义排除表是两套真相，必然分叉——排除只保留 npm 自己的硬规则。
  */
-export const SYNC_EXCLUDE = ['.git', 'node_modules', 'WORKBOARD', 'test', '.tmp', '.bak', '.trash'];
+export const NPM_ALWAYS_IGNORE_SEGMENTS = ['.git', 'node_modules', '.DS_Store', '.npmrc', 'package-lock.json'];
+/** npm 硬性忽略的后缀型条目（编辑器交换/备份文件）。 */
+export const NPM_ALWAYS_IGNORE_SUFFIX = ['.orig', '.swp'];
+
+/**
+ * 该相对路径是否命中 npm 硬性排除项（目录遍历与单测共用同一判定，避免规则再次分叉）。
+ * @param {string} rel 相对插件根的路径（POSIX 分隔符）
+ * @returns {boolean} true = npm 不会打包它，同步也不复制
+ */
+export function isNpmIgnored(rel) {
+  const segments = String(rel).split('/');
+  return NPM_ALWAYS_IGNORE_SEGMENTS.some((x) => segments.includes(x))
+    || NPM_ALWAYS_IGNORE_SUFFIX.some((x) => String(rel).endsWith(x));
+}
 
 /** 异步探测路径是否存在（node:fs/promises 不提供 exists）。 */
 async function exists(p) {
@@ -61,7 +80,13 @@ export async function packageFilesOf(root) {
   } catch {
     // 读失败 → 走兜底最小集
   }
-  if (files.length === 0) files = ['lib', 'cordis.patch.yml'];
+  if (files.length === 0) {
+    // npm 语义：未声明 `files` = 发布「除默认忽略项以外的一切」；安装副本**不照做**
+    //   （那会把 test/、docs/、开发归档一起灌进宿主副本），退化为候选白名单并提示补声明。
+    console.warn('[sync-plugin] ⚠️ package.json 未声明 files —— 按保守白名单同步；建议按 npm 规范补上 files 字段');
+    files = SYNC_ENTRIES;
+  }
+  // package.json 永远随包（npm 语义：始终包含）——部署副本靠它识别插件与版本。
   return Array.from(new Set([...files, 'package.json']));
 }
 
@@ -78,7 +103,7 @@ export async function listSyncFiles(root = SOURCE_ROOT) {
     for (const entry of await readdir(dir, { withFileTypes: true })) {
       const full = join(dir, entry.name);
       const rel = relative(root, full);
-      if (SYNC_EXCLUDE.some((x) => rel.split('/').includes(x) || rel.includes(x))) continue;
+      if (isNpmIgnored(rel)) continue;
       if (entry.isDirectory()) await walk(full);
       else out.push(rel);
     }

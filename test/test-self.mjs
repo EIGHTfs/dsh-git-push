@@ -11,9 +11,9 @@ import { fileURLToPath } from 'node:url';
 import { VERSION, readmeTemplate, yamlTemplate, versionInfo, helpSync } from '../lib/self/index.js';
 import { parseArgv, KNOWN_FLAGS, main, cmdVersion } from '../cli.mjs';
 import {
-  SOURCE_ROOT, SYNC_ENTRIES, SYNC_EXCLUDE, listSyncFiles, detectTargets, syncPlugin,
+  SOURCE_ROOT, SYNC_ENTRIES, NPM_ALWAYS_IGNORE_SEGMENTS, listSyncFiles, detectTargets, syncPlugin,
 } from '../scripts/sync-plugin.mjs';
-import { mkdtempSync, rmSync, existsSync } from 'node:fs';
+import { mkdtempSync, rmSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -208,14 +208,39 @@ test('同步：真实写入到临时目录（幂等）', async () => {
 });
 
 test('同步：常量声明齐全', () => {
-  assert.ok(SYNC_ENTRIES.includes('lib'));
-  assert.ok(SYNC_EXCLUDE.includes('node_modules'));
-  // 备份与回收站不得进安装副本（scripts/*.bak 曾被同步进 <插件目录>/scripts/）
-  assert.ok(SYNC_EXCLUDE.includes('.bak'), 'SYNC_EXCLUDE 必须排除 .bak（含 .bak-<后缀>）');
-  assert.ok(SYNC_EXCLUDE.includes('.trash'), 'SYNC_EXCLUDE 必须排除 .trash 回收站');
+  assert.ok(SYNC_ENTRIES.includes('lib'), 'SYNC_ENTRIES 是「package.json 未声明 files」时的候选白名单');
+  // npm 硬性排除项（不是项目自定义规则）：版本库与依赖目录永不进安装副本
+  assert.ok(NPM_ALWAYS_IGNORE_SEGMENTS.includes('.git'), 'npm 语义下 .git 必须排除');
+  assert.ok(NPM_ALWAYS_IGNORE_SEGMENTS.includes('node_modules'), 'npm 语义下 node_modules 必须排除');
 });
 
 // 实测返回集，确保排除规则真的作用于 listSyncFiles（不只是常量里写了名字）
+// 语义回归（2026-10-07）：同步清单**只由 package.json 的 files 决定**，不再有自定义排除表。
+//   事故：旧实现用 `rel.includes('test')` 把 lib/shared/test-hooks.js（正式发布模块）排掉，
+//   同步报成功但安装副本少文件、版本间 lib/ 对不齐。这里用夹具插件根钉死语义：
+//   files 里声明的目录→全量同步（哪怕文件名带 test）；未声明的目录→不进清单（不靠名字猜）。
+test('同步：清单严格来自 package.json files（名字含 test 的正式模块不被误排）', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'sync-files-'));
+  try {
+    mkdirSync(join(dir, 'lib', 'shared'), { recursive: true });
+    mkdirSync(join(dir, 'test', 'unit'), { recursive: true });
+    writeFileSync(join(dir, 'package.json'), JSON.stringify({ name: 'fixture', version: '1.0.0', files: ['lib'] }));
+    writeFileSync(join(dir, 'lib', 'index.js'), 'export const a = 1;\n');
+    writeFileSync(join(dir, 'lib', 'shared', 'test-hooks.js'), 'export const b = 2;\n');
+    writeFileSync(join(dir, 'lib', 'notes.bak'), 'backup\n');
+    writeFileSync(join(dir, 'test', 'unit', 'a.mjs'), 'export const c = 3;\n');
+
+    const files = await listSyncFiles(dir);
+    assert.ok(files.includes('lib/index.js'), 'files 声明的 lib/ 应全量同步');
+    assert.ok(files.includes('lib/shared/test-hooks.js'), 'lib/ 下名字含 test 的正式模块必须同步（旧 bug 点）');
+    assert.ok(files.includes('lib/notes.bak'), 'files 声明的目录内文件按 npm 语义原样同步（不猜后缀）');
+    assert.ok(files.includes('package.json'), 'package.json 永远随包（npm 语义）');
+    assert.ok(!files.some((f) => f.startsWith('test/')), '未列入 files 的 test/ 不进清单');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test('同步：listSyncFiles 返回集不含 .bak / .trash 残留', async () => {
   const files = await listSyncFiles(ROOT);
   const bad = files.filter((f) => f.includes('.bak') || f.includes('.trash'));
