@@ -38,6 +38,8 @@ export { cmdFileIo, cmdTreeDoc, cmdFunctions, cmdModuleSplitter };
 export const KNOWN_FLAGS = ['--depth', '--full', '--ruleset', '--weights', '--include-ignored', '--push', '--no-push', '--dry-run', '--force', '--req-confirm', '--push-gate-confirmed', '--json', '--max', '--owner', '--offline', '--paths', '--history', '--since', '--until', '--out', '--skip-empty',
   // file-io 三标签过滤
   '--summary', '--write', '--type', '--kind', '--risk', '--op', '--root', '--readme',
+  // identity-rewrite：额外要统一的邮箱
+  '--extra-emails',
   // 补齐的 5 个命令（clone / account-check / remote-create / set-visibility / gen-ssh-key）
   '--dest', '--branch', '--preview', '--max-file-mb', '--concurrency', '--visibility', '--email', '--no-check-ssh', '--token'];
 
@@ -65,6 +67,10 @@ const HELP = `git-sluice v${VERSION} — dsh-git-push 引擎独立 CLI（脱离 
   git-sluice file-io [路径...] [--summary] [--write] [--type sync|async] [--kind read|write|delete|rename] [--risk high|medium|low] [--op <操作名>] [--json]
                                   文件读写调用扫描（三标签：类型/操作/上下文）——同步 I/O 在异步路径会阻塞；写/删/改名涉及数据安全
   git-sluice link-check <路径>    检查 md/文本中的链接有效性（只 warning，flaky 域名打折）
+  git-sluice identity-rewrite [仓库路径...] [--root <目录>] [--write] [--push] [--extra-emails <邮箱...>] [--json]
+                                   提交身份历史改写：把非规范身份（工具/AI 产生的 agent@dsh.local 等 + 账号 noreply 旧变体）
+                                   统一成登录账号规范身份；默认 dry-run 只报告，--write 才改（先建备份引用，自检通过才改写），
+                                   --push 再用 force-with-lease 强推；只处理 origin 属于登录账号的仓库
   git-sluice module-splitter <analyze|split|verify> <file|plan> [--dry-run] [--json]
   git-sluice functions <analyze|apply> [目录] [--skip-empty] [--json]
   git-sluice tree-doc <sync|gen|check|apply> [--root <目录>] [--readme <路径>] [--write]

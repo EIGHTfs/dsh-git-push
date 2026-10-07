@@ -101,6 +101,7 @@ Git 全链路自动化，token / SSH 凭据管理 + 提交推送，无需手动�
 | 能力 | 说明 |
 |---|---|
 | `git_commit_push` | 一键提交+推送（审计门禁默认开启；敏感文件自动 .gitignore；`--push/--no-push/--dry-run/--force/--req-confirm/--json`；返回带 `identity`=本次提交身份与来源） |
+| `git_identity_rewrite` | 提交身份历史改写（工具 `git_identity_rewrite` / CLI `git-sluice identity-rewrite`）：非规范身份（工具/AI 产生的 `agent@dsh.local` 等 + 账号 noreply 旧变体，可用 `extraEmails` 追加）统一成账号规范身份。默认 dry-run；`--write` 才改写（先建备份引用 `refs/backup/identity-rewrite/<日期>/<分支>`，自检「提交数/工作树/身份全规范」通过），`--push` 再用 `--force-with-lease` 强推；已跟踪文件有改动则拒改；只处理 origin 属于登录账号的仓库 |
 | 推送通道 | `ssh（默认）`= 只走 SSH 私钥 / `token`= 先走 Git Data API（用 token 推）失败回落 SSH / `auto`= 先 ssh 失败回落 token；远端分叉时不静默回落，如实报错 |
 | force 强推 | API 通道重建 commit 去旧 parent / SSH 通道 `git push --force` |
 | clone / 建仓 | `cloneViaApi`（trees+blobs 写文件转 git 仓）/ `ensureRemoteRepo`（建仓+设 origin） |
@@ -125,6 +126,10 @@ Git 全链路自动化，token / SSH 凭据管理 + 提交推送，无需手动�
 > 为什么加这一条：实测 AI 经常不知道「该用什么身份」，只能自己编 —— 本机曾同时存在
 > `DSH Agent <agent@dsh.local>`、`eightfs@local`、`v2-clone@local`、小写 noreply 等多种身份
 > （如某仓库 226 个提交里 21 个是 DSH Agent）。插件现在自己解析 + 落盘 + 告知，AI 只需按提示走。
+
+**提交时顺带提醒「以前」**：每次提交的返回里带 `legacyIdentity{count,emails,hint}` —— 该仓库历史上还有多少条
+非规范身份提交（如 `agent@dsh.local`）。**只提醒、不改历史**：历史要不要统一由用户决定；需要时用
+`git_identity_rewrite`（工具）/ `git-sluice identity-rewrite`（CLI）先 dry-run 预览会改哪些分支与提交。
 
 ### 提交前自动门禁
 
@@ -248,7 +253,7 @@ dsh-git-push/
 │   │   ├── slot-stats.js — 规则槽位命中统计（模块级状态）
 │   │   ├── tool-call.js — 工具调用分发（git_scan/commit_push/audit/status 等全部工具）
 │   │   ├── tools.js — 工具定义清单（名称/描述/参数 schema）
-│   │   └── …（8 个更深文件）
+│   │   └── …（9 个更深文件）
 │   ├── arch/ — （待注释）
 │   │   ├── aggregate.js — （待注释）
 │   │   ├── extract.js — （待注释）
@@ -362,6 +367,8 @@ dsh-git-push/
 │   │   ├── credentials.js — 凭据解析（token/SSH 私钥：环境变量→凭据文件→settings）
 │   │   ├── endpoints.js — （待注释）
 │   │   ├── exec.js — git 进程调用（runGit 统一超时/错误规整 + gitRaw 原始字节）
+│   │   ├── identity-rewrite.js — （待注释）
+│   │   ├── identity.js — （待注释）
 │   │   ├── ignore.js — .gitignore 兜底（DEFAULT_IGNORE_PATTERNS 补齐）
 │   │   ├── index.js — Git 执行层统一出口
 │   │   ├── module-splitter.js — （待注释）
@@ -427,8 +434,6 @@ dsh-git-push/
 │   ├── sync-plugin.mjs — 双副本同步脚本（源仓库 → 部署安装副本）
 │   ├── verify-prestep.mjs — 上下文注入自检脚本（真实触发 agent/pre-step 验证注入）
 │   ├── watch-preview.mjs — preview.html 自动重生成监听（源码变更即重建）
-│   ├── __pycache__/ — （待注释）
-│   │   ├── module-splitter.cpython-38.pyc — （待注释）
 │   ├── audit-ext/ — （待注释）
 │   │   ├── _example-readme-present.mjs — 审计扩展契约示例（_ 前缀：演示不参与实际审计）
 │   │   ├── variable-min-length.mjs — 审计扩展：variable-min-length（内置规则抽出试点——统一动态入口）
@@ -493,6 +498,8 @@ dsh-git-push/
 │   ├── test-folder-scope.mjs — 目录级审计作用域回归测试
 │   ├── test-func-doc-drift.mjs — （待注释）
 │   ├── test-generated-html-artifact.mjs — （待注释）
+│   ├── test-git-identity-rewrite.mjs — （待注释）
+│   ├── test-git-identity.mjs — （待注释）
 │   ├── test-git.mjs — git 总入口测试（runGit/commitAndPush/凭据/克隆）
 │   ├── test-gitignore-match.mjs — gitignore 兜底匹配（与真 git 对拍 + 非 git 端到端）
 │   ├── test-gitignore-nongit-dir.mjs — （待注释）
@@ -884,6 +891,8 @@ node assets/preview-gen.mjs
 · git_commit_push —— 一键提交并推送（审计同步拦截，通过后 commit+push 走宿主官方后台 job：立即返回 async:true+jobId，结果完成会自动返回、无需特意查询；如需主动查用宿主 job_output <jobId>）
 · code_audit —— 审计仓库（L0 静态检查 + 质量评分），scope=full 全量，可传 ruleset / weights
 · git_account_check —— 校验 GitHub 账号与凭据（token 在线校验 + SSH 公钥指纹）
+· git_identity_rewrite —— 提交身份历史改写（非规范身份→登录账号规范身份；默认 dry-run，
+  真改写先建备份引用、自检通过才改写，push 用 force-with-lease；只处理本人远端仓库）
 · git_sluice —— 浅包装 git 透传（AI 直接调用任意 git 命令，凭据自动注入）：args 传与 git 一致的参数串，返回 status + stdout/stderr；git 的 log/diff/branch/tag 等其余能力用它
 · git_gen_ssh_key / git_remote_create / git_set_visibility / git_clone / link_check
 【凭据由插件托管，不要到处找凭据】GitHub token 与 SSH 私钥存放在插件配置目录
