@@ -16,7 +16,8 @@ import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-import { mkdtempSync, writeFileSync, existsSync } from 'node:fs';
+import { writeFileSync, existsSync } from 'node:fs';
+import { mkdtempTracked } from './helpers/tmp-dir.mjs';
 import { tmpdir } from 'node:os';
 
 import { dispatchPush, pushViaSsh, sshReason, isNonFastForward } from '../lib/git/index.js';
@@ -28,7 +29,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 /** 建一个只有一次提交、无 origin 的临时仓库。 */
 function tempRepo() {
-  const dir = mkdtempSync(join(tmpdir(), 'dshgp-sshprobe-'));
+  const dir = mkdtempTracked(join(tmpdir(), 'dshgp-sshprobe-'));
   const git = (...a) => execFileSync('git', a, { cwd: dir, stdio: 'pipe' });
   git('init', '-q');
   git('config', 'user.email', 'probe@test');

@@ -1121,7 +1121,7 @@
 | `gitRaw` | 78-94 | 17 | `export function gitRaw(args, { cwd = '', timeoutMs = 600_000 } = {}) {` |
 | `runGitAsync` | 104-120 | 17 | `export function runGitAsync(args, { cwd = '', timeoutMs = 120_000, env = {} } = {}) {` |
 
-### lib/git/identity-rewrite.js（297 行 · 14 个函数）
+### lib/git/identity-rewrite.js（298 行 · 14 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1129,16 +1129,16 @@
 | `shq` | 46-48 | 3 | `function shq(s) {` |
 | `parseGithubRepo` | 55-62 | 8 | `export function parseGithubRepo(url) {` |
 | `identityHits` | 65-80 | 16 | `export function identityHits(repoPath, { runGit, wrongEmails, branch = '' } = {}) {` |
-| `buildEnvFilter` | 83-91 | 9 | `function buildEnvFilter(canonicalName, canonicalEmail, wrongEmails) {` |
-| `rewriteRepoIdentity` | 107-138 | 32 | `export function rewriteRepoIdentity(repoPath, opts = {}) {` |
-| `countCommits` | 141-143 | 3 | `function countCommits(repoPath, branch, runGit) {` |
-| `preflightRepo` | 149-164 | 16 | `function preflightRepo(repoPath, { runGit }) {` |
-| `rewriteBranch` | 171-192 | 22 | `function rewriteBranch(repoPath, branch, { runGit, canonical, wrongEmails, timestamp, hits, before }) {` |
-| `pushRewrittenBranch` | 199-216 | 18 | `function pushRewrittenBranch(repoPath, branch, { runGit, pushUrl, oldSha, credEnv }) {` |
-| `rewriteIdentities` | 224-235 | 12 | `export function rewriteIdentities(repoPaths = [], opts = {}) {` |
-| `legacyIdentityReport` | 246-255 | 10 | `export function legacyIdentityReport(repoPath, { runGit, wrongEmails = [], branch = '' } = {}) {` |
-| `buildLegacyIdentityHint` | 263-270 | 8 | `export function buildLegacyIdentityHint(report = {}, canonical = null) {` |
-| `formatIdentityRewriteReport` | 277-296 | 20 | `export function formatIdentityRewriteReport(summary = {}) {` |
+| `buildEnvFilter` | 83-92 | 10 | `function buildEnvFilter(canonicalName, canonicalEmail, wrongEmails) {` |
+| `rewriteRepoIdentity` | 108-139 | 32 | `export function rewriteRepoIdentity(repoPath, opts = {}) {` |
+| `countCommits` | 142-144 | 3 | `function countCommits(repoPath, branch, runGit) {` |
+| `preflightRepo` | 150-165 | 16 | `function preflightRepo(repoPath, { runGit }) {` |
+| `rewriteBranch` | 172-193 | 22 | `function rewriteBranch(repoPath, branch, { runGit, canonical, wrongEmails, timestamp, hits, before }) {` |
+| `pushRewrittenBranch` | 200-217 | 18 | `function pushRewrittenBranch(repoPath, branch, { runGit, pushUrl, oldSha, credEnv }) {` |
+| `rewriteIdentities` | 225-236 | 12 | `export function rewriteIdentities(repoPaths = [], opts = {}) {` |
+| `legacyIdentityReport` | 247-256 | 10 | `export function legacyIdentityReport(repoPath, { runGit, wrongEmails = [], branch = '' } = {}) {` |
+| `buildLegacyIdentityHint` | 264-271 | 8 | `export function buildLegacyIdentityHint(report = {}, canonical = null) {` |
+| `formatIdentityRewriteReport` | 278-297 | 20 | `export function formatIdentityRewriteReport(summary = {}) {` |
 
 ### lib/git/identity.js（151 行 · 8 个函数）
 
@@ -1920,6 +1920,17 @@
 |------|------|------|------|
 | `regen` | 38-48 | 11 | `function regen() {` |
 
+### test/helpers/tmp-dir.mjs（117 行 · 6 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `installExitHook` | 25-33 | 9 | `function installExitHook() {` |
+| `removeTempDir` | 36-39 | 4 | `export function removeTempDir(dir) {` |
+| `mkdtempTracked` | 51-57 | 7 | `export function mkdtempTracked(prefixPath) {` |
+| `tempDir` | 65-71 | 7 | `export function tempDir(label = 'tmp', { t = null } = {}) {` |
+| `tempRepo` | 79-85 | 7 | `export function tempRepo(label = 'repo', { t = null, name = '', email = '' } = {}) {` |
+| `sweepStaleTempDirs` | 93-116 | 24 | `export function sweepStaleTempDirs({ maxAgeMs = 60 * 60 * 1000, log = null } = {}) {` |
+
 ### test/test-account-ssh.mjs（149 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2108,21 +2119,21 @@
 | `fixture` | 18-70 | 53 | `function fixture(block) {` |
 | `driftFindings` | 36-39 | 4 | `async function driftFindings(dir) {` |
 
-### test/test-git-identity-rewrite.mjs（190 行 · 4 个函数）
+### test/test-git-identity-rewrite.mjs（191 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `makeRepo` | 27-34 | 8 | `function makeRepo() {` |
-| `commit` | 37-41 | 5 | `function commit(dir, msg, { author = null, committer = { name: 'DSH Agent', email: 'agent@dsh.local' } } = {}) {` |
-| `identities` | 44-46 | 3 | `function identities(dir) {` |
-| `repoWrongEmails` | 48-50 | 3 | `function repoWrongEmails() {` |
+| `makeRepo` | 28-35 | 8 | `function makeRepo() {` |
+| `commit` | 38-42 | 5 | `function commit(dir, msg, { author = null, committer = { name: 'DSH Agent', email: 'agent@dsh.local' } } = {}) {` |
+| `identities` | 45-47 | 3 | `function identities(dir) {` |
+| `repoWrongEmails` | 49-51 | 3 | `function repoWrongEmails() {` |
 
-### test/test-git-identity.mjs（116 行 · 2 个函数）
+### test/test-git-identity.mjs（117 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `makeRepo` | 24-28 | 5 | `function makeRepo() {` |
-| `repoConfig` | 31-33 | 3 | `function repoConfig(dir, key) {` |
+| `makeRepo` | 25-29 | 5 | `function makeRepo() {` |
+| `repoConfig` | 32-34 | 3 | `function repoConfig(dir, key) {` |
 
 ### test/test-git.mjs（846 行 · 2 个函数）
 
@@ -2212,11 +2223,11 @@
 |------|------|------|------|
 | `mkRepo` | 17-21 | 5 | `function mkRepo({ name = null } = {}) {` |
 
-### test/test-push-transport.mjs（198 行 · 1 个函数）
+### test/test-push-transport.mjs（199 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `tempRepo` | 30-40 | 11 | `function tempRepo() {` |
+| `tempRepo` | 31-41 | 11 | `function tempRepo() {` |
 
 ### test/test-repo-list.mjs（548 行 · 4 个函数）
 

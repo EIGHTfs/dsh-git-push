@@ -64,7 +64,7 @@
     "@deepseek-ai/schemastery": "*"
   },
   "scripts": {
-    "test": "node --test test/*.mjs",
+    "test": "node test/run-tests.mjs",
     "check": "node scripts/check.mjs",
     "scan-version": "node scripts/scan-version.mjs",
     "sync-plugin": "node scripts/sync-plugin.mjs"

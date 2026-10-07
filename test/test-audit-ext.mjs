@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
+import { mkdtempTracked } from './helpers/tmp-dir.mjs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -21,7 +22,7 @@ test('ext-runner：动态加载契约脚本 + _ 前缀示例不加载', async ()
 });
 
 test('ext-runner：契约执行——有 README 不报，缺 README 报 info', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'audit-ext-test-'));
+  const dir = mkdtempTracked(join(tmpdir(), 'audit-ext-test-'));
   writeFileSync(join(dir, 'ok-ext.mjs'), `
     export const auditExt = {
       name: 't-check-readme',
@@ -36,7 +37,7 @@ test('ext-runner：契约执行——有 README 不报，缺 README 报 info', a
       },
     };
   `, 'utf8');
-  const repo = mkdtempSync(join(tmpdir(), 'repo-'));
+  const repo = mkdtempTracked(join(tmpdir(), 'repo-'));
   const findings = await runAuditExt(repo, { dir });
   assert.equal(findings.length, 1, '缺 README 应报 1 条');
   assert.ok(findings[0].source.startsWith('ext:t-check-readme'), 'source 标记 ext:<name>');
@@ -47,7 +48,7 @@ test('ext-runner：契约执行——有 README 不报，缺 README 报 info', a
 });
 
 test('ext-runner：match 返回 false 跳过该扩展', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'audit-ext-match-'));
+  const dir = mkdtempTracked(join(tmpdir(), 'audit-ext-match-'));
   writeFileSync(join(dir, 'skip.mjs'), `
     export const auditExt = {
       name: 't-skip',
@@ -62,7 +63,7 @@ test('ext-runner：match 返回 false 跳过该扩展', async () => {
 });
 
 test('ext-runner：单脚本失败降级跳过（不中断其他扩展）', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'audit-ext-fail-'));
+  const dir = mkdtempTracked(join(tmpdir(), 'audit-ext-fail-'));
   writeFileSync(join(dir, 'bad.mjs'), 'export const auditExt = { name: "t-bad", run: async () => { throw new Error("boom"); } };\n', 'utf8');
   writeFileSync(join(dir, 'good.mjs'), `
     export const auditExt = { name: 't-good', run: async () => [{ file: 'g', line: 1, rule: 'ext/good', severity: 'warning', message: 'ok' }] };
@@ -78,7 +79,7 @@ test('auditFull：扩展 findings 自动并入（auditExtDir 注入）', async (
   const { auditFull } = await import('../lib/audit/orchestrate.js');
   await import('../lib/rule/compilers.js');
   // 临时扩展目录（缺 README 报 info）
-  const extDir = mkdtempSync(join(tmpdir(), 'audit-ext-dir-'));
+  const extDir = mkdtempTracked(join(tmpdir(), 'audit-ext-dir-'));
   writeFileSync(join(extDir, 'need-readme.mjs'), `
     export const auditExt = { name: 't-need-readme', run: async (repo) => {
       const { existsSync } = await import('node:fs');
@@ -87,7 +88,7 @@ test('auditFull：扩展 findings 自动并入（auditExtDir 注入）', async (
     } };
   `, 'utf8');
   // 临时仓库（无 README → 扩展报 info）
-  const repo = mkdtempSync(join(tmpdir(), 'audit-ext-full-'));
+  const repo = mkdtempTracked(join(tmpdir(), 'audit-ext-full-'));
   const r = await auditFull(repo, { auditExtDir: extDir });
   const ext = (r.findings || []).filter((f) => f.source && f.source.startsWith('ext:'));
   assert.ok(ext.length >= 1, 'auditFull 应并入扩展 findings（缺 README 报 info）');

@@ -11,7 +11,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, rmSync, writeFileSync, appendFileSync } from 'node:fs';
+import { rmSync, writeFileSync, appendFileSync } from 'node:fs';
+import { mkdtempTracked } from './helpers/tmp-dir.mjs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -25,7 +26,7 @@ const OTHER = { name: 'Other', email: 'other@example.com' };
 const TS = '20990101'; // 固定时间戳 → 备份引用路径可预期
 
 function makeRepo() {
-  const dir = mkdtempSync(join(tmpdir(), 'dshgp-idnrw-'));
+  const dir = mkdtempTracked(join(tmpdir(), 'dshgp-idnrw-'));
   execFileSync('git', ['init', '-q'], { cwd: dir });
   // 仓库局部身份：故意用非规范身份，模拟「没配身份的仓库」
   execFileSync('git', ['config', '--local', 'user.name', 'DSH Agent'], { cwd: dir });

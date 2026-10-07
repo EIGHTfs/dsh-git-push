@@ -450,6 +450,7 @@ dsh-git-push/
 ├── test/ — node:test 全量单元测试（541+ 条，覆盖审计/推送/账号/HTTP/后台任务）
 │   ├── .test — 空文件豁免标记（目录级豁免 .test 目录）
 │   ├── regression-2.4.1.mjs — （待注释）
+│   ├── run-tests.mjs — （待注释）
 │   ├── test-account-refresh-on-push.mjs — （待注释）
 │   ├── test-account-ssh.mjs — 账号检查 + SSH 密钥测试
 │   ├── test-arch-func-source.mjs — （待注释）
@@ -549,6 +550,8 @@ dsh-git-push/
 │   ├── test-visibility-unified.mjs — （待注释）
 │   ├── fixtures/ — （待注释）
 │   │   ├── TimeZoneComboBox-CRnoCikG.js — Pawchive 混淆产物样本（hash 文件名——跳过判定 fixture）
+│   ├── helpers/ — 
+│   │   ├── tmp-dir.mjs — （待注释）
 ├── docs/ — 开发文档
 │   ├── ARCH-FACTS-SPEC.md — （待注释）
 │   ├── CHANGELOG.md — 版本列表宿主（doc-version apply 写 dshgp-version 标记块）

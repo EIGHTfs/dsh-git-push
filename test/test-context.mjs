@@ -4,7 +4,8 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdtempTracked } from './helpers/tmp-dir.mjs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
@@ -47,7 +48,7 @@ test('路径归属：target 在 root 内/等于 root → true', () => {
 // ---------- 2026-09-20 工具清单 json 化（模板只 key，值运行时生成） ----------
 
 test('工具清单模板：只取 key 作探测范围（值为空），.exe key 归一化查版本参数', () => {
-  const tmp = mkdtempSync(join(tmpdir(), 'ctx-probes-'));
+  const tmp = mkdtempTracked(join(tmpdir(), 'ctx-probes-'));
   const tpl = join(tmp, 'tool-probes.json');
   writeFileSync(tpl, JSON.stringify({ git: '', '7z.exe': '' }, null, 2));
   const list = loadToolProbeTemplate(tpl);
@@ -61,7 +62,7 @@ test('工具清单模板：文件缺失/空对象回退内置清单', () => {
   const list = loadToolProbeTemplate('/no-such-template.json');
   assert.ok(list.length >= 9, '缺失应回退内置清单');
   assert.ok(list.some((p) => p.name === 'git'), '内置清单应含 git');
-  const tmp = mkdtempSync(join(tmpdir(), 'ctx-probes-empty-'));
+  const tmp = mkdtempTracked(join(tmpdir(), 'ctx-probes-empty-'));
   const tpl = join(tmp, 'tool-probes.json');
   writeFileSync(tpl, '{}');
   const empty = loadToolProbeTemplate(tpl);
@@ -69,7 +70,7 @@ test('工具清单模板：文件缺失/空对象回退内置清单', () => {
 });
 
 test('探测结果落盘：只写 found 且有路径的工具（{key: path} 原子写）', () => {
-  const tmp = mkdtempSync(join(tmpdir(), 'ctx-res-'));
+  const tmp = mkdtempTracked(join(tmpdir(), 'ctx-res-'));
   const file = join(tmp, 'tools.json');
   const w = writeToolResult(file, [
     { name: 'git', path: '/usr/bin/git', found: true },
@@ -83,7 +84,7 @@ test('探测结果落盘：只写 found 且有路径的工具（{key: path} 原�
 });
 
 test('collectToolPaths：默认模板探测 + resultFile 落盘（本机 git 应命中）', () => {
-  const tmp = mkdtempSync(join(tmpdir(), 'ctx-collect-'));
+  const tmp = mkdtempTracked(join(tmpdir(), 'ctx-collect-'));
   const file = join(tmp, 'tools.json');
   const out = collectToolPaths(null, { resultFile: file });
   const git = out.find((r) => r.name === 'git');
@@ -143,14 +144,14 @@ test('环境注入：默认工具清单含 git/node/npm（关键工具不缺失�
 });
 
 test('环境注入：projectRoot 有 skills 目录 → 标记 true；无 → false', () => {
-  const tmp = mkdtempSync(join(tmpdir(), 'ctx-skills-'));
+  const tmp = mkdtempTracked(join(tmpdir(), 'ctx-skills-'));
   mkdirSync(join(tmp, 'skills'));
   const withSkills = createEnvInjectionText({ cwd: tmp, projectRoot: tmp });
   assert.ok(withSkills.includes('存在：true'), '建有 skills/ 应标记 true');
   const parsed = parseEnvInjection(withSkills);
   assert.equal(parsed.skillsDir, join(tmp, 'skills'), 'skills 路径应正确回读');
 
-  const empty = mkdtempSync(join(tmpdir(), 'ctx-noskills-'));
+  const empty = mkdtempTracked(join(tmpdir(), 'ctx-noskills-'));
   const without = createEnvInjectionText({ cwd: empty, projectRoot: empty });
   assert.ok(without.includes('存在：false'), '无 skills/ 应标记 false');
 });

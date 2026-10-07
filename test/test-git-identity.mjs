@@ -10,7 +10,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { rmSync } from 'node:fs';
+import { mkdtempTracked } from './helpers/tmp-dir.mjs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -22,7 +23,7 @@ const CANON_EMAIL = '38984640+EIGHTfs@users.noreply.github.com';
 
 /** 建一个真实临时 git 仓库（用完删）。 */
 function makeRepo() {
-  const dir = mkdtempSync(join(tmpdir(), 'dshgp-identity-'));
+  const dir = mkdtempTracked(join(tmpdir(), 'dshgp-identity-'));
   execFileSync('git', ['init', '-q'], { cwd: dir });
   return dir;
 }

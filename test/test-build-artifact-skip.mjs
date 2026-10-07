@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { mkdtempTracked } from './helpers/tmp-dir.mjs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -70,11 +71,11 @@ test('audit-ext 通道：variable-min-length ext 脚本跳过混淆产物', asyn
   // 用临时扩展目录：只放 variable-min-length（真实 ext 脚本）——指向包含 fixture 的仓库
   const { mkdtempSync } = await import('node:fs');
   const { tmpdir } = await import('node:os');
-  const extDir = mkdtempSync(join(tmpdir(), 'audit-ext-artifact-'));
+  const extDir = mkdtempTracked(join(tmpdir(), 'audit-ext-artifact-'));
   const { copyFileSync } = await import('node:fs');
   copyFileSync(join(ROOT, 'scripts/audit-ext/variable-min-length.mjs'), join(extDir, 'variable-min-length.mjs'));
   // 仓库 = 临时目录，里面放一个 hash 产物副本（真实文件名——触发 hash 判定）
-  const repo = mkdtempSync(join(tmpdir(), 'repo-artifact-'));
+  const repo = mkdtempTracked(join(tmpdir(), 'repo-artifact-'));
   copyFileSync(FIXTURE, join(repo, 'TimeZoneComboBox-CRnoCikG.js'));
   const findings = await runAuditExt(repo, { dir: extDir });
   const onArtifact = findings.filter((x) => /-CRnoCikG\.js$/.test(x.file || ''));
