@@ -74,11 +74,19 @@ export const auditExt = {
             if (isExcludedPath(rel)) continue; // 规则声明的路径白名单外（如 token 级判定层的惯用短名）
             if (isBuildArtifactFile(rel, text)) continue; // 构建/混淆产物跳过（行级规则必然误报）
             for (const hit of checkNameLengthAst(text, { min: minLength, allow })) {
+              // 降级（按需求）：窄作用域（声明所在块行跨度 ≤ SCOPE_LINES）里的短别名
+              //   仍列出来（聚合结果里能查到位置、便于人工核对），但不按 warning 告警——
+              //   含义由紧邻上下文决定（c=chunk / h=header / m=method / d=data / q=query），
+              //   报成 warning 只会制造噪声；宽作用域仍按 warning 报。
+              const narrow = hit.narrowScope === true;
+              const what = hit.type === 'function' ? '函数' : '变量';
               findings.push({
                 file: rel, line: hit.line,
                 rule: 'readability/variable-min-length', kind: 'min-length',
-                severity: 'warning',
-                message: `${hit.type === 'function' ? '函数' : '变量'}名「${hit.name}」过短（< ${minLength}）——应可读命名`,
+                severity: narrow ? 'notice' : 'warning',
+                message: narrow
+                  ? `${what}名「${hit.name}」过短（< ${minLength}）——窄作用域惯用短别名（已降级为提示，位置可查）`
+                  : `${what}名「${hit.name}」过短（< ${minLength}）——应可读命名`,
                 dimensions: ['可读性'],
                 exemptHint: 'dsh-skip-quality（文件头=整文件）',
                 scoreImpact: 0,

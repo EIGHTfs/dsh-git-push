@@ -381,19 +381,29 @@
   "lib/arch/lists.js": "（待注释）",
   "_meta": {
     "worktree": {
+      "README.md": {
+        "status": "M",
+        "mtime": "2026-10-07T12:23:54.478Z",
+        "note": "注释可能需更新"
+      },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-07T03:47:13.616Z",
+        "mtime": "2026-10-07T12:26:07.362Z",
         "note": "注释可能需更新"
       },
-      "lib/ast/control-flow.js": {
+      "lib/ast/naming.js": {
         "status": "M",
-        "mtime": "2026-10-07T03:46:28.936Z",
+        "mtime": "2026-10-07T12:25:31.864Z",
         "note": "注释可能需更新"
       },
-      "test/test-empty-catch-promise.mjs": {
+      "scripts/audit-ext/variable-min-length.mjs": {
         "status": "M",
-        "mtime": "2026-10-07T03:47:05.854Z",
+        "mtime": "2026-10-07T12:25:40.021Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-name-length-scope.mjs": {
+        "status": "A",
+        "mtime": "2026-10-07T12:23:42.768Z",
         "note": "注释可能需更新"
       }
     }
@@ -405,5 +415,6 @@
   "test/test-push-false-success.mjs": "（待注释）",
   "test/test-gitignore-nongit-dir.mjs": "（待注释）",
   "test/test-remote-name-ascii.mjs": "（待注释）",
-  "test/test-empty-catch-promise.mjs": "（待注释）"
+  "test/test-empty-catch-promise.mjs": "（待注释）",
+  "test/test-name-length-scope.mjs": "（待注释）"
 }

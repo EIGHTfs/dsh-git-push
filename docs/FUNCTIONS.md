@@ -458,14 +458,14 @@
 | `isNamedConstantValue` | 217-224 | 8 | `function isNamedConstantValue(tokens, numIdx) {` |
 | `collectPythonEnumAssignLines` | 246-272 | 27 | `function collectPythonEnumAssignLines(text) {` |
 
-### lib/ast/naming.js（242 行 · 4 个函数）
+### lib/ast/naming.js（285 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `checkNameLengthAst` | 26-148 | 123 | `export function checkNameLengthAst(text = '', { min = 2, allow = [] } = {}) {` |
-| `checkShortFunctionNameAst` | 162-177 | 16 | `export function checkShortFunctionNameAst(text = '', { max = 2, allow = [] } = {}) {` |
-| `checkSmallFileReadAst` | 193-216 | 24 | `export function checkSmallFileReadAst(text = '') {` |
-| `checkConsoleLogJsonAst` | 225-241 | 17 | `export function checkConsoleLogJsonAst(text = '') {` |
+| `checkNameLengthAst` | 26-191 | 166 | `export function checkNameLengthAst(text = '', { min = 2, allow = [] } = {}) {` |
+| `checkShortFunctionNameAst` | 205-220 | 16 | `export function checkShortFunctionNameAst(text = '', { max = 2, allow = [] } = {}) {` |
+| `checkSmallFileReadAst` | 236-259 | 24 | `export function checkSmallFileReadAst(text = '') {` |
+| `checkConsoleLogJsonAst` | 268-284 | 17 | `export function checkConsoleLogJsonAst(text = '') {` |
 
 ### lib/ast/scope.js（242 行 · 11 个函数）
 
@@ -1622,12 +1622,12 @@
 | `refreshProject` | 56-105 | 50 | `function refreshProject(repoPath, { checkOnly = false } = {}) {` |
 | `main` | 107-130 | 24 | `function main() {` |
 
-### scripts/audit-ext/variable-min-length.mjs（94 行 · 2 个函数）
+### scripts/audit-ext/variable-min-length.mjs（102 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `isExcludedPath` | 29-36 | 8 | `const isExcludedPath = (rel) => {` |
-| `walk` | 60-90 | 31 | `const walk = (dir) => {` |
+| `walk` | 60-98 | 39 | `const walk = (dir) => {` |
 
 ### scripts/audit-runner.mjs（35 行 · 1 个函数）
 
