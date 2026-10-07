@@ -8,6 +8,7 @@ import assert from 'node:assert/strict';
 
 import { tokenize, clearTokenCache } from '../lib/ast/tokenizer.js';
 import { checkNameLengthAst } from '../lib/ast/naming.js';
+import { checkMagicNumberSmartAst } from '../lib/ast/magic-number.js';
 
 const SRC = [
   'const HELP = `用法:',
@@ -34,4 +35,30 @@ test('短名规则不再报模板正文里的占位符', () => {
   const hits = checkNameLengthAst(SRC, { min: 2 });
   assert.ok(!hits.some((h) => h.line === 2), `模板正文（第 2 行）不该被报：${JSON.stringify(hits)}`);
   assert.ok(hits.some((h) => h.name === 'N' && h.line === 4), '真变量 N（第 4 行）仍应被报，确认检查没被关掉');
+});
+
+// 反引号正好在行尾的形态（`const css = ` + 换行）：token 值只有单个反引号，
+//   旧判据看 endsWith('`') 为真 ⇒ 漏置跨行状态 ⇒ 整段 CSS 被当代码，其中的 #141518/#888/1.5
+//   被魔数规则误报（dsh-session-conductor 的 compaction.js 实测 3 条）。
+const CSS_TMPL = [
+  'const css = `',
+  '  .cm_card { border:1px solid rgba(128,128,128,.2); background:var(--x,#141518); }',
+  '  .cm_hint { color:#888; line-height:1.5; }',
+  '`;',
+  'const after = 1;',
+].join('\n');
+
+test('模板开引号独占行尾时，正文仍并入 tmpl（不产 ident/num）', () => {
+  clearTokenCache();
+  const all = tokenize(CSS_TMPL);
+  const leaked = all.filter((t) => (t.line === 2 || t.line === 3) && !['tmpl', 'ws', 'comment'].includes(t.type));
+  assert.deepEqual(leaked.map((t) => t.type + '@' + t.line + ':' + t.value), [], '模板正文行不该产出代码 token');
+  const tmplLines = all.filter((t) => t.type === 'tmpl').map((t) => t.line);
+  assert.deepEqual(tmplLines, [1, 2, 3, 4], `模板应跨 4 行产出 tmpl，实得 ${JSON.stringify(tmplLines)}`);
+});
+
+test('魔数规则不再报 CSS 模板正文里的数值', () => {
+  clearTokenCache();
+  const hits = checkMagicNumberSmartAst(CSS_TMPL, {});
+  assert.deepEqual(hits, [], `CSS 正文里的 #141518/#888/1.5 不该报魔数：${JSON.stringify(hits)}`);
 });
