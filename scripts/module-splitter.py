@@ -317,11 +317,21 @@ def parse_blocks(src: str):
 
 
 def parse_imports(src: str):
-    """{符号: 原样 import 语句}——用于按符号把原 import 分发到各模块。"""
+    """{符号: 原样 import 语句}——用于按符号把原 import 分发到各模块。
+
+    多行 import 支持：`import {\\n  a,\\n  b,\\n} from "./x.js";` 是常见写法，
+    原先用 `.+?`（`.` 不跨行）⇒ 这类 import **匹配不到**，其符号分发不到任何模块，
+    续行又被覆盖审计判为「未承载」而拦下正确的 plan（dsh-session-conductor 的
+    lib/index.js 有 8 个多行 import，实测 32 行被误判）。改用 [\\s\\S] 跨行匹配。
+    """
     sym2stmt = {}
-    for m in re.finditer(r'^import\s+(.+?)\s+from\s+[\'"]([^\'"]+)[\'"];', src, re.M):
+    for m in re.finditer(r'^import\s+([\s\S]+?)\s+from\s+[\'"]([^\'"]+)[\'"];', src, re.M):
         clause, stmt = m.group(1), m.group(0)
-        inner = re.search(r'\{(.*)\}', clause)
+        # `.*` 不跨行 ⇒ 多行 import 的符号列表取不到（clause 形如 "{\n  a,\n  b,\n}"），
+        #   会退化成只取第一段、把符号全丢（实测 dsh-session-conductor：81 个符号里
+        #   analyzeSession / cancelSessionTimers / patchSwitch 等全缺，导致 index 里
+        #   裸再导出 `export { x };` 因绑定不存在直接 SyntaxError）。改用 [\s\S]。
+        inner = re.search(r'\{([\s\S]*)\}', clause)
         if inner:
             for sym in inner.group(1).split(','):
                 sym = sym.strip()
@@ -375,8 +385,20 @@ def audit_coverage(plan, blocks, ranges_of, lines, source_lines):
     # 写进 index（见 parse_side_effect_imports / parse_export_clauses），
     # 故审计里视为已覆盖，否则会误报「未承载」而拦下正确的 plan。
     trivial = re.compile(r'^\s*(//|/\*|\*|\*/|import\s|export\s*\{|$)')
+    # 多行 import / export 子句的**续行**也要算已覆盖：整条语句由 index 原样保留
+    #   （见 parse_imports 的 [\s\S] 跨行匹配与 parse_export_clauses 的 [^}]*），
+    #   但续行本身不以 import/export 开头 ⇒ 单靠 trivial 正则会误报「未承载」而拦下正确的
+    #   plan（实测 dsh-session-conductor：8 个多行 import + 3 个多行 export 子句共 41 行）。
+    kept_lines = set()
+    src_text = '\n'.join(source_lines)
+    for pat in (r'^import\s+[\s\S]*?\s+from\s+[\'"][^\'"]+[\'"];',
+                r"^export\s*\{[^}]*\}\s*(?:from\s*(['\"])[^'\"]+\1\s*)?;"):
+        for m in re.finditer(pat, src_text, re.M):
+            start = src_text.count('\n', 0, m.start()) + 1
+            end = src_text.count('\n', 0, m.end()) + 1
+            kept_lines.update(range(start, end + 1))
     missing = [i + 1 for i in range(len(source_lines))
-               if i not in count and not trivial.match(source_lines[i])]
+               if i not in count and not trivial.match(source_lines[i]) and (i + 1) not in kept_lines]
     return missing, dup
 
 

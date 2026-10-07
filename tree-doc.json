@@ -381,29 +381,24 @@
   "lib/arch/lists.js": "（待注释）",
   "_meta": {
     "worktree": {
-      "README.md": {
-        "status": "M",
-        "mtime": "2026-10-07T12:23:54.478Z",
-        "note": "注释可能需更新"
-      },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-07T12:26:07.362Z",
+        "mtime": "2026-10-07T12:40:24.436Z",
         "note": "注释可能需更新"
       },
-      "lib/ast/naming.js": {
+      "scripts/__pycache__/module-splitter.cpython-38.pyc": {
         "status": "M",
-        "mtime": "2026-10-07T12:25:31.864Z",
+        "mtime": "2026-10-07T12:37:35.004Z",
         "note": "注释可能需更新"
       },
-      "scripts/audit-ext/variable-min-length.mjs": {
+      "scripts/module-splitter.py": {
         "status": "M",
-        "mtime": "2026-10-07T12:25:40.021Z",
+        "mtime": "2026-10-07T12:37:28.277Z",
         "note": "注释可能需更新"
       },
-      "test/test-name-length-scope.mjs": {
+      "test/test-module-splitter-multiline.mjs": {
         "status": "A",
-        "mtime": "2026-10-07T12:23:42.768Z",
+        "mtime": "2026-10-07T12:40:12.586Z",
         "note": "注释可能需更新"
       }
     }
@@ -416,5 +411,6 @@
   "test/test-gitignore-nongit-dir.mjs": "（待注释）",
   "test/test-remote-name-ascii.mjs": "（待注释）",
   "test/test-empty-catch-promise.mjs": "（待注释）",
-  "test/test-name-length-scope.mjs": "（待注释）"
+  "test/test-name-length-scope.mjs": "（待注释）",
+  "test/test-module-splitter-multiline.mjs": "（待注释）"
 }

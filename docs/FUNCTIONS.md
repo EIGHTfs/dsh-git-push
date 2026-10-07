@@ -2120,6 +2120,12 @@
 |------|------|------|------|
 | `hits` | 16-18 | 3 | `function hits(text) {` |
 
+### test/test-module-splitter-multiline.mjs（80 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `makeFixture` | 25-43 | 19 | `function makeFixture(dir) {` |
+
 ### test/test-persist-credentials.mjs（93 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |

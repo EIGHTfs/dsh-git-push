@@ -485,6 +485,7 @@ dsh-git-push/
 │   ├── test-java-rules.mjs — Java/Kotlin 语言路由与专项规则测试（javaKtFuncRanges/短名/复杂度/规则联动/聚合型降级）
 │   ├── test-link-check.mjs — 链接判断测试（分级扣分/断网不拦）
 │   ├── test-magic-number.mjs — 硬编码魔数检测测试
+│   ├── test-module-splitter-multiline.mjs — （待注释）
 │   ├── test-module-splitter.mjs — module_splitter 工具 + CLI 接入测试（契约 + 行为 + 脚本随插件发布）
 │   ├── test-name-length-scope.mjs — （待注释）
 │   ├── test-persist-credentials.mjs — 凭据持久化测试
