@@ -25,3 +25,7 @@ __pycache__/
 archify-preview.json
 # 某同步流程留下的整仓临时副本（test-self 已修为同步清理；这里兜底防它再进审计范围）
 .tmp-sync-write/
+# CodeGraph local cache
+.codegraph/
+# 会话插话提出的新功能需求清单（本机待办，不入库）
+任务.md

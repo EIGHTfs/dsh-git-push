@@ -282,6 +282,7 @@ dsh-git-push/
 │   │   ├── scope.js — 变量作用域分类器（module/function/loop 行号区间 + 模块常量赋值判定）
 │   │   ├── shell.js — shell 精筛（cd 动态路径/写操作命中 .gitignore）
 │   │   ├── size.js — 规模检查（函数长度/文件长度/重复字符串）
+│   │   ├── symbol-index.js — （待注释）
 │   │   ├── tokenizer.js — 分词器（token 流 + LRU 缓存）
 │   ├── audit/ — 审计编排层（文件收集/逐文件检查/槽位聚合/审计出口）
 │   │   ├── audit-file.js — 单文件审计执行（跑检查+豁免）
@@ -431,6 +432,7 @@ dsh-git-push/
 │   ├── scan-repos.mjs — （待注释）
 │   ├── scan-version.mjs — 版本一致性校验脚本
 │   ├── scrub-user-wording.mjs — 清理「用户沟通措辞」独立脚本
+│   ├── symbol-index.mjs — （待注释）
 │   ├── sync-plugin.mjs — 双副本同步脚本（源仓库 → 部署安装副本）
 │   ├── verify-prestep.mjs — 上下文注入自检脚本（真实触发 agent/pre-step 验证注入）
 │   ├── watch-preview.mjs — preview.html 自动重生成监听（源码变更即重建）
@@ -539,6 +541,7 @@ dsh-git-push/
 │   ├── test-slash-commands.mjs — 用户输入框 /git-audit 斜杠命令（解析/接线/对本仓库跑 quick）
 │   ├── test-smart-hint.mjs — 扫描智能提示 + 评分对数衰减测试
 │   ├── test-status-secret.mjs — token 明文不下发安全回归
+│   ├── test-symbol-index.mjs — （待注释）
 │   ├── test-symlink-resolution.mjs — 软链安装依赖解析回归测试（默认失败/--preserve-symlinks/NODE_PATH/真实副本四种场景）
 │   ├── test-task-queue.mjs — 后台化回归测试（官方 job 注册 / 无 jobs 同步保底 / blocker 拦截）
 │   ├── test-tokenizer-multiline-template.mjs — （待注释）
@@ -1200,6 +1203,44 @@ node <archify>/archify/bin/archify.mjs render   architecture <仓库>/.archify/<
 - 每种图一个生成函数 + 一份**类型对应的规范层校验**（archify 的 `dataflow` / `sequence` schema 约束需实测其 schema 后内置）
 - 事实层校验扩展到新图：子模块列表与目录一致、import 边与真实 import 一致、工具/路由条数与注册表一致
 - 仍未定：是否需要把生成器包成插件工具（`archify_gen`）
+
+#### 语法解析能力增强待办（2026-10-08 记录）
+
+研读 dsh-codegraph（`packages/core/src`，8127 行 TS）的静态分析实现后，提炼出对我们有直接价值的能力缺口，按优先级记在这里。
+它的语法层是第三方的（`web-tree-sitter` + `tree-sitter-wasms`，36 个语法 .wasm / 50MB），**语义层是自研**——
+我们要学的主要是「语法树之上那一层」，与语法实现解耦，现有自研 tokenizer 也能套用。
+
+| # | 要做的 | 具体口径（可直接实现） | 状态 |
+|---|--------|------------------------|------|
+| A1 | **跨文件符号索引 + 稳定符号 ID** | 稳定 ID 用 `<相对路径>#<符号名>`（路径与符号都做标识符清洗、小写化），**不含行号**——行号一变缓存/引用全废。索引按文件分组（`file → {exports, imports, calls}`），再做一遍全局解析：`import`/`require` 的相对说明符解析到工程内文件（含 `.js/.mjs/.cjs/index.js` 候选），把 `未解析调用` 落到「本地声明 → 导入符号 → 全工程唯一同名」三级判定，**歧义就不连边**（宁缺勿错） | **已完成（2.5.4）** |
+| A2 | 按文件失效的增量缓存 | 每文件存内容哈希 + 解析结果；只重解析哈希变化的文件，其余复用（配合 A1 的稳定 ID 才有意义）。现状：`lib/ast`、`lib/arch`、`lib/audit` 均无内容哈希，每次都全量重扫 | 待做 |
+| A3 | 双轨变更检测 | 快路径 `git diff --name-status <lastScannedSha>..HEAD` **并集** `git status --porcelain -uall`（只扫未提交变更会漏「扫描后已提交」的改动），快路径为空也要落到内容哈希兜底，不要用 `if (有结果) return` 短路；重命名/冲突码（`R`/`RM`/`UU`）按首字符分类而非枚举 `M/MM/AM` | 待做 |
+| A4 | 契约/路由归一化匹配 | 把路由参数归一成 `{param}`（`:id`、`{id}`、`<int:id>`、`${id}` 四种写法都要覆盖），据此匹配前端调用与后端路由，落成审计规则：**悬空 API 调用**（前端调了没有对应路由）与**未使用路由** | 待做 |
+| A5 | 分析覆盖率 / 置信度指标 | 统计「解析失败文件数、未解析引用比例、未连边的调用比例」，作为审计的一个维度输出——防止「规则全过、其实根本没解析到」的假绿（与现有 ignore-blind 静默失明检测互补） | 待做 |
+| A6 | tree-sitter 真语法（多语言） | 引 `web-tree-sitter` + 只带 JS/TS/TSX 三个语法（含运行时约 **5.3MB**，对比全量 50MB），缺失时退化到现有 tokenizer。**前置**：需先定「是否允许破零运行时依赖」——本项目 npm 发布完整性明确是「真正零运行时依赖」 | **待定（需拍板）** |
+
+### 跨文件符号索引（2.5.4 落地）
+
+`lib/ast/symbol-index.js` 提供工程级符号索引：稳定 ID（`<相对路径>#<符号名>`）、import 解析到工程内文件、
+跨文件调用落地（本地声明 → 导入符号 → 全工程唯一同名，歧义不连边）、未使用导出候选、以及**分析覆盖率**。
+
+```bash
+node scripts/symbol-index.mjs <仓库目录> [--unused] [--top N] [--ext .js,.mjs] [--json]
+```
+
+实测（同一份代码、同一口径；覆盖率 = 连边 / 可解析调用，成员调用 `x.y()` 已排除并单独计数）：
+
+| 目标 | 文件 | 可解析调用 | 连边（local / import / unique） | 未解析 | 覆盖率 |
+|---|---|---|---|---|---|
+| 本插件仓库（JS） | 287 | 10139 | 4036（2072 / 1422 / 542） | 6103 | **39.8%** |
+| dsh-codegraph `packages/core/src`（TS） | 24 | 388 | 230（97 / 133 / 0） | 158 | **59.3%** |
+
+落地过程中修掉两个真问题（都有回归测试）：
+
+- **TS 的 `./x.js` 写法**：源码是 `x.ts`、import 却写 `./x.js`（Node 解析规范）。未做后缀回退时，
+  TS 工程 **import 边为 0**；补 `.ts/.tsx` 回退后 import 边 133 条（覆盖率 12.2% → 59.3%）。
+- **成员调用误计**：`console.log(`、`obj.method(` 被当成可解析调用 → 未解析虚高、覆盖率虚低
+  （本插件仓库 16398 → 6103，覆盖率 21.6% → 39.8%）；现单独计入 `skippedMemberCalls` 并从分母剔除。
 
 ## 注意事项
 

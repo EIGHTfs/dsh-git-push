@@ -521,6 +521,33 @@
 | `checkCommentDensityAst` | 290-325 | 36 | `export function checkCommentDensityAst(text = '', { warn = COMMENT_DENSITY_WARN_DEFAULT, minCodeLines = 5 } = {}) {` |
 | `checkRepeatedStringsAst` | 335-374 | 40 | `export function checkRepeatedStringsAst(text = '', { min = 3, ignore = [] } = {}) {` |
 
+### lib/ast/symbol-index.js（400 行 · 22 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `sanitizeId` | 39-41 | 3 | `export function sanitizeId(input) {` |
+| `symbolId` | 49-52 | 4 | `export function symbolId(relPath, name) {` |
+| `unquote` | 55-58 | 4 | `function unquote(raw) {` |
+| `collectDeclarations` | 61-78 | 18 | `function collectDeclarations(tokens) {` |
+| `collectEsmImports` | 84-114 | 31 | `function collectEsmImports(tokens) {` |
+| `collectCjsImports` | 120-137 | 18 | `function collectCjsImports(tokens) {` |
+| `collectCallSites` | 147-164 | 18 | `function collectCallSites(tokens, fnRanges) {` |
+| `isMemberAccess` | 167-175 | 9 | `function isMemberAccess(tokens, idx) {` |
+| `findEnclosingFn` | 178-183 | 6 | `function findEnclosingFn(idx, fnRanges) {` |
+| `extractFileSymbols` | 191-202 | 12 | `export function extractFileSymbols(relPath, text) {` |
+| `resolveSpecifier` | 211-236 | 26 | `export function resolveSpecifier(relPath, source, fileSet) {` |
+| `buildSymbolIndex` | 244-254 | 11 | `export function buildSymbolIndex(files = [], opts = {}) {` |
+| `collectExports` | 257-267 | 11 | `function collectExports(perFile) {` |
+| `flattenSymbols` | 270-282 | 13 | `function flattenSymbols(exportsByFile, perFile) {` |
+| `buildNameIndex` | 285-294 | 10 | `function buildNameIndex(exportsByFile) {` |
+| `resolveCalls` | 297-313 | 17 | `function resolveCalls(perFile, exportsByFile, fileSet) {` |
+| `buildImportMap` | 316-328 | 13 | `function buildImportMap(rel, imports, fileSet, exportsByFile) {` |
+| `resolveOne` | 331-337 | 7 | `function resolveOne(rel, call, localNames, importMap, byName) {` |
+| `indexStats` | 340-359 | 20 | `function indexStats(perFile, symbols, edges, unresolved) {` |
+| `callersOf` | 362-370 | 9 | `export function callersOf(index, id) {` |
+| `unusedExportCandidates` | 377-391 | 15 | `export function unusedExportCandidates(index) {` |
+| `indexSummary` | 394-399 | 6 | `export function indexSummary(index) {` |
+
 ### lib/ast/tokenizer.js（286 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -1418,15 +1445,15 @@
 | `countByDimension` | 42-72 | 31 | `export function countByDimension(findings = []) {` |
 | `scoreQuality` | 89-131 | 43 | `export function scoreQuality(findings = [], weights = {}, context = {}) {` |
 
-### lib/self/index.js（175 行 · 5 个函数）
+### lib/self/index.js（178 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `readmeTemplate` | 55-120 | 66 | `export function readmeTemplate({ name = 'dsh-git-push', description = 'DSH git 自动提交推送插件——统一函数入口架构', version = VERSION, versionTable = '' } = {}) {` |
-| `yamlTemplate` | 123-135 | 13 | `export function yamlTemplate() {` |
-| `selfVersion` | 138-140 | 3 | `export function selfVersion() {` |
-| `versionInfo` | 147-159 | 13 | `export function versionInfo(pkgJson = '') {` |
-| `helpSync` | 168-174 | 7 | `export function helpSync(helpText = '', knownFlags = []) {` |
+| `readmeTemplate` | 58-123 | 66 | `export function readmeTemplate({ name = 'dsh-git-push', description = 'DSH git 自动提交推送插件——统一函数入口架构', version = VERSION, versionTable = '' } = {}) {` |
+| `yamlTemplate` | 126-138 | 13 | `export function yamlTemplate() {` |
+| `selfVersion` | 141-143 | 3 | `export function selfVersion() {` |
+| `versionInfo` | 150-162 | 13 | `export function versionInfo(pkgJson = '') {` |
+| `helpSync` | 171-177 | 7 | `export function helpSync(helpText = '', knownFlags = []) {` |
 
 ### lib/skip-dirs.js（65 行 · 3 个函数）
 
@@ -1897,6 +1924,13 @@
 | `main` | 319-417 | 99 | `async function main(argv) {` |
 | `ask` | 385-385 | 1 | `const ask = (q) => new Promise((res) => rl.question(q, res));` |
 
+### scripts/symbol-index.mjs（86 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `collectFiles` | 23-35 | 13 | `function collectFiles(root, exts, dir = root, out = []) {` |
+| `parseArgs` | 38-52 | 15 | `function parseArgs(argv) {` |
+
 ### scripts/sync-plugin.mjs（233 行 · 9 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2296,6 +2330,13 @@
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `inv` | 15-17 | 3 | `function inv(cwd) {` |
+
+### test/test-symbol-index.mjs（120 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `build` | 31-34 | 4 | `function build(extra = {}) {` |
+| `hasEdge` | 36-36 | 1 | `const hasEdge = (idx, from, to, via) => idx.edges.some((e) => e.from === from && e.to === to && e.via === via);` |
 
 ### test/test-symlink-resolution.mjs（104 行 · 2 个函数）
 
