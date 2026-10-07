@@ -383,17 +383,17 @@
     "worktree": {
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-07T03:22:14.829Z",
+        "mtime": "2026-10-07T03:47:13.616Z",
         "note": "注释可能需更新"
       },
       "lib/ast/control-flow.js": {
         "status": "M",
-        "mtime": "2026-10-07T03:21:24.809Z",
+        "mtime": "2026-10-07T03:46:28.936Z",
         "note": "注释可能需更新"
       },
       "test/test-empty-catch-promise.mjs": {
-        "status": "A",
-        "mtime": "2026-10-07T03:21:58.826Z",
+        "status": "M",
+        "mtime": "2026-10-07T03:47:05.854Z",
         "note": "注释可能需更新"
       }
     }

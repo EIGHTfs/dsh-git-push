@@ -28,3 +28,12 @@ test('有语句或有注释交代的 catch 不报', () => {
   assert.equal(checkEmptyCatchAst('try { x(); } catch (e) { log(e); }').length, 0, '有语句不报');
   assert.equal(checkEmptyCatchAst('try { x(); } catch { /* 尽力而为 */ }').length, 0, '注释交代了原因不报');
 });
+
+test('短 CJK 注释算交代（汉字信息量折算），但单字符占位仍要报', () => {
+  // 实测误报：项目里写 `catch { /* 尽力 */ }`（2 个汉字），按「≥4 字符」的 ASCII 门槛被判「没交代」
+  assert.equal(checkEmptyCatchAst('try { x(); } catch { /* 尽力 */ }').length, 0, '2 个汉字的注释应算交代');
+  assert.equal(checkEmptyCatchAst('try { x(); } catch { /* 忽略 */ }').length, 0, '词表命中同样算交代');
+  // 防过度豁免：单字符占位不是交代
+  assert.equal(checkEmptyCatchAst('try { x(); } catch { // e\n}').length, 1, '`// e` 这类占位仍应报');
+  assert.equal(checkEmptyCatchAst('try { x(); } catch { /* x */ }').length, 1, '单字母注释仍应报');
+});
