@@ -1075,15 +1075,15 @@
 | `quotaChannel` | 198-206 | 9 | `function quotaChannel(resources, key) {` |
 | `fetchApiQuota` | 218-233 | 16 | `export async function fetchApiQuota({ workspaceRoot = '', token = '' } = {}) {` |
 
-### lib/git/api.js（130 行 · 5 个函数）
+### lib/git/api.js（131 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `githubFetch` | 22-86 | 65 | `export async function githubFetch(path, { token = '', method = 'GET', body, timeout = 60_000, headers: extraHeaders } = {}) {` |
-| `attempt` | 53-76 | 24 | `const attempt = async (target) => {` |
-| `parseGithubOwnerRepo` | 89-103 | 15 | `export function parseGithubOwnerRepo(originUrl) {` |
-| `isBadCredentials` | 106-108 | 3 | `export function isBadCredentials(reason = '') {` |
-| `detectRepoVisibility` | 115-129 | 15 | `export async function detectRepoVisibility({ repoPath = '', token = '' } = {}) {` |
+| `githubFetch` | 22-87 | 66 | `export async function githubFetch(path, { token = '', method = 'GET', body, timeout = 60_000, headers: extraHeaders } = {}) {` |
+| `attempt` | 54-77 | 24 | `const attempt = async (target) => {` |
+| `parseGithubOwnerRepo` | 90-104 | 15 | `export function parseGithubOwnerRepo(originUrl) {` |
+| `isBadCredentials` | 107-109 | 3 | `export function isBadCredentials(reason = '') {` |
+| `detectRepoVisibility` | 116-130 | 15 | `export async function detectRepoVisibility({ repoPath = '', token = '' } = {}) {` |
 
 ### lib/git/atomic-json.js（99 行 · 5 个函数）
 
@@ -1236,16 +1236,16 @@
 | `persistSshPub` | 173-186 | 14 | `export function persistSshPub(pub, { workspaceRoot = '' } = {}) {` |
 | `generateSshKey` | 195-234 | 40 | `export function generateSshKey(email, { workspaceRoot = '', force = false } = {}) {` |
 
-### lib/git/endpoints.js（98 行 · 6 个函数）
+### lib/git/endpoints.js（110 行 · 6 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `mirrorPrefix` | 20-24 | 5 | `export function mirrorPrefix() {` |
-| `withMirror` | 45-53 | 9 | `export function withMirror(url, { method = 'GET', mode = 'read' } = {}) {` |
-| `mirrorGitConfigEnv` | 66-75 | 10 | `export function mirrorGitConfigEnv(env, { mode = 'read' } = {}) {` |
-| `blobApiUrl` | 85-87 | 3 | `export function blobApiUrl(owner, repo, sha) {` |
-| `contentsApiUrl` | 90-92 | 3 | `export function contentsApiUrl(owner, repo, encodedPath, encodedRef) {` |
-| `rawFileUrl` | 95-97 | 3 | `export function rawFileUrl(owner, repo, encodedRef, encodedPath) {` |
+| `mirrorPrefix` | 30-35 | 6 | `export function mirrorPrefix() {` |
+| `withMirror` | 56-65 | 10 | `export function withMirror(url, { method = 'GET', mode = 'read', noMirror = false } = {}) {` |
+| `mirrorGitConfigEnv` | 78-87 | 10 | `export function mirrorGitConfigEnv(env, { mode = 'read' } = {}) {` |
+| `blobApiUrl` | 97-99 | 3 | `export function blobApiUrl(owner, repo, sha) {` |
+| `contentsApiUrl` | 102-104 | 3 | `export function contentsApiUrl(owner, repo, encodedPath, encodedRef) {` |
+| `rawFileUrl` | 107-109 | 3 | `export function rawFileUrl(owner, repo, encodedRef, encodedPath) {` |
 
 ### lib/git/exec.js（152 行 · 5 个函数）
 
