@@ -31,7 +31,7 @@ test('事实层函数数与 docs/FUNCTIONS.md 同源（逐文件与 scanFileFunc
   assert.ok(facts.totals.funcs > 500, `全库函数合计应 > 500，实得 ${facts.totals.funcs}`);
   // tool-call.js 的函数数是**硬编码基准**：给该文件加/删函数时要同步这里（以及 docs/FUNCTIONS.md）
   const toolCall = (scanFileFuncs(join(ROOT, 'lib/app/tool-call.js')).funcs || []).length;
-  assert.equal(toolCall, 19, `lib/app/tool-call.js 应为 19 个函数（scanFileFuncs 口径），实得 ${toolCall}`);
+  assert.equal(toolCall, 21, `lib/app/tool-call.js 应为 21 个函数（scanFileFuncs 口径），实得 ${toolCall}`);
 });
 
 test('事实层源码里不得再出现 funcRangesAst（防止实现被换回）', () => {

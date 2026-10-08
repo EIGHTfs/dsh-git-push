@@ -60,9 +60,15 @@ function detectFunction(lines, i) {
 }
 
 /** 扫描单文件 → { file, funcs, totalLines }。 */
-export function scanFileFuncs(file) {
+export function scanFileFuncs(file, textOverride) {
+  // textOverride：调用方已有全文时直接传进来，省掉一次读盘 + 一次 split
+  //   （2026-10-09 热路径实测：事实层生成时同一文件被读 3 次 → 传文本后降到 1 次；NFS/CIFS 上收益更明显）
   let text;
-  try { text = readFileSync(file, 'utf8'); } catch (e) { return { file, funcs: [], totalLines: 0, error: e.message }; }
+  if (textOverride === undefined) {
+    try { text = readFileSync(file, 'utf8'); } catch (e) { return { file, funcs: [], totalLines: 0, error: e.message }; }
+  } else {
+    text = String(textOverride);
+  }
   const lines = text.split('\n');
   const funcs = [];
   for (let i = 0; i < lines.length; i++) {

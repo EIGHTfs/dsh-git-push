@@ -22,16 +22,16 @@
 | `aggregateFindings` | 70-91 | 22 | `export function aggregateFindings(findings = [], opts = {}) {` |
 | `runAuditApi` | 99-158 | 60 | `export async function runAuditApi(repo, params = {}, cfg = {}) {` |
 
-### lib/app/command-registry.js（249 行 · 6 个函数）
+### lib/app/command-registry.js（248 行 · 6 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `applyFlagToken` | 187-203 | 17 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
-| `validateParamConstraints` | 206-212 | 7 | `function validateParamConstraints(args, params) {` |
-| `parseRegistryArgs` | 214-234 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
-| `registryByName` | 237-239 | 3 | `export function registryByName(name) {` |
-| `registryByCli` | 242-244 | 3 | `export function registryByCli(cli) {` |
-| `buildToolsListText` | 247-249 | 3 | `export function buildToolsListText() {` |
+| `applyFlagToken` | 186-202 | 17 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
+| `validateParamConstraints` | 205-211 | 7 | `function validateParamConstraints(args, params) {` |
+| `parseRegistryArgs` | 213-233 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
+| `registryByName` | 236-238 | 3 | `export function registryByName(name) {` |
+| `registryByCli` | 241-243 | 3 | `export function registryByCli(cli) {` |
+| `buildToolsListText` | 246-248 | 3 | `export function buildToolsListText() {` |
 
 ### lib/app/handlers/account.js（166 行 · 10 个函数）
 
@@ -243,24 +243,24 @@
 | `aggregateModules` | 17-76 | 60 | `export function aggregateModules(facts, { min = 8, max = 15 } = {}) {` |
 | `componentId` | 84-89 | 6 | `function componentId(layer, mods) {` |
 
-### lib/arch/extract.js（463 行 · 14 个函数）
+### lib/arch/extract.js（467 行 · 14 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `detectSourceRoot` | 41-64 | 24 | `export function detectSourceRoot(repoPath) {` |
-| `collectSync` | 67-78 | 12 | `function collectSync(dir, out = [], depth = 0) {` |
-| `ioPathFromLine` | 89-463 | 375 | `export function ioPathFromLine(text, line) {` |
-| `statementAt` | 114-133 | 20 | `export function statementAt(text, line) {` |
-| `startsStatement` | 118-118 | 1 | `const startsStatement = (s) => /^\s*(const\|let\|var\|function\|return\|if\|for\|while\|await\|export)\b/.test(s);` |
-| `count` | 125-125 | 1 | `const count = (s, re) => (s.match(re) \|\| []).length;` |
-| `collectPathConsts` | 148-463 | 316 | `export function collectPathConsts(text) {` |
-| `ioPathsFromLine` | 170-463 | 294 | `export function ioPathsFromLine(text, line) {` |
-| `extractFileIo` | 193-237 | 45 | `export function extractFileIo(text) {` |
-| `resolveIoPath` | 249-262 | 14 | `export function resolveIoPath(baseDir, p, repoFiles = []) {` |
-| `normalizeIoPath` | 270-280 | 11 | `export function normalizeIoPath(baseDir, p) {` |
-| `importSpecifiers` | 282-286 | 5 | `export function importSpecifiers(text) {` |
-| `resolveModule` | 289-302 | 14 | `export function resolveModule(fromRel, spec, sourceRoot) {` |
-| `extractArchFacts` | 313-462 | 150 | `export async function extractArchFacts(repoPath, { maxFiles = DEFAULT_MAX_FILES } = {}) {` |
+| `detectSourceRoot` | 42-65 | 24 | `export function detectSourceRoot(repoPath) {` |
+| `collectSync` | 68-79 | 12 | `function collectSync(dir, out = [], depth = 0) {` |
+| `ioPathFromLine` | 90-467 | 378 | `export function ioPathFromLine(text, line) {` |
+| `statementAt` | 115-134 | 20 | `export function statementAt(text, line) {` |
+| `startsStatement` | 119-119 | 1 | `const startsStatement = (s) => /^\s*(const\|let\|var\|function\|return\|if\|for\|while\|await\|export)\b/.test(s);` |
+| `count` | 126-126 | 1 | `const count = (s, re) => (s.match(re) \|\| []).length;` |
+| `collectPathConsts` | 149-467 | 319 | `export function collectPathConsts(text) {` |
+| `ioPathsFromLine` | 171-467 | 297 | `export function ioPathsFromLine(text, line) {` |
+| `extractFileIo` | 194-238 | 45 | `export function extractFileIo(text) {` |
+| `resolveIoPath` | 250-263 | 14 | `export function resolveIoPath(baseDir, p, repoFiles = []) {` |
+| `normalizeIoPath` | 271-281 | 11 | `export function normalizeIoPath(baseDir, p) {` |
+| `importSpecifiers` | 283-287 | 5 | `export function importSpecifiers(text) {` |
+| `resolveModule` | 290-303 | 14 | `export function resolveModule(fromRel, spec, sourceRoot) {` |
+| `extractArchFacts` | 314-466 | 153 | `export async function extractArchFacts(repoPath, { maxFiles = DEFAULT_MAX_FILES } = {}) {` |
 
 ### lib/arch/ir.js（150 行 · 1 个函数）
 
@@ -1298,7 +1298,7 @@
 | `ensureAuxSshRemote` | 49-65 | 17 | `export function ensureAuxSshRemote(repoPath, owner, repo, result = {}) {` |
 | `autoTagDSHProject` | 72-101 | 30 | `export async function autoTagDSHProject({ repoPath = '', version = '', commitSha = '', owner = '', repo = '', token = '' } = {}) {` |
 
-### lib/git/push.js（360 行 · 7 个函数）
+### lib/git/push.js（383 行 · 8 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1306,9 +1306,10 @@
 | `commitAndPush` | 51-190 | 140 | `export async function commitAndPush({ repoPath = '', message = '', push = true, dryRun = false, token = '', customIgnorePatterns = '', requirementsConfirmed = false, force = false, pushMethod = 'ssh', pushGate = false, pushConfirmed = false, paths = '' } = {}) {` |
 | `legacyIdentity` | 121-130 | 10 | `const legacyIdentity = (() => {` |
 | `fetchRemoteBranchRef` | 203-216 | 14 | `async function fetchRemoteBranchRef(repoPath, branch, owner, repo) {` |
-| `enhanceAfterPushSuccess` | 224-289 | 66 | `async function enhanceAfterPushSuccess({ repoPath, pr, token, steps, commitSha }) {` |
-| `readmeCheckHint` | 294-299 | 6 | `export function readmeCheckHint(repoPath) {` |
-| `pushCurrentBranch` | 308-359 | 52 | `export async function pushCurrentBranch({ repoPath = '', pushMethod = 'ssh' } = {}) {` |
+| `enhanceAfterPushSuccess` | 224-312 | 89 | `async function enhanceAfterPushSuccess({ repoPath, pr, token, steps, commitSha }) {` |
+| `lsRemoteSha` | 264-270 | 7 | `const lsRemoteSha = () => {` |
+| `readmeCheckHint` | 317-322 | 6 | `export function readmeCheckHint(repoPath) {` |
+| `pushCurrentBranch` | 331-382 | 52 | `export async function pushCurrentBranch({ repoPath = '', pushMethod = 'ssh' } = {}) {` |
 
 ### lib/git/remote.js（88 行 · 3 个函数）
 
@@ -1752,7 +1753,7 @@
 |------|------|------|------|
 | `collectJs` | 15-23 | 9 | `function collectJs(dir, acc = []) {` |
 
-### scripts/doc-func.mjs（207 行 · 12 个函数）
+### scripts/doc-func.mjs（213 行 · 12 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1760,14 +1761,14 @@
 | `stripComment` | 32-34 | 3 | `function stripComment(line) {` |
 | `findBlockEnd` | 37-49 | 13 | `function findBlockEnd(lines, startIdx) {` |
 | `detectFunction` | 51-60 | 10 | `function detectFunction(lines, i) {` |
-| `scanFileFuncs` | 63-207 | 145 | `export function scanFileFuncs(file) {` |
-| `collectFuncFiles` | 105-120 | 16 | `export function collectFuncFiles(root, includeDirs = DEFAULT_SCAN_DIRS) {` |
-| `walk` | 107-117 | 11 | `const walk = (dir, depth) => {` |
-| `buildFuncListText` | 123-142 | 20 | `export function buildFuncListText(root, includeDirs = DEFAULT_SCAN_DIRS) {` |
-| `findBlock` | 145-150 | 6 | `function findBlock(text) {` |
-| `applyFuncBlock` | 153-157 | 5 | `export function applyFuncBlock(text, newContent) {` |
-| `checkFuncDrift` | 160-172 | 13 | `export function checkFuncDrift({ hostPath, root, includeDirs = DEFAULT_SCAN_DIRS } = {}) {` |
-| `out` | 182-182 | 1 | `const out = (msg) => console.log(msg);` |
+| `scanFileFuncs` | 63-213 | 151 | `export function scanFileFuncs(file, textOverride) {` |
+| `collectFuncFiles` | 111-126 | 16 | `export function collectFuncFiles(root, includeDirs = DEFAULT_SCAN_DIRS) {` |
+| `walk` | 113-123 | 11 | `const walk = (dir, depth) => {` |
+| `buildFuncListText` | 129-148 | 20 | `export function buildFuncListText(root, includeDirs = DEFAULT_SCAN_DIRS) {` |
+| `findBlock` | 151-156 | 6 | `function findBlock(text) {` |
+| `applyFuncBlock` | 159-163 | 5 | `export function applyFuncBlock(text, newContent) {` |
+| `checkFuncDrift` | 166-178 | 13 | `export function checkFuncDrift({ hostPath, root, includeDirs = DEFAULT_SCAN_DIRS } = {}) {` |
+| `out` | 188-188 | 1 | `const out = (msg) => console.log(msg);` |
 
 ### scripts/doc-tree.mjs（456 行 · 20 个函数）
 
@@ -2003,18 +2004,18 @@
 |------|------|------|------|
 | `regen` | 38-48 | 11 | `function regen() {` |
 
-### test/helpers/test-cache.mjs（211 行 · 8 个函数）
+### test/helpers/test-cache.mjs（210 行 · 8 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `stripCommentsAndStrings` | 57-82 | 26 | `export function stripCommentsAndStrings(text) {` |
-| `isCacheableTest` | 90-94 | 5 | `export function isCacheableTest(sourceText, fileName = '') {` |
-| `relativeSpecifiers` | 97-110 | 14 | `export function relativeSpecifiers(sourceText) {` |
-| `importClosure` | 118-137 | 20 | `export function importClosure(entryAbs, exists = existsSync) {` |
-| `cacheKeyFor` | 145-156 | 12 | `export function cacheKeyFor(absFiles, nodeVersion = process.version) {` |
-| `loadTestCache` | 159-166 | 8 | `export function loadTestCache(root) {` |
-| `saveTestCache` | 169-182 | 14 | `export function saveTestCache(root, cache) {` |
-| `planTestRun` | 191-210 | 20 | `export function planTestRun(files, cache, exists = existsSync) {` |
+| `stripCommentsAndStrings` | 56-81 | 26 | `export function stripCommentsAndStrings(text) {` |
+| `isCacheableTest` | 89-93 | 5 | `export function isCacheableTest(sourceText, fileName = '') {` |
+| `relativeSpecifiers` | 96-109 | 14 | `export function relativeSpecifiers(sourceText) {` |
+| `importClosure` | 117-136 | 20 | `export function importClosure(entryAbs, exists = existsSync) {` |
+| `cacheKeyFor` | 144-155 | 12 | `export function cacheKeyFor(absFiles, nodeVersion = process.version) {` |
+| `loadTestCache` | 158-165 | 8 | `export function loadTestCache(root) {` |
+| `saveTestCache` | 168-181 | 14 | `export function saveTestCache(root, cache) {` |
+| `planTestRun` | 190-209 | 20 | `export function planTestRun(files, cache, exists = existsSync) {` |
 
 ### test/helpers/tmp-dir.mjs（117 行 · 6 个函数）
 
