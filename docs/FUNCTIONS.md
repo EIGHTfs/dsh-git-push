@@ -1186,17 +1186,17 @@
 | `localBranchRef` | 256-258 | 3 | `export function localBranchRef(branch) {` |
 | `markerJson` | 261-263 | 3 | `export function markerJson({ branch = '', replayedSha = '', at = '' } = {}) {` |
 
-### lib/git/clone.js（383 行 · 7 个函数）
+### lib/git/clone.js（424 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `isPartialCloneDir` | 47-54 | 8 | `export function isPartialCloneDir(dir) {` |
-| `resolveMaxCloneFileMB` | 67-70 | 4 | `export function resolveMaxCloneFileMB(cfg = {}) {` |
-| `enclosingGitRoot` | 87-105 | 19 | `export function enclosingGitRoot(dir) {` |
-| `cloneViaApi` | 114-281 | 168 | `export async function cloneViaApi({` |
-| `cleanupPartial` | 294-298 | 5 | `async function cleanupPartial(dir) {` |
-| `classifyCloneFailure` | 312-325 | 14 | `export function classifyCloneFailure(failed = []) {` |
-| `previewClone` | 353-382 | 30 | `export async function previewClone({ target = '', token = '', branch = '', maxFileMB = DEFAULT_MAX_FILE_MB } = {}) {` |
+| `isPartialCloneDir` | 48-55 | 8 | `export function isPartialCloneDir(dir) {` |
+| `resolveMaxCloneFileMB` | 68-71 | 4 | `export function resolveMaxCloneFileMB(cfg = {}) {` |
+| `enclosingGitRoot` | 88-106 | 19 | `export function enclosingGitRoot(dir) {` |
+| `cloneViaApi` | 115-322 | 208 | `export async function cloneViaApi({` |
+| `cleanupPartial` | 335-339 | 5 | `async function cleanupPartial(dir) {` |
+| `classifyCloneFailure` | 353-366 | 14 | `export function classifyCloneFailure(failed = []) {` |
+| `previewClone` | 394-423 | 30 | `export async function previewClone({ target = '', token = '', branch = '', maxFileMB = DEFAULT_MAX_FILE_MB } = {}) {` |
 
 ### lib/git/cloud.js（47 行 · 1 个函数）
 
