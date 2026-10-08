@@ -1883,7 +1883,7 @@
 | `filesOf` | 400-400 | 1 | `const filesOf = (r) => gitLsFiles(r);` |
 | `mapOf` | 401-401 | 1 | `const mapOf = (r) => loadMapping(r);` |
 
-### scripts/doc-version.mjs（118 行 · 7 个函数）
+### scripts/doc-version.mjs（125 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1892,8 +1892,8 @@
 | `buildVersionListText` | 46-57 | 12 | `export function buildVersionListText(root, { versionSource = '' } = {}) {` |
 | `findBlock` | 60-65 | 6 | `function findBlock(text) {` |
 | `applyVersionBlock` | 68-72 | 5 | `export function applyVersionBlock(text, newContent) {` |
-| `checkVersionDrift` | 75-83 | 9 | `export function checkVersionDrift({ hostPath, root } = {}) {` |
-| `out` | 93-93 | 1 | `const out = (msg) => console.log(msg);` |
+| `checkVersionDrift` | 75-83 | 9 | `export function checkVersionDrift({ hostPath, root, versionSource = '' } = {}) {` |
+| `out` | 100-100 | 1 | `const out = (msg) => console.log(msg);` |
 
 ### scripts/frontend-preview-check.mjs（120 行 · 1 个函数）
 

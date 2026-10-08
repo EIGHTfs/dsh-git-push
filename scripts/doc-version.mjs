@@ -72,14 +72,14 @@ export function applyVersionBlock(text, newContent) {
 }
 
 /** 比对宿主块与最新版本表。返回 { ok, issues, latest }。 */
-export function checkVersionDrift({ hostPath, root } = {}) {
-  const { text: latest } = buildVersionListText(root);
+export function checkVersionDrift({ hostPath, root, versionSource = '' } = {}) {
+  const { text: latest, source } = buildVersionListText(root, { versionSource });
   const host = existsSync(hostPath) ? readFileSync(hostPath, 'utf8') : '';
   const block = findBlock(host);
   const issues = [];
   if (!block) issues.push({ type: 'no-block', msg: `${basename(hostPath)} 无版本列表标记块（${MARK_START} … ${MARK_END}），先 apply 生成` });
-  else if (block.content.trim() !== latest.trim()) issues.push({ type: 'drift', msg: '版本列表与 git log 聚合不一致（运行 doc-version.mjs apply 更新）' });
-  return { ok: issues.length === 0, issues, latest };
+  else if (block.content.trim() !== latest.trim()) issues.push({ type: 'drift', msg: `版本列表与期望内容不一致（来源：${source}，运行 doc-version.mjs apply 更新）` });
+  return { ok: issues.length === 0, issues, latest, source };
 }
 
 /* ─────────── CLI ─────────── */
@@ -89,29 +89,36 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const cmd = args[0];
   const rootIdx = args.indexOf('--root');
   const root = rootIdx !== -1 && args[rootIdx + 1] ? resolve(args[rootIdx + 1]) : ROOT;
+  // 版本来源可显式指定（package.json | git-log）；不传则按项目类型自动识别（有 package.json 即 npm 项目）
+  const srcIdx = args.indexOf('--version-source');
+  const versionSource = srcIdx !== -1 && args[srcIdx + 1] ? String(args[srcIdx + 1]) : '';
+  if (versionSource && versionSource !== 'package.json' && versionSource !== 'git-log') {
+    console.log(`❌ --version-source 只接受 package.json 或 git-log，收到：${versionSource}`);
+    process.exit(1);
+  }
   const host = findMarkedHostMd(root, MARKER);
   const out = (msg) => console.log(msg);
 
   if (cmd === 'gen') {
-    const r = buildVersionListText(root);
+    const r = buildVersionListText(root, { versionSource });
     out(r.text);
-    out(`\n（${r.rows} 版本行；apply 写入 ${relative(root, host) || 'README.md'}）`);
+    out(`\n（${r.rows} 版本行；来源 ${r.source}；apply 写入 ${relative(root, host) || 'README.md'}）`);
     process.exit(0);
   }
   if (cmd === 'apply') {
-    const r = buildVersionListText(root);
+    const r = buildVersionListText(root, { versionSource });
     const hostText = existsSync(host) ? readFileSync(host, 'utf8') : '';
     writeFileSync(host, applyVersionBlock(hostText, r.text), 'utf8');
-    out(`✅ 已写入版本列表 → ${relative(root, host) || 'README.md'}（${r.rows} 版本行）`);
+    out(`✅ 已写入版本列表 → ${relative(root, host) || 'README.md'}（${r.rows} 版本行；来源 ${r.source}）`);
     process.exit(0);
   }
   if (cmd === 'check') {
-    const r = checkVersionDrift({ hostPath: host, root });
-    if (r.ok) { out(`✅ 版本列表与 git log 一致（${relative(root, host) || 'README.md'}）`); process.exit(0); }
+    const r = checkVersionDrift({ hostPath: host, root, versionSource });
+    if (r.ok) { out(`✅ 版本列表一致（来源 ${r.source}）`); process.exit(0); }
     out('❌ 版本列表存在差异：');
     for (const i of r.issues) out('  - ' + i.msg);
     process.exit(1);
   }
-  out('用法: node scripts/doc-version.mjs <gen|apply|check> [--root <项目根>]');
+  out('用法: node scripts/doc-version.mjs <gen|apply|check> [--root <项目根>] [--version-source package.json|git-log]');
   process.exit(1);
 }
