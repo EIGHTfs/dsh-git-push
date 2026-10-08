@@ -2189,6 +2189,12 @@
 | `writer` | 134-140 | 7 | `const writer = (async () => {` |
 | `call` | 433-433 | 1 | `const call = async (body) => (await handleHttp(` |
 
+### test/test-clone-history-defaults.mjs（49 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `read` | 16-16 | 1 | `const read = (rel) => readFileSync(join(ROOT, rel), 'utf8');` |
+
 ### test/test-clone-history-mode.mjs（129 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |

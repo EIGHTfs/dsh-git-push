@@ -100,5 +100,5 @@ if (errs.length) fails.push('存在前端错误: ' + errs.slice(0, 2).join(' | '
 await browser.close();
 
 console.log(fails.length ? '❌ 前端渲染自检未通过：\n  - ' + fails.join('\n  - ') + '\n  截图: ' + OUT
-  : '✅ 前端渲染自检通过（弹窗出现 + 勾选框存在 + 默认勾选 + 无前端错误）\n  截图: ' + OUT);
+  : '✅ 前端渲染自检通过（弹窗出现 + 勾选框存在 + 默认勾选 + 切换有效 + 无前端错误）\n  截图: ' + OUT);
 process.exit(fails.length ? 1 : 0);
