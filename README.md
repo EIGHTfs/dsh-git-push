@@ -430,6 +430,7 @@ dsh-git-push/
 │   ├── doc-func.mjs — （待注释）
 │   ├── doc-tree.mjs — （待注释）
 │   ├── doc-version.mjs — （待注释）
+│   ├── frontend-preview-check.mjs — （待注释）
 │   ├── gen-preview.mjs — preview.html 槽位数据自动生成器（gen 打印 / --write 写盘 / check 查漂移——__SLOTS__/__FAKE__ 从 listRuleSlots 真实生成，新增规则槽位不再手工维护）
 │   ├── hot-path-probe-cjs.cjs — （待注释）
 │   ├── hot-path-probe-fs-shim.mjs — （待注释）
@@ -538,6 +539,7 @@ dsh-git-push/
 │   ├── test-link-check.mjs — 链接判断测试（分级扣分/断网不拦）
 │   ├── test-magic-number.mjs — 硬编码魔数检测测试
 │   ├── test-max-lines-scope.mjs — （待注释）
+│   ├── test-mirror-gates.mjs — （待注释）
 │   ├── test-module-splitter-multiline.mjs — （待注释）
 │   ├── test-module-splitter.mjs — module_splitter 工具 + CLI 接入测试（契约 + 行为 + 脚本随插件发布）
 │   ├── test-name-length-scope.mjs — （待注释）
