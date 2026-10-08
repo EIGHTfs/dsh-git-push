@@ -1550,15 +1550,15 @@
 | `countByDimension` | 50-80 | 31 | `export function countByDimension(findings = []) {` |
 | `scoreQuality` | 97-140 | 44 | `export function scoreQuality(findings = [], weights = {}, context = {}) {` |
 
-### lib/self/index.js（186 行 · 5 个函数）
+### lib/self/index.js（188 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `readmeTemplate` | 66-131 | 66 | `export function readmeTemplate({ name = 'dsh-git-push', description = 'DSH git 自动提交推送插件——统一函数入口架构', version = VERSION, versionTable = '' } = {}) {` |
-| `yamlTemplate` | 134-146 | 13 | `export function yamlTemplate() {` |
-| `selfVersion` | 149-151 | 3 | `export function selfVersion() {` |
-| `versionInfo` | 158-170 | 13 | `export function versionInfo(pkgJson = '') {` |
-| `helpSync` | 179-185 | 7 | `export function helpSync(helpText = '', knownFlags = []) {` |
+| `readmeTemplate` | 68-133 | 66 | `export function readmeTemplate({ name = 'dsh-git-push', description = 'DSH git 自动提交推送插件——统一函数入口架构', version = VERSION, versionTable = '' } = {}) {` |
+| `yamlTemplate` | 136-148 | 13 | `export function yamlTemplate() {` |
+| `selfVersion` | 151-153 | 3 | `export function selfVersion() {` |
+| `versionInfo` | 160-172 | 13 | `export function versionInfo(pkgJson = '') {` |
+| `helpSync` | 181-187 | 7 | `export function helpSync(helpText = '', knownFlags = []) {` |
 
 ### lib/skip-dirs.js（65 行 · 3 个函数）
 
