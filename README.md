@@ -279,12 +279,14 @@ dsh-git-push/
 │   │   ├── lang.js — 语言路由（2026-10-06）：detectLang 内容启发式检测 + javaKtFuncRanges（Java/Kotlin 方法签名+括号配对函数范围）+ LANG_FUNC_RANGES 主流语言占位
 │   │   ├── magic-number.js — 硬编码魔数识别（豁免版本号/日期/状态码）
 │   │   ├── naming.js — 命名检查（标识符长度/函数名过短/受控小文件读取）
+│   │   ├── perf.js — （待注释）
 │   │   ├── scope.js — 变量作用域分类器（module/function/loop 行号区间 + 模块常量赋值判定）
 │   │   ├── shell.js — shell 精筛（cd 动态路径/写操作命中 .gitignore）
 │   │   ├── size.js — 规模检查（函数长度/文件长度/重复字符串）
 │   │   ├── symbol-index.js — （待注释）
 │   │   ├── tokenizer.js — 分词器（token 流 + LRU 缓存）
 │   ├── audit/ — 审计编排层（文件收集/逐文件检查/槽位聚合/审计出口）
+│   │   ├── analysis-coverage.js — （待注释）
 │   │   ├── audit-file.js — 单文件审计执行（跑检查+豁免）
 │   │   ├── checks.js — 检查器入口（纯引用表）
 │   │   ├── collector.js — 文件收集（gitignore 感知）
@@ -422,6 +424,7 @@ dsh-git-push/
 │   ├── doc-version.mjs — （待注释）
 │   ├── gen-preview.mjs — preview.html 槽位数据自动生成器（gen 打印 / --write 写盘 / check 查漂移——__SLOTS__/__FAKE__ 从 listRuleSlots 真实生成，新增规则槽位不再手工维护）
 │   ├── module-splitter.py — 巨型单文件按顶层块拆分脚本（analyze/split/verify 三命令，python3 零依赖；module_splitter 工具与 CLI 的底层实现）
+│   ├── platform-scan.mjs — （待注释）
 │   ├── preview-server.mjs — 本地真实后端测试服务（preview.html 接真实 handleHttp）
 │   ├── probe-recheck.mjs — 探针：「重新检测」按钮链路实测（在线校验 token/SSH）
 │   ├── readme-gen.mjs — README 生成独立脚本（git_gen_readme 抽出：模板渲染/版本表/目录）
@@ -455,6 +458,7 @@ dsh-git-push/
 │   ├── run-tests.mjs — （待注释）
 │   ├── test-account-refresh-on-push.mjs — （待注释）
 │   ├── test-account-ssh.mjs — 账号检查 + SSH 密钥测试
+│   ├── test-analysis-coverage.mjs — （待注释）
 │   ├── test-arch-func-source.mjs — （待注释）
 │   ├── test-arch-generic.mjs — （待注释）
 │   ├── test-arch-ir.mjs — （待注释）
@@ -501,6 +505,7 @@ dsh-git-push/
 │   ├── test-folder-scope.mjs — 目录级审计作用域回归测试
 │   ├── test-func-doc-drift.mjs — （待注释）
 │   ├── test-generated-html-artifact.mjs — （待注释）
+│   ├── test-git-bin-plan.mjs — （待注释）
 │   ├── test-git-identity-rewrite.mjs — （待注释）
 │   ├── test-git-identity.mjs — （待注释）
 │   ├── test-git.mjs — git 总入口测试（runGit/commitAndPush/凭据/克隆）
@@ -517,7 +522,9 @@ dsh-git-push/
 │   ├── test-module-splitter-multiline.mjs — （待注释）
 │   ├── test-module-splitter.mjs — module_splitter 工具 + CLI 接入测试（契约 + 行为 + 脚本随插件发布）
 │   ├── test-name-length-scope.mjs — （待注释）
+│   ├── test-perf-loop-collection.mjs — （待注释）
 │   ├── test-persist-credentials.mjs — 凭据持久化测试
+│   ├── test-platform-scan.mjs — （待注释）
 │   ├── test-plugin.mjs — 插件接线测试（入口导出/工具清单/双副本同步）
 │   ├── test-private-gate.mjs — （待注释）
 │   ├── test-project-type-filter.mjs — 项目类型规则适配测试（非 dsh 项目不加载 dsh 槽位/0.x 版本规则、timeout 限 js 系、folder 尊重 gitignore——Pawchive 误报消除驱动）
@@ -544,6 +551,7 @@ dsh-git-push/
 │   ├── test-symbol-index.mjs — （待注释）
 │   ├── test-symlink-resolution.mjs — 软链安装依赖解析回归测试（默认失败/--preserve-symlinks/NODE_PATH/真实副本四种场景）
 │   ├── test-task-queue.mjs — 后台化回归测试（官方 job 注册 / 无 jobs 同步保底 / blocker 拦截）
+│   ├── test-test-cache.mjs — （待注释）
 │   ├── test-tokenizer-multiline-template.mjs — （待注释）
 │   ├── test-tool-contract.mjs — （待注释）
 │   ├── test-tool-probes.mjs — （待注释）
@@ -554,6 +562,7 @@ dsh-git-push/
 │   ├── fixtures/ — （待注释）
 │   │   ├── TimeZoneComboBox-CRnoCikG.js — Pawchive 混淆产物样本（hash 文件名——跳过判定 fixture）
 │   ├── helpers/ — 
+│   │   ├── test-cache.mjs — （待注释）
 │   │   ├── tmp-dir.mjs — （待注释）
 ├── docs/ — 开发文档
 │   ├── ARCH-FACTS-SPEC.md — （待注释）
@@ -1125,7 +1134,57 @@ node scripts/audit-runtime-check.mjs --all <目录>
   - `scripts/scrub-user-wording.mjs`：清洗注释里的沟通残留措辞（见「独立脚本：清洗用户沟通措辞」）
   - `scripts/check.mjs`：全仓语法检查（`node --check` 批量）
   - `scripts/sync-plugin.mjs`：源码仓库 → 安装副本的双副本同步（默认 dry-run，`--write` 才写）
-- **测试**：`npm test` 一条命令复现全绿（524 断言，0 失败）
+- **测试**：`npm test` 一条命令复现全绿（1086 断言，0 失败）
+
+### 测试缓存（未变更的纯本地测试自动跳过）
+
+`npm test` 走 `test/run-tests.mjs`：按「**测试文件 + 其传递依赖闭包**的内容哈希」判断哪些测试
+没变过、上次又通过，直接跳过；实测 **102s → 9.3s**（92/100 个文件命中缓存，只真跑 8 个）。
+
+```bash
+npm test                       # 默认：用缓存（未变更且上次通过的纯本地测试跳过）
+node test/run-tests.mjs --dry-run   # 只报告「会跑哪些/跳过哪些/为什么」，不执行测试
+node test/run-tests.mjs --all       # 忽略缓存，全部真跑（交付前门禁）
+node test/run-tests.mjs --stats     # 打印每个文件「跑/跳过」的原因
+```
+
+安全模型（宁可少跳过，不可漏跑）：
+
+| 机制 | 说明 |
+|---|---|
+键 = 测试文件 + **传递依赖闭包** + `package.json` + node 版本 | 依赖一变（含版本号）→ 键变 → 必重跑 |
+**整仓不变式测试常跑** | 文件清单/版本表/函数表/架构事实这 8 个测试（`test-doc-func`/`test-doc-version`/`test-tree-doc`/`test-func-doc-drift`/`test-arch-*`/`test-inject-system-prompt`）**永不跳过** —— 它们才是「新增文件忘了登记」的守门人（闭包哈希刻画不了「整仓当前状态」） |
+联网判据 | 只看**测试文件自身**（先剥离注释与字符串，避免夹具示例误判）：真实 `await fetch(`/`createServer(`/`.listen(`/`net.connect(` → 不缓存。本仓库测试均为注入 fetcher 或进程内 handler（见 `test-link-check.mjs` 头部） |
+失败只失效「本轮跑过的文件」 | 不搞「一处失败全清」：被跳过的文件保持命中，下次只重跑可能出问题的那批 |
+缓存损坏/版本不符 | 按空缓存处理，绝不因缓存本身报错 |
+
+缓存文件 `.test-cache/results.json`（已 gitignore，不入库）。
+
+### 跨平台可移植性扫描（`scripts/platform-scan.mjs`）
+
+独立工具，可对**任意仓库**跑：找出「只在 Linux/macOS 能跑」与「只在 Windows 能跑」的代码，
+并区分**代码**（会真炸）与**注释**（只是说明，降级为提示）；同时统计已做平台分支的正面写法。
+
+```bash
+node scripts/platform-scan.mjs <目标目录>            # 文本报告（按类别分组 + 文件 top）
+node scripts/platform-scan.mjs <目标目录> --json     # 机器可读（file/line/rule/category/severity/snippet）
+node scripts/platform-scan.mjs <目标目录> --strict   # 发现「代码里的平台专属写法」→ 退出码 1（可做 CI 门禁）
+```
+
+判据（把实测踩过的坑固化成规则，节选）：
+
+| 类别 | 例子 |
+|---|---|
+只在 POSIX 成立 | 硬编码 `/tmp`·`/dev/null`、`sh -c` 与 `execFileSync('sh', ['-c', …])`、POSIX 专有命令（`chmod`/`sed`/`which`…）、**`PATH.split(':')`**（Windows 用 `;`，会永远找不到可执行文件却报成「找不到 git」）、硬编码 `/usr`·`/etc`、符号链接、`sudo`、`~/.ssh` 字面量 |
+只在 Windows 成立 | 硬编码盘符 `C:\…`、`cmd /c`/`powershell`、`.exe`/`.bat`/`.cmd` 字面量、`where`/`tasklist`/`wmic`、`%VAR%`、`path.win32` |
+已平台分支（正面） | `process.platform === 'win32'`、`os.platform()`、`os.tmpdir()`、`path.delimiter`、`path.join/resolve/sep` |
+
+实测（2026-10-08）：本插件仓库 298 个文件 → 130 条命中（POSIX 专属 73 / Windows 专属 38 / 已分支 19），
+其中**代码里**的 94 条多为测试夹具里的 `/tmp`·`/usr/bin` 字符串（本仓库测试是内存键/临时目录隔离，不真用这些路径）；
+dsh-codegraph 52 个文件 → 159 条（Windows 专属 14：`c:/windows` 保护目录清单、`.bat` 启动器、`C:\` 断言）。
+
+> 定位说明：这是**线索扫描器**，不是判决器 —— 夹具字符串里的路径也会命中（按注释/代码分层提示），
+> 最终由人判断；跨平台正确写法不会被判为问题。
 
 ## archify 架构图（产出合法 JSON + 防漂移）
 
@@ -1216,7 +1275,7 @@ node <archify>/archify/bin/archify.mjs render   architecture <仓库>/.archify/<
 | A2 | 按文件失效的增量缓存 | 每文件存内容哈希 + 解析结果；只重解析哈希变化的文件，其余复用（配合 A1 的稳定 ID 才有意义）。现状：`lib/ast`、`lib/arch`、`lib/audit` 均无内容哈希，每次都全量重扫 | 待做 |
 | A3 | 双轨变更检测 | 快路径 `git diff --name-status <lastScannedSha>..HEAD` **并集** `git status --porcelain -uall`（只扫未提交变更会漏「扫描后已提交」的改动），快路径为空也要落到内容哈希兜底，不要用 `if (有结果) return` 短路；重命名/冲突码（`R`/`RM`/`UU`）按首字符分类而非枚举 `M/MM/AM` | 待做 |
 | A4 | 契约/路由归一化匹配 | 把路由参数归一成 `{param}`（`:id`、`{id}`、`<int:id>`、`${id}` 四种写法都要覆盖），据此匹配前端调用与后端路由，落成审计规则：**悬空 API 调用**（前端调了没有对应路由）与**未使用路由** | 待做 |
-| A5 | 分析覆盖率 / 置信度指标 | 统计「解析失败文件数、未解析引用比例、未连边的调用比例」，作为审计的一个维度输出——防止「规则全过、其实根本没解析到」的假绿（与现有 ignore-blind 静默失明检测互补） | 待做 |
+| A5 | 分析覆盖率 / 置信度指标 | 统计「解析失败文件数、未解析引用比例、未连边的调用比例」，作为审计的一个维度输出——防止「规则全过、其实根本没解析到」的假绿（与现有 ignore-blind 静默失明检测互补） | **已完成（2.5.5，信息项）** |
 | A6 | tree-sitter 真语法（多语言） | 引 `web-tree-sitter` + 只带 JS/TS/TSX 三个语法（含运行时约 **5.3MB**，对比全量 50MB），缺失时退化到现有 tokenizer。**前置**：需先定「是否允许破零运行时依赖」——本项目 npm 发布完整性明确是「真正零运行时依赖」 | **待定（需拍板）** |
 
 ### 跨文件符号索引（2.5.4 落地）
@@ -1241,6 +1300,22 @@ node scripts/symbol-index.mjs <仓库目录> [--unused] [--top N] [--ext .js,.mj
   TS 工程 **import 边为 0**；补 `.ts/.tsx` 回退后 import 边 133 条（覆盖率 12.2% → 59.3%）。
 - **成员调用误计**：`console.log(`、`obj.method(` 被当成可解析调用 → 未解析虚高、覆盖率虚低
   （本插件仓库 16398 → 6103，覆盖率 21.6% → 39.8%）；现单独计入 `skippedMemberCalls` 并从分母剔除。
+
+### 分析覆盖率（2.5.5，信息项）
+
+审计结果新增 `analysisCoverage` 字段（文本摘要里附一行），用符号索引回答「**这次审计到底解析到了多少**」：
+
+```
+分析覆盖率 65.4%（连边 3334 / 可解析调用 5101；未解析 1767：unknown 1767；已排除成员调用 5653）——信息项，不参与评分
+```
+
+- **两条路径同口径**：覆盖率在审计编排层（`lib/audit/orchestrate.js`）算一次，`code_audit` 工具与 `git-sluice audit` CLI 继承同一结果
+  （实测同一目标两边都是 65.4% / 连边 3334 / 可解析调用 5101；两路径一致性另有 `test-cli-audit-parity.mjs` 门禁）；
+- **不参与评分**：同一仓库开/关该信息项，`summary` 与 `quality` 逐字节一致（有回归测试钉死）——
+  覆盖率受语言与工程风格影响很大（纯函数库天然高、框架代码天然低），直接计分会把「语言差异」算成「代码质量问题」；
+- **口径**：覆盖率 = 连边数 / 可解析调用数；成员调用（`x.y()`）不经符号索引解析，单独计入 `memberCallsExcluded` 并从分母剔除；
+- **可信前提**：需要完整文件集。`scope=diff` 只含变动文件，此时返回 `{skipped}` 而不是给失真数字；
+- **可关闭**：`code_audit` 传 `coverage: false` 可跳过（大仓库省一次读取+解析开销）。
 
 ## 注意事项
 

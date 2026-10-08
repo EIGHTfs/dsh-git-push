@@ -27,5 +27,9 @@ archify-preview.json
 .tmp-sync-write/
 # CodeGraph local cache
 .codegraph/
+# code-review-graph（外部评审用知识图谱工具）的本地库与产物：本机分析用，不入库
+.code-review-graph/
 # 会话插话提出的新功能需求清单（本机待办，不入库）
 任务.md
+# 测试结果缓存（按「测试文件 + 依赖闭包」内容哈希跳过未变更的纯本地测试；本机缓存不入库）
+.test-cache/

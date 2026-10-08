@@ -53,6 +53,22 @@ rules:
       - 递归加深度限制
       - 子进程用 spawn + 流式读取
 
+  # ── 循环内全量集合物化（二次增长；真实样本见 lib/ast/perf.js 注释）──
+  - id: performance/loop-full-collection
+    name: "禁止在循环体内做全量集合物化"
+    category: "performance"
+    severity: "warning"
+    description: "循环体内 Array.from(x.values()/keys()/entries()) 会把整个集合物化一遍：成本≈循环次数×集合大小，随数据量二次增长（应先建索引、循环内 O(1) 查）"
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx"]
+    # 纯正则无法表达「在不在循环体内」——由 AST 精筛（allow 语义：只报循环体内的命中）
+    astConfirmKind: "loop-full-collection"
+    patterns:
+      - id: array-from-values
+        pattern: "Array\\.from\\s*\\(\\s*[A-Za-z_$][\\w.$]*\\.(values|keys|entries)\\s*\\(\\s*\\)\\s*\\)"
+        message: "循环体内全量物化集合：改为循环外建一次索引（Map/Set），循环内 O(1) 查"
+    fixable: false
+    mitigation: "循环外建 Map/Set 索引（如 name→nodeId），循环内用 .get()/.has() 查；确需快照时提到循环外"
+
   # ── 无界循环 / 高 CPU 轮询（性能补充）──
   - id: performance/busy-wait-loop
     name: "忙等待循环（高 CPU 空转）"
