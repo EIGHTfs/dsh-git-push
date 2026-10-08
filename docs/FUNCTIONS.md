@@ -1100,24 +1100,25 @@
 |------|------|------|------|
 | `browseDir` | 17-38 | 22 | `export function browseDir(p = '', { root = '' } = {}) {` |
 
-### lib/git/clone-download.js（381 行 · 14 个函数）
+### lib/git/clone-download.js（398 行 · 15 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `partitionBySize` | 55-66 | 12 | `export function partitionBySize(blobs = [], maxFileMB = DEFAULT_MAX_FILE_MB) {` |
 | `downloadSymlinkEntry` | 93-105 | 13 | `async function downloadSymlinkEntry(entry, { owner, repo, token, out, rel }) {` |
-| `downloadRegularEntry` | 113-126 | 14 | `async function downloadRegularEntry(entry, { owner, repo, branch, token, out, partPath, signal, rel, onBytes }) {` |
-| `runDownloadPool` | 134-145 | 12 | `async function runDownloadPool(blobs, one, concurrency, signal) {` |
-| `worker` | 136-143 | 8 | `const worker = async () => {` |
-| `cleanupPartsIfAllSucceeded` | 157-160 | 4 | `async function cleanupPartsIfAllSucceeded(partsDir, failed, signal) {` |
-| `downloadOneEntry` | 172-198 | 27 | `async function downloadOneEntry(entry, ctx) {` |
-| `downloadBlobs` | 200-231 | 32 | `export async function downloadBlobs(o) {` |
-| `emit` | 211-215 | 5 | `const emit = () => {` |
-| `one` | 222-222 | 1 | `const one = (entry) => downloadOneEntry(entry, ctx);` |
-| `fetchBlobJson` | 236-251 | 16 | `async function fetchBlobJson(owner, repo, sha, token) {` |
-| `removeDirForce` | 277-296 | 20 | `export async function removeDirForce(dir, attempts = 3) {` |
-| `fetchToFile` | 298-380 | 83 | `async function fetchToFile({ owner, repo, branch, relPath, token, out, partPath, size, onBytes, signal = null }) {` |
-| `mkHeaders` | 332-339 | 8 | `const mkHeaders = (raw, withRange) => {` |
+| `posixModeOf` | 119-121 | 3 | `function posixModeOf(gitMode) {` |
+| `downloadRegularEntry` | 129-143 | 15 | `async function downloadRegularEntry(entry, { owner, repo, branch, token, out, partPath, signal, rel, onBytes }) {` |
+| `runDownloadPool` | 151-162 | 12 | `async function runDownloadPool(blobs, one, concurrency, signal) {` |
+| `worker` | 153-160 | 8 | `const worker = async () => {` |
+| `cleanupPartsIfAllSucceeded` | 174-177 | 4 | `async function cleanupPartsIfAllSucceeded(partsDir, failed, signal) {` |
+| `downloadOneEntry` | 189-215 | 27 | `async function downloadOneEntry(entry, ctx) {` |
+| `downloadBlobs` | 217-248 | 32 | `export async function downloadBlobs(o) {` |
+| `emit` | 228-232 | 5 | `const emit = () => {` |
+| `one` | 239-239 | 1 | `const one = (entry) => downloadOneEntry(entry, ctx);` |
+| `fetchBlobJson` | 253-268 | 16 | `async function fetchBlobJson(owner, repo, sha, token) {` |
+| `removeDirForce` | 294-313 | 20 | `export async function removeDirForce(dir, attempts = 3) {` |
+| `fetchToFile` | 315-397 | 83 | `async function fetchToFile({ owner, repo, branch, relPath, token, out, partPath, size, onBytes, signal = null, mode = 0o644 }) {` |
+| `mkHeaders` | 349-356 | 8 | `const mkHeaders = (raw, withRange) => {` |
 
 ### lib/git/clone-history.js（167 行 · 5 个函数）
 
