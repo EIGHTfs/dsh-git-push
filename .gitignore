@@ -12,19 +12,9 @@ dist/
 # 运行期 PID 文件（start.sh 启停脚本产生，不入库）
 *.pid
 
-# 架构事实产物（我们自己的 ArchFacts 规范，见 docs/ARCH-FACTS-SPEC.md）——**不入库**：
-#   事实 JSON 是工具产出（`arch_json` 落到 .dsh-archfacts/），随代码变而变，入库只会造成「看起来是真的、其实是旧的」。
-# 渲染器产物（archify 的 .archify/*.json|*.html）同样**不入库**：
-#   那是**渲染器格式**，由独立翻译脚本产出（ai-work-archive/scripts/archify-translate.mjs），
-#   插件里不出现任何渲染器概念（边界声明见 docs/ARCH-FACTS-SPEC.md 第 10 节）。
-.dsh-archfacts/
-.archify/
 __pycache__/
 *.pyc
 
-# 架构图预览的本机配置（项目路径每台机器不同，属本机配置不入库；
-#   仓库里只放 archify-preview.example.json 作为模板）
-archify-preview.json
 # 某同步流程留下的整仓临时副本（test-self 已修为同步清理；这里兜底防它再进审计范围）
 .tmp-sync-write/
 # CodeGraph local cache

@@ -226,13 +226,6 @@
 | `paramsToParameters` | 12-18 | 7 | `function paramsToParameters(params = []) {` |
 | `listTools` | 21-27 | 7 | `export function listTools() {` |
 
-### lib/arch/facts-cache.js（67 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `fileFingerprint` | 20-27 | 8 | `export function fileFingerprint(full) {` |
-| `openFactsCache` | 30-66 | 37 | `export function openFactsCache(repoPath, dirName, name) {` |
-
 ### lib/ast/brace.js（106 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |

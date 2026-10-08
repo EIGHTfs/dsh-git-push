@@ -61,7 +61,7 @@ test('注释/字符串里的示例 → 不命中（allow 语义需自查，避�
 });
 
 test('不同内层循环里的相同调用文本 → 不报（真实误报回归）', () => {
-  // 真实误报：lib/arch/extract.js 的 io.reads 与 io.writes 是两个独立内层循环，
+  // 真实误报：两个独立内层循环都写了同一个调用，
   //   却因外层区间被当成「重复调用」→ 改为只比最内层后消失。
   const text = [
     'for (const mod of modules) {',
