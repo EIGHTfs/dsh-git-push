@@ -21,11 +21,12 @@ const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
 
 // 公开面基线：新增/删除工具时**必须**同步改这里（以及 README 的工具表）——
 //   这是刻意的：工具是宿主可见的公开接口，变更应当显式而不是悄悄发生。
-const EXPECTED_TOOL_COUNT = 16;
+const EXPECTED_TOOL_COUNT = 17;
 const EXPECTED_TOOLS = [
   'git_scan', 'git_commit_push', 'code_audit', 'git_clone', 'git_remote_create',
   'git_set_visibility', 'io_scan', 'arch_json', 'git_clone_preview', 'link_check', 'module_splitter',
   'git_account_check', 'git_cred_env', 'git_gen_ssh_key', 'git_sluice', 'git_identity_rewrite',
+  'edit_after_read',
 ];
 
 test('契约：工具数量固定（改公开面须同步本测试与 README 工具表）', () => {
