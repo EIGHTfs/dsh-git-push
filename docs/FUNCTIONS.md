@@ -1466,22 +1466,22 @@
 | `maxVersion` | 156-166 | 11 | `function maxVersion(list) {` |
 | `cmp` | 157-164 | 8 | `const cmp = (a, b) => {` |
 
-### lib/score/index.js（131 行 · 2 个函数）
+### lib/score/index.js（140 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `countByDimension` | 42-72 | 31 | `export function countByDimension(findings = []) {` |
-| `scoreQuality` | 89-131 | 43 | `export function scoreQuality(findings = [], weights = {}, context = {}) {` |
+| `countByDimension` | 50-80 | 31 | `export function countByDimension(findings = []) {` |
+| `scoreQuality` | 97-140 | 44 | `export function scoreQuality(findings = [], weights = {}, context = {}) {` |
 
-### lib/self/index.js（182 行 · 5 个函数）
+### lib/self/index.js（184 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `readmeTemplate` | 62-127 | 66 | `export function readmeTemplate({ name = 'dsh-git-push', description = 'DSH git 自动提交推送插件——统一函数入口架构', version = VERSION, versionTable = '' } = {}) {` |
-| `yamlTemplate` | 130-142 | 13 | `export function yamlTemplate() {` |
-| `selfVersion` | 145-147 | 3 | `export function selfVersion() {` |
-| `versionInfo` | 154-166 | 13 | `export function versionInfo(pkgJson = '') {` |
-| `helpSync` | 175-181 | 7 | `export function helpSync(helpText = '', knownFlags = []) {` |
+| `readmeTemplate` | 64-129 | 66 | `export function readmeTemplate({ name = 'dsh-git-push', description = 'DSH git 自动提交推送插件——统一函数入口架构', version = VERSION, versionTable = '' } = {}) {` |
+| `yamlTemplate` | 132-144 | 13 | `export function yamlTemplate() {` |
+| `selfVersion` | 147-149 | 3 | `export function selfVersion() {` |
+| `versionInfo` | 156-168 | 13 | `export function versionInfo(pkgJson = '') {` |
+| `helpSync` | 177-183 | 7 | `export function helpSync(helpText = '', knownFlags = []) {` |
 
 ### lib/skip-dirs.js（65 行 · 3 个函数）
 
