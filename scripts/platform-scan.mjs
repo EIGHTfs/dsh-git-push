@@ -25,6 +25,8 @@ import { fileURLToPath } from 'node:url';
 import { tokenize } from '../lib/ast/tokenizer.js';
 
 const SKIP_DIRS = new Set(['.git', 'node_modules', '.trash', '.codegraph', 'dist', 'build', '__pycache__', '.test-cache', '.archify']);
+/** 报告里每条命中回显的最大字符数（避免超长行把报告撑爆）。 */
+const SNIPPET_MAX = 120;
 const DEFAULT_EXTS = ['.js', '.mjs', '.cjs', '.ts', '.tsx', '.jsx', '.sh', '.ps1', '.bat', '.cmd', '.py'];
 
 /** 规则表：id / 类别 / 严重级 / 判据 / 为什么。 */
@@ -100,7 +102,7 @@ export function scanPlatformCode(root, { exts = DEFAULT_EXTS } = {}) {
         const severity = rule.category === 'gated' ? 'info' : (inComment ? 'info' : rule.severity);
         findings.push({
           file: rel, line: i + 1, rule: rule.id, category: rule.category, severity,
-          inComment, why: rule.why, snippet: line.trim().slice(0, 120),
+          inComment, why: rule.why, snippet: line.trim().slice(0, SNIPPET_MAX),
         });
       }
     }

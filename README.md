@@ -578,6 +578,7 @@ dsh-git-push/
 ├── skills/ — 插件权威 skill（功能手册/规则/使用说明，安装副本的 skills/ 同步）
 │   ├── dsh-repo-index.md — dsh-repo-index skill（源码索引权威说明）
 │   ├── dev/ — （待注释）
+│   │   ├── audit-rule-authoring.md — （待注释）
 │   │   ├── dsh-git-push.md — （待注释）
 │   │   ├── git-push-live-fix.md — （待注释）
 │   ├── guide/ — （待注释）

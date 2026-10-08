@@ -45,6 +45,13 @@ function parseArgv(argv) {
 
 const args = parseArgv(process.argv.slice(2));
 const WAIT_MS = Number(args.wait || 12000);
+/** 打印页面文本时的截断长度（避免整页文本把终端/日志刷爆）。 */
+const TEXT_PRINT_MAX = 6000;
+/** 无头浏览器视口尺寸（默认 1440×1000，够桌面布局；窄屏可另传参）。 */
+const VIEWPORT_W = 1440;
+const VIEWPORT_H = 1000;
+/** 每次点击后等待页面稳定的毫秒数（等前端异步渲染完成）。 */
+const CLICK_SETTLE_MS = 5000;
 const OUT = String(args.out || '');
 const URL = args.url
   ? String(args.url)
@@ -226,7 +233,7 @@ if (!playwright) {
   const text = stripHtml(r.stdout || '');
   if (OUT) writeFileSync(OUT, text);
   console.log('=== 页面可见文本 ===');
-  console.log(text.slice(0, 6000));
+  console.log(text.slice(0, TEXT_PRINT_MAX));
   process.exit(r.status === 0 ? 0 : 1);
 }
 
@@ -238,7 +245,7 @@ const browser = await chromium.launch({
   args: ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage'],
   env: childEnv,
 });
-const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+const page = await browser.newPage({ viewport: { width: VIEWPORT_W, height: VIEWPORT_H } });
 const errors = [];
 page.on('pageerror', (e) => errors.push('PAGEERROR: ' + e.message));
 page.on('console', (m) => { if (m.type() === 'error') errors.push('CONSOLE: ' + m.text().slice(0, 500)); });
@@ -253,12 +260,12 @@ for (const text of args.click) {
     return false;
   }, text);
   console.log(`[probe] 点击「${text}」:`, hit ? '成功' : '未找到');
-  await page.waitForTimeout(5000);
+  await page.waitForTimeout(CLICK_SETTLE_MS);
 }
 const body = await page.evaluate(() => document.body.innerText);
 if (OUT) { writeFileSync(OUT, body); writeFileSync(`${OUT}.errors`, errors.join('\n')); }
 console.log('=== 页面可见文本 ===');
-console.log(body.slice(0, 6000));
+console.log(body.slice(0, TEXT_PRINT_MAX));
 console.log('=== 前端错误（pageerror / console.error）===');
 console.log(errors.join('\n').slice(0, 4000) || '（无）');
 await browser.close();

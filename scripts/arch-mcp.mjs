@@ -17,6 +17,9 @@ import { extractArchFacts } from '../lib/arch/extract.js';
 
 const SERVER_INFO = { name: 'dsh-git-push-arch', version: '1.0.0' };
 const PROTOCOL_VERSION = '2024-11-05';
+/** JSON-RPC 2.0 标准错误码（协议规定值，不是随便挑的数字）。 */
+const JSONRPC_METHOD_NOT_FOUND = -32601;
+const JSONRPC_INVALID_PARAMS = -32602;
 
 // 暴露的工具（全部是**事实导出**，不接受任何「让 AI 决定拓扑」的参数）
 const TOOLS = [
@@ -61,13 +64,13 @@ async function handleRequest(req) {
   if (method === 'tools/call') {
     const name = params?.name;
     const args = params?.arguments || {};
-    if (!TOOLS.some((t) => t.name === name)) return fail(-32602, `未知工具：${name}`);
-    if (!args.repoPath) return fail(-32602, '缺少必填参数 repoPath');
+    if (!TOOLS.some((t) => t.name === name)) return fail(JSONRPC_INVALID_PARAMS, `未知工具：${name}`);
+    if (!args.repoPath) return fail(JSONRPC_INVALID_PARAMS, '缺少必填参数 repoPath');
     const facts = await extractArchFacts(args.repoPath, { maxFiles: args.maxFiles || 4000 });
     if (name === 'arch_modules') return ok(textResult({ sourceRoot: facts.sourceRoot, modules: facts.modules, totals: facts.totals }));
     return ok(textResult(facts));
   }
-  return fail(-32601, `不支持的方法：${method}`);
+  return fail(JSONRPC_METHOD_NOT_FOUND, `不支持的方法：${method}`);
 }
 
 function main() {

@@ -60,6 +60,24 @@ test('注释/字符串里的示例 → 不命中（allow 语义需自查，避�
   assert.equal(repeatIdenticalCallLines(text).size, 0);
 });
 
+test('不同内层循环里的相同调用文本 → 不报（真实误报回归）', () => {
+  // 真实误报：lib/arch/extract.js 的 io.reads 与 io.writes 是两个独立内层循环，
+  //   却因外层区间被当成「重复调用」→ 改为只比最内层后消失。
+  const text = [
+    'for (const mod of modules) {',
+    '  for (const p of io.reads) {',
+    '    const rel = resolveIoPath(baseDir, p, allRepoFiles);',
+    '    push(rel);',
+    '  }',
+    '  for (const p of io.writes) {',
+    '    const rel = resolveIoPath(baseDir, p, allRepoFiles);',
+    '    push(rel);',
+    '  }',
+    '}',
+  ].join('\n');
+  assert.equal(repeatIdenticalCallLines(text).size, 0, '不同内层循环不得互相算重复');
+});
+
 test('端到端：checkRegexRules 以 allow 语义只在循环体内报该规则', () => {
   const rule = {
     id: 'performance/repeat-identical-call',

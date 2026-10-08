@@ -57,15 +57,17 @@
 | `readTreeDoc` | 35-40 | 6 | `function readTreeDoc(repoPath) {` |
 | `exportArchJson` | 48-78 | 31 | `export async function exportArchJson(args = {}, deps = {}) {` |
 
-### lib/app/handlers/clone.js（137 行 · 5 个函数）
+### lib/app/handlers/clone.js（154 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `handleRepoClone` | 20-101 | 82 | `export async function handleRepoClone(ctx) {` |
-| `handleCloneLogs` | 104-108 | 5 | `export function handleCloneLogs(ctx) {` |
-| `handleCloneAbort` | 111-114 | 4 | `export function handleCloneAbort() {` |
-| `handleClonePreview` | 117-129 | 13 | `export async function handleClonePreview(ctx) {` |
-| `handleCloneProgress` | 132-137 | 6 | `export function handleCloneProgress(ctx) {` |
+| `parseCloneRequest` | 23-31 | 9 | `function parseCloneRequest(body) {` |
+| `busyResponse` | 38-53 | 16 | `function busyResponse(target, dest) {` |
+| `handleRepoClone` | 56-118 | 63 | `export async function handleRepoClone(ctx) {` |
+| `handleCloneLogs` | 121-125 | 5 | `export function handleCloneLogs(ctx) {` |
+| `handleCloneAbort` | 128-131 | 4 | `export function handleCloneAbort() {` |
+| `handleClonePreview` | 134-146 | 13 | `export async function handleClonePreview(ctx) {` |
+| `handleCloneProgress` | 149-154 | 6 | `export function handleCloneProgress(ctx) {` |
 
 ### lib/app/handlers/identity-rewrite.js（95 行 · 2 个函数）
 
@@ -92,15 +94,15 @@
 | `handleAudit` | 151-164 | 14 | `export async function handleAudit(ctx) {` |
 | `handleToggleRule` | 167-175 | 9 | `export function handleToggleRule(ctx) {` |
 
-### lib/app/handlers/repo-actions.js（140 行 · 5 个函数）
+### lib/app/handlers/repo-actions.js（143 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `handleRepoVisibility` | 16-21 | 6 | `export async function handleRepoVisibility(ctx) {` |
 | `handleVisibilityGet` | 24-33 | 10 | `async function handleVisibilityGet({ query, env }) {` |
 | `handleVisibilityPost` | 36-45 | 10 | `async function handleVisibilityPost({ body, env }) {` |
-| `handleRepoPush` | 48-89 | 42 | `export async function handleRepoPush(ctx) {` |
-| `handleRepoCommit` | 92-140 | 49 | `export async function handleRepoCommit(ctx) {` |
+| `handleRepoPush` | 48-92 | 45 | `export async function handleRepoPush(ctx) {` |
+| `handleRepoCommit` | 95-143 | 49 | `export async function handleRepoCommit(ctx) {` |
 
 ### lib/app/handlers/repos.js（222 行 · 7 个函数）
 
@@ -238,24 +240,24 @@
 | `aggregateModules` | 17-76 | 60 | `export function aggregateModules(facts, { min = 8, max = 15 } = {}) {` |
 | `componentId` | 84-89 | 6 | `function componentId(layer, mods) {` |
 
-### lib/arch/extract.js（455 行 · 14 个函数）
+### lib/arch/extract.js（458 行 · 14 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `detectSourceRoot` | 40-63 | 24 | `export function detectSourceRoot(repoPath) {` |
 | `collectSync` | 66-77 | 12 | `function collectSync(dir, out = [], depth = 0) {` |
-| `ioPathFromLine` | 88-455 | 368 | `export function ioPathFromLine(text, line) {` |
+| `ioPathFromLine` | 88-458 | 371 | `export function ioPathFromLine(text, line) {` |
 | `statementAt` | 113-132 | 20 | `export function statementAt(text, line) {` |
 | `startsStatement` | 117-117 | 1 | `const startsStatement = (s) => /^\s*(const\|let\|var\|function\|return\|if\|for\|while\|await\|export)\b/.test(s);` |
 | `count` | 124-124 | 1 | `const count = (s, re) => (s.match(re) \|\| []).length;` |
-| `collectPathConsts` | 147-455 | 309 | `export function collectPathConsts(text) {` |
-| `ioPathsFromLine` | 169-455 | 287 | `export function ioPathsFromLine(text, line) {` |
+| `collectPathConsts` | 147-458 | 312 | `export function collectPathConsts(text) {` |
+| `ioPathsFromLine` | 169-458 | 290 | `export function ioPathsFromLine(text, line) {` |
 | `extractFileIo` | 192-236 | 45 | `export function extractFileIo(text) {` |
 | `resolveIoPath` | 248-261 | 14 | `export function resolveIoPath(baseDir, p, repoFiles = []) {` |
 | `normalizeIoPath` | 269-279 | 11 | `export function normalizeIoPath(baseDir, p) {` |
 | `importSpecifiers` | 281-285 | 5 | `export function importSpecifiers(text) {` |
 | `resolveModule` | 288-301 | 14 | `export function resolveModule(fromRel, spec, sourceRoot) {` |
-| `extractArchFacts` | 309-454 | 146 | `export async function extractArchFacts(repoPath, { maxFiles = 4000 } = {}) {` |
+| `extractArchFacts` | 312-457 | 146 | `export async function extractArchFacts(repoPath, { maxFiles = DEFAULT_MAX_FILES } = {}) {` |
 
 ### lib/arch/ir.js（150 行 · 1 个函数）
 
@@ -272,14 +274,14 @@
 | `functionsFromScan` | 73-83 | 11 | `export function functionsFromScan(scan, moduleId) {` |
 | `fileEntries` | 89-96 | 8 | `export function fileEntries(entries) {` |
 
-### lib/arch/to-json.js（136 行 · 4 个函数）
+### lib/arch/to-json.js（140 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `dataFileId` | 17-27 | 11 | `export function dataFileId(path) {` |
-| `collectDataFiles` | 38-62 | 25 | `export function collectDataFiles(agg, facts, { repoPath = '' } = {}) {` |
-| `isRepoRelative` | 65-74 | 10 | `function isRepoRelative(p, repoPath = '') {` |
-| `toArchifyJson` | 83-135 | 53 | `export function toArchifyJson(agg, facts, { name = 'repo', repoPath = '', evidence = null, treeDoc = null } = {}) {` |
+| `dataFileId` | 21-31 | 11 | `export function dataFileId(path) {` |
+| `collectDataFiles` | 42-66 | 25 | `export function collectDataFiles(agg, facts, { repoPath = '' } = {}) {` |
+| `isRepoRelative` | 69-78 | 10 | `function isRepoRelative(p, repoPath = '') {` |
+| `toArchifyJson` | 87-139 | 53 | `export function toArchifyJson(agg, facts, { name = 'repo', repoPath = '', evidence = null, treeDoc = null } = {}) {` |
 
 ### lib/arch/validate-facts.js（118 行 · 4 个函数）
 
@@ -479,7 +481,7 @@
 | `checkSmallFileReadAst` | 236-259 | 24 | `export function checkSmallFileReadAst(text = '') {` |
 | `checkConsoleLogJsonAst` | 268-284 | 17 | `export function checkConsoleLogJsonAst(text = '') {` |
 
-### lib/ast/perf.js（190 行 · 9 个函数）
+### lib/ast/perf.js（217 行 · 10 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -487,11 +489,12 @@
 | `matchingParen` | 36-47 | 12 | `function matchingParen(text, openIdx) {` |
 | `lineOf` | 50-54 | 5 | `function lineOf(text, idx) {` |
 | `inCommentOrString` | 63-69 | 7 | `function inCommentOrString(tokens, line, matchText) {` |
-| `nextBlockRange` | 72-190 | 119 | `function nextBlockRange(text, startIdx) {` |
+| `nextBlockRange` | 72-217 | 146 | `function nextBlockRange(text, startIdx) {` |
 | `collectLoopRanges` | 86-102 | 17 | `function collectLoopRanges(text) {` |
 | `loopBodyLines` | 109-118 | 10 | `export function loopBodyLines(text = '') {` |
-| `repeatIdenticalCallLines` | 139-160 | 22 | `export function repeatIdenticalCallLines(text = '') {` |
-| `loopFullCollectionLines` | 174-189 | 16 | `export function loopFullCollectionLines(text = '') {` |
+| `innermostLoopRanges` | 137-140 | 4 | `function innermostLoopRanges(text) {` |
+| `repeatIdenticalCallLines` | 164-187 | 24 | `export function repeatIdenticalCallLines(text = '') {` |
+| `loopFullCollectionLines` | 201-216 | 16 | `export function loopFullCollectionLines(text = '') {` |
 
 ### lib/ast/scope.js（242 行 · 11 个函数）
 
@@ -1249,7 +1252,7 @@
 | `parseOwnerRepoFromRemote` | 61-68 | 8 | `export function parseOwnerRepoFromRemote(remoteUrl) {` |
 | `setVisibility` | 71-87 | 17 | `export async function setVisibility({ owner = '', repo = '', visibility = '', token = '', repoPath = '' } = {}) {` |
 
-### lib/git/repo-index.js（508 行 · 19 个函数）
+### lib/git/repo-index.js（509 行 · 19 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1262,16 +1265,16 @@
 | `parseManualVisibility` | 135-147 | 13 | `export function parseManualVisibility(existingContent) {` |
 | `queryGitHubVisibility` | 150-161 | 12 | `async function queryGitHubVisibility(repoName, token, owner = 'EIGHTfs') {` |
 | `remoteToRepoInfo` | 164-173 | 10 | `function remoteToRepoInfo(remote, visibility) {` |
-| `buildRepoIndexVisibility` | 176-191 | 16 | `async function buildRepoIndexVisibility({ repos, token, manualVisibility, owner }) {` |
-| `buildRepoIndexLocalOnly` | 194-207 | 14 | `async function buildRepoIndexLocalOnly({ workspaceRoot, repos, localOnlyExtra }) {` |
-| `buildRepoIndex` | 214-259 | 46 | `export async function buildRepoIndex({ workspaceRoot, depth = 20, extraRepos = [], extraReposFile = '', token = '', manualVisibility = {}, localOnlyExtra = [], owner = 'EIGHTfs', offline = false, maxRepos = 200 } = {}) {` |
-| `repoList` | 231-238 | 8 | `const repoList = (await Promise.all(ownedRepos.map(async (r) => {` |
-| `syncRepoIndex` | 265-284 | 20 | `export function syncRepoIndex({ content, workspaceRoot = '', owner = 'EIGHTfs', syncTarget = '' } = {}) {` |
-| `mergeFreshIntoExisting` | 299-342 | 44 | `function mergeFreshIntoExisting(existing, freshContent) {` |
-| `updateRepoIndex` | 359-386 | 28 | `export async function updateRepoIndex({ workspaceRoot = '', token = '', owner = 'EIGHTfs', depth = 20, extraRepos = [], extraReposFile = '', syncTarget = '', offline = false, maxRepos = 200, mode = 'rebuild', cloudRepos = [], repoName = '', remoteState = {} } = {}) {` |
-| `maintainRepoIndex` | 393-396 | 4 | `export async function maintainRepoIndex({ workspaceRoot = '', token = '', owner = 'EIGHTfs', depth = 20, extraRepos = [], extraReposFile = '', syncTarget = '', offline = false, maxRepos = 200 } = {}) {` |
-| `mergeCloudReposIntoIndex` | 411-464 | 54 | `export function mergeCloudReposIntoIndex({ workspaceRoot = '', owner = 'EIGHTfs', cloudRepos = [], syncTarget = '' } = {}) {` |
-| `updateRepoRemoteStateInIndex` | 481-507 | 27 | `export function updateRepoRemoteStateInIndex({ workspaceRoot = '', repoName = '', remoteState = {}, syncTarget = '' } = {}) {` |
+| `buildRepoIndexVisibility` | 176-192 | 17 | `async function buildRepoIndexVisibility({ repos, token, manualVisibility, owner }) {` |
+| `buildRepoIndexLocalOnly` | 195-208 | 14 | `async function buildRepoIndexLocalOnly({ workspaceRoot, repos, localOnlyExtra }) {` |
+| `buildRepoIndex` | 215-260 | 46 | `export async function buildRepoIndex({ workspaceRoot, depth = 20, extraRepos = [], extraReposFile = '', token = '', manualVisibility = {}, localOnlyExtra = [], owner = 'EIGHTfs', offline = false, maxRepos = 200 } = {}) {` |
+| `repoList` | 232-239 | 8 | `const repoList = (await Promise.all(ownedRepos.map(async (r) => {` |
+| `syncRepoIndex` | 266-285 | 20 | `export function syncRepoIndex({ content, workspaceRoot = '', owner = 'EIGHTfs', syncTarget = '' } = {}) {` |
+| `mergeFreshIntoExisting` | 300-343 | 44 | `function mergeFreshIntoExisting(existing, freshContent) {` |
+| `updateRepoIndex` | 360-387 | 28 | `export async function updateRepoIndex({ workspaceRoot = '', token = '', owner = 'EIGHTfs', depth = 20, extraRepos = [], extraReposFile = '', syncTarget = '', offline = false, maxRepos = 200, mode = 'rebuild', cloudRepos = [], repoName = '', remoteState = {} } = {}) {` |
+| `maintainRepoIndex` | 394-397 | 4 | `export async function maintainRepoIndex({ workspaceRoot = '', token = '', owner = 'EIGHTfs', depth = 20, extraRepos = [], extraReposFile = '', syncTarget = '', offline = false, maxRepos = 200 } = {}) {` |
+| `mergeCloudReposIntoIndex` | 412-465 | 54 | `export function mergeCloudReposIntoIndex({ workspaceRoot = '', owner = 'EIGHTfs', cloudRepos = [], syncTarget = '' } = {}) {` |
+| `updateRepoRemoteStateInIndex` | 482-508 | 27 | `export function updateRepoRemoteStateInIndex({ workspaceRoot = '', repoName = '', remoteState = {}, syncTarget = '' } = {}) {` |
 
 ### lib/git/repos.js（145 行 · 6 个函数）
 
@@ -1643,55 +1646,55 @@
 | `requireJsYaml` | 2999-3038 | 40 | `function requireJsYaml() {` |
 | `renamed` | 3004-3008 | 5 | `function renamed(from, to) {` |
 
-### scripts/arch-mcp.mjs（89 行 · 3 个函数）
+### scripts/arch-mcp.mjs（92 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `textResult` | 47-49 | 3 | `function textResult(obj) {` |
-| `handleRequest` | 52-71 | 20 | `async function handleRequest(req) {` |
-| `main` | 73-86 | 14 | `function main() {` |
+| `textResult` | 50-52 | 3 | `function textResult(obj) {` |
+| `handleRequest` | 55-74 | 20 | `async function handleRequest(req) {` |
+| `main` | 76-89 | 14 | `function main() {` |
 
-### scripts/archify-gen.mjs（976 行 · 37 个函数）
+### scripts/archify-gen.mjs（987 行 · 37 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `deriveExternals` | 52-74 | 23 | `function deriveExternals(repoPath, sourceRoot) {` |
 | `deriveCrossLayerEdges` | 88-124 | 37 | `function deriveCrossLayerEdges(repoPath, sourceRootName, moduleIds) {` |
 | `inferComponentType` | 127-130 | 4 | `export function inferComponentType(dirName) {` |
-| `layoutByLayer` | 156-181 | 26 | `function layoutByLayer(components, connections = []) {` |
-| `readRepositoryEvidence` | 188-209 | 22 | `function readRepositoryEvidence(repoPath) {` |
-| `run` | 189-194 | 6 | `const run = (args) => {` |
-| `appendDataFileNodes` | 224-245 | 22 | `async function appendDataFileNodes(repoPath, components, connections, ids, src, graph) {` |
-| `linkOrDropIsolated` | 254-288 | 35 | `function linkOrDropIsolated(repoPath, components, connections, boundaries, topLevelIds = new Set()) {` |
-| `buildFuncCards` | 301-313 | 13 | `async function buildFuncCards(repoPath) {` |
-| `parentBoundaries` | 322-334 | 13 | `function parentBoundaries(components) {` |
-| `deriveExternalNodes` | 341-364 | 24 | `function deriveExternalNodes(repoPath, sourceRootName) {` |
-| `aggregateByLayer` | 375-436 | 62 | `export function aggregateByLayer(components, connections) {` |
-| `groupOf` | 382-393 | 12 | `const groupOf = (c) => {` |
-| `slug` | 403-403 | 1 | `const slug = (g) => g.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-\|-$/g, '') \|\| 'root';` |
-| `dirComponents` | 442-450 | 9 | `function dirComponents(repoPath, dirs, src) {` |
-| `placeOnGrid` | 458-490 | 33 | `function placeOnGrid(components, connections, maxCols = 6) {` |
-| `resolveView` | 514-530 | 17 | `function resolveView(components, connections) {` |
-| `useFine` | 520-523 | 4 | `const useFine = () => {` |
-| `regroupForView` | 532-601 | 70 | `function regroupForView(fine, connections) {` |
-| `topOf` | 534-544 | 11 | `const topOf = (c) => {` |
-| `typeOf` | 546-551 | 6 | `const typeOf = (ms) => {` |
-| `slug` | 560-560 | 1 | `const slug = (s) => s.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-\|-$/g, '') \|\| 'grp';` |
-| `buildArchitectureDoc` | 603-767 | 165 | `export async function buildArchitectureDoc(repoPath, name = basename(resolve(repoPath))) {` |
-| `treeDoc` | 650-652 | 3 | `const treeDoc = (() => {` |
-| `representativeFile` | 776-803 | 28 | `function representativeFile(repoPath, dir) {` |
-| `tracked` | 777-787 | 11 | `const tracked = (() => {` |
-| `countFiles` | 806-820 | 15 | `function countFiles(dir) {` |
-| `walk` | 809-816 | 8 | `const walk = (d) => {` |
-| `validateHeader` | 823-829 | 7 | `function validateHeader(doc, errs) {` |
-| `validateComponents` | 837-856 | 20 | `function validateComponents(doc, errs) {` |
-| `validateConnections` | 859-866 | 8 | `function validateConnections(doc, ids, errs) {` |
-| `validateBoundaries` | 869-874 | 6 | `function validateBoundaries(doc, errs) {` |
-| `validateRepositoryEvidence` | 880-887 | 8 | `function validateRepositoryEvidence(doc, errs) {` |
-| `validateAgainstSpec` | 897-905 | 9 | `export function validateAgainstSpec(doc) {` |
-| `checkDrift` | 911-936 | 26 | `export function checkDrift(repoPath, doc) {` |
-| `outputPath` | 939-941 | 3 | `export function outputPath(repoPath, name = basename(resolve(repoPath))) {` |
-| `main` | 943-973 | 31 | `async function main() {` |
+| `layoutByLayer` | 166-192 | 27 | `function layoutByLayer(components, connections = []) {` |
+| `readRepositoryEvidence` | 199-220 | 22 | `function readRepositoryEvidence(repoPath) {` |
+| `run` | 200-205 | 6 | `const run = (args) => {` |
+| `appendDataFileNodes` | 235-256 | 22 | `async function appendDataFileNodes(repoPath, components, connections, ids, src, graph) {` |
+| `linkOrDropIsolated` | 265-299 | 35 | `function linkOrDropIsolated(repoPath, components, connections, boundaries, topLevelIds = new Set()) {` |
+| `buildFuncCards` | 312-324 | 13 | `async function buildFuncCards(repoPath) {` |
+| `parentBoundaries` | 333-345 | 13 | `function parentBoundaries(components) {` |
+| `deriveExternalNodes` | 352-375 | 24 | `function deriveExternalNodes(repoPath, sourceRootName) {` |
+| `aggregateByLayer` | 386-447 | 62 | `export function aggregateByLayer(components, connections) {` |
+| `groupOf` | 393-404 | 12 | `const groupOf = (c) => {` |
+| `slug` | 414-414 | 1 | `const slug = (g) => g.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-\|-$/g, '') \|\| 'root';` |
+| `dirComponents` | 453-461 | 9 | `function dirComponents(repoPath, dirs, src) {` |
+| `placeOnGrid` | 469-501 | 33 | `function placeOnGrid(components, connections, maxCols = 6) {` |
+| `resolveView` | 525-541 | 17 | `function resolveView(components, connections) {` |
+| `useFine` | 531-534 | 4 | `const useFine = () => {` |
+| `regroupForView` | 543-612 | 70 | `function regroupForView(fine, connections) {` |
+| `topOf` | 545-555 | 11 | `const topOf = (c) => {` |
+| `typeOf` | 557-562 | 6 | `const typeOf = (ms) => {` |
+| `slug` | 571-571 | 1 | `const slug = (s) => s.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-\|-$/g, '') \|\| 'grp';` |
+| `buildArchitectureDoc` | 614-778 | 165 | `export async function buildArchitectureDoc(repoPath, name = basename(resolve(repoPath))) {` |
+| `treeDoc` | 661-663 | 3 | `const treeDoc = (() => {` |
+| `representativeFile` | 787-814 | 28 | `function representativeFile(repoPath, dir) {` |
+| `tracked` | 788-798 | 11 | `const tracked = (() => {` |
+| `countFiles` | 817-831 | 15 | `function countFiles(dir) {` |
+| `walk` | 820-827 | 8 | `const walk = (d) => {` |
+| `validateHeader` | 834-840 | 7 | `function validateHeader(doc, errs) {` |
+| `validateComponents` | 848-867 | 20 | `function validateComponents(doc, errs) {` |
+| `validateConnections` | 870-877 | 8 | `function validateConnections(doc, ids, errs) {` |
+| `validateBoundaries` | 880-885 | 6 | `function validateBoundaries(doc, errs) {` |
+| `validateRepositoryEvidence` | 891-898 | 8 | `function validateRepositoryEvidence(doc, errs) {` |
+| `validateAgainstSpec` | 908-916 | 9 | `export function validateAgainstSpec(doc) {` |
+| `checkDrift` | 922-947 | 26 | `export function checkDrift(repoPath, doc) {` |
+| `outputPath` | 950-952 | 3 | `export function outputPath(repoPath, name = basename(resolve(repoPath))) {` |
+| `main` | 954-984 | 31 | `async function main() {` |
 
 ### scripts/archify-imports.mjs（343 行 · 14 个函数）
 
@@ -1742,17 +1745,17 @@
 | `runFile` | 60-98 | 39 | `async function runFile(file, obj) {` |
 | `main` | 101-127 | 27 | `async function main() {` |
 
-### scripts/browser-page-probe.mjs（265 行 · 7 个函数）
+### scripts/browser-page-probe.mjs（272 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `parseArgv` | 33-44 | 12 | `function parseArgv(argv) {` |
-| `findDirUnder` | 61-75 | 15 | `function findDirUnder(root, names, maxDepth = 4) {` |
-| `sharedRootCandidates` | 78-100 | 23 | `function sharedRootCandidates() {` |
-| `readBrowserEnvRecord` | 106-112 | 7 | `function readBrowserEnvRecord() {` |
-| `discover` | 120-175 | 56 | `function discover() {` |
-| `loadPlaywright` | 184-192 | 9 | `function loadPlaywright(pwroot) {` |
-| `stripHtml` | 195-201 | 7 | `function stripHtml(html) {` |
+| `findDirUnder` | 68-82 | 15 | `function findDirUnder(root, names, maxDepth = 4) {` |
+| `sharedRootCandidates` | 85-107 | 23 | `function sharedRootCandidates() {` |
+| `readBrowserEnvRecord` | 113-119 | 7 | `function readBrowserEnvRecord() {` |
+| `discover` | 127-182 | 56 | `function discover() {` |
+| `loadPlaywright` | 191-199 | 9 | `function loadPlaywright(pwroot) {` |
+| `stripHtml` | 202-208 | 7 | `function stripHtml(html) {` |
 
 ### scripts/check.mjs（37 行 · 1 个函数）
 
@@ -1823,15 +1826,15 @@
 | `checkPreviewDrift` | 72-89 | 18 | `export function checkPreviewDrift() {` |
 | `basenameSafe` | 105-108 | 4 | `function basenameSafe(p) {` |
 
-### scripts/platform-scan.mjs（167 行 · 5 个函数）
+### scripts/platform-scan.mjs（169 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `collectFiles` | 54-66 | 13 | `function collectFiles(root, exts, dir = root, out = []) {` |
-| `commentLineSet` | 69-77 | 9 | `function commentLineSet(text) {` |
-| `scanPlatformCode` | 85-113 | 29 | `export function scanPlatformCode(root, { exts = DEFAULT_EXTS } = {}) {` |
-| `parseArgs` | 116-130 | 15 | `function parseArgs(argv) {` |
-| `printReport` | 133-151 | 19 | `function printReport(result, top) {` |
+| `collectFiles` | 56-68 | 13 | `function collectFiles(root, exts, dir = root, out = []) {` |
+| `commentLineSet` | 71-79 | 9 | `function commentLineSet(text) {` |
+| `scanPlatformCode` | 87-115 | 29 | `export function scanPlatformCode(root, { exts = DEFAULT_EXTS } = {}) {` |
+| `parseArgs` | 118-132 | 15 | `function parseArgs(argv) {` |
+| `printReport` | 135-153 | 19 | `function printReport(result, top) {` |
 
 ### scripts/preview-server.mjs（116 行 · 1 个函数）
 

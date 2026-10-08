@@ -139,6 +139,16 @@ const EXTERNAL = [
 
 const SCHEMA_VERSION = 1;
 const DIAGRAM_TYPE = 'architecture';
+/** 组件栅格列间距（像素）：与行间距配合，4 列宽度不超 1440 视口（否则官方 validate 判 desktop-readability 不可读）。 */
+const COL_PITCH = 340;
+/** 组件高度（像素）：配合宽度 200 保证标签不溢出（官方 validate 会报 Label is wider than component）。 */
+const COMPONENT_H = 74;
+/** 数据文件节点副标题最大字符数（长文件名会让标签超出组件宽度 200px）。 */
+const SUB_LABEL_MAX = 22;
+/** 「细粒度视图」默认组件数上限（可用环境变量 ARCHIFY_FINE_MAX 覆盖）。 */
+const FINE_MAX_DEFAULT = 14;
+/** 卡片条目（模块路径）最大展示条数。 */
+const CARD_ITEM_MAX = 40;
 const COMPONENT_TYPES = ['frontend', 'backend', 'database', 'cloud', 'security', 'messagebus', 'external'];
 const VARIANTS = ['default', 'emphasis', 'security', 'dashed'];
 const BOUNDARY_KINDS = ['region', 'security-group'];
@@ -176,7 +186,8 @@ function layoutByLayer(components, connections = []) {
     //   用 340/300 即可——原 460 间距使 4 列宽达 1640，超出 1440 视口触发 desktop-readability
     //   （实测 Pawchive 16 组件时画布 1680×1070 被判不可读）。
     c.pos = [60 + (i % PER_ROW) * 340, 60 + Math.floor(i / PER_ROW) * 300];
-    c.size = [200, 74];
+    c.pos = [60 + (i % PER_ROW) * COL_PITCH, 60 + Math.floor(i / PER_ROW) * 300];
+    c.size = [200, COMPONENT_H];
   });
 }
 
@@ -235,7 +246,7 @@ async function appendDataFileNodes(repoPath, components, connections, ids, src, 
       id, type: 'database', label: p.split('/').pop().slice(0, 16),
       // 标签有宽度上限：实测 `cache-miss-request.sequence.json` 这类长文件名（~211px）会超出
       //   组件宽度 200px，官方 validate 报 `Label ... is wider than component` ⇒ 截断到 16 字符
-      sublabel: `数据文件 · ${p}`.slice(0, 22),
+      sublabel: `数据文件 · ${p}`.slice(0, SUB_LABEL_MAX),
       ...src(p),
     });
     for (const from of new Set(slot.reads)) connections.push({ from, to: id, variant: 'dashed' });   // 读=虚线
@@ -512,7 +523,7 @@ function placeOnGrid(components, connections, maxCols = 6) {
 //   （实测网格会把 10 个节点摊成整行、触发 composition/desktop-readability）。
 // 返回：{ components, connections, cards, cols }。
 function resolveView(components, connections) {
-  const fineMax = Number(process.env.ARCHIFY_FINE_MAX) > 0 ? Number(process.env.ARCHIFY_FINE_MAX) : 14;
+  const fineMax = Number(process.env.ARCHIFY_FINE_MAX) > 0 ? Number(process.env.ARCHIFY_FINE_MAX) : FINE_MAX_DEFAULT;
   const minGroups = Number(process.env.ARCHIFY_MIN_GROUPS) > 0 ? Number(process.env.ARCHIFY_MIN_GROUPS) : 5;
   // 细粒度**硬上限**：组件超过它时即使归并后组数少也必须归并——
   //   实测 archify 仓库 118 组件走细粒度会让渲染器进程崩（internal/renderer-process）。
@@ -578,7 +589,7 @@ function regroupForView(fine, connections) {
     cards.push({
       dot: dots[gi % dots.length],
       title: `${label}（${ms.length} 个模块）`,
-      items: ms.map((m) => String((m.sources && m.sources[0] && m.sources[0].path) || m.label || m.id)).slice(0, 40),
+      items: ms.map((m) => String((m.sources && m.sources[0] && m.sources[0].path) || m.label || m.id)).slice(0, CARD_ITEM_MAX),
     });
     gi += 1;
   }
@@ -653,7 +664,7 @@ export async function buildArchitectureDoc(repoPath, name = basename(resolve(rep
   if (treeDoc && typeof treeDoc === 'object') {
     for (const c of components) {
       const desc = treeDoc[c.id] || treeDoc[`${graph.sourceRoot}/${c.id}`] || treeDoc[`lib/${c.id}`];
-      if (desc) c.sublabel = String(desc).slice(0, 22);
+      if (desc) c.sublabel = String(desc).slice(0, SUB_LABEL_MAX);
     }
   }
 
