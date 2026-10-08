@@ -31,6 +31,9 @@ const arg = (name, def = '') => {
 };
 const HTML = arg('--html');
 const OUT = arg('--out', 'frontend-preview-check.png');
+// plain   = 普通克隆（伪造 /clone-preview 里 partial:false）：不应出现「重来」
+// partial = 不完整克隆（partial:true）：应出现「重来」与 partial 提示
+const EXPECT = arg('--expect', 'plain');
 const PW_ROOT = process.env.PW_ROOT || process.cwd();
 const CHROME = process.env.CHROMIUM || '';
 if (!HTML) { console.error('缺少 --html <预览页.html>'); process.exit(2); }
@@ -93,6 +96,18 @@ if (hasDlg) {
     await page.waitForTimeout(600);
     const back = await box.first().isChecked();
     need(back === true, `再次点击应恢复勾选（实测 ${back}）`);
+  }
+  // 条件渲染对照：「重来」按钮与 partial 提示只在「已存在且不完整」时出现。
+  //   只验出现态无法区分「只在 partial 时显示」与「总是显示」——故两种期望值都要能断言。
+  const labels = (await dlg.locator('button').allInnerTexts()).map((t) => t.trim());
+  const hasRestart = labels.includes('重来');
+  const hasHint = (await page.locator('.dshgp_previewpartial').count()) > 0;
+  if (EXPECT === 'partial') {
+    need(hasRestart, `不完整克隆应出现「重来」按钮（实测按钮 ${JSON.stringify(labels)}）`);
+    need(hasHint, '不完整克隆应显示 partial 提示（.dshgp_previewpartial）');
+  } else {
+    need(!hasRestart, `普通克隆不应出现「重来」按钮（实测按钮 ${JSON.stringify(labels)}）`);
+    need(!hasHint, '普通克隆不应显示 partial 提示');
   }
 }
 await page.screenshot({ path: OUT, fullPage: true });
