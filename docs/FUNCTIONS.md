@@ -1120,22 +1120,22 @@
 | `fetchToFile` | 315-397 | 83 | `async function fetchToFile({ owner, repo, branch, relPath, token, out, partPath, size, onBytes, signal = null, mode = 0o644 }) {` |
 | `mkHeaders` | 349-356 | 8 | `const mkHeaders = (raw, withRange) => {` |
 
-### lib/git/clone-history-mode.js（82 行 · 2 个函数）
+### lib/git/clone-history-mode.js（86 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `resolveBranchHead` | 25-31 | 7 | `export async function resolveBranchHead({ owner = '', repo = '', branch = '', token = '', deps = {} } = {}) {` |
-| `cloneWithHistory` | 46-81 | 36 | `export async function cloneWithHistory({` |
+| `resolveBranchHead` | 25-35 | 11 | `export async function resolveBranchHead({ owner = '', repo = '', branch = '', token = '', deps = {} } = {}) {` |
+| `cloneWithHistory` | 50-85 | 36 | `export async function cloneWithHistory({` |
 
-### lib/git/clone-history.js（167 行 · 5 个函数）
+### lib/git/clone-history.js（176 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `gitDateOf` | 33-45 | 13 | `export function gitDateOf(iso) {` |
 | `commitEnvOf` | 56-67 | 12 | `export function commitEnvOf(c) {` |
 | `topoSort` | 79-109 | 31 | `export function topoSort(commits) {` |
-| `fetchCommitChain` | 123-148 | 26 | `export async function fetchCommitChain({ owner, repo, head, depth = DEFAULT_HISTORY_DEPTH, apiGet } = {}) {` |
-| `planReplay` | 159-166 | 8 | `export function planReplay(commits) {` |
+| `fetchCommitChain` | 123-157 | 35 | `export async function fetchCommitChain({ owner, repo, head, depth = DEFAULT_HISTORY_DEPTH, apiGet } = {}) {` |
+| `planReplay` | 168-175 | 8 | `export function planReplay(commits) {` |
 
 ### lib/git/clone-jobs.js（251 行 · 15 个函数）
 
@@ -1157,11 +1157,11 @@
 | `setPreview` | 237-245 | 9 | `export function setPreview(key, data) {` |
 | `__resetCloneJobs` | 248-250 | 3 | `export function __resetCloneJobs() {` |
 
-### lib/git/clone-replay-io.js（160 行 · 1 个函数）
+### lib/git/clone-replay-io.js（162 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `createReplayIo` | 47-159 | 113 | `export function createReplayIo({` |
+| `createReplayIo` | 47-161 | 115 | `export function createReplayIo({` |
 
 ### lib/git/clone-replay.js（264 行 · 18 个函数）
 
