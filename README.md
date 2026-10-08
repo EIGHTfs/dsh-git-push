@@ -931,7 +931,10 @@ node assets/preview-gen.mjs
   真改写先建备份引用、自检通过才改写，push 用 force-with-lease；只处理本人远端仓库）
 · edit_after_read —— 读改合一编辑（自己读当前文件 → 校验 → 字面替换 → 写回；比宿主编辑守卫更严：读后文件被改动则拒绝写入、old 默认必须唯一匹配、按字面匹配不做正则解释）
 · git_sluice —— 浅包装 git 透传（AI 直接调用任意 git 命令，凭据自动注入）：args 传与 git 一致的参数串，返回 status + stdout/stderr；git 的 log/diff/branch/tag 等其余能力用它
-· git_gen_ssh_key / git_remote_create / git_set_visibility / git_clone / link_check
+· git_clone / link_check —— git_clone 从 GitHub 拉仓库（Git Data API）：target=owner/repo、dest=目标目录、branch=分支；
+  加 `history=1` 则改用 git fetch --depth 取回**原始对象**重建真实历史（克隆结果与远端 HEAD 逐字节一致，
+  可推回远端、可 git log 读演进；`historyDepth=N` 限浅克隆深度）；**默认关**，走整树快照（与远端无祖先、不能推回）
+· git_gen_ssh_key / git_remote_create / git_set_visibility
 【凭据由插件托管，不要到处找凭据】GitHub token 与 SSH 私钥存放在插件配置目录
 （git-push/ 下 github-token、id_rsa；0600 权限），由插件的推送/校验流程自动读取与选择通道
 （默认 SSH，token 401 回退 SSH）。判断登录态 → 调 git_account_check；推送 → 调 git_commit_push。
