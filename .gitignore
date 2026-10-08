@@ -12,11 +12,13 @@ dist/
 # 运行期 PID 文件（start.sh 启停脚本产生，不入库）
 *.pid
 
-# archify 架构图产物（由 scripts/archify-gen.mjs 生成）——按用户要求**入库**：
-#   HTML 交互式图与 JSON 数据源都提交进来，便于直接分发与离线查看；
-#   仍用 check 子命令查漂移（产物与代码不一致时非零退出）。
-# 注：这里不忽略 .archify/，只忽略它的临时/中间文件
-.archify/*.tmp
+# 架构事实产物（我们自己的 ArchFacts 规范，见 docs/ARCH-FACTS-SPEC.md）——**不入库**：
+#   事实 JSON 是工具产出（`arch_json` 落到 .dsh-archfacts/），随代码变而变，入库只会造成「看起来是真的、其实是旧的」。
+# 渲染器产物（archify 的 .archify/*.json|*.html）同样**不入库**：
+#   那是**渲染器格式**，由独立翻译脚本产出（ai-work-archive/scripts/archify-translate.mjs），
+#   插件里不出现任何渲染器概念（边界声明见 docs/ARCH-FACTS-SPEC.md 第 10 节）。
+.dsh-archfacts/
+.archify/
 __pycache__/
 *.pyc
 

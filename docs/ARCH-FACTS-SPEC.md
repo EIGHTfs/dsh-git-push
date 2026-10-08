@@ -172,3 +172,18 @@
 | S2 | `validateFacts(ir)` + `test/test-arch-ir.mjs`（8 条不变量逐条测） | 本仓库 0 错；负例能报错 |
 | S3 | `to-json.js` → `to-archify.js`（留兼容别名），消费方切换 | `arch_json` 输出与改前**逐字节一致** |
 | S4 | `scripts/archify-imports.mjs` 退役，模块划分下沉 `extract.js` | 工具侧与脚本侧对同一仓库输出**一致** |
+| S5 ✅ | 渲染器彻底移出插件：`to-json.js`（翻译）与 `validate.js`（四层校验）搬去独立翻译脚本；`archify-*` / `arch-mcp` 脚本一并移出；`.archify/` 与事实产物**都不入库** | 插件内零渲染器概念（由 `test-arch-json-fresh.mjs` 的「无渲染器字段」用例机器兜住） |
+
+## 10. 边界声明（2026-10-09 收敛，权威）
+
+三样东西**互不越界**；判断一个新需求该放哪，按本表对号入座：
+
+| 层 | 是什么 | 谁产出 | 存哪 | 入库 |
+|---|---|---|---|---|
+**① ArchFacts**（本规范） | **我们自己的**中性事实 JSON：`{schema:"dsh-archfacts/1", revision, facts:{modules,…}, agg:{components,edges}}`；不含颜色/坐标/图标/布局/渲染器枚举 | 本插件 `arch_json`（`lib/arch/extract → aggregate`） | `<repo>/.dsh-archfacts/<name>.facts.json` | **否**（.gitignore） |
+**② 翻译器** | **独立脚本**：读①写 archify 格式；archify 的全部概念（组件类型枚举、pos/size、boundary、variant、四层 schema 校验）**只活在这里** | `ai-work-archive/scripts/archify-translate.mjs` | 归档仓 `scripts/` | 是（归档仓） |
+**③ 渲染器产物** | archify 的 `architecture.json` 与渲染出的 HTML | 翻译器 / archify 本体 | 任意（默认 `<name>.architecture.json`） | **否**（.gitignore） |
+
+**归属判据（一句话）**：出现「渲染器才懂的概念」就属于②；只描述「代码里真实存在什么」才属于①。
+插件里**不得**出现渲染器概念——由 `test/test-arch-json-fresh.mjs` 的「无渲染器字段」用例机器兜住；
+翻译层的正确性由翻译器自己的四层校验负责。
