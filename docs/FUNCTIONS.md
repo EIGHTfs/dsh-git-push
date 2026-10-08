@@ -595,14 +595,16 @@
 | `topUnresolvedFiles` | 78-85 | 8 | `function topUnresolvedFiles(unresolved, topN) {` |
 | `formatAnalysisCoverageLine` | 92-98 | 7 | `export function formatAnalysisCoverageLine(cov = {}) {` |
 
-### lib/audit/audit-file.js（179 行 · 4 个函数）
+### lib/audit/audit-file.js（220 行 · 6 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `isMinifiedOneLine` | 25-35 | 11 | `function isMinifiedOneLine(text) {` |
-| `isHashSegment` | 39-41 | 3 | `function isHashSegment(seg) {` |
-| `isBuildArtifactFile` | 43-73 | 31 | `export function isBuildArtifactFile(relPathOrFile = '', text = '') {` |
-| `auditFile` | 75-179 | 105 | `export function auditFile({ file, relPath, text, grouped }, opts = {}) {` |
+| `resolveDshClientEntries` | 40-64 | 25 | `export function resolveDshClientEntries(repoRoot) {` |
+| `pick` | 50-58 | 9 | `const pick = (v) => {` |
+| `isMinifiedOneLine` | 66-76 | 11 | `function isMinifiedOneLine(text) {` |
+| `isHashSegment` | 80-82 | 3 | `function isHashSegment(seg) {` |
+| `isBuildArtifactFile` | 84-114 | 31 | `export function isBuildArtifactFile(relPathOrFile = '', text = '') {` |
+| `auditFile` | 116-220 | 105 | `export function auditFile({ file, relPath, text, grouped }, opts = {}) {` |
 
 ### lib/audit/collector.js（449 行 · 17 个函数）
 
@@ -866,7 +868,7 @@
 | `isRepoLevelSemanticRule` | 69-78 | 10 | `export function isRepoLevelSemanticRule(rule) {` |
 | `checkPatchInsert` | 93-134 | 42 | `export function checkPatchInsert({ file, text, rules }) {` |
 
-### lib/checks/structural.js（281 行 · 10 个函数）
+### lib/checks/structural.js（286 行 · 10 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -876,10 +878,10 @@
 | `checkMinLength` | 101-122 | 22 | `export function checkMinLength({ file, text, rules }) {` |
 | `checkComplexity` | 125-151 | 27 | `export function checkComplexity({ file, text, rules }) {` |
 | `checkDepth` | 154-170 | 17 | `export function checkDepth({ file, text, rules }) {` |
-| `isDshClientEntry` | 178-180 | 3 | `function isDshClientEntry(file) {` |
-| `checkMaxLines` | 183-230 | 48 | `export function checkMaxLines({ file, text, rules }) {` |
-| `checkCommentDensity` | 238-253 | 16 | `export function checkCommentDensity({ file, text, rules }) {` |
-| `checkRepeated` | 256-280 | 25 | `export function checkRepeated({ file, text, rules }) {` |
+| `isDshClientEntryFallback` | 179-181 | 3 | `function isDshClientEntryFallback(file) {` |
+| `checkMaxLines` | 184-235 | 52 | `export function checkMaxLines({ file, text, rules, fileScope = '' }) {` |
+| `checkCommentDensity` | 243-258 | 16 | `export function checkCommentDensity({ file, text, rules }) {` |
+| `checkRepeated` | 261-285 | 25 | `export function checkRepeated({ file, text, rules }) {` |
 
 ### lib/cli/commands-account.mjs（108 行 · 6 个函数）
 
@@ -2312,6 +2314,12 @@
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `hits` | 16-18 | 3 | `function hits(text) {` |
+
+### test/test-max-lines-scope.mjs（66 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `withScope` | 24-26 | 3 | `function withScope(action) {` |
 
 ### test/test-module-splitter-multiline.mjs（80 行 · 1 个函数）
 

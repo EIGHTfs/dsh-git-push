@@ -144,14 +144,23 @@ rules:
     fixable: true
 
   - id: readability/max-file-length
-    name: "文件总行数不超过 400 行"
+    name: "文件代码行数不超过 400 行"
     category: "readability"
     severity: "warning"
-    description: "单文件超过 400 行时应拆分模块（存量超大文件为已知债务，仅提醒不拦截；D1 重构已拆分核心文件）"
+    description: "单文件代码行超过 400 行时应拆分模块（存量超大文件为已知债务，仅提醒不拦截；D1 重构已拆分核心文件）。代码行口径见 lib/ast/line-count.js（总行 − 纯注释行 − 空行）"
     max_lines: 400
     # 2026-09-23：只对**代码文件**生效——md/yml/json 文档天然长（README/docs 详解/规则包），
     #   文件行数拆分规则针对代码模块；此前无 exts 导致 README 1058 行/docs 详解被误报。
     exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx"]
+    # 平台约束降级（DSH 插件专属）：DSH 要求插件客户端是**单文件**（dsh.client + exports["./client"]
+    #   指向同一文件），该文件天然超长且不可按模块拆分 → action: downgrade
+    #   （仍出现在报告里，但降为 info 且不扣分；不用 exempt——静默排除会让这个事实消失）。
+    #   作用域值由 lib/audit/audit-file.js 的 resolveDshClientEntries() 推导（读 package.json，非写死文件名）。
+    #   注意：必须声明在**规则原槽位**——loader 是拼接而非覆盖，写到别的槽位不会生效。
+    scope_rules:
+      - scope: "dsh-client-entry"
+        action: "downgrade"
+        reason: "DSH 要求客户端为单文件（不可拆分）——降级为提示，仍报不排除"
     fixable: false
 
   - id: readability/comment-density
