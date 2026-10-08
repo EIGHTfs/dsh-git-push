@@ -203,7 +203,7 @@
 | `getLastSlotHitStats` | 28-30 | 3 | `export function getLastSlotHitStats() {` |
 | `getLastSlotHitMeta` | 33-35 | 3 | `export function getLastSlotHitMeta() {` |
 
-### lib/app/tool-call.js（560 行 · 19 个函数）
+### lib/app/tool-call.js（567 行 · 19 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -223,9 +223,9 @@
 | `doHistory` | 322-325 | 4 | `const doHistory = async () => {` |
 | `callCodeAudit` | 350-362 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
 | `runStandardAuditTool` | 365-404 | 40 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
-| `callTool` | 406-531 | 126 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null) {` |
-| `shellSplit` | 534-552 | 19 | `function shellSplit(input) {` |
-| `readTextSafe` | 555-559 | 5 | `function readTextSafe(path = '') {` |
+| `callTool` | 406-538 | 133 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null) {` |
+| `shellSplit` | 541-559 | 19 | `function shellSplit(input) {` |
+| `readTextSafe` | 562-566 | 5 | `function readTextSafe(path = '') {` |
 
 ### lib/app/tools.js（27 行 · 2 个函数）
 
@@ -1035,13 +1035,13 @@
 | `isSampleExemptDir` | 205-227 | 23 | `export function isSampleExemptDir(repoPath, relPath = '') {` |
 | `isTestExemptDir` | 237-259 | 23 | `export function isTestExemptDir(repoPath, relPath = '') {` |
 
-### lib/fs/edit-after-read.js（90 行 · 3 个函数）
+### lib/fs/edit-after-read.js（104 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `countOccurrences` | 18-27 | 10 | `export function countOccurrences(text, needle) {` |
 | `fingerprint` | 30-37 | 8 | `function fingerprint(statFile, path) {` |
-| `editAfterRead` | 51-89 | 39 | `export function editAfterRead({` |
+| `editAfterRead` | 51-103 | 53 | `export function editAfterRead({` |
 
 ### lib/fsx.js（88 行 · 3 个函数）
 
@@ -1075,15 +1075,15 @@
 | `quotaChannel` | 198-206 | 9 | `function quotaChannel(resources, key) {` |
 | `fetchApiQuota` | 218-233 | 16 | `export async function fetchApiQuota({ workspaceRoot = '', token = '' } = {}) {` |
 
-### lib/git/api.js（131 行 · 5 个函数）
+### lib/git/api.js（137 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `githubFetch` | 22-87 | 66 | `export async function githubFetch(path, { token = '', method = 'GET', body, timeout = 60_000, headers: extraHeaders } = {}) {` |
+| `githubFetch` | 22-93 | 72 | `export async function githubFetch(path, { token = '', method = 'GET', body, timeout = 60_000, headers: extraHeaders } = {}) {` |
 | `attempt` | 54-77 | 24 | `const attempt = async (target) => {` |
-| `parseGithubOwnerRepo` | 90-104 | 15 | `export function parseGithubOwnerRepo(originUrl) {` |
-| `isBadCredentials` | 107-109 | 3 | `export function isBadCredentials(reason = '') {` |
-| `detectRepoVisibility` | 116-130 | 15 | `export async function detectRepoVisibility({ repoPath = '', token = '' } = {}) {` |
+| `parseGithubOwnerRepo` | 96-110 | 15 | `export function parseGithubOwnerRepo(originUrl) {` |
+| `isBadCredentials` | 113-115 | 3 | `export function isBadCredentials(reason = '') {` |
+| `detectRepoVisibility` | 122-136 | 15 | `export async function detectRepoVisibility({ repoPath = '', token = '' } = {}) {` |
 
 ### lib/git/atomic-json.js（99 行 · 5 个函数）
 
@@ -1551,15 +1551,15 @@
 | `countByDimension` | 50-80 | 31 | `export function countByDimension(findings = []) {` |
 | `scoreQuality` | 97-140 | 44 | `export function scoreQuality(findings = [], weights = {}, context = {}) {` |
 
-### lib/self/index.js（190 行 · 5 个函数）
+### lib/self/index.js（194 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `readmeTemplate` | 70-135 | 66 | `export function readmeTemplate({ name = 'dsh-git-push', description = 'DSH git 自动提交推送插件——统一函数入口架构', version = VERSION, versionTable = '' } = {}) {` |
-| `yamlTemplate` | 138-150 | 13 | `export function yamlTemplate() {` |
-| `selfVersion` | 153-155 | 3 | `export function selfVersion() {` |
-| `versionInfo` | 162-174 | 13 | `export function versionInfo(pkgJson = '') {` |
-| `helpSync` | 183-189 | 7 | `export function helpSync(helpText = '', knownFlags = []) {` |
+| `readmeTemplate` | 74-139 | 66 | `export function readmeTemplate({ name = 'dsh-git-push', description = 'DSH git 自动提交推送插件——统一函数入口架构', version = VERSION, versionTable = '' } = {}) {` |
+| `yamlTemplate` | 142-154 | 13 | `export function yamlTemplate() {` |
+| `selfVersion` | 157-159 | 3 | `export function selfVersion() {` |
+| `versionInfo` | 166-178 | 13 | `export function versionInfo(pkgJson = '') {` |
+| `helpSync` | 187-193 | 7 | `export function helpSync(helpText = '', knownFlags = []) {` |
 
 ### lib/skip-dirs.js（65 行 · 3 个函数）
 
@@ -2298,12 +2298,12 @@
 | `mk` | 142-142 | 1 | `const mk = (fnName) => `` |
 | `mk` | 160-160 | 1 | `const mk = (fnName, params) => `` |
 
-### test/test-edit-after-read.mjs（91 行 · 2 个函数）
+### test/test-edit-after-read.mjs（117 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `fixture` | 20-26 | 7 | `function fixture(content = 'const a = 1;\n') {` |
-| `statFile` | 69-72 | 4 | `const statFile = () => {` |
+| `fixture` | 22-28 | 7 | `function fixture(content = 'const a = 1;\n') {` |
+| `statFile` | 95-98 | 4 | `const statFile = () => {` |
 
 ### test/test-empty-catch-single-source.mjs（29 行 · 1 个函数）
 
