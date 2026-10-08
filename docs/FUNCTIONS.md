@@ -1150,6 +1150,12 @@
 | `setPreview` | 237-245 | 9 | `export function setPreview(key, data) {` |
 | `__resetCloneJobs` | 248-250 | 3 | `export function __resetCloneJobs() {` |
 
+### lib/git/clone-replay-io.js（160 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `createReplayIo` | 47-159 | 113 | `export function createReplayIo({` |
+
 ### lib/git/clone-replay.js（264 行 · 18 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |

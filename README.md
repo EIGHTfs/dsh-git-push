@@ -368,6 +368,7 @@ dsh-git-push/
 │   │   ├── clone-download.js — 并发下载 + .part 断点续传 + 体积守卫 + 进度回调
 │   │   ├── clone-history.js — （待注释）
 │   │   ├── clone-jobs.js — clone 进度/预览内存态（供前端轮询）
+│   │   ├── clone-replay-io.js — （待注释）
 │   │   ├── clone-replay.js — （待注释）
 │   │   ├── clone.js — 克隆（Git Data API，不依赖本地凭据）
 │   │   ├── cloud.js — 云端仓库列表（/user/repos 供手动 clone）
