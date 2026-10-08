@@ -939,7 +939,7 @@
 | `printCloneResult` | 153-165 | 13 | `function printCloneResult(r, flags, target, dest) {` |
 | `cmdClone` | 168-175 | 8 | `export async function cmdClone(flags, positional) {` |
 
-### lib/client.js（2549 行 · 46 个函数）
+### lib/client.js（2561 行 · 46 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -968,27 +968,27 @@
 | `dshgp_RepoCloudPane` | 717-768 | 52 | `function dshgp_RepoCloudPane(props) {` |
 | `dshgp_CloneProgress` | 779-796 | 18 | `function dshgp_CloneProgress(props) {` |
 | `mb` | 781-781 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
-| `dshgp_ClonePreview` | 804-829 | 26 | `function dshgp_ClonePreview(props) {` |
+| `dshgp_ClonePreview` | 804-841 | 38 | `function dshgp_ClonePreview(props) {` |
 | `mb` | 806-806 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
-| `dshgp_WeightRows` | 833-856 | 24 | `function dshgp_WeightRows(props) {` |
-| `dshgp_RuleRow` | 867-929 | 63 | `function dshgp_RuleRow(props, slot, idx, len) {` |
-| `countTitle` | 876-879 | 4 | `const countTitle = (kind) => {` |
-| `move` | 884-884 | 1 | `const move = (dir) => props.moveSlot(slot, dir);` |
-| `dshgp_AuditSwitchBlock` | 932-996 | 65 | `function dshgp_AuditSwitchBlock(props) {` |
-| `dshgp_InjectPromptSwitchBlock` | 999-1021 | 23 | `function dshgp_InjectPromptSwitchBlock(props) {` |
-| `dshgp_CommentWordingBlock` | 1024-1039 | 16 | `function dshgp_CommentWordingBlock(props) {` |
-| `dshgp_AuditAdvancedBlock` | 1042-1068 | 27 | `function dshgp_AuditAdvancedBlock(props) {` |
-| `dshgp_RuleListBlock` | 1071-1102 | 32 | `function dshgp_RuleListBlock(props) {` |
-| `dshgp_AuditTab` | 1109-1129 | 21 | `function dshgp_AuditTab(props) {` |
-| `dshgp_CredentialBlock` | 1133-1198 | 66 | `function dshgp_CredentialBlock(props) {` |
-| `dshgp_PushDefaultsBlock` | 1201-1263 | 63 | `function dshgp_PushDefaultsBlock(props) {` |
-| `dshgp_SettingsTab` | 1265-1274 | 10 | `function dshgp_SettingsTab(props) {` |
-| `dshgp_GitPushPage` | 1277-1330 | 54 | `function dshgp_GitPushPage(props) {` |
-| `renderResult` | 2110-2123 | 14 | `const renderResult = (res) => {` |
-| `poll` | 2126-2151 | 26 | `const poll = async () => {` |
-| `apply` | 2478-2542 | 65 | `function apply(ctx) {` |
-| `useCardState` | 2518-2521 | 4 | `const useCardState = (selector) => {` |
-| `SectionPage` | 2524-2529 | 6 | `function SectionPage() {` |
+| `dshgp_WeightRows` | 845-868 | 24 | `function dshgp_WeightRows(props) {` |
+| `dshgp_RuleRow` | 879-941 | 63 | `function dshgp_RuleRow(props, slot, idx, len) {` |
+| `countTitle` | 888-891 | 4 | `const countTitle = (kind) => {` |
+| `move` | 896-896 | 1 | `const move = (dir) => props.moveSlot(slot, dir);` |
+| `dshgp_AuditSwitchBlock` | 944-1008 | 65 | `function dshgp_AuditSwitchBlock(props) {` |
+| `dshgp_InjectPromptSwitchBlock` | 1011-1033 | 23 | `function dshgp_InjectPromptSwitchBlock(props) {` |
+| `dshgp_CommentWordingBlock` | 1036-1051 | 16 | `function dshgp_CommentWordingBlock(props) {` |
+| `dshgp_AuditAdvancedBlock` | 1054-1080 | 27 | `function dshgp_AuditAdvancedBlock(props) {` |
+| `dshgp_RuleListBlock` | 1083-1114 | 32 | `function dshgp_RuleListBlock(props) {` |
+| `dshgp_AuditTab` | 1121-1141 | 21 | `function dshgp_AuditTab(props) {` |
+| `dshgp_CredentialBlock` | 1145-1210 | 66 | `function dshgp_CredentialBlock(props) {` |
+| `dshgp_PushDefaultsBlock` | 1213-1275 | 63 | `function dshgp_PushDefaultsBlock(props) {` |
+| `dshgp_SettingsTab` | 1277-1286 | 10 | `function dshgp_SettingsTab(props) {` |
+| `dshgp_GitPushPage` | 1289-1342 | 54 | `function dshgp_GitPushPage(props) {` |
+| `renderResult` | 2122-2135 | 14 | `const renderResult = (res) => {` |
+| `poll` | 2138-2163 | 26 | `const poll = async () => {` |
+| `apply` | 2490-2554 | 65 | `function apply(ctx) {` |
+| `useCardState` | 2530-2533 | 4 | `const useCardState = (selector) => {` |
+| `SectionPage` | 2536-2541 | 6 | `function SectionPage() {` |
 
 ### lib/client/index.js（162 行 · 5 个函数）
 
@@ -1235,16 +1235,16 @@
 | `persistSshPub` | 173-186 | 14 | `export function persistSshPub(pub, { workspaceRoot = '' } = {}) {` |
 | `generateSshKey` | 195-234 | 40 | `export function generateSshKey(email, { workspaceRoot = '', force = false } = {}) {` |
 
-### lib/git/endpoints.js（77 行 · 6 个函数）
+### lib/git/endpoints.js（98 行 · 6 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `mirrorPrefix` | 20-24 | 5 | `export function mirrorPrefix() {` |
-| `withMirror` | 33-40 | 8 | `export function withMirror(url) {` |
-| `mirrorGitConfigEnv` | 46-54 | 9 | `export function mirrorGitConfigEnv(env) {` |
-| `blobApiUrl` | 64-66 | 3 | `export function blobApiUrl(owner, repo, sha) {` |
-| `contentsApiUrl` | 69-71 | 3 | `export function contentsApiUrl(owner, repo, encodedPath, encodedRef) {` |
-| `rawFileUrl` | 74-76 | 3 | `export function rawFileUrl(owner, repo, encodedRef, encodedPath) {` |
+| `withMirror` | 45-53 | 9 | `export function withMirror(url, { method = 'GET', mode = 'read' } = {}) {` |
+| `mirrorGitConfigEnv` | 66-75 | 10 | `export function mirrorGitConfigEnv(env, { mode = 'read' } = {}) {` |
+| `blobApiUrl` | 85-87 | 3 | `export function blobApiUrl(owner, repo, sha) {` |
+| `contentsApiUrl` | 90-92 | 3 | `export function contentsApiUrl(owner, repo, encodedPath, encodedRef) {` |
+| `rawFileUrl` | 95-97 | 3 | `export function rawFileUrl(owner, repo, encodedRef, encodedPath) {` |
 
 ### lib/git/exec.js（152 行 · 5 个函数）
 
