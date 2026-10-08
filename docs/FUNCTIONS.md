@@ -1075,14 +1075,14 @@
 | `quotaChannel` | 198-206 | 9 | `function quotaChannel(resources, key) {` |
 | `fetchApiQuota` | 218-233 | 16 | `export async function fetchApiQuota({ workspaceRoot = '', token = '' } = {}) {` |
 
-### lib/git/api.js（111 行 · 4 个函数）
+### lib/git/api.js（121 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `githubFetch` | 22-67 | 46 | `export async function githubFetch(path, { token = '', method = 'GET', body, timeout = 60_000, headers: extraHeaders } = {}) {` |
-| `parseGithubOwnerRepo` | 70-84 | 15 | `export function parseGithubOwnerRepo(originUrl) {` |
-| `isBadCredentials` | 87-89 | 3 | `export function isBadCredentials(reason = '') {` |
-| `detectRepoVisibility` | 96-110 | 15 | `export async function detectRepoVisibility({ repoPath = '', token = '' } = {}) {` |
+| `githubFetch` | 22-77 | 56 | `export async function githubFetch(path, { token = '', method = 'GET', body, timeout = 60_000, headers: extraHeaders } = {}) {` |
+| `parseGithubOwnerRepo` | 80-94 | 15 | `export function parseGithubOwnerRepo(originUrl) {` |
+| `isBadCredentials` | 97-99 | 3 | `export function isBadCredentials(reason = '') {` |
+| `detectRepoVisibility` | 106-120 | 15 | `export async function detectRepoVisibility({ repoPath = '', token = '' } = {}) {` |
 
 ### lib/git/atomic-json.js（99 行 · 5 个函数）
 
