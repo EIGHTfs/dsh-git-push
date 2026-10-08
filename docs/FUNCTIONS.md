@@ -1893,11 +1893,11 @@
 | `checkVersionDrift` | 49-57 | 9 | `export function checkVersionDrift({ hostPath, root } = {}) {` |
 | `out` | 67-67 | 1 | `const out = (msg) => console.log(msg);` |
 
-### scripts/frontend-preview-check.mjs（105 行 · 1 个函数）
+### scripts/frontend-preview-check.mjs（120 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `clickText` | 52-56 | 5 | `const clickText = async (re) => {` |
+| `clickText` | 55-59 | 5 | `const clickText = async (re) => {` |
 
 ### scripts/gen-preview.mjs（109 行 · 6 个函数）
 
@@ -2425,6 +2425,12 @@
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `withScope` | 24-26 | 3 | `function withScope(action) {` |
+
+### test/test-mirror-fallback.mjs（43 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `withMirror` | 12-20 | 9 | `const withMirror = async (value, fn) => {` |
 
 ### test/test-mirror-gates.mjs（83 行 · 1 个函数）
 
