@@ -366,6 +366,7 @@ dsh-git-push/
 │   │   ├── atomic-json.js — 统一 JSON 原子读写（readJson/writeJsonAtomic/updateJsonAtomic/writeTextAtomic）
 │   │   ├── browse.js — 目录浏览（账号卡片路径选择器后端）
 │   │   ├── clone-download.js — 并发下载 + .part 断点续传 + 体积守卫 + 进度回调
+│   │   ├── clone-history.js — （待注释）
 │   │   ├── clone-jobs.js — clone 进度/预览内存态（供前端轮询）
 │   │   ├── clone.js — 克隆（Git Data API，不依赖本地凭据）
 │   │   ├── cloud.js — 云端仓库列表（/user/repos 供手动 clone）

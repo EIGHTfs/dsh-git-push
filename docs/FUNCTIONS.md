@@ -1119,6 +1119,16 @@
 | `fetchToFile` | 298-380 | 83 | `async function fetchToFile({ owner, repo, branch, relPath, token, out, partPath, size, onBytes, signal = null }) {` |
 | `mkHeaders` | 332-339 | 8 | `const mkHeaders = (raw, withRange) => {` |
 
+### lib/git/clone-history.js（167 行 · 5 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `gitDateOf` | 33-45 | 13 | `export function gitDateOf(iso) {` |
+| `commitEnvOf` | 56-67 | 12 | `export function commitEnvOf(c) {` |
+| `topoSort` | 79-109 | 31 | `export function topoSort(commits) {` |
+| `fetchCommitChain` | 123-148 | 26 | `export async function fetchCommitChain({ owner, repo, head, depth = DEFAULT_HISTORY_DEPTH, apiGet } = {}) {` |
+| `planReplay` | 159-166 | 8 | `export function planReplay(commits) {` |
+
 ### lib/git/clone-jobs.js（251 行 · 15 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
