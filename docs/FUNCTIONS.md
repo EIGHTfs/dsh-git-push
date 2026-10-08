@@ -1247,7 +1247,7 @@
 | `contentsApiUrl` | 102-104 | 3 | `export function contentsApiUrl(owner, repo, encodedPath, encodedRef) {` |
 | `rawFileUrl` | 107-109 | 3 | `export function rawFileUrl(owner, repo, encodedRef, encodedPath) {` |
 
-### lib/git/exec.js（159 行 · 5 个函数）
+### lib/git/exec.js（163 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1255,7 +1255,7 @@
 | `resolveGitBin` | 54-71 | 18 | `export function resolveGitBin() {` |
 | `runGit` | 87-108 | 22 | `export function runGit(args, { cwd = '', timeoutMs = 120_000, env = {} } = {}) {` |
 | `gitRaw` | 116-132 | 17 | `export function gitRaw(args, { cwd = '', timeoutMs = 600_000 } = {}) {` |
-| `runGitAsync` | 142-158 | 17 | `export function runGitAsync(args, { cwd = '', timeoutMs = 120_000, env = {} } = {}) {` |
+| `runGitAsync` | 142-162 | 21 | `export function runGitAsync(args, { cwd = '', timeoutMs = 120_000, env = {} } = {}) {` |
 
 ### lib/git/identity-rewrite.js（298 行 · 14 个函数）
 
