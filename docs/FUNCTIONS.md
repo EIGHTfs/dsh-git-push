@@ -57,7 +57,7 @@
 | `readTreeDoc` | 35-40 | 6 | `function readTreeDoc(repoPath) {` |
 | `exportArchJson` | 48-78 | 31 | `export async function exportArchJson(args = {}, deps = {}) {` |
 
-### lib/app/handlers/clone.js（159 行 · 7 个函数）
+### lib/app/handlers/clone.js（165 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -66,8 +66,8 @@
 | `handleRepoClone` | 56-123 | 68 | `export async function handleRepoClone(ctx) {` |
 | `handleCloneLogs` | 126-130 | 5 | `export function handleCloneLogs(ctx) {` |
 | `handleCloneAbort` | 133-136 | 4 | `export function handleCloneAbort() {` |
-| `handleClonePreview` | 139-151 | 13 | `export async function handleClonePreview(ctx) {` |
-| `handleCloneProgress` | 154-159 | 6 | `export function handleCloneProgress(ctx) {` |
+| `handleClonePreview` | 139-157 | 19 | `export async function handleClonePreview(ctx) {` |
+| `handleCloneProgress` | 160-165 | 6 | `export function handleCloneProgress(ctx) {` |
 
 ### lib/app/handlers/identity-rewrite.js（95 行 · 2 个函数）
 
