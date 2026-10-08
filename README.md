@@ -355,6 +355,8 @@ dsh-git-push/
 │   │   ├── index.js — 上下文注入入口（环境注入文本）
 │   ├── exempt/ — 豁免机制（dsh-skip-* 注释标记解析与文件头/行内语义）
 │   │   ├── index.js — 豁免注册表（dsh-skip-* 全标记消费）
+│   ├── fs/ — 
+│   │   ├── edit-after-read.js — （待注释）
 │   ├── git/ — Git 执行层（runGit/账号/API/克隆/凭据/推送/扫描/索引维护/敏感扫描/传输通道）
 │   │   ├── account-status.js — （待注释）
 │   │   ├── account.js — 账号校验（token 在线 + SSH 公钥指纹，输出账号状态块）
@@ -495,6 +497,7 @@ dsh-git-push/
 │   ├── test-dup-code.mjs — （待注释）
 │   ├── test-dup-const-idiom.mjs — （待注释）
 │   ├── test-dup-const.mjs — duplicate-const 规则测试（多语言提取 JS/Kotlin/Java/Go/Rust/Python、模块级过滤、跨文件聚合、test 目录排除、同值不同名不报）
+│   ├── test-edit-after-read.mjs — （待注释）
 │   ├── test-empty-catch-promise.mjs — （待注释）
 │   ├── test-empty-catch-single-source.mjs — （待注释）
 │   ├── test-exempt-hint-classify.mjs — （待注释）

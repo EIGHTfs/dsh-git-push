@@ -1020,6 +1020,14 @@
 | `isSampleExemptDir` | 205-227 | 23 | `export function isSampleExemptDir(repoPath, relPath = '') {` |
 | `isTestExemptDir` | 237-259 | 23 | `export function isTestExemptDir(repoPath, relPath = '') {` |
 
+### lib/fs/edit-after-read.js（90 行 · 3 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `countOccurrences` | 18-27 | 10 | `export function countOccurrences(text, needle) {` |
+| `fingerprint` | 30-37 | 8 | `function fingerprint(statFile, path) {` |
+| `editAfterRead` | 51-89 | 39 | `export function editAfterRead({` |
+
 ### lib/fsx.js（88 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2172,6 +2180,13 @@
 | `mk` | 122-122 | 1 | `const mk = (fnName) => `` |
 | `mk` | 142-142 | 1 | `const mk = (fnName) => `` |
 | `mk` | 160-160 | 1 | `const mk = (fnName, params) => `` |
+
+### test/test-edit-after-read.mjs（91 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `fixture` | 20-26 | 7 | `function fixture(content = 'const a = 1;\n') {` |
+| `statFile` | 69-72 | 4 | `const statFile = () => {` |
 
 ### test/test-empty-catch-single-source.mjs（29 行 · 1 个函数）
 
