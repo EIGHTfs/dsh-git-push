@@ -40,8 +40,7 @@ export const ALWAYS_RUN_TESTS = new Set([
   'test-func-doc-drift.mjs',  // 函数表漂移
   'test-tree-doc.mjs',        // README 目录树漂移
   'test-arch-func-source.mjs',// 架构事实层函数数与 FUNCTIONS.md 同源
-  'test-arch-json-fresh.mjs', // 架构 JSON 新鲜度
-  'test-archify-imports.mjs', // archify 导入图与真实 import 一致
+  'test-arch-json-fresh.mjs', // ArchFacts 可复现 + 不含渲染器字段（渲染器相关用例随脚本移交归档）
   'test-inject-system-prompt.mjs', // 注入文本里的版本列表与 package.json 一致
 ]);
 
