@@ -174,3 +174,46 @@ test('git_clone：exec.agent 存在时 owner 必须是会话 id（clone job 路�
   assert.equal(mj.state[0].spec.kind, 'git-clone');
   assert.equal(mj.state[0].spec.owner, 'session-clone-9', 'owner 必须是 exec.agent.id 字符串');
 });
+
+// ---------- 回归：带 owner 被拒 → 退「无主」再试（避免后台 job 被静默丢掉）----------
+// 宿主契约（jobs-local：start → resolveOwner → servesOwner）：owner 必须是**有活 agent 的会话 id**；
+//   而 owner 缺省（unowned）在存在全局控制器时同样可注册 ⇒ 带 owner 失败不应直接降级同步。
+test('job 注册：带 owner 失败 → 自动退无主重试成功（不得静默降级）', async () => {
+  const seen = [];
+  const mj = {
+    start(spec) {
+      seen.push(spec.owner);
+      if (spec.owner !== undefined) throw new Error(`session "${spec.owner}" has no live agent (background job owner must be live)`);
+      return 'git-push-9';
+    },
+  };
+  const dir = mkRepo();
+  try {
+    const r = await callTool(
+      'git_commit_push',
+      { repo: dir, message: 'owner 退无主', audit: false, push: false, requirementsConfirmed: true },
+      { workspaceRoot: tmpdir() }, Config(), null, mj, { agent: { id: 'session-not-live' } },
+    );
+    assert.equal(r.async, true, '带 owner 失败后必须退无主重试并拿到 job，而不是静默同步');
+    assert.equal(r.jobId, 'git-push-9');
+    assert.equal(r.jobFallback, undefined, '成功注册时不得出现降级标记');
+    assert.deepEqual(seen, ['session-not-live', undefined], '应先带 owner 试、再退无主');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('job 注册：两步都失败 → 同步降级并把原因带回结果（不再静默）', async () => {
+  const mj = { start() { throw new Error('background jobs unavailable: no job controller serves this agent'); } };
+  const dir = mkRepo();
+  try {
+    const r = await callTool(
+      'git_commit_push',
+      { repo: dir, message: '两步都失败', audit: false, push: false, requirementsConfirmed: true },
+      { workspaceRoot: tmpdir() }, Config(), null, mj, { agent: { id: 'session-x' } },
+    );
+    assert.equal(r.async, false);
+    assert.equal(r.jobFallback, true);
+    assert.match(String(r.jobFallbackReason), /owner=session-x 失败/);
+    assert.match(String(r.jobFallbackReason), /unowned 失败/);
+    assert.ok(r.result, '降级后应带回同步执行的结果');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});

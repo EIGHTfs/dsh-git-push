@@ -603,14 +603,11 @@ dsh-git-push/
 │   │   ├── task-completion-report.md — （待注释）
 │   │   ├── tool-json-add-ask.md — （待注释）
 │   │   ├── versioning-rule.md — （待注释）
-├── .dsh-archfacts/ — （待注释）
-│   ├── archfacts.facts-cache.json — （待注释）
 ├── .auditignore — 审计豁免清单（不影响 git 入库，仅跳过审计扫描）——排除内置第三方代码
 ├── .gitignore — 忽略规则（node_modules/产物/备份/回收站等）
 ├── CONTRIBUTING.md — （待注释）
 ├── README.md — 插件 README（功能总览/用法/版本记录）
 ├── SECURITY.md — （待注释）
-├── archify-preview.json — （待注释）
 ├── assemble.json — bench-template 下发清单（键=模板仓库相对路径，值=本插件落点；preview 启动两件套 → assets/）
 ├── cli.mjs — 独立 CLI（git-sluice，不依赖宿主可独立运行）
 ├── cordis.patch.yml — DSH 插件组合 patch（loader 注入定义）
