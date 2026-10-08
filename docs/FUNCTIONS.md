@@ -596,25 +596,25 @@
 | `isBuildArtifactFile` | 43-73 | 31 | `export function isBuildArtifactFile(relPathOrFile = '', text = '') {` |
 | `auditFile` | 75-179 | 105 | `export function auditFile({ file, relPath, text, grouped }, opts = {}) {` |
 
-### lib/audit/collector.js（413 行 · 15 个函数）
+### lib/audit/collector.js（421 行 · 15 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `isGitWorkTree` | 47-58 | 12 | `function isGitWorkTree(dir) {` |
 | `tryLoadAuditIgnoreFallback` | 74-115 | 42 | `function tryLoadAuditIgnoreFallback(root, respectAuditIgnore = true) {` |
 | `walkDirs` | 95-112 | 18 | `const walkDirs = (dir) => {` |
-| `tryLoadGitIgnoreSet` | 127-216 | 90 | `function tryLoadGitIgnoreSet(root, respectAuditIgnore = true) {` |
+| `tryLoadGitIgnoreSet` | 127-224 | 98 | `function tryLoadGitIgnoreSet(root, respectAuditIgnore = true) {` |
 | `walkDirs` | 168-183 | 16 | `const walkDirs = (dir) => {` |
-| `isHardSkipped` | 225-227 | 3 | `function isHardSkipped(name) {` |
-| `computeGitIgnored` | 230-235 | 6 | `function computeGitIgnored(full, gitIgnoreRoot, includeIgnored, respectAuditIgnore = true) {` |
-| `shouldSkipDirByYml` | 238-242 | 5 | `function shouldSkipDirByYml(name, ignoredByGit, gitIgnoreRoot) {` |
-| `isFileGitIgnored` | 245-256 | 12 | `function isFileGitIgnored(full, gitIgnoreRoot, includeIgnored, respectAuditIgnore = true) {` |
-| `collectTextFiles` | 258-317 | 60 | `export async function collectTextFiles(dir, { depth = 10, gitIgnoreRoot = null, includeIgnored = false, testExemptRoot = null, respectAuditIgnore = true } = {}) {` |
-| `walk` | 280-316 | 37 | `async function walk(cur, level) {` |
-| `isGitRepo` | 320-322 | 3 | `export function isGitRepo(dir) {` |
-| `collectChangedFiles` | 330-387 | 58 | `export function collectChangedFiles(repoPath) {` |
-| `isTextFile` | 390-408 | 19 | `export function isTextFile(full) {` |
-| `readText` | 411-413 | 3 | `export function readText(full) {` |
+| `isHardSkipped` | 233-235 | 3 | `function isHardSkipped(name) {` |
+| `computeGitIgnored` | 238-243 | 6 | `function computeGitIgnored(full, gitIgnoreRoot, includeIgnored, respectAuditIgnore = true) {` |
+| `shouldSkipDirByYml` | 246-250 | 5 | `function shouldSkipDirByYml(name, ignoredByGit, gitIgnoreRoot) {` |
+| `isFileGitIgnored` | 253-264 | 12 | `function isFileGitIgnored(full, gitIgnoreRoot, includeIgnored, respectAuditIgnore = true) {` |
+| `collectTextFiles` | 266-325 | 60 | `export async function collectTextFiles(dir, { depth = 10, gitIgnoreRoot = null, includeIgnored = false, testExemptRoot = null, respectAuditIgnore = true } = {}) {` |
+| `walk` | 288-324 | 37 | `async function walk(cur, level) {` |
+| `isGitRepo` | 328-330 | 3 | `export function isGitRepo(dir) {` |
+| `collectChangedFiles` | 338-395 | 58 | `export function collectChangedFiles(repoPath) {` |
+| `isTextFile` | 398-416 | 19 | `export function isTextFile(full) {` |
+| `readText` | 419-421 | 3 | `export function readText(full) {` |
 
 ### lib/audit/ext-runner.js（78 行 · 2 个函数）
 
