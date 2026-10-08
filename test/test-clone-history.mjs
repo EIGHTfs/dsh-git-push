@@ -17,7 +17,7 @@ import {
 const C = (sha, parents, extra = {}) => ({
   sha,
   parents,
-  tree: `tree-${sha}`,
+  tree: { sha: `tree-${sha}` },   // 真实 /git/commits/{sha} 的 tree 是对象（tree.sha），写字符串会让映射静默取到空串
   message: `msg-${sha}`,
   author: { name: `A-${sha}`, email: `${sha}@example.com`, date: '2026-09-13T12:00:00+08:00' },
   committer: { name: `K-${sha}`, email: `k-${sha}@example.com`, date: '2026-09-13T12:00:00+08:00' },
@@ -45,6 +45,7 @@ test('fetchCommitChain：合并链按拓扑序返回（父先于子）', async (
   const r = await fetchCommitChain({ owner: 'o', repo: 'r', head: 'c', apiGet });
   assert.equal(r.ok, true);
   assert.deepEqual(r.commits.map((x) => x.sha), ['a', 'b', 'c']);
+  assert.equal(r.commits[0].tree, 'tree-a');   // 树 sha 必须从 tree.sha 映射出来（写错形状会静默变空串）
   assert.equal(r.truncated, false);
 });
 

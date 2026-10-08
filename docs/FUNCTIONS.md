@@ -1120,6 +1120,13 @@
 | `fetchToFile` | 315-397 | 83 | `async function fetchToFile({ owner, repo, branch, relPath, token, out, partPath, size, onBytes, signal = null, mode = 0o644 }) {` |
 | `mkHeaders` | 349-356 | 8 | `const mkHeaders = (raw, withRange) => {` |
 
+### lib/git/clone-history-mode.js（82 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `resolveBranchHead` | 25-31 | 7 | `export async function resolveBranchHead({ owner = '', repo = '', branch = '', token = '', deps = {} } = {}) {` |
+| `cloneWithHistory` | 46-81 | 36 | `export async function cloneWithHistory({` |
+
 ### lib/git/clone-history.js（167 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2173,7 +2180,15 @@
 | `writer` | 134-140 | 7 | `const writer = (async () => {` |
 | `call` | 433-433 | 1 | `const call = async (body) => (await handleHttp(` |
 
-### test/test-clone-history.mjs（135 行 · 1 个函数）
+### test/test-clone-history-mode.mjs（125 行 · 3 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `fakeApi` | 20-30 | 11 | `function fakeApi({ headSha = 'c', trees = {}, commits = {}, refStatus = 200 } = {}) {` |
+| `fakeGit` | 33-44 | 12 | `function fakeGit() {` |
+| `runGit` | 36-42 | 7 | `const runGit = (args) => {` |
+
+### test/test-clone-history.mjs（136 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|

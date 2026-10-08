@@ -366,6 +366,7 @@ dsh-git-push/
 │   │   ├── atomic-json.js — 统一 JSON 原子读写（readJson/writeJsonAtomic/updateJsonAtomic/writeTextAtomic）
 │   │   ├── browse.js — 目录浏览（账号卡片路径选择器后端）
 │   │   ├── clone-download.js — 并发下载 + .part 断点续传 + 体积守卫 + 进度回调
+│   │   ├── clone-history-mode.js — （待注释）
 │   │   ├── clone-history.js — （待注释）
 │   │   ├── clone-jobs.js — clone 进度/预览内存态（供前端轮询）
 │   │   ├── clone-replay-io.js — （待注释）
@@ -490,6 +491,7 @@ dsh-git-push/
 │   ├── test-cli-audit-parity.mjs — CLI 与源码全量审计一致性测试（audit --full --json vs 直接 auditFull，含忽略排除）
 │   ├── test-client.mjs — 侧边栏测试（手写 DOM/零外部资源/开关默认）
 │   ├── test-clone-concurrency.mjs — clone 并发互斥/可中止/失败保留文件（14 项，CIFS 对照用例可跳）
+│   ├── test-clone-history-mode.mjs — （待注释）
 │   ├── test-clone-history.mjs — （待注释）
 │   ├── test-clone-maxfilemb.mjs — （待注释）
 │   ├── test-clone-parts-keep.mjs — （待注释）
