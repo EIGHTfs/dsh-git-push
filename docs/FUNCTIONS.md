@@ -479,7 +479,7 @@
 | `checkSmallFileReadAst` | 236-259 | 24 | `export function checkSmallFileReadAst(text = '') {` |
 | `checkConsoleLogJsonAst` | 268-284 | 17 | `export function checkConsoleLogJsonAst(text = '') {` |
 
-### lib/ast/perf.js（147 行 · 8 个函数）
+### lib/ast/perf.js（190 行 · 9 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -487,10 +487,11 @@
 | `matchingParen` | 36-47 | 12 | `function matchingParen(text, openIdx) {` |
 | `lineOf` | 50-54 | 5 | `function lineOf(text, idx) {` |
 | `inCommentOrString` | 63-69 | 7 | `function inCommentOrString(tokens, line, matchText) {` |
-| `nextBlockRange` | 72-147 | 76 | `function nextBlockRange(text, startIdx) {` |
+| `nextBlockRange` | 72-190 | 119 | `function nextBlockRange(text, startIdx) {` |
 | `collectLoopRanges` | 86-102 | 17 | `function collectLoopRanges(text) {` |
 | `loopBodyLines` | 109-118 | 10 | `export function loopBodyLines(text = '') {` |
-| `loopFullCollectionLines` | 131-146 | 16 | `export function loopFullCollectionLines(text = '') {` |
+| `repeatIdenticalCallLines` | 139-160 | 22 | `export function repeatIdenticalCallLines(text = '') {` |
+| `loopFullCollectionLines` | 174-189 | 16 | `export function loopFullCollectionLines(text = '') {` |
 
 ### lib/ast/scope.js（242 行 · 11 个函数）
 
@@ -832,15 +833,15 @@
 |------|------|------|------|
 | `checkPrivateFiles` | 24-63 | 40 | `export function checkPrivateFiles({ root, visibility = 'unknown', privateFiles = [] }) {` |
 
-### lib/checks/regex.js（234 行 · 5 个函数）
+### lib/checks/regex.js（236 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `pickExemptHint` | 25-40 | 16 | `export function pickExemptHint(rule) {` |
 | `hit` | 28-28 | 1 | `const hit = (words) => (Array.isArray(words) ? words : []).some((w) => id.includes(w));` |
-| `checkRegexRules` | 51-156 | 106 | `export function checkRegexRules({ file, text, rules, source = '新增行', repoPath = '' }) {` |
-| `checkPathRegexRules` | 159-175 | 17 | `export function checkPathRegexRules({ file, relPath, rules }) {` |
-| `checkBlacklist` | 185-233 | 49 | `export function checkBlacklist({ file, text, rules }) {` |
+| `checkRegexRules` | 51-158 | 108 | `export function checkRegexRules({ file, text, rules, source = '新增行', repoPath = '' }) {` |
+| `checkPathRegexRules` | 161-177 | 17 | `export function checkPathRegexRules({ file, relPath, rules }) {` |
+| `checkBlacklist` | 187-235 | 49 | `export function checkBlacklist({ file, text, rules }) {` |
 
 ### lib/checks/semantic.js（135 行 · 3 个函数）
 

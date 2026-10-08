@@ -523,6 +523,7 @@ dsh-git-push/
 │   ├── test-module-splitter.mjs — module_splitter 工具 + CLI 接入测试（契约 + 行为 + 脚本随插件发布）
 │   ├── test-name-length-scope.mjs — （待注释）
 │   ├── test-perf-loop-collection.mjs — （待注释）
+│   ├── test-perf-repeat-call.mjs — （待注释）
 │   ├── test-persist-credentials.mjs — 凭据持久化测试
 │   ├── test-platform-scan.mjs — （待注释）
 │   ├── test-plugin.mjs — 插件接线测试（入口导出/工具清单/双副本同步）

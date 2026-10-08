@@ -69,6 +69,22 @@ rules:
     fixable: false
     mitigation: "循环外建 Map/Set 索引（如 name→nodeId），循环内用 .get()/.has() 查；确需快照时提到循环外"
 
+  # ── 循环内重复调用同一函数（可记忆化 / 提前计算）──
+  - id: performance/repeat-identical-call
+    name: "同一循环体内重复调用同一函数（实参完全相同）"
+    category: "performance"
+    severity: "warning"
+    description: "同一循环体内 ≥2 次实参完全相同的调用：若该函数为纯函数且开销不小，应记忆化或提到循环外（真实案例：路径解析函数在解析循环内被调 8762 次、占全量扫描 89%，加记忆化后 4581ms→344ms）"
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx"]
+    # 纯正则无法表达「在不在循环体内 / 实参是否相同」——由 AST 精筛（allow 语义）
+    astConfirmKind: "repeat-identical-call"
+    patterns:
+      - id: repeated-call
+        pattern: "[A-Za-z_$][\\w.$]*\\s*\\([^()]*\\)"
+        message: "循环体内重复调用（实参相同）：若为纯函数可记忆化或提前计算"
+    fixable: false
+    mitigation: "加一层 Map 记忆化（键=入参组合）或把结果提到循环外；有副作用的调用（写文件/网络/日志）不适用"
+
   # ── 无界循环 / 高 CPU 轮询（性能补充）──
   - id: performance/busy-wait-loop
     name: "忙等待循环（高 CPU 空转）"
