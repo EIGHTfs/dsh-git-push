@@ -1163,7 +1163,7 @@
 |------|------|------|------|
 | `createReplayIo` | 47-172 | 126 | `export function createReplayIo({` |
 
-### lib/git/clone-replay.js（269 行 · 18 个函数）
+### lib/git/clone-replay.js（276 行 · 18 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1176,27 +1176,27 @@
 | `initArgs` | 195-197 | 3 | `export function initArgs() {` |
 | `setRemoteArgs` | 200-202 | 3 | `export function setRemoteArgs(name, url) {` |
 | `configFileModeArgs` | 205-207 | 3 | `export function configFileModeArgs(enabled = false) {` |
-| `addAllArgs` | 210-212 | 3 | `export function addAllArgs() {` |
-| `writeTreeArgs` | 215-217 | 3 | `export function writeTreeArgs() {` |
-| `commitTreeArgs` | 228-233 | 6 | `export function commitTreeArgs({ tree = '', parents = [], message = '' } = {}) {` |
-| `updateRefArgs` | 239-243 | 5 | `export function updateRefArgs(ref, sha, { oldValue = '' } = {}) {` |
-| `setUpstreamArgs` | 246-248 | 3 | `export function setUpstreamArgs(branch, remote = 'origin') {` |
-| `revParseArgs` | 251-253 | 3 | `export function revParseArgs(rev) {` |
-| `remoteTrackingRef` | 256-258 | 3 | `export function remoteTrackingRef(remote, branch) {` |
-| `localBranchRef` | 261-263 | 3 | `export function localBranchRef(branch) {` |
-| `markerJson` | 266-268 | 3 | `export function markerJson({ branch = '', replayedSha = '', at = '' } = {}) {` |
+| `addAllArgs` | 217-219 | 3 | `export function addAllArgs() {` |
+| `writeTreeArgs` | 222-224 | 3 | `export function writeTreeArgs() {` |
+| `commitTreeArgs` | 235-240 | 6 | `export function commitTreeArgs({ tree = '', parents = [], message = '' } = {}) {` |
+| `updateRefArgs` | 246-250 | 5 | `export function updateRefArgs(ref, sha, { oldValue = '' } = {}) {` |
+| `setUpstreamArgs` | 253-255 | 3 | `export function setUpstreamArgs(branch, remote = 'origin') {` |
+| `revParseArgs` | 258-260 | 3 | `export function revParseArgs(rev) {` |
+| `remoteTrackingRef` | 263-265 | 3 | `export function remoteTrackingRef(remote, branch) {` |
+| `localBranchRef` | 268-270 | 3 | `export function localBranchRef(branch) {` |
+| `markerJson` | 273-275 | 3 | `export function markerJson({ branch = '', replayedSha = '', at = '' } = {}) {` |
 
-### lib/git/clone.js（424 行 · 7 个函数）
+### lib/git/clone.js（434 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `isPartialCloneDir` | 48-55 | 8 | `export function isPartialCloneDir(dir) {` |
 | `resolveMaxCloneFileMB` | 68-71 | 4 | `export function resolveMaxCloneFileMB(cfg = {}) {` |
 | `enclosingGitRoot` | 88-106 | 19 | `export function enclosingGitRoot(dir) {` |
-| `cloneViaApi` | 115-322 | 208 | `export async function cloneViaApi({` |
-| `cleanupPartial` | 335-339 | 5 | `async function cleanupPartial(dir) {` |
-| `classifyCloneFailure` | 353-366 | 14 | `export function classifyCloneFailure(failed = []) {` |
-| `previewClone` | 394-423 | 30 | `export async function previewClone({ target = '', token = '', branch = '', maxFileMB = DEFAULT_MAX_FILE_MB } = {}) {` |
+| `cloneViaApi` | 115-332 | 218 | `export async function cloneViaApi({` |
+| `cleanupPartial` | 345-349 | 5 | `async function cleanupPartial(dir) {` |
+| `classifyCloneFailure` | 363-376 | 14 | `export function classifyCloneFailure(failed = []) {` |
+| `previewClone` | 404-433 | 30 | `export async function previewClone({ target = '', token = '', branch = '', maxFileMB = DEFAULT_MAX_FILE_MB } = {}) {` |
 
 ### lib/git/cloud.js（47 行 · 1 个函数）
 

@@ -77,7 +77,7 @@ test('cloneWithHistory：完整流水线（拉链 → 准备 → 重放 → 收�
   // 编排顺序：init/config/remote → 下载 → 提交 → 收尾挂引用
   assert.equal(seen[0], 'init');
   assert.equal(seen[1], 'config core.fileMode false');
-  assert.equal(seen.includes('add -A'), true);
+  assert.equal(seen.includes('add -A -f'), true);   // -f：重建远端树时不遵守 .gitignore
   assert.deepEqual(seen.slice(-3), [
     'update-ref refs/heads/master LOCAL2',
     'update-ref refs/remotes/origin/master LOCAL2',

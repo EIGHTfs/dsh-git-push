@@ -76,7 +76,7 @@ test('commit：命令序列为 add -A → write-tree → commit-tree（父按顺
   const r = await io.commit({ env: { GIT_AUTHOR_NAME: 'A' }, message: 'm', parentShas: ['p1', 'p2'] });
   assert.equal(r.ok, true);
   assert.equal(r.sha, 'SHA1');
-  assert.deepEqual(seen, ['add -A', 'write-tree', 'commit-tree TREE1 -p p1 -p p2 -m m']);
+  assert.deepEqual(seen, ['add -A -f', 'write-tree', 'commit-tree TREE1 -p p1 -p p2 -m m']);
 });
 
 test('commit：write-tree 失败时如实报错，不发 commit-tree', async () => {

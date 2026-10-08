@@ -199,7 +199,7 @@ test('git 参数构造：init / remote / config / add / write-tree', () => {
   assert.deepEqual(setRemoteArgs('origin', 'https://github.com/o/r.git'), ['remote', 'add', 'origin', 'https://github.com/o/r.git']);
   assert.deepEqual(configFileModeArgs(), ['config', 'core.fileMode', 'false']);
   assert.deepEqual(configFileModeArgs(true), ['config', 'core.fileMode', 'true']);
-  assert.deepEqual(addAllArgs(), ['add', '-A']);
+  assert.deepEqual(addAllArgs(), ['add', '-A', '-f']);   // -f：重建远端树时不得遵守 .gitignore（否则漏文件 ⇒ tree/sha 不同）
   assert.deepEqual(writeTreeArgs(), ['write-tree']);
 });
 
