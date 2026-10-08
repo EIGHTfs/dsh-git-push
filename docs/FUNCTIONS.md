@@ -57,17 +57,17 @@
 | `readTreeDoc` | 35-40 | 6 | `function readTreeDoc(repoPath) {` |
 | `exportArchJson` | 48-78 | 31 | `export async function exportArchJson(args = {}, deps = {}) {` |
 
-### lib/app/handlers/clone.js（165 行 · 7 个函数）
+### lib/app/handlers/clone.js（168 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `parseCloneRequest` | 23-31 | 9 | `function parseCloneRequest(body) {` |
 | `busyResponse` | 38-53 | 16 | `function busyResponse(target, dest) {` |
-| `handleRepoClone` | 56-123 | 68 | `export async function handleRepoClone(ctx) {` |
-| `handleCloneLogs` | 126-130 | 5 | `export function handleCloneLogs(ctx) {` |
-| `handleCloneAbort` | 133-136 | 4 | `export function handleCloneAbort() {` |
-| `handleClonePreview` | 139-157 | 19 | `export async function handleClonePreview(ctx) {` |
-| `handleCloneProgress` | 160-165 | 6 | `export function handleCloneProgress(ctx) {` |
+| `handleRepoClone` | 56-126 | 71 | `export async function handleRepoClone(ctx) {` |
+| `handleCloneLogs` | 129-133 | 5 | `export function handleCloneLogs(ctx) {` |
+| `handleCloneAbort` | 136-139 | 4 | `export function handleCloneAbort() {` |
+| `handleClonePreview` | 142-160 | 19 | `export async function handleClonePreview(ctx) {` |
+| `handleCloneProgress` | 163-168 | 6 | `export function handleCloneProgress(ctx) {` |
 
 ### lib/app/handlers/identity-rewrite.js（95 行 · 2 个函数）
 
@@ -939,7 +939,7 @@
 | `printCloneResult` | 153-165 | 13 | `function printCloneResult(r, flags, target, dest) {` |
 | `cmdClone` | 168-175 | 8 | `export async function cmdClone(flags, positional) {` |
 
-### lib/client.js（2563 行 · 46 个函数）
+### lib/client.js（2570 行 · 46 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -984,11 +984,11 @@
 | `dshgp_PushDefaultsBlock` | 1215-1277 | 63 | `function dshgp_PushDefaultsBlock(props) {` |
 | `dshgp_SettingsTab` | 1279-1288 | 10 | `function dshgp_SettingsTab(props) {` |
 | `dshgp_GitPushPage` | 1291-1344 | 54 | `function dshgp_GitPushPage(props) {` |
-| `renderResult` | 2124-2137 | 14 | `const renderResult = (res) => {` |
-| `poll` | 2140-2165 | 26 | `const poll = async () => {` |
-| `apply` | 2492-2556 | 65 | `function apply(ctx) {` |
-| `useCardState` | 2532-2535 | 4 | `const useCardState = (selector) => {` |
-| `SectionPage` | 2538-2543 | 6 | `function SectionPage() {` |
+| `renderResult` | 2128-2141 | 14 | `const renderResult = (res) => {` |
+| `poll` | 2144-2169 | 26 | `const poll = async () => {` |
+| `apply` | 2499-2563 | 65 | `function apply(ctx) {` |
+| `useCardState` | 2539-2542 | 4 | `const useCardState = (selector) => {` |
+| `SectionPage` | 2545-2550 | 6 | `function SectionPage() {` |
 
 ### lib/client/index.js（162 行 · 5 个函数）
 
@@ -1189,17 +1189,17 @@
 | `localBranchRef` | 268-270 | 3 | `export function localBranchRef(branch) {` |
 | `markerJson` | 273-275 | 3 | `export function markerJson({ branch = '', replayedSha = '', at = '' } = {}) {` |
 
-### lib/git/clone.js（433 行 · 7 个函数）
+### lib/git/clone.js（446 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `isPartialCloneDir` | 48-55 | 8 | `export function isPartialCloneDir(dir) {` |
 | `resolveMaxCloneFileMB` | 68-71 | 4 | `export function resolveMaxCloneFileMB(cfg = {}) {` |
 | `enclosingGitRoot` | 88-106 | 19 | `export function enclosingGitRoot(dir) {` |
-| `cloneViaApi` | 115-331 | 217 | `export async function cloneViaApi({` |
-| `cleanupPartial` | 344-348 | 5 | `async function cleanupPartial(dir) {` |
-| `classifyCloneFailure` | 362-375 | 14 | `export function classifyCloneFailure(failed = []) {` |
-| `previewClone` | 403-432 | 30 | `export async function previewClone({ target = '', token = '', branch = '', maxFileMB = DEFAULT_MAX_FILE_MB } = {}) {` |
+| `cloneViaApi` | 115-344 | 230 | `export async function cloneViaApi({` |
+| `cleanupPartial` | 357-361 | 5 | `async function cleanupPartial(dir) {` |
+| `classifyCloneFailure` | 375-388 | 14 | `export function classifyCloneFailure(failed = []) {` |
+| `previewClone` | 416-445 | 30 | `export async function previewClone({ target = '', token = '', branch = '', maxFileMB = DEFAULT_MAX_FILE_MB } = {}) {` |
 
 ### lib/git/cloud.js（47 行 · 1 个函数）
 
