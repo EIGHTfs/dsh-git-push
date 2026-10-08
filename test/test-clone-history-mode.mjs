@@ -58,18 +58,22 @@ test('resolveBranchHead：正常取 sha；非 200 时回报失败', async () => 
 
 test('cloneWithHistory：完整流水线（拉链 → 准备 → 重放 → 收尾），引用指向重放结果', async () => {
   const { seen, runGit } = fakeGit();
+  const refs = [];                       // 记录每次下载用的 ref，用于断言「按提交 sha 下载」
   const r = await cloneWithHistory({
     owner: 'o', repo: 'r', branch: 'master', repoPath: '/x', gitDir: '/x/.git',
     deps: {
       githubFetch: fakeApi({ headSha: 'b', trees: TREES, commits: COMMITS }),
       runGit,
-      downloadBlobs: async (o2) => ({ files: o2.blobs.length, failed: [], modePreserved: true }),
+      downloadBlobs: async (o2) => { refs.push(o2.branch); return { files: o2.blobs.length, failed: [], modePreserved: true }; },
     },
   });
   assert.equal(r.ok, true);
   assert.equal(r.count, 2);
   assert.equal(r.replayed, 2);
   assert.equal(r.headSha, 'LOCAL2');
+  // 关键判据：下载 ref 必须是**正在重放的远端提交 sha**，而不是分支名——
+  //   否则会拿到 HEAD 版本（长度不符 + 中间提交被写成 HEAD 的样子，sha 保真失效）
+  assert.deepEqual(refs, ['a', 'b']);
   // 编排顺序：init/config/remote → 下载 → 提交 → 收尾挂引用
   assert.equal(seen[0], 'init');
   assert.equal(seen[1], 'config core.fileMode false');
