@@ -12,15 +12,12 @@ lib/vendor/
 #   权重另由侧边栏配置项可调，不是散落魔数。故整文件豁免质量类规则。
 lib/score/index.js
 
-# 侧边栏设置 UI（零依赖手写 DOM，2292 行，package.json 的 "./client" 入口；
-#   2026-09-19 起从仓库根移到 lib/client.js，豁免路径随之更新）：
-#   本插件「零依赖发布」是硬约束，故不引框架、不用 JSX，全部用 createElement 手写，
-#   由此带来 7 个高复杂度函数与 6 个超长函数——这是**架构选择的固有代价，不是缺陷**。
-#   拆成多文件会引入模块边界与构建步骤，与零依赖单文件入口的目标相悖；
-#   按功能硬拆只是把复杂度从一处搬到另一处，不产生实际收益。
-#   该文件有 13 个测试文件覆盖（交互/状态/渲染/持久化），真实测试覆盖不受影响——
-#   此处豁免的只是风格与复杂度类规则，不是「无人测」。
-lib/client.js
+# 侧边栏设置 UI（lib/client.js，package.json 的 "./client" 入口）：**不再整文件豁免**。
+#   改为**规则声明降级**：audit-rules-nodejs.yml 的 readability/max-file-length 声明
+#   scope_rules: dsh-client-entry → downgrade（仍报、不扣分，不静默排除）。
+#   文件级作用域由 lib/audit/client-entry.js 的 resolveDshClientEntries 读 package.json 推导。
+#   理由：该文件是「零依赖单文件入口」的架构选择（拆分的固有代价），但「架构选择」不等于
+#   「不该被看见」——降级保留可见性与可追溯性，豁免则让事实消失。
 
 # 日期清理工具自身：注释/正则必须含日期示例（20\d{2}-... 匹配模式与示例），
 #   否则工具失去文档价值——no-date-in-comment 对该文件豁免（工具本质）。

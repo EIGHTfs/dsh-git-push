@@ -290,6 +290,7 @@ dsh-git-push/
 │   │   ├── analysis-coverage.js — （待注释）
 │   │   ├── audit-file.js — 单文件审计执行（跑检查+豁免）
 │   │   ├── checks.js — 检查器入口（纯引用表）
+│   │   ├── client-entry.js — （待注释）
 │   │   ├── collector.js — 文件收集（gitignore 感知）
 │   │   ├── ext-runner.js — 审计扩展运行器（audit-ext 统一入口动态加载/契约执行/失败降级）
 │   │   ├── file-context.js — 文件上下文豁免（外部调用超时/mkdir 同函数/版本路径）

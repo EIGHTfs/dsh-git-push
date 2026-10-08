@@ -55,9 +55,9 @@ test('④ 有声明但 fileScope 不匹配 → 不降级（精确匹配）', () 
   assert.equal(r[0].severity, 'warning', '作用域不匹配时按规则自身分级');
 });
 
-test('⑤ 过渡兜底：未传 fileScope 但文件名为 client.js → 仍降级', () => {
+test('⑤ 无 fileScope（调度层未推导出作用域）→ 不降级，按规则分级', () => {
   const r = checkMaxLines({ file: 'lib/client.js', text: BIG, rules: [RULE] });
-  assert.equal(r[0].severity, 'info', '迁移期行为不变（fileScope 全链路接通后删此兜底）');
+  assert.equal(r[0].severity, 'warning', '降级只由 yml 声明驱动（写死正则的过渡兜底已删）');
 });
 
 test('⑥ 未超阈值 → 无命中', () => {

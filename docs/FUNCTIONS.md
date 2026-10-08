@@ -203,29 +203,29 @@
 | `getLastSlotHitStats` | 28-30 | 3 | `export function getLastSlotHitStats() {` |
 | `getLastSlotHitMeta` | 33-35 | 3 | `export function getLastSlotHitMeta() {` |
 
-### lib/app/tool-call.js（550 行 · 19 个函数）
+### lib/app/tool-call.js（554 行 · 19 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `pushWithPostSteps` | 57-92 | 36 | `async function pushWithPostSteps(args, env, cfg) {` |
-| `pushJobOutcome` | 112-131 | 20 | `export function pushJobOutcome(r = {}) {` |
+| `pushJobOutcome` | 112-135 | 24 | `export function pushJobOutcome(r = {}) {` |
 | `short` | 114-114 | 1 | `const short = (sha) => String(sha \|\| '').slice(0, 8);` |
-| `cloneJobOutcome` | 139-144 | 6 | `export function cloneJobOutcome(r = {}) {` |
-| `buildCommitPushJobSpec` | 147-164 | 18 | `function buildCommitPushJobSpec(repo, doPush) {` |
-| `done` | 152-160 | 9 | `const done = (async () => {` |
-| `callCloneJob` | 178-204 | 27 | `async function callCloneJob(args, jobs, exec, log, env = {}, cfg = {}) {` |
-| `buildCloneJobSpec` | 207-224 | 18 | `function buildCloneJobSpec(target, dest, doClone) {` |
-| `done` | 212-220 | 9 | `const done = (async () => {` |
-| `callCommitPush` | 231-278 | 48 | `async function callCommitPush(args, env, cfg, log, jobs, exec) {` |
-| `doPush` | 247-247 | 1 | `const doPush = () => pushWithPostSteps(args, env, cfg);` |
-| `buildAuditOpts` | 289-300 | 12 | `function buildAuditOpts(args, cfg, scope) {` |
-| `runHistoryAuditTool` | 306-338 | 33 | `async function runHistoryAuditTool(args, env, cfg, jobs, exec, weights) {` |
-| `doHistory` | 312-315 | 4 | `const doHistory = async () => {` |
-| `callCodeAudit` | 340-352 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
-| `runStandardAuditTool` | 355-394 | 40 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
-| `callTool` | 396-521 | 126 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null) {` |
-| `shellSplit` | 524-542 | 19 | `function shellSplit(input) {` |
-| `readTextSafe` | 545-549 | 5 | `function readTextSafe(path = '') {` |
+| `cloneJobOutcome` | 143-148 | 6 | `export function cloneJobOutcome(r = {}) {` |
+| `buildCommitPushJobSpec` | 151-168 | 18 | `function buildCommitPushJobSpec(repo, doPush) {` |
+| `done` | 156-164 | 9 | `const done = (async () => {` |
+| `callCloneJob` | 182-208 | 27 | `async function callCloneJob(args, jobs, exec, log, env = {}, cfg = {}) {` |
+| `buildCloneJobSpec` | 211-228 | 18 | `function buildCloneJobSpec(target, dest, doClone) {` |
+| `done` | 216-224 | 9 | `const done = (async () => {` |
+| `callCommitPush` | 235-282 | 48 | `async function callCommitPush(args, env, cfg, log, jobs, exec) {` |
+| `doPush` | 251-251 | 1 | `const doPush = () => pushWithPostSteps(args, env, cfg);` |
+| `buildAuditOpts` | 293-304 | 12 | `function buildAuditOpts(args, cfg, scope) {` |
+| `runHistoryAuditTool` | 310-342 | 33 | `async function runHistoryAuditTool(args, env, cfg, jobs, exec, weights) {` |
+| `doHistory` | 316-319 | 4 | `const doHistory = async () => {` |
+| `callCodeAudit` | 344-356 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
+| `runStandardAuditTool` | 359-398 | 40 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
+| `callTool` | 400-525 | 126 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null) {` |
+| `shellSplit` | 528-546 | 19 | `function shellSplit(input) {` |
+| `readTextSafe` | 549-553 | 5 | `function readTextSafe(path = '') {` |
 
 ### lib/app/tools.js（27 行 · 2 个函数）
 
@@ -595,16 +595,21 @@
 | `topUnresolvedFiles` | 78-85 | 8 | `function topUnresolvedFiles(unresolved, topN) {` |
 | `formatAnalysisCoverageLine` | 92-98 | 7 | `export function formatAnalysisCoverageLine(cov = {}) {` |
 
-### lib/audit/audit-file.js（220 行 · 6 个函数）
+### lib/audit/audit-file.js（183 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `resolveDshClientEntries` | 40-64 | 25 | `export function resolveDshClientEntries(repoRoot) {` |
-| `pick` | 50-58 | 9 | `const pick = (v) => {` |
-| `isMinifiedOneLine` | 66-76 | 11 | `function isMinifiedOneLine(text) {` |
-| `isHashSegment` | 80-82 | 3 | `function isHashSegment(seg) {` |
-| `isBuildArtifactFile` | 84-114 | 31 | `export function isBuildArtifactFile(relPathOrFile = '', text = '') {` |
-| `auditFile` | 116-220 | 105 | `export function auditFile({ file, relPath, text, grouped }, opts = {}) {` |
+| `isMinifiedOneLine` | 29-39 | 11 | `function isMinifiedOneLine(text) {` |
+| `isHashSegment` | 43-45 | 3 | `function isHashSegment(seg) {` |
+| `isBuildArtifactFile` | 47-77 | 31 | `export function isBuildArtifactFile(relPathOrFile = '', text = '') {` |
+| `auditFile` | 79-183 | 105 | `export function auditFile({ file, relPath, text, grouped }, opts = {}) {` |
+
+### lib/audit/client-entry.js（50 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `resolveDshClientEntries` | 25-49 | 25 | `export function resolveDshClientEntries(repoRoot) {` |
+| `pick` | 35-43 | 9 | `const pick = (v) => {` |
 
 ### lib/audit/collector.js（449 行 · 17 个函数）
 
@@ -745,22 +750,22 @@
 | `stripCommentLines` | 106-120 | 15 | `function stripCommentLines(text) {` |
 | `checkButtonBindings` | 138-277 | 140 | `export function checkButtonBindings({ file, text, rules }) {` |
 
-### lib/checks/common.js（156 行 · 12 个函数）
+### lib/checks/common.js（169 行 · 12 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `capSeverity` | 31-37 | 7 | `export function capSeverity(ruleSeverity, internalLevel) {` |
-| `groupByKind` | 40-46 | 7 | `export function groupByKind(compiled) {` |
-| `smartHitLines` | 55-58 | 4 | `export function smartHitLines(text) {` |
-| `smallFileReadLines` | 68-72 | 5 | `export function smallFileReadLines(text) {` |
-| `consoleLogJsonLines` | 80-82 | 3 | `export function consoleLogJsonLines(text) {` |
-| `shortFuncNameLines` | 90-92 | 3 | `export function shortFuncNameLines(text) {` |
-| `placeholderCredentialLines` | 103-105 | 3 | `export function placeholderCredentialLines(text, file) {` |
-| `credentialValueLines` | 107-109 | 3 | `export function credentialValueLines(text) {` |
-| `ioRiskLines` | 123-125 | 3 | `export function ioRiskLines(text) {` |
-| `ioRiskDetail` | 133-141 | 9 | `export function ioRiskDetail(text) {` |
-| `shellCdDynamicLines` | 143-145 | 3 | `export function shellCdDynamicLines(text) {` |
-| `writeIntoGitignoredLines` | 152-154 | 3 | `export function writeIntoGitignoredLines(text, repoPath) {` |
+| `capSeverity` | 33-39 | 7 | `export function capSeverity(ruleSeverity, internalLevel) {` |
+| `groupByKind` | 50-59 | 10 | `export function groupByKind(compiled) {` |
+| `smartHitLines` | 68-71 | 4 | `export function smartHitLines(text) {` |
+| `smallFileReadLines` | 81-85 | 5 | `export function smallFileReadLines(text) {` |
+| `consoleLogJsonLines` | 93-95 | 3 | `export function consoleLogJsonLines(text) {` |
+| `shortFuncNameLines` | 103-105 | 3 | `export function shortFuncNameLines(text) {` |
+| `placeholderCredentialLines` | 116-118 | 3 | `export function placeholderCredentialLines(text, file) {` |
+| `credentialValueLines` | 120-122 | 3 | `export function credentialValueLines(text) {` |
+| `ioRiskLines` | 136-138 | 3 | `export function ioRiskLines(text) {` |
+| `ioRiskDetail` | 146-154 | 9 | `export function ioRiskDetail(text) {` |
+| `shellCdDynamicLines` | 156-158 | 3 | `export function shellCdDynamicLines(text) {` |
+| `writeIntoGitignoredLines` | 165-167 | 3 | `export function writeIntoGitignoredLines(text, repoPath) {` |
 
 ### lib/checks/credential-file.js（44 行 · 1 个函数）
 
@@ -774,11 +779,12 @@
 |------|------|------|------|
 | `checkDataflow` | 25-40 | 16 | `export function checkDataflow({ file, text, rules }) {` |
 
-### lib/checks/dispatch.js（86 行 · 1 个函数）
+### lib/checks/dispatch.js（106 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `runChecks` | 30-85 | 56 | `export function runChecks({ file, relPath, text, grouped }, opts = {}) {` |
+| `resolveFileScope` | 42-48 | 7 | `function resolveFileScope({ repoPath, relPath }) {` |
+| `runChecks` | 50-105 | 56 | `export function runChecks({ file, relPath, text, grouped }, opts = {}) {` |
 
 ### lib/checks/dup-code.js（70 行 · 1 个函数）
 
@@ -868,7 +874,7 @@
 | `isRepoLevelSemanticRule` | 69-78 | 10 | `export function isRepoLevelSemanticRule(rule) {` |
 | `checkPatchInsert` | 93-134 | 42 | `export function checkPatchInsert({ file, text, rules }) {` |
 
-### lib/checks/structural.js（286 行 · 10 个函数）
+### lib/checks/structural.js（275 行 · 9 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -878,10 +884,9 @@
 | `checkMinLength` | 101-122 | 22 | `export function checkMinLength({ file, text, rules }) {` |
 | `checkComplexity` | 125-151 | 27 | `export function checkComplexity({ file, text, rules }) {` |
 | `checkDepth` | 154-170 | 17 | `export function checkDepth({ file, text, rules }) {` |
-| `isDshClientEntryFallback` | 179-181 | 3 | `function isDshClientEntryFallback(file) {` |
-| `checkMaxLines` | 184-235 | 52 | `export function checkMaxLines({ file, text, rules, fileScope = '' }) {` |
-| `checkCommentDensity` | 243-258 | 16 | `export function checkCommentDensity({ file, text, rules }) {` |
-| `checkRepeated` | 261-285 | 25 | `export function checkRepeated({ file, text, rules }) {` |
+| `checkMaxLines` | 173-224 | 52 | `export function checkMaxLines({ file, text, rules, fileScope = '' }) {` |
+| `checkCommentDensity` | 232-247 | 16 | `export function checkCommentDensity({ file, text, rules }) {` |
+| `checkRepeated` | 250-274 | 25 | `export function checkRepeated({ file, text, rules }) {` |
 
 ### lib/cli/commands-account.mjs（108 行 · 6 个函数）
 
@@ -1462,7 +1467,7 @@
 | `loadRuleFiles` | 173-222 | 50 | `export function loadRuleFiles(order = null, opts = {}) {` |
 | `setSlotDisabled` | 236-270 | 35 | `export function setSlotDisabled(slot, disabled, opts = {}) {` |
 
-### lib/rule/registry.js（105 行 · 5 个函数）
+### lib/rule/registry.js（115 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1470,7 +1475,7 @@
 | `compileRule` | 28-61 | 34 | `export function compileRule(rule, ctx = {}) {` |
 | `withSlot` | 43-51 | 9 | `const withSlot = (res) => {` |
 | `compileAllRules` | 64-72 | 9 | `export function compileAllRules(rules, ctx = {}) {` |
-| `withRuleScope` | 89-105 | 17 | `function withRuleScope(compiled, source) {` |
+| `withRuleScope` | 89-115 | 27 | `function withRuleScope(compiled, source) {` |
 
 ### lib/rule/scope.js（67 行 · 2 个函数）
 
