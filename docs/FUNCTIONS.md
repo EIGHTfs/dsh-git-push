@@ -2144,6 +2144,12 @@
 | `writer` | 134-140 | 7 | `const writer = (async () => {` |
 | `call` | 433-433 | 1 | `const call = async (body) => (await handleHttp(` |
 
+### test/test-clone-history.mjs（135 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `stubApi` | 28-38 | 11 | `function stubApi(chain) {` |
+
 ### test/test-clone-parts-keep.mjs（64 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
