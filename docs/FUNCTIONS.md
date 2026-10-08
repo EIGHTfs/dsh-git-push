@@ -939,7 +939,7 @@
 | `printCloneResult` | 153-165 | 13 | `function printCloneResult(r, flags, target, dest) {` |
 | `cmdClone` | 168-175 | 8 | `export async function cmdClone(flags, positional) {` |
 
-### lib/client.js（2570 行 · 46 个函数）
+### lib/client.js（2574 行 · 46 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -968,27 +968,27 @@
 | `dshgp_RepoCloudPane` | 717-768 | 52 | `function dshgp_RepoCloudPane(props) {` |
 | `dshgp_CloneProgress` | 779-796 | 18 | `function dshgp_CloneProgress(props) {` |
 | `mb` | 781-781 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
-| `dshgp_ClonePreview` | 804-843 | 40 | `function dshgp_ClonePreview(props) {` |
+| `dshgp_ClonePreview` | 804-847 | 44 | `function dshgp_ClonePreview(props) {` |
 | `mb` | 806-806 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
-| `dshgp_WeightRows` | 847-870 | 24 | `function dshgp_WeightRows(props) {` |
-| `dshgp_RuleRow` | 881-943 | 63 | `function dshgp_RuleRow(props, slot, idx, len) {` |
-| `countTitle` | 890-893 | 4 | `const countTitle = (kind) => {` |
-| `move` | 898-898 | 1 | `const move = (dir) => props.moveSlot(slot, dir);` |
-| `dshgp_AuditSwitchBlock` | 946-1010 | 65 | `function dshgp_AuditSwitchBlock(props) {` |
-| `dshgp_InjectPromptSwitchBlock` | 1013-1035 | 23 | `function dshgp_InjectPromptSwitchBlock(props) {` |
-| `dshgp_CommentWordingBlock` | 1038-1053 | 16 | `function dshgp_CommentWordingBlock(props) {` |
-| `dshgp_AuditAdvancedBlock` | 1056-1082 | 27 | `function dshgp_AuditAdvancedBlock(props) {` |
-| `dshgp_RuleListBlock` | 1085-1116 | 32 | `function dshgp_RuleListBlock(props) {` |
-| `dshgp_AuditTab` | 1123-1143 | 21 | `function dshgp_AuditTab(props) {` |
-| `dshgp_CredentialBlock` | 1147-1212 | 66 | `function dshgp_CredentialBlock(props) {` |
-| `dshgp_PushDefaultsBlock` | 1215-1277 | 63 | `function dshgp_PushDefaultsBlock(props) {` |
-| `dshgp_SettingsTab` | 1279-1288 | 10 | `function dshgp_SettingsTab(props) {` |
-| `dshgp_GitPushPage` | 1291-1344 | 54 | `function dshgp_GitPushPage(props) {` |
-| `renderResult` | 2128-2141 | 14 | `const renderResult = (res) => {` |
-| `poll` | 2144-2169 | 26 | `const poll = async () => {` |
-| `apply` | 2499-2563 | 65 | `function apply(ctx) {` |
-| `useCardState` | 2539-2542 | 4 | `const useCardState = (selector) => {` |
-| `SectionPage` | 2545-2550 | 6 | `function SectionPage() {` |
+| `dshgp_WeightRows` | 851-874 | 24 | `function dshgp_WeightRows(props) {` |
+| `dshgp_RuleRow` | 885-947 | 63 | `function dshgp_RuleRow(props, slot, idx, len) {` |
+| `countTitle` | 894-897 | 4 | `const countTitle = (kind) => {` |
+| `move` | 902-902 | 1 | `const move = (dir) => props.moveSlot(slot, dir);` |
+| `dshgp_AuditSwitchBlock` | 950-1014 | 65 | `function dshgp_AuditSwitchBlock(props) {` |
+| `dshgp_InjectPromptSwitchBlock` | 1017-1039 | 23 | `function dshgp_InjectPromptSwitchBlock(props) {` |
+| `dshgp_CommentWordingBlock` | 1042-1057 | 16 | `function dshgp_CommentWordingBlock(props) {` |
+| `dshgp_AuditAdvancedBlock` | 1060-1086 | 27 | `function dshgp_AuditAdvancedBlock(props) {` |
+| `dshgp_RuleListBlock` | 1089-1120 | 32 | `function dshgp_RuleListBlock(props) {` |
+| `dshgp_AuditTab` | 1127-1147 | 21 | `function dshgp_AuditTab(props) {` |
+| `dshgp_CredentialBlock` | 1151-1216 | 66 | `function dshgp_CredentialBlock(props) {` |
+| `dshgp_PushDefaultsBlock` | 1219-1281 | 63 | `function dshgp_PushDefaultsBlock(props) {` |
+| `dshgp_SettingsTab` | 1283-1292 | 10 | `function dshgp_SettingsTab(props) {` |
+| `dshgp_GitPushPage` | 1295-1348 | 54 | `function dshgp_GitPushPage(props) {` |
+| `renderResult` | 2132-2145 | 14 | `const renderResult = (res) => {` |
+| `poll` | 2148-2173 | 26 | `const poll = async () => {` |
+| `apply` | 2503-2567 | 65 | `function apply(ctx) {` |
+| `useCardState` | 2543-2546 | 4 | `const useCardState = (selector) => {` |
+| `SectionPage` | 2549-2554 | 6 | `function SectionPage() {` |
 
 ### lib/client/index.js（162 行 · 5 个函数）
 
