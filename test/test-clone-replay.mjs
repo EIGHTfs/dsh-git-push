@@ -8,7 +8,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { blobEntriesOf, planTreeDiff, replayMarkerPath, canResumeFrom, replayHistory } from '../lib/git/clone-replay.js';
+import {
+  blobEntriesOf, planTreeDiff, replayMarkerPath, canResumeFrom, replayHistory,
+  initArgs, setRemoteArgs, configFileModeArgs, addAllArgs, writeTreeArgs, commitTreeArgs,
+  updateRefArgs, setUpstreamArgs, revParseArgs, remoteTrackingRef, localBranchRef, markerJson,
+} from '../lib/git/clone-replay.js';
 
 const E = (path, sha, mode = '100644', size = 10) => ({ path, sha, mode, size });
 
@@ -184,4 +188,45 @@ test('replayHistory：父被 depth 截断（不在链上）时不传该父，避
 test('replayHistory：缺 io / 空链 返回错误而不抛异常', async () => {
   assert.equal((await replayHistory({ commits: CHAIN, branch: 'master' })).ok, false);
   assert.equal((await replayHistory({ commits: [], branch: 'master', io: fakeIo().io })).ok, false);
+});
+
+// ─────────────────── git 命令参数构造（契约即参数数组） ───────────────────
+// 为什么逐条断言参数数组：接线层最容易写错的就是命令与参数顺序（少一个 -p、ref 名、配置键大小写），
+//   把它们固化成契约后，接线层只负责「把这些参数交给 runGit」，不再有解释空间。
+
+test('git 参数构造：init / remote / config / add / write-tree', () => {
+  assert.deepEqual(initArgs(), ['init']);
+  assert.deepEqual(setRemoteArgs('origin', 'https://github.com/o/r.git'), ['remote', 'add', 'origin', 'https://github.com/o/r.git']);
+  assert.deepEqual(configFileModeArgs(), ['config', 'core.fileMode', 'false']);
+  assert.deepEqual(configFileModeArgs(true), ['config', 'core.fileMode', 'true']);
+  assert.deepEqual(addAllArgs(), ['add', '-A']);
+  assert.deepEqual(writeTreeArgs(), ['write-tree']);
+});
+
+test('git 参数构造：commit-tree 保留父顺序、多父（合并提交）原样给出', () => {
+  assert.deepEqual(commitTreeArgs({ tree: 't1' }), ['commit-tree', 't1', '-m', '']);
+  assert.deepEqual(commitTreeArgs({ tree: 't2', parents: ['p1'], message: 'msg' }), ['commit-tree', 't2', '-p', 'p1', '-m', 'msg']);
+  assert.deepEqual(
+    commitTreeArgs({ tree: 't3', parents: ['p1', 'p2'], message: 'merge' }),
+    ['commit-tree', 't3', '-p', 'p1', '-p', 'p2', '-m', 'merge'],
+  );
+});
+
+test('git 参数构造：update-ref / set-upstream / rev-parse / 引用名', () => {
+  assert.deepEqual(updateRefArgs('refs/heads/master', 'abc'), ['update-ref', 'refs/heads/master', 'abc']);
+  assert.deepEqual(updateRefArgs('refs/heads/master', 'abc', { oldValue: 'def' }), ['update-ref', 'refs/heads/master', 'abc', 'def']);
+  assert.deepEqual(setUpstreamArgs('master'), ['branch', '--set-upstream-to=origin/master', 'master']);
+  assert.deepEqual(setUpstreamArgs('dev', 'upstream'), ['branch', '--set-upstream-to=upstream/dev', 'dev']);
+  assert.deepEqual(revParseArgs('HEAD'), ['rev-parse', 'HEAD']);
+  assert.equal(remoteTrackingRef('origin', 'master'), 'refs/remotes/origin/master');
+  assert.equal(localBranchRef('master'), 'refs/heads/master');
+});
+
+test('markerJson：可解析回原值，且带 ISO 时间', () => {
+  const s = markerJson({ branch: 'master', replayedSha: 'a1b2c3' });
+  const o = JSON.parse(s);
+  assert.equal(o.branch, 'master');
+  assert.equal(o.replayedSha, 'a1b2c3');
+  assert.match(o.at, /^\d{4}-\d{2}-\d{2}T/);
+  assert.equal(JSON.parse(markerJson({ branch: 'm', replayedSha: 'x', at: 'FIXED' })).at, 'FIXED');
 });

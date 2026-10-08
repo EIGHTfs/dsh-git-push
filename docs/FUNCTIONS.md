@@ -1150,7 +1150,7 @@
 | `setPreview` | 237-245 | 9 | `export function setPreview(key, data) {` |
 | `__resetCloneJobs` | 248-250 | 3 | `export function __resetCloneJobs() {` |
 
-### lib/git/clone-replay.js（182 行 · 6 个函数）
+### lib/git/clone-replay.js（264 行 · 18 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1160,6 +1160,18 @@
 | `replayMarkerPath` | 85-87 | 3 | `export function replayMarkerPath(gitDir) {` |
 | `canResumeFrom` | 99-106 | 8 | `export function canResumeFrom(marker, { branch = '', shas = [] } = {}) {` |
 | `replayHistory` | 130-181 | 52 | `export async function replayHistory({ commits = [], branch = '', io } = {}) {` |
+| `initArgs` | 190-192 | 3 | `export function initArgs() {` |
+| `setRemoteArgs` | 195-197 | 3 | `export function setRemoteArgs(name, url) {` |
+| `configFileModeArgs` | 200-202 | 3 | `export function configFileModeArgs(enabled = false) {` |
+| `addAllArgs` | 205-207 | 3 | `export function addAllArgs() {` |
+| `writeTreeArgs` | 210-212 | 3 | `export function writeTreeArgs() {` |
+| `commitTreeArgs` | 223-228 | 6 | `export function commitTreeArgs({ tree = '', parents = [], message = '' } = {}) {` |
+| `updateRefArgs` | 234-238 | 5 | `export function updateRefArgs(ref, sha, { oldValue = '' } = {}) {` |
+| `setUpstreamArgs` | 241-243 | 3 | `export function setUpstreamArgs(branch, remote = 'origin') {` |
+| `revParseArgs` | 246-248 | 3 | `export function revParseArgs(rev) {` |
+| `remoteTrackingRef` | 251-253 | 3 | `export function remoteTrackingRef(remote, branch) {` |
+| `localBranchRef` | 256-258 | 3 | `export function localBranchRef(branch) {` |
+| `markerJson` | 261-263 | 3 | `export function markerJson({ branch = '', replayedSha = '', at = '' } = {}) {` |
 
 ### lib/git/clone.js（383 行 · 7 个函数）
 
@@ -2177,11 +2189,11 @@
 | `walk` | 50-55 | 6 | `function walk(node, out = []) {` |
 | `renderPreview` | 58-134 | 77 | `function renderPreview(handlers = {}) {` |
 
-### test/test-clone-replay.mjs（188 行 · 1 个函数）
+### test/test-clone-replay.mjs（233 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `fakeIo` | 111-129 | 19 | `function fakeIo({ trees = {}, failDownloadAt = -1, marker = null } = {}) {` |
+| `fakeIo` | 115-133 | 19 | `function fakeIo({ trees = {}, failDownloadAt = -1, marker = null } = {}) {` |
 
 ### test/test-collector-ignore.mjs（68 行 · 2 个函数）
 
