@@ -349,7 +349,7 @@ dsh-git-push/
 │   │   ├── index.js — 上下文注入入口（环境注入文本）
 │   ├── exempt/ — 豁免机制（dsh-skip-* 注释标记解析与文件头/行内语义）
 │   │   ├── index.js — 豁免注册表（dsh-skip-* 全标记消费）
-│   ├── fs/ — 
+│   ├── fs/ — （待注释）
 │   │   ├── edit-after-read.js — （待注释）
 │   ├── git/ — Git 执行层（runGit/账号/API/克隆/凭据/推送/扫描/索引维护/敏感扫描/传输通道）
 │   │   ├── account-status.js — （待注释）
@@ -568,13 +568,15 @@ dsh-git-push/
 │   ├── test-visibility-unified.mjs — （待注释）
 │   ├── fixtures/ — （待注释）
 │   │   ├── TimeZoneComboBox-CRnoCikG.js — Pawchive 混淆产物样本（hash 文件名——跳过判定 fixture）
-│   ├── helpers/ — 
+│   ├── helpers/ — （待注释）
 │   │   ├── test-cache.mjs — （待注释）
 │   │   ├── tmp-dir.mjs — （待注释）
 ├── docs/ — 开发文档
+│   ├── 2026-10-09-审计插件性能优化.MD — （待注释）
 │   ├── CHANGELOG.md — 版本列表宿主（doc-version apply 写 dshgp-version 标记块）
 │   ├── DETAILS-EXEMPT-AND-RULES.md — 细节补充：豁免注释与规则 yml 用法全录
 │   ├── FUNCTIONS.md — 函数列表宿主（doc-func apply 写 dshgp-functions 标记块）
+│   ├── PERF-BASELINE.md — （待注释）
 │   ├── SPEC.md — （待注释）
 │   ├── 功能-仓库索引与账号状态.md — （待注释）
 │   ├── 功能-历史提交审计.md — （待注释）

@@ -354,99 +354,11 @@
   "CONTRIBUTING.md": "（待注释）",
   "SECURITY.md": "（待注释）",
   "docs/SPEC.md": "（待注释）",
-  "scripts/archify-gen.mjs": "（待注释）",
-  "scripts/archify-imports.mjs": "（待注释）",
-  "test/test-archify-imports.mjs": "（待注释）",
-  ".archify": "（待注释）",
-  ".archify/dsh-git-push.architecture.json": "（待注释）",
-  "lib/arch": "（待注释）",
-  "lib/arch/extract.js": "（待注释）",
-  ".archify/dsh-git-push.html": "（待注释）",
-  "scripts/arch-mcp.mjs": "（待注释）",
-  "lib/arch/aggregate.js": "（待注释）",
-  "lib/arch/to-json.js": "（待注释）",
-  "lib/arch/validate.js": "（待注释）",
-  "lib/app/handlers/arch-json.js": "（待注释）",
-  "test/test-arch-json-fresh.mjs": "（待注释）",
-  "archify-preview.example.json": "（待注释）",
-  "scripts/archify-preview.mjs": "（待注释）",
-  "test/test-arch-func-source.mjs": "（待注释）",
-  "test/test-arch-generic.mjs": "（待注释）",
-  "docs/ARCH-FACTS-SPEC.md": "（待注释）",
-  "lib/arch/ir.js": "（待注释）",
-  "lib/arch/validate-facts.js": "（待注释）",
-  "test/test-arch-ir.mjs": "（待注释）",
-  "lib/arch/lists.js": "（待注释）",
   "_meta": {
     "worktree": {
-      "README.md": {
-        "status": "M",
-        "mtime": "2026-10-07T19:56:33.052Z",
-        "note": "注释可能需更新"
-      },
-      "cli.mjs": {
-        "status": "M",
-        "mtime": "2026-10-07T19:55:36.730Z",
-        "note": "注释可能需更新"
-      },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-07T19:58:49.022Z",
-        "note": "注释可能需更新"
-      },
-      "lib/app/command-registry.js": {
-        "status": "M",
-        "mtime": "2026-10-07T19:57:56.032Z",
-        "note": "注释可能需更新"
-      },
-      "lib/app/inject-text.js": {
-        "status": "M",
-        "mtime": "2026-10-07T19:56:33.030Z",
-        "note": "注释可能需更新"
-      },
-      "lib/app/tool-call.js": {
-        "status": "M",
-        "mtime": "2026-10-07T19:52:47.382Z",
-        "note": "注释可能需更新"
-      },
-      "lib/git/push.js": {
-        "status": "M",
-        "mtime": "2026-10-07T19:56:17.608Z",
-        "note": "注释可能需更新"
-      },
-      "lib/self/index.js": {
-        "status": "M",
-        "mtime": "2026-10-07T19:56:33.091Z",
-        "note": "注释可能需更新"
-      },
-      "package.json": {
-        "status": "M",
-        "mtime": "2026-10-07T19:56:33.100Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-plugin.mjs": {
-        "status": "M",
-        "mtime": "2026-10-07T19:57:56.043Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-tool-contract.mjs": {
-        "status": "M",
-        "mtime": "2026-10-07T19:54:07.334Z",
-        "note": "注释可能需更新"
-      },
-      "lib/app/handlers/identity-rewrite.js": {
-        "status": "A",
-        "mtime": "2026-10-07T19:53:02.163Z",
-        "note": "注释可能需更新"
-      },
-      "lib/git/identity-rewrite.js": {
-        "status": "A",
-        "mtime": "2026-10-07T19:59:37.715Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-git-identity-rewrite.mjs": {
-        "status": "A",
-        "mtime": "2026-10-07T19:56:25.226Z",
+        "mtime": "2026-10-08T21:10:29.229Z",
         "note": "注释可能需更新"
       }
     }
@@ -465,5 +377,47 @@
   "lib/git/identity-rewrite.js": "（待注释）",
   "test/test-git-identity-rewrite.mjs": "（待注释）",
   "lib/git/identity.js": "（待注释）",
-  "test/test-git-identity.mjs": "（待注释）"
+  "test/test-git-identity.mjs": "（待注释）",
+  "lib/fs": "（待注释）",
+  "test/helpers": "（待注释）",
+  "docs/2026-10-09-审计插件性能优化.MD": "（待注释）",
+  "docs/PERF-BASELINE.md": "（待注释）",
+  "lib/ast/line-count.js": "（待注释）",
+  "lib/ast/perf.js": "（待注释）",
+  "lib/ast/symbol-index.js": "（待注释）",
+  "lib/audit/analysis-coverage.js": "（待注释）",
+  "lib/audit/client-entry.js": "（待注释）",
+  "lib/fs/edit-after-read.js": "（待注释）",
+  "lib/git/clone-history-mode.js": "（待注释）",
+  "lib/git/clone-history.js": "（待注释）",
+  "lib/git/clone-replay-io.js": "（待注释）",
+  "lib/git/clone-replay.js": "（待注释）",
+  "scripts/frontend-preview-check.mjs": "（待注释）",
+  "scripts/hot-path-probe-cjs.cjs": "（待注释）",
+  "scripts/hot-path-probe-fs-shim.mjs": "（待注释）",
+  "scripts/hot-path-probe-fsp-shim.mjs": "（待注释）",
+  "scripts/hot-path-probe.mjs": "（待注释）",
+  "scripts/platform-scan.mjs": "（待注释）",
+  "scripts/symbol-index.mjs": "（待注释）",
+  "skills/dev/audit-rule-authoring.md": "（待注释）",
+  "test/helpers/test-cache.mjs": "（待注释）",
+  "test/helpers/tmp-dir.mjs": "（待注释）",
+  "test/run-tests.mjs": "（待注释）",
+  "test/test-analysis-coverage.mjs": "（待注释）",
+  "test/test-clone-history-defaults.mjs": "（待注释）",
+  "test/test-clone-history-mode.mjs": "（待注释）",
+  "test/test-clone-history.mjs": "（待注释）",
+  "test/test-clone-replay-io.mjs": "（待注释）",
+  "test/test-clone-replay.mjs": "（待注释）",
+  "test/test-edit-after-read.mjs": "（待注释）",
+  "test/test-git-bin-plan.mjs": "（待注释）",
+  "test/test-line-count.mjs": "（待注释）",
+  "test/test-max-lines-scope.mjs": "（待注释）",
+  "test/test-mirror-fallback.mjs": "（待注释）",
+  "test/test-mirror-gates.mjs": "（待注释）",
+  "test/test-perf-loop-collection.mjs": "（待注释）",
+  "test/test-perf-repeat-call.mjs": "（待注释）",
+  "test/test-platform-scan.mjs": "（待注释）",
+  "test/test-symbol-index.mjs": "（待注释）",
+  "test/test-test-cache.mjs": "（待注释）"
 }

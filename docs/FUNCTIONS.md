@@ -194,7 +194,7 @@
 | `getLastSlotHitStats` | 28-30 | 3 | `export function getLastSlotHitStats() {` |
 | `getLastSlotHitMeta` | 33-35 | 3 | `export function getLastSlotHitMeta() {` |
 
-### lib/app/tool-call.js（568 行 · 20 个函数）
+### lib/app/tool-call.js（570 行 · 20 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -215,9 +215,9 @@
 | `doHistory` | 336-339 | 4 | `const doHistory = async () => {` |
 | `callCodeAudit` | 358-370 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
 | `runStandardAuditTool` | 373-412 | 40 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
-| `callTool` | 414-539 | 126 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null) {` |
-| `shellSplit` | 542-560 | 19 | `function shellSplit(input) {` |
-| `readTextSafe` | 563-567 | 5 | `function readTextSafe(path = '') {` |
+| `callTool` | 414-541 | 128 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null) {` |
+| `shellSplit` | 544-562 | 19 | `function shellSplit(input) {` |
+| `readTextSafe` | 565-569 | 5 | `function readTextSafe(path = '') {` |
 
 ### lib/app/tools.js（27 行 · 2 个函数）
 
@@ -495,17 +495,17 @@
 | `unusedExportCandidates` | 377-391 | 15 | `export function unusedExportCandidates(index) {` |
 | `indexSummary` | 394-399 | 6 | `export function indexSummary(index) {` |
 
-### lib/ast/tokenizer.js（286 行 · 7 个函数）
+### lib/ast/tokenizer.js（301 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `tokenize` | 39-56 | 18 | `export function tokenize(text = '') {` |
-| `clearTokenCache` | 59-61 | 3 | `export function clearTokenCache() {` |
-| `tokenizeUncached` | 68-172 | 105 | `function tokenizeUncached(text = '') {` |
-| `consumeLexeme` | 191-224 | 34 | `function consumeLexeme(src, i, n, ch, next, tokens, push) { // dsh-skip-complexity: 词素分派器（六类词素分派分支为结构必然，拆分后职责单一）` |
-| `consumeString` | 227-238 | 12 | `function consumeString(src, i, n, ch, push) {` |
-| `consumeTemplate` | 241-252 | 12 | `function consumeTemplate(src, i, n, push) {` |
-| `consumeRegex` | 255-260 | 6 | `function consumeRegex(src, i, n, tokens, push) { // dsh-skip-complexity: 正则状态机（转义/字符组/闭包三态，天然多分支）` |
+| `tokenize` | 49-70 | 22 | `export function tokenize(text = '') {` |
+| `clearTokenCache` | 73-76 | 4 | `export function clearTokenCache() {` |
+| `tokenizeUncached` | 83-187 | 105 | `function tokenizeUncached(text = '') {` |
+| `consumeLexeme` | 206-239 | 34 | `function consumeLexeme(src, i, n, ch, next, tokens, push) { // dsh-skip-complexity: 词素分派器（六类词素分派分支为结构必然，拆分后职责单一）` |
+| `consumeString` | 242-253 | 12 | `function consumeString(src, i, n, ch, push) {` |
+| `consumeTemplate` | 256-267 | 12 | `function consumeTemplate(src, i, n, push) {` |
+| `consumeRegex` | 270-275 | 6 | `function consumeRegex(src, i, n, tokens, push) { // dsh-skip-complexity: 正则状态机（转义/字符组/闭包三态，天然多分支）` |
 
 ### lib/audit/analysis-coverage.js（99 行 · 5 个函数）
 
@@ -714,7 +714,7 @@
 |------|------|------|------|
 | `checkDuplicateCode` | 28-69 | 42 | `export function checkDuplicateCode(fileTexts = [], rules = null) {` |
 
-### lib/checks/dup-const.js（231 行 · 7 个函数）
+### lib/checks/dup-const.js（233 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -722,9 +722,9 @@
 | `extractFromJavaFinal` | 72-80 | 9 | `function extractFromJavaFinal(tokens, i, push) {` |
 | `createConstPusher` | 100-116 | 17 | `function createConstPusher(out) {` |
 | `extractConstAtToken` | 124-148 | 25 | `function extractConstAtToken(tokens, i, { lang, atTopLevel, push }) {` |
-| `findConstDefs` | 150-173 | 24 | `export function findConstDefs(text = '') {` |
-| `atTopLevel` | 155-158 | 4 | `const atTopLevel = (line) => {` |
-| `checkDuplicateConst` | 181-230 | 50 | `export function checkDuplicateConst(fileTexts = [], rules = null) {` |
+| `findConstDefs` | 150-175 | 26 | `export function findConstDefs(text = '') {` |
+| `atTopLevel` | 160-160 | 1 | `const atTopLevel = (line) => /^\S/.test(lines[line - 1] \|\| '');` |
+| `checkDuplicateConst` | 183-232 | 50 | `export function checkDuplicateConst(fileTexts = [], rules = null) {` |
 
 ### lib/checks/file-health.js（151 行 · 2 个函数）
 
@@ -945,7 +945,7 @@
 | `norm` | 316-321 | 6 | `const norm = (p) => {` |
 | `parseEnvInjection` | 334-363 | 30 | `export function parseEnvInjection(text = '') {` |
 
-### lib/exempt/index.js（260 行 · 7 个函数）
+### lib/exempt/index.js（293 行 · 10 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -954,8 +954,11 @@
 | `isCategoryExempt` | 129-137 | 9 | `export function isCategoryExempt(finding = {}) {` |
 | `exemptForFinding` | 148-186 | 39 | `export function exemptForFinding(finding, text = '') { // dsh-skip-complexity: 豁免判定器本体（9 标记 × blocked/细分规则多条件链，职责单一）` |
 | `exemptHintFor` | 189-194 | 6 | `export function exemptHintFor(ruleOrKind) {` |
-| `isSampleExemptDir` | 205-227 | 23 | `export function isSampleExemptDir(repoPath, relPath = '') {` |
-| `isTestExemptDir` | 237-259 | 23 | `export function isTestExemptDir(repoPath, relPath = '') {` |
+| `cacheGet` | 210-211 | 2 | `function cacheGet(cache, dir) { return cache.has(dir) ? cache.get(dir) : undefined; }` |
+| `dirHasEmptyMarker` | 213-225 | 13 | `function dirHasEmptyMarker(dir, name, cache) {` |
+| `clearExemptMarkerCache` | 228-231 | 4 | `export function clearExemptMarkerCache() {` |
+| `isSampleExemptDir` | 242-262 | 21 | `export function isSampleExemptDir(repoPath, relPath = '') {` |
+| `isTestExemptDir` | 272-292 | 21 | `export function isTestExemptDir(repoPath, relPath = '') {` |
 
 ### lib/fs/edit-after-read.js（104 行 · 3 个函数）
 
@@ -1232,18 +1235,18 @@
 | `ensureAuxSshRemote` | 49-65 | 17 | `export function ensureAuxSshRemote(repoPath, owner, repo, result = {}) {` |
 | `autoTagDSHProject` | 72-101 | 30 | `export async function autoTagDSHProject({ repoPath = '', version = '', commitSha = '', owner = '', repo = '', token = '' } = {}) {` |
 
-### lib/git/push.js（383 行 · 8 个函数）
+### lib/git/push.js（402 行 · 8 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `resolveRepoIdentity` | 33-39 | 7 | `function resolveRepoIdentity(repoPath) {` |
-| `commitAndPush` | 51-190 | 140 | `export async function commitAndPush({ repoPath = '', message = '', push = true, dryRun = false, token = '', customIgnorePatterns = '', requirementsConfirmed = false, force = false, pushMethod = 'ssh', pushGate = false, pushConfirmed = false, paths = '' } = {}) {` |
-| `legacyIdentity` | 121-130 | 10 | `const legacyIdentity = (() => {` |
-| `fetchRemoteBranchRef` | 203-216 | 14 | `async function fetchRemoteBranchRef(repoPath, branch, owner, repo) {` |
-| `enhanceAfterPushSuccess` | 224-312 | 89 | `async function enhanceAfterPushSuccess({ repoPath, pr, token, steps, commitSha }) {` |
-| `lsRemoteSha` | 264-270 | 7 | `const lsRemoteSha = () => {` |
-| `readmeCheckHint` | 317-322 | 6 | `export function readmeCheckHint(repoPath) {` |
-| `pushCurrentBranch` | 331-382 | 52 | `export async function pushCurrentBranch({ repoPath = '', pushMethod = 'ssh' } = {}) {` |
+| `resolveRepoIdentity` | 34-40 | 7 | `function resolveRepoIdentity(repoPath) {` |
+| `commitAndPush` | 52-191 | 140 | `export async function commitAndPush({ repoPath = '', message = '', push = true, dryRun = false, token = '', customIgnorePatterns = '', requirementsConfirmed = false, force = false, pushMethod = 'ssh', pushGate = false, pushConfirmed = false, paths = '' } = {}) {` |
+| `legacyIdentity` | 122-131 | 10 | `const legacyIdentity = (() => {` |
+| `fetchRemoteBranchRef` | 204-217 | 14 | `async function fetchRemoteBranchRef(repoPath, branch, owner, repo) {` |
+| `enhanceAfterPushSuccess` | 225-331 | 107 | `async function enhanceAfterPushSuccess({ repoPath, pr, token, steps, commitSha }) {` |
+| `lsRemoteSha` | 265-277 | 13 | `const lsRemoteSha = () => {` |
+| `readmeCheckHint` | 336-341 | 6 | `export function readmeCheckHint(repoPath) {` |
+| `pushCurrentBranch` | 350-401 | 52 | `export async function pushCurrentBranch({ repoPath = '', pushMethod = 'ssh' } = {}) {` |
 
 ### lib/git/remote.js（88 行 · 3 个函数）
 
@@ -1277,16 +1280,21 @@
 | `mergeCloudReposIntoIndex` | 416-469 | 54 | `export function mergeCloudReposIntoIndex({ workspaceRoot = '', owner = 'EIGHTfs', cloudRepos = [], syncTarget = '' } = {}) {` |
 | `updateRepoRemoteStateInIndex` | 486-512 | 27 | `export function updateRepoRemoteStateInIndex({ workspaceRoot = '', repoName = '', remoteState = {}, syncTarget = '' } = {}) {` |
 
-### lib/git/repos.js（145 行 · 6 个函数）
+### lib/git/repos.js（236 行 · 11 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `scanRepos` | 29-99 | 71 | `export function scanRepos(root = '.', { depth = DEFAULT_SCAN_DEPTH, extraRepos = [], extraReposFile = '', maxRepos = 200 } = {}) {` |
-| `loadIgnoredDirs` | 38-52 | 15 | `const loadIgnoredDirs = (repoRoot) => {` |
-| `isIgnored` | 54-62 | 9 | `const isIgnored = (abs) => {` |
-| `walk` | 63-80 | 18 | `const walk = (dir, level) => {` |
-| `maskRemoteUrl` | 105-114 | 10 | `export function maskRemoteUrl(url = '') {` |
-| `describeRepo` | 120-144 | 25 | `export function describeRepo(repoPath = '') {` |
+| `scanRepos` | 29-31 | 3 | `export function scanRepos(root = '.', opts = {}) {` |
+| `scanReposAsync` | 43-47 | 5 | `export async function scanReposAsync(root = '.', opts = {}) {` |
+| `mapLimit` | 50-62 | 13 | `async function mapLimit(items, limit, fn) {` |
+| `collectRepoPaths` | 69-139 | 71 | `export function collectRepoPaths(root = '.', { depth = DEFAULT_SCAN_DEPTH, extraRepos = [], extraReposFile = '', maxRepos = 200 } = {}) {` |
+| `loadIgnoredDirs` | 78-92 | 15 | `const loadIgnoredDirs = (repoRoot) => {` |
+| `isIgnored` | 94-102 | 9 | `const isIgnored = (abs) => {` |
+| `walk` | 103-120 | 18 | `const walk = (dir, level) => {` |
+| `maskRemoteUrl` | 145-154 | 10 | `export function maskRemoteUrl(url = '') {` |
+| `parseRepoInfo` | 164-184 | 21 | `function parseRepoInfo(repoPath, raw) {` |
+| `describeRepo` | 190-207 | 18 | `export function describeRepo(repoPath = '') {` |
+| `describeRepoAsync` | 216-235 | 20 | `export async function describeRepoAsync(repoPath = '') {` |
 
 ### lib/git/scan-runner.js（159 行 · 9 个函数）
 
