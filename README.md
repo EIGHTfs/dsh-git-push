@@ -547,6 +547,7 @@ dsh-git-push/
 │   ├── test-rule-packs.mjs — 规则总入口测试（编译注册/字段指派）
 │   ├── test-rule-slots-render.mjs — 规则包列表统计渲染回归
 │   ├── test-scope.mjs — 作用域最小实验测试（分类器/机制/magic 接入）
+│   ├── test-scrub-conv-wording.mjs — （待注释）
 │   ├── test-self.mjs — 自身总入口测试（VERSION/CLI/help 比对）
 │   ├── test-settings-persistence.mjs — 设置侧边栏持久化专项测试（L1 提交/L2 白名单/L3 回读/L4 消费四层断言）
 │   ├── test-settings-roundtrip.mjs — （待注释）

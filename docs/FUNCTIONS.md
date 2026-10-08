@@ -1800,7 +1800,7 @@
 |------|------|------|------|
 | `detectLanIp` | 29-41 | 13 | `function detectLanIp() {` |
 
-### scripts/readme-gen.mjs（266 行 · 13 个函数）
+### scripts/readme-gen.mjs（268 行 · 13 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1811,12 +1811,12 @@
 | `tocFromTemplate` | 119-129 | 11 | `export function tocFromTemplate(template) {` |
 | `parseVersion` | 134-138 | 5 | `export function parseVersion(str) {` |
 | `listVersionCommits` | 143-157 | 15 | `export function listVersionCommits(repoPath) {` |
-| `scrubConvWording` | 164-176 | 13 | `export function scrubConvWording(label) {` |
-| `readVersionMetrics` | 187-194 | 8 | `export function readVersionMetrics(repoPath) {` |
-| `buildReadmeVersionTable` | 196-223 | 28 | `export function buildReadmeVersionTable(repoPath) {` |
-| `genReadme` | 226-242 | 17 | `export function genReadme({ repoPath, template = '' } = {}) {` |
-| `toString` | 244-245 | 2 | `function toString(arr) { return Array.isArray(arr) ? arr.join('\n') : String(arr \|\| ''); }` |
-| `main` | 246-258 | 13 | `function main(argv) {` |
+| `scrubConvWording` | 164-178 | 15 | `export function scrubConvWording(label) {` |
+| `readVersionMetrics` | 189-196 | 8 | `export function readVersionMetrics(repoPath) {` |
+| `buildReadmeVersionTable` | 198-225 | 28 | `export function buildReadmeVersionTable(repoPath) {` |
+| `genReadme` | 228-244 | 17 | `export function genReadme({ repoPath, template = '' } = {}) {` |
+| `toString` | 246-247 | 2 | `function toString(arr) { return Array.isArray(arr) ? arr.join('\n') : String(arr \|\| ''); }` |
+| `main` | 248-260 | 13 | `function main(argv) {` |
 
 ### scripts/rename-locator.mjs（97 行 · 4 个函数）
 

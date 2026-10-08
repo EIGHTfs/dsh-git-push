@@ -166,8 +166,10 @@ export function scrubConvWording(label) {
   return String(label || '')
     // 剔除括号内沟通短语（许可/同意/要求/确认等）
     .replace(new RegExp(`[（(](?:${user})?(?:许可|同意|要求|确认|授权)[^）)]*[）)]`, 'g'), '')
-    // 残留裸短语
-    .replace(new RegExp(`（${user}许可升版）|（${user}许可）|${user}许可升版|${user}同意|${user}要求`, 'g'), '')
+    // 残留裸短语（扩充：补决策来源类裸短语——此前只清括号内与「同意/要求/许可」，
+    //   裸的「按用[户]确认删除」会整句留在版本表里，被公开文档规则拦下）
+    // 本项目惯例：黑名单词在注释与正则里都做字符类拆分（如 用[户]、指[示]），避免注释自举规则误报命中
+    .replace(new RegExp(`（${user}许可升版）|（${user}许可）|${user}许可升版|${user}同意|${user}要求|按?经?${user}(?:确认|决[定]|指[示]|反馈|指[出]|建议|选择)[，、]?`, 'g'), '')
     .replace(new RegExp(`（${user}[^）]*）|\\(${user}[^)]*\\)`, 'g'), '')
     .replace(new RegExp(`——bump[\\s\\S]*?（${user}[^）]*）`, 'g'), '')
     // 清理遗留的分号/空括号
