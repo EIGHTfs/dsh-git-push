@@ -8,7 +8,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { blobEntriesOf, planTreeDiff, replayMarkerPath, canResumeFrom } from '../lib/git/clone-replay.js';
+import { blobEntriesOf, planTreeDiff, replayMarkerPath, canResumeFrom, replayHistory } from '../lib/git/clone-replay.js';
 
 const E = (path, sha, mode = '100644', size = 10) => ({ path, sha, mode, size });
 
@@ -94,4 +94,94 @@ test('canResumeFrom：无标记/分支不一致/sha 不在链上 都不可续跑
   const ok = canResumeFrom(marker, { branch: 'master', shas: new Set(['a', 'b']) });
   assert.equal(ok.resume, true);
   assert.equal(ok.fromSha, 'b');
+});
+
+// ───────────────────────── replayHistory：编排（io 注入，离线） ─────────────────────────
+// 为什么用假 io：编排的正确性（顺序、父映射、续跑点、失败处不回退标记）不依赖真 git/网络；
+//   真跑 git 的那层由执行适配器承担，接线下轮做。
+
+/** 造提交对象（字段形状与 /git/commits 一致）。 */
+const C = (sha, parents, tree, msg) => ({
+  sha, parents, tree, message: msg,
+  author: { name: 'A', email: 'a@x', date: '2026-09-13T12:00:00Z' },
+  committer: { name: 'A', email: 'a@x', date: '2026-09-13T12:00:00Z' },
+});
+
+/** 假 io：记录调用；failDownloadAt 指定第几次下载失败（从 1 数）。 */
+function fakeIo({ trees = {}, failDownloadAt = -1, marker = null } = {}) {
+  const calls = { commit: [], download: [], remove: [], marker: [], fetch: [] };
+  let dl = 0;
+  return {
+    calls,
+    io: {
+      readMarker: async () => marker,
+      writeMarker: async (m) => { calls.marker.push(m); return { ok: true }; },
+      fetchTreeEntries: async (treeSha) => { calls.fetch.push(treeSha); return { ok: true, entries: trees[treeSha] || [], error: '' }; },
+      applyDownload: async (entries) => {
+        dl += 1;
+        calls.download.push(entries.map((e) => e.path));
+        return dl === failDownloadAt ? { ok: false, error: '网络抖动' } : { ok: true };
+      },
+      applyRemove: async (paths) => { calls.remove.push(paths); return { ok: true }; },
+      commit: async (c) => { calls.commit.push(c); return { ok: true, sha: `local-${calls.commit.length}` }; },
+    },
+  };
+}
+
+const CHAIN = [C('a', [], 'ta', 'A'), C('b', ['a'], 'tb', 'B'), C('c', ['b', 'a'], 'tc', 'C')];
+const TREES = { ta: [E('f1', 's1')], tb: [E('f1', 's1'), E('f2', 's2')], tc: [E('f1', 's1'), E('f2', 's2b')] };
+
+test('replayHistory：线性+合并链按序重建，父映射到本地 sha', async () => {
+  const { io, calls } = fakeIo({ trees: TREES });
+  const r = await replayHistory({ commits: CHAIN, branch: 'master', io });
+  assert.equal(r.ok, true);
+  assert.equal(r.replayed, 3);
+  assert.equal(r.headSha, 'local-3');
+  assert.deepEqual(calls.commit.map((c) => c.parentShas), [[], ['local-1'], ['local-2', 'local-1']]);   // 合并提交两父都传
+  assert.deepEqual(calls.download, [['f1'], ['f2'], ['f2']]);                                          // 只下变化文件
+  assert.deepEqual(calls.marker.map((m) => m.replayedSha), ['a', 'b', 'c']);                            // 每步写标记
+  assert.equal(calls.commit[0].env.GIT_AUTHOR_NAME, 'A');                                              // 环境变量已回填
+});
+
+test('replayHistory：删除先于下载，且删除名单正确', async () => {
+  const trees = { ta: [E('keep', 's'), E('gone', 'g')], tb: [E('keep', 's'), E('new', 'n')] };
+  const { io, calls } = fakeIo({ trees });
+  const chain = [C('a', [], 'ta', 'A'), C('b', ['a'], 'tb', 'B')];
+  const r = await replayHistory({ commits: chain, branch: 'master', io });
+  assert.equal(r.ok, true);
+  assert.deepEqual(calls.remove, [['gone']]);
+  assert.deepEqual(calls.download, [['gone', 'keep'], ['new']]);   // planTreeDiff 按路径排序，故 gone 在 keep 前
+});
+
+test('replayHistory：续跑——标记指向链上提交时，从它的下一个开始且基线取它的树', async () => {
+  const { io, calls } = fakeIo({ trees: TREES, marker: { branch: 'master', replayedSha: 'b' } });
+  const r = await replayHistory({ commits: CHAIN, branch: 'master', io });
+  assert.equal(r.ok, true);
+  assert.equal(r.resumedFrom, 'b');
+  assert.equal(r.replayed, 1);
+  assert.deepEqual(calls.fetch, ['tb', 'tc']);        // 第一个是续跑基线
+  assert.deepEqual(calls.marker.map((m) => m.replayedSha), ['c']);
+});
+
+test('replayHistory：下载失败时中断、且标记不回退（续跑从最后完整处继续）', async () => {
+  const { io, calls } = fakeIo({ trees: TREES, failDownloadAt: 2 });
+  const r = await replayHistory({ commits: CHAIN, branch: 'master', io });
+  assert.equal(r.ok, false);
+  assert.match(r.error, /下载失败（b）/);
+  assert.equal(r.replayed, 1);
+  assert.equal(r.headSha, 'local-1');
+  assert.deepEqual(calls.marker.map((m) => m.replayedSha), ['a']);   // 失败处不写标记
+});
+
+test('replayHistory：父被 depth 截断（不在链上）时不传该父，避免引用不存在的对象', async () => {
+  const trees = { tb: [E('f', 's')] };
+  const { io, calls } = fakeIo({ trees });
+  const r = await replayHistory({ commits: [C('b', ['a-missing'], 'tb', 'B')], branch: 'master', io });
+  assert.equal(r.ok, true);
+  assert.deepEqual(calls.commit[0].parentShas, []);
+});
+
+test('replayHistory：缺 io / 空链 返回错误而不抛异常', async () => {
+  assert.equal((await replayHistory({ commits: CHAIN, branch: 'master' })).ok, false);
+  assert.equal((await replayHistory({ commits: [], branch: 'master', io: fakeIo().io })).ok, false);
 });

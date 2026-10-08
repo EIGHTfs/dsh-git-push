@@ -1150,15 +1150,16 @@
 | `setPreview` | 237-245 | 9 | `export function setPreview(key, data) {` |
 | `__resetCloneJobs` | 248-250 | 3 | `export function __resetCloneJobs() {` |
 
-### lib/git/clone-replay.js（103 行 · 5 个函数）
+### lib/git/clone-replay.js（182 行 · 6 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `blobEntriesOf` | 25-37 | 13 | `export function blobEntriesOf(treeJson) {` |
-| `planTreeDiff` | 52-69 | 18 | `export function planTreeDiff(prevEntries = [], curEntries = []) {` |
-| `byPath` | 64-64 | 1 | `const byPath = (a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0);` |
-| `replayMarkerPath` | 81-83 | 3 | `export function replayMarkerPath(gitDir) {` |
-| `canResumeFrom` | 95-102 | 8 | `export function canResumeFrom(marker, { branch = '', shas = [] } = {}) {` |
+| `blobEntriesOf` | 29-41 | 13 | `export function blobEntriesOf(treeJson) {` |
+| `planTreeDiff` | 56-73 | 18 | `export function planTreeDiff(prevEntries = [], curEntries = []) {` |
+| `byPath` | 68-68 | 1 | `const byPath = (a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0);` |
+| `replayMarkerPath` | 85-87 | 3 | `export function replayMarkerPath(gitDir) {` |
+| `canResumeFrom` | 99-106 | 8 | `export function canResumeFrom(marker, { branch = '', shas = [] } = {}) {` |
+| `replayHistory` | 130-181 | 52 | `export async function replayHistory({ commits = [], branch = '', io } = {}) {` |
 
 ### lib/git/clone.js（383 行 · 7 个函数）
 
@@ -2175,6 +2176,12 @@
 | `extractFunction` | 36-134 | 99 | `function extractFunction(src, signature) {` |
 | `walk` | 50-55 | 6 | `function walk(node, out = []) {` |
 | `renderPreview` | 58-134 | 77 | `function renderPreview(handlers = {}) {` |
+
+### test/test-clone-replay.mjs（188 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `fakeIo` | 111-129 | 19 | `function fakeIo({ trees = {}, failDownloadAt = -1, marker = null } = {}) {` |
 
 ### test/test-collector-ignore.mjs（68 行 · 2 个函数）
 
