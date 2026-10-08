@@ -253,15 +253,9 @@ dsh-git-push/
 │   │   ├── slot-stats.js — 规则槽位命中统计（模块级状态）
 │   │   ├── tool-call.js — 工具调用分发（git_scan/commit_push/audit/status 等全部工具）
 │   │   ├── tools.js — 工具定义清单（名称/描述/参数 schema）
-│   │   └── …（9 个更深文件）
+│   │   └── …（8 个更深文件）
 │   ├── arch/ — （待注释）
-│   │   ├── aggregate.js — （待注释）
-│   │   ├── extract.js — （待注释）
-│   │   ├── ir.js — （待注释）
-│   │   ├── lists.js — （待注释）
-│   │   ├── to-json.js — （待注释）
-│   │   ├── validate-facts.js — （待注释）
-│   │   ├── validate.js — （待注释）
+│   │   ├── facts-cache.js — （待注释）
 │   ├── ast/ — AST 实现层（token 级判定：括号/控制流/数据流/凭据/魔数/命名/规模/分词）
 │   │   ├── brace.js — 括号配对与区间包含工具
 │   │   ├── callgraph.js — 调用链追踪（单文件调用图 + isInRequestPath，io-risk 请求路径判定升级）
@@ -418,10 +412,6 @@ dsh-git-push/
 │   ├── vendor/ — （待注释）
 │   │   └── …（2 个更深文件）
 ├── scripts/ — 开发工具脚本（版本校验/双副本同步/预览服务/README 目录树维护）
-│   ├── arch-mcp.mjs — （待注释）
-│   ├── archify-gen.mjs — （待注释）
-│   ├── archify-imports.mjs — （待注释）
-│   ├── archify-preview.mjs — （待注释）
 │   ├── audit-runner.mjs — 审计扩展 CLI 统一入口（独立跑 scripts/audit-ext/ 全部扩展）
 │   ├── audit-runtime-check.mjs — 三层审计 L3 运行时检测脚本
 │   ├── browser-page-probe.mjs — （待注释）
@@ -472,11 +462,6 @@ dsh-git-push/
 │   ├── test-account-refresh-on-push.mjs — （待注释）
 │   ├── test-account-ssh.mjs — 账号检查 + SSH 密钥测试
 │   ├── test-analysis-coverage.mjs — （待注释）
-│   ├── test-arch-func-source.mjs — （待注释）
-│   ├── test-arch-generic.mjs — （待注释）
-│   ├── test-arch-ir.mjs — （待注释）
-│   ├── test-arch-json-fresh.mjs — （待注释）
-│   ├── test-archify-imports.mjs — （待注释）
 │   ├── test-audit-api-http.mjs — （待注释）
 │   ├── test-audit-api.mjs — （待注释）
 │   ├── test-audit-bad-file.mjs — 审计拦截门禁测试（硬编码密码/API key/.env 凭据文件）
@@ -589,7 +574,6 @@ dsh-git-push/
 │   │   ├── test-cache.mjs — （待注释）
 │   │   ├── tmp-dir.mjs — （待注释）
 ├── docs/ — 开发文档
-│   ├── ARCH-FACTS-SPEC.md — （待注释）
 │   ├── CHANGELOG.md — 版本列表宿主（doc-version apply 写 dshgp-version 标记块）
 │   ├── DETAILS-EXEMPT-AND-RULES.md — 细节补充：豁免注释与规则 yml 用法全录
 │   ├── FUNCTIONS.md — 函数列表宿主（doc-func apply 写 dshgp-functions 标记块）
@@ -621,9 +605,14 @@ dsh-git-push/
 │   │   ├── task-completion-report.md — （待注释）
 │   │   ├── tool-json-add-ask.md — （待注释）
 │   │   ├── versioning-rule.md — （待注释）
-├── .archify/ — （待注释）
-│   ├── dsh-git-push.architecture.json — （待注释）
-│   ├── dsh-git-push.html — （待注释）
+├── audit-history/ — （待注释）
+│   ├── 7a692e7-2026-10-09T03-13-26.json — （待注释）
+│   ├── 7a692e7-2026-10-09T03-13-26.md — （待注释）
+│   ├── SUMMARY.json — （待注释）
+│   ├── c54384a-2026-10-09T03-16-47.json — （待注释）
+│   ├── c54384a-2026-10-09T03-16-47.md — （待注释）
+│   ├── d57d0f5-2026-10-09T03-36-35.json — （待注释）
+│   ├── d57d0f5-2026-10-09T03-36-35.md — （待注释）
 ├── .auditignore — 审计豁免清单（不影响 git 入库，仅跳过审计扫描）——排除内置第三方代码
 ├── .gitignore — 忽略规则（node_modules/产物/备份/回收站等）
 ├── CONTRIBUTING.md — （待注释）

@@ -22,16 +22,16 @@
 | `aggregateFindings` | 70-91 | 22 | `export function aggregateFindings(findings = [], opts = {}) {` |
 | `runAuditApi` | 99-158 | 60 | `export async function runAuditApi(repo, params = {}, cfg = {}) {` |
 
-### lib/app/command-registry.js（248 行 · 6 个函数）
+### lib/app/command-registry.js（240 行 · 6 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `applyFlagToken` | 186-202 | 17 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
-| `validateParamConstraints` | 205-211 | 7 | `function validateParamConstraints(args, params) {` |
-| `parseRegistryArgs` | 213-233 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
-| `registryByName` | 236-238 | 3 | `export function registryByName(name) {` |
-| `registryByCli` | 241-243 | 3 | `export function registryByCli(cli) {` |
-| `buildToolsListText` | 246-248 | 3 | `export function buildToolsListText() {` |
+| `applyFlagToken` | 178-194 | 17 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
+| `validateParamConstraints` | 197-203 | 7 | `function validateParamConstraints(args, params) {` |
+| `parseRegistryArgs` | 205-225 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
+| `registryByName` | 228-230 | 3 | `export function registryByName(name) {` |
+| `registryByCli` | 233-235 | 3 | `export function registryByCli(cli) {` |
+| `buildToolsListText` | 238-240 | 3 | `export function buildToolsListText() {` |
 
 ### lib/app/handlers/account.js（166 行 · 10 个函数）
 
@@ -47,15 +47,6 @@
 | `handleApiQuota` | 119-146 | 28 | `export async function handleApiQuota(ctx) {` |
 | `handleAccountCheck` | 149-158 | 10 | `export async function handleAccountCheck(ctx) {` |
 | `handleGenSshKey` | 161-166 | 6 | `export function handleGenSshKey(ctx) {` |
-
-### lib/app/handlers/arch-json.js（111 行 · 4 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `repositoryEvidence` | 26-37 | 12 | `function repositoryEvidence(repoPath, { execFileSync }) {` |
-| `run` | 27-32 | 6 | `const run = (args) => {` |
-| `readTreeDoc` | 40-45 | 6 | `function readTreeDoc(repoPath) {` |
-| `exportArchFacts` | 57-107 | 51 | `export async function exportArchFacts(args = {}) {` |
 
 ### lib/app/handlers/clone.js（168 行 · 7 个函数）
 
@@ -203,31 +194,30 @@
 | `getLastSlotHitStats` | 28-30 | 3 | `export function getLastSlotHitStats() {` |
 | `getLastSlotHitMeta` | 33-35 | 3 | `export function getLastSlotHitMeta() {` |
 
-### lib/app/tool-call.js（605 行 · 21 个函数）
+### lib/app/tool-call.js（568 行 · 20 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `pushWithPostSteps` | 57-92 | 36 | `async function pushWithPostSteps(args, env, cfg) {` |
-| `pushJobOutcome` | 112-135 | 24 | `export function pushJobOutcome(r = {}) {` |
-| `short` | 114-114 | 1 | `const short = (sha) => String(sha \|\| '').slice(0, 8);` |
-| `cloneJobOutcome` | 143-148 | 6 | `export function cloneJobOutcome(r = {}) {` |
-| `buildCommitPushJobSpec` | 151-168 | 18 | `function buildCommitPushJobSpec(repo, doPush) {` |
-| `done` | 156-164 | 9 | `const done = (async () => {` |
-| `startHostJob` | 181-188 | 8 | `function startHostJob(jobs, spec, owner) {` |
-| `callCloneJob` | 202-234 | 33 | `async function callCloneJob(args, jobs, exec, log, env = {}, cfg = {}) {` |
-| `buildCloneJobSpec` | 237-254 | 18 | `function buildCloneJobSpec(target, dest, doClone) {` |
-| `done` | 242-250 | 9 | `const done = (async () => {` |
-| `callCommitPush` | 261-304 | 44 | `async function callCommitPush(args, env, cfg, log, jobs, exec) {` |
-| `doPush` | 277-277 | 1 | `const doPush = () => pushWithPostSteps(args, env, cfg);` |
-| `buildAuditOpts` | 315-326 | 12 | `function buildAuditOpts(args, cfg, scope) {` |
-| `runHistoryAuditTool` | 332-358 | 27 | `async function runHistoryAuditTool(args, env, cfg, jobs, exec, weights) {` |
-| `doHistory` | 338-341 | 4 | `const doHistory = async () => {` |
-| `callCodeAudit` | 360-372 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
-| `runStandardAuditTool` | 375-414 | 40 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
-| `callTool` | 416-576 | 161 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null) {` |
-| `doArch` | 462-471 | 10 | `const doArch = async () => {` |
-| `shellSplit` | 579-597 | 19 | `function shellSplit(input) {` |
-| `readTextSafe` | 600-604 | 5 | `function readTextSafe(path = '') {` |
+| `pushWithPostSteps` | 55-90 | 36 | `async function pushWithPostSteps(args, env, cfg) {` |
+| `pushJobOutcome` | 110-133 | 24 | `export function pushJobOutcome(r = {}) {` |
+| `short` | 112-112 | 1 | `const short = (sha) => String(sha \|\| '').slice(0, 8);` |
+| `cloneJobOutcome` | 141-146 | 6 | `export function cloneJobOutcome(r = {}) {` |
+| `buildCommitPushJobSpec` | 149-166 | 18 | `function buildCommitPushJobSpec(repo, doPush) {` |
+| `done` | 154-162 | 9 | `const done = (async () => {` |
+| `startHostJob` | 179-186 | 8 | `function startHostJob(jobs, spec, owner) {` |
+| `callCloneJob` | 200-232 | 33 | `async function callCloneJob(args, jobs, exec, log, env = {}, cfg = {}) {` |
+| `buildCloneJobSpec` | 235-252 | 18 | `function buildCloneJobSpec(target, dest, doClone) {` |
+| `done` | 240-248 | 9 | `const done = (async () => {` |
+| `callCommitPush` | 259-302 | 44 | `async function callCommitPush(args, env, cfg, log, jobs, exec) {` |
+| `doPush` | 275-275 | 1 | `const doPush = () => pushWithPostSteps(args, env, cfg);` |
+| `buildAuditOpts` | 313-324 | 12 | `function buildAuditOpts(args, cfg, scope) {` |
+| `runHistoryAuditTool` | 330-356 | 27 | `async function runHistoryAuditTool(args, env, cfg, jobs, exec, weights) {` |
+| `doHistory` | 336-339 | 4 | `const doHistory = async () => {` |
+| `callCodeAudit` | 358-370 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
+| `runStandardAuditTool` | 373-412 | 40 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
+| `callTool` | 414-539 | 126 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null) {` |
+| `shellSplit` | 542-560 | 19 | `function shellSplit(input) {` |
+| `readTextSafe` | 563-567 | 5 | `function readTextSafe(path = '') {` |
 
 ### lib/app/tools.js（27 行 · 2 个函数）
 
@@ -236,61 +226,12 @@
 | `paramsToParameters` | 12-18 | 7 | `function paramsToParameters(params = []) {` |
 | `listTools` | 21-27 | 7 | `export function listTools() {` |
 
-### lib/arch/aggregate.js（90 行 · 2 个函数）
+### lib/arch/facts-cache.js（67 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `aggregateModules` | 17-76 | 60 | `export function aggregateModules(facts, { min = 8, max = 15 } = {}) {` |
-| `componentId` | 84-89 | 6 | `function componentId(layer, mods) {` |
-
-### lib/arch/extract.js（467 行 · 14 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `detectSourceRoot` | 42-65 | 24 | `export function detectSourceRoot(repoPath) {` |
-| `collectSync` | 68-79 | 12 | `function collectSync(dir, out = [], depth = 0) {` |
-| `ioPathFromLine` | 90-467 | 378 | `export function ioPathFromLine(text, line) {` |
-| `statementAt` | 115-134 | 20 | `export function statementAt(text, line) {` |
-| `startsStatement` | 119-119 | 1 | `const startsStatement = (s) => /^\s*(const\|let\|var\|function\|return\|if\|for\|while\|await\|export)\b/.test(s);` |
-| `count` | 126-126 | 1 | `const count = (s, re) => (s.match(re) \|\| []).length;` |
-| `collectPathConsts` | 149-467 | 319 | `export function collectPathConsts(text) {` |
-| `ioPathsFromLine` | 171-467 | 297 | `export function ioPathsFromLine(text, line) {` |
-| `extractFileIo` | 194-238 | 45 | `export function extractFileIo(text) {` |
-| `resolveIoPath` | 250-263 | 14 | `export function resolveIoPath(baseDir, p, repoFiles = []) {` |
-| `normalizeIoPath` | 271-281 | 11 | `export function normalizeIoPath(baseDir, p) {` |
-| `importSpecifiers` | 283-287 | 5 | `export function importSpecifiers(text) {` |
-| `resolveModule` | 290-303 | 14 | `export function resolveModule(fromRel, spec, sourceRoot) {` |
-| `extractArchFacts` | 314-466 | 153 | `export async function extractArchFacts(repoPath, { maxFiles = DEFAULT_MAX_FILES } = {}) {` |
-
-### lib/arch/ir.js（150 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `toArchFacts` | 35-149 | 115 | `export function toArchFacts(agg, facts, opts = {}) {` |
-
-### lib/arch/layers.js（21 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `inferLayer` | 18-20 | 3 | `export function inferLayer(dirName) {` |
-
-### lib/arch/lists.js（97 行 · 4 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `scanUrls` | 14-27 | 14 | `export function scanUrls(text, file, moduleId) {` |
-| `scanApis` | 37-66 | 30 | `export function scanApis(text, file, moduleId) {` |
-| `functionsFromScan` | 73-83 | 11 | `export function functionsFromScan(scan, moduleId) {` |
-| `fileEntries` | 89-96 | 8 | `export function fileEntries(entries) {` |
-
-### lib/arch/validate-facts.js（118 行 · 4 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `evidenceFile` | 13-20 | 8 | `function evidenceFile(entry) {` |
-| `validateFacts` | 28-117 | 90 | `export function validateFacts(ir, { repoPath = '' } = {}) {` |
-| `exists` | 37-37 | 1 | `const exists = (p) => !repoPath \|\| !p \|\| existsSync(join(repoPath, p));` |
-| `dfs` | 85-95 | 11 | `const dfs = (node, stack) => {` |
+| `fileFingerprint` | 20-27 | 8 | `export function fileFingerprint(full) {` |
+| `openFactsCache` | 30-66 | 37 | `export function openFactsCache(repoPath, dirName, name) {` |
 
 ### lib/ast/brace.js（106 行 · 5 个函数）
 
@@ -2004,18 +1945,18 @@
 |------|------|------|------|
 | `regen` | 38-48 | 11 | `function regen() {` |
 
-### test/helpers/test-cache.mjs（210 行 · 8 个函数）
+### test/helpers/test-cache.mjs（208 行 · 8 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `stripCommentsAndStrings` | 56-81 | 26 | `export function stripCommentsAndStrings(text) {` |
-| `isCacheableTest` | 89-93 | 5 | `export function isCacheableTest(sourceText, fileName = '') {` |
-| `relativeSpecifiers` | 96-109 | 14 | `export function relativeSpecifiers(sourceText) {` |
-| `importClosure` | 117-136 | 20 | `export function importClosure(entryAbs, exists = existsSync) {` |
-| `cacheKeyFor` | 144-155 | 12 | `export function cacheKeyFor(absFiles, nodeVersion = process.version) {` |
-| `loadTestCache` | 158-165 | 8 | `export function loadTestCache(root) {` |
-| `saveTestCache` | 168-181 | 14 | `export function saveTestCache(root, cache) {` |
-| `planTestRun` | 190-209 | 20 | `export function planTestRun(files, cache, exists = existsSync) {` |
+| `stripCommentsAndStrings` | 54-79 | 26 | `export function stripCommentsAndStrings(text) {` |
+| `isCacheableTest` | 87-91 | 5 | `export function isCacheableTest(sourceText, fileName = '') {` |
+| `relativeSpecifiers` | 94-107 | 14 | `export function relativeSpecifiers(sourceText) {` |
+| `importClosure` | 115-134 | 20 | `export function importClosure(entryAbs, exists = existsSync) {` |
+| `cacheKeyFor` | 142-153 | 12 | `export function cacheKeyFor(absFiles, nodeVersion = process.version) {` |
+| `loadTestCache` | 156-163 | 8 | `export function loadTestCache(root) {` |
+| `saveTestCache` | 166-179 | 14 | `export function saveTestCache(root, cache) {` |
+| `planTestRun` | 188-207 | 20 | `export function planTestRun(files, cache, exists = existsSync) {` |
 
 ### test/helpers/tmp-dir.mjs（117 行 · 6 个函数）
 
@@ -2039,25 +1980,6 @@
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `makeProject` | 20-27 | 8 | `function makeProject() {` |
-
-### test/test-arch-generic.mjs（72 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `signature` | 20-26 | 7 | `function signature(facts) {` |
-
-### test/test-arch-ir.mjs（93 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `makeFixture` | 17-24 | 8 | `function makeFixture() {` |
-| `buildIr` | 26-30 | 5 | `async function buildIr(dir) {` |
-
-### test/test-arch-json-fresh.mjs（65 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `generate` | 25-32 | 8 | `async function generate(outDir) {` |
 
 ### test/test-audit-bad-file.mjs（107 行 · 2 个函数）
 
@@ -2368,13 +2290,13 @@
 |------|------|------|------|
 | `makeProject` | 20-46 | 27 | `function makeProject() {` |
 
-### test/test-plugin.mjs（652 行 · 3 个函数）
+### test/test-plugin.mjs（653 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `makeExemptRepo` | 483-489 | 7 | `function makeExemptRepo() {` |
-| `addSecretFile` | 490-493 | 4 | `function addSecretFile(root, path) {` |
-| `fsStatMode` | 647-649 | 3 | `function fsStatMode(file) {` |
+| `makeExemptRepo` | 484-490 | 7 | `function makeExemptRepo() {` |
+| `addSecretFile` | 491-494 | 4 | `function addSecretFile(root, path) {` |
+| `fsStatMode` | 648-650 | 3 | `function fsStatMode(file) {` |
 
 ### test/test-private-gate.mjs（72 行 · 1 个函数）
 

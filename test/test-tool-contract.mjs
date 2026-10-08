@@ -24,7 +24,7 @@ const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
 const EXPECTED_TOOL_COUNT = 17;
 const EXPECTED_TOOLS = [
   'git_scan', 'git_commit_push', 'code_audit', 'git_clone', 'git_remote_create',
-  'git_set_visibility', 'io_scan', 'arch_json', 'git_clone_preview', 'link_check', 'module_splitter',
+  'git_set_visibility', 'io_scan', 'git_clone_preview', 'link_check', 'module_splitter',
   'git_account_check', 'git_cred_env', 'git_gen_ssh_key', 'git_sluice', 'git_identity_rewrite',
   'edit_after_read',
 ];
