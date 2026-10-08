@@ -1150,6 +1150,16 @@
 | `setPreview` | 237-245 | 9 | `export function setPreview(key, data) {` |
 | `__resetCloneJobs` | 248-250 | 3 | `export function __resetCloneJobs() {` |
 
+### lib/git/clone-replay.js（103 行 · 5 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `blobEntriesOf` | 25-37 | 13 | `export function blobEntriesOf(treeJson) {` |
+| `planTreeDiff` | 52-69 | 18 | `export function planTreeDiff(prevEntries = [], curEntries = []) {` |
+| `byPath` | 64-64 | 1 | `const byPath = (a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0);` |
+| `replayMarkerPath` | 81-83 | 3 | `export function replayMarkerPath(gitDir) {` |
+| `canResumeFrom` | 95-102 | 8 | `export function canResumeFrom(marker, { branch = '', shas = [] } = {}) {` |
+
 ### lib/git/clone.js（383 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |

@@ -368,6 +368,7 @@ dsh-git-push/
 │   │   ├── clone-download.js — 并发下载 + .part 断点续传 + 体积守卫 + 进度回调
 │   │   ├── clone-history.js — （待注释）
 │   │   ├── clone-jobs.js — clone 进度/预览内存态（供前端轮询）
+│   │   ├── clone-replay.js — （待注释）
 │   │   ├── clone.js — 克隆（Git Data API，不依赖本地凭据）
 │   │   ├── cloud.js — 云端仓库列表（/user/repos 供手动 clone）
 │   │   ├── config.js — 路径与配置（PLUGIN_ROOT + 开发者要求清单读取）
@@ -492,6 +493,7 @@ dsh-git-push/
 │   ├── test-clone-maxfilemb.mjs — （待注释）
 │   ├── test-clone-parts-keep.mjs — （待注释）
 │   ├── test-clone-preview-buttons.mjs — clone 预览确认框按钮可点（真渲染+真点击）
+│   ├── test-clone-replay.mjs — （待注释）
 │   ├── test-clone-token.mjs — （待注释）
 │   ├── test-collector-ignore.mjs — （待注释）
 │   ├── test-command-registry.mjs — 命令注册表测试（工具入表/查找/parseRegistryArgs/清单生成）
