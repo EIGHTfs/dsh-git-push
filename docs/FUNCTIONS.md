@@ -1310,7 +1310,7 @@
 | `ensureAuxSshRemote` | 49-65 | 17 | `export function ensureAuxSshRemote(repoPath, owner, repo, result = {}) {` |
 | `autoTagDSHProject` | 72-101 | 30 | `export async function autoTagDSHProject({ repoPath = '', version = '', commitSha = '', owner = '', repo = '', token = '' } = {}) {` |
 
-### lib/git/push.js（355 行 · 7 个函数）
+### lib/git/push.js（360 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1318,9 +1318,9 @@
 | `commitAndPush` | 51-190 | 140 | `export async function commitAndPush({ repoPath = '', message = '', push = true, dryRun = false, token = '', customIgnorePatterns = '', requirementsConfirmed = false, force = false, pushMethod = 'ssh', pushGate = false, pushConfirmed = false, paths = '' } = {}) {` |
 | `legacyIdentity` | 121-130 | 10 | `const legacyIdentity = (() => {` |
 | `fetchRemoteBranchRef` | 203-216 | 14 | `async function fetchRemoteBranchRef(repoPath, branch, owner, repo) {` |
-| `enhanceAfterPushSuccess` | 224-284 | 61 | `async function enhanceAfterPushSuccess({ repoPath, pr, token, steps, commitSha }) {` |
-| `readmeCheckHint` | 289-294 | 6 | `export function readmeCheckHint(repoPath) {` |
-| `pushCurrentBranch` | 303-354 | 52 | `export async function pushCurrentBranch({ repoPath = '', pushMethod = 'ssh' } = {}) {` |
+| `enhanceAfterPushSuccess` | 224-289 | 66 | `async function enhanceAfterPushSuccess({ repoPath, pr, token, steps, commitSha }) {` |
+| `readmeCheckHint` | 294-299 | 6 | `export function readmeCheckHint(repoPath) {` |
+| `pushCurrentBranch` | 308-359 | 52 | `export async function pushCurrentBranch({ repoPath = '', pushMethod = 'ssh' } = {}) {` |
 
 ### lib/git/remote.js（88 行 · 3 个函数）
 
