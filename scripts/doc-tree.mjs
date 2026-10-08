@@ -186,7 +186,10 @@ export function syncIndex({ write = true, files = gitLsFiles(), map = loadMappin
     delete next[k];
   }
   // 补新增键（文件 + 目录），保持插入顺序稳定（先目录后文件：树父在前）
-  const want = new Set([...realDirs, ...realFiles]);
+  // 逐个 add 而不是 new Set([...realDirs, ...realFiles])：避免为去重多复制两个数组一遍
+  //   （性能规则 performance/memory-bomb「展开多个大数组会一次性创建新数组」；插入顺序不变）
+  const want = new Set(realDirs);
+  for (const f of realFiles) want.add(f);
   for (const p of want) {
     if (p in next) continue;
     next[p] = '（待注释）';
