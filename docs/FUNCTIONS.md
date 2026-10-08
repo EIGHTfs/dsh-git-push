@@ -533,7 +533,7 @@
 | `resolveDshClientEntries` | 25-49 | 25 | `export function resolveDshClientEntries(repoRoot) {` |
 | `pick` | 35-43 | 9 | `const pick = (v) => {` |
 
-### lib/audit/collector.js（449 行 · 17 个函数）
+### lib/audit/collector.js（477 行 · 18 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -553,7 +553,8 @@
 | `isGitRepo` | 356-358 | 3 | `export function isGitRepo(dir) {` |
 | `collectChangedFiles` | 366-423 | 58 | `export function collectChangedFiles(repoPath) {` |
 | `isTextFile` | 426-444 | 19 | `export function isTextFile(full) {` |
-| `readText` | 447-449 | 3 | `export function readText(full) {` |
+| `clearReadCache` | 458-461 | 4 | `export function clearReadCache() {` |
+| `readText` | 464-477 | 14 | `export function readText(full) {` |
 
 ### lib/audit/ext-runner.js（80 行 · 2 个函数）
 
