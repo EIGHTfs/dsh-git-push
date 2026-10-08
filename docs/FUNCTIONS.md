@@ -22,16 +22,16 @@
 | `aggregateFindings` | 70-91 | 22 | `export function aggregateFindings(findings = [], opts = {}) {` |
 | `runAuditApi` | 99-158 | 60 | `export async function runAuditApi(repo, params = {}, cfg = {}) {` |
 
-### lib/app/command-registry.js（244 行 · 6 个函数）
+### lib/app/command-registry.js（248 行 · 6 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `applyFlagToken` | 182-198 | 17 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
-| `validateParamConstraints` | 201-207 | 7 | `function validateParamConstraints(args, params) {` |
-| `parseRegistryArgs` | 209-229 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
-| `registryByName` | 232-234 | 3 | `export function registryByName(name) {` |
-| `registryByCli` | 237-239 | 3 | `export function registryByCli(cli) {` |
-| `buildToolsListText` | 242-244 | 3 | `export function buildToolsListText() {` |
+| `applyFlagToken` | 186-202 | 17 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
+| `validateParamConstraints` | 205-211 | 7 | `function validateParamConstraints(args, params) {` |
+| `parseRegistryArgs` | 213-233 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
+| `registryByName` | 236-238 | 3 | `export function registryByName(name) {` |
+| `registryByCli` | 241-243 | 3 | `export function registryByCli(cli) {` |
+| `buildToolsListText` | 246-248 | 3 | `export function buildToolsListText() {` |
 
 ### lib/app/handlers/account.js（166 行 · 10 个函数）
 
@@ -203,7 +203,7 @@
 | `getLastSlotHitStats` | 28-30 | 3 | `export function getLastSlotHitStats() {` |
 | `getLastSlotHitMeta` | 33-35 | 3 | `export function getLastSlotHitMeta() {` |
 
-### lib/app/tool-call.js（554 行 · 19 个函数）
+### lib/app/tool-call.js（558 行 · 19 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -213,19 +213,19 @@
 | `cloneJobOutcome` | 143-148 | 6 | `export function cloneJobOutcome(r = {}) {` |
 | `buildCommitPushJobSpec` | 151-168 | 18 | `function buildCommitPushJobSpec(repo, doPush) {` |
 | `done` | 156-164 | 9 | `const done = (async () => {` |
-| `callCloneJob` | 182-208 | 27 | `async function callCloneJob(args, jobs, exec, log, env = {}, cfg = {}) {` |
-| `buildCloneJobSpec` | 211-228 | 18 | `function buildCloneJobSpec(target, dest, doClone) {` |
-| `done` | 216-224 | 9 | `const done = (async () => {` |
-| `callCommitPush` | 235-282 | 48 | `async function callCommitPush(args, env, cfg, log, jobs, exec) {` |
-| `doPush` | 251-251 | 1 | `const doPush = () => pushWithPostSteps(args, env, cfg);` |
-| `buildAuditOpts` | 293-304 | 12 | `function buildAuditOpts(args, cfg, scope) {` |
-| `runHistoryAuditTool` | 310-342 | 33 | `async function runHistoryAuditTool(args, env, cfg, jobs, exec, weights) {` |
-| `doHistory` | 316-319 | 4 | `const doHistory = async () => {` |
-| `callCodeAudit` | 344-356 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
-| `runStandardAuditTool` | 359-398 | 40 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
-| `callTool` | 400-525 | 126 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null) {` |
-| `shellSplit` | 528-546 | 19 | `function shellSplit(input) {` |
-| `readTextSafe` | 549-553 | 5 | `function readTextSafe(path = '') {` |
+| `callCloneJob` | 182-212 | 31 | `async function callCloneJob(args, jobs, exec, log, env = {}, cfg = {}) {` |
+| `buildCloneJobSpec` | 215-232 | 18 | `function buildCloneJobSpec(target, dest, doClone) {` |
+| `done` | 220-228 | 9 | `const done = (async () => {` |
+| `callCommitPush` | 239-286 | 48 | `async function callCommitPush(args, env, cfg, log, jobs, exec) {` |
+| `doPush` | 255-255 | 1 | `const doPush = () => pushWithPostSteps(args, env, cfg);` |
+| `buildAuditOpts` | 297-308 | 12 | `function buildAuditOpts(args, cfg, scope) {` |
+| `runHistoryAuditTool` | 314-346 | 33 | `async function runHistoryAuditTool(args, env, cfg, jobs, exec, weights) {` |
+| `doHistory` | 320-323 | 4 | `const doHistory = async () => {` |
+| `callCodeAudit` | 348-360 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
+| `runStandardAuditTool` | 363-402 | 40 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
+| `callTool` | 404-529 | 126 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null) {` |
+| `shellSplit` | 532-550 | 19 | `function shellSplit(input) {` |
+| `readTextSafe` | 553-557 | 5 | `function readTextSafe(path = '') {` |
 
 ### lib/app/tools.js（27 行 · 2 个函数）
 
