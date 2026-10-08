@@ -57,17 +57,17 @@
 | `readTreeDoc` | 35-40 | 6 | `function readTreeDoc(repoPath) {` |
 | `exportArchJson` | 48-78 | 31 | `export async function exportArchJson(args = {}, deps = {}) {` |
 
-### lib/app/handlers/clone.js（154 行 · 7 个函数）
+### lib/app/handlers/clone.js（158 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `parseCloneRequest` | 23-31 | 9 | `function parseCloneRequest(body) {` |
 | `busyResponse` | 38-53 | 16 | `function busyResponse(target, dest) {` |
-| `handleRepoClone` | 56-118 | 63 | `export async function handleRepoClone(ctx) {` |
-| `handleCloneLogs` | 121-125 | 5 | `export function handleCloneLogs(ctx) {` |
-| `handleCloneAbort` | 128-131 | 4 | `export function handleCloneAbort() {` |
-| `handleClonePreview` | 134-146 | 13 | `export async function handleClonePreview(ctx) {` |
-| `handleCloneProgress` | 149-154 | 6 | `export function handleCloneProgress(ctx) {` |
+| `handleRepoClone` | 56-122 | 67 | `export async function handleRepoClone(ctx) {` |
+| `handleCloneLogs` | 125-129 | 5 | `export function handleCloneLogs(ctx) {` |
+| `handleCloneAbort` | 132-135 | 4 | `export function handleCloneAbort() {` |
+| `handleClonePreview` | 138-150 | 13 | `export async function handleClonePreview(ctx) {` |
+| `handleCloneProgress` | 153-158 | 6 | `export function handleCloneProgress(ctx) {` |
 
 ### lib/app/handlers/identity-rewrite.js（95 行 · 2 个函数）
 
