@@ -277,6 +277,7 @@ dsh-git-push/
 │   │   ├── io-risk-loop.js — IO 风险分级·循环判定：循环内/迭代器表达式（只执行一次）/小字面量数组降级/collectRanges 范围收集
 │   │   ├── io-risk.js — IO 风险分级（四级）判定与评分：scanIoRiskAst 判定上下文/类别 → summarizeIoRisk 统计 → rankIoFixList 优先级清单；并再导出下列三个从属模块的公共符号
 │   │   ├── lang.js — 语言路由（2026-10-06）：detectLang 内容启发式检测 + javaKtFuncRanges（Java/Kotlin 方法签名+括号配对函数范围）+ LANG_FUNC_RANGES 主流语言占位
+│   │   ├── line-count.js — （待注释）
 │   │   ├── magic-number.js — 硬编码魔数识别（豁免版本号/日期/状态码）
 │   │   ├── naming.js — 命名检查（标识符长度/函数名过短/受控小文件读取）
 │   │   ├── perf.js — （待注释）
@@ -520,6 +521,7 @@ dsh-git-push/
 │   ├── test-inject-system-prompt.mjs — 注入系统提示词回归
 │   ├── test-io-risk.mjs — IO 风险分级测试（四级判定/字段完整性/汇总/排序/finding 转换）
 │   ├── test-java-rules.mjs — Java/Kotlin 语言路由与专项规则测试（javaKtFuncRanges/短名/复杂度/规则联动/聚合型降级）
+│   ├── test-line-count.mjs — （待注释）
 │   ├── test-link-check.mjs — 链接判断测试（分级扣分/断网不拦）
 │   ├── test-magic-number.mjs — 硬编码魔数检测测试
 │   ├── test-module-splitter-multiline.mjs — （待注释）

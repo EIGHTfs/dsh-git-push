@@ -512,9 +512,11 @@ test('auditLevel：deep 与 standard 全量等价（当前引擎无第三档内�
 // ---------- 2026-09-20：文件/函数长度默认按非注释部分 ----------
 
 test('checkFileLines：默认按非注释行判定（注释多的文件不误报）；excludeComments:false 回退总行数', () => {
-  const text = '// 注释\n'.repeat(30) + 'const x = 1;\n'.repeat(10); // 40 行：注释 30 + 代码 10
+  const text = '// 注释\n'.repeat(30) + 'const x = 1;\n'.repeat(10); // 41 行：注释 30 + 代码 10 + 末尾空行 1
   const r1 = checkFileLines(text, { warn: 20, block: 40 });
-  assert.equal(r1.codeLines, r1.lines - r1.commentLines, 'codeLines = 总行数 − 注释行');
+  // 代码行口径 = 总行 − 纯注释行 − 空行（单一来源 lib/ast/line-count.js）
+  assert.equal(r1.codeLines, 10, '代码行 = 10（末尾空行不计）');
+  assert.equal(r1.lines - r1.commentLines - r1.codeLines, 1, '差额恰为末尾空行 → 空行不再算代码行');
   assert.ok(r1.codeLines <= 30, '非注释行数应明显小于总行数（注释占多数）');
   assert.equal(r1.level, null, '非注释行低于阈值 20 → 不报');
   const r2 = checkFileLines(text, { warn: 20, block: 40, excludeComments: false });

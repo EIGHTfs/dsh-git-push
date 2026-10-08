@@ -241,24 +241,24 @@
 | `aggregateModules` | 17-76 | 60 | `export function aggregateModules(facts, { min = 8, max = 15 } = {}) {` |
 | `componentId` | 84-89 | 6 | `function componentId(layer, mods) {` |
 
-### lib/arch/extract.js（458 行 · 14 个函数）
+### lib/arch/extract.js（463 行 · 14 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `detectSourceRoot` | 40-63 | 24 | `export function detectSourceRoot(repoPath) {` |
-| `collectSync` | 66-77 | 12 | `function collectSync(dir, out = [], depth = 0) {` |
-| `ioPathFromLine` | 88-458 | 371 | `export function ioPathFromLine(text, line) {` |
-| `statementAt` | 113-132 | 20 | `export function statementAt(text, line) {` |
-| `startsStatement` | 117-117 | 1 | `const startsStatement = (s) => /^\s*(const\|let\|var\|function\|return\|if\|for\|while\|await\|export)\b/.test(s);` |
-| `count` | 124-124 | 1 | `const count = (s, re) => (s.match(re) \|\| []).length;` |
-| `collectPathConsts` | 147-458 | 312 | `export function collectPathConsts(text) {` |
-| `ioPathsFromLine` | 169-458 | 290 | `export function ioPathsFromLine(text, line) {` |
-| `extractFileIo` | 192-236 | 45 | `export function extractFileIo(text) {` |
-| `resolveIoPath` | 248-261 | 14 | `export function resolveIoPath(baseDir, p, repoFiles = []) {` |
-| `normalizeIoPath` | 269-279 | 11 | `export function normalizeIoPath(baseDir, p) {` |
-| `importSpecifiers` | 281-285 | 5 | `export function importSpecifiers(text) {` |
-| `resolveModule` | 288-301 | 14 | `export function resolveModule(fromRel, spec, sourceRoot) {` |
-| `extractArchFacts` | 312-457 | 146 | `export async function extractArchFacts(repoPath, { maxFiles = DEFAULT_MAX_FILES } = {}) {` |
+| `detectSourceRoot` | 41-64 | 24 | `export function detectSourceRoot(repoPath) {` |
+| `collectSync` | 67-78 | 12 | `function collectSync(dir, out = [], depth = 0) {` |
+| `ioPathFromLine` | 89-463 | 375 | `export function ioPathFromLine(text, line) {` |
+| `statementAt` | 114-133 | 20 | `export function statementAt(text, line) {` |
+| `startsStatement` | 118-118 | 1 | `const startsStatement = (s) => /^\s*(const\|let\|var\|function\|return\|if\|for\|while\|await\|export)\b/.test(s);` |
+| `count` | 125-125 | 1 | `const count = (s, re) => (s.match(re) \|\| []).length;` |
+| `collectPathConsts` | 148-463 | 316 | `export function collectPathConsts(text) {` |
+| `ioPathsFromLine` | 170-463 | 294 | `export function ioPathsFromLine(text, line) {` |
+| `extractFileIo` | 193-237 | 45 | `export function extractFileIo(text) {` |
+| `resolveIoPath` | 249-262 | 14 | `export function resolveIoPath(baseDir, p, repoFiles = []) {` |
+| `normalizeIoPath` | 270-280 | 11 | `export function normalizeIoPath(baseDir, p) {` |
+| `importSpecifiers` | 282-286 | 5 | `export function importSpecifiers(text) {` |
+| `resolveModule` | 289-302 | 14 | `export function resolveModule(fromRel, spec, sourceRoot) {` |
+| `extractArchFacts` | 313-462 | 150 | `export async function extractArchFacts(repoPath, { maxFiles = DEFAULT_MAX_FILES } = {}) {` |
 
 ### lib/arch/ir.js（150 行 · 1 个函数）
 
@@ -462,6 +462,13 @@
 | `javaKtFuncRanges` | 100-123 | 24 | `export function javaKtFuncRanges(text = '') {` |
 | `detectLang` | 131-142 | 12 | `export function detectLang(text = '') {` |
 
+### lib/ast/line-count.js（53 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `lineStats` | 26-43 | 18 | `export function lineStats(text) {` |
+| `codeLineCount` | 50-52 | 3 | `export function codeLineCount(text) {` |
+
 ### lib/ast/magic-number.js（273 行 · 6 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -523,21 +530,21 @@
 | `extractWriteTarget` | 88-94 | 7 | `function extractWriteTarget(line) {` |
 | `writeIntoGitignoredLines` | 106-131 | 26 | `export function writeIntoGitignoredLines(text, repoPath = '') {` |
 
-### lib/ast/size.js（375 行 · 11 个函数）
+### lib/ast/size.js（379 行 · 11 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `funcNameAt` | 30-44 | 15 | `function funcNameAt(tokens, i) {` |
-| `pythonFuncRanges` | 59-83 | 25 | `export function pythonFuncRanges(text = '') {` |
-| `maxFunctionLength` | 94-100 | 7 | `export function maxFunctionLength(text = '') {` |
-| `funcRangesAst` | 102-375 | 274 | `export function funcRangesAst(text = '') {` |
-| `countCommentLinesInRange` | 145-158 | 14 | `export function countCommentLinesInRange(tokens, startLine = 1, endLine = Infinity) {` |
-| `checkFuncLinesAst` | 168-185 | 18 | `export function checkFuncLinesAst(text = '', { warn = FUNC_LINES_WARN, block = FUNC_LINES_BLOCK } = {}) {` |
-| `checkFuncDensityAst` | 209-230 | 22 | `export function checkFuncDensityAst(text = '', { threshold = FUNC_LINES_WARN, blockThreshold = FUNC_LINES_BLOCK, skipLines = new Set() } = {}) {` |
-| `countCommentLines` | 238-251 | 14 | `export function countCommentLines(text = '') {` |
-| `checkFileLines` | 262-268 | 7 | `export function checkFileLines(text = '', { warn = 500, block = 1000, excludeComments = true } = {}) {` |
-| `checkCommentDensityAst` | 290-325 | 36 | `export function checkCommentDensityAst(text = '', { warn = COMMENT_DENSITY_WARN_DEFAULT, minCodeLines = 5 } = {}) {` |
-| `checkRepeatedStringsAst` | 335-374 | 40 | `export function checkRepeatedStringsAst(text = '', { min = 3, ignore = [] } = {}) {` |
+| `funcNameAt` | 31-45 | 15 | `function funcNameAt(tokens, i) {` |
+| `pythonFuncRanges` | 60-84 | 25 | `export function pythonFuncRanges(text = '') {` |
+| `maxFunctionLength` | 95-101 | 7 | `export function maxFunctionLength(text = '') {` |
+| `funcRangesAst` | 103-379 | 277 | `export function funcRangesAst(text = '') {` |
+| `countCommentLinesInRange` | 146-159 | 14 | `export function countCommentLinesInRange(tokens, startLine = 1, endLine = Infinity) {` |
+| `checkFuncLinesAst` | 169-186 | 18 | `export function checkFuncLinesAst(text = '', { warn = FUNC_LINES_WARN, block = FUNC_LINES_BLOCK } = {}) {` |
+| `checkFuncDensityAst` | 210-231 | 22 | `export function checkFuncDensityAst(text = '', { threshold = FUNC_LINES_WARN, blockThreshold = FUNC_LINES_BLOCK, skipLines = new Set() } = {}) {` |
+| `countCommentLines` | 239-252 | 14 | `export function countCommentLines(text = '') {` |
+| `checkFileLines` | 263-272 | 10 | `export function checkFileLines(text = '', { warn = 500, block = 1000, excludeComments = true } = {}) {` |
+| `checkCommentDensityAst` | 294-329 | 36 | `export function checkCommentDensityAst(text = '', { warn = COMMENT_DENSITY_WARN_DEFAULT, minCodeLines = 5 } = {}) {` |
+| `checkRepeatedStringsAst` | 339-378 | 40 | `export function checkRepeatedStringsAst(text = '', { min = 3, ignore = [] } = {}) {` |
 
 ### lib/ast/symbol-index.js（400 行 · 22 个函数）
 
@@ -789,12 +796,12 @@
 | `atTopLevel` | 155-158 | 4 | `const atTopLevel = (line) => {` |
 | `checkDuplicateConst` | 181-230 | 50 | `export function checkDuplicateConst(fileTexts = [], rules = null) {` |
 
-### lib/checks/file-health.js（148 行 · 2 个函数）
+### lib/checks/file-health.js（151 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `checkFileHealth` | 37-147 | 111 | `export function checkFileHealth({ file, relPath, text, rules }) {` |
-| `levelOf` | 84-87 | 4 | `const levelOf = (val, levels) => {` |
+| `checkFileHealth` | 38-150 | 113 | `export function checkFileHealth({ file, relPath, text, rules }) {` |
+| `levelOf` | 87-90 | 4 | `const levelOf = (val, levels) => {` |
 
 ### lib/checks/filter.js（132 行 · 6 个函数）
 
@@ -859,7 +866,7 @@
 | `isRepoLevelSemanticRule` | 69-78 | 10 | `export function isRepoLevelSemanticRule(rule) {` |
 | `checkPatchInsert` | 93-134 | 42 | `export function checkPatchInsert({ file, text, rules }) {` |
 
-### lib/checks/structural.js（259 行 · 9 个函数）
+### lib/checks/structural.js（281 行 · 10 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -869,9 +876,10 @@
 | `checkMinLength` | 101-122 | 22 | `export function checkMinLength({ file, text, rules }) {` |
 | `checkComplexity` | 125-151 | 27 | `export function checkComplexity({ file, text, rules }) {` |
 | `checkDepth` | 154-170 | 17 | `export function checkDepth({ file, text, rules }) {` |
-| `checkMaxLines` | 173-208 | 36 | `export function checkMaxLines({ file, text, rules }) {` |
-| `checkCommentDensity` | 216-231 | 16 | `export function checkCommentDensity({ file, text, rules }) {` |
-| `checkRepeated` | 234-258 | 25 | `export function checkRepeated({ file, text, rules }) {` |
+| `isDshClientEntry` | 178-180 | 3 | `function isDshClientEntry(file) {` |
+| `checkMaxLines` | 183-230 | 48 | `export function checkMaxLines({ file, text, rules }) {` |
+| `checkCommentDensity` | 238-253 | 16 | `export function checkCommentDensity({ file, text, rules }) {` |
+| `checkRepeated` | 256-280 | 25 | `export function checkRepeated({ file, text, rules }) {` |
 
 ### lib/cli/commands-account.mjs（108 行 · 6 个函数）
 
@@ -1462,12 +1470,12 @@
 | `compileAllRules` | 64-72 | 9 | `export function compileAllRules(rules, ctx = {}) {` |
 | `withRuleScope` | 89-105 | 17 | `function withRuleScope(compiled, source) {` |
 
-### lib/rule/scope.js（62 行 · 2 个函数）
+### lib/rule/scope.js（67 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `normalizeScopeRules` | 30-39 | 10 | `export function normalizeScopeRules(rule) {` |
-| `resolveScopeAction` | 47-62 | 16 | `export function resolveScopeAction(scopeRules, scopeInfo = {}) {` |
+| `normalizeScopeRules` | 35-44 | 10 | `export function normalizeScopeRules(rule) {` |
+| `resolveScopeAction` | 52-67 | 16 | `export function resolveScopeAction(scopeRules, scopeInfo = {}) {` |
 
 ### lib/score/docs-score.js（166 行 · 5 个函数）
 
