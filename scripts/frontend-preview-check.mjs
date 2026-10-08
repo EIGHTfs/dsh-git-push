@@ -83,6 +83,16 @@ if (hasDlg) {
   if (await box.count()) {
     const checked = await box.first().isChecked();
     need(checked === true, `勾选框默认应为 checked=true（与后端默认「带历史」一致），实测 ${checked}`);
+    // 切换有效性：「取消勾选 ⇒ 真的传 history:false ⇒ 退回整树快照」依赖前端能切换成功，
+    //   故这里验「点一下真的变 false、再点回 true」；提交体是否带 history:false 由代码审查 + 用例覆盖。
+    await box.first().click().catch(() => {});
+    await page.waitForTimeout(600);
+    const off = await box.first().isChecked();
+    need(off === false, `点击勾选框应变为未勾选（实测 ${off}）——说明 onChange 没接到或状态没重绘`);
+    await box.first().click().catch(() => {});
+    await page.waitForTimeout(600);
+    const back = await box.first().isChecked();
+    need(back === true, `再次点击应恢复勾选（实测 ${back}）`);
   }
 }
 await page.screenshot({ path: OUT, fullPage: true });
