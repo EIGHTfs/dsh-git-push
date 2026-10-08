@@ -24,10 +24,36 @@ const MARKER = 'dshgp-version';
 const MARK_START = `<!-- ${MARKER}:start -->`;
 const MARK_END = `<!-- ${MARKER}:end -->`;
 
+/**
+ * 版本表「最新行」的来源：
+ *   · npm 项目（项目根有 package.json）默认取 package.json.version —— 它才是版本号权威源
+ *     （scan-version 门禁也正是比对 package.json），因此发版流程无需「先提交再生成再 amend」；
+ *   · 其余项目退回 git log 聚合（老项目行为不变）。
+ * @param {string} root 项目根
+ * @param {string} [explicit] 'package.json' | 'git-log'（显式覆盖，留空则自动识别）
+ */
+export function resolveVersionSource(root, explicit = '') {
+  if (explicit === 'package.json' || explicit === 'git-log') return explicit;
+  return existsSync(join(root, 'package.json')) ? 'package.json' : 'git-log';
+}
+
+/** 读项目 package.json 的 version；读不到返回空串（不抛错，退回 git log 行）。 */
+export function packageVersionOf(root) {
+  try { return String(JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version || ''); } catch { return ''; }
+}
+
 /** 生成版本列表 markdown（宿主块内容）。 */
-export function buildVersionListText(root) {
+export function buildVersionListText(root, { versionSource = '' } = {}) {
   const rows = buildReadmeVersionTable(root);
-  return { text: `## 版本列表\n\n${rows.join('\n')}\n`, rows: rows.length - 2 };
+  const source = resolveVersionSource(root, versionSource);
+  const pkg = source === 'package.json' ? packageVersionOf(root) : '';
+  // 只改**最新数据行**的版本号（rows[0]=表头、rows[1]=分隔行 ⇒ 数据从 rows[2] 起）；
+  //   日期与标题仍来自该行原本的 git 提交 —— 历史行完全不动。
+  if (pkg && rows.length > 2) {
+    const m = rows[2].match(/\d+\.\d+\.\d+/);
+    if (m && m[0] !== pkg) rows[2] = rows[2].replace(m[0], pkg);
+  }
+  return { text: `## 版本列表\n\n${rows.join('\n')}\n`, rows: rows.length - 2, source, packageVersion: pkg };
 }
 
 /** 找宿主 md 内的 dshgp-version 标记块。 */
