@@ -495,17 +495,23 @@
 | `unusedExportCandidates` | 377-391 | 15 | `export function unusedExportCandidates(index) {` |
 | `indexSummary` | 394-399 | 6 | `export function indexSummary(index) {` |
 
-### lib/ast/tokenizer.js（301 行 · 7 个函数）
+### lib/ast/tokenizer.js（342 行 · 13 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `tokenize` | 49-70 | 22 | `export function tokenize(text = '') {` |
 | `clearTokenCache` | 73-76 | 4 | `export function clearTokenCache() {` |
 | `tokenizeUncached` | 83-187 | 105 | `function tokenizeUncached(text = '') {` |
-| `consumeLexeme` | 206-239 | 34 | `function consumeLexeme(src, i, n, ch, next, tokens, push) { // dsh-skip-complexity: 词素分派器（六类词素分派分支为结构必然，拆分后职责单一）` |
-| `consumeString` | 242-253 | 12 | `function consumeString(src, i, n, ch, push) {` |
-| `consumeTemplate` | 256-267 | 12 | `function consumeTemplate(src, i, n, push) {` |
-| `consumeRegex` | 270-275 | 6 | `function consumeRegex(src, i, n, tokens, push) { // dsh-skip-complexity: 正则状态机（转义/字符组/闭包三态，天然多分支）` |
+| `MULTI_OPS_BY_FIRST` | 199-207 | 9 | `const MULTI_OPS_BY_FIRST = (() => {` |
+| `isCjkChar` | 224-224 | 1 | `const isCjkChar = (c) => c >= 0x4e00 && c <= 0x9fa5;` |
+| `isIdentStartCode` | 226-226 | 1 | `const isIdentStartCode = (c) => (c < 128 ? ID_START_ASCII[c] === 1 : isCjkChar(c));` |
+| `isIdentPartCode` | 228-228 | 1 | `const isIdentPartCode = (c) => (c < 128 ? ID_PART_ASCII[c] === 1 : isCjkChar(c));` |
+| `isNumPartCode` | 230-230 | 1 | `const isNumPartCode = (c) => c < 128 && NUM_PART_ASCII[c] === 1;` |
+| `isAsciiDigit` | 232-232 | 1 | `const isAsciiDigit = (c) => c >= 48 && c <= 57;` |
+| `consumeLexeme` | 243-280 | 38 | `function consumeLexeme(src, i, n, ch, next, tokens, push) { // dsh-skip-complexity: 词素分派器（六类词素分派分支为结构必然，拆分后职责单一）` |
+| `consumeString` | 283-294 | 12 | `function consumeString(src, i, n, ch, push) {` |
+| `consumeTemplate` | 297-308 | 12 | `function consumeTemplate(src, i, n, push) {` |
+| `consumeRegex` | 311-316 | 6 | `function consumeRegex(src, i, n, tokens, push) { // dsh-skip-complexity: 正则状态机（转义/字符组/闭包三态，天然多分支）` |
 
 ### lib/audit/analysis-coverage.js（99 行 · 5 个函数）
 
