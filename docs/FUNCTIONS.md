@@ -939,7 +939,7 @@
 | `printCloneResult` | 153-165 | 13 | `function printCloneResult(r, flags, target, dest) {` |
 | `cmdClone` | 168-175 | 8 | `export async function cmdClone(flags, positional) {` |
 
-### lib/client.js（2541 行 · 46 个函数）
+### lib/client.js（2549 行 · 46 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -961,34 +961,34 @@
 | `dshgp_browseClose` | 458-464 | 7 | `function dshgp_browseClose() {` |
 | `dshgp_browseAttach` | 465-475 | 11 | `function dshgp_browseAttach(inputEl) {` |
 | `dshgp_RepoManagerCard` | 479-509 | 31 | `function dshgp_RepoManagerCard(props) {` |
-| `dshgp_RepoLocalRow` | 512-588 | 77 | `function dshgp_RepoLocalRow(props) {` |
-| `dshgp_RepoLocalPane` | 591-628 | 38 | `function dshgp_RepoLocalPane(props) {` |
-| `dshgp_RepoCloudRow` | 631-675 | 45 | `function dshgp_RepoCloudRow(props) {` |
-| `dshgp_VisConfirmDialog` | 681-709 | 29 | `function dshgp_VisConfirmDialog(props) {` |
-| `dshgp_RepoCloudPane` | 712-763 | 52 | `function dshgp_RepoCloudPane(props) {` |
-| `dshgp_CloneProgress` | 774-791 | 18 | `function dshgp_CloneProgress(props) {` |
-| `mb` | 776-776 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
-| `dshgp_ClonePreview` | 799-824 | 26 | `function dshgp_ClonePreview(props) {` |
-| `mb` | 801-801 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
-| `dshgp_WeightRows` | 828-851 | 24 | `function dshgp_WeightRows(props) {` |
-| `dshgp_RuleRow` | 862-924 | 63 | `function dshgp_RuleRow(props, slot, idx, len) {` |
-| `countTitle` | 871-874 | 4 | `const countTitle = (kind) => {` |
-| `move` | 879-879 | 1 | `const move = (dir) => props.moveSlot(slot, dir);` |
-| `dshgp_AuditSwitchBlock` | 927-991 | 65 | `function dshgp_AuditSwitchBlock(props) {` |
-| `dshgp_InjectPromptSwitchBlock` | 994-1016 | 23 | `function dshgp_InjectPromptSwitchBlock(props) {` |
-| `dshgp_CommentWordingBlock` | 1019-1034 | 16 | `function dshgp_CommentWordingBlock(props) {` |
-| `dshgp_AuditAdvancedBlock` | 1037-1063 | 27 | `function dshgp_AuditAdvancedBlock(props) {` |
-| `dshgp_RuleListBlock` | 1066-1097 | 32 | `function dshgp_RuleListBlock(props) {` |
-| `dshgp_AuditTab` | 1104-1124 | 21 | `function dshgp_AuditTab(props) {` |
-| `dshgp_CredentialBlock` | 1128-1193 | 66 | `function dshgp_CredentialBlock(props) {` |
-| `dshgp_PushDefaultsBlock` | 1196-1258 | 63 | `function dshgp_PushDefaultsBlock(props) {` |
-| `dshgp_SettingsTab` | 1260-1269 | 10 | `function dshgp_SettingsTab(props) {` |
-| `dshgp_GitPushPage` | 1272-1325 | 54 | `function dshgp_GitPushPage(props) {` |
-| `renderResult` | 2105-2118 | 14 | `const renderResult = (res) => {` |
-| `poll` | 2121-2146 | 26 | `const poll = async () => {` |
-| `apply` | 2470-2534 | 65 | `function apply(ctx) {` |
-| `useCardState` | 2510-2513 | 4 | `const useCardState = (selector) => {` |
-| `SectionPage` | 2516-2521 | 6 | `function SectionPage() {` |
+| `dshgp_RepoLocalRow` | 512-590 | 79 | `function dshgp_RepoLocalRow(props) {` |
+| `dshgp_RepoLocalPane` | 593-630 | 38 | `function dshgp_RepoLocalPane(props) {` |
+| `dshgp_RepoCloudRow` | 633-680 | 48 | `function dshgp_RepoCloudRow(props) {` |
+| `dshgp_VisConfirmDialog` | 686-714 | 29 | `function dshgp_VisConfirmDialog(props) {` |
+| `dshgp_RepoCloudPane` | 717-768 | 52 | `function dshgp_RepoCloudPane(props) {` |
+| `dshgp_CloneProgress` | 779-796 | 18 | `function dshgp_CloneProgress(props) {` |
+| `mb` | 781-781 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
+| `dshgp_ClonePreview` | 804-829 | 26 | `function dshgp_ClonePreview(props) {` |
+| `mb` | 806-806 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
+| `dshgp_WeightRows` | 833-856 | 24 | `function dshgp_WeightRows(props) {` |
+| `dshgp_RuleRow` | 867-929 | 63 | `function dshgp_RuleRow(props, slot, idx, len) {` |
+| `countTitle` | 876-879 | 4 | `const countTitle = (kind) => {` |
+| `move` | 884-884 | 1 | `const move = (dir) => props.moveSlot(slot, dir);` |
+| `dshgp_AuditSwitchBlock` | 932-996 | 65 | `function dshgp_AuditSwitchBlock(props) {` |
+| `dshgp_InjectPromptSwitchBlock` | 999-1021 | 23 | `function dshgp_InjectPromptSwitchBlock(props) {` |
+| `dshgp_CommentWordingBlock` | 1024-1039 | 16 | `function dshgp_CommentWordingBlock(props) {` |
+| `dshgp_AuditAdvancedBlock` | 1042-1068 | 27 | `function dshgp_AuditAdvancedBlock(props) {` |
+| `dshgp_RuleListBlock` | 1071-1102 | 32 | `function dshgp_RuleListBlock(props) {` |
+| `dshgp_AuditTab` | 1109-1129 | 21 | `function dshgp_AuditTab(props) {` |
+| `dshgp_CredentialBlock` | 1133-1198 | 66 | `function dshgp_CredentialBlock(props) {` |
+| `dshgp_PushDefaultsBlock` | 1201-1263 | 63 | `function dshgp_PushDefaultsBlock(props) {` |
+| `dshgp_SettingsTab` | 1265-1274 | 10 | `function dshgp_SettingsTab(props) {` |
+| `dshgp_GitPushPage` | 1277-1330 | 54 | `function dshgp_GitPushPage(props) {` |
+| `renderResult` | 2110-2123 | 14 | `const renderResult = (res) => {` |
+| `poll` | 2126-2151 | 26 | `const poll = async () => {` |
+| `apply` | 2478-2542 | 65 | `function apply(ctx) {` |
+| `useCardState` | 2518-2521 | 4 | `const useCardState = (selector) => {` |
+| `SectionPage` | 2524-2529 | 6 | `function SectionPage() {` |
 
 ### lib/client/index.js（162 行 · 5 个函数）
 
@@ -1501,15 +1501,15 @@
 | `countByDimension` | 50-80 | 31 | `export function countByDimension(findings = []) {` |
 | `scoreQuality` | 97-140 | 44 | `export function scoreQuality(findings = [], weights = {}, context = {}) {` |
 
-### lib/self/index.js（184 行 · 5 个函数）
+### lib/self/index.js（186 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `readmeTemplate` | 64-129 | 66 | `export function readmeTemplate({ name = 'dsh-git-push', description = 'DSH git 自动提交推送插件——统一函数入口架构', version = VERSION, versionTable = '' } = {}) {` |
-| `yamlTemplate` | 132-144 | 13 | `export function yamlTemplate() {` |
-| `selfVersion` | 147-149 | 3 | `export function selfVersion() {` |
-| `versionInfo` | 156-168 | 13 | `export function versionInfo(pkgJson = '') {` |
-| `helpSync` | 177-183 | 7 | `export function helpSync(helpText = '', knownFlags = []) {` |
+| `readmeTemplate` | 66-131 | 66 | `export function readmeTemplate({ name = 'dsh-git-push', description = 'DSH git 自动提交推送插件——统一函数入口架构', version = VERSION, versionTable = '' } = {}) {` |
+| `yamlTemplate` | 134-146 | 13 | `export function yamlTemplate() {` |
+| `selfVersion` | 149-151 | 3 | `export function selfVersion() {` |
+| `versionInfo` | 158-170 | 13 | `export function versionInfo(pkgJson = '') {` |
+| `helpSync` | 179-185 | 7 | `export function helpSync(helpText = '', knownFlags = []) {` |
 
 ### lib/skip-dirs.js（65 行 · 3 个函数）
 
@@ -1854,6 +1854,17 @@
 | `checkPreviewDrift` | 72-89 | 18 | `export function checkPreviewDrift() {` |
 | `basenameSafe` | 105-108 | 4 | `function basenameSafe(p) {` |
 
+### scripts/hot-path-probe.mjs（154 行 · 6 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `readCfg` | 31-37 | 7 | `function readCfg() {` |
+| `report` | 61-77 | 17 | `function report() {` |
+| `initialize` | 88-90 | 3 | `export function initialize(data) {` |
+| `resolve` | 93-102 | 10 | `export async function resolve(specifier, context, next) {` |
+| `load` | 105-153 | 49 | `export async function load(url, context, next) {` |
+| `__wrapped` | 141-145 | 5 | `const __wrapped = function (...__a) {` |
+
 ### scripts/platform-scan.mjs（169 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2105,14 +2116,14 @@
 |------|------|------|------|
 | `makeAuditRepo` | 19-39 | 21 | `function makeAuditRepo() {` |
 
-### test/test-client.mjs（510 行 · 4 个函数）
+### test/test-client.mjs（519 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `mockReact` | 20-26 | 7 | `function mockReact() {` |
-| `req` | 315-332 | 18 | `const req = (name) => {` |
-| `req` | 393-412 | 20 | `const req = (name) => {` |
-| `req` | 461-479 | 19 | `const req = (name) => {` |
+| `req` | 324-341 | 18 | `const req = (name) => {` |
+| `req` | 402-421 | 20 | `const req = (name) => {` |
+| `req` | 470-488 | 19 | `const req = (name) => {` |
 
 ### test/test-clone-concurrency.mjs（456 行 · 3 个函数）
 

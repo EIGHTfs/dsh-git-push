@@ -79,10 +79,19 @@ test('client.js：clone 提交用短超时（后台化后不再阻塞下载）',
   //   故提交调用**不该**再背 30 分钟超时——那是旧「请求阻塞到克隆结束」设计的产物，
   //   长超时还会掩盖「提交阶段就卡死」的真实故障。
   const src = readFileSync(join(ROOT, 'lib', 'client.js'), 'utf8');
-  // 提交调用的超时必须是短超时
-  const call = src.match(/repo-clone'[^)]*?(60_000|[\d_]+)\s*\)/);
+  // 提交调用的超时必须是短超时：**字面量或命名常量都接受**——把裸魔数提取为命名常量是本仓库
+  //   对 readability/magic-number-smart 的既定处理方式，故断言应按意图（短超时）而非按写法。
+  //   命名常量则回溯其定义处的字面量值。
+  const call = src.match(/repo-clone'[\s\S]*?\},\s*([A-Za-z_$][\w$]*|\d[\d_]*)\s*\)/);
   assert.ok(call, 'repo-clone 提交应显式传超时');
-  const used = Number(String(call[1]).replace(/_/g, ''));
+  let used = NaN;
+  if (/^\d/.test(call[1])) {
+    used = Number(call[1].replace(/_/g, ''));
+  } else {
+    const def = src.match(new RegExp(`const\\s+${call[1]}\\s*=\\s*([\\d_]+)`));
+    assert.ok(def, `超时常量 ${call[1]} 应有字面量定义`);
+    used = Number(def[1].replace(/_/g, ''));
+  }
   assert.ok(used <= 120_000, `提交是快速返回的，超时应为短超时（实际 ${used}ms）——长超时会掩盖提交阶段卡死`);
   // 旧的长超时常量应已删除（提交不再阻塞，留着是死代码且误导）
   assert.ok(

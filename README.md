@@ -427,6 +427,10 @@ dsh-git-push/
 │   ├── doc-tree.mjs — （待注释）
 │   ├── doc-version.mjs — （待注释）
 │   ├── gen-preview.mjs — preview.html 槽位数据自动生成器（gen 打印 / --write 写盘 / check 查漂移——__SLOTS__/__FAKE__ 从 listRuleSlots 真实生成，新增规则槽位不再手工维护）
+│   ├── hot-path-probe-cjs.cjs — （待注释）
+│   ├── hot-path-probe-fs-shim.mjs — （待注释）
+│   ├── hot-path-probe-fsp-shim.mjs — （待注释）
+│   ├── hot-path-probe.mjs — （待注释）
 │   ├── module-splitter.py — 巨型单文件按顶层块拆分脚本（analyze/split/verify 三命令，python3 零依赖；module_splitter 工具与 CLI 的底层实现）
 │   ├── platform-scan.mjs — （待注释）
 │   ├── preview-server.mjs — 本地真实后端测试服务（preview.html 接真实 handleHttp）
