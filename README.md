@@ -494,6 +494,7 @@ dsh-git-push/
 │   ├── test-clone-maxfilemb.mjs — （待注释）
 │   ├── test-clone-parts-keep.mjs — （待注释）
 │   ├── test-clone-preview-buttons.mjs — clone 预览确认框按钮可点（真渲染+真点击）
+│   ├── test-clone-replay-io.mjs — （待注释）
 │   ├── test-clone-replay.mjs — （待注释）
 │   ├── test-clone-token.mjs — （待注释）
 │   ├── test-collector-ignore.mjs — （待注释）

@@ -2195,6 +2195,13 @@
 | `walk` | 50-55 | 6 | `function walk(node, out = []) {` |
 | `renderPreview` | 58-134 | 77 | `function renderPreview(handlers = {}) {` |
 
+### test/test-clone-replay-io.mjs（159 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `fakeGit` | 17-159 | 143 | `function fakeGit({ hasOrigin = false, failAt = '' } = {}) {` |
+| `runGit` | 19-29 | 11 | `const runGit = (args) => {` |
+
 ### test/test-clone-replay.mjs（233 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
