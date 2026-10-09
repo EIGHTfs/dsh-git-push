@@ -1927,19 +1927,35 @@
 | `collectFiles` | 23-35 | 13 | `function collectFiles(root, exts, dir = root, out = []) {` |
 | `parseArgs` | 38-52 | 15 | `function parseArgs(argv) {` |
 
-### scripts/sync-plugin.mjs（233 行 · 9 个函数）
+### scripts/sync-plugin-install.mjs（224 行 · 11 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `isNpmIgnored` | 57-61 | 5 | `export function isNpmIgnored(rel) {` |
-| `exists` | 64-66 | 3 | `async function exists(p) {` |
-| `packageFilesOf` | 75-91 | 17 | `export async function packageFilesOf(root) {` |
-| `listSyncFiles` | 98-118 | 21 | `export async function listSyncFiles(root = SOURCE_ROOT) {` |
-| `walk` | 102-110 | 9 | `const walk = async (dir) => {` |
-| `detectTargets` | 133-149 | 17 | `export function detectTargets(home = process.env.DSH_HOME \|\| '', pluginName = '') {` |
-| `fileContentEqual` | 161-170 | 10 | `async function fileContentEqual(from, to) {` |
-| `syncPlugin` | 172-202 | 31 | `export async function syncPlugin({ source = SOURCE_ROOT, target = '', write = false } = {}) {` |
-| `main` | 205-226 | 22 | `export async function main(argv = process.argv.slice(2)) {` |
+| `dshRootOf` | 28-34 | 7 | `export function dshRootOf(home = process.env.DSH_HOME \|\| '') {` |
+| `profilesDirOf` | 37-40 | 4 | `export function profilesDirOf(home = process.env.DSH_HOME \|\| '') {` |
+| `inspectProfiles` | 43-56 | 14 | `export function inspectProfiles(home = process.env.DSH_HOME \|\| '') {` |
+| `readHmrConfig` | 62-80 | 19 | `export function readHmrConfig(profileDir, home = process.env.DSH_HOME \|\| '') {` |
+| `judgeHmr` | 87-109 | 23 | `export function judgeHmr({ hmr, profileDir, pluginName }) {` |
+| `inRoot` | 97-97 | 1 | `const inRoot = (p) => roots.some((r) => p === r \|\| p.startsWith(r + sep));` |
+| `lstatOrNull` | 112-114 | 3 | `function lstatOrNull(p) {` |
+| `planInstall` | 121-145 | 25 | `export function planInstall({ profileDir, pluginName }) {` |
+| `applyInstall` | 155-178 | 24 | `export function applyInstall(actions, { on = false } = {}) {` |
+| `depHints` | 185-199 | 15 | `export function depHints(profileDir, pluginName) {` |
+| `pickProfile` | 210-223 | 14 | `export function pickProfile(profiles = [], pluginName = '') {` |
+
+### scripts/sync-plugin.mjs（280 行 · 9 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `isNpmIgnored` | 59-63 | 5 | `export function isNpmIgnored(rel) {` |
+| `exists` | 66-68 | 3 | `async function exists(p) {` |
+| `packageFilesOf` | 77-93 | 17 | `export async function packageFilesOf(root) {` |
+| `listSyncFiles` | 100-120 | 21 | `export async function listSyncFiles(root = SOURCE_ROOT) {` |
+| `walk` | 104-112 | 9 | `const walk = async (dir) => {` |
+| `detectTargets` | 135-155 | 21 | `export function detectTargets(home = process.env.DSH_HOME \|\| '', pluginName = '', profileName = '') {` |
+| `fileContentEqual` | 167-176 | 10 | `async function fileContentEqual(from, to) {` |
+| `syncPlugin` | 178-208 | 31 | `export async function syncPlugin({ source = SOURCE_ROOT, target = '', write = false } = {}) {` |
+| `main` | 212-273 | 62 | `export async function main(argv = process.argv.slice(2)) {` |
 
 ### scripts/verify-prestep.mjs（101 行 · 1 个函数）
 
@@ -2402,6 +2418,12 @@
 |------|------|------|------|
 | `buildFixture` | 25-41 | 17 | `function buildFixture() {` |
 | `runNode` | 43-45 | 3 | `function runNode(args, env) {` |
+
+### test/test-sync-plugin-install.mjs（137 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `fakeHome` | 16-23 | 8 | `function fakeHome({ profile = 'web' } = {}) {` |
 
 ### test/test-task-queue.mjs（220 行 · 3 个函数）
 

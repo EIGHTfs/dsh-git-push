@@ -23,6 +23,8 @@ import { copyFileCompat } from '../lib/fsx.js';
 import { readdir, stat, access } from 'node:fs/promises';
 import { join, relative, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
+// 安装形态与免重启热重载自检（2026-10-09 拆出，见 scripts/sync-plugin-install.mjs 顶部说明）
+import { dshRootOf, profilesDirOf, inspectProfiles, readHmrConfig, judgeHmr, planInstall, applyInstall, depHints, pickProfile } from './sync-plugin-install.mjs';
 
 export const SOURCE_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -130,13 +132,17 @@ export async function listSyncFiles(root = SOURCE_ROOT) {
  * @param {string} [pluginName] 插件名
  * @returns {string[]} 命中的目标目录（local-plugins 在前）
  */
-export function detectTargets(home = process.env.DSH_HOME || '', pluginName = '') {
+export function detectTargets(home = process.env.DSH_HOME || '', pluginName = '', profileName = '') {
   const hits = [];
   if (!home || !pluginName) return hits;
-  const profiles = join(home, '.dsh', 'profiles');
-  if (!existsSync(profiles)) return hits;
+  // 2026-10-09 入参归一：DSH 自己的 DSH_HOME **含** `.dsh`，而本函数原先一律按「不含 .dsh」拼接
+  //   ⇒ 直接传 $DSH_HOME 会拼成 `…/.dsh/.dsh/profiles`、探测为空（开发者文档 §5.1 记录的坑）。
+  //   现按实存目录判定两种形态；多 profile 时可用 profileName 只看指定 profile（§5.2：自动取首个会选错）。
+  const profiles = profilesDirOf(home);
+  if (!profiles || !existsSync(profiles)) return hits;
   for (const profile of readdirSync(profiles, { withFileTypes: true })) {
     if (!profile.isDirectory()) continue;
+    if (profileName && profile.name !== profileName) continue;
     const base = join(profiles, profile.name);
     // 真实加载源优先（package.json 的 file: 指向这里）
     const local = join(base, 'local-plugins', pluginName);
@@ -201,19 +207,41 @@ export async function syncPlugin({ source = SOURCE_ROOT, target = '', write = fa
   return { ok: failures.length === 0, written, skipped, files, failures };
 }
 
-/** CLI 入口。支持 --source <目录>（缺省=本仓库）、--target <目录>（缺省=自动探测）、--write。 */
+/** CLI 入口。支持 --source <目录>（缺省=本仓库）、--target <目录>（缺省=自动探测）、
+ *  --profile <名>（多 profile 时显式指定）、--write（真写）、--fix（按目标形态修正安装位置，含 --write 语义）。 */
 export async function main(argv = process.argv.slice(2)) {
-  const write = argv.includes('--write');
+  const fix = argv.includes('--fix');
+  const write = argv.includes('--write') || fix;
   const si = argv.indexOf('--source');
   const source = si >= 0 ? argv[si + 1] : SOURCE_ROOT;
   const ti = argv.indexOf('--target');
-  // 未显式给 target → 按源目录名自动探测 DSH 插件目录（local-plugins + node_modules 双副本）
+  const pi = argv.indexOf('--profile');
+  const profileName = pi >= 0 ? argv[pi + 1] : '';
+  const home = process.env.DSH_HOME || '';
   const pluginName = basename(source);
-  const target = ti >= 0 ? argv[ti + 1] : (detectTargets(process.env.DSH_HOME || '', pluginName)[0] || '');
+  // 2026-10-09：按 profile 探测（多 profile 时自动取首个会选错——开发者文档 §5.2 已记录该坑）
+  const profiles = inspectProfiles(home);
+  const picked = profileName
+    ? { dir: (profiles.find((p) => p.name === profileName) || {}).dir || '', profile: profileName, reason: '按 --profile 指定' }
+    : pickProfile(profiles, pluginName);
+  if (!ti && picked.ambiguous) {
+    console.log(`"${pluginName}" 在多个 profile 都有副本：${(picked.candidates || []).join(' / ')}`);
+    console.log('请显式指定：--profile <名>（或 --target <目录>）');
+    return 1;
+  }
+  const hits = detectTargets(home, pluginName, profileName || picked.profile || '');
+  const target = ti >= 0 ? argv[ti + 1] : (hits[0] || '');
+  const pd = picked.dir || (profiles.find((p) => p.dir === dirname(dirname(target))) || {}).dir || '';
+  if (!ti && !target) {
+    console.log(`未探测到 "${pluginName}" 的部署副本：${picked.reason}`);
+    if (profiles.length) console.log(`  共 ${profiles.length} 个 profile：${profiles.map((p) => p.name).join(' / ')}`);
+    console.log('请显式指定：--profile <名>（或 --target <目录>）');
+    return 1;
+  }
   const r = await syncPlugin({ source, target, write });
   if (!r.ok) {
     console.log(`同步未执行：${r.error}`);
-    console.log(`可用目标（自动探测）：${detectTargets(process.env.DSH_HOME || '', pluginName).join(' | ') || '(无)'}`);
+    console.log(`可用目标（自动探测）：${hits.join(' | ') || '(无)'}`);
     return 1;
   }
   console.log(`双副本同步${write ? '' : '（dry-run，加 --write 才写）'}`);
@@ -222,6 +250,25 @@ export async function main(argv = process.argv.slice(2)) {
   console.log(`  待写 ${r.written} 个文件，已一致 ${r.skipped} 个`);
   for (const f of r.files.slice(0, 10)) console.log(`    - ${f}`);
   if (r.files.length > 10) console.log(`    … 共 ${r.files.length} 个`);
+  // ── 安装形态 + 免重启热重载自检 + 依赖声明（2026-10-09：把开发者文档 §3.1/§3.2/§5 的检查内置）──
+  if (pd) {
+    const hmr = readHmrConfig(pd);
+    const verdict = judgeHmr({ hmr, profileDir: pd, pluginName });
+    console.log(`  profile：${pd}`);
+    console.log(`  免重启热重载：${verdict.hot ? '✅ 可（改代码后同步即生效）' : `❌ 不可 —— ${verdict.reason}`}`);
+    const actions = planInstall({ profileDir: pd, pluginName });
+    if (actions.length) {
+      console.log('  安装形态待办（目标：local-plugins 真实目录 + node_modules 相对软链）：');
+      for (const a of actions) console.log(`    · [${a.kind}] ${a.desc}`);
+      if (fix) {
+        const res = applyInstall(actions, { on: true });
+        console.log(`    已执行：${res.done.join(', ') || '（无）'}${res.skipped.length ? `｜跳过：${res.skipped.join(', ')}` : ''}`);
+      } else {
+        console.log('    （加 --fix 才执行：删软链/建相对链，真实文件由上面的同步步骤落盘）');
+      }
+    }
+    for (const h of depHints(pd, pluginName)) console.log(`  ⚠️ ${h}`);
+  }
   return 0;
 }
 

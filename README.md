@@ -437,6 +437,7 @@ dsh-git-push/
 │   ├── scan-version.mjs — 版本一致性校验脚本
 │   ├── scrub-user-wording.mjs — 清理「用户沟通措辞」独立脚本
 │   ├── symbol-index.mjs — （待注释）
+│   ├── sync-plugin-install.mjs — （待注释）
 │   ├── sync-plugin.mjs — 双副本同步脚本（源仓库 → 部署安装副本）
 │   ├── verify-prestep.mjs — 上下文注入自检脚本（真实触发 agent/pre-step 验证注入）
 │   ├── watch-preview.mjs — preview.html 自动重生成监听（源码变更即重建）
@@ -558,6 +559,7 @@ dsh-git-push/
 │   ├── test-status-secret.mjs — token 明文不下发安全回归
 │   ├── test-symbol-index.mjs — （待注释）
 │   ├── test-symlink-resolution.mjs — 软链安装依赖解析回归测试（默认失败/--preserve-symlinks/NODE_PATH/真实副本四种场景）
+│   ├── test-sync-plugin-install.mjs — （待注释）
 │   ├── test-task-queue.mjs — 后台化回归测试（官方 job 注册 / 无 jobs 同步保底 / blocker 拦截）
 │   ├── test-test-cache.mjs — （待注释）
 │   ├── test-tokenizer-multiline-template.mjs — （待注释）
@@ -1140,12 +1142,13 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 - **环境**：DSH（DeepSeek Harness）｜Node ≥18 ｜本机 git
 - **安装**：`dsh plugin add EIGHTfs/dsh-git-push`（仓库已声明 `dsh.bundle`，可安装）
-- **随插件发布的脚本**：`scripts/` 在发布白名单内（`package.json` 的 `files` 与 `scripts/sync-plugin.mjs` 的 `SYNC_ENTRIES` 两处一致，由 `test-self.mjs` 的「SYNC_ENTRIES 覆盖 files 白名单」测试守住），装好插件后 5 个脚本在**安装副本目录内**同样可直接运行（零外部依赖，只用 node 内置模块）：
+- **随插件发布的脚本**：`scripts/` 在发布白名单内（`package.json` 的 `files` 与 `scripts/sync-plugin.mjs` 的 `SYNC_ENTRIES` 两处一致，由 `test-self.mjs` 的「SYNC_ENTRIES 覆盖 files 白名单」测试守住），装好插件后 6 个脚本在**安装副本目录内**同样可直接运行（零外部依赖，只用 node 内置模块）：
   - `scripts/scan-version.mjs`：版本一致性自检（lib/self 的 VERSION ↔ `package.json` `version` ↔ README 版本列表 ↔ cli HELP 模板），不一致 exit 1
   - `scripts/audit-runtime-check.mjs`：三层审计的 L3 运行时检测（见「独立脚本：运行时检测」）
   - `scripts/scrub-user-wording.mjs`：清洗注释里的沟通残留措辞（见「独立脚本：清洗用户沟通措辞」）
   - `scripts/check.mjs`：全仓语法检查（`node --check` 批量）
-  - `scripts/sync-plugin.mjs`：源码仓库 → 安装副本的双副本同步（默认 dry-run，`--write` 才写）
+  - `scripts/sync-plugin.mjs`：源码仓库 → 安装副本的双副本同步（默认 dry-run，`--write` 才写）。2026-10-09 起同时做**部署形态与免重启热重载自检**：`--profile <名>` 指定 profile（多 profile 时必须显式给，否则报所有候选而不是默默取首个）、`--fix` 按目标形态修正安装位置（`local-plugins/` 真实目录 + `node_modules/` **相对**软链）；每次都报告「该插件改代码能否免重启热重载」（读 profile 的 `cordis.patch.yml` 里 `id: hmr` 的 `base`/`root`）以及 profile 依赖声明是否该改回 `file:local-plugins/<插件>`
+  - `scripts/sync-plugin-install.mjs`：上一条里安装形态/HMR 自检的实现模块（被 `sync-plugin.mjs` 引用，非独立入口）
 - **测试**：`npm test` 一条命令复现全绿（1086 断言，0 失败）
 
 ### 测试缓存（未变更的纯本地测试自动跳过）

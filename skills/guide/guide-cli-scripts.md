@@ -73,7 +73,8 @@ git-sluice self-check
 | `scripts/readme-gen.mjs` | README 生成 |
 | `scripts/gen-preview.mjs` / `watch-preview.mjs` / `preview-server.mjs` | 界面预览页数据生成、变更监听、本地真实后端测试服务 |
 | `scripts/browser-page-probe.mjs` | 无头浏览器探针：读页面真实渲染文本 + 抓前端运行时错误（零硬编码路径，自动探测环境） |
-| `scripts/sync-plugin.mjs` | 双副本同步（工作区 ↔ 安装副本） |
+| `scripts/sync-plugin.mjs` | 双副本同步（工作区 ↔ 安装副本）+ 部署形态与免重启热重载自检：`--profile <名>` 指定 profile（多 profile 必给）、`--fix` 按目标形态修正（local-plugins 真实目录 + node_modules 相对软链） |
+| `scripts/sync-plugin-install.mjs` | 安装形态 / HMR 自检的实现模块（`sync-plugin.mjs` 引用，非独立入口） |
 | `scripts/verify-prestep.mjs` | 上下文注入自检（真实触发 pre-step 校验注入内容） |
 | `scripts/rename-locator.mjs` | 变量重命名位置定位（按作用域聚合） |
 | `scripts/rules-solo-audit.mjs` | 单条 yml 规则的控制变量评估 |

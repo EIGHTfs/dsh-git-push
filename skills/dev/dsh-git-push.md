@@ -271,7 +271,8 @@ node scripts/readme-gen.mjs <repoPath> [--write <path>] [--template <path>]
 
 | 现象 | 原因 / 处理 |
 |------|-------------|
-| 插件改动刷新看不到 | 真实加载源是 `<profile>/local-plugins/<插件名>`，只同步 `node_modules/` 无效；用 `scripts/sync-plugin.mjs --write` 同步两处 |
+| 插件改动刷新看不到 | 真实加载源是 `<profile>/local-plugins/<插件名>`，只同步 `node_modules/` 无效；用 `scripts/sync-plugin.mjs --write` 同步两处（多 profile 时加 `--profile <名>`） |
+| 改插件代码必须重启才生效 | 免重启热重载要同时满足两条：① profile 的 `cordis.patch.yml` 里 `id: hmr` 显式配 `base` + `root`（默认 `root: []` = module roots are opt-in，一个模块目录都不 watch）；② 插件本体在 `local-plugins/`（`node_modules/**` 被默认 `ignored` 整棵剪枝，想只放行其下某插件的否定写法无效）。`sync-plugin.mjs` 会直接报告该插件能否热重载，`--fix` 可修部署形态（改完形态需重启一次让解析路径生效） |
 | 规则不生效 | 槽位动态发现，确认文件名 `audit-rules-<名>.yml` 且在 `lib/audit-rules/` |
 | 统计数字矛盾（0 blocker 0 warning 但 total > 0） | error 级计入拦截级，看 findings 的 `severity` |
 | 豁免写了没用 | 整文件豁免须在前 3 行；行级豁免须写在命中行 |
