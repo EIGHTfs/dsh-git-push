@@ -278,3 +278,4 @@ node scripts/readme-gen.mjs <repoPath> [--write <path>] [--template <path>]
 | 豁免写了没用 | 整文件豁免须在前 3 行；行级豁免须写在命中行 |
 | 函数/复杂度被报为 blocker | 规则 `severity` 是上限，检查器不越级；报 blocker 说明 yml 里写的就是 error/blocker |
 | 克隆大文件反复失败 | 失败项的分片必须保留（`.dsh-parts`）才能跨轮 Range 续传；同轮清理分片会让大文件永远从 0 重来 |
+| 建了远端但推送报「远端查不到分支 master（API 404 / ls-remote 无该分支）」 | `git_remote_create` 旧版把 origin 写成 **REST API 端点**（`https://api.github.com/repos/<o>/<r>` ✗ 那不是 git remote）⇒ `git push/fetch origin` 必然失败。2026-10-09 已修（`lib/git/remote.js`）：origin 统一写 `https://github.com/<o>/<r>`，并**自愈**——仓库已存在但 origin 仍是 API 形态时 `set-url` 改回；返回体新增 `originAction`（`add`/`repair`/`keep`）。旧仓库手工修：`git remote set-url origin ssh://git@ssh.github.com:443/<o>/<r>.git` 再 `git push -u origin master`（凭据用插件 `id_rsa` + `-p 443`）。⚠️ `lib/git/clone.js` 仍写 API 形态 origin（设计如此，插件自身推送不受影响，但 `git push origin` 会失败） |

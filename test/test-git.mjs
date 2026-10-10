@@ -697,8 +697,30 @@ test('ensureRemoteRepo：mock 创建成功 + 设 origin', async () => {
   assert.equal(r.visibility, 'private');
   assert.equal(r.owner, 'EIGHTfs');
   assert.ok(fetchCalls.some((c) => c.method === 'POST' && c.url.endsWith('/user/repos')));
-  // origin 必须带 owner 段（否则 pushViaApi 无法解析）
-  assert.ok(r.origin.endsWith('/repos/EIGHTfs/repo2'), `origin 应含 owner 段: ${r.origin}`);
+  // origin 必须是**可用的 git URL**：API 形态（`https://api.github.com/repos/…`）是 REST 端点、不是 git remote，
+  //   `git push/fetch origin` 必然失败，且推送核验会报「推送未落地：远端查不到分支」（任务.md B5 实测）。
+  assert.equal(r.origin, 'https://github.com/EIGHTfs/repo2');
+  assert.ok(!/api\.github\.com/.test(r.origin), `origin 不能是 REST API 端点: ${r.origin}`);
+  assert.equal(r.originAction, 'add');
+  // 本地仓库的 origin remote 也要写成同一 git 形态（而不是 API 端点）
+  assert.equal(String(runGit(['remote', 'get-url', 'origin'], { cwd: repo2 }).stdout).trim(), 'https://github.com/EIGHTfs/repo2');
+});
+
+test('ensureRemoteRepo：仓库已存在时自愈 API 形态 origin（B5 回归）', async () => {
+  const repoHeal = join(tmp, 'repo-heal-origin');
+  mkdirSync(repoHeal);
+  runGit(['init', '-q'], { cwd: repoHeal });
+  // 模拟「旧版建仓留下的 API 形态 origin」
+  runGit(['remote', 'add', 'origin', 'https://api.github.com/repos/EIGHTfs/repo-heal-origin'], { cwd: repoHeal });
+  mockFetch([
+    { match: (u, m) => m === 'GET' && u.endsWith('/user'), status: 200, body: { login: 'EIGHTfs' } },
+    { match: (u, m) => m === 'GET' && u.endsWith('/repos/EIGHTfs/repo-heal-origin'), status: 200, body: {} },
+  ]);
+  const r = await ensureRemoteRepo({ repoPath: repoHeal, token: 'ghp_y' });
+  assert.equal(r.ok, true);
+  assert.equal(r.exists, true);
+  assert.equal(r.originAction, 'repair', '已存在的 API 形态 origin 应被改回 git 形态');
+  assert.equal(String(runGit(['remote', 'get-url', 'origin'], { cwd: repoHeal }).stdout).trim(), 'https://github.com/EIGHTfs/repo-heal-origin');
 });
 
 test('ensureRemoteRepo：dryRun 不创建', async () => {

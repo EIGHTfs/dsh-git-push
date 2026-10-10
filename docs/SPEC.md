@@ -80,7 +80,7 @@ settings-get  settings-set
 
 ## 六、审计规则体系
 
-- **21 个槽位 / 122 条规则**，声明在 `lib/audit-rules/audit-rules-<槽位>.yml`；判定在 `lib/ast/*`；产出 finding 在 `lib/checks/*`；调度汇总在 `lib/audit/*`。
+- **21 个槽位 / 125 条规则**，声明在 `lib/audit-rules/audit-rules-<槽位>.yml`；判定在 `lib/ast/*`；产出 finding 在 `lib/checks/*`；调度汇总在 `lib/audit/*`。
 - 作用域字段：`exts` / `include_paths`（路径白名单，按文件名或路径前后缀）/ `exclude_paths` / `file_patterns`（**内容**初筛）。
 - 分级：`blocker` / `warning` / `info`；评分 10 维度加权得 0-100 + 等级。
 - 豁免标记 9 个（`dsh-skip-*`），判定入口 `lib/exempt/index.js`；finding 的 `exemptHint` 必须与实际生效的标记一致。

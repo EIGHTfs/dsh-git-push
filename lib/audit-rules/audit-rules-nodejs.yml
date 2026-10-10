@@ -152,15 +152,22 @@ rules:
     # 2026-09-23：只对**代码文件**生效——md/yml/json 文档天然长（README/docs 详解/规则包），
     #   文件行数拆分规则针对代码模块；此前无 exts 导致 README 1058 行/docs 详解被误报。
     exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx"]
-    # 平台约束降级（DSH 插件专属）：DSH 要求插件客户端是**单文件**（dsh.client + exports["./client"]
-    #   指向同一文件），该文件天然超长且不可按模块拆分 → action: downgrade
-    #   （仍出现在报告里，但降为 info 且不扣分；不用 exempt——静默排除会让这个事实消失）。
-    #   作用域值由 lib/audit/audit-file.js 的 resolveDshClientEntries() 推导（读 package.json，非写死文件名）。
+    # 平台约束降级（DSH 插件专属）：DSH 要求插件的**运行态客户端**是单文件
+    #   （dsh.client + exports["./client"] 指向同一文件）——那是**产物**，不是源码形态：
+    #   源码可以按分片维护 + 构建拼接（本仓库 lib/client-parts/** → lib/client.js）。
+    #   故按两档作用域分别降级（仍出现在报告里，降为 info 且不扣分；
+    #   不用 exempt——静默排除会让这个事实从报告里消失）：
+    #     · dsh-client-entry    ：那份**产物**本身（运行态单文件，行数天然超长）
+    #     · dsh-client-fragment ：**分片源码**（片段：单文件语法不成立，独立看行数超阈值不代表可拆分）
+    #   作用域值由 lib/audit/client-entry.js 推导（读 package.json，非写死文件名）。
     #   注意：必须声明在**规则原槽位**——loader 是拼接而非覆盖，写到别的槽位不会生效。
     scope_rules:
       - scope: "dsh-client-entry"
         action: "downgrade"
-        reason: "DSH 要求客户端为单文件（不可拆分）——降级为提示，仍报不排除"
+        reason: "运行态客户端产物本身就是单文件（源码已分片维护 + 构建拼接，见 lib/client-parts/）——降级为提示，仍报不排除"
+      - scope: "dsh-client-fragment"
+        action: "downgrade"
+        reason: "客户端分片是构建片段（拼接后才是完整文件）——单看行数超阈值不构成可拆分问题，降级为提示、仍报不排除"
     fixable: false
 
   - id: readability/comment-density

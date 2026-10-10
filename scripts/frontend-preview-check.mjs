@@ -10,8 +10,13 @@
  *   CHROMIUM  无头浏览器可执行文件（chrome-headless-shell 亦可）
  *   运行库/字体由调用方通过 LD_LIBRARY_PATH / FONTCONFIG_FILE 提供（无头 chromium 的既有要求）
  *
- * 用法：
- *   node scripts/frontend-preview-check.mjs --html <预览页.html> [--out <截图.png>]
+ * 用法（⚠️ 两个实测坑，都踩过）：
+ *   node scripts/frontend-preview-check.mjs --html "$PWD/assets/preview.html?mock=1" [--out <截图.png>]
+ *     · --html 必须给**绝对路径**（或自带 file://）：相对路径会让 page.goto 直接 ERR_INVALID_URL。
+ *     · 建议带 `?mock=1`：预览页切内置假数据（见 README「离线调试」）。不带时页面 fetch 真后端，
+ *       /repos-cloud 等返回 404 ⇒ 报「仓库列表没有 clone 按钮」这类**假失败**（看着像前端坏了，其实是没数据）。
+ *   运行前需 PW_ROOT（含 node_modules/playwright 的目录）+ CHROMIUM（无头浏览器），
+ *   运行库/字体由调用方通过 LD_LIBRARY_PATH / FONTCONFIG_FILE 提供（无头 chromium 的既有要求）。
  * 前置（生成预览页；同样由调用方给出工具与 React UMD 路径）：
  *   <dsh>/skills/frontend-real-render-preview.mjs --client lib/client.js --out <预览页.html>
  *     --react <dsh>/cache/react-umd --endpoints <伪造响应.json>

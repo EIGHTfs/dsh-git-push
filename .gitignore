@@ -25,3 +25,9 @@ __pycache__/
 任务.md
 # 测试结果缓存（按「测试文件 + 依赖闭包」内容哈希跳过未变更的纯本地测试；本机缓存不入库）
 .test-cache/
+
+# 客户端构建产物（C8）：源码是分片 lib/client-parts/**（入库），
+#   lib/client.js 由 scripts/build-client.mjs 按 PART_ORDER 拼接生成 —— 产物不入库。
+#   安装侧靠 package.json 的 prepare / prepack 自动构建；本地改分片后跑 npm run build:client。
+lib/client.js
+

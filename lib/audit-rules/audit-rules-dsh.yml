@@ -128,3 +128,35 @@ rules:
       - "window\\.__ModuleLoader__\\.load\\s*\\([^)]{0,80}"
     fixable: false
     mitigation: "window.__ModuleLoader__.load({ id: '<pkg>', factory: (require) => ({ apply }) })"
+
+  # ── ⑥ 插件运行时铁律（来源：2026-10-10 dsh-file-path-tracker 真实事故，两条都实测触发过）──
+  # 事故链 A：读 ctx.sessionId ⇒ 事件处理器抛 inject 错 ⇒ tools/pre-execute 每次工具调用都触发
+  #   ⇒ 宿主**所有工具**全部失败（现场：任何工具都返回 cannot get property "sessionId" without inject）。
+  # 事故链 B：HTTP 路由用猜测 API 兜底链（x.addRoute || x.route || x.use）+ 静默 return
+  #   ⇒ 路由从未注册、页面一直 404，却没有任何报错（靠查反代日志才发现）。
+  # 说明：只收「与 DSH 插件强关联」且**单行可判定**的两条；部署卫生类检查（local-plugins 里混入
+  #   备份目录、profile patch 内同一 loader id 重复）不是单行内容匹配，属脚本层检查，见 SPEC 待办。
+  - id: dsh/ctx-undeclared-property-read
+    name: "读 ctx 上未注入的属性（cordis 严格代理会抛，可打挂宿主全部工具）"
+    category: "dsh"
+    severity: "blocker"
+    description: "cordis 的 Context 是严格代理：访问未声明/未注入的属性直接抛 cannot get property \"<name>\" without inject。事件处理器（尤其 tools/pre-execute 这类每次工具调用都触发的事件）里抛错会把宿主所有工具调用打挂。下面列的是实测致命且**不是** cordis 服务的标识字段。"
+    exts: ["js", "mjs", "cjs", "ts", "mts", "cts"]
+    # 引擎只在 blacklist 式规则上应用 whitelist（纯 patterns 规则不吃白名单），故这里用 blacklist。
+    blacklist:
+      - pattern: "ctx\\.(sessionId|sessionID|conversationId|agentId|workspaceRoot|dshHome|DSH_HOME)\\b"
+    # 注释里**提到**这些字段名属正常（本项目就在注释里写明这条铁律），整行豁免，避免自我误报。
+    whitelist:
+      - pattern: "^\\s*(?://|\\*|/\\*)"
+    fixable: true
+    mitigation: "从事件负载取，或 ctx.get('<已在 inject 里声明的服务>') 取；取不到用空值兜底，绝不假定 ctx 上有该字段；事件回调整体包 try/catch 作纵深防御"
+  - id: dsh/host-api-guessed-fallback-chain
+    name: "猜宿主 API 的兜底链（A || B || C）"
+    category: "dsh"
+    severity: "error"
+    description: "注册/接线代码里用 x.addRoute || x.route || x.use 这类**猜测**的 API 兜底链；真实 API 不匹配时静默 return ⇒ 功能整体失效却没有任何报错（实测：HTTP 路由从未注册，页面一直 404，直到查反代日志才发现）。DSH 宿主真实 API 形如 webServer.register({ kind:'prefix', path, handler })。"
+    exts: ["js", "mjs", "cjs", "ts", "mts", "cts"]
+    patterns:
+      - "\\b(addRoute|addHandler|registerRoute|useRoute)\\s*\\|\\|"
+    fixable: true
+    mitigation: "按官方真实 API 写（webServer.register({ kind:'prefix', path, handler })）；接线失败必须 return false 并告警，不得静默吞掉"

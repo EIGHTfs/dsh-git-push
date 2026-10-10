@@ -532,12 +532,13 @@
 | `isBuildArtifactFile` | 47-77 | 31 | `export function isBuildArtifactFile(relPathOrFile = '', text = '') {` |
 | `auditFile` | 79-183 | 105 | `export function auditFile({ file, relPath, text, grouped }, opts = {}) {` |
 
-### lib/audit/client-entry.js（50 行 · 2 个函数）
+### lib/audit/client-entry.js（94 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `resolveDshClientEntries` | 25-49 | 25 | `export function resolveDshClientEntries(repoRoot) {` |
-| `pick` | 35-43 | 9 | `const pick = (v) => {` |
+| `resolveDshClientEntries` | 27-54 | 28 | `export function resolveDshClientEntries(repoRoot) {` |
+| `pick` | 40-48 | 9 | `const pick = (v) => {` |
+| `resolveDshClientFragments` | 70-93 | 24 | `export function resolveDshClientFragments(repoRoot) {` |
 
 ### lib/audit/collector.js（477 行 · 18 个函数）
 
@@ -708,12 +709,12 @@
 |------|------|------|------|
 | `checkDataflow` | 25-40 | 16 | `export function checkDataflow({ file, text, rules }) {` |
 
-### lib/checks/dispatch.js（106 行 · 2 个函数）
+### lib/checks/dispatch.js（113 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `resolveFileScope` | 42-48 | 7 | `function resolveFileScope({ repoPath, relPath }) {` |
-| `runChecks` | 50-105 | 56 | `export function runChecks({ file, relPath, text, grouped }, opts = {}) {` |
+| `resolveFileScope` | 47-55 | 9 | `function resolveFileScope({ repoPath, relPath }) {` |
+| `runChecks` | 57-112 | 56 | `export function runChecks({ file, relPath, text, grouped }, opts = {}) {` |
 
 ### lib/checks/dup-code.js（70 行 · 1 个函数）
 
@@ -867,6 +868,97 @@
 | `runClonePreview` | 137-150 | 14 | `async function runClonePreview(target, flags) {` |
 | `printCloneResult` | 153-165 | 13 | `function printCloneResult(r, flags, target, dest) {` |
 | `cmdClone` | 168-175 | 8 | `export async function cmdClone(flags, positional) {` |
+
+### lib/client-parts/02-utils.js（63 行 · 7 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `dshgp_ensureCss` | 2-10 | 9 | `function dshgp_ensureCss() {` |
+| `dshgp_getJson` | 13-16 | 4 | `async function dshgp_getJson(url) {` |
+| `dshgp_postJson` | 18-27 | 10 | `async function dshgp_postJson(url, payload, timeoutMs) {` |
+| `dshgp_tokenConfigured` | 35-39 | 5 | `function dshgp_tokenConfigured(value) {` |
+| `dshgp_localGet` | 46-48 | 3 | `function dshgp_localGet(key) {` |
+| `dshgp_localSet` | 51-53 | 3 | `function dshgp_localSet(key, value) {` |
+| `dshgp_copyText` | 56-61 | 6 | `function dshgp_copyText(text) {` |
+
+### lib/client-parts/10-account.js（84 行 · 3 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `dshgp_AcctHead` | 3-17 | 15 | `function dshgp_AcctHead(props) {` |
+| `dshgp_AccountCard` | 20-64 | 45 | `function dshgp_AccountCard(props) {` |
+| `dshgp_AccountTab` | 67-82 | 16 | `function dshgp_AccountTab(props) {` |
+
+### lib/client-parts/11-browser.js（96 行 · 7 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `dshgp_browseEnsureDom` | 6-34 | 29 | `function dshgp_browseEnsureDom() {` |
+| `dshgp_browseGuess` | 35-37 | 3 | `function dshgp_browseGuess() {` |
+| `dshgp_browseRemember` | 38-40 | 3 | `function dshgp_browseRemember(p) {` |
+| `dshgp_browseLoad` | 41-66 | 26 | `async function dshgp_browseLoad(p) {` |
+| `dshgp_browseOpen` | 67-75 | 9 | `function dshgp_browseOpen(input, onPick) {` |
+| `dshgp_browseClose` | 76-82 | 7 | `function dshgp_browseClose() {` |
+| `dshgp_browseAttach` | 83-93 | 11 | `function dshgp_browseAttach(inputEl) {` |
+
+### lib/client-parts/20-repo.js（372 行 · 10 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `dshgp_RepoManagerCard` | 2-32 | 31 | `function dshgp_RepoManagerCard(props) {` |
+| `dshgp_RepoLocalRow` | 35-113 | 79 | `function dshgp_RepoLocalRow(props) {` |
+| `dshgp_RepoLocalPane` | 116-153 | 38 | `function dshgp_RepoLocalPane(props) {` |
+| `dshgp_RepoCloudRow` | 156-203 | 48 | `function dshgp_RepoCloudRow(props) {` |
+| `dshgp_VisConfirmDialog` | 209-237 | 29 | `function dshgp_VisConfirmDialog(props) {` |
+| `dshgp_RepoCloudPane` | 240-291 | 52 | `function dshgp_RepoCloudPane(props) {` |
+| `dshgp_CloneProgress` | 302-319 | 18 | `function dshgp_CloneProgress(props) {` |
+| `mb` | 304-304 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
+| `dshgp_ClonePreview` | 327-370 | 44 | `function dshgp_ClonePreview(props) {` |
+| `mb` | 329-329 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
+
+### lib/client-parts/21-audit.js（302 行 · 10 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `dshgp_WeightRows` | 3-26 | 24 | `function dshgp_WeightRows(props) {` |
+| `dshgp_RuleRow` | 37-99 | 63 | `function dshgp_RuleRow(props, slot, idx, len) {` |
+| `countTitle` | 46-49 | 4 | `const countTitle = (kind) => {` |
+| `move` | 54-54 | 1 | `const move = (dir) => props.moveSlot(slot, dir);` |
+| `dshgp_AuditSwitchBlock` | 102-166 | 65 | `function dshgp_AuditSwitchBlock(props) {` |
+| `dshgp_InjectPromptSwitchBlock` | 169-191 | 23 | `function dshgp_InjectPromptSwitchBlock(props) {` |
+| `dshgp_CommentWordingBlock` | 194-209 | 16 | `function dshgp_CommentWordingBlock(props) {` |
+| `dshgp_AuditAdvancedBlock` | 212-238 | 27 | `function dshgp_AuditAdvancedBlock(props) {` |
+| `dshgp_RuleListBlock` | 241-272 | 32 | `function dshgp_RuleListBlock(props) {` |
+| `dshgp_AuditTab` | 279-299 | 21 | `function dshgp_AuditTab(props) {` |
+
+### lib/client-parts/22-settings.js（145 行 · 3 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `dshgp_CredentialBlock` | 2-67 | 66 | `function dshgp_CredentialBlock(props) {` |
+| `dshgp_PushDefaultsBlock` | 70-132 | 63 | `function dshgp_PushDefaultsBlock(props) {` |
+| `dshgp_SettingsTab` | 134-143 | 10 | `function dshgp_SettingsTab(props) {` |
+
+### lib/client-parts/30-page.js（57 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `dshgp_GitPushPage` | 2-55 | 54 | `function dshgp_GitPushPage(props) {` |
+
+### lib/client-parts/40-controller.js（885 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `renderResult` | 783-796 | 14 | `const renderResult = (res) => {` |
+| `poll` | 799-824 | 26 | `const poll = async () => {` |
+
+### lib/client-parts/99-apply.js（72 行 · 3 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `apply` | 1-65 | 65 | `function apply(ctx) {` |
+| `useCardState` | 41-44 | 4 | `const useCardState = (selector) => {` |
+| `SectionPage` | 47-52 | 6 | `function SectionPage() {` |
 
 ### lib/client.js（2586 行 · 46 个函数）
 
@@ -1255,13 +1347,15 @@
 | `readmeCheckHint` | 336-341 | 6 | `export function readmeCheckHint(repoPath) {` |
 | `pushCurrentBranch` | 350-401 | 52 | `export async function pushCurrentBranch({ repoPath = '', pushMethod = 'ssh' } = {}) {` |
 
-### lib/git/remote.js（88 行 · 3 个函数）
+### lib/git/remote.js（129 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `ensureRemoteRepo` | 17-58 | 42 | `export async function ensureRemoteRepo({ repoPath = '', owner = '', visibility = 'private', dryRun = false, token = '' } = {}) {` |
-| `parseOwnerRepoFromRemote` | 61-68 | 8 | `export function parseOwnerRepoFromRemote(remoteUrl) {` |
-| `setVisibility` | 71-87 | 17 | `export async function setVisibility({ owner = '', repo = '', visibility = '', token = '', repoPath = '' } = {}) {` |
+| `isApiFormOrigin` | 19-21 | 3 | `function isApiFormOrigin(url) {` |
+| `ensureUsableOrigin` | 37-50 | 14 | `function ensureUsableOrigin(repoPath, ownerName, name) {` |
+| `ensureRemoteRepo` | 53-99 | 47 | `export async function ensureRemoteRepo({ repoPath = '', owner = '', visibility = 'private', dryRun = false, token = '' } = {}) {` |
+| `parseOwnerRepoFromRemote` | 102-109 | 8 | `export function parseOwnerRepoFromRemote(remoteUrl) {` |
+| `setVisibility` | 112-128 | 17 | `export async function setVisibility({ owner = '', repo = '', visibility = '', token = '', repoPath = '' } = {}) {` |
 
 ### lib/git/repo-index.js（513 行 · 19 个函数）
 
@@ -1696,11 +1790,20 @@
 | `loadPlaywright` | 191-199 | 9 | `function loadPlaywright(pwroot) {` |
 | `stripHtml` | 202-208 | 7 | `function stripHtml(html) {` |
 
-### scripts/check.mjs（37 行 · 1 个函数）
+### scripts/build-client.mjs（119 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `collectJs` | 15-23 | 9 | `function collectJs(dir, acc = []) {` |
+| `readParts` | 53-59 | 7 | `export function readParts(order = PART_ORDER, dir = PARTS_DIR) {` |
+| `buildClient` | 64-67 | 4 | `export function buildClient(order = PART_ORDER, dir = PARTS_DIR) {` |
+| `checkShape` | 70-79 | 10 | `export function checkShape(code) {` |
+| `main` | 83-114 | 32 | `function main(argv = process.argv.slice(2)) {` |
+
+### scripts/check.mjs（62 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `collectJs` | 22-31 | 10 | `function collectJs(dir, acc = []) {` |
 
 ### scripts/doc-func.mjs（213 行 · 12 个函数）
 
@@ -1756,11 +1859,11 @@
 | `checkVersionDrift` | 75-83 | 9 | `export function checkVersionDrift({ hostPath, root, versionSource = '' } = {}) {` |
 | `out` | 100-100 | 1 | `const out = (msg) => console.log(msg);` |
 
-### scripts/frontend-preview-check.mjs（120 行 · 1 个函数）
+### scripts/frontend-preview-check.mjs（125 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `clickText` | 55-59 | 5 | `const clickText = async (re) => {` |
+| `clickText` | 60-64 | 5 | `const clickText = async (re) => {` |
 
 ### scripts/gen-preview.mjs（109 行 · 6 个函数）
 
@@ -2030,6 +2133,12 @@
 |------|------|------|------|
 | `makeAuditRepo` | 19-39 | 21 | `function makeAuditRepo() {` |
 
+### test/test-client-fragment-scope.mjs（69 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `fakeRepo` | 16-20 | 5 | `function fakeRepo(pkg) {` |
+
 ### test/test-client.mjs（519 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2222,7 +2331,7 @@
 | `makeRepo` | 25-29 | 5 | `function makeRepo() {` |
 | `repoConfig` | 32-34 | 3 | `function repoConfig(dir, key) {` |
 
-### test/test-git.mjs（846 行 · 2 个函数）
+### test/test-git.mjs（868 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|

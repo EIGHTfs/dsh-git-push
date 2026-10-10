@@ -4,7 +4,7 @@ DSH（DeepSeek Harness）git 提交推送与代码审计插件——提交前自
 
 ![账号信息面板](assets/panel-account.png)
 
-审计面板（14 个规则包 + 按包命中数，上下调次序、单击启停）：
+审计面板（21 个规则包 + 按包命中数，上下调次序、单击启停）：
 
 ![审计面板](assets/panel-audit.png)
 
@@ -32,7 +32,7 @@ DSH（DeepSeek Harness）git 提交推送与代码审计插件——提交前自
 - 全部命令：`git-sluice help`
 
 **③ 侧边栏面板**
-- 审计面板：14 个规则包开关/排序/命中数
+- 审计面板：21 个规则包开关/排序/命中数
 - 设置：凭据 / SSH 公钥 / 审计开关与权重
 
 ## 目录
@@ -68,8 +68,8 @@ DSH（DeepSeek Harness）git 提交推送与代码审计插件——提交前自
 
 | 文档 | 讲什么 |
 |---|---|
-| [docs/SPEC.md](docs/SPEC.md) | **当前有效规格唯一入口**：身份 / 14 个工具 / 28 条 HTTP 接口 / 18 个设置键 / 4 个数据文件 / 审计规则体系 / 文档产物 / 版本纪律 / 测试基线 |
-| [docs/功能-审计规则体系.md](docs/功能-审计规则体系.md) | 21 个规则槽位 / 122 条规则的组织方式、作用域字段、三层结构、运行入口、结果怎么读、怎么豁免 |
+| [docs/SPEC.md](docs/SPEC.md) | **当前有效规格唯一入口**：身份 / 16 个工具 / 28 条 HTTP 接口 / 18 个设置键 / 4 个数据文件 / 审计规则体系 / 文档产物 / 版本纪律 / 测试基线 |
+| [docs/功能-审计规则体系.md](docs/功能-审计规则体系.md) | 21 个规则槽位 / 125 条规则的组织方式、作用域字段、三层结构、运行入口、结果怎么读、怎么豁免 |
 | [docs/功能-历史提交审计.md](docs/功能-历史提交审计.md) | 逐提交回放审计：解决什么、怎么跑、与普通审计的差异与成本 |
 | [docs/功能-文档与结构追踪.md](docs/功能-文档与结构追踪.md) | tree-doc / doc-func / doc-version 三份自动生成文档怎么更新、漂移怎么办 |
 | [docs/功能-仓库索引与账号状态.md](docs/功能-仓库索引与账号状态.md) | `dsh-repo-index.json` 与 `account-status.json` 的写入时机、读取入口、统一收口约定 |
@@ -82,7 +82,7 @@ DSH（DeepSeek Harness）git 提交推送与代码审计插件——提交前自
 | 功能块 | 做什么 | 入口 |
 |---|---|---|
 | **提交推送** | token / SSH 密钥管理、提交、推送、clone、建仓、可见性切换、force 强推、版本历史、**提交身份自动用登录账号（未配身份的仓库自动写入局部配置）** | `git_commit_push` 工具 / CLI / 侧边栏 |
-| **代码审计** | 提交前自动审计门禁、14 个规则槽位 107 条规则、10 维度质量评分、豁免机制、链接检查、**三层审计管线（L1 正则初筛 / L2 AST 数据流 / L3 运行时检测）** | `code_audit` 工具 / CLI / 侧边栏 / 输入框 `/git-audit` |
+| **代码审计** | 提交前自动审计门禁、21 个规则槽位 125 条规则、10 维度质量评分、豁免机制、链接检查、**三层审计管线（L1 正则初筛 / L2 AST 数据流 / L3 运行时检测）** | `code_audit` 工具 / CLI / 侧边栏 / 输入框 `/git-audit` |
 | **任务完成自动推送** | 监听 AI 回合结束→检测回复含「✅任务完成」→自动 commit+push（复用审计门禁，不裸提交） | 侧边栏开关 `autoPushEnabled`（默认关）+ 自定义触发文本 |
 | **审计结果 API** | `/api/git-push/audit`——请求时自定义聚合审计结果：按**规则类型 / 文件名 / 严重级 / 规则包**分组，`severity` 白名单过滤，`top` 截断，`withFindings` 附明细 | HTTP `GET/POST /api/git-push/audit` |
 
@@ -186,7 +186,7 @@ src/vendor.js       # 单文件豁免审计
 
 ### 规则引擎（yml 管理）
 
-规则槽位由目录文件驱动：目录里每个 `audit-rules-<名>.yml` 即一个槽位，**放文件即生效、删文件即移除**，无需改代码。内置 14 个槽位：
+规则槽位由目录文件驱动：目录里每个 `audit-rules-<名>.yml` 即一个槽位，**放文件即生效、删文件即移除**，无需改代码。内置 21 个槽位：
 
 | 槽位 | 规则数 | 检查内容 |
 |---|---|---|
@@ -231,7 +231,6 @@ dsh-git-push/
 │   ├── ARCHITECTURE.md — 架构说明文档
 │   ├── BUGFIX-NOTES-2026-09-14.md — Bug 修复说明（diff 审计提速 / 凭据文件拦截三层根因）
 │   ├── audit-defaults.js — （待注释）
-│   ├── client.js — 侧边栏设置 UI 源码（账号卡片/审计/规则包三选项卡，零依赖手写 DOM）
 │   ├── commit-push.js — 审计提交总入口（commitWithAudit + runAudit 同步审计）
 │   ├── fsx.js — 文件系统适配层（CIFS/SMB 兼容：copyFile 读写回退、chmod 尽力而为、元数据能力探测）
 │   ├── index.js — 插件入口（DSH 接线，再导出全部能力）
@@ -345,6 +344,20 @@ dsh-git-push/
 │   │   ├── commands-vcs.mjs — （待注释）
 │   ├── client/ — 客户端配置（DEFAULT_CONFIG + SETTINGS_SCHEMA 侧边栏设置项定义）
 │   │   ├── index.js — 侧边栏设置 UI 总入口（DEFAULT_CONFIG + SETTINGS_SCHEMA）
+│   ├── client-parts/ — 客户端分片源码（13 片，拼接成 lib/client.js；产物不入库）
+│   │   ├── 00-loader.js — 首片：__ModuleLoader__.load + factory 头 + require + NS
+│   │   ├── 01-const.js — [1] 常量区（忙碌状态键/10 维度表/超时/样式串）
+│   │   ├── 02-utils.js — [2] 工具区（ensureCss/getJson/postJson/localGet/copyText）
+│   │   ├── 03-icons.js — [3] 图标区
+│   │   ├── 10-account.js — [4] 账号信息 Tab
+│   │   ├── 11-browser.js — [5] 目录选择器（browse*）
+│   │   ├── 20-repo.js — [6] 仓库管理卡（本地/云端仓库、推送、可见性）
+│   │   ├── 21-audit.js — [7] 审计 Tab（权重/规则行/规则包/注入开关）
+│   │   ├── 22-settings.js — [8] 设置 Tab（token/SSH/邮箱）
+│   │   ├── 30-page.js — [9] 页面装配（GitPushPage 三选项卡聚合）
+│   │   ├── 40-controller.js — [10] Controller：状态机 + 数据加载（884 行，跨两片）
+│   │   ├── 41-actions.js — [10] Controller：动作注入（269 行）
+│   │   ├── 99-apply.js — 末片：apply/inject 导出 + factory 返回
 │   ├── context/ — 上下文注入（给 AI 会话注入环境：目录映射/工具路径/skill 入口）
 │   │   ├── index.js — 上下文注入入口（环境注入文本）
 │   ├── exempt/ — 豁免机制（dsh-skip-* 注释标记解析与文件头/行内语义）
@@ -413,6 +426,7 @@ dsh-git-push/
 │   ├── audit-runner.mjs — 审计扩展 CLI 统一入口（独立跑 scripts/audit-ext/ 全部扩展）
 │   ├── audit-runtime-check.mjs — 三层审计 L3 运行时检测脚本
 │   ├── browser-page-probe.mjs — （待注释）
+│   ├── build-client.mjs — 客户端分片拼接（PART_ORDER + --check 门禁 + 形态铁律自检）
 │   ├── check.mjs — 语法检查脚本（npm run check）
 │   ├── clean-date-comments.py — （待注释）
 │   ├── doc-func.mjs — （待注释）
@@ -437,7 +451,7 @@ dsh-git-push/
 │   ├── scan-version.mjs — 版本一致性校验脚本
 │   ├── scrub-user-wording.mjs — 清理「用户沟通措辞」独立脚本
 │   ├── symbol-index.mjs — （待注释）
-│   ├── sync-plugin-install.mjs — （待注释）
+│   ├── sync-plugin-install.mjs — 插件安装形态与免重启热重载自检（被 sync-plugin.mjs 引用）
 │   ├── sync-plugin.mjs — 双副本同步脚本（源仓库 → 部署安装副本）
 │   ├── verify-prestep.mjs — 上下文注入自检脚本（真实触发 agent/pre-step 验证注入）
 │   ├── watch-preview.mjs — preview.html 自动重生成监听（源码变更即重建）
@@ -472,8 +486,10 @@ dsh-git-push/
 │   ├── test-auditignore.mjs — （待注释）
 │   ├── test-auto-push.mjs — 任务完成自动推送测试（检测纯函数 + registerAutoPush 门控监听注册）
 │   ├── test-build-artifact-skip.mjs — 构建/混淆产物跳过专项测试（Pawchive 样本 fixture）
+│   ├── test-build-client.mjs — 分片构建门禁测试（产物一致/幂等/形态铁律/dshgp_ 前缀）
 │   ├── test-button-bind.mjs — 按钮绑定交叉比对（jsx 工厂形态/注释过滤/行号归属）
 │   ├── test-cli-audit-parity.mjs — CLI 与源码全量审计一致性测试（audit --full --json vs 直接 auditFull，含忽略排除）
+│   ├── test-client-fragment-scope.mjs — 客户端分片作用域推导测试（dsh-client-fragment）
 │   ├── test-client.mjs — 侧边栏测试（手写 DOM/零外部资源/开关默认）
 │   ├── test-clone-concurrency.mjs — clone 并发互斥/可中止/失败保留文件（14 项，CIFS 对照用例可跳）
 │   ├── test-clone-history-defaults.mjs — （待注释）
@@ -641,7 +657,7 @@ dsh-git-push/
 | — git 能力 | `lib/git/*.js` | 命令执行 / 凭据 / GitHub API / 传输（SSH+API）/ 提交推送 / 克隆 / 仓库与可见性 / 账号校验 |
 | — 规则装载 | `lib/rule/*.js` | 规则加载 / 编译 / 注册（yml → 编译后规则对象） |
 | — 评分 | `lib/score/index.js` | 10 维度对数衰减评分 + 权重（**本目录只放评分，不含 AST**） |
-| — 呈现 / 交互 | `lib/client/` | 侧边栏 UI、审计面板、规则包列表 |
+| — 呈现 / 交互 | `lib/client-parts/` → `lib/client.js` | 侧边栏 UI、审计面板、规则包列表（分片源码 + 拼接产物，改代码只改分片） |
 
 **为什么拆这么细**：原先 `lib/score/ast.js`（1029 行）与 `lib/audit/checks.js`（1259 行）把「评分」「实现」「调用」「调度」全混在一起——
 `lib/score/` 本应只管评分权重，却装着全部 AST 实现；`checks.js` 本应只做调用，却塞了 25 个检查实现。拆分后每个文件只做一件事，
@@ -884,11 +900,69 @@ console.log(x); // dsh-skip-residue: 本行为刻意保留的调试输出样本
 - **全部可点**：三选项卡切换 · 审计开关 · **注入系统提示词开关** · 「注入开发者要求清单」子开关（含置灰联动）· 规则包启停与 ↑↓ 调序 · 权重编辑 · token/SSH 保存 · 邮箱一键生成 SSH 并回填
 - 健康检查 `GET /preview-ping`（start.sh 启动判定）；PID 落 `dsh-git-push.pid`（插件根）；日志 `assets/preview-server.log`（超 10MB 轮转）
 
-重新生成（改了 `client.js` 后同步）：
+### 客户端分片构建（lib/client-parts/ → lib/client.js）
+
+浏览器半侧的**源码是 `lib/client-parts/` 下的 13 个分片**，`lib/client.js` 是**拼接产物**（2585 行）。改客户端代码**只改分片**：
 
 ```
-node assets/preview-gen.mjs
+lib/client-parts/00-loader.js      loader + factory 头 + require + NS（必须首片）
+                 01-const.js       [1] 常量区（忙碌状态键/10 维度表/超时/样式串）
+                 02-utils.js       [2] 工具区（ensureCss/getJson/postJson/localGet/copyText…）
+                 03-icons.js       [3] 图标区
+                 10-account.js     [4] 账号信息 Tab
+                 11-browser.js     [5] 目录选择器
+                 20-repo.js        [6] 仓库管理卡（本地/云端仓库行、推送、可见性）
+                 21-audit.js       [7] 审计 Tab（权重行/规则行/规则包/注入开关）
+                 22-settings.js    [8] 设置 Tab（token/SSH/邮箱）
+                 30-page.js        [9] 页面装配（GitPushPage 三选项卡聚合）
+                 40-controller.js  [10] Controller：状态机 + 数据加载（884 行，跨两片）
+                 41-actions.js     [10] Controller：动作注入（269 行）
+                 99-apply.js       收尾：apply/inject 导出 + factory 返回（必须末片）
 ```
+
+改动流程（输入 → 处理 → 输出）：
+
+```
+① 改分片            编辑 lib/client-parts/**.js（分片是**片段**，单文件 node --check 必然失败，
+                    语法只对拼起来的产物才有意义）
+② npm run build:client   按 PART_ORDER 拼接 → 写 lib/client.js（幂等：分片不变则产物逐字节不变）
+③ npm run check     语法检查（跳过 client-parts）+ **产物新鲜度校验**：client.js 必须与分片拼出来的一致
+④ node assets/preview-gen.mjs   用产物重生成预览页，实际点三选项卡确认渲染与交互
+```
+
+- **不要手改 `lib/client.js`**：它是构建产物，下次构建即被覆盖，改动静默丢失；`npm run check` 会直接报「产物与分片不一致」。
+- **产物不入库**（`.gitignore` 已忽略 `lib/client.js`）：源码只维护分片，产物由构建生成。
+  安装侧靠 `package.json` 的 **`prepare`**（npm 安装/装 git 依赖时自动跑）与 **`prepack`**（打包/发布前）自动构建；
+  直接用 git 拉代码但没跑构建时，手动补一次 `npm run build:client` 即可（`cli.mjs` 与 `lib/**` 都不依赖产物，
+  只有浏览器半侧需要它——缺了就是设置页 UI 空）。
+- **分片顺序 = `scripts/build-client.mjs` 的 `PART_ORDER`**：顺序错会在**运行时**才炸（`const` 不提升），
+  且新分片**必须登记进 PART_ORDER**——未登记不会被拼进产物（构建脚本会报错拦下，不静默丢失）。
+- **形态铁律**（client-modules 聚合 bundle 兼容，见 `client.js` 头部注释）：产物第一条语句必须是
+  `window.__ModuleLoader__.load(...)`；全部代码在 `factory` 函数体内、文件顶层零声明；内部命名统一 `dshgp_` 前缀。
+  构建脚本与 `test/test-build-client.mjs` 都会校验这三条。
+- **等价性**：拆分前后 `lib/client.js` **逐字节一致**（分片是原文的逐字子串，拼接零加工）；
+  `npm run check` + `test/test-build-client.mjs` 共同守住这一点。
+
+重新生成预览页（改了客户端分片后）：
+
+```
+npm run build:client        # 先拼产物
+node assets/preview-gen.mjs # 再用产物重生成预览页
+```
+
+渲染自检（改了客户端代码或预览生成器后必跑；把「改前端必须真的看一眼」变成一条命令）：
+
+```
+PW_ROOT=<含 node_modules/playwright 的目录> \
+CHROMIUM=<无头浏览器可执行文件> LD_LIBRARY_PATH=<运行库> FONTCONFIG_FILE=<字体配置> \
+node scripts/frontend-preview-check.mjs --html "$PWD/assets/preview.html?mock=1" --out /tmp/frontend-check.png
+```
+
+- **`--html` 必须绝对路径**（相对路径会让 `page.goto` 直接 `ERR_INVALID_URL`）。
+- **带 `?mock=1`** 走预览页内置假数据；不带时页面 fetch 真后端、`/repos-cloud` 等返回 404，
+  会报「仓库列表没有 clone 按钮」这类**假失败**（看着像前端坏了，其实只是没数据）。
+- 判据（任一不满足即非零退出）：云端标签 → 仓库列表 → 行内 clone → 目录选择器确认 → 预览弹窗出现
+  → 弹窗内「带真实历史」勾选框存在且默认勾选 → 全程无前端错误。
 
 ## 三、系统提示词注入
 
@@ -896,7 +970,7 @@ node assets/preview-gen.mjs
 
 | 段名 | order | 注入内容 | 生效条件 |
 |---|---|---|---|
-| `dsh-git-push-usage` | 990 | 插件功能用法：10 个工具各做什么、参数要点、调用纪律 | `injectSystemPrompt` |
+| `dsh-git-push-usage` | 990 | 插件功能用法：各工具做什么、参数要点、调用纪律 | `injectSystemPrompt` |
 | `dsh-git-push-env` | 980 | 当前 cwd · 项目 git 根 · **skills 总入口一行** · 工作区根 + 直接子目录 · 工具安装路径（实测探测） | `injectSystemPrompt` |
 | `dsh-git-push-readme-check` | 991 | 提交前必须核对 README（功能表/版本记录/用法）的提醒 | `injectSystemPrompt` |
 | `dsh-git-push-requirements` | 992 | 开发者特殊要求清单正文 | `injectSystemPrompt` + 审计开关 + `injectRequirements` |
@@ -1142,14 +1216,19 @@ node scripts/audit-runtime-check.mjs --all <目录>
 
 - **环境**：DSH（DeepSeek Harness）｜Node ≥18 ｜本机 git
 - **安装**：`dsh plugin add EIGHTfs/dsh-git-push`（仓库已声明 `dsh.bundle`，可安装）
-- **随插件发布的脚本**：`scripts/` 在发布白名单内（`package.json` 的 `files` 与 `scripts/sync-plugin.mjs` 的 `SYNC_ENTRIES` 两处一致，由 `test-self.mjs` 的「SYNC_ENTRIES 覆盖 files 白名单」测试守住），装好插件后 6 个脚本在**安装副本目录内**同样可直接运行（零外部依赖，只用 node 内置模块）：
+- **客户端产物不入库**（C8）：浏览器半侧源码是分片 `lib/client-parts/**`；`lib/client.js` 是**构建产物**，
+  已被 `.gitignore` 忽略。安装/拉取后若该文件缺失，跑一次 `npm run build:client` 即可补齐
+  （`package.json` 的 **`prepare`** 会在 npm 安装与装 git 依赖时自动构建，**`prepack`** 覆盖打包/发布；
+  `cli.mjs` 与 `lib/**` 都不依赖该产物——缺了只影响设置页 UI）。
+- **随插件发布的脚本**：`scripts/` 在发布白名单内（`package.json` 的 `files` 与 `scripts/sync-plugin.mjs` 的 `SYNC_ENTRIES` 两处一致，由 `test-self.mjs` 的「SYNC_ENTRIES 覆盖 files 白名单」测试守住），装好插件后 7 个脚本在**安装副本目录内**同样可直接运行（零外部依赖，只用 node 内置模块）：
+  - `scripts/build-client.mjs`：客户端分片拼接（PART_ORDER 顺序拼接 + `--check` 一致性门禁 + 形态铁律自检；见「客户端分片构建」）
   - `scripts/scan-version.mjs`：版本一致性自检（lib/self 的 VERSION ↔ `package.json` `version` ↔ README 版本列表 ↔ cli HELP 模板），不一致 exit 1
   - `scripts/audit-runtime-check.mjs`：三层审计的 L3 运行时检测（见「独立脚本：运行时检测」）
   - `scripts/scrub-user-wording.mjs`：清洗注释里的沟通残留措辞（见「独立脚本：清洗用户沟通措辞」）
   - `scripts/check.mjs`：全仓语法检查（`node --check` 批量）
   - `scripts/sync-plugin.mjs`：源码仓库 → 安装副本的双副本同步（默认 dry-run，`--write` 才写）。2026-10-09 起同时做**部署形态与免重启热重载自检**：`--profile <名>` 指定 profile（多 profile 时必须显式给，否则报所有候选而不是默默取首个）、`--fix` 按目标形态修正安装位置（`local-plugins/` 真实目录 + `node_modules/` **相对**软链）；每次都报告「该插件改代码能否免重启热重载」（读 profile 的 `cordis.patch.yml` 里 `id: hmr` 的 `base`/`root`）以及 profile 依赖声明是否该改回 `file:local-plugins/<插件>`
   - `scripts/sync-plugin-install.mjs`：上一条里安装形态/HMR 自检的实现模块（被 `sync-plugin.mjs` 引用，非独立入口）
-- **测试**：`npm test` 一条命令复现全绿（1086 断言，0 失败）
+- **测试**：`npm test` 一条命令复现全绿（2026-10-09 实测 1195 用例 / 1193 通过 / 0 失败，2 跳过）
 
 ### 测试缓存（未变更的纯本地测试自动跳过）
 

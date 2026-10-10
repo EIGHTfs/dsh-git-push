@@ -21,6 +21,9 @@ rules:
     #    SKIP_DIRS 消费（loadYamlBlacklistDirs）→ 全局跳过审计。工程目录的 total-count
     #    排除在 folder.js 按名称过滤（只影响计数，不影响 collector 遍历）。
     exclude_dirs:
+      # 客户端分片目录（C8：分片源码 → 构建拼接成 lib/client.js）：分片是同一个客户端入口的
+      #   组成部分，与产物一起算**一个**逻辑模块 ⇒ 不计入目录类计数，否则恒定多报 1 个。
+      - "client-parts"
       - "node_modules"
       - "node_modules.orig"
       - ".git"
@@ -45,6 +48,9 @@ rules:
     description: "单个目录下文件数量 > 500，极可能是解包产物或依赖目录"
     threshold: 500
     exclude_dirs:
+      # 客户端分片目录（C8：分片源码 → 构建拼接成 lib/client.js）：分片是同一个客户端入口的
+      #   组成部分，与产物一起算**一个**逻辑模块 ⇒ 不计入目录类计数，否则恒定多报 1 个。
+      - "client-parts"
       - "node_modules"
       - ".git"
       - "dist"

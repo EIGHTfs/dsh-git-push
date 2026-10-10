@@ -32,26 +32,67 @@ const MARK_END = `<!-- ${MARKER}:end -->`;
  * @param {string} root 项目根
  * @param {string} [explicit] 'package.json' | 'git-log'（显式覆盖，留空则自动识别）
  */
-export function resolveVersionSource(root, explicit = '') {
-  if (explicit === 'package.json' || explicit === 'git-log') return explicit;
-  return existsSync(join(root, 'package.json')) ? 'package.json' : 'git-log';
-}
+/* 旧的 resolveVersionSource 已删除：它只判断"有没有 package.json"，
+   已被下方 detectVersionSource/projectVersionOf 版本取代（非 npm 项目需按类型识别）。 */
 
 /** 读项目 package.json 的 version；读不到返回空串（不抛错，退回 git log 行）。 */
+/** 支持的项目类型 → 版本文件（数组顺序即探测优先级）。
+ *  ⚠️ 为什么需要这个表：只判断"有没有 package.json"会把非 npm 项目误判为 git-log 聚合
+ *  （用户指出：package.json 只是 **npm 项目的默认源**，工具应能识别项目类型自动切换）。 */
+const VERSION_SOURCES = [
+  { id: 'package.json', file: 'package.json', read: (t) => JSON.parse(t).version },
+  { id: 'pyproject.toml', file: 'pyproject.toml', read: (t) => (t.match(/^\s*version\s*=\s*["']([^"']+)["']/m) || [])[1] },
+  { id: 'Cargo.toml', file: 'Cargo.toml', read: (t) => (t.match(/^\s*version\s*=\s*["']([^"']+)["']/m) || [])[1] },
+  { id: 'composer.json', file: 'composer.json', read: (t) => JSON.parse(t).version },
+  { id: 'setup.cfg', file: 'setup.cfg', read: (t) => (t.match(/^\s*version\s*=\s*([^\s#]+)/m) || [])[1] },
+];
+
+/** 按项目类型探测版本源；都不匹配则回退 git-log 聚合（老项目行为不变）。 */
+export function detectVersionSource(root) {
+  for (const s of VERSION_SOURCES) {
+    if (existsSync(join(root, s.file))) return s.id;
+  }
+  return 'git-log';
+}
+
+/** 版本源解析：显式指定优先；否则按项目类型自动识别。 */
+export function resolveVersionSource(root, explicit = '') {
+  if (explicit) return explicit;
+  return detectVersionSource(root);
+}
+
+/** 按已识别/指定的版本源读取版本号；读不到返回空串（不抛错，退回 git log 行）。 */
+export function projectVersionOf(root, source = '') {
+  const src = source || detectVersionSource(root);
+  const def = VERSION_SOURCES.find((s) => s.id === src);
+  if (!def) return '';
+  try {
+    const v = def.read(readFileSync(join(root, def.file), 'utf8'));
+    return v ? String(v).trim() : '';
+  } catch {
+    return '';
+  }
+}
+
+/** 兼容旧调用：等价于"按项目类型识别后取版本号"。 */
 export function packageVersionOf(root) {
-  try { return String(JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version || ''); } catch { return ''; }
+  return projectVersionOf(root, detectVersionSource(root));
 }
 
 /** 生成版本列表 markdown（宿主块内容）。 */
 export function buildVersionListText(root, { versionSource = '' } = {}) {
   const rows = buildReadmeVersionTable(root);
   const source = resolveVersionSource(root, versionSource);
-  const pkg = source === 'package.json' ? packageVersionOf(root) : '';
+  const pkg = source !== 'git-log' ? projectVersionOf(root, source) : '';
   // 只改**最新数据行**的版本号（rows[0]=表头、rows[1]=分隔行 ⇒ 数据从 rows[2] 起）；
   //   日期与标题仍来自该行原本的 git 提交 —— 历史行完全不动。
   if (pkg && rows.length > 2) {
     const m = rows[2].match(/\d+\.\d+\.\d+/);
     if (m && m[0] !== pkg) rows[2] = rows[2].replace(m[0], pkg);
+  } else if (pkg) {
+    // 版本真源是 package.json：**git log 读不到时也必须出表**（此前这里产 0 行 ⇒ 整张表被写空）。
+    //   提交历史不可读时，至少以 package.json 的版本号生成一条数据行，绝不产出空表。
+    rows.push(`| ${pkg} | 版本号来自 package.json（提交历史不可读，内容待补） |`);
   }
   return { text: `## 版本列表\n\n${rows.join('\n')}\n`, rows: rows.length - 2, source, packageVersion: pkg };
 }
@@ -108,6 +149,37 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   if (cmd === 'apply') {
     const r = buildVersionListText(root, { versionSource });
     const hostText = existsSync(host) ? readFileSync(host, 'utf8') : '';
+    const force = args.includes('--force');
+    // ── 预演（dry-run）：先看清"将写入几行、首行是什么"，再决定落盘 ──
+    //   破坏性写入前必须能预演；`gen` 也能看内容，但 dry-run 额外报出目标文件与现有行数对比。
+    if (args.includes('--dry-run')) {
+      const curB = findBlock(hostText);
+      const curN = curB ? (curB.content.match(/^\|\s*\d+\.\d+\.\d+\s*\|/gm) || []).length : 0;
+      out(`[dry-run] 目标文件：${relative(root, host) || 'README.md'}`);
+      out(`[dry-run] 将写入：${r.rows} 版本行（来源 ${r.source}）；现有：${curN} 行`);
+      out(`[dry-run] 首行预览：${(r.text.split('\n').find((l) => /^\|\s*\d/.test(l)) || '（无数据行）').trim()}`);
+      out('[dry-run] 未做任何写入。');
+      process.exit(0);
+    }
+    // ── 安全闸（2026-10-10 真实事故：本工具静默把整张版本表清空）──
+    //   0 行的常见原因**不是**"项目真的没有版本"，而是 git log 读不到（如本机 dubious ownership，
+    //   git 直接拒绝该仓库）⇒ 此时必须拒绝写盘，绝不覆盖现有版本表。
+    if (!force && !(r.rows > 0)) {
+      out(`❌ 拒绝写盘：聚合出 0 条版本行（来源 ${r.source}）——现有版本表保持不变，未做任何修改。`);
+      out('   常见原因：git log 读不到该仓库（例如 dubious ownership 被 git 拒绝）。先执行：');
+      out("     git config --global --add safe.directory '*'");
+      out('   再用 `node scripts/doc-version.mjs gen` 确认能输出真实版本行（非 0 行）后重试；');
+      out('   确实要写空表时显式加 --force。');
+      process.exit(2);
+    }
+    // ── 骤减保护：新表行数少于现有表行数 ⇒ 疑似聚合来源异常（log 不完整/换源），同样拒绝写盘 ──
+    const curBlock = findBlock(hostText);
+    const curRows = curBlock ? (curBlock.content.match(/^\|\s*\d+\.\d+\.\d+\s*\|/gm) || []).length : 0;
+    if (!force && curRows > 0 && r.rows < curRows) {
+      out(`❌ 拒绝写盘：本次聚合 ${r.rows} 行 < 现有 ${curRows} 行（疑似聚合来源异常，如 git log 不完整或换源）。`);
+      out('   现有版本表保持不变；确认要缩减请先备份，再显式加 --force。');
+      process.exit(2);
+    }
     writeFileSync(host, applyVersionBlock(hostText, r.text), 'utf8');
     out(`✅ 已写入版本列表 → ${relative(root, host) || 'README.md'}（${r.rows} 版本行；来源 ${r.source}）`);
     process.exit(0);

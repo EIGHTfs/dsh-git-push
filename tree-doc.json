@@ -91,7 +91,6 @@
   "lib/checks/semantic.js": "语义类规则执行（patch insert/仓库级语义）",
   "lib/checks/structural.js": "结构类规则（函数长度/复杂度/嵌套/同步 fs）",
   "lib/client": "客户端配置（DEFAULT_CONFIG + SETTINGS_SCHEMA 侧边栏设置项定义）",
-  "lib/client.js": "侧边栏设置 UI 源码（账号卡片/审计/规则包三选项卡，零依赖手写 DOM）",
   "lib/client/index.js": "侧边栏设置 UI 总入口（DEFAULT_CONFIG + SETTINGS_SCHEMA）",
   "lib/commit-push.js": "审计提交总入口（commitWithAudit + runAudit 同步审计）",
   "lib/context": "上下文注入（给 AI 会话注入环境：目录映射/工具路径/skill 入口）",
@@ -354,15 +353,6 @@
   "CONTRIBUTING.md": "（待注释）",
   "SECURITY.md": "（待注释）",
   "docs/SPEC.md": "（待注释）",
-  "_meta": {
-    "worktree": {
-      "docs/FUNCTIONS.md": {
-        "status": "M",
-        "mtime": "2026-10-08T21:10:29.229Z",
-        "note": "注释可能需更新"
-      }
-    }
-  },
   "test/test-collector-ignore.mjs": "（待注释）",
   "test/test-empty-catch-single-source.mjs": "（待注释）",
   "test/test-conv-rule-scope.mjs": "（待注释）",
@@ -419,5 +409,25 @@
   "test/test-perf-repeat-call.mjs": "（待注释）",
   "test/test-platform-scan.mjs": "（待注释）",
   "test/test-symbol-index.mjs": "（待注释）",
-  "test/test-test-cache.mjs": "（待注释）"
+  "test/test-test-cache.mjs": "（待注释）",
+  "lib/client-parts": "客户端分片源码（13 片，拼接成 lib/client.js；产物不入库）",
+  "lib/client-parts/00-loader.js": "首片：__ModuleLoader__.load + factory 头 + require + NS",
+  "lib/client-parts/01-const.js": "[1] 常量区（忙碌状态键/10 维度表/超时/样式串）",
+  "lib/client-parts/02-utils.js": "[2] 工具区（ensureCss/getJson/postJson/localGet/copyText）",
+  "lib/client-parts/03-icons.js": "[3] 图标区",
+  "lib/client-parts/10-account.js": "[4] 账号信息 Tab",
+  "lib/client-parts/11-browser.js": "[5] 目录选择器（browse*）",
+  "lib/client-parts/20-repo.js": "[6] 仓库管理卡（本地/云端仓库、推送、可见性）",
+  "lib/client-parts/21-audit.js": "[7] 审计 Tab（权重/规则行/规则包/注入开关）",
+  "lib/client-parts/22-settings.js": "[8] 设置 Tab（token/SSH/邮箱）",
+  "lib/client-parts/30-page.js": "[9] 页面装配（GitPushPage 三选项卡聚合）",
+  "lib/client-parts/40-controller.js": "[10] Controller：状态机 + 数据加载（884 行，跨两片）",
+  "lib/client-parts/41-actions.js": "[10] Controller：动作注入（269 行）",
+  "lib/client-parts/99-apply.js": "末片：apply/inject 导出 + factory 返回",
+  "scripts/build-client.mjs": "客户端分片拼接（PART_ORDER + --check 门禁 + 形态铁律自检）",
+  "scripts/sync-plugin-install.mjs": "插件安装形态与免重启热重载自检（被 sync-plugin.mjs 引用）",
+  "test/test-build-client.mjs": "分片构建门禁测试（产物一致/幂等/形态铁律/dshgp_ 前缀）",
+  "test/test-client-fragment-scope.mjs": "客户端分片作用域推导测试（dsh-client-fragment）",
+  "test/test-scrub-conv-wording.mjs": "（待注释）",
+  "test/test-sync-plugin-install.mjs": "（待注释）"
 }
