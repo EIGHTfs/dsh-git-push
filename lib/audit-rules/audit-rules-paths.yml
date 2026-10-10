@@ -1,0 +1,92 @@
+# dsh-git-push 审计规则（paths 槽位，1.0.0）
+#
+# 路径类审计规则**集中一处**：硬编码绝对路径 / 路径穿越 / cd 兜底 / 写入被忽略目录 / 文档旧凭据路径。
+#
+# 为什么独立成槽位：
+#   · 这些规则**与语言无关**（nodejs / python / java 项目都可能踩），与「按语言分组」的槽位语义不同；
+#   · 原先散落在 nodejs 与 folder 两个槽位里（同一个"路径"主题两处维护）⇒ 集中后消除分裂；
+#   · 引擎的槽位是**动态**的：本文件放进 lib/audit-rules/ 即自动成为槽位（无需改代码）。
+#
+# 三段式写法（本槽位统一遵循）：
+#   ① patterns 正则初筛 → ② astConfirm/astConfirmKind 精筛（实现在 lib/checks/，可拿到文件路径与
+#   仓库上下文）→ ③ exceptions 说明豁免边界（最终由人判断，正则只是线索不是判决）。
+metadata:
+  name: "路径类审计规则（硬编码绝对路径 / 路径穿越 / cd 兜底 / 写入忽略目录 / 旧凭据路径）"
+  version: "1.0.0"
+
+rules:
+  # ----- 规则 1：硬编码绝对路径（2026-10-11 新增）-----
+  # 正则初筛（跨系统字面量）→ 精筛 astConfirmKind: hardcoded-abs-path
+  #   （lib/checks/common.js 的 hardcodedAbsPathLines：fs.existsSync 判断"本机可访问"并换算相对路径；
+  #    基准 = 该文件所在目录（用户确认的选择）；可访问 ⇒ 警告并附相对路径；不可访问 ⇒ 仅警告）
+  - id: paths/hardcoded-absolute-path
+    name: "硬编码绝对路径（换机即失效）"
+    category: "paths"
+    severity: "warning"
+    description: "字符串里写死本机绝对路径（/volume1、/home、/Users、C:\\、\\\\server\\share、file://），换机/迁移/换挂载点后失效；应改为相对路径（基准 = 文件所在目录）、path.join 或配置项传入"
+    patterns:
+      - "/(volume[0-9]+|home|Users|var|usr|opt|tmp|mnt|srv|etc|root|Applications|Volumes)/[^\\s\"'`),;]+"
+      - "[A-Za-z]:[\\\\/][^\\s\"'`),;]+"
+      # UNC（\\\\server\\share\\...）：初筛必须写，否则这类行进不了精筛通道
+      #   （实测：漏了这条 ⇒ 夹具里 UNC 那行永远不报，而精筛明明有 UNC 判定）
+      - "\\\\\\\\[A-Za-z0-9_.-]+\\\\[^\\s\"'`),;]+"
+      - "file:///[^\\s\"'`),;]+"
+    astConfirm: true
+    astConfirmKind: "hardcoded-abs-path"
+    exceptions:
+      - "注释里的举例说明（仅提示，不阻断）"
+      - "已用 path.join / os.tmpdir() / 相对路径的写法"
+      - "测试夹具里刻意构造的样例路径（属测试数据）"
+      - "文档中带日期的历史实测记录（说明当时在哪台机器上跑的）"
+
+  # ----- 规则 2（迁移自 nodejs 槽位）：路径穿越防护 -----
+  - id: security/no-path-traversal
+    name: "路径穿越防护"
+    category: "security"
+    severity: "error"
+    description: "直接使用用户输入作为文件路径存在目录遍历风险"
+    fixable: false
+    mitigation: "使用 path.resolve + startsWith 白名单校验"
+
+  # ----- 规则 3（迁移自 nodejs 槽位）：文档引用旧凭据位置 -----
+  - id: credref-legacy-path
+    name: "文档引用旧凭据位置"
+    category: "security"
+    severity: "warning"
+    description: "文档含旧凭据位置引用：凭据统一存插件配置目录（DSH_HOME/git-push/，0600 权限）"
+    pattern: "(\\.ssh[\\\\/]credentials|data[\\\\/]sensitive[\\\\/]|credentials\\.md|sudo-key|git-rescue[\\\\/]token)"
+    fixable: false
+
+  # ----- 规则 4（迁移自 folder 槽位）：cd 到可能不存在的目录 -----
+  # 三段式：正则初筛（cd 命令）→ token 精筛 astConfirm → 精筛集合 shell-cd-dynamic
+  #   （lib/ast/shell.js：目标含 $、排除自我定位 dirname/BASH_SOURCE、同行无 ||、非 && 链）。
+  - id: folder/cd-to-maybe-missing
+    name: "cd 到可能不存在的目录（动态路径无兜底）"
+    category: "paths"
+    severity: "warning"
+    description: "cd 到变量/命令替换路径时目标目录可能不存在，cd 失败后脚本仍会继续执行；应加 || exit/return/echo 兜底或先确认目录存在"
+    patterns:
+      - "\\bcd\\s+\\S+"
+    astConfirm: true
+    astConfirmKind: "shell-cd-dynamic"
+    exceptions:
+      - "脚本自我定位（cd $(dirname $0) / ${BASH_SOURCE[0]%/*}，目录必然存在）"
+      - "同行已有 || 兜底或 && 链"
+
+  # ----- 规则 5（迁移自 folder 槽位）：写文件/目录到可能不存在的 gitignore 目录 -----
+  # 三段式：正则初筛（写操作字面量目标）→ token 精筛 astConfirm → 精筛集合
+  #   write-into-gitignored（lib/ast/shell.js：读仓库 .gitignore 判定目标被忽略；无
+  #   仓库上下文 repoPath 时不报——不臆测）。
+  - id: folder/write-into-gitignored-dir
+    name: "写文件/目录到可能不存在的 gitignore 目录"
+    category: "paths"
+    severity: "warning"
+    description: "写操作的目标目录被 .gitignore 忽略且可能在仓库中不存在；产物不可见，运行时可能失败，应先 mkdir -p 或调整忽略"
+    patterns:
+      - "(writeFile|writeFileSync|appendFile|appendFileSync|createWriteStream|mkdir|mkdirSync)\\s*\\(\\s*['\"][^'\"]+['\"]"
+    astConfirm: true
+    astConfirmKind: "write-into-gitignored"
+    exceptions:
+      - "目标为 node_modules 内写入（安装产物）"
+      - "目标为 /tmp 临时目录"
+      - ".gitignore 中以 ! 取反的路径"

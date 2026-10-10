@@ -53,6 +53,38 @@ function docFiles(root = ROOT) {
 }
 
 /**
+ * 设置键数（真实口径）：`settings-set` 的白名单 `allowedKeys = new Set([...])`
+ * ——它就是「前端可写的设置键」权威清单（README/SPEC 说的 18 个即此）。
+ * 取不到返回 null，调用方跳过该项（不误报）。
+ */
+export function countSettings(root = ROOT) {
+  try {
+    const p = join(root, 'lib', 'app', 'handlers', 'settings.js');
+    const text = readFileSync(p, 'utf8');
+    const m = /allowedKeys\s*=\s*new Set\(\[([\s\S]*?)\]\)/.exec(text);
+    if (!m) return null;
+    return (m[1].match(/'[A-Za-z][A-Za-z0-9]*'/g) || []).length;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * HTTP 接口数（真实口径）：`lib/app/http-handlers.js` 里 `case '/api/git-push/…'` 的唯一路径数
+ * ——分发器就是路由真相（SPEC 的「28 条」即此）。
+ */
+export function countRoutes(root = ROOT) {
+  try {
+    const p = join(root, 'lib', 'app', 'http-handlers.js');
+    const text = readFileSync(p, 'utf8');
+    const set = new Set((text.match(/case '\/api\/git-push\/[A-Za-z0-9/_-]+'/g) || []));
+    return set.size || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * 扫描文档里手写的计数并比对实际值。
  * 覆盖**全部出现处**（README 里"14 个规则包"曾出现在多行，只查第一处会漏）。
  * @returns {Array<{file:string,line:number,text:string,kind:string,doc:number,actual:number}>}
@@ -64,18 +96,27 @@ export function findCountDrift(root = ROOT, actual = countRules(root), toolCount
   // ②「N 条规则」→ 比规则条数
   const ruleRe = /(\d+)\s*条规则/g;
   // ③「N 个工具」→ 比 listTools() 条数（**用真实 API 取口径**，不用正则数代码）
-  const toolRe = /(\d+)\s*个工具/g;
+  //   两种语序都要认：`17 个工具` 与 `工具（17 个…）`——此前只认前者，漏掉了 SPEC 的「工具（14 个）」（实测盲区）。
+  const toolRe = /(\d+)\s*个工具|工具\s*[（(]\s*(\d+)\s*个/g;
+  // ④「N 个设置键」→ 比 settings-set 白名单条数
+  const setRe = /(\d+)\s*个设置键/g;
+  // ⑤「N 条 HTTP 接口」→ 比分发器 case 唯一路径数
+  const routeRe = /(\d+)\s*条\s*HTTP\s*接口/g;
   const tools = toolCount;
+  const settings = countSettings(root);
+  const routes = countRoutes(root);
   for (const file of docFiles(root)) {
     const lines = readFileSync(file, 'utf8').split('\n');
     lines.forEach((text, i) => {
       const pairs = [[slotRe, '槽位数', actual.slots], [ruleRe, '规则条数', actual.rules]];
       if (tools !== null) pairs.push([toolRe, '工具数', tools]);
+      if (settings !== null) pairs.push([setRe, '设置键数', settings]);
+      if (routes !== null) pairs.push([routeRe, 'HTTP 接口数', routes]);
       for (const [re, kind, want] of pairs) {
         re.lastIndex = 0;
         let m;
         while ((m = re.exec(text))) {
-          const doc = Number(m[1]);
+          const doc = Number(m[1] ?? m[2]);
           if (doc !== want) {
             issues.push({ file: relative(root, file), line: i + 1, text: m[0], kind, doc, actual: want });
           }

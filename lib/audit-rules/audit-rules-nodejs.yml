@@ -389,13 +389,9 @@ rules:
     fixable: false
     mitigation: "改用 Authorization 头或 POST body 传递凭据，避免出现在 URL（防日志/历史/Referer 泄露）"
 
-  - id: security/no-path-traversal
-    name: "路径穿越防护"
-    category: "security"
-    severity: "error"
-    description: "直接使用用户输入作为文件路径存在目录遍历风险"
-    fixable: false
-    mitigation: "使用 path.resolve + startsWith 白名单校验"
+  # security/no-path-traversal 已于 2026-10-11 **迁移到 lib/audit-rules/audit-rules-paths.yml**
+  #   （路径类规则集中一处；规则 id 与语义未变，此处不再保留副本）。
+  # credref-legacy-path 同样迁移至该槽位（见下方原位置指针）。
 
   # ----- 凭据入库门禁 -----
   # 提交门禁安全底线：新增行命中即拦截提交；severity=error → blocker
@@ -449,13 +445,8 @@ rules:
     description: "敏感配置/私钥目录入库，禁止提交"
     path_pattern: "(^|[\\\\/])(data[\\\\/]sensitive[\\\\/]|dsh-private-configs[\\\\/]|\\.ssh[\\\\/]|private)[\\\\/][^\\\\/]*"
     fixable: false
-  - id: credref-legacy-path
-    name: "文档引用旧凭据位置"
-    category: "security"
-    severity: "warning"
-    description: "文档含旧凭据位置引用：凭据统一存插件配置目录（DSH_HOME/git-push/，0600 权限）"
-    pattern: "(\\.ssh[\\\\/]credentials|data[\\\\/]sensitive[\\\\/]|credentials\\.md|sudo-key|git-rescue[\\\\/]token)"
-    fixable: false
+  # credref-legacy-path 已于 2026-10-11 **迁移到 lib/audit-rules/audit-rules-paths.yml**
+  #   （路径类规则集中一处；规则 id 与语义未变，此处不再保留副本）。
   - id: credref-plain-secret
     name: "文档疑似凭据明文"
     category: "security"

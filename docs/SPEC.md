@@ -14,7 +14,7 @@
 | 装载声明 | `package.json` 的 `dsh.bundle.patch` → `./cordis.patch.yml`；`dsh.client` 声明 web 端注入；`dsh.skills` 列出随包发布的 skill |
 | 配置目录 | `<DSH_HOME>/git-push/`（凭据与状态文件都落在这里） |
 
-## 二、工具（14 个，宿主可见公开面）
+## 二、工具（17 个，宿主可见公开面）
 
 | 工具 | CLI 名 | 用途 |
 |---|---|---|
@@ -32,6 +32,7 @@
 | `git_cred_env` | `cred-env` | 输出凭据环境变量前缀（不含明文） |
 | `git_gen_ssh_key` | `gen-ssh-key` | 生成 SSH 密钥对（私钥不出本机） |
 | `git_sluice` | `git` | git 命令透传（凭据自动注入） |
+| `git_api` | `api` | **直接调用本插件 28 条 HTTP API**（内部走 `handleHttp` 同一条代码路径）；`path` 传接口名（不传则列出全部接口），`method`/`query`/`body` 可选 |
 
 **不变量**：工具名唯一且匹配 `^[a-zA-Z0-9_-]+$`；CLI 名唯一；宿主注册面（`listTools`）与注册表（`TOOL_REGISTRY`）同名同数——由 `test/test-tool-contract.mjs` 门禁。增删工具必须同步该测试与 README 工具表。
 
@@ -80,7 +81,7 @@ settings-get  settings-set
 
 ## 六、审计规则体系
 
-- **21 个槽位 / 125 条规则**，声明在 `lib/audit-rules/audit-rules-<槽位>.yml`；判定在 `lib/ast/*`；产出 finding 在 `lib/checks/*`；调度汇总在 `lib/audit/*`。
+- **22 个槽位 / 126 条规则**，声明在 `lib/audit-rules/audit-rules-<槽位>.yml`；判定在 `lib/ast/*`；产出 finding 在 `lib/checks/*`；调度汇总在 `lib/audit/*`。
 - 作用域字段：`exts` / `include_paths`（路径白名单，按文件名或路径前后缀）/ `exclude_paths` / `file_patterns`（**内容**初筛）。
 - 分级：`blocker` / `warning` / `info`；评分 10 维度加权得 0-100 + 等级。
 - 豁免标记 9 个（`dsh-skip-*`），判定入口 `lib/exempt/index.js`；finding 的 `exemptHint` 必须与实际生效的标记一致。

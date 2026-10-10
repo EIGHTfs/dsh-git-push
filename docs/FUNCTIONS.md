@@ -22,16 +22,16 @@
 | `aggregateFindings` | 70-91 | 22 | `export function aggregateFindings(findings = [], opts = {}) {` |
 | `runAuditApi` | 99-158 | 60 | `export async function runAuditApi(repo, params = {}, cfg = {}) {` |
 
-### lib/app/command-registry.js（240 行 · 6 个函数）
+### lib/app/command-registry.js（249 行 · 6 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `applyFlagToken` | 178-194 | 17 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
-| `validateParamConstraints` | 197-203 | 7 | `function validateParamConstraints(args, params) {` |
-| `parseRegistryArgs` | 205-225 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
-| `registryByName` | 228-230 | 3 | `export function registryByName(name) {` |
-| `registryByCli` | 233-235 | 3 | `export function registryByCli(cli) {` |
-| `buildToolsListText` | 238-240 | 3 | `export function buildToolsListText() {` |
+| `applyFlagToken` | 187-203 | 17 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
+| `validateParamConstraints` | 206-212 | 7 | `function validateParamConstraints(args, params) {` |
+| `parseRegistryArgs` | 214-234 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
+| `registryByName` | 237-239 | 3 | `export function registryByName(name) {` |
+| `registryByCli` | 242-244 | 3 | `export function registryByCli(cli) {` |
+| `buildToolsListText` | 247-249 | 3 | `export function buildToolsListText() {` |
 
 ### lib/app/handlers/account.js（166 行 · 10 个函数）
 
@@ -194,7 +194,7 @@
 | `getLastSlotHitStats` | 28-30 | 3 | `export function getLastSlotHitStats() {` |
 | `getLastSlotHitMeta` | 33-35 | 3 | `export function getLastSlotHitMeta() {` |
 
-### lib/app/tool-call.js（570 行 · 20 个函数）
+### lib/app/tool-call.js（602 行 · 20 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -215,9 +215,9 @@
 | `doHistory` | 336-339 | 4 | `const doHistory = async () => {` |
 | `callCodeAudit` | 358-370 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
 | `runStandardAuditTool` | 373-412 | 40 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
-| `callTool` | 414-541 | 128 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null) {` |
-| `shellSplit` | 544-562 | 19 | `function shellSplit(input) {` |
-| `readTextSafe` | 565-569 | 5 | `function readTextSafe(path = '') {` |
+| `callTool` | 414-573 | 160 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null) {` |
+| `shellSplit` | 576-594 | 19 | `function shellSplit(input) {` |
+| `readTextSafe` | 597-601 | 5 | `function readTextSafe(path = '') {` |
 
 ### lib/app/tools.js（27 行 · 2 个函数）
 
@@ -1805,6 +1805,18 @@
 |------|------|------|------|
 | `collectJs` | 22-31 | 10 | `function collectJs(dir, acc = []) {` |
 
+### scripts/doc-drift.mjs（165 行 · 7 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `countRules` | 32-42 | 11 | `export function countRules(root = ROOT) {` |
+| `docFiles` | 45-53 | 9 | `function docFiles(root = ROOT) {` |
+| `countSettings` | 60-70 | 11 | `export function countSettings(root = ROOT) {` |
+| `countRoutes` | 76-85 | 10 | `export function countRoutes(root = ROOT) {` |
+| `findCountDrift` | 92-127 | 36 | `export function findCountDrift(root = ROOT, actual = countRules(root), toolCount = null) {` |
+| `countToolsAsync` | 134-142 | 9 | `export async function countToolsAsync(root = ROOT) {` |
+| `main` | 144-162 | 19 | `async function main() {` |
+
 ### scripts/doc-func.mjs（213 行 · 12 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -1847,17 +1859,19 @@
 | `filesOf` | 400-400 | 1 | `const filesOf = (r) => gitLsFiles(r);` |
 | `mapOf` | 401-401 | 1 | `const mapOf = (r) => loadMapping(r);` |
 
-### scripts/doc-version.mjs（125 行 · 7 个函数）
+### scripts/doc-version.mjs（197 行 · 9 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `resolveVersionSource` | 35-38 | 4 | `export function resolveVersionSource(root, explicit = '') {` |
-| `packageVersionOf` | 41-43 | 3 | `export function packageVersionOf(root) {` |
-| `buildVersionListText` | 46-57 | 12 | `export function buildVersionListText(root, { versionSource = '' } = {}) {` |
-| `findBlock` | 60-65 | 6 | `function findBlock(text) {` |
-| `applyVersionBlock` | 68-72 | 5 | `export function applyVersionBlock(text, newContent) {` |
-| `checkVersionDrift` | 75-83 | 9 | `export function checkVersionDrift({ hostPath, root, versionSource = '' } = {}) {` |
-| `out` | 100-100 | 1 | `const out = (msg) => console.log(msg);` |
+| `detectVersionSource` | 51-56 | 6 | `export function detectVersionSource(root) {` |
+| `resolveVersionSource` | 59-62 | 4 | `export function resolveVersionSource(root, explicit = '') {` |
+| `projectVersionOf` | 65-75 | 11 | `export function projectVersionOf(root, source = '') {` |
+| `packageVersionOf` | 78-80 | 3 | `export function packageVersionOf(root) {` |
+| `buildVersionListText` | 83-98 | 16 | `export function buildVersionListText(root, { versionSource = '' } = {}) {` |
+| `findBlock` | 101-106 | 6 | `function findBlock(text) {` |
+| `applyVersionBlock` | 109-113 | 5 | `export function applyVersionBlock(text, newContent) {` |
+| `checkVersionDrift` | 116-124 | 9 | `export function checkVersionDrift({ hostPath, root, versionSource = '' } = {}) {` |
+| `out` | 141-141 | 1 | `const out = (msg) => console.log(msg);` |
 
 ### scripts/frontend-preview-check.mjs（125 行 · 1 个函数）
 

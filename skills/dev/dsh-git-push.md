@@ -11,7 +11,7 @@ generatedBy: deepseek-official/deepseek-v4-flash · EIGHTfs 2026-10-02
 > 定位：把「扫描仓库 → 审计门禁 → 一键 commit+push」固化为代码管道（零 token、确定性）。
 > 本手册是使用说明；正常情况优先直接调用插件工具。
 
-## 一、七个工具
+## 一、17 个工具
 
 | 工具 | 参数 | 说明 |
 |---|---|---|
@@ -22,6 +22,16 @@ generatedBy: deepseek-official/deepseek-v4-flash · EIGHTfs 2026-10-02
 | `git_remote_create` | `repo`, `visibility?`(默认 private), `dryRun?` | 按目录名建远程仓库并设 origin（走 api.github.com） |
 | `git_set_visibility` | `repo`, `visibility`(必填) | 切换仓库公开/私有（改 public 前先确认无凭据泄露） |
 | `link_check` | `repo?`, `paths?` | 检查文档链接：404/403→-3、DNS→-2、超时/5xx→-1；只 warning，永不 blocker |
+| `io_scan` | `repo?`, `writeOnly?` | I/O 风险扫描（AST 四级分级 high/medium/low/safe，与审计 io-risk 同标准） |
+| `git_clone_preview` | `target`, `branch?` | clone 预演（不落盘，报告将拉取什么） |
+| `edit_after_read` | `path`/`file_path`, `old`/`old_string`, `new`/`new_string`, `all?` | 读改合一编辑（读后文件被改动则拒绝；old 默认必须唯一匹配；字面匹配不做正则解释） |
+| `git_identity_rewrite` | `paths?`, `root?`, `dryRun?`, `push?` | 提交身份历史改写（默认 dryRun 只报告；真改写先建备份引用 + 自检，通过才 force-with-lease） |
+| `module_splitter` | `command`, `file`/`plan`, `dryRun?` | 巨型单文件拆分：analyze（先看依赖）→ split → verify（校验导出一致） |
+| `git_account_check` | `token?`, `sshPub?` | 校验 GitHub 账号与凭据（登录态/用户名/公钥数/套餐；token 不传自动解析） |
+| `git_cred_env` | — | 输出凭据环境变量前缀（SSH `GIT_SSH_COMMAND` / HTTPS `GIT_ASKPASS`，不含明文） |
+| `git_gen_ssh_key` | `email`(必填), `force?` | 生成 SSH 密钥对（写入插件配置目录；私钥不出本机，公钥整行回传） |
+| `git_sluice` | `args`(必填) | git 命令透传（凭据自动注入；返回 status + stdout/stderr 原文） |
+| `git_api` | `path?`, `method?`, `query?`, `body?` | **直接调用本插件 28 条 HTTP API**（内部走 `handleHttp` 同一条代码路径，不另写实现）；不传 `path` 则列出全部接口 |
 
 典型流程：`git_scan` 看改动 → `code_audit` 自查 → `git_commit_push`（审计通过才推）。
 

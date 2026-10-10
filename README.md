@@ -4,7 +4,7 @@ DSH（DeepSeek Harness）git 提交推送与代码审计插件——提交前自
 
 ![账号信息面板](assets/panel-account.png)
 
-审计面板（21 个规则包 + 按包命中数，上下调次序、单击启停）：
+审计面板（22 个规则包 + 按包命中数，上下调次序、单击启停）：
 
 ![审计面板](assets/panel-audit.png)
 
@@ -32,7 +32,7 @@ DSH（DeepSeek Harness）git 提交推送与代码审计插件——提交前自
 - 全部命令：`git-sluice help`
 
 **③ 侧边栏面板**
-- 审计面板：21 个规则包开关/排序/命中数
+- 审计面板：22 个规则包开关/排序/命中数
 - 设置：凭据 / SSH 公钥 / 审计开关与权重
 
 ## 目录
@@ -68,8 +68,8 @@ DSH（DeepSeek Harness）git 提交推送与代码审计插件——提交前自
 
 | 文档 | 讲什么 |
 |---|---|
-| [docs/SPEC.md](docs/SPEC.md) | **当前有效规格唯一入口**：身份 / 16 个工具 / 28 条 HTTP 接口 / 18 个设置键 / 4 个数据文件 / 审计规则体系 / 文档产物 / 版本纪律 / 测试基线 |
-| [docs/功能-审计规则体系.md](docs/功能-审计规则体系.md) | 21 个规则槽位 / 125 条规则的组织方式、作用域字段、三层结构、运行入口、结果怎么读、怎么豁免 |
+| [docs/SPEC.md](docs/SPEC.md) | **当前有效规格唯一入口**：身份 / 17 个工具 / 28 条 HTTP 接口 / 18 个设置键 / 4 个数据文件 / 审计规则体系 / 文档产物 / 版本纪律 / 测试基线 |
+| [docs/功能-审计规则体系.md](docs/功能-审计规则体系.md) | 22 个规则槽位 / 126 条规则的组织方式、作用域字段、三层结构、运行入口、结果怎么读、怎么豁免 |
 | [docs/功能-历史提交审计.md](docs/功能-历史提交审计.md) | 逐提交回放审计：解决什么、怎么跑、与普通审计的差异与成本 |
 | [docs/功能-文档与结构追踪.md](docs/功能-文档与结构追踪.md) | tree-doc / doc-func / doc-version 三份自动生成文档怎么更新、漂移怎么办 |
 | [docs/功能-仓库索引与账号状态.md](docs/功能-仓库索引与账号状态.md) | `dsh-repo-index.json` 与 `account-status.json` 的写入时机、读取入口、统一收口约定 |
@@ -82,7 +82,7 @@ DSH（DeepSeek Harness）git 提交推送与代码审计插件——提交前自
 | 功能块 | 做什么 | 入口 |
 |---|---|---|
 | **提交推送** | token / SSH 密钥管理、提交、推送、clone、建仓、可见性切换、force 强推、版本历史、**提交身份自动用登录账号（未配身份的仓库自动写入局部配置）** | `git_commit_push` 工具 / CLI / 侧边栏 |
-| **代码审计** | 提交前自动审计门禁、21 个规则槽位 125 条规则、10 维度质量评分、豁免机制、链接检查、**三层审计管线（L1 正则初筛 / L2 AST 数据流 / L3 运行时检测）** | `code_audit` 工具 / CLI / 侧边栏 / 输入框 `/git-audit` |
+| **代码审计** | 提交前自动审计门禁、22 个规则槽位 126 条规则、10 维度质量评分、豁免机制、链接检查、**三层审计管线（L1 正则初筛 / L2 AST 数据流 / L3 运行时检测）** | `code_audit` 工具 / CLI / 侧边栏 / 输入框 `/git-audit` |
 | **任务完成自动推送** | 监听 AI 回合结束→检测回复含「✅任务完成」→自动 commit+push（复用审计门禁，不裸提交） | 侧边栏开关 `autoPushEnabled`（默认关）+ 自定义触发文本 |
 | **审计结果 API** | `/api/git-push/audit`——请求时自定义聚合审计结果：按**规则类型 / 文件名 / 严重级 / 规则包**分组，`severity` 白名单过滤，`top` 截断，`withFindings` 附明细 | HTTP `GET/POST /api/git-push/audit` |
 
@@ -186,7 +186,7 @@ src/vendor.js       # 单文件豁免审计
 
 ### 规则引擎（yml 管理）
 
-规则槽位由目录文件驱动：目录里每个 `audit-rules-<名>.yml` 即一个槽位，**放文件即生效、删文件即移除**，无需改代码。内置 21 个槽位：
+规则槽位由目录文件驱动：目录里每个 `audit-rules-<名>.yml` 即一个槽位，**放文件即生效、删文件即移除**，无需改代码。内置 22 个槽位：
 
 | 槽位 | 规则数 | 检查内容 |
 |---|---|---|
@@ -429,6 +429,7 @@ dsh-git-push/
 │   ├── build-client.mjs — 客户端分片拼接（PART_ORDER + --check 门禁 + 形态铁律自检）
 │   ├── check.mjs — 语法检查脚本（npm run check）
 │   ├── clean-date-comments.py — （待注释）
+│   ├── doc-drift.mjs — （待注释）
 │   ├── doc-func.mjs — （待注释）
 │   ├── doc-tree.mjs — （待注释）
 │   ├── doc-version.mjs — （待注释）
@@ -524,6 +525,7 @@ dsh-git-push/
 │   ├── test-folder-scope.mjs — 目录级审计作用域回归测试
 │   ├── test-func-doc-drift.mjs — （待注释）
 │   ├── test-generated-html-artifact.mjs — （待注释）
+│   ├── test-git-api-tool.mjs — （待注释）
 │   ├── test-git-bin-plan.mjs — （待注释）
 │   ├── test-git-identity-rewrite.mjs — （待注释）
 │   ├── test-git-identity.mjs — （待注释）
@@ -592,6 +594,7 @@ dsh-git-push/
 │   │   ├── tmp-dir.mjs — （待注释）
 ├── docs/ — 开发文档
 │   ├── 2026-10-09-审计插件性能优化.MD — （待注释）
+│   ├── 2026-10-11-单一真源与文档漂移治理方案.MD — （待注释）
 │   ├── CHANGELOG.md — 版本列表宿主（doc-version apply 写 dshgp-version 标记块）
 │   ├── DETAILS-EXEMPT-AND-RULES.md — 细节补充：豁免注释与规则 yml 用法全录
 │   ├── FUNCTIONS.md — 函数列表宿主（doc-func apply 写 dshgp-functions 标记块）
