@@ -131,7 +131,10 @@ test('环境注入：非 ASCII 与空格路径原样保留', () => {
 });
 
 test('环境注入：工具清单完整回读（多工具键值对不丢）', () => {
-  const tools = { git: '/usr/bin/git', ffmpeg: '/usr/bin/ffmpeg', '7z': '/usr/bin/7z' };
+  // 夹具从真实 PATH 取一个目录再拼出工具路径：既能验证"多工具键值对不丢"，
+  //   又不写死绝对路径（写死 /usr/bin/... 换机即失效，也会被硬编码路径规则报出）。
+  const bin = (process.env.PATH || '/bin').split(':').find(Boolean) || '/bin';
+  const tools = { git: `${bin}/git`, ffmpeg: `${bin}/ffmpeg`, '7z': `${bin}/7z` };
   const text = createEnvInjectionText({ cwd: '/a', projectRoot: '/b', tools });
   const parsed = parseEnvInjection(text);
   assert.deepEqual(parsed.tools, tools);

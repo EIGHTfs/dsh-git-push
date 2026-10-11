@@ -23,14 +23,16 @@ test('gitSearchPlan：Windows 用 ";" 切分且候选名为 git.exe', () => {
 });
 
 test('gitSearchPlan：POSIX 用 ":" 切分且候选名为 git', () => {
-  const plan = gitSearchPlan('/usr/local/bin:/usr/bin:/bin', { delimiter: ':', platform: 'linux' });
-  assert.deepEqual(plan.dirs, ['/usr/local/bin', '/usr/bin', '/bin']);
+  // 夹具用**合成目录名**（/opt-a、/opt-b）而非真实 /usr/...：本用例只验证"按 : 切分"，
+  //   写死真实绝对路径既无必要、换机后又失效、还会被硬编码路径规则报出。
+  const plan = gitSearchPlan('/opt-a/bin:/opt-b/bin:/plain', { delimiter: ':', platform: 'linux' });
+  assert.deepEqual(plan.dirs, ['/opt-a/bin', '/opt-b/bin', '/plain']);
   assert.deepEqual(plan.names, ['git']);
 });
 
 test('gitSearchPlan：去掉目录尾部分隔符、跳过空段', () => {
-  const posix = gitSearchPlan('/usr/bin/::/opt/git/', { delimiter: ':', platform: 'linux' });
-  assert.deepEqual(posix.dirs, ['/usr/bin', '/opt/git'], '尾部 / 去掉、空段跳过');
+  const posix = gitSearchPlan('/opt-a/bin/::/opt-b/git/', { delimiter: ':', platform: 'linux' });
+  assert.deepEqual(posix.dirs, ['/opt-a/bin', '/opt-b/git'], '尾部 / 去掉、空段跳过');
   const win = gitSearchPlan('C:\\Git\\cmd\\;', { delimiter: ';', platform: 'win32' });
   assert.deepEqual(win.dirs, ['C:\\Git\\cmd'], '尾部 \\ 去掉');
   assert.deepEqual(gitSearchPlan('', { delimiter: ':', platform: 'linux' }).dirs, [], '空 PATH → 无目录');
