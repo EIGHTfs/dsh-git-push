@@ -85,6 +85,54 @@ rules:
     fixable: false
     mitigation: "加一层 Map 记忆化（键=入参组合）或把结果提到循环外；有副作用的调用（写文件/网络/日志）不适用"
 
+  # ── 写死 User-Agent（2026-10-12 从 gbmd 实战沉淀）──
+  #   教训：GameBanana 等平台的会话与「换取 cookie 时的浏览器 UA」绑定；下载路径写死 Chrome UA
+  #   ⇒ 服务端判定未登录 ⇒ 全量 403。UA 必须来自配置/调用方，兜底常量要显式命名。
+  - id: performance/hardcoded-user-agent
+    name: "对象字面量里写死 User-Agent"
+    category: "performance"
+    severity: "blocker"
+    description: "请求头里直接写死浏览器 UA（而非读配置/调用方传入）：会话类站点会因 UA 与 cookie 不匹配判未登录（实战：下载全 403）"
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx", "py"]
+    patterns:
+      - id: literal-ua
+        pattern: "[\"']User-Agent[\"']\\s*:\\s*[\"']Mozilla[^\"']*[\"']"
+        message: "写死 User-Agent：改为读配置（如 cfg.gbUserAgent）或调用方传入；确需兜底请用命名常量（DEFAULT_UA）"
+    fixable: false
+    mitigation: "UA 与 cookie 同源：从配置/调用方取；兜底值提成命名常量并在注释里说明用途"
+
+  # ── 手写资源版本号（2026-10-12 从 gbmd 实战沉淀）──
+  #   教训：href 手写 ?v=4.4.1，而脚本元数据已 @version 4.5.0 ⇒ 必然漂移；serve 端 no-store 时
+  #   版本参数本身也多余（浏览器每次都会拉最新）。
+  - id: performance/handwritten-asset-version
+    name: "href 手写 ?v= 版本号（必然漂移）"
+    category: "performance"
+    severity: "warning"
+    description: "静态资源/脚本链接手写 ?v=：与真实版本（如油猴 @version）必然漂移，且服务端已 no-store 时属多余参数"
+    exts: ["html", "htm", "js", "mjs", "cjs", "ts", "tsx", "jsx", "vue", "svelte"]
+    patterns:
+      - id: userscript-v
+        pattern: "\\.user\\.js\\?v=[0-9]"
+        message: "油猴脚本链接手写 ?v=：与脚本 @version 必然漂移；服务端路由已 no-store 时请直接去掉版本参数"
+    fixable: false
+    mitigation: "去掉手写版本号；需要防缓存就用构建期 hash 或服务端 no-store"
+
+  # ── 接口回整个状态对象（2026-10-12 从 gbmd 实战沉淀）──
+  #   教训：/api/task 单次回 34.3MB、写接口把 38MB 完整任务塞进响应 ⇒ 每 2 秒轮询 ≈17MB/s，
+  #   页面卡死、服务端序列化被拖垮。列表类接口应回摘要 + 分页。
+  - id: performance/endpoint-returns-whole-state
+    name: "接口直接回整个状态对象（裸变量）"
+    category: "performance"
+    severity: "warning"
+    description: "响应体里直接塞一个裸变量（可能是完整状态对象）：大对象序列化 + 传输成本随数据量线性增长（实战：34.3MB/次 × 每 2 秒）"
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx"]
+    patterns:
+      - id: bare-task-var
+        pattern: "\\btask\\s*:\\s*[A-Za-z_$][\\w$]*\\s*[,}]"
+        message: "响应里回裸变量 task: X：确认 X 是否为完整状态对象；列表类接口应回摘要/分页"
+    fixable: false
+    mitigation: "改为回摘要（状态/统计/计数）+ 分页接口；完整对象只在显式导出接口返回"
+
   # ── 无界循环 / 高 CPU 轮询（性能补充）──
   - id: performance/busy-wait-loop
     name: "忙等待循环（高 CPU 空转）"
@@ -96,3 +144,64 @@ rules:
       - "for\\s*\\([^)]*;[^)]*;[^)]*\\)\\s*\\{\\s*\\}"
     fixable: false
     mitigation: "等待用 setTimeout / async sleep，轮询加间隔与超时"
+
+  # ── 2026-10-12 实战沉淀：4 条需 AST 精筛的性能/健壮性规则 ──
+  #   共性：正则只能看出「写了某个调用/循环」，看不出它在不在循环里、循环规模多大、函数会不会返回 undefined。
+  #   每条都在真实修复提交上验证过：修复前命中、修复后不报（语料见 gbmd 项目 test/perf-antipatterns.test.cjs）。
+
+  - id: performance/loop-no-fallback-return
+    name: "循环后缺兜底 return（函数可能返回 undefined）"
+    category: "performance"
+    severity: "blocker"
+    description: "函数顶层循环里有值 return，循环之后既无 return 也无 throw ⇒ 某些分支会「走完循环直接掉出函数」返回 undefined；调用方解构/取值即崩（实战：fetchJsonHeaders 因 maxAttempts(6) > 循环上界 retries(1) 而返回 undefined，面板报 Cannot destructure property 'json' …）"
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx"]
+    # 正则只做「循环行」初筛，是否真会掉出函数由 AST 判定（allow 语义）
+    astConfirmKind: "loop-no-fallback-return"
+    patterns:
+      - id: loop-line
+        pattern: "\\b(for|while)\\s*\\("
+        message: "循环之后没有兜底 return/throw：确认所有分支都会返回值或抛错（否则调用方拿到 undefined）"
+    fixable: false
+    mitigation: "循环结束后补 `throw lastErr` 或 `return 默认值`；重试循环的 maxAttempts 必须与循环上界一致"
+
+  - id: performance/loop-full-rewrite-call
+    name: "循环内调用「整份重写文件」的函数"
+    category: "performance"
+    severity: "warning"
+    description: "循环体里调用会 writeFileSync + JSON.stringify 整份文件的函数 ⇒ 每轮重写整份；单份几十 MB 时写盘量 = 轮数 × 文件大小（实战：收尾逐目录重写 15–26MB 游戏索引，数千轮 = 几十 GB、收尾 634 秒、接口堵死 74 秒）。**循环规模静态不可知**（13 个游戏 vs 4,598 个目录代码同形），故只作 warning，判真伪需运行期计数"
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx"]
+    astConfirmKind: "loop-full-rewrite-call"
+    patterns:
+      - id: rewrite-like-call
+        pattern: "\\b\\w*(save|write|persist|flush|rewrite)\\w*\\s*\\("
+        message: "循环内整份重写文件：改为批量期间只更新内存、循环结束后统一落盘（或加 deferSave/防抖）"
+    fixable: false
+    mitigation: "批量收集改动 → 循环外每个目标文件只写一次；确需逐轮写就加节流窗口或改增量写"
+
+  - id: performance/nested-linear-scan
+    name: "成员判定回调里套循环做 === 比较（O(n×m)）"
+    category: "performance"
+    severity: "warning"
+    description: "filter/find/some/every 的回调里再套 for 循环逐条 === 比较 ⇒ 复杂度 O(n×m)（实战：2,544 × 40,394 ≈ 1.03 亿次比较，纯 CPU 阻塞 12,784ms；改成先建 Set 再判定 ⇒ 14ms，913×）"
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx"]
+    astConfirmKind: "nested-linear-scan"
+    patterns:
+      - id: membership-callback
+        pattern: "\\.(filter|find|some|every)\\s*\\("
+        message: "成员判定回调里套循环逐条比较：先把一侧收进 Set/Map 再判定（O(n+m)）"
+    fixable: false
+    mitigation: "循环外建 Set/Map 索引，回调内 O(1) 查；键要选稳定唯一值（如 modId）"
+
+  - id: performance/long-sync-loop
+    name: "async 函数内长同步循环无让出点"
+    category: "performance"
+    severity: "warning"
+    description: "async 函数里的循环体含 ≥2 个同步调用且整段无 await ⇒ 长任务占满事件循环，期间接口全部超时（实战：收尾逐目录同步 stat/read/write 把 /api/* 堵死 74 秒）"
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx"]
+    astConfirmKind: "long-sync-loop"
+    patterns:
+      - id: loop-line
+        pattern: "\\b(for|while)\\s*\\("
+        message: "长同步循环无让出点：每 N 轮 await setImmediate/延时一次（总耗时不变，服务保持可响应）"
+    fixable: false
+    mitigation: "循环内每 N 次迭代 `await new Promise((r) => setImmediate(r))`；或把同步 I/O 换成异步 API"
