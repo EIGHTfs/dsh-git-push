@@ -117,19 +117,48 @@ node cli.mjs self-check       # 自身完整性
 
 ## 七、安装与客户端 UI（官方 CLI + 2026-09-12 修复实录）
 
-### 7.1 安装（官方 CLI，不再手动三步曲）
+### 7.1 安装（三种来源：本地 link / 打包 tgz / GitHub 源）
+
+⚠️ **2026-10-12 实测：`dsh plugin --profile <名> add …` 会挂死且零输出**（两次都以 timeout 结束、
+日志为空）⇒ 下面的命令**改在 profile 目录里直跑 pnpm**（`dsh plugin` 的设计就是把参数转发给 profile 的
+pnpm，两者本应等价，但转发这条路当前不可用）：
 
 ```bash
 export DSH_HOME="<你的 DSH 实例 .dsh 目录>"
-# 开发期（改码重启即生效，node_modules 是软链）
-dsh plugin --profile web add link:/绝对/路径/dsh-git-push-v2
-# 用户要求实体安装（怀疑软链 / 换机分发）——pnpm 目录源都是软链，唯一实体是 .tgz
-dsh plugin --profile web remove dsh-git-push && rm -f node_modules/dsh-git-push
+cd "$DSH_HOME/profiles/web"
+
+# ① 开发期：本地 link（改码重启即生效）
+pnpm add link:/绝对/路径/dsh-git-push
+
+# ② 实体安装（唯一实体是 .tgz；pnpm 的目录源都是软链）
+pnpm remove dsh-git-push && rm -f node_modules/dsh-git-push
 cd <源码> && pnpm pack --pack-destination /tmp/
-dsh plugin --profile web add /tmp/dsh-git-push-<版本>.tgz
+cd "$DSH_HOME/profiles/web" && pnpm add /tmp/dsh-git-push-<版本>.tgz
+
+# ③ 从 GitHub 源装（公开仓库匿名可装；远端暂无 tag ⇒ 用 commit 固定版本）
+pnpm add github:EIGHTfs/dsh-git-push#<commit>
 ```
 
-验证：`ls -la node_modules/dsh-git-push`（drwx=实体，lrwx=软链）+ `--dump-config` 应有 `id: dsh-git-push / enabled: true`。装完重启 DSH 才生效（dsh-restart-gate）。
+**GitHub 源的两条前置条件（2026-10-12 实测，缺一即失败）**：
+
+1. **本机要有 `npm`** —— pnpm 构建 git 来源的包时会在临时目录执行 `npm install`；缺 npm 报
+   `ERR_PNPM_PREPARE_PACKAGE` + `spawn ENOENT: npm: command not found`。
+   （本机已装：npm 10.9.2 解包到 `<APP>/lib/node_modules/npm`，链到
+   `/var/packages/DeepSeekHarness-NAS/target/.local/bin/npm` —— `/usr/local/bin` 不可写。）
+2. **pnpm 11 默认禁止 git 源依赖执行构建脚本**（供应链策略），而本插件**有 `prepare`/`prepack`**
+   （构建不入库的 `lib/client.js`）⇒ 必须先在 profile 的 `pnpm-workspace.yaml` 放行：
+
+   ```yaml
+   allowBuilds:
+     dsh-git-push@https://codeload.github.com/EIGHTfs/dsh-git-push/tar.gz/<commit>: true
+   ```
+
+   否则报 `ERR_PNPM_GIT_DEP_PREPARE_NOT_ALLOWED`；key 里带 commit 哈希 ⇒ 换版本/换提交要同步改这一行。
+
+装完三步：profile `package.json` 的 `dsh.profile.bundles` 登记插件名 → 本插件 `cordis.patch.yml`
+顶层 `- insert:` 新建 loader 行 → 重启宿主并在日志确认 `loaded`。
+验证：`ls -la node_modules/dsh-git-push`（drwx=实体，lrwx=软链）+ `--dump-config` 应有
+`id: dsh-git-push / enabled: true`（重启门禁见 dsh-restart-gate）。
 
 ### 7.2 客户端 UI 修复实录（2026-09-12）
 

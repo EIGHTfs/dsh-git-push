@@ -1218,7 +1218,31 @@ node scripts/audit-runtime-check.mjs --all <目录>
 ## 安装与要求
 
 - **环境**：DSH（DeepSeek Harness）｜Node ≥18 ｜本机 git
-- **安装**：`dsh plugin add EIGHTfs/dsh-git-push`（仓库已声明 `dsh.bundle`，可安装）
+- **安装**（从 GitHub 源安装；公开仓库，匿名可装）：
+  ⚠️ `dsh plugin --profile <名> add …` 当前实测**会挂死且零输出**（两次都以 timeout 结束、日志为空）⇒
+  安装改在**该 profile 目录里直跑 pnpm**（`dsh plugin` 的设计是把参数转发给 profile 的 pnpm，两者本应等价）：
+
+  ```bash
+  cd <DSH_HOME>/profiles/<profile>
+  pnpm add github:EIGHTfs/dsh-git-push#<commit>      # 用 commit 固定版本（远端暂无 tag）
+  ```
+
+  **两条前置条件（缺一即失败）**：
+  1. **本机要有 `npm`** —— pnpm 构建 git 来源的包时会在临时目录执行 `npm install`；
+     缺 npm 时报 `ERR_PNPM_PREPARE_PACKAGE` + `spawn ENOENT: npm: command not found`。
+  2. **pnpm 11 默认禁止 git 源依赖执行构建脚本**（供应链策略），而本插件**有 `prepare`**
+     （构建不入库的 `lib/client.js`）⇒ 必须先在 profile 的 `pnpm-workspace.yaml` 里放行，
+     否则报 `ERR_PNPM_GIT_DEP_PREPARE_NOT_ALLOWED`：
+
+     ```yaml
+     allowBuilds:
+       dsh-git-push@https://codeload.github.com/EIGHTfs/dsh-git-push/tar.gz/<commit>: true
+     ```
+
+     ⚠️ key 里带 commit 哈希 ⇒ 换版本/换提交要同步改这一行。
+
+  装完还要三步：profile `package.json` 的 `dsh.profile.bundles` 登记插件名 → 本插件 `cordis.patch.yml`
+  顶层 `- insert:` 新建 loader 行 → 重启宿主并在日志确认 `loaded`。
 - **客户端产物不入库**（C8）：浏览器半侧源码是分片 `lib/client-parts/**`；`lib/client.js` 是**构建产物**，
   已被 `.gitignore` 忽略。安装/拉取后若该文件缺失，跑一次 `npm run build:client` 即可补齐
   （`package.json` 的 **`prepare`** 会在 npm 安装与装 git 依赖时自动构建，**`prepack`** 覆盖打包/发布；
