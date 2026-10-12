@@ -541,6 +541,7 @@ dsh-git-push/
 │   ├── test-java-rules.mjs — Java/Kotlin 语言路由与专项规则测试（javaKtFuncRanges/短名/复杂度/规则联动/聚合型降级）
 │   ├── test-line-count.mjs — （待注释）
 │   ├── test-link-check.mjs — 链接判断测试（分级扣分/断网不拦）
+│   ├── test-loop-no-fallback-return.mjs — （待注释）
 │   ├── test-magic-number.mjs — 硬编码魔数检测测试
 │   ├── test-max-lines-scope.mjs — （待注释）
 │   ├── test-mirror-fallback.mjs — （待注释）

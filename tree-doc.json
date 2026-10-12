@@ -437,31 +437,47 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
+      "assets/minihost.sh": {
+        "status": "M",
+        "mtime": "2026-10-12T22:24:18.533Z",
+        "note": "注释可能需更新"
+      },
+      "docs/CHANGELOG.md": {
+        "status": "M",
+        "mtime": "2026-10-12T22:27:01.354Z",
+        "note": "注释可能需更新"
+      },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-12T21:54:47.970Z",
+        "mtime": "2026-10-12T22:27:01.721Z",
         "note": "注释可能需更新"
       },
-      "test/test-cli-audit-parity.mjs": {
+      "lib/ast/perf.js": {
         "status": "M",
-        "mtime": "2026-10-12T21:52:58.701Z",
+        "mtime": "2026-10-12T22:25:30.872Z",
         "note": "注释可能需更新"
       },
-      "test/test-plugin.mjs": {
+      "lib/checks/hardcoded-path.js": {
         "status": "M",
-        "mtime": "2026-10-12T21:50:40.391Z",
+        "mtime": "2026-10-12T22:24:05.116Z",
         "note": "注释可能需更新"
       },
-      "test/test-rule-packs.mjs": {
+      "lib/self/index.js": {
         "status": "M",
-        "mtime": "2026-10-12T21:51:12.628Z",
+        "mtime": "2026-10-12T22:26:55.952Z",
         "note": "注释可能需更新"
       },
-      "test/test-tool-contract.mjs": {
+      "package.json": {
         "status": "M",
-        "mtime": "2026-10-12T21:49:51.806Z",
+        "mtime": "2026-10-12T22:26:55.945Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-loop-no-fallback-return.mjs": {
+        "status": "A",
+        "mtime": "2026-10-12T22:24:49.044Z",
         "note": "注释可能需更新"
       }
     }
-  }
+  },
+  "test/test-loop-no-fallback-return.mjs": "（待注释）"
 }

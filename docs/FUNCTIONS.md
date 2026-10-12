@@ -411,7 +411,7 @@
 | `checkSmallFileReadAst` | 236-259 | 24 | `export function checkSmallFileReadAst(text = '') {` |
 | `checkConsoleLogJsonAst` | 268-284 | 17 | `export function checkConsoleLogJsonAst(text = '') {` |
 
-### lib/ast/perf.js（380 行 · 16 个函数）
+### lib/ast/perf.js（473 行 · 18 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -419,18 +419,20 @@
 | `matchingParen` | 36-47 | 12 | `function matchingParen(text, openIdx) {` |
 | `lineOf` | 50-54 | 5 | `function lineOf(text, idx) {` |
 | `inCommentOrString` | 63-69 | 7 | `function inCommentOrString(tokens, line, matchText) {` |
-| `nextBlockRange` | 72-380 | 309 | `function nextBlockRange(text, startIdx) {` |
+| `nextBlockRange` | 72-473 | 402 | `function nextBlockRange(text, startIdx) {` |
 | `collectLoopRanges` | 86-102 | 17 | `function collectLoopRanges(text) {` |
 | `loopBodyLines` | 109-118 | 10 | `export function loopBodyLines(text = '') {` |
 | `innermostLoopRanges` | 137-140 | 4 | `function innermostLoopRanges(text) {` |
 | `repeatIdenticalCallLines` | 164-187 | 24 | `export function repeatIdenticalCallLines(text = '') {` |
 | `loopFullCollectionLines` | 201-216 | 16 | `export function loopFullCollectionLines(text = '') {` |
-| `collectFuncRanges` | 226-380 | 155 | `function collectFuncRanges(text) {` |
+| `collectFuncRanges` | 226-473 | 248 | `function collectFuncRanges(text) {` |
 | `directFullWriters` | 245-252 | 8 | `function directFullWriters(text) {` |
-| `loopNoFallbackReturnLines` | 265-280 | 16 | `export function loopNoFallbackReturnLines(text = '') {` |
-| `loopFullRewriteCallLines` | 296-322 | 27 | `export function loopFullRewriteCallLines(text = '') {` |
-| `nestedLinearScanLines` | 335-353 | 19 | `export function nestedLinearScanLines(text = '') {` |
-| `longSyncLoopLines` | 365-379 | 15 | `export function longSyncLoopLines(text = '') {` |
+| `blankCommentsAndLiterals` | 263-325 | 63 | `function blankCommentsAndLiterals(text) {` |
+| `isRegexStart` | 268-275 | 8 | `const isRegexStart = (idx) => {` |
+| `loopNoFallbackReturnLines` | 345-373 | 29 | `export function loopNoFallbackReturnLines(text = '') {` |
+| `loopFullRewriteCallLines` | 389-415 | 27 | `export function loopFullRewriteCallLines(text = '') {` |
+| `nestedLinearScanLines` | 428-446 | 19 | `export function nestedLinearScanLines(text = '') {` |
+| `longSyncLoopLines` | 458-472 | 15 | `export function longSyncLoopLines(text = '') {` |
 
 ### lib/ast/scope.js（242 行 · 11 个函数）
 
@@ -2448,6 +2450,12 @@
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `fakeFetch` | 14-21 | 8 | `function fakeFetch(map = {}) {` |
+
+### test/test-loop-no-fallback-return.mjs（115 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `hits` | 19-19 | 1 | `const hits = (src) => [...loopNoFallbackReturnLines(src)].sort((a, b) => a - b);` |
 
 ### test/test-magic-number.mjs（130 行 · 1 个函数）
 
