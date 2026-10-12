@@ -33,7 +33,7 @@ lib/client.js
 
 # 预览页产物（1.4M 单文件）：assets/preview.html 由 assets/preview-gen.mjs 生成
 #   （内联真 client.js + 垫片宿主，供离线 / 接真后端预览）——属**生成产物，不入库**。
-#   生成：node assets/preview-gen.mjs（或 node scripts/watch-preview.mjs 自动重生成）；
+#   生成：node scripts/preview-gen.mjs（或 node scripts/preview-gen.mjs --watch 自动重生成）；
 #   缺失时 scripts/gen-preview.mjs 与 test-rule-slots-render 会自动生成一次，保证新克隆可用。
 assets/preview.html
 

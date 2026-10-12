@@ -11,11 +11,13 @@
 # ============================================================
 set -uo pipefail
 
-# 脚本落在 assets/（bench-template 下发）；ROOT 上溯到插件根
+# 脚本落在 assets/；ROOT 上溯到插件根
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROJECT_NAME="$(basename "$ROOT")"
-# 服务工作目录 = 脚本所在目录（assets/，start-preview.mjs 在此）
+# 预览服务入口：scripts/preview-server.mjs（2026-10-13 合并后单入口；--local/--shot/--direct 均在其内部）
+#   服务工作目录仍取脚本所在目录（assets/），入口用绝对路径调用，与 cwd 无关。
 SERVER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SERVER_ENTRY="$ROOT/scripts/preview-server.mjs"
 PID_FILE="$ROOT/${PROJECT_NAME}.pid"
 LOG_FILE="$SERVER_DIR/preview-server.log"
 DEFAULT_PORT="${DEFAULT_PORT:-30999}"
@@ -95,7 +97,7 @@ resolve_token() {
     grep -o 'token=[a-zA-Z0-9_-]\{20,\}' "$log_file" 2>/dev/null | tail -n1 | sed 's/^token=//'
     return 0
   fi
-  return 0 # 找不到就空，start-preview.mjs 内部还有兜底
+  return 0 # 找不到就空，预览服务（scripts/preview-server.mjs）内部还有兜底
 }
 
 # ---------- 端口工具 ----------
@@ -223,7 +225,7 @@ start_server() {
   rotate_log
   local token
   token="$(resolve_token)"
-  local cmd=("$NODE_BIN" start-preview.mjs --port "$port" --no-open)
+  local cmd=("$NODE_BIN" "$SERVER_ENTRY" --port "$port" --no-open)
   if [ -n "$token" ]; then cmd+=("--token" "$token"); fi
   cd "$SERVER_DIR" || exit 1
   if command -v setsid >/dev/null 2>&1; then

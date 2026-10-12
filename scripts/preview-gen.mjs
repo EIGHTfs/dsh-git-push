@@ -304,7 +304,7 @@ window.__scopeMock = {
 };
 
 // 接真实后端（完全真实数据版）：
-//   · 默认（无参数）：同源相对路径 /api/git-push/* 直接放行——在 start-preview.mjs 反代服务下
+//   · 默认（无参数）：同源相对路径 /api/git-push/* 直接放行——在 preview-server.mjs 反代服务下
 //     打开时请求落到真实 DSH 后端，预览数据完全真实（账号/仓库/规则/审计/设置）。
 //   · URL 传 ?backend=http://127.0.0.1:PORT → 转发到所给后端（preview-server 直连实测）。
 //   · ?mock=1 → 走下方假数据（离线调试兜底，默认不再用假数据）。
@@ -325,7 +325,7 @@ function forwardBackend(urlStr, init) {
     });
   }).catch(function () { return { ok: true, status: 502, json: function () { return Promise.resolve({ ok: false, error: '后端未启动: ' + b }); } }; });
 }
-// 同源放行：start-preview.mjs 反代到 DSH 真实后端（完全真实数据）；
+// 同源放行：preview-server.mjs 反代到 DSH 真实后端（完全真实数据）；
 //   仅显式 ?mock=1 才走下方假数据（离线调试）。
 function passthroughFetch(urlStr, init) {
   if (!/[?&]mock=1/.test(location.search)) {

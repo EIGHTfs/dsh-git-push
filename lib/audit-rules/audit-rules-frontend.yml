@@ -17,7 +17,7 @@ metadata:
 
 # exts 说明（2026-09-13）：本包是「前端 HTML 审计规则集」，HTML 规则必须声明 exts，
 #   否则会跑在所有文本文件上——.mjs 里生成网页的 HTML 模板字符串会被当真实网页误报
-#   （实例：assets/preview-gen.mjs 里 `<script>${...}</script>` 被判「内联脚本」blocker）。
+#   （实例：scripts/preview-gen.mjs 里 `<script>${...}</script>` 被判「内联脚本」blocker）。
 #   框架类规则（react/vue 的 dangerouslySetInnerHTML / v-html / key）是 JS/JSX 写法，故限 JS 类。
 rules:
   # ----- 1. 可访问性 -----

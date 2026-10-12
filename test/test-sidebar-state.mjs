@@ -223,7 +223,7 @@ test('assets/preview.html 与 client.js 同步（重新生成过）', () => {
     ['保存后刷新账号状态', /await this\.refresh\('account'\)/],
   ];
   for (const [label, re] of markers) {
-    assert.match(preview, re, `preview.html 未包含最新实现「${label}」——改完 client.js 需重新执行 node assets/preview-gen.mjs`);
+    assert.match(preview, re, `preview.html 未包含最新实现「${label}」——改完 client.js 需重新执行 node scripts/preview-gen.mjs`);
   }
 });
 

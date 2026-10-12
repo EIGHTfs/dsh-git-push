@@ -309,6 +309,7 @@ dsh-git-push/
 │   │   ├── audit-rules-java.yml — Java/Kotlin 规则（短名/魔数/方法长度/复杂度，exts: [java,kt]）（规则包 java）
 │   │   ├── audit-rules-nodejs.yml — Node.js 规则（同步 fs/空 catch）（规则包 nodejs）
 │   │   ├── audit-rules-npm.yml — npm 规则（package.json 规范）（规则包 npm）
+│   │   ├── audit-rules-paths.yml — （待注释）
 │   │   ├── audit-rules-performance.yml — 性能规则（规则包 performance）
 │   │   ├── audit-rules-php.yml — PHP 规则包（占位：规则待补，槽位就绪）（规则包 php）
 │   │   ├── audit-rules-private.yml — 私密文件规则（凭据/私密清单）（规则包 private）
@@ -329,6 +330,7 @@ dsh-git-push/
 │   │   ├── file-health.js — 文件健康度（行数/字节/行长三维打分）
 │   │   ├── filter.js — 规则作用域过滤（exts/exclude_paths）
 │   │   ├── folder.js — 目录级检查（文件夹数/单目录文件数/解包特征）
+│   │   ├── hardcoded-path.js — （待注释）
 │   │   ├── index.js — 检查层统一出口
 │   │   ├── io.js — IO 风险分级包装：checkIoRisk → lib/ast/io-risk.js（转 warning finding，取代 quality/sync-fs）
 │   │   ├── magic-number.js — 魔数检查包装（token 判定→finding）
@@ -434,20 +436,24 @@ dsh-git-push/
 │   ├── doc-tree.mjs — （待注释）
 │   ├── doc-version.mjs — （待注释）
 │   ├── frontend-preview-check.mjs — （待注释）
-│   ├── gen-preview.mjs — preview.html 槽位数据自动生成器（gen 打印 / --write 写盘 / check 查漂移——__SLOTS__/__FAKE__ 从 listRuleSlots 真实生成，新增规则槽位不再手工维护）
 │   ├── hot-path-probe-cjs.cjs — （待注释）
 │   ├── hot-path-probe-fs-shim.mjs — （待注释）
 │   ├── hot-path-probe-fsp-shim.mjs — （待注释）
 │   ├── hot-path-probe.mjs — （待注释）
 │   ├── module-splitter.py — 巨型单文件按顶层块拆分脚本（analyze/split/verify 三命令，python3 零依赖；module_splitter 工具与 CLI 的底层实现）
 │   ├── platform-scan.mjs — （待注释）
+│   ├── preview-gen.mjs — （待注释）
+│   ├── preview-local-runner.mjs — （待注释）
+│   ├── preview-server-direct.mjs — （待注释）
 │   ├── preview-server.mjs — 本地真实后端测试服务（preview.html 接真实 handleHttp）
+│   ├── preview-slot-data.mjs — （待注释）
 │   ├── probe-recheck.mjs — 探针：「重新检测」按钮链路实测（在线校验 token/SSH）
 │   ├── readme-gen.mjs — README 生成独立脚本（git_gen_readme 抽出：模板渲染/版本表/目录）
 │   ├── rename-locator.mjs — 变量重命名位置定位工具（按作用域聚合引用——单字母变量人工重命名辅助）
 │   ├── rule-switch.mjs — 规则槽位手动启停 CLI
 │   ├── rules-solo-audit.mjs — 规则单启控制变量扫描（基准全关+逐规则单启+全量对照，报告供 AI/人工审规则有效性与局限，按需运行非常驻）
 │   ├── scan-file-io.mjs — 文件读写扫描器（列出所有 fs 读写调用位置 + 路径参数）
+│   ├── scan-hardcoded-paths.mjs — （待注释）
 │   ├── scan-repos.mjs — （待注释）
 │   ├── scan-version.mjs — 版本一致性校验脚本
 │   ├── scrub-user-wording.mjs — 清理「用户沟通措辞」独立脚本
@@ -455,7 +461,6 @@ dsh-git-push/
 │   ├── sync-plugin-install.mjs — 插件安装形态与免重启热重载自检（被 sync-plugin.mjs 引用）
 │   ├── sync-plugin.mjs — 双副本同步脚本（源仓库 → 部署安装副本）
 │   ├── verify-prestep.mjs — 上下文注入自检脚本（真实触发 agent/pre-step 验证注入）
-│   ├── watch-preview.mjs — preview.html 自动重生成监听（源码变更即重建）
 │   ├── audit-ext/ — （待注释）
 │   │   ├── _example-readme-present.mjs — 审计扩展契约示例（_ 前缀：演示不参与实际审计）
 │   │   ├── variable-min-length.mjs — 审计扩展：variable-min-length（内置规则抽出试点——统一动态入口）
@@ -464,10 +469,6 @@ dsh-git-push/
 │   ├── panel-account.png — 账号卡片面板截图（README 配图）
 │   ├── panel-audit.png — 审计面板截图（README 配图）
 │   ├── panel-settings.png — 设置面板截图（README 配图）
-│   ├── preview-gen.mjs — 生成 preview.html（真 client.js + 假数据垫片）
-│   ├── preview-local-runner.mjs — （待注释）
-│   ├── preview.html — 侧边栏交互模拟页（可点，支持 ?backend= 接真实后端）
-│   ├── start-preview.mjs — 预览反代服务器（模板 bench-template server/lib/preview 下发改用：本地服务 preview.html，/api/git-push/* 转发 DSH 真实后端 + token 认证）
 │   ├── start.sh — 预览服务器启停脚本（start/stop/restart/status + --port + PID/日志/健康检查 /preview-ping）
 ├── test/ — node:test 全量单元测试（541+ 条，覆盖审计/推送/账号/HTTP/后台任务）
 │   ├── .test — 空文件豁免标记（目录级豁免 .test 目录）
@@ -565,6 +566,7 @@ dsh-git-push/
 │   ├── test-rule-include-paths.mjs — （待注释）
 │   ├── test-rule-packs.mjs — 规则总入口测试（编译注册/字段指派）
 │   ├── test-rule-slots-render.mjs — 规则包列表统计渲染回归
+│   ├── test-scan-hardcoded-paths.mjs — （待注释）
 │   ├── test-scope.mjs — 作用域最小实验测试（分类器/机制/magic 接入）
 │   ├── test-scrub-conv-wording.mjs — （待注释）
 │   ├── test-self.mjs — 自身总入口测试（VERSION/CLI/help 比对）
@@ -595,6 +597,8 @@ dsh-git-push/
 ├── docs/ — 开发文档
 │   ├── 2026-10-09-审计插件性能优化.MD — （待注释）
 │   ├── 2026-10-11-单一真源与文档漂移治理方案.MD — （待注释）
+│   ├── 2026-10-11-硬编码路径改造为审计引擎方案.MD — （待注释）
+│   ├── 2026-10-13-预览合并方案.md — （待注释）
 │   ├── CHANGELOG.md — 版本列表宿主（doc-version apply 写 dshgp-version 标记块）
 │   ├── DETAILS-EXEMPT-AND-RULES.md — 细节补充：豁免注释与规则 yml 用法全录
 │   ├── FUNCTIONS.md — 函数列表宿主（doc-func apply 写 dshgp-functions 标记块）
@@ -632,7 +636,6 @@ dsh-git-push/
 ├── CONTRIBUTING.md — （待注释）
 ├── README.md — 插件 README（功能总览/用法/版本记录）
 ├── SECURITY.md — （待注释）
-├── assemble.json — bench-template 下发清单（键=模板仓库相对路径，值=本插件落点；preview 启动两件套 → assets/）
 ├── cli.mjs — 独立 CLI（git-sluice，不依赖宿主可独立运行）
 ├── cordis.patch.yml — DSH 插件组合 patch（loader 注入定义）
 ├── package.json — 包声明（零依赖、files 白名单、scripts）
@@ -891,14 +894,14 @@ console.log(x); // dsh-skip-residue: 本行为刻意保留的调试输出样本
 
 ## 界面预览页（assets/preview.html，真实后端数据）
 
-`assets/preview.html` 由 `assets/preview-gen.mjs` 生成（内联真实 `client.js`，只垫片宿主环境 `window.__ModuleLoader__`/`react`/`settingsScope`/`fetch`，界面与真实插件一致）；**用 `assets/start.sh` 启动本地反代服务访问**（启动脚本与反代服务器来自模板仓库 bench-template `server/lib/preview/`，经 `assemble.json` 文件清单下发）：
+`assets/preview.html` 由 `scripts/preview-gen.mjs` 生成（内联真实 `client.js`，只垫片宿主环境 `window.__ModuleLoader__`/`react`/`settingsScope`/`fetch`，界面与真实插件一致）；**用 `assets/start.sh` 启动本地反代服务访问**（服务入口 `scripts/preview-server.mjs`；产物属生成物、不入库，缺失时生成器与 minihost 会自动生成一次）：
 
 ```
 ./assets/start.sh start [--port 31000]   # 启动（默认 30999；已有项目占用时用 --port 错开）
 ./assets/start.sh status / restart / stop
 ```
 
-- **完全真实后端数据**：`assets/start-preview.mjs` 反向代理——`/api/git-push/*` 全部转发到 DSH 真实后端（默认 http://127.0.0.1:30800 反代，`--dsh` 可覆盖），并自动完成 token 认证（`--token` > 环境变量 `DSH_PREVIEW_TOKEN` > 解析 `dsh-proxy.log` 兜底）。预览里的账号信息 / 本地仓库 / 云端仓库 / 规则包 / 审计结果 / 设置**全部来自真实后端**（读取与写入都真实）。
+- **完全真实后端数据**：`scripts/preview-server.mjs` 反向代理——`/api/git-push/*` 全部转发到 DSH 真实后端（默认 http://127.0.0.1:30800 反代，`--dsh` 可覆盖），并自动完成 token 认证（`--token` > 环境变量 `DSH_PREVIEW_TOKEN` > 解析 `dsh-proxy.log` 兜底）。预览里的账号信息 / 本地仓库 / 云端仓库 / 规则包 / 审计结果 / 设置**全部来自真实后端**（读取与写入都真实）。
 - **离线调试**：URL 加 `?mock=1` 切回内置假数据（改动只留页面内、不写文件）；跨后端实测用 `?backend=http://127.0.0.1:端口`。
 - **全部可点**：三选项卡切换 · 审计开关 · **注入系统提示词开关** · 「注入开发者要求清单」子开关（含置灰联动）· 规则包启停与 ↑↓ 调序 · 权重编辑 · token/SSH 保存 · 邮箱一键生成 SSH 并回填
 - 健康检查 `GET /preview-ping`（start.sh 启动判定）；PID 落 `dsh-git-push.pid`（插件根）；日志 `assets/preview-server.log`（超 10MB 轮转）
@@ -930,7 +933,7 @@ lib/client-parts/00-loader.js      loader + factory 头 + require + NS（必须�
                     语法只对拼起来的产物才有意义）
 ② npm run build:client   按 PART_ORDER 拼接 → 写 lib/client.js（幂等：分片不变则产物逐字节不变）
 ③ npm run check     语法检查（跳过 client-parts）+ **产物新鲜度校验**：client.js 必须与分片拼出来的一致
-④ node assets/preview-gen.mjs   用产物重生成预览页，实际点三选项卡确认渲染与交互
+④ node scripts/preview-gen.mjs   用产物重生成预览页，实际点三选项卡确认渲染与交互
 ```
 
 - **不要手改 `lib/client.js`**：它是构建产物，下次构建即被覆盖，改动静默丢失；`npm run check` 会直接报「产物与分片不一致」。
@@ -950,7 +953,7 @@ lib/client-parts/00-loader.js      loader + factory 头 + require + NS（必须�
 
 ```
 npm run build:client        # 先拼产物
-node assets/preview-gen.mjs # 再用产物重生成预览页
+node scripts/preview-gen.mjs # 再用产物重生成预览页
 ```
 
 渲染自检（改了客户端代码或预览生成器后必跑；把「改前端必须真的看一眼」变成一条命令）：

@@ -71,7 +71,7 @@ git-sluice self-check
 | `scripts/scan-version.mjs` | 版本一致性校验（三处版本号是否同步） |
 | `scripts/doc-func.mjs` / `doc-tree.mjs` / `doc-version.mjs` | 函数列表 / 目录树 / 版本记录 三份文档与代码同步（`check` 查漂移、`apply` 写回） |
 | `scripts/readme-gen.mjs` | README 生成 |
-| `scripts/gen-preview.mjs` / `watch-preview.mjs` / `preview-server.mjs` | 界面预览页数据生成、变更监听、本地真实后端测试服务 |
+| `scripts/preview-gen.mjs`（默认生成 / `--data-only` 只更数据段 / `check` 漂移门禁 / `--watch` 监听） / `scripts/preview-server.mjs`（默认反代真后端 / `--direct` 直连插件 / `--local` 免重启） | 界面预览页生成与漂移门禁、本地真实后端测试服务 |
 | `scripts/browser-page-probe.mjs` | 无头浏览器探针：读页面真实渲染文本 + 抓前端运行时错误（零硬编码路径，自动探测环境） |
 | `scripts/sync-plugin.mjs` | 双副本同步（工作区 ↔ 安装副本）+ 部署形态与免重启热重载自检：`--profile <名>` 指定 profile（多 profile 必给）、`--fix` 按目标形态修正（local-plugins 真实目录 + node_modules 相对软链） |
 | `scripts/sync-plugin-install.mjs` | 安装形态 / HMR 自检的实现模块（`sync-plugin.mjs` 引用，非独立入口） |

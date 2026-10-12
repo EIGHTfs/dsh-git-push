@@ -1,6 +1,6 @@
 // dsh-skip-sensitive: 本文件为预览反代服务器，含 token 认证逻辑（--token/环境变量/dsh-proxy.log 运行时解析），无硬编码凭据，安全类规则整文件豁免（文件头前 3 行生效）。
 /**
- * dsh-git-push 侧边栏独立预览启动器（模板源：bench-template/server/lib/preview/start-preview.mjs，改配置区裁剪）
+ * dsh-git-push 侧边栏独立预览服务（默认反代 DSH 真实后端；同入口还支持 --direct 直连插件 handleHttp、--local 免重启、--shot 截图）
  *
  * 用途：把任意 DSH 插件的预览页（preview.html，垫片执行真实 client 代码）独立跑起来，
  *   并接 **DSH 真实后端**——预览页里的数据全部来自真后端（读与写都真实）。
@@ -21,8 +21,8 @@
  *   node scripts/preview-server.mjs --direct --port 8090   # 直连模式：不起 DSH 宿主，直接调插件 handleHttp
  *                                                 #（原 scripts/preview-server.mjs，2026-10-13 并入本入口）
  *   node scripts/preview-server.mjs --local         # 免重启：每个 /api 请求 fork 一次性子进程跑工作区最新代码
- *   node start-preview.mjs --dsh http://127.0.0.1:30800 --token <launch-token>
- *   node start-preview.mjs --shot preview.png    # playwright 截图自检（需 pwviewer）
+ *   node scripts/preview-server.mjs --dsh http://127.0.0.1:30800 --token <launch-token>
+ *   node scripts/preview-server.mjs --shot preview.png    # playwright 截图自检（需 pwviewer）
  */
 import { createServer } from 'node:http';
 import { request as httpRequest } from 'node:http';

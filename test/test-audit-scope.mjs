@@ -100,7 +100,7 @@ test('作用域：filterRulesByExt 按文件扩展名裁剪（HTML 规则不落�
       { id: 'unscoped' },
     ],
   };
-  const forMjs = filterRulesByExt(grouped, 'assets/preview-gen.mjs').regex.map((r) => r.id);
+  const forMjs = filterRulesByExt(grouped, 'scripts/preview-gen.mjs').regex.map((r) => r.id);
   assert.ok(!forMjs.includes('html-only'), '.mjs 不应命中 HTML 规则');
   assert.ok(forMjs.includes('js-only'), '.mjs 应命中 JS 规则');
   assert.ok(forMjs.includes('unscoped'), '未声明 exts 的规则不受限');
