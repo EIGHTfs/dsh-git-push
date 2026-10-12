@@ -14,7 +14,7 @@
  *     <DSH_HOME>/cache/react-umd/（不入库、断网可复用）。
  *   需要时可覆盖：DSH_ROOT / REACT_UMD_DIR / REACT_DOM_UMD_DIR。
  */
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -55,9 +55,46 @@ if (!DSH) {
   console.error('找不到 DSH 安装根（标志：含 node_modules/ 与 package.json）。用 DSH_ROOT 显式指定，例如：\n  DSH_ROOT=/volume1/@appstore/DeepSeekHarness-NAS node assets/preview-gen.mjs');
   process.exit(1);
 }
-const store = join(DSH, 'node_modules', '.pnpm');
-const reactUmdDir = process.env.REACT_UMD_DIR || join(store, 'react@18.3.1', 'node_modules', 'react');
-const RD = process.env.REACT_DOM_UMD_DIR || join(store, 'react-dom@18.3.1_react@18.3.1', 'node_modules', 'react-dom');
+// React UMD 解析（整理 2026-10-13）：原实现写死 `store/react@18.3.1`，而本机**安装根根本没有 react**
+//   （react 实际装在数据目录的 profile 里：<DSH_HOME>/profiles/<profile>/node_modules/react）
+//   ⇒ 必然报「找不到 react UMD」。改为多候选探测 + 校验**目标文件**（不是只看 umd 目录，
+//   否则会把 react-dom 的 umd 误当成 react 的）+ 不再写死版本号。
+//   候选顺序：env 显式 → DSH_HOME 缓存 → DSH_PROFILE_DIR/node_modules → 各 profile/node_modules
+//             → 安装根 node_modules → 安装根 .pnpm/<pkg>@*（任意版本）
+function pickUmdDir(pkg) {
+  const envVar = pkg === 'react' ? 'REACT_UMD_DIR' : 'REACT_DOM_UMD_DIR';
+  const want = join('umd', pkg === 'react' ? 'react.development.js' : 'react-dom.development.js');
+  const has = (d) => Boolean(d) && existsSync(join(d, want));
+  if (process.env[envVar] && has(process.env[envVar])) return process.env[envVar];
+  const dshHome = process.env.DSH_HOME || '';
+  const cands = [];
+  if (dshHome) {
+    cands.push(join(dshHome, 'cache', 'react-umd', pkg)); // 缓存按包名分目录（若有）
+    cands.push(join(dshHome, 'cache', 'react-umd'));      // 兼容：umd/ 直接铺在缓存根
+    const profDir = process.env.DSH_PROFILE_DIR || '';
+    if (profDir) cands.push(join(profDir, 'node_modules', pkg));
+    try {
+      for (const p of readdirSync(join(dshHome, 'profiles'))) {
+        cands.push(join(dshHome, 'profiles', p, 'node_modules', pkg));
+      }
+    } catch { /* 无 profiles 目录 */ }
+  }
+  cands.push(join(DSH, 'node_modules', pkg));
+  try {
+    const pnpm = join(DSH, 'node_modules', '.pnpm');
+    for (const d of readdirSync(pnpm)) {
+      if (d === pkg || d.startsWith(`${pkg}@`)) cands.push(join(pnpm, d, 'node_modules', pkg));
+    }
+  } catch { /* 无 .pnpm 或不可读 */ }
+  for (const c of cands) if (has(c)) return c;
+  return process.env[envVar] || '';
+}
+// 原实现（保留供追溯）：写死 .pnpm/react@18.3.1 与 react-dom@18.3.1_react@18.3.1
+//   const store = join(DSH, 'node_modules', '.pnpm');
+//   const reactUmdDir = process.env.REACT_UMD_DIR || join(store, 'react@18.3.1', 'node_modules', 'react');
+//   const RD = process.env.REACT_DOM_UMD_DIR || join(store, 'react-dom@18.3.1_react@18.3.1', 'node_modules', 'react-dom');
+const reactUmdDir = pickUmdDir('react');
+const RD = pickUmdDir('react-dom');
 
 /**
  * 确保 react-dom UMD 就位（修）。

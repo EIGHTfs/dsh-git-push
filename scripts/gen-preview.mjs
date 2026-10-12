@@ -16,6 +16,7 @@
  *   提交前跑 check 防漏（门禁不拦，warning 提示）。
  */
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { listRuleSlots } from '../lib/app/handlers/meta.js';
@@ -47,9 +48,38 @@ export function readPreviewSlotData(html = readPreviewHtml()) {
   } catch { return null; }
 }
 
-function readPreviewHtml() {
-  if (!existsSync(PREVIEW)) return '';
+/**
+ * 预览页不入库（见 .gitignore）：缺失时先跑一次生成器，保证「漂移门禁 + 单元测试」
+ * 在**新克隆 / CI** 上同样可用（否则 readPreviewHtml 返回空 ⇒ 测试以“缺失”失败）。
+ * 只在首次缺失时尝试一次，避免每次调用都生成；生成失败按空处理并让调用方给出明确错误。
+ */
+let previewEnsureTried = false;
+export function ensurePreviewHtml() {
+  if (existsSync(PREVIEW)) return { ok: true, generated: false };
+  if (!previewEnsureTried) {
+    previewEnsureTried = true;
+    const gen = join(ROOT, 'assets', 'preview-gen.mjs');
+    if (existsSync(gen)) {
+      const r = spawnSync(process.execPath, [gen], { cwd: ROOT, timeout: 300000, encoding: 'utf8' });
+      if (r.status !== 0) {
+        return { ok: false, generated: true, error: `生成 assets/preview.html 失败：${String(r.stderr || r.stdout || '').slice(-400)}` };
+      }
+    }
+  }
+  return { ok: existsSync(PREVIEW), generated: true };
+}
+
+/** 读预览页正文（缺失则先自动生成一次）。导出供测试复用，避免测试直接 readFileSync 抛错。 */
+export function readPreviewHtmlText() {
+  if (!existsSync(PREVIEW)) {
+    const e = ensurePreviewHtml();
+    if (!e.ok) return '';
+  }
   return readFileSync(PREVIEW, 'utf8');
+}
+
+function readPreviewHtml() {
+  return readPreviewHtmlText();
 }
 
 /** 生成（打印）或写盘。 */

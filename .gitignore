@@ -31,3 +31,9 @@ __pycache__/
 #   安装侧靠 package.json 的 prepare / prepack 自动构建；本地改分片后跑 npm run build:client。
 lib/client.js
 
+# 预览页产物（1.4M 单文件）：assets/preview.html 由 assets/preview-gen.mjs 生成
+#   （内联真 client.js + 垫片宿主，供离线 / 接真后端预览）——属**生成产物，不入库**。
+#   生成：node assets/preview-gen.mjs（或 node scripts/watch-preview.mjs 自动重生成）；
+#   缺失时 scripts/gen-preview.mjs 与 test-rule-slots-render 会自动生成一次，保证新克隆可用。
+assets/preview.html
+

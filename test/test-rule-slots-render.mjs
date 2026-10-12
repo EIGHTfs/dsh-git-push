@@ -173,7 +173,7 @@ test('预览页：槽位数据取自真实规则文件，不得与真实实例�
   // 数据由 scripts/gen-preview.mjs 自动生成（此前手工维护 33K JSON 串，
   //   新增槽位漏改即失败）——本测试直接调脚本的 checkPreviewDrift 断言无漂移，
   //   并顺带锁死「脚本生成结果与测试预期一致」（防脚本自身改契约）。
-  const { checkPreviewDrift, buildPreviewSlotData, readPreviewSlotData } = await import('../scripts/gen-preview.mjs');
+  const { checkPreviewDrift, buildPreviewSlotData, readPreviewSlotData, readPreviewHtmlText } = await import('../scripts/gen-preview.mjs');
   const drift = checkPreviewDrift();
   assert.ok(drift.ok, drift.message);
 
@@ -181,7 +181,10 @@ test('预览页：槽位数据取自真实规则文件，不得与真实实例�
   const real = listRuleSlots(undefined, [], null);
   const realOrder = real.order.filter((s) => s !== 'template');
 
-  const html = readFileSync(join(ROOT, 'assets/preview.html'), 'utf8');
+  // 预览页不入库（见 .gitignore）：用脚本导出的读取器（缺失时自动生成一次），
+  //   避免测试直接 readFileSync 在“新克隆 / 已清理”环境下抛 ENOENT。
+  const html = readPreviewHtmlText();
+  assert.ok(html, '预览页应已生成（为空说明生成器失败，看上一行 checkPreviewDrift 的报错）');
   const previewMeta = readPreviewSlotData(html)?.meta || {};
   const previewOrder = readPreviewSlotData(html)?.order || [];
 
