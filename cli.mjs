@@ -35,7 +35,7 @@ export { cmdFileIo, cmdTreeDoc, cmdFunctions, cmdModuleSplitter };
 
 /** parseArgv 认识的选项白名单（cli-help-sync 机器比对基准，必须与 HELP 文本一致。
  * 注：-m 是单横线别名（helpSync 只比对 -- 双横线），不列入本表。 */
-export const KNOWN_FLAGS = ['--depth', '--full', '--ruleset', '--weights', '--include-ignored', '--push', '--no-push', '--dry-run', '--force', '--req-confirm', '--push-gate-confirmed', '--json', '--max', '--owner', '--offline', '--paths', '--history', '--since', '--until', '--out', '--skip-empty',
+export const KNOWN_FLAGS = ['--depth', '--full', '--ruleset', '--weights', '--include-ignored', '--push', '--no-push', '--dry-run', '--force', '--message', '--audit', '--ignore-patterns', '--requirements-confirmed', '--push-confirmed', '--json', '--max', '--owner', '--offline', '--paths', '--history', '--since', '--until', '--out', '--skip-empty',
   // file-io 三标签过滤
   '--summary', '--write', '--type', '--kind', '--risk', '--op', '--root', '--readme',
   // identity-rewrite：额外要统一的邮箱
@@ -49,7 +49,7 @@ const HELP = `git-sluice v${VERSION} — dsh-git-push 引擎独立 CLI（脱离 
   git-sluice account-check            ① 先校验 GitHub 凭据（token/SSH 是否可用）
   git-sluice scan <目录>              ② 看有哪些 git 仓库（分支/未提交/未推送）
   git-sluice audit <仓库> --full      ③ 全量审计一个仓库（评分/问题/API 指引）
-  git-sluice commit <仓库> -m "msg"   ④ 提交推送（自动过审计门禁）
+  git-sluice commit <仓库> --message "msg"   ④ 提交推送（自动过审计门禁）
   git-sluice help                     全部命令与参数
 
 用法:
@@ -62,8 +62,9 @@ const HELP = `git-sluice v${VERSION} — dsh-git-push 引擎独立 CLI（脱离 
                                   重建仓库索引 dsh-repo-index.json（--offline=纯离线不查 GitHub API）
   git-sluice audit <root> [--full] [--ruleset <目录>] [--weights <JSON>] [--include-ignored] [--history [--since <提交>] [--until <提交>] [--out <目录>]]
                                   审计目录（默认 diff 范围；--full=全量；--ruleset=自定规则目录；--weights=权重覆盖 JSON；--include-ignored=连 .gitignore 忽略的文件也扫；--history=历史提交审计——逐提交快照全量审计并落盘报告，--since/--until 起始~结束提交（皆缺省=全部历史、含两端），--out 报告保存目录（缺省=git 根 audit-history/））
-  git-sluice commit <repo> -m <msg> [--push|--no-push] [--dry-run] [--force] [--req-confirm] [--push-gate-confirmed] [--paths <路径1,路径2>] [--json]
-                                  审计门禁 → 提交（默认只 commit 不 push；--push 推远端；--force 强推覆盖远端历史；--req-confirm 显式核对开发者要求；--push-gate-confirmed 显式放行推送门禁；--paths 精确 add 指定文件替代 add -A）
+  git-sluice commit <repo> --message <msg> [--push|--no-push] [--dry-run] [--force] [--audit] [--ignore-patterns <模式>] [--requirements-confirmed] [--push-confirmed] [--paths <路径1,路径2>] [--json]
+                                  审计门禁 → 提交（默认只 commit 不 push；--push 推远端；--force 强推覆盖远端历史；--requirements-confirmed 显式核对开发者要求；--push-confirmed 显式放行推送门禁；--paths 精确 add 指定文件替代 add -A）
+  git-sluice clone-preview <owner/repo> [--branch <名>] [--json]
   git-sluice file-io [路径...] [--summary] [--write] [--type sync|async] [--kind read|write|delete|rename] [--risk high|medium|low] [--op <操作名>] [--json]
                                   文件读写调用扫描（三标签：类型/操作/上下文）——同步 I/O 在异步路径会阻塞；写/删/改名涉及数据安全
   git-sluice link-check <路径>    检查 md/文本中的链接有效性（只 warning，flaky 域名打折）

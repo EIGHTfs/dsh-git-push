@@ -491,6 +491,7 @@ dsh-git-push/
 │   ├── test-build-client.mjs — 分片构建门禁测试（产物一致/幂等/形态铁律/dshgp_ 前缀）
 │   ├── test-button-bind.mjs — 按钮绑定交叉比对（jsx 工厂形态/注释过滤/行号归属）
 │   ├── test-cli-audit-parity.mjs — CLI 与源码全量审计一致性测试（audit --full --json vs 直接 auditFull，含忽略排除）
+│   ├── test-cli-help-registry-sync.mjs — （待注释）
 │   ├── test-client-fragment-scope.mjs — 客户端分片作用域推导测试（dsh-client-fragment）
 │   ├── test-client.mjs — 侧边栏测试（手写 DOM/零外部资源/开关默认）
 │   ├── test-clone-concurrency.mjs — clone 并发互斥/可中止/失败保留文件（14 项，CIFS 对照用例可跳）

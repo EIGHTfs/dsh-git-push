@@ -437,47 +437,23 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "assets/minihost.sh": {
+      "cli.mjs": {
         "status": "M",
-        "mtime": "2026-10-12T22:24:18.533Z",
-        "note": "注释可能需更新"
-      },
-      "docs/CHANGELOG.md": {
-        "status": "M",
-        "mtime": "2026-10-12T22:27:01.354Z",
+        "mtime": "2026-10-12T22:44:07.295Z",
         "note": "注释可能需更新"
       },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-12T22:27:01.721Z",
+        "mtime": "2026-10-12T22:45:00.385Z",
         "note": "注释可能需更新"
       },
-      "lib/ast/perf.js": {
-        "status": "M",
-        "mtime": "2026-10-12T22:25:30.872Z",
-        "note": "注释可能需更新"
-      },
-      "lib/checks/hardcoded-path.js": {
-        "status": "M",
-        "mtime": "2026-10-12T22:24:05.116Z",
-        "note": "注释可能需更新"
-      },
-      "lib/self/index.js": {
-        "status": "M",
-        "mtime": "2026-10-12T22:26:55.952Z",
-        "note": "注释可能需更新"
-      },
-      "package.json": {
-        "status": "M",
-        "mtime": "2026-10-12T22:26:55.945Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-loop-no-fallback-return.mjs": {
+      "test/test-cli-help-registry-sync.mjs": {
         "status": "A",
-        "mtime": "2026-10-12T22:24:49.044Z",
+        "mtime": "2026-10-12T22:44:52.488Z",
         "note": "注释可能需更新"
       }
     }
   },
-  "test/test-loop-no-fallback-return.mjs": "（待注释）"
+  "test/test-loop-no-fallback-return.mjs": "（待注释）",
+  "test/test-cli-help-registry-sync.mjs": "（待注释）"
 }

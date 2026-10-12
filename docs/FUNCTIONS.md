@@ -2203,6 +2203,12 @@
 |------|------|------|------|
 | `makeAuditRepo` | 19-39 | 21 | `function makeAuditRepo() {` |
 
+### test/test-cli-help-registry-sync.mjs（75 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `usageLines` | 32-42 | 11 | `function usageLines(cmd) {` |
+
 ### test/test-client-fragment-scope.mjs（69 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
