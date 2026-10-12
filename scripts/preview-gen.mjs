@@ -20,6 +20,25 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { listRuleSlots } from '../lib/app/http-handlers.js';
+// 合并（2026-10-13）：数据段生成 / 漂移 check 的纯函数来自 scripts/preview-slot-data.mjs
+//   （原 scripts/gen-preview.mjs），并由本文件**再导出** ⇒ 统一入口 = 本文件，
+//   调用方（test-rule-slots-render.mjs、文档）只认这一个路径。
+import {
+  buildPreviewSlotData,
+  readPreviewSlotData,
+  ensurePreviewHtml,
+  readPreviewHtmlText,
+  genPreview,
+  checkPreviewDrift,
+} from './preview-slot-data.mjs';
+export {
+  buildPreviewSlotData,
+  readPreviewSlotData,
+  ensurePreviewHtml,
+  readPreviewHtmlText,
+  genPreview,
+  checkPreviewDrift,
+};
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 // 字节 → MB 换算：1 MB = 1024 × 1024 字节
@@ -133,6 +152,56 @@ for (const [label, dir] of [['react', reactUmdDir], ['react-dom', reactDomDir]])
     console.error(`找不到 ${label} UMD：${dir}\n（DSH 根推导为 ${DSH}；可用 DSH_ROOT / ${label === 'react' ? 'REACT_UMD_DIR' : 'REACT_DOM_UMD_DIR'} 指定）`);
     process.exit(1);
   }
+}
+
+// ---------- 统一 CLI 分发（合并 2026-10-13）----------
+//   默认          = 整体生成预览页（本文件余下流程）
+//   --data-only   = 只重写 __SLOTS__/__FAKE__ 数据段（原 scripts/gen-preview.mjs --write）
+//   check         = 漂移门禁：产物数据 vs 真实 listRuleSlots（原 scripts/gen-preview.mjs check）
+//   --watch       = 监听源码变更自动重生成（原 scripts/watch-preview.mjs）
+const CLI_ARGS = process.argv.slice(2);
+const CLI_MODE = CLI_ARGS.includes('check')
+  ? 'check'
+  : CLI_ARGS.includes('--data-only')
+    ? 'data'
+    : CLI_ARGS.includes('--watch')
+      ? 'watch'
+      : 'gen';
+
+if (CLI_MODE === 'check') {
+  const r = checkPreviewDrift();
+  console.log(r.ok ? `✅ ${r.message}` : `❌ ${r.message}`);
+  process.exit(r.ok ? 0 : 1);
+}
+
+if (CLI_MODE === 'data') {
+  const r = genPreview({ write: true });
+  if (!r.ok) { console.error(r.error); process.exit(1); }
+  console.log(`✅ 已写盘（仅数据段）：${r.metaCount} 槽位 / order ${r.order.length} 项${r.drift ? '（原数据有漂移，已更新）' : ''}`);
+  process.exit(0);
+}
+
+if (CLI_MODE === 'watch') {
+  const { watch } = await import('node:fs');
+  const SELF = fileURLToPath(import.meta.url);
+  const targets = [join(projectRoot, 'lib', 'client.js'), join(projectRoot, 'lib', 'client', 'index.js'), SELF];
+  const regen = () => {
+    const t0 = Date.now();
+    const r = spawnSync(process.execPath, [SELF], { cwd: projectRoot, stdio: 'inherit', timeout: 300_000 });
+    if (r.status !== 0) console.error(`[watch] 重新生成失败（exit ${r.status}）`);
+    else console.log(`[watch] ${new Date().toTimeString().slice(0, 8)} 已重新生成预览页（${Date.now() - t0}ms）`);
+  };
+  let timer = null;
+  for (const f of targets) {
+    watch(f, { persistent: true }, () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => { timer = null; regen(); }, 300);
+    });
+  }
+  console.log('[watch] 监听中：lib/client.js · lib/client/index.js · 本文件；Ctrl+C 停止');
+  regen();
+  // 常驻：watcher 已在事件循环里；永不 resolve，避免继续执行下面的整体生成
+  await new Promise(() => {});
 }
 
 const clientSrc = readFileSync(`${projectRoot}/lib/client.js`, 'utf8');

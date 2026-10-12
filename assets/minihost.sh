@@ -21,6 +21,13 @@ if [ ! -f "$TOOL" ]; then
   exit 2
 fi
 ARGS=(--plugin "$ROOT" --port "${PORT:-31100}")
+# 预览页是**生成产物**（.gitignore 已忽略，不入库）：缺失时先自动生成一次，
+#   否则 --preview 分支会**静默跳过**（页面打开是 404/无预览页，且没有任何报错）。
+if [ ! -f "$ROOT/assets/preview.html" ] && [ -f "$ROOT/scripts/preview-gen.mjs" ]; then
+  echo "[minihost] 预览页缺失，先生成一次：node scripts/preview-gen.mjs"
+  "${NODE_BIN:-node}" "$ROOT/scripts/preview-gen.mjs" >/dev/null 2>&1 \
+    || echo "[minihost] 预览页生成失败（继续启动，但不带预览页）"
+fi
 [ -f "$ROOT/assets/preview.html" ] && ARGS+=(--preview "$ROOT/assets/preview.html")
 [ -d "$ROOT/lib" ] && ARGS+=(--static "$ROOT/lib")
 exec "${NODE_BIN:-node}" "$TOOL" "${ARGS[@]}" "$@"

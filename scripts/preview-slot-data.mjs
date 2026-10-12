@@ -58,7 +58,7 @@ export function ensurePreviewHtml() {
   if (existsSync(PREVIEW)) return { ok: true, generated: false };
   if (!previewEnsureTried) {
     previewEnsureTried = true;
-    const gen = join(ROOT, 'assets', 'preview-gen.mjs');
+    const gen = join(ROOT, 'scripts', 'preview-gen.mjs');
     if (existsSync(gen)) {
       const r = spawnSync(process.execPath, [gen], { cwd: ROOT, timeout: 300000, encoding: 'utf8' });
       if (r.status !== 0) {
@@ -118,21 +118,6 @@ export function checkPreviewDrift() {
   return { ok: true, drift: false, message: `preview.html 槽位数据与真实一致（${slotData.realOrder.length} 槽位）` };
 }
 
-// ---------- CLI 入口 ----------
-if (process.argv[1] && basenameSafe(process.argv[1]) === 'gen-preview.mjs') {
-  const arg = process.argv[2] || '';
-  if (arg === 'check') {
-    const r = checkPreviewDrift();
-    console.log(r.ok ? `✅ ${r.message}` : `❌ ${r.message}`);
-    process.exitCode = r.ok ? 0 : 1;
-  } else {
-    const r = genPreview({ write: arg === '--write' });
-    if (!r.ok) { console.error(r.error); process.exitCode = 1; }
-    else console.log(`${r.write ? '✅ 已写盘' : '预览数据（未写盘，--write 才落盘）'}：${r.metaCount} 槽位 / order ${r.order.length} 项${r.drift ? '（原数据有漂移，已生成最新）' : ''}`);
-  }
-}
-
-function basenameSafe(p) {
-  const s = String(p || '').replace(/\\/g, '/');
-  return s.split('/').pop();
-}
+// （合并 2026-10-13）本文件原来的 CLI 入口（`node scripts/gen-preview.mjs [check|--write]`）已并入
+//   统一入口 scripts/preview-gen.mjs 的模式分发（check / --data-only）；本文件只保留纯函数导出，
+//   供统一入口与 test-rule-slots-render.mjs 复用。原 CLI 行为（打印/写盘/退出码）不变。
