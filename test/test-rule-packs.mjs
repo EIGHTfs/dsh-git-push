@@ -536,7 +536,7 @@ test('1.0.4：small-file-read 精筛并集 console.log(JSON.stringify) 输出行
 // ---------- 2026-09-14：folder 槽位两条新规则（cd 动态路径 + 写 gitignored 目录） ----------
 // dsh-skip-i18n: 测试用中文文案为规则 message 样本，非产品文案
 test('2026-09-14：folder/cd-to-maybe-missing——cd 动态路径无兜底才报，自我定位/||/&&/字面量/注释/字符串豁免', () => {
-  const r = loadRuleFiles(['folder']);
+  const r = loadRuleFiles(['paths']);
   const compiled = compileAllRules(r.merged.rules, { errors: [] });
   const rule = compiled.find((c) => c.id === 'folder/cd-to-maybe-missing');
   assert.ok(rule, 'folder/cd-to-maybe-missing 应编译进 regex kind');
@@ -558,7 +558,7 @@ test('2026-09-14：folder/cd-to-maybe-missing——cd 动态路径无兜底才�
 });
 
 test('2026-09-14：folder/write-into-gitignored-dir——写目标命中仓库 .gitignore 才报，无上下文不报', () => {
-  const r = loadRuleFiles(['folder']);
+  const r = loadRuleFiles(['paths']);
   const compiled = compileAllRules(r.merged.rules, { errors: [] });
   const rule = compiled.find((c) => c.id === 'folder/write-into-gitignored-dir');
   assert.ok(rule, 'folder/write-into-gitignored-dir 应编译进 regex kind');

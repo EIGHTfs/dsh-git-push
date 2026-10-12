@@ -2195,7 +2195,7 @@
 |------|------|------|------|
 | `setupRepo` | 11-32 | 22 | `function setupRepo() {` |
 
-### test/test-cli-audit-parity.mjs（65 行 · 1 个函数）
+### test/test-cli-audit-parity.mjs（68 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|

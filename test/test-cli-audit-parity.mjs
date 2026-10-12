@@ -48,8 +48,11 @@ test('CLI audit --full --json 与 auditFull 直接调用完全一致（含忽略
     assert.equal(cli.status, 0, `CLI 退出码非 0：${cli.stderr}`);
     let a;
     try { a = JSON.parse(cli.stdout); } catch (e) { assert.fail(`CLI --json stdout 无法解析（有噪音/损坏）: ${e.message}\nstdout 头: ${String(cli.stdout).slice(0, 200)}`); }
-    // 通道 B：源码直接调用
-    const b = await auditFull(repo, {});
+    // 通道 B：源码直接调用——必须与 CLI **同口径**：CLI 走「与插件 code_audit 完全相同的 opts」
+    //   （cliPluginConfig 读同一份 config.json，再经 pluginEqualAuditOpts 映射），
+    //   直接传 {} 会落回默认值（auditLevel/includeIgnored/maxScanFiles 等不同）⇒ 两侧不可比。
+    const { cliPluginConfig, pluginEqualAuditOpts } = await import('../lib/cli/commands-audit.mjs');
+    const b = await auditFull(repo, pluginEqualAuditOpts(cliPluginConfig(), { json: true, full: true }, { scope: 'full' }));
     assert.equal(a.files, b.files, `files 不一致：CLI=${a.files} 源码=${b.files}`);
     assert.equal(a.findings.length, b.findings.length, `findings 数不一致：CLI=${a.findings.length} 源码=${b.findings.length}`);
     assert.deepEqual(a.summary, b.summary, 'summary 不一致');

@@ -423,7 +423,6 @@
   "test/test-client-fragment-scope.mjs": "客户端分片作用域推导测试（dsh-client-fragment）",
   "test/test-scrub-conv-wording.mjs": "（待注释）",
   "test/test-sync-plugin-install.mjs": "（待注释）",
-  "docs/2026-10-13-预览合并方案.md": "（待注释）",
   "docs/2026-10-11-单一真源与文档漂移治理方案.MD": "（待注释）",
   "docs/2026-10-11-硬编码路径改造为审计引擎方案.MD": "（待注释）",
   "lib/audit-rules/audit-rules-paths.yml": "（待注释）",
@@ -438,34 +437,29 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      ".gitignore": {
-        "status": "M",
-        "mtime": "2026-10-12T21:41:39.941Z",
-        "note": "注释可能需更新"
-      },
-      "README.md": {
-        "status": "M",
-        "mtime": "2026-10-12T21:42:41.136Z",
-        "note": "注释可能需更新"
-      },
-      "assemble.json": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "assets/start.sh": {
-        "status": "M",
-        "mtime": "2026-10-12T21:41:39.934Z",
-        "note": "注释可能需更新"
-      },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-12T21:42:41.341Z",
+        "mtime": "2026-10-12T21:54:47.970Z",
         "note": "注释可能需更新"
       },
-      "docs/2026-10-13-预览合并方案.md": {
-        "status": "A",
-        "mtime": "2026-10-12T21:32:12.930Z",
+      "test/test-cli-audit-parity.mjs": {
+        "status": "M",
+        "mtime": "2026-10-12T21:52:58.701Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-plugin.mjs": {
+        "status": "M",
+        "mtime": "2026-10-12T21:50:40.391Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-rule-packs.mjs": {
+        "status": "M",
+        "mtime": "2026-10-12T21:51:12.628Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-tool-contract.mjs": {
+        "status": "M",
+        "mtime": "2026-10-12T21:49:51.806Z",
         "note": "注释可能需更新"
       }
     }

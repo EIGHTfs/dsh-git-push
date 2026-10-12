@@ -598,7 +598,6 @@ dsh-git-push/
 │   ├── 2026-10-09-审计插件性能优化.MD — （待注释）
 │   ├── 2026-10-11-单一真源与文档漂移治理方案.MD — （待注释）
 │   ├── 2026-10-11-硬编码路径改造为审计引擎方案.MD — （待注释）
-│   ├── 2026-10-13-预览合并方案.md — （待注释）
 │   ├── CHANGELOG.md — 版本列表宿主（doc-version apply 写 dshgp-version 标记块）
 │   ├── DETAILS-EXEMPT-AND-RULES.md — 细节补充：豁免注释与规则 yml 用法全录
 │   ├── FUNCTIONS.md — 函数列表宿主（doc-func apply 写 dshgp-functions 标记块）
