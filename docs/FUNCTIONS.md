@@ -1412,6 +1412,17 @@
 | `readmeCheckHint` | 336-341 | 6 | `export function readmeCheckHint(repoPath) {` |
 | `pushCurrentBranch` | 350-401 | 52 | `export async function pushCurrentBranch({ repoPath = '', pushMethod = 'ssh' } = {}) {` |
 
+### lib/git/remote-resolve.js（147 行 · 6 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `parseGithubUrl` | 22-30 | 9 | `export function parseGithubUrl(url = '') {` |
+| `ssh443Url` | 33-35 | 3 | `export function ssh443Url(owner, repo) {` |
+| `httpsUrl` | 38-40 | 3 | `export function httpsUrl(owner, repo) {` |
+| `listRemotes` | 43-54 | 12 | `export function listRemotes(repoPath = '') {` |
+| `scoreRemote` | 57-80 | 24 | `export function scoreRemote(cand = {}, { owner = '', repo = '', preferSsh443 = true } = {}) {` |
+| `resolveGithubRemote` | 87-146 | 60 | `export function resolveGithubRemote({ repoPath = '', owner = '', repo = '', preferSsh443 = true, dryRun = false } = {}) {` |
+
 ### lib/git/remote.js（129 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -1486,25 +1497,25 @@
 | `scanSensitiveFiles` | 112-134 | 23 | `export async function scanSensitiveFiles(repoPath) {` |
 | `walk` | 116-131 | 16 | `const walk = async (dir, rel) => {` |
 
-### lib/git/transport.js（409 行 · 15 个函数）
+### lib/git/transport.js（427 行 · 15 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `sshUrlOf` | 28-30 | 3 | `function sshUrlOf(pr) {` |
-| `knownHostsPath` | 33-35 | 3 | `function knownHostsPath() {` |
-| `fetchRemoteHeads` | 42-55 | 14 | `export async function fetchRemoteHeads({ owner = '', repo = '', branch = '', token = '', count = 3 } = {}) {` |
-| `dispatchPush` | 73-117 | 45 | `export async function dispatchPush({ repoPath = '', branch = '', token = '', force = false, pushMethod = 'ssh' } = {}) {` |
-| `sshReason` | 124-133 | 10 | `export function sshReason(stderr = '') {` |
-| `isNonFastForward` | 140-142 | 3 | `export function isNonFastForward(text = '') {` |
-| `sshMuxCtlPath` | 156-170 | 15 | `function sshMuxCtlPath() {` |
-| `buildLsRemoteSshCmd` | 173-179 | 7 | `function buildLsRemoteSshCmd(keyPath, known, { mux = true } = {}) {` |
-| `liveRemoteHead` | 186-216 | 31 | `export function liveRemoteHead({ repoPath = '', branch = '' } = {}) {` |
-| `pushViaSsh` | 219-242 | 24 | `export function pushViaSsh({ repoPath = '', branch = '', force = false }) {` |
-| `sshFallback` | 245-248 | 4 | `async function sshFallback(repoPath, branch) {` |
-| `apiOrFallback` | 251-256 | 6 | `async function apiOrFallback(api, repoPath, branch, res) {` |
-| `pushViaApi` | 263-349 | 87 | `export async function pushViaApi({ repoPath = '', branch = '', token = '', force = false } = {}) {` |
-| `uploadBlobsAndBuildTree` | 355-372 | 18 | `async function uploadBlobsAndBuildTree({ repoPath, entries, remoteBlobShas, api }) {` |
-| `liveRemoteHeadAsync` | 382-408 | 27 | `export async function liveRemoteHeadAsync({ repoPath = '', branch = '' } = {}) {` |
+| `sshUrlOf` | 30-32 | 3 | `function sshUrlOf(pr) {` |
+| `knownHostsPath` | 35-37 | 3 | `function knownHostsPath() {` |
+| `fetchRemoteHeads` | 44-57 | 14 | `export async function fetchRemoteHeads({ owner = '', repo = '', branch = '', token = '', count = 3 } = {}) {` |
+| `dispatchPush` | 75-119 | 45 | `export async function dispatchPush({ repoPath = '', branch = '', token = '', force = false, pushMethod = 'ssh' } = {}) {` |
+| `sshReason` | 126-135 | 10 | `export function sshReason(stderr = '') {` |
+| `isNonFastForward` | 142-144 | 3 | `export function isNonFastForward(text = '') {` |
+| `sshMuxCtlPath` | 158-172 | 15 | `function sshMuxCtlPath() {` |
+| `buildLsRemoteSshCmd` | 175-181 | 7 | `function buildLsRemoteSshCmd(keyPath, known, { mux = true } = {}) {` |
+| `liveRemoteHead` | 188-220 | 33 | `export function liveRemoteHead({ repoPath = '', branch = '' } = {}) {` |
+| `pushViaSsh` | 223-254 | 32 | `export function pushViaSsh({ repoPath = '', branch = '', force = false }) {` |
+| `sshFallback` | 257-260 | 4 | `async function sshFallback(repoPath, branch) {` |
+| `apiOrFallback` | 263-268 | 6 | `async function apiOrFallback(api, repoPath, branch, res) {` |
+| `pushViaApi` | 275-367 | 93 | `export async function pushViaApi({ repoPath = '', branch = '', token = '', force = false } = {}) {` |
+| `uploadBlobsAndBuildTree` | 373-390 | 18 | `async function uploadBlobsAndBuildTree({ repoPath, entries, remoteBlobShas, api }) {` |
+| `liveRemoteHeadAsync` | 400-426 | 27 | `export async function liveRemoteHeadAsync({ repoPath = '', branch = '' } = {}) {` |
 
 ### lib/git/visibility.js（36 行 · 1 个函数）
 
@@ -2673,6 +2684,14 @@
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `tempRepo` | 31-41 | 11 | `function tempRepo() {` |
+
+### test/test-remote-resolve.mjs（126 行 · 3 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `makeRepo` | 25-29 | 5 | `function makeRepo() {` |
+| `addRemote` | 30-32 | 3 | `function addRemote(dir, name, url) {` |
+| `getUrl` | 33-39 | 7 | `function getUrl(dir, name) {` |
 
 ### test/test-repo-list.mjs（548 行 · 4 个函数）
 

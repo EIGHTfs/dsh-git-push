@@ -15,7 +15,7 @@
 
 | 版本 | 内容 |
 |------|------|
-| 2.8.1 | CLI 真发姿势补齐（npm-publish --no-dry-run 需配 --confirm、新增 --json）与 npm 端点经 api 通道可用；doc-drift 增「工具清单完整性」校验并把「N 条 HTTP API」「HTTP 接口（N 条…）」纳入计数模式（本次即抓出 SPEC 工具表缺行）；发包回归改用未发布过的 fixture 包，断言不放松；发版收尾序列补齐三条防再犯（压缩后重跑版本表 / 缩行需 --force / 压缩改信息别用 --amend --no-edit） |
+| 2.8.2 | 推送前自动指定正确的 GitHub remote：新增 lib/git/remote-resolve.js（按「归属一致 + 本机可用形态 ssh:443 + 名字优先级 origin>github-ssh」评分，必要时自动 remote set-url 或新建，dryRun 只报告不写盘；归属不符的 origin 绝不覆盖，改走 github-ssh）；transport 的 SSH/API 推送与两处 liveRemoteHead 全部改用解析结果，回执带 remote/remoteAction/remoteReasons；另：README 移除界面配图与入库的图片资源、删除 screenshots.json |
 | 2.8.0 | 账号信息新增 NPM 能力（三标签 + GitHub↔NPM 账号卡滑动切换 + 名下包列表）+ npm 装包与发包（API / 工具 / CLI） |
 | 2.7.1 | 审计按独立包设计落地——对外门面 + 子路径导出 + 审计侧与仓库脚本解耦 + 边界门禁扩列 |
 | 2.7.0 | 审计↔git 边界澄清第一期——抽出 lib/core 中立工具层，审计侧不再依赖 git |

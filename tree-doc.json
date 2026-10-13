@@ -3,9 +3,6 @@
   ".gitignore": "忽略规则（node_modules/产物/备份/回收站等）",
   "README.md": "插件 README（功能总览/用法/版本记录）",
   "assets": "预览页与配图（preview.html 交互模拟页 + 面板截图）",
-  "assets/panel-account.png": "账号卡片面板截图（README 配图）",
-  "assets/panel-audit.png": "审计面板截图（README 配图）",
-  "assets/panel-settings.png": "设置面板截图（README 配图）",
   "cli.mjs": "独立 CLI（git-sluice，不依赖宿主可独立运行）",
   "cordis.patch.yml": "DSH 插件组合 patch（loader 注入定义）",
   "docs": "开发文档",
@@ -157,7 +154,6 @@
   "lib/vendor/js-yaml/LICENSE": "js-yaml 上游 MIT 许可证",
   "lib/vendor/js-yaml/js-yaml.mjs": "js-yaml 4.3.1 上游构建产物（MIT，自包含 ESM）——内置以实现零依赖",
   "package.json": "包声明（零依赖、files 白名单、scripts）",
-  "screenshots.json": "截图清单（README 配图引用）",
   "scripts": "开发工具脚本（版本校验/双副本同步/预览服务/README 目录树维护）",
   "scripts/audit-runtime-check.mjs": "三层审计 L3 运行时检测脚本",
   "scripts/check.mjs": "语法检查脚本（npm run check）",
@@ -437,24 +433,54 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
+      "README.md": {
+        "status": "M",
+        "mtime": "2026-10-13T07:20:11.544Z",
+        "note": "注释可能需更新"
+      },
       "docs/CHANGELOG.md": {
         "status": "M",
-        "mtime": "2026-10-13T06:24:02.027Z",
+        "mtime": "2026-10-13T07:20:25.341Z",
+        "note": "注释可能需更新"
+      },
+      "docs/FUNCTIONS.md": {
+        "status": "M",
+        "mtime": "2026-10-13T07:20:25.583Z",
+        "note": "注释可能需更新"
+      },
+      "docs/SPEC.md": {
+        "status": "M",
+        "mtime": "2026-10-13T07:20:25.207Z",
         "note": "注释可能需更新"
       },
       "docs/releases.json": {
         "status": "M",
-        "mtime": "2026-10-13T06:23:44.631Z",
+        "mtime": "2026-10-13T07:20:11.537Z",
+        "note": "注释可能需更新"
+      },
+      "lib/git/transport.js": {
+        "status": "M",
+        "mtime": "2026-10-13T07:18:22.654Z",
         "note": "注释可能需更新"
       },
       "lib/self/index.js": {
         "status": "M",
-        "mtime": "2026-10-13T06:23:44.624Z",
+        "mtime": "2026-10-13T07:20:11.531Z",
         "note": "注释可能需更新"
       },
       "package.json": {
         "status": "M",
-        "mtime": "2026-10-13T06:23:44.614Z",
+        "mtime": "2026-10-13T07:20:11.525Z",
+        "note": "注释可能需更新"
+      },
+      "lib/git/remote-resolve.js": {
+        "status": "A",
+        "mtime": "2026-10-13T07:18:57.567Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-remote-resolve.mjs": {
+        "status": "A",
+        "mtime": "2026-10-13T07:18:08.510Z",
         "note": "注释可能需更新"
       }
     }
@@ -488,5 +514,7 @@
   "lib/npm/account.js": "（待注释）",
   "docs/2026-10-13-UI账号信息-NPM对齐GitHub方案.MD": "（待注释）",
   "lib/npm/publish.js": "（待注释）",
-  "test/test-npm-publish.mjs": "（待注释）"
+  "test/test-npm-publish.mjs": "（待注释）",
+  "lib/git/remote-resolve.js": "（待注释）",
+  "test/test-remote-resolve.mjs": "（待注释）"
 }

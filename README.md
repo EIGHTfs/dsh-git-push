@@ -93,6 +93,7 @@ Git 全链路自动化，token / SSH 凭据管理 + 提交推送，无需手动�
 |---|---|
 | `git_commit_push` | 一键提交+推送（审计门禁默认开启；敏感文件自动 .gitignore；`--push/--no-push/--dry-run/--force/--req-confirm/--json`；返回带 `identity`=本次提交身份与来源） |
 | `git_identity_rewrite` | 提交身份历史改写（工具 `git_identity_rewrite` / CLI `git-sluice identity-rewrite`）：非规范身份（工具/AI 产生的 `agent@dsh.local` 等 + 账号 noreply 旧变体，可用 `extraEmails` 追加）统一成账号规范身份。默认 dry-run；`--write` 才改写（先建备份引用 `refs/backup/identity-rewrite/<日期>/<分支>`，自检「提交数/工作树/身份全规范」通过），`--push` 再用 `--force-with-lease` 强推；已跟踪文件有改动则拒改；只处理 origin 属于登录账号的仓库 |
+| remote 自动判定 | 推送前自动选「正确的 GitHub remote」：归属（owner/repo 与登录账号一致）+ 本机可用形态（优先 `ssh://git@ssh.github.com:443/…`）+ 名字优先级（`origin` > `github-ssh` > 其它）。形态不推荐自动 `remote set-url`；没有可用 remote 时新建；**归属不符的 `origin` 绝不覆盖**（改走 `github-ssh`）；`dryRun` 只报告不写盘；回执带 `remote` / `remoteAction` / `remoteReasons` |
 | 推送通道 | `ssh（默认）`= 只走 SSH 私钥 / `token`= 先走 Git Data API（用 token 推）失败回落 SSH / `auto`= 先 ssh 失败回落 token；远端分叉时不静默回落，如实报错 |
 | force 强推 | API 通道重建 commit 去旧 parent / SSH 通道 `git push --force` |
 | clone / 建仓 | `cloneViaApi`（trees+blobs 写文件转 git 仓）/ `ensureRemoteRepo`（建仓+设 origin） |
@@ -400,6 +401,7 @@ dsh-git-push/
 │   │   ├── module-splitter.js — （待注释）
 │   │   ├── post-push.js — 推送后增强（remote-tracking ref/aux remote/tag）
 │   │   ├── push.js — 提交推送编排（commitAndPush 全流程：敏感扫描→add/commit→推送）
+│   │   ├── remote-resolve.js — （待注释）
 │   │   ├── remote.js — 远端仓库管理（建仓默认 private/可见性切换）
 │   │   ├── repo-index.js — dsh-repo-index 自动维护（扫描 workspace 生成索引 JSON）
 │   │   ├── repos.js — 仓库扫描与展示（describeRepo 分支/远端/领先落后/未提交）
@@ -478,7 +480,7 @@ dsh-git-push/
 │   ├── audit-ext/ — （待注释）
 │   │   ├── _example-readme-present.mjs — 审计扩展契约示例（_ 前缀：演示不参与实际审计）
 │   │   ├── variable-min-length.mjs — 审计扩展：variable-min-length（内置规则抽出试点——统一动态入口）
-├── assets/ — 预览页（preview.html 交互模拟页）
+├── assets/ — 预览页与配图（preview.html 交互模拟页 + 面板截图）
 │   ├── minihost.sh — （待注释）
 │   ├── start.sh — 预览服务器启停脚本（start/stop/restart/status + --port + PID/日志/健康检查 /preview-ping）
 ├── test/ — node:test 全量单元测试（541+ 条，覆盖审计/推送/账号/HTTP/后台任务）
@@ -582,6 +584,7 @@ dsh-git-push/
 │   ├── test-quota-write.mjs — （待注释）
 │   ├── test-readme-gen.mjs — README 生成测试（模板渲染/版本表）
 │   ├── test-remote-name-ascii.mjs — （待注释）
+│   ├── test-remote-resolve.mjs — （待注释）
 │   ├── test-rename-locator.mjs — rename-locator 测试（同名不同作用域分组/模块级/过滤）
 │   ├── test-repo-list.mjs — 仓库列表测试（本地扫描/索引读写/HTTP 端点/远端状态）
 │   ├── test-rule-include-paths.mjs — （待注释）
@@ -663,7 +666,6 @@ dsh-git-push/
 ├── cli.mjs — 独立 CLI（git-sluice，不依赖宿主可独立运行）
 ├── cordis.patch.yml — DSH 插件组合 patch（loader 注入定义）
 ├── package.json — 包声明（零依赖、files 白名单、scripts）
-├── screenshots.json — 截图清单（README 配图引用）
 ├── tree-doc.json — 目录结构注释映射（路径→一句话介绍，AI 维护）
 ├── version-metrics.json — （待注释）
 ```

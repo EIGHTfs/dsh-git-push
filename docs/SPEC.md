@@ -107,6 +107,7 @@ settings-get  settings-set
 ## 八、版本纪律
 
 - 三处版本号一致：`lib/self/index.js` 的 `VERSION` ≡ `package.json` 的 `version` ≡ 版本表；
+- 推送前自动判定 remote：归属（owner/repo 与登录账号一致）+ 本机可用形态（优先 `ssh://git@ssh.github.com:443/…`）+ 名字优先级（`origin` > `github-ssh` > 其它）；形态不推荐时自动 `remote set-url`，没有可用 remote 时新建；**归属不符的 `origin` 绝不覆盖**（改走 `github-ssh`）；`dryRun` 只报告不写盘；推送回执带 `remote` / `remoteAction` / `remoteReasons`；
 - 纯优化不升版本（多次本地提交 → 收尾压缩一次推送）；
 - 发版在 `version-metrics.json` 补量化对比，版本表会带上。
 
