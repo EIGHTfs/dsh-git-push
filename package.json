@@ -17,6 +17,7 @@
     "cli.mjs",
     "cordis.patch.yml",
     "README.md",
+    "LICENSE",
     ".auditignore",
     ".gitignore"
   ],
@@ -55,14 +56,32 @@
       "./skills/workflow/versioning-rule.md"
     ]
   },
-  "license": "UNLICENSED",
-  "private": true,
+  "license": "MIT",
+  "author": "EIGHTfs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EIGHTfs/dsh-git-push.git"
+  },
+  "bugs": {
+    "url": "https://github.com/EIGHTfs/dsh-git-push/issues"
+  },
+  "homepage": "https://github.com/EIGHTfs/dsh-git-push#readme",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "git",
+    "commit",
+    "push",
+    "audit",
+    "cli"
+  ],
   "engines": {
     "node": ">=18.0.0"
   },
   "peerDependencies": {
-    "@deepseek-ai/dsh-tools": "*",
-    "@deepseek-ai/schemastery": "*"
+    "@deepseek-ai/dsh-tools": ">=0.1.6-0 <0.3.0-0",
+    "@deepseek-ai/schemastery": ">=3.0.0 <4.0.0-0"
   },
   "scripts": {
     "build:client": "node scripts/build-client.mjs",
