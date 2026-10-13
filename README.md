@@ -925,6 +925,9 @@ console.log(x); // dsh-skip-residue: 本行为刻意保留的调试输出样本
 
 </details>
 
+<details>
+<summary><b>展开：大仓库性能降级 / 界面预览页 / 审计能力可被外部依赖（audit 子路径导出）/ 账号信息里的 NPM 面板</b></summary>
+
 ## 大仓库性能降级
 
 全量审计按文件逐个跑检查，单文件约 40ms；文件数上万时（实测某检出目录 29921 个文件）总耗时会到分钟级，弱 CPU 机器上表现为「提交推送卡住不动」。降级策略：
@@ -1097,6 +1100,8 @@ NPM 账号卡与 GitHub 账号卡**同一款式**：渐变面板 + 图标块（n
 **设置里的 npm 凭据**：设置 → 凭据与密钥 新增 `npm token` 与 `registry` 两个字段，保存走 `settings-set`；
 token 与 GitHub token 存**同一份** `config.json`（0600，写入走原子读改写，互不覆盖），接口只回派生布尔位与脱敏值，**不回传明文**。
 
+</details>
+
 ## 三、系统提示词注入
 
 <details>
@@ -1156,6 +1161,9 @@ token 与 GitHub token 存**同一份** `config.json`（0600，写入走原子�
 `injectFullSkill`（注入全部 skill 正文）与 `injectRepoIndexFull`（注入 `dsh-repo-index.json` 全文）**已移除**：注入固定为目录级，不提供全量正文注入档位——长文正文交给 skill 按需加载。
 
 </details>
+
+<details>
+<summary><b>展开：侧边栏设置 / 仓库索引联动 / 规则启用禁用脚本 / 输入框斜杠命令</b></summary>
 
 ## 侧边栏设置
 
@@ -1277,6 +1285,8 @@ node scripts/rule-switch.mjs enable comment     # 重新启用
 
 Host 注册走 `ctx.inject(['commands'])`；无命令适配器的宿主静默跳过。改动需重启主实例后输入框才能看到。
 
+</details>
+
 ## 独立 CLI（git-sluice）
 
 <details>
@@ -1314,6 +1324,9 @@ CLI 是引擎的独立入口，**功能与结果必须与插件一致**——同
 `audit` 参数与服务端设置对应：`--full` ↔ `auditScanScope=full`、`--weights` ↔ `weightOverrides`、`--include-ignored` ↔ 连 `.gitignore` 忽略的文件也扫。（2026-09-17：`--level` / `--ruleset` 已随设置项移除；`--ruleset` 仅作为当次调用的自定规则目录参数。）
 
 </details>
+
+<details>
+<summary><b>展开：清洗用户沟通措辞脚本 / 运行时检测（三层审计 L3）脚本</b></summary>
 
 ## 独立脚本：清洗用户沟通措辞（scrub-user-wording.mjs）
 
@@ -1356,6 +1369,8 @@ node scripts/audit-runtime-check.mjs --all <目录>
 退出码：0=全部通过（无运行时命中）；1=存在运行时命中（L3 确认的 bug）；2=无法检测（文件不可 import / 无导出对象 / 用法错误）。
 
 局限（如实标注）：只能测模块**导出**的入口（内部闭包需测试钩子）；依赖被测文件能安全 import（副作用不能炸进程）；异步时序建议用 `node:test` 写专门用例。
+
+</details>
 
 ## 安装与要求
 
