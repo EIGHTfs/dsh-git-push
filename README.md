@@ -11,6 +11,8 @@ DSH（DeepSeek Harness）git 提交推送与代码审计插件——提交前自
 
 插件装上并重启后，**三种方式直接可用**：
 
+> **常见误解**：没有改动 / 没有新提交时，提交推送工具**不会报错**（返回 `ok:true`，只是 `committed:false` 或 `pushed:false`），而「本地领先远端」的已提交内容照样会被推上去 —— 放心用插件，不要退回手敲 git。
+
 **① AI 直接用**（DSH 会话里——不用记命令）
 - 工具已自动注册：`git_scan` / `code_audit` / `git_commit_push` / `git_account_check` 等
 - 直接说人话即可：「扫描我的仓库」「审计 Pawchive」「提交推送 xx 仓库」
@@ -93,6 +95,7 @@ Git 全链路自动化，token / SSH 凭据管理 + 提交推送，无需手动�
 |---|---|
 | `git_commit_push` | 一键提交+推送（审计门禁默认开启；敏感文件自动 .gitignore；`--push/--no-push/--dry-run/--force/--req-confirm/--json`；返回带 `identity`=本次提交身份与来源） |
 | `git_identity_rewrite` | 提交身份历史改写（工具 `git_identity_rewrite` / CLI `git-sluice identity-rewrite`）：非规范身份（工具/AI 产生的 `agent@dsh.local` 等 + 账号 noreply 旧变体，可用 `extraEmails` 追加）统一成账号规范身份。默认 dry-run；`--write` 才改写（先建备份引用 `refs/backup/identity-rewrite/<日期>/<分支>`，自检「提交数/工作树/身份全规范」通过），`--push` 再用 `--force-with-lease` 强推；已跟踪文件有改动则拒改；只处理 origin 属于登录账号的仓库 |
+| 零改动也安全 | **没有改动 / 没有新提交时调用不会报错**：返回 `ok:true` + `committed:false`（job 状态 `completed`，文案写明「无变更：工作区无改动，无需提交（正常）」）；远端已最新 ⇒ `ok:true` + `pushed:false`；**本地领先远端**的已提交内容照样会推上去。零改动调用不产生提交 ⇒ 不涉及 README 核对与 `requirementsConfirmed` 门禁 |
 | remote 自动判定 | 推送前自动选「正确的 GitHub remote」：归属（owner/repo 与登录账号一致）+ 本机可用形态（优先 `ssh://git@ssh.github.com:443/…`）+ 名字优先级（`origin` > `github-ssh` > 其它）。形态不推荐自动 `remote set-url`；没有可用 remote 时新建；**归属不符的 `origin` 绝不覆盖**（改走 `github-ssh`）；`dryRun` 只报告不写盘；回执带 `remote` / `remoteAction` / `remoteReasons` |
 | 推送通道 | `ssh（默认）`= 只走 SSH 私钥 / `token`= 先走 Git Data API（用 token 推）失败回落 SSH / `auto`= 先 ssh 失败回落 token；远端分叉时不静默回落，如实报错 |
 | force 强推 | API 通道重建 commit 去旧 parent / SSH 通道 `git push --force` |
@@ -499,6 +502,7 @@ dsh-git-push/
 │   ├── test-audit-ext.mjs — 审计扩展自动接入测试（契约加载/降级/match/auditFull 并入）
 │   ├── test-audit-git-boundary.mjs — （待注释）
 │   ├── test-audit-npm-publish-rules.mjs — （待注释）
+│   ├── test-audit-push-boundary.mjs — （待注释）
 │   ├── test-audit-scope.mjs — 审计作用域/凭据占位符回归测试
 │   ├── test-audit.mjs — 审计总入口测试（auditFull/changed/豁免/gitignore）
 │   ├── test-auditignore.mjs — （待注释）

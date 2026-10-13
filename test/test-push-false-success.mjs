@@ -68,3 +68,40 @@ test('后台 job 状态：不再有硬编码的成功文案（commit+push done /
   assert.equal(cloneJobOutcome({ ok: false, error: '网络失败' }).status, 'failed');
   assert.equal(cloneJobOutcome({ ok: true }).status, 'completed');
 });
+
+// ---------- 「零改动」文案：必须自证是正常成功路径（不是失败）----------
+// 事故（用户反馈）：许多 AI 以为「没有新提交 ⇒ 推送会报错」，于是绕开插件手敲 git。实际不会报错，
+//   但文案从没说清；更糟的是下面这条路径的输出**自相矛盾**。
+// 真 bug：工作区干净 + push=true + 远端已最新时，push.js 的 cleanSkipCommit 路径返回对象里
+//   **没有 committed 字段** ⇒ pushJobOutcome 落到「已提交，未推送」兜底分支，而本次根本没提交
+//   （实测复现：detail 显示「已提交，未推送：本地 HEAD abcdef12｜远端 HEAD 未取到｜原因：无新提交可推送」）。
+test('零改动：job 文案必须自证「正常」，且不许出现与事实相反的「已提交」', () => {
+  // ① 纯零改动（无新提交、也无可推内容）
+  const noop = pushJobOutcome({
+    ok: true, committed: false, pushed: false,
+    message: '无变更：工作区无改动，无需提交（正常，不是错误）',
+    push: { pushed: false, reason: '远端已是最新，无新提交可推送（正常，不是错误）' },
+  });
+  assert.equal(noop.status, 'completed', '零改动是成功完成，不是失败');
+  assert.match(noop.detail, /无变更/, '要写明无变更');
+  assert.ok(!/已提交/.test(noop.detail), '本次没有提交，文案不许说「已提交」');
+  // ② 工作区干净但本地领先远端：推的是既有提交，本次**没有**新提交
+  const ahead = pushJobOutcome({ ok: true, committed: false, pushed: true, commitSha: 'abcdef12', push: { verified: true, remoteSha: 'abcdef12' } });
+  assert.equal(ahead.status, 'completed');
+  assert.match(ahead.detail, /本次无新提交/, '必须说清「本次无新提交」，避免被读成刚提交了一次');
+  assert.ok(!/已提交并推送/.test(ahead.detail), '没有新提交就不许说「已提交并推送」');
+  // ③ 根因锁死：cleanSkipCommit 的两条返回路径都必须带上 committed 字段
+  assert.match(src, /if \(!pr\.pushed\) return \{ ok: true, steps, commitSha, committed: !cleanSkipCommit,/,
+    'cleanSkipCommit + 无可推内容 的返回必须带 committed（否则 job 兜底成「已提交，未推送」）');
+  assert.match(src, /commitSha, committed: !cleanSkipCommit, pushed: true,/,
+    'cleanSkipCommit + 推送成功 的返回也必须带 committed');
+});
+
+test('零改动文案：源码 / 注入用法 / 工具描述三处都要写明「正常，不是错误」', () => {
+  assert.match(src, /无需提交（正常，不是错误）/, 'push.js 的零改动文案要自证正常');
+  const inject = readFileSync(join(ROOT, 'lib/app/inject-text.js'), 'utf8');
+  assert.match(inject, /零改动 = 正常成功路径，不是失败/, '注入给 AI 的用法必须写清零改动是正常成功路径');
+  assert.match(inject, /不会报错/, '开头就要打消「会报错」的顾虑');
+  const reg = readFileSync(join(ROOT, 'lib/app/command-registry.js'), 'utf8');
+  assert.match(reg, /零改动是\*\*正常成功路径\*\*/, '工具描述必须写清零改动是正常成功路径');
+});

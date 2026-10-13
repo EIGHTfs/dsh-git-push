@@ -15,7 +15,9 @@
 
 | 版本 | 内容 |
 |------|------|
-| 2.8.2 | 推送前自动指定正确的 GitHub remote：新增 lib/git/remote-resolve.js（按「归属一致 + 本机可用形态 ssh:443 + 名字优先级 origin>github-ssh」评分，必要时自动 remote set-url 或新建，dryRun 只报告不写盘；归属不符的 origin 绝不覆盖，改走 github-ssh）；transport 的 SSH/API 推送与两处 liveRemoteHead 全部改用解析结果，回执带 remote/remoteAction/remoteReasons；另：README 移除界面配图与入库的图片资源、删除 screenshots.json |
+| 2.8.3 | 文案修正：把「零改动 / 无新提交」明确写成**正常成功路径**（不会报错、返回 ok:true + committed:false 或 pushed:false、本地领先远端的提交照样会推），覆盖 AI 注入用法、git_commit_push 工具描述、README（补「零改动也安全」能力行与常见误解提示）、提交推送指南与开发文档；并修 job 输出自相矛盾——cleanSkipCommit 路径此前缺 committed 字段，导致「已提交，未推送」的误导文案（现如实输出「无变更：工作区无改动，未产生新提交」） |
+| 2.8.2 | 推送前自动指定正确的 GitHub remote |
+| 2.8.1 | CLI 真发姿势补齐 + doc-drift 增工具清单完整性校验 + 发包回归改 fixture + SPEC 工具表补行 |
 | 2.8.0 | 账号信息新增 NPM 能力（三标签 + GitHub↔NPM 账号卡滑动切换 + 名下包列表）+ npm 装包与发包（API / 工具 / CLI） |
 | 2.7.1 | 审计按独立包设计落地——对外门面 + 子路径导出 + 审计侧与仓库脚本解耦 + 边界门禁扩列 |
 | 2.7.0 | 审计↔git 边界澄清第一期——抽出 lib/core 中立工具层，审计侧不再依赖 git |

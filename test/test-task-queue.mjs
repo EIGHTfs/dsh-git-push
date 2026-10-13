@@ -21,6 +21,18 @@ function mkRepo() {
   execSync(`git -C "${dir}" add . && git -C "${dir}" commit -qm init`, { stdio: ['ignore', 'ignore', 'ignore'] });
   return dir;
 }
+
+/**
+ * 造一个「有真实改动」的仓 —— 提交推送类用例必须真的有东西可提交。
+ * 为什么单独一个函数：修复「零改动不写 .gitignore、不提交」之后，干净且无 .gitignore 的仓
+ *   **不会**再凭空产生提交（那正是要修掉的行为）⇒ 旧用例靠「自动补 .gitignore 造出一次提交」
+ *   的假设必须改成显式造改动，否则断言 git log 时必然拿不到新提交。
+ */
+function mkDirtyRepo() {
+  const dir = mkRepo();
+  writeFileSync(join(dir, 'change.txt'), 'changed\n');
+  return dir;
+}
 function wait(ms) { return new Promise((r) => setTimeout(r, ms)); }
 
 /** 内存 mock 宿主 jobs（对齐 ctx.jobs.start 返回 JobHooks 契约）。 */
@@ -46,7 +58,7 @@ function mockJobs() {
 
 // ---------- 无宿主 ctx.jobs → 同步执行保底 ----------
 test('git_commit_push：无 jobs（CLI/测试）→ 同步执行并返回 async:false + result', async () => {
-  const dir = mkRepo();
+  const dir = mkDirtyRepo(); // 必须有真实改动：干净仓不再凭空产生提交
   try {
     const r = await callTool('git_commit_push', { repo: dir, message: '同步保底提交', audit: false, push: false, requirementsConfirmed: true }, { workspaceRoot: dir }, Config());
     assert.equal(r.ok, true);
@@ -59,7 +71,7 @@ test('git_commit_push：无 jobs（CLI/测试）→ 同步执行并返回 async:
 
 // ---------- 有宿主 ctx.jobs（mock）→ 官方 job 注册 ----------
 test('git_commit_push：有 jobs → 注册 kind=git-push 官方 job、返回 async+jobId、done 完成', async () => {
-  const dir = mkRepo();
+  const dir = mkDirtyRepo(); // 同上：必须有真实改动
   const mj = mockJobs();
   try {
     const r = await callTool('git_commit_push', { repo: dir, message: '官方job提交', audit: false, push: false, requirementsConfirmed: true }, { workspaceRoot: dir }, Config(), null, mj);
@@ -133,7 +145,7 @@ test('git_commit_push：审计 blocker（secret 未提交文件）→ 同步拦�
 });
 // ---------- 2026-09-15 新增：jobs.start 存在但抛错（控制器不对本 agent 服务）→ 自动降级同步 ----------
 test('git_commit_push：jobs.start 抛错（no job controller serves this agent）→ 降级同步执行不报错', async () => {
-  const dir = mkRepo();
+  const dir = mkDirtyRepo(); // 同上：必须有真实改动
   const throwingJobs = {
     start() { throw new Error('no job controller serves this agent'); },
   };

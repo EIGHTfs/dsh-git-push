@@ -433,54 +433,24 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "README.md": {
-        "status": "M",
-        "mtime": "2026-10-13T07:20:11.544Z",
-        "note": "注释可能需更新"
-      },
-      "docs/CHANGELOG.md": {
-        "status": "M",
-        "mtime": "2026-10-13T07:20:25.341Z",
-        "note": "注释可能需更新"
-      },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-13T07:20:25.583Z",
+        "mtime": "2026-10-13T23:36:46.661Z",
         "note": "注释可能需更新"
       },
-      "docs/SPEC.md": {
+      "lib/git/push.js": {
         "status": "M",
-        "mtime": "2026-10-13T07:20:25.207Z",
+        "mtime": "2026-10-13T23:32:22.987Z",
         "note": "注释可能需更新"
       },
-      "docs/releases.json": {
+      "test/test-audit-push-boundary.mjs": {
         "status": "M",
-        "mtime": "2026-10-13T07:20:11.537Z",
+        "mtime": "2026-10-13T23:32:33.691Z",
         "note": "注释可能需更新"
       },
-      "lib/git/transport.js": {
+      "test/test-task-queue.mjs": {
         "status": "M",
-        "mtime": "2026-10-13T07:18:22.654Z",
-        "note": "注释可能需更新"
-      },
-      "lib/self/index.js": {
-        "status": "M",
-        "mtime": "2026-10-13T07:20:11.531Z",
-        "note": "注释可能需更新"
-      },
-      "package.json": {
-        "status": "M",
-        "mtime": "2026-10-13T07:20:11.525Z",
-        "note": "注释可能需更新"
-      },
-      "lib/git/remote-resolve.js": {
-        "status": "A",
-        "mtime": "2026-10-13T07:18:57.567Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-remote-resolve.mjs": {
-        "status": "A",
-        "mtime": "2026-10-13T07:18:08.510Z",
+        "mtime": "2026-10-13T23:35:25.854Z",
         "note": "注释可能需更新"
       }
     }
@@ -516,5 +486,6 @@
   "lib/npm/publish.js": "（待注释）",
   "test/test-npm-publish.mjs": "（待注释）",
   "lib/git/remote-resolve.js": "（待注释）",
-  "test/test-remote-resolve.mjs": "（待注释）"
+  "test/test-remote-resolve.mjs": "（待注释）",
+  "test/test-audit-push-boundary.mjs": "（待注释）"
 }

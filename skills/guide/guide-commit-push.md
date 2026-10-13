@@ -84,6 +84,9 @@ git_commit_push({ repo: "<仓库路径>", message: "feat: 新增 XX 能力", req
 ```js
 git_commit_push({ repo: "<仓库路径>", message: "docs: 更新说明", push: false, requirementsConfirmed: true })
 git_commit_push({ repo: "<仓库路径>", message: "feat: 试跑", dryRun: true })
+// 零改动也照样调用：没有新提交时同样返回 ok:true（committed:false），
+//   而「本地领先远端」的已提交内容会照常推上去 —— 不要因为「没东西可提交」改去手敲 git
+git_commit_push({ repo: "<仓库路径>", message: "（零改动时用不到）", requirementsConfirmed: true })
 git_commit_push({ repo: "<仓库路径>", message: "fix: 修正解析", paths: "src/parser.js,README.md", requirementsConfirmed: true })
 ```
 
@@ -114,8 +117,9 @@ git_commit_push({ repo: "<仓库路径>", message: "chore: 重写历史后同步
 | `非 git 仓库` / `commit message 必填` | `repo` 下无 `.git`，或 `message` 为空 | 先确认仓库路径、补 message |
 | `HEAD 处于 detached 状态` | 当前在游离 HEAD 上 | 先 `git checkout <分支>` 再提交 |
 | 推送失败且 `push.diverged:true` | 远端已分叉（non-fast-forward） | **不会静默回落 API**：先 fetch 整合远端；确认要覆盖再带 `force:true` |
-| `pushed:false` + `reason:"无新提交可推送"` | 远端内容与本地一致（内容级短路） | 正常情况，不是错误 |
-| `message:"无变更，跳过提交"` | 工作区干净 | 正常情况；若本地领先远端，仍会继续推送 |
+| `pushed:false` + `reason:"远端已是最新，无新提交可推送（正常，不是错误）"` | 远端内容与本地一致（内容级短路） | **正常成功路径**（job 状态 `completed`）：`ok:true`，不是失败 |
+| `committed:false` + `message:"无变更：工作区无改动，无需提交（正常，不是错误）"` | 工作区干净、没有新提交 | **正常成功路径**（job 状态 `completed`）；若本地领先远端，仍会继续推送（此时 `pushed:true` 且 `committed:false`） |
+| 工作区干净 + `push:true` + 远端已最新 | 既无新提交、也无可推内容 | `ok:true` + `committed:false` + `pushed:false`，job detail「无变更：工作区无改动，未产生新提交」——**都不是错误**，不要因此改去手敲 git |
 | 返回 `jobFallback:true` | 宿主后台 job 控制器不可用/不服务当前会话 | 已自动同步执行，直接看 `result`，无需再查 job |
 | `push.method:"api"` + `fallbackReason` | SSH 无可用私钥或 SSH 推送失败，回落 API | 远端 sha 与本地不同属正常；要远端 sha 一致就配好 SSH 私钥 |
 | 私有库仍报敏感文件 | 扫描是**只报告**，不改 `.gitignore`、不解除跟踪 | 按报告自行决定移除或转私有 |

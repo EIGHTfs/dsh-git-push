@@ -35,6 +35,9 @@ generatedBy: deepseek-official/deepseek-v4-flash · EIGHTfs 2026-10-02
 
 典型流程：`git_scan` 看改动 → `code_audit` 自查 → `git_commit_push`（审计通过才推）。
 
+分支：**没有改动、或只想把「本地领先远端」的已提交内容推上去** ⇒ 直接调 `git_commit_push`，不必先审计/先 commit：
+零改动返回 `ok:true + committed:false`（job 状态 completed，不是失败），领先提交照常推送（`pushed:true`）。
+
 ## 二、审计规则包（YAML 槽位）
 
 - **位置**：`lib/audit-rules/audit-rules-<槽位名>.yml`
