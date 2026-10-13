@@ -2,19 +2,10 @@
 
 DSH（DeepSeek Harness）git 提交推送与代码审计插件——提交前自动审计门禁，提交推送全链路自动化。
 
-![账号信息面板](assets/panel-account.png)
-
-审计面板（22 个规则包 + 按包命中数，上下调次序、单击启停）：
-
-![审计面板](assets/panel-audit.png)
-
-设置面板（凭据 / SSH 公钥 / 审计开关与 10 维度权重）：
-
-![设置面板](assets/panel-settings.png)
+> **界面**：账号信息面板（GitHub ↔ NPM 账号卡滑动切换、离线快照与在线自检）· 审计面板（22 个规则包 + 按包命中数，上下调次序、单击启停）· 设置面板（凭据 / SSH 公钥 / 审计开关与 10 维度权重）。
 
 > **公开仓库**：EIGHTfs/dsh-git-push（2026-09-13 转 public）｜全量测试 490 全绿（`npm test` 一条命令可复现）
 > **界面模拟页**：`assets/preview.html`（单文件自包含，双击即可打开；跑的是真实 `client.js` + 假数据，三选项卡全部可点）
-> **截图声明**：`screenshots.json`（仓库根、与 `package.json` 同级，列出 `assets/panel-*.png`）——DSH 插件榜单按此文件自动收录截图，作者推自己的仓库即生效，无需到榜单仓库提 PR
 
 ## 快速开始（第一次用——不用查源码）
 
@@ -487,11 +478,8 @@ dsh-git-push/
 │   ├── audit-ext/ — （待注释）
 │   │   ├── _example-readme-present.mjs — 审计扩展契约示例（_ 前缀：演示不参与实际审计）
 │   │   ├── variable-min-length.mjs — 审计扩展：variable-min-length（内置规则抽出试点——统一动态入口）
-├── assets/ — 预览页与配图（preview.html 交互模拟页 + 面板截图）
+├── assets/ — 预览页（preview.html 交互模拟页）
 │   ├── minihost.sh — （待注释）
-│   ├── panel-account.png — 账号卡片面板截图（README 配图）
-│   ├── panel-audit.png — 审计面板截图（README 配图）
-│   ├── panel-settings.png — 设置面板截图（README 配图）
 │   ├── start.sh — 预览服务器启停脚本（start/stop/restart/status + --port + PID/日志/健康检查 /preview-ping）
 ├── test/ — node:test 全量单元测试（541+ 条，覆盖审计/推送/账号/HTTP/后台任务）
 │   ├── .test — 空文件豁免标记（目录级豁免 .test 目录）
