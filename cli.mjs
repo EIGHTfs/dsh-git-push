@@ -4,6 +4,7 @@
  * dsh-git-push 独立 CLI（git-sluice）
  * 不依赖 DSH 运行时，可独立运行。命名/参数与 lib 函数完全一致（外部 API 与函数名一致）。
  */
+import './lib/app/host-doc-checks.js'; // 审计包边界：文档漂移检查器由宿主（独立 CLI）注入
 import { VERSION, readmeTemplate, yamlTemplate, helpSync } from './lib/self/index.js';
 import { loadRuleFiles, discoverRuleSlots } from './lib/rule/loader.js';
 import { compileAllRules } from './lib/rule/registry.js';

@@ -8,6 +8,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
+import '../lib/app/host-doc-checks.js'; // 审计包边界：漂移检查器由宿主注入（见 lib/app/host-doc-checks.js）
 import { auditFull } from '../lib/audit/index.js';
 import { buildFuncListText } from '../scripts/doc-func.mjs';
 

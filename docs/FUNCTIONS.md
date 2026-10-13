@@ -115,6 +115,12 @@
 | `handleSettingsGet` | 13-19 | 7 | `export function handleSettingsGet(ctx) {` |
 | `handleSettingsSet` | 22-56 | 35 | `export async function handleSettingsSet(ctx) {` |
 
+### lib/app/host-doc-checks.js（26 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `installHostDocChecks` | 20-23 | 4 | `export function installHostDocChecks(checks = HOST_DOC_CHECKS) {` |
+
 ### lib/app/http-handlers.js（123 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -194,30 +200,30 @@
 | `getLastSlotHitStats` | 28-30 | 3 | `export function getLastSlotHitStats() {` |
 | `getLastSlotHitMeta` | 33-35 | 3 | `export function getLastSlotHitMeta() {` |
 
-### lib/app/tool-call.js（602 行 · 20 个函数）
+### lib/app/tool-call.js（603 行 · 20 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `pushWithPostSteps` | 55-90 | 36 | `async function pushWithPostSteps(args, env, cfg) {` |
-| `pushJobOutcome` | 110-133 | 24 | `export function pushJobOutcome(r = {}) {` |
-| `short` | 112-112 | 1 | `const short = (sha) => String(sha \|\| '').slice(0, 8);` |
-| `cloneJobOutcome` | 141-146 | 6 | `export function cloneJobOutcome(r = {}) {` |
-| `buildCommitPushJobSpec` | 149-166 | 18 | `function buildCommitPushJobSpec(repo, doPush) {` |
-| `done` | 154-162 | 9 | `const done = (async () => {` |
-| `startHostJob` | 179-186 | 8 | `function startHostJob(jobs, spec, owner) {` |
-| `callCloneJob` | 200-232 | 33 | `async function callCloneJob(args, jobs, exec, log, env = {}, cfg = {}) {` |
-| `buildCloneJobSpec` | 235-252 | 18 | `function buildCloneJobSpec(target, dest, doClone) {` |
-| `done` | 240-248 | 9 | `const done = (async () => {` |
-| `callCommitPush` | 259-302 | 44 | `async function callCommitPush(args, env, cfg, log, jobs, exec) {` |
-| `doPush` | 275-275 | 1 | `const doPush = () => pushWithPostSteps(args, env, cfg);` |
-| `buildAuditOpts` | 313-324 | 12 | `function buildAuditOpts(args, cfg, scope) {` |
-| `runHistoryAuditTool` | 330-356 | 27 | `async function runHistoryAuditTool(args, env, cfg, jobs, exec, weights) {` |
-| `doHistory` | 336-339 | 4 | `const doHistory = async () => {` |
-| `callCodeAudit` | 358-370 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
-| `runStandardAuditTool` | 373-412 | 40 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
-| `callTool` | 414-573 | 160 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null) {` |
-| `shellSplit` | 576-594 | 19 | `function shellSplit(input) {` |
-| `readTextSafe` | 597-601 | 5 | `function readTextSafe(path = '') {` |
+| `pushWithPostSteps` | 56-91 | 36 | `async function pushWithPostSteps(args, env, cfg) {` |
+| `pushJobOutcome` | 111-134 | 24 | `export function pushJobOutcome(r = {}) {` |
+| `short` | 113-113 | 1 | `const short = (sha) => String(sha \|\| '').slice(0, 8);` |
+| `cloneJobOutcome` | 142-147 | 6 | `export function cloneJobOutcome(r = {}) {` |
+| `buildCommitPushJobSpec` | 150-167 | 18 | `function buildCommitPushJobSpec(repo, doPush) {` |
+| `done` | 155-163 | 9 | `const done = (async () => {` |
+| `startHostJob` | 180-187 | 8 | `function startHostJob(jobs, spec, owner) {` |
+| `callCloneJob` | 201-233 | 33 | `async function callCloneJob(args, jobs, exec, log, env = {}, cfg = {}) {` |
+| `buildCloneJobSpec` | 236-253 | 18 | `function buildCloneJobSpec(target, dest, doClone) {` |
+| `done` | 241-249 | 9 | `const done = (async () => {` |
+| `callCommitPush` | 260-303 | 44 | `async function callCommitPush(args, env, cfg, log, jobs, exec) {` |
+| `doPush` | 276-276 | 1 | `const doPush = () => pushWithPostSteps(args, env, cfg);` |
+| `buildAuditOpts` | 314-325 | 12 | `function buildAuditOpts(args, cfg, scope) {` |
+| `runHistoryAuditTool` | 331-357 | 27 | `async function runHistoryAuditTool(args, env, cfg, jobs, exec, weights) {` |
+| `doHistory` | 337-340 | 4 | `const doHistory = async () => {` |
+| `callCodeAudit` | 359-371 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
+| `runStandardAuditTool` | 374-413 | 40 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
+| `callTool` | 415-574 | 160 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null) {` |
+| `shellSplit` | 577-595 | 19 | `function shellSplit(input) {` |
+| `readTextSafe` | 598-602 | 5 | `function readTextSafe(path = '') {` |
 
 ### lib/app/tools.js（27 行 · 2 个函数）
 
@@ -638,23 +644,27 @@
 | `excludePathOf` | 38-47 | 10 | `function excludePathOf(root) {` |
 | `detectIgnoreBlindSpot` | 54-101 | 48 | `export function detectIgnoreBlindSpot(root) {` |
 
-### lib/audit/orchestrate.js（448 行 · 13 个函数）
+### lib/audit/orchestrate.js（466 行 · 17 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `capScanFiles` | 39-49 | 11 | `export function capScanFiles(files, root, maxFiles) {` |
-| `appendIgnoreBlindSpot` | 62-78 | 17 | `function appendIgnoreBlindSpot(findings, repoPath, scanned) {` |
-| `auditFiles` | 90-250 | 161 | `async function auditFiles(repoPath, files, opts = {}) {` |
-| `isDshPlugin` | 115-121 | 7 | `const isDshPlugin = (() => {` |
-| `auditFull` | 252-274 | 23 | `export async function auditFull(repoPath, opts = {}) {` |
-| `appendTreeDocDrift` | 279-321 | 43 | `function appendTreeDocDrift(findings, repoPath) {` |
-| `by` | 312-312 | 1 | `const by = (code) => wt.filter(([, v]) => v?.status === code).length;` |
-| `appendFuncDocDrift` | 330-346 | 17 | `function appendFuncDocDrift(findings, repoPath) {` |
-| `appendSplitDocsCheck` | 354-397 | 44 | `function appendSplitDocsCheck(findings, repoPath) {` |
-| `hasMarkBlock` | 400-402 | 3 | `function hasMarkBlock(text, marker) {` |
-| `auditChanged` | 407-442 | 36 | `export async function auditChanged(repoPath, opts = {}) {` |
-| `isAuditIgnored` | 423-436 | 14 | `const isAuditIgnored = (rel) => {` |
-| `auditWithScope` | 445-447 | 3 | `export async function auditWithScope(repoPath, { scope = 'diff', ...opts } = {}) {` |
+| `setHostDocChecks` | 28-30 | 3 | `export function setHostDocChecks(checks) {` |
+| `findMarkedHostMd` | 34-34 | 1 | `const findMarkedHostMd = (...args) => (injected \|\| EMPTY_DOC_CHECKS).findMarkedHostMd(...args);` |
+| `checkDrift` | 35-35 | 1 | `const checkDrift = (...args) => (injected \|\| EMPTY_DOC_CHECKS).checkDrift(...args);` |
+| `checkFuncDrift` | 36-36 | 1 | `const checkFuncDrift = (...args) => (injected \|\| EMPTY_DOC_CHECKS).checkFuncDrift(...args);` |
+| `capScanFiles` | 57-67 | 11 | `export function capScanFiles(files, root, maxFiles) {` |
+| `appendIgnoreBlindSpot` | 80-96 | 17 | `function appendIgnoreBlindSpot(findings, repoPath, scanned) {` |
+| `auditFiles` | 108-268 | 161 | `async function auditFiles(repoPath, files, opts = {}) {` |
+| `isDshPlugin` | 133-139 | 7 | `const isDshPlugin = (() => {` |
+| `auditFull` | 270-292 | 23 | `export async function auditFull(repoPath, opts = {}) {` |
+| `appendTreeDocDrift` | 297-339 | 43 | `function appendTreeDocDrift(findings, repoPath) {` |
+| `by` | 330-330 | 1 | `const by = (code) => wt.filter(([, v]) => v?.status === code).length;` |
+| `appendFuncDocDrift` | 348-364 | 17 | `function appendFuncDocDrift(findings, repoPath) {` |
+| `appendSplitDocsCheck` | 372-415 | 44 | `function appendSplitDocsCheck(findings, repoPath) {` |
+| `hasMarkBlock` | 418-420 | 3 | `function hasMarkBlock(text, marker) {` |
+| `auditChanged` | 425-460 | 36 | `export async function auditChanged(repoPath, opts = {}) {` |
+| `isAuditIgnored` | 441-454 | 14 | `const isAuditIgnored = (rel) => {` |
+| `auditWithScope` | 463-465 | 3 | `export async function auditWithScope(repoPath, { scope = 'diff', ...opts } = {}) {` |
 
 ### lib/audit/repo-level.js（31 行 · 2 个函数）
 
@@ -1038,13 +1048,13 @@
 | `collectExternalRefs` | 136-141 | 6 | `export function collectExternalRefs(css = '') {` |
 | `clientModuleInfo` | 151-162 | 12 | `export function clientModuleInfo() {` |
 
-### lib/commit-push.js（143 行 · 3 个函数）
+### lib/commit-push.js（144 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `runAudit` | 32-97 | 66 | `export async function runAudit({ repoPath = '', audit, rulesetDir, slots, cfg: extCfg, visibility: extVisibility } = {}) {` |
-| `commitWithAudit` | 107-129 | 23 | `export async function commitWithAudit({` |
-| `commitMany` | 137-143 | 7 | `export async function commitMany({ repos = [], message = '', push = true, dryRun = false, requirementsConfirmed = false, customIgnorePatterns = '' } = {}) {` |
+| `runAudit` | 33-98 | 66 | `export async function runAudit({ repoPath = '', audit, rulesetDir, slots, cfg: extCfg, visibility: extVisibility } = {}) {` |
+| `commitWithAudit` | 108-130 | 23 | `export async function commitWithAudit({` |
+| `commitMany` | 138-144 | 7 | `export async function commitMany({ repos = [], message = '', push = true, dryRun = false, requirementsConfirmed = false, customIgnorePatterns = '' } = {}) {` |
 
 ### lib/context/index.js（363 行 · 10 个函数）
 
@@ -2191,14 +2201,14 @@
 |------|------|------|------|
 | `read` | 15-15 | 1 | `const read = (p) => readFileSync(join(ROOT, p), 'utf8');` |
 
-### test/test-audit-git-boundary.mjs（81 行 · 4 个函数）
+### test/test-audit-git-boundary.mjs（94 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `walk` | 20-27 | 8 | `function walk(dir, out = []) {` |
-| `stripComments` | 30-32 | 3 | `function stripComments(text) {` |
-| `specifiersOf` | 35-39 | 5 | `export function specifiersOf(text) {` |
-| `findViolations` | 42-52 | 11 | `export function findViolations(files, rules) {` |
+| `walk` | 21-28 | 8 | `function walk(dir, out = []) {` |
+| `stripComments` | 31-33 | 3 | `function stripComments(text) {` |
+| `specifiersOf` | 36-40 | 5 | `export function specifiersOf(text) {` |
+| `findViolations` | 43-54 | 12 | `export function findViolations(files, rules) {` |
 
 ### test/test-auditignore.mjs（145 行 · 1 个函数）
 
@@ -2393,12 +2403,12 @@
 |------|------|------|------|
 | `countSourceDirs` | 28-47 | 20 | `function countSourceDirs(tree, { threshold = 1, excludeDirs = [] } = {}) {` |
 
-### test/test-func-doc-drift.mjs（70 行 · 2 个函数）
+### test/test-func-doc-drift.mjs（71 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `fixture` | 18-70 | 53 | `function fixture(block) {` |
-| `driftFindings` | 36-39 | 4 | `async function driftFindings(dir) {` |
+| `fixture` | 19-71 | 53 | `function fixture(block) {` |
+| `driftFindings` | 37-40 | 4 | `async function driftFindings(dir) {` |
 
 ### test/test-git-identity-rewrite.mjs（191 行 · 4 个函数）
 

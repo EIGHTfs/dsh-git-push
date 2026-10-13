@@ -242,6 +242,7 @@ dsh-git-push/
 │   │   ├── audit-api.js — 审计结果 API 聚合层（/api/git-push/audit：按规则/文件/严重级/规则包分组 + severity 过滤 + top 截断）
 │   │   ├── command-registry.js — 工具命令注册表（方案 B——CLI/宿主工具/帮助同源，免维护）
 │   │   ├── constants.js — 插件名与设置命名空间常量
+│   │   ├── host-doc-checks.js — （待注释）
 │   │   ├── http-handlers.js — HTTP 路由分发（薄 router：前置校验 + switch 各端点调 handlers/ 模块）
 │   │   ├── index.js — 插件入口再导出（宿主 main 指向）
 │   │   ├── inject-text.js — 注入文本（工具用法提示 FUNCTION_USAGE_HINT）
@@ -293,6 +294,7 @@ dsh-git-push/
 │   │   ├── ignore-blind.js — 审计静默失明检测（本地 git 排除配置把整仓判成忽略时告警）
 │   │   ├── index.js — 审计层统一出口（auditFull/auditChanged）
 │   │   ├── orchestrate.js — 审计编排（收集→检查→汇总）
+│   │   ├── public.js — （待注释）
 │   │   ├── repo-level.js — 仓库级语义规则
 │   │   ├── report-yaml.js — （待注释）
 │   │   ├── slot.js — 按规则包聚合审计命中（拦截/警告/通过）
@@ -978,6 +980,55 @@ node scripts/frontend-preview-check.mjs --html "$PWD/assets/preview.html?mock=1"
   会报「仓库列表没有 clone 按钮」这类**假失败**（看着像前端坏了，其实只是没数据）。
 - 判据（任一不满足即非零退出）：云端标签 → 仓库列表 → 行内 clone → 目录选择器确认 → 预览弹窗出现
   → 弹窗内「带真实历史」勾选框存在且默认勾选 → 全程无前端错误。
+
+## 审计能力可被外部依赖（子路径导出 `dsh-git-push/audit`）
+
+审计部分按**独立包**设计（对外契约冻结、依赖边界由机器门禁守住）；当前形态不单独发包，用**包子路径导出**对外提供能力——将来若抽成独立包，消费方 import 路径不变或只改一行。
+
+**用法**
+
+```js
+import { auditWithScope, auditFull, summarize } from 'dsh-git-push/audit';
+
+const { findings } = await auditWithScope('/path/to/repo', 'full'); // scope: diff | full
+console.log(summarize(findings));
+```
+
+```bash
+npm i dsh-git-push   # 零运行时依赖（js-yaml 已内置 lib/vendor/）
+```
+
+**稳定 API 面（冻结）**
+
+| 符号 | 用途 |
+|---|---|
+| `auditWithScope(repo, scope)` | 按范围审计（`diff` / `full`，提交门禁用） |
+| `auditFull(repo)` | 全量审计 |
+| `auditChanged(repo)` | 仅改动集 |
+| `auditFile(file)` | 单文件审计 |
+| `buildRuleSlotMap()` | 规则槽位映射 |
+| `summarize(findings)` | findings → 结论汇总 |
+| `formatAnalysisCoverageLine(...)` | 分析覆盖行 |
+
+未列入的符号（`lib/checks`、`lib/rule`、`lib/score` 等内部件）属内部实现，可随版本调整。稳定性承诺：上表符号只在 minor/major 版本增删。
+
+**完整流程（数据流）**
+
+```
+调用方 → dsh-git-push/audit（门面 lib/audit/public.js，只再导出冻结面）
+      → 收集文件（git ls-files + 忽略规则）
+      → 规则加载（lib/rule/loader.js 动态发现 lib/audit-rules/*.yml 槽位，放一个 yml 即成为槽位）
+      → 检查器（lib/checks/*：语法 / 复杂度 / 安全 / 凭据 / 结构 / 文档漂移 …）
+      → findings（严重度 + 维度 + 扣分）→ 调用方自行处理，或调 summarize() 汇总
+```
+
+**宿主交互靠注入，不靠反向依赖**
+
+「目录树漂移 / 函数列表漂移」属于**宿主侧**能力：审计不 import 仓库脚本，改由宿主加载 `lib/app/host-doc-checks.js` 注入（插件工具调用、提交门禁、独立 CLI 三处已接线）。未接线的环境（例如只依赖审计子路径的项目）会跳过这两类 finding，其余检查不受影响。
+
+依赖边界由 `test/test-audit-git-boundary.mjs` 机器门禁守住：`lib/audit/**` 与 `lib/core/**` 不得引用 git 层 / 装配层 / 仓库脚本 / 宿主包（`@deepseek-ai/*`、`cordis` 等）。
+
+设计与后续（抽成独立包的迁移路径）见开发者文档《审计独立包设计》。
 
 ## 三、系统提示词注入
 
