@@ -111,6 +111,46 @@ rules:
     exts: ["json"]
     fixable: false
     mitigation: "增加 \"license\": \"MIT\"（或项目实际 SPDX 值）+ LICENSE 文件；npm publish --dry-run 验证"
+  - id: npm/license-unlicensed
+    name: "license 声明为 UNLICENSED（别人无法合法使用/分发）"
+    category: "npm"
+    severity: "warning"
+    description: "UNLICENSED / PROPRIETARY 只表示「未授权」——公开包的使用者无法合法使用与再分发，npm 页面也会标红。与 npm/license-field-check（缺字段）互补，本规则只判「有字段但值等于未授权」。依据：npm-publish-checklist 清单第 2 项"
+    kind: "npm-json"
+    fixable: true
+    mitigation: "改为明确 SPDX（如 \"license\": \"MIT\" / \"Apache-2.0\"），并把 LICENSE 文件纳入 files 白名单"
+  - id: npm/files-risky-entry
+    name: "files 白名单含敏感内容或体积产物（会随包发布）"
+    category: "npm"
+    severity: "warning"
+    description: "逐条核对 files 数组：出现 node_modules / .env / secret|credential|token / *.key|*.pem ⇒ 判为 blocker（凭据随包发布不可逆）；出现 *.tgz / music|audio / *.mp3|*.wav / 字体 ⇒ 按规则严重度报（体积白涨）。依据：npm-publish-checklist 清单第 3、9、12 项"
+    kind: "npm-json"
+    fixable: true
+    mitigation: "从 files 删除这些条目；凭据类同时轮换令牌；用 npm pack --dry-run --json 复核实际打进包的文件清单"
+  - id: npm/meta-incomplete
+    name: "包元信息不全（author / keywords / bugs / homepage）"
+    category: "npm"
+    severity: "info"
+    description: "缺 author/keywords/bugs/homepage 会让 npm 包页面没有作者与仓库入口、也搜不到；规则逐个列出缺失项，便于一次补齐。依据：npm-publish-checklist 清单第 7 项"
+    kind: "npm-json"
+    fixable: false
+    mitigation: "补齐 author、若干 keywords、bugs/homepage（地址需实测存在）"
+  - id: npm/prepack-script-present
+    name: "存在 prepack/prepare/publishOnly 脚本（发布时会自动执行）"
+    category: "npm"
+    severity: "info"
+    description: "npm publish 前会自动执行 prepack / prepare / publishOnly / prepublishOnly；脚本跑不通发布会直接失败。命中即提示发布前本地先跑一次，并确认其产物已被 files 覆盖。依据：npm-publish-checklist 清单第 8 项"
+    kind: "npm-json"
+    fixable: false
+    mitigation: "发布前本地执行同名脚本确认可跑通；产物路径与 files 白名单保持一致"
+  - id: npm/peer-range-unbounded
+    name: "peerDependencies 未写显式上界（宿主兼容范围不明确）"
+    category: "npm"
+    severity: "info"
+    description: "peer 是「由宿主提供」的依赖，^ / ~ 的隐式上界常与实际宿主版本错位；建议写显式区间（如 \">=0.1.6-0 <0.3.0-0\"）。不含 '<' 的条目才提示；写 '*' 的交由 npm/dependency-star-range 管辖、私有包整体跳过。依据：npm-publish-checklist 清单第 4 项"
+    kind: "npm-json"
+    fixable: false
+    mitigation: "peerDependencies 写显式区间，上界对齐宿主实际兼容版本"
   - id: npm/repository-field-check
     name: "repository 字段核对（npm 包元数据）"
     category: "npm"

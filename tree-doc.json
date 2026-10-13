@@ -437,69 +437,34 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "README.md": {
-        "status": "M",
-        "mtime": "2026-10-13T04:35:09.291Z",
-        "note": "注释可能需更新"
-      },
-      "cli.mjs": {
-        "status": "M",
-        "mtime": "2026-10-13T04:33:14.463Z",
-        "note": "注释可能需更新"
-      },
-      "docs/CHANGELOG.md": {
-        "status": "M",
-        "mtime": "2026-10-13T04:35:21.779Z",
-        "note": "注释可能需更新"
-      },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-13T04:35:21.967Z",
+        "mtime": "2026-10-13T04:45:47.160Z",
         "note": "注释可能需更新"
       },
-      "lib/app/tool-call.js": {
+      "lib/audit-rules/audit-rules-npm.yml": {
         "status": "M",
-        "mtime": "2026-10-13T04:33:14.434Z",
+        "mtime": "2026-10-13T04:44:03.155Z",
         "note": "注释可能需更新"
       },
-      "lib/audit/orchestrate.js": {
+      "lib/checks/npm-json.js": {
         "status": "M",
-        "mtime": "2026-10-13T04:33:00.273Z",
-        "note": "注释可能需更新"
-      },
-      "lib/commit-push.js": {
-        "status": "M",
-        "mtime": "2026-10-13T04:33:14.440Z",
+        "mtime": "2026-10-13T04:44:03.146Z",
         "note": "注释可能需更新"
       },
       "lib/self/index.js": {
         "status": "M",
-        "mtime": "2026-10-13T04:34:51.335Z",
+        "mtime": "2026-10-13T04:44:23.334Z",
         "note": "注释可能需更新"
       },
       "package.json": {
         "status": "M",
-        "mtime": "2026-10-13T04:34:51.319Z",
+        "mtime": "2026-10-13T04:44:23.324Z",
         "note": "注释可能需更新"
       },
-      "test/test-audit-git-boundary.mjs": {
-        "status": "M",
-        "mtime": "2026-10-13T04:33:14.474Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-func-doc-drift.mjs": {
-        "status": "M",
-        "mtime": "2026-10-13T04:34:43.081Z",
-        "note": "注释可能需更新"
-      },
-      "lib/app/host-doc-checks.js": {
+      "test/test-audit-npm-publish-rules.mjs": {
         "status": "A",
-        "mtime": "2026-10-13T04:33:00.292Z",
-        "note": "注释可能需更新"
-      },
-      "lib/audit/public.js": {
-        "status": "A",
-        "mtime": "2026-10-13T04:32:19.634Z",
+        "mtime": "2026-10-13T04:45:35.914Z",
         "note": "注释可能需更新"
       }
     }
@@ -515,5 +480,6 @@
   "lib/core/exec.js": "（待注释）",
   "test/test-audit-git-boundary.mjs": "（待注释）",
   "lib/app/host-doc-checks.js": "（待注释）",
-  "lib/audit/public.js": "（待注释）"
+  "lib/audit/public.js": "（待注释）",
+  "test/test-audit-npm-publish-rules.mjs": "（待注释）"
 }

@@ -799,13 +799,13 @@
 |------|------|------|------|
 | `checkMagicNumberSmart` | 22-42 | 21 | `export function checkMagicNumberSmart({ file, text, rules }) {` |
 
-### lib/checks/npm-json.js（187 行 · 3 个函数）
+### lib/checks/npm-json.js（274 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `starRangeDeps` | 21-33 | 13 | `function starRangeDeps(pkg) {` |
 | `findJsonKeyLine` | 51-59 | 9 | `function findJsonKeyLine(text, key, valueHint) {` |
-| `checkNpmJson` | 61-186 | 126 | `export function checkNpmJson({ file, text, rules, repoHasJsYamlImport, repoPath }) {` |
+| `checkNpmJson` | 61-273 | 213 | `export function checkNpmJson({ file, text, rules, repoHasJsYamlImport, repoPath }) {` |
 
 ### lib/checks/private.js（64 行 · 1 个函数）
 
@@ -2209,6 +2209,14 @@
 | `stripComments` | 31-33 | 3 | `function stripComments(text) {` |
 | `specifiersOf` | 36-40 | 5 | `export function specifiersOf(text) {` |
 | `findViolations` | 43-54 | 12 | `export function findViolations(files, rules) {` |
+
+### test/test-audit-npm-publish-rules.mjs（82 行 · 3 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `hits` | 25-25 | 1 | `const hits = (text, rule) => run(text).filter((f) => f.rule === rule);` |
+| `has` | 26-26 | 1 | `const has = (text, rule) => hits(text, rule).length > 0;` |
+| `msg` | 27-27 | 1 | `const msg = (text, rule) => hits(text, rule)[0]?.message \|\| '';` |
 
 ### test/test-auditignore.mjs（145 行 · 1 个函数）
 
