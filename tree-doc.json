@@ -439,27 +439,22 @@
     "worktree": {
       "docs/CHANGELOG.md": {
         "status": "M",
-        "mtime": "2026-10-13T06:18:05.999Z",
+        "mtime": "2026-10-13T06:24:02.027Z",
         "note": "注释可能需更新"
       },
-      "docs/FUNCTIONS.md": {
+      "docs/releases.json": {
         "status": "M",
-        "mtime": "2026-10-13T06:18:06.451Z",
+        "mtime": "2026-10-13T06:23:44.631Z",
         "note": "注释可能需更新"
       },
-      "lib/app/command-registry.js": {
+      "lib/self/index.js": {
         "status": "M",
-        "mtime": "2026-10-13T06:09:22.503Z",
+        "mtime": "2026-10-13T06:23:44.624Z",
         "note": "注释可能需更新"
       },
-      "lib/app/tool-call.js": {
+      "package.json": {
         "status": "M",
-        "mtime": "2026-10-13T06:09:22.511Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-npm-publish.mjs": {
-        "status": "M",
-        "mtime": "2026-10-13T06:17:45.169Z",
+        "mtime": "2026-10-13T06:23:44.614Z",
         "note": "注释可能需更新"
       }
     }

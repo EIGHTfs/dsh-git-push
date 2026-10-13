@@ -15,7 +15,8 @@
 
 | 版本 | 内容 |
 |------|------|
-| 2.8.0 | 账号信息新增 NPM 面板：本地/GitHub/NPM 三标签，顶部 GitHub↔NPM 账号卡滑动切换（同位置、同款卡、同一套离线快照 + 在线校验链路）；npm token/registry 设置（与 githubToken 同文件、原子读改写）；账号名下包列表（与 GitHub 仓库列表同款行、行内可安装）；npm 装包（默认 --ignore-scripts、二次确认、日志留痕）；npm 发包 API 与工具（后台 job、默认 dryRun、真发需 confirm + dryRun:false）；新增 lib/npm/*（registry 探测 / npmrc 物化 / 安装编排 / 发包编排 / 账号快照） |
+| 2.8.1 | CLI 真发姿势补齐（npm-publish --no-dry-run 需配 --confirm、新增 --json）与 npm 端点经 api 通道可用；doc-drift 增「工具清单完整性」校验并把「N 条 HTTP API」「HTTP 接口（N 条…）」纳入计数模式（本次即抓出 SPEC 工具表缺行）；发包回归改用未发布过的 fixture 包，断言不放松；发版收尾序列补齐三条防再犯（压缩后重跑版本表 / 缩行需 --force / 压缩改信息别用 --amend --no-edit） |
+| 2.8.0 | 账号信息新增 NPM 能力（三标签 + GitHub↔NPM 账号卡滑动切换 + 名下包列表）+ npm 装包与发包（API / 工具 / CLI） |
 | 2.7.1 | 审计按独立包设计落地——对外门面 + 子路径导出 + 审计侧与仓库脚本解耦 + 边界门禁扩列 |
 | 2.7.0 | 审计↔git 边界澄清第一期——抽出 lib/core 中立工具层，审计侧不再依赖 git |
 | 2.6.11 | 全量审计 5 个 blocker 清零 —— 修 2 处真问题 + 收窄 performance/loop-no-fallback-return 的 3 类假阳性 |
