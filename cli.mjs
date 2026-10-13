@@ -37,6 +37,8 @@ export { cmdFileIo, cmdTreeDoc, cmdFunctions, cmdModuleSplitter };
 /** parseArgv 认识的选项白名单（cli-help-sync 机器比对基准，必须与 HELP 文本一致。
  * 注：-m 是单横线别名（helpSync 只比对 -- 双横线），不列入本表。 */
 export const KNOWN_FLAGS = ['--depth', '--full', '--ruleset', '--weights', '--include-ignored', '--push', '--no-push', '--dry-run', '--force', '--message', '--audit', '--ignore-patterns', '--requirements-confirmed', '--push-confirmed', '--json', '--max', '--owner', '--offline', '--paths', '--history', '--since', '--until', '--out', '--skip-empty',
+  // npm 相关（与 command-registry 的 npm_publish 参数对齐：dir / dryRun / tag / otp / confirm）
+  '--dir', '--tag', '--otp', '--confirm', '--global', '--ignore-scripts', '--async', '--no-dry-run',
   // file-io 三标签过滤
   '--summary', '--write', '--type', '--kind', '--risk', '--op', '--root', '--readme',
   // identity-rewrite：额外要统一的邮箱
@@ -69,6 +71,17 @@ const HELP = `git-sluice v${VERSION} — dsh-git-push 引擎独立 CLI（脱离 
   git-sluice file-io [路径...] [--summary] [--write] [--type sync|async] [--kind read|write|delete|rename] [--risk high|medium|low] [--op <操作名>] [--json]
                                   文件读写调用扫描（三标签：类型/操作/上下文）——同步 I/O 在异步路径会阻塞；写/删/改名涉及数据安全
   git-sluice link-check <路径>    检查 md/文本中的链接有效性（只 warning，flaky 域名打折）
+  git-sluice npm-publish [目录] [--dry-run|--no-dry-run] [--tag <tag>] [--otp <码>] [--confirm] [--json]
+                                   npm 发包（注册为后台 job）：默认 dry-run，只体检 + npm publish --dry-run（**不写 registry**）；
+                                   真发必须同时给 --no-dry-run 与 --confirm（不可撤销）；体检项：private:true / 同名版本占用 / npm pack 清单
+  git-sluice api npm-account [--json]      npm 账号（离线快照）
+  git-sluice api npm-check                 npm 账号在线校验（npm whoami，写快照）
+  git-sluice api npm-owned                登录账号名下的公开包列表
+  git-sluice api npm-packages --dir <目录> 该目录的依赖清单
+  git-sluice api npm-install --dir <目录> --confirm [--global] [--async] [--ignore-scripts]
+                                   安装包（--global=全局；--async=异步 + 用 npm-install-progress 轮询进度；默认不执行安装脚本）
+  git-sluice api npm-install-progress     安装进度/终态（consume:true 取走后复位）
+  git-sluice api npm-publish --dry-run    npm 发包（等价写法：走 api 通道，默认 dry-run）
   git-sluice identity-rewrite [仓库路径...] [--root <目录>] [--write] [--push] [--extra-emails <邮箱...>] [--json]
                                    提交身份历史改写：把非规范身份（工具/AI 产生的 agent@dsh.local 等 + 账号 noreply 旧变体）
                                    统一成登录账号规范身份；默认 dry-run 只报告，--write 才改（先建备份引用，自检通过才改写），

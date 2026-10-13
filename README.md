@@ -68,7 +68,7 @@ DSH（DeepSeek Harness）git 提交推送与代码审计插件——提交前自
 
 | 文档 | 讲什么 |
 |---|---|
-| [docs/SPEC.md](docs/SPEC.md) | **当前有效规格唯一入口**：身份 / 17 个工具 / 28 条 HTTP 接口 / 18 个设置键 / 4 个数据文件 / 审计规则体系 / 文档产物 / 版本纪律 / 测试基线 |
+| [docs/SPEC.md](docs/SPEC.md) | **当前有效规格唯一入口**：身份 / 18 个工具 / 34 条 HTTP 接口 / 20 个设置键 / 4 个数据文件 / 审计规则体系 / 文档产物 / 版本纪律 / 测试基线 |
 | [docs/功能-审计规则体系.md](docs/功能-审计规则体系.md) | 22 个规则槽位 / 138 条规则的组织方式、作用域字段、三层结构、运行入口、结果怎么读、怎么豁免 |
 | [docs/功能-历史提交审计.md](docs/功能-历史提交审计.md) | 逐提交回放审计：解决什么、怎么跑、与普通审计的差异与成本 |
 | [docs/功能-文档与结构追踪.md](docs/功能-文档与结构追踪.md) | tree-doc / doc-func / doc-version 三份自动生成文档怎么更新、漂移怎么办 |
@@ -107,6 +107,14 @@ Git 全链路自动化，token / SSH 凭据管理 + 提交推送，无需手动�
 | clone / 建仓 | `cloneViaApi`（trees+blobs 写文件转 git 仓）/ `ensureRemoteRepo`（建仓+设 origin） |
 | 可见性 | `setVisibility` PATCH 切换 public/private |
 | 网络硬闸 | 只允许 api.github.com（`githubFetch` 拒绝非该域名，不跟随 302） |
+
+### npm 能力（账号 / 安装 / 发包）
+
+| 能力 | 说明 |
+|---|---|
+| `npm_publish` | npm 发包（**后台 job**，返回 jobId）：默认 `dryRun`＝只体检 + `npm publish --dry-run`（不写 registry）；真发需同时 `confirm:true` 且 `dryRun:false`；体检项：`private:true`、同名版本占用、`npm pack` 真实清单 |
+| 安装（四段交互） | 列表行「安装」→ 弹**目录选择器**或选**全局安装** → 轮询 `/npm-install-progress` 显示进度 → 回执与日志。默认 `--ignore-scripts`、必须 `confirm:true`、日志落凭据目录 0600 |
+| 账号 | `/npm-account`（离线快照，秒回）+ `/npm-check`（在线 `npm whoami` 写快照）；与 GitHub 账号同款「离线 + 在线」链路；账号名下包经 `/npm-owned` 列出（与 GitHub 仓库列表同款行） |
 
 ### 提交身份（自动带登录账号，AI 不用猜）
 
@@ -253,7 +261,7 @@ dsh-git-push/
 │   │   ├── slot-stats.js — 规则槽位命中统计（模块级状态）
 │   │   ├── tool-call.js — 工具调用分发（git_scan/commit_push/audit/status 等全部工具）
 │   │   ├── tools.js — 工具定义清单（名称/描述/参数 schema）
-│   │   └── …（8 个更深文件）
+│   │   └── …（9 个更深文件）
 │   ├── ast/ — AST 实现层（token 级判定：括号/控制流/数据流/凭据/魔数/命名/规模/分词）
 │   │   ├── brace.js — 括号配对与区间包含工具
 │   │   ├── callgraph.js — 调用链追踪（单文件调用图 + isInRequestPath，io-risk 请求路径判定升级）
@@ -358,6 +366,7 @@ dsh-git-push/
 │   │   ├── 20-repo.js — [6] 仓库管理卡（本地/云端仓库、推送、可见性）
 │   │   ├── 21-audit.js — [7] 审计 Tab（权重/规则行/规则包/注入开关）
 │   │   ├── 22-settings.js — [8] 设置 Tab（token/SSH/邮箱）
+│   │   ├── 23-npm.js — （待注释）
 │   │   ├── 30-page.js — [9] 页面装配（GitPushPage 三选项卡聚合）
 │   │   ├── 40-controller.js — [10] Controller：状态机 + 数据加载（884 行，跨两片）
 │   │   ├── 41-actions.js — [10] Controller：动作注入（269 行）
@@ -412,6 +421,12 @@ dsh-git-push/
 │   │   ├── index.js — HTTP 总入口（Origin/CSRF/写确认/413/路由分发）
 │   ├── link-check/ — 链接判断（文档链接有效性，只 warning 永不 blocker）
 │   │   ├── index.js — 链接判断总入口（分级扣分，断网不拦）
+│   ├── npm/ — （待注释）
+│   │   ├── account.js — （待注释）
+│   │   ├── install.js — （待注释）
+│   │   ├── npmrc.js — （待注释）
+│   │   ├── publish.js — （待注释）
+│   │   ├── registry.js — （待注释）
 │   ├── plugin/ — Host 侧接线层（插件注册到 DSH：工具/HTTP/配置 schema）
 │   │   ├── auto-detect.js — 任务完成自动推送·检测层（纯函数：✅任务完成 触发/❌⚠ 阻断/自定义正则/许可合成判断）
 │   │   ├── auto-push.js — 任务完成自动推送·核心（turn/end 监听→检测→autoPushEnabled 开关→调 commitWithAudit 完整门禁，不裸提交）
@@ -480,6 +495,7 @@ dsh-git-push/
 │   ├── start.sh — 预览服务器启停脚本（start/stop/restart/status + --port + PID/日志/健康检查 /preview-ping）
 ├── test/ — node:test 全量单元测试（541+ 条，覆盖审计/推送/账号/HTTP/后台任务）
 │   ├── .test — 空文件豁免标记（目录级豁免 .test 目录）
+│   ├── e2e-npm-tab-render.mjs — （待注释）
 │   ├── regression-2.4.1.mjs — （待注释）
 │   ├── run-tests.mjs — （待注释）
 │   ├── test-account-refresh-on-push.mjs — （待注释）
@@ -521,6 +537,7 @@ dsh-git-push/
 │   ├── test-cred-env.mjs — git_cred_env 凭据传递测试（双通道/无明文/askpass 调用/无凭据兜底）
 │   ├── test-dataflow.mjs — 三层审计 L2 数据流测试
 │   ├── test-doc-func.mjs — （待注释）
+│   ├── test-doc-version-release-source.mjs — （待注释）
 │   ├── test-doc-version.mjs — （待注释）
 │   ├── test-docs-score.mjs — 文档加分制测试（文档集圈法/四检查/公式/不一致 review/不冲突）
 │   ├── test-dup-code.mjs — （待注释）
@@ -560,6 +577,10 @@ dsh-git-push/
 │   ├── test-module-splitter-multiline.mjs — （待注释）
 │   ├── test-module-splitter.mjs — module_splitter 工具 + CLI 接入测试（契约 + 行为 + 脚本随插件发布）
 │   ├── test-name-length-scope.mjs — （待注释）
+│   ├── test-npm-install.mjs — （待注释）
+│   ├── test-npm-publish.mjs — （待注释）
+│   ├── test-npm-registry.mjs — （待注释）
+│   ├── test-npm-token-credential.mjs — （待注释）
 │   ├── test-perf-loop-collection.mjs — （待注释）
 │   ├── test-perf-repeat-call.mjs — （待注释）
 │   ├── test-persist-credentials.mjs — 凭据持久化测试
@@ -610,11 +631,14 @@ dsh-git-push/
 │   ├── 2026-10-09-审计插件性能优化.MD — （待注释）
 │   ├── 2026-10-11-单一真源与文档漂移治理方案.MD — （待注释）
 │   ├── 2026-10-11-硬编码路径改造为审计引擎方案.MD — （待注释）
+│   ├── 2026-10-13-UI账号信息-NPM对齐GitHub方案.MD — （待注释）
+│   ├── 2026-10-13-UI账号信息-NPM账号卡片与三标签页.MD — （待注释）
 │   ├── CHANGELOG.md — 版本列表宿主（doc-version apply 写 dshgp-version 标记块）
 │   ├── DETAILS-EXEMPT-AND-RULES.md — 细节补充：豁免注释与规则 yml 用法全录
 │   ├── FUNCTIONS.md — 函数列表宿主（doc-func apply 写 dshgp-functions 标记块）
 │   ├── PERF-BASELINE.md — （待注释）
 │   ├── SPEC.md — （待注释）
+│   ├── releases.json — （待注释）
 │   ├── 功能-仓库索引与账号状态.md — （待注释）
 │   ├── 功能-历史提交审计.md — （待注释）
 │   ├── 功能-审计规则体系.md — （待注释）
@@ -1030,6 +1054,36 @@ npm i dsh-git-push   # 零运行时依赖（js-yaml 已内置 lib/vendor/）
 依赖边界由 `test/test-audit-git-boundary.mjs` 机器门禁守住：`lib/audit/**` 与 `lib/core/**` 不得引用 git 层 / 装配层 / 仓库脚本 / 宿主包（`@deepseek-ai/*`、`cordis` 等）。
 
 设计与后续（抽成独立包的迁移路径）见开发者文档《审计独立包设计》。
+
+## 账号信息里的 NPM 面板（本地 / GitHub / NPM 三标签）
+
+账号信息区的仓库管理卡由「本地 / 云端」两标签改为「**本地 / GitHub / NPM**」三标签；NPM 页提供账号态、装包与已装依赖：
+
+**NPM 页包含**
+
+| 区块 | 内容 | 数据来源 |
+|---|---|---|
+| NPM 账号卡 | 登录用户（`npm whoami`）/ registry / 凭据是否配置 + 刷新 | `GET /api/git-push/npm-account` |
+
+NPM 账号卡与 GitHub 账号卡**同一款式**：渐变面板 + 图标块（npm 字样）+ 标题/副标题 + 三态状态徽标
+（已连接 / 校验未过 / 未配置）+ 勾选明细块（✅ 凭据可用、npm token 与 registry、whoami 结果）+ 底部刷新按钮与提示。
+| 安装包 | 包名（多个用空格或逗号分隔，支持 `@scope/name@版本`）、安装目录、全局开关、`--ignore-scripts` 开关、**二次确认**、回执（日志路径 + stdout 摘要） | `POST /api/git-push/npm-install` |
+| 已装依赖 | 目标目录 `package.json` 的依赖列表 + `node_modules` 是否存在 | `GET /api/git-push/npm-packages` |
+
+**完整流程（装包）**
+
+```
+填包名（+ 选择安装目录，或勾选全局）→ 点「安装」→ 出现「确认安装（二次确认）」→ 点击后：
+  前端 POST /api/git-push/npm-install { names, dest|global, ignoreScripts, confirm: true }
+  → 后端校验包名（拒绝 - 开头与路径穿越）与目录 → 加「进行中」锁 → 把 npm token 物化成 0600 独立 npmrc
+  → spawn npm install（默认带 --ignore-scripts、--no-audit --no-fund、--userconfig 指向我们的 npmrc）
+  → 结果与日志路径回执（日志落凭据目录 npm-install.log，0600）
+```
+
+**安全默认（不可省）**：默认**不执行安装脚本**（`--ignore-scripts`，装包会触发 postinstall 任意代码）；默认**不全局**（避免污染宿主 node 环境）；安装**必须二次确认**；包名不接受 `-` 开头（防选项注入）与路径穿越；registry 与凭据只走插件自建 npmrc，不碰用户全局 `~/.npmrc`。
+
+**设置里的 npm 凭据**：设置 → 凭据与密钥 新增 `npm token` 与 `registry` 两个字段，保存走 `settings-set`；
+token 与 GitHub token 存**同一份** `config.json`（0600，写入走原子读改写，互不覆盖），接口只回派生布尔位与脱敏值，**不回传明文**。
 
 ## 三、系统提示词注入
 

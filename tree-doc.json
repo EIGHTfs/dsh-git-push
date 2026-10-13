@@ -437,34 +437,29 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
+      "docs/CHANGELOG.md": {
+        "status": "M",
+        "mtime": "2026-10-13T06:18:05.999Z",
+        "note": "注释可能需更新"
+      },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-13T04:45:47.160Z",
+        "mtime": "2026-10-13T06:18:06.451Z",
         "note": "注释可能需更新"
       },
-      "lib/audit-rules/audit-rules-npm.yml": {
+      "lib/app/command-registry.js": {
         "status": "M",
-        "mtime": "2026-10-13T04:44:03.155Z",
+        "mtime": "2026-10-13T06:09:22.503Z",
         "note": "注释可能需更新"
       },
-      "lib/checks/npm-json.js": {
+      "lib/app/tool-call.js": {
         "status": "M",
-        "mtime": "2026-10-13T04:44:03.146Z",
+        "mtime": "2026-10-13T06:09:22.511Z",
         "note": "注释可能需更新"
       },
-      "lib/self/index.js": {
+      "test/test-npm-publish.mjs": {
         "status": "M",
-        "mtime": "2026-10-13T04:44:23.334Z",
-        "note": "注释可能需更新"
-      },
-      "package.json": {
-        "status": "M",
-        "mtime": "2026-10-13T04:44:23.324Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-audit-npm-publish-rules.mjs": {
-        "status": "A",
-        "mtime": "2026-10-13T04:45:35.914Z",
+        "mtime": "2026-10-13T06:17:45.169Z",
         "note": "注释可能需更新"
       }
     }
@@ -481,5 +476,22 @@
   "test/test-audit-git-boundary.mjs": "（待注释）",
   "lib/app/host-doc-checks.js": "（待注释）",
   "lib/audit/public.js": "（待注释）",
-  "test/test-audit-npm-publish-rules.mjs": "（待注释）"
+  "test/test-audit-npm-publish-rules.mjs": "（待注释）",
+  "docs/releases.json": "（待注释）",
+  "test/test-doc-version-release-source.mjs": "（待注释）",
+  "docs/2026-10-13-UI账号信息-NPM账号卡片与三标签页.MD": "（待注释）",
+  "test/test-npm-token-credential.mjs": "（待注释）",
+  "lib/npm": "（待注释）",
+  "lib/app/handlers/npm.js": "（待注释）",
+  "lib/npm/npmrc.js": "（待注释）",
+  "lib/npm/registry.js": "（待注释）",
+  "test/test-npm-registry.mjs": "（待注释）",
+  "lib/npm/install.js": "（待注释）",
+  "test/test-npm-install.mjs": "（待注释）",
+  "lib/client-parts/23-npm.js": "（待注释）",
+  "test/e2e-npm-tab-render.mjs": "（待注释）",
+  "lib/npm/account.js": "（待注释）",
+  "docs/2026-10-13-UI账号信息-NPM对齐GitHub方案.MD": "（待注释）",
+  "lib/npm/publish.js": "（待注释）",
+  "test/test-npm-publish.mjs": "（待注释）"
 }

@@ -22,16 +22,16 @@
 | `aggregateFindings` | 70-91 | 22 | `export function aggregateFindings(findings = [], opts = {}) {` |
 | `runAuditApi` | 99-158 | 60 | `export async function runAuditApi(repo, params = {}, cfg = {}) {` |
 
-### lib/app/command-registry.js（249 行 · 6 个函数）
+### lib/app/command-registry.js（262 行 · 6 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `applyFlagToken` | 187-203 | 17 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
-| `validateParamConstraints` | 206-212 | 7 | `function validateParamConstraints(args, params) {` |
-| `parseRegistryArgs` | 214-234 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
-| `registryByName` | 237-239 | 3 | `export function registryByName(name) {` |
-| `registryByCli` | 242-244 | 3 | `export function registryByCli(cli) {` |
-| `buildToolsListText` | 247-249 | 3 | `export function buildToolsListText() {` |
+| `applyFlagToken` | 200-216 | 17 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
+| `validateParamConstraints` | 219-225 | 7 | `function validateParamConstraints(args, params) {` |
+| `parseRegistryArgs` | 227-247 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
+| `registryByName` | 250-252 | 3 | `export function registryByName(name) {` |
+| `registryByCli` | 255-257 | 3 | `export function registryByCli(cli) {` |
+| `buildToolsListText` | 260-262 | 3 | `export function buildToolsListText() {` |
 
 ### lib/app/handlers/account.js（166 行 · 10 个函数）
 
@@ -85,6 +85,18 @@
 | `handleAudit` | 151-164 | 14 | `export async function handleAudit(ctx) {` |
 | `handleToggleRule` | 167-175 | 9 | `export function handleToggleRule(ctx) {` |
 
+### lib/app/handlers/npm.js（170 行 · 7 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `npmAccountState` | 18-45 | 28 | `function npmAccountState(ctx) {` |
+| `handleNpmAccount` | 48-50 | 3 | `export function handleNpmAccount(ctx) {` |
+| `handleNpmCheck` | 53-73 | 21 | `export function handleNpmCheck(ctx) {` |
+| `handleNpmOwned` | 76-86 | 11 | `export async function handleNpmOwned(ctx) {` |
+| `handleNpmPackages` | 92-116 | 25 | `export function handleNpmPackages(ctx) {` |
+| `handleNpmInstall` | 122-144 | 23 | `export function handleNpmInstall(ctx) {` |
+| `handleNpmPublish` | 150-169 | 20 | `export async function handleNpmPublish(ctx) {` |
+
 ### lib/app/handlers/repo-actions.js（143 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -108,12 +120,12 @@
 | `handleReposLocalRefresh` | 195-204 | 10 | `export async function handleReposLocalRefresh(ctx) {` |
 | `handleReposCloud` | 207-231 | 25 | `export async function handleReposCloud(ctx) {` |
 
-### lib/app/handlers/settings.js（56 行 · 2 个函数）
+### lib/app/handlers/settings.js（62 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `handleSettingsGet` | 13-19 | 7 | `export function handleSettingsGet(ctx) {` |
-| `handleSettingsSet` | 22-56 | 35 | `export async function handleSettingsSet(ctx) {` |
+| `handleSettingsSet` | 22-62 | 41 | `export async function handleSettingsSet(ctx) {` |
 
 ### lib/app/host-doc-checks.js（26 行 · 1 个函数）
 
@@ -121,24 +133,24 @@
 |------|------|------|------|
 | `installHostDocChecks` | 20-23 | 4 | `export function installHostDocChecks(checks = HOST_DOC_CHECKS) {` |
 
-### lib/app/http-handlers.js（123 行 · 4 个函数）
+### lib/app/http-handlers.js（132 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `adaptHttpHandler` | 37-54 | 18 | `export async function adaptHttpHandler(req, res, env, cfg) {` |
-| `readBody` | 57-60 | 4 | `function readBody(req) {` |
-| `buildCtx` | 63-65 | 3 | `function buildCtx(req, method, env, cfg, query, body, path) {` |
-| `handleHttp` | 75-122 | 48 | `export async function handleHttp(req = {}, env = {}, cfg = defaultConfig()) {` |
+| `adaptHttpHandler` | 40-57 | 18 | `export async function adaptHttpHandler(req, res, env, cfg) {` |
+| `readBody` | 60-63 | 4 | `function readBody(req) {` |
+| `buildCtx` | 66-68 | 3 | `function buildCtx(req, method, env, cfg, query, body, path) {` |
+| `handleHttp` | 78-131 | 54 | `export async function handleHttp(req = {}, env = {}, cfg = defaultConfig()) {` |
 
-### lib/app/inject-text.js（188 行 · 5 个函数）
+### lib/app/inject-text.js（189 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `buildIdentityInjectionText` | 69-79 | 11 | `export function buildIdentityInjectionText() {` |
-| `buildRequirementsInjectionText` | 81-93 | 13 | `export function buildRequirementsInjectionText() {` |
-| `detectHostIp` | 114-125 | 12 | `function detectHostIp() {` |
-| `buildAuditApiGuide` | 131-158 | 28 | `export function buildAuditApiGuide(repo = '', opts = {}) {` |
-| `formatAuditBlock` | 160-187 | 28 | `export function formatAuditBlock(r = {}) {` |
+| `buildIdentityInjectionText` | 70-80 | 11 | `export function buildIdentityInjectionText() {` |
+| `buildRequirementsInjectionText` | 82-94 | 13 | `export function buildRequirementsInjectionText() {` |
+| `detectHostIp` | 115-126 | 12 | `function detectHostIp() {` |
+| `buildAuditApiGuide` | 132-159 | 28 | `export function buildAuditApiGuide(repo = '', opts = {}) {` |
+| `formatAuditBlock` | 161-188 | 28 | `export function formatAuditBlock(r = {}) {` |
 
 ### lib/app/scan-root.js（23 行 · 1 个函数）
 
@@ -146,13 +158,13 @@
 |------|------|------|------|
 | `getDefaultScanRoot` | 13-23 | 11 | `export function getDefaultScanRoot(env = {}, cfg = {}) {` |
 
-### lib/app/schema.js（148 行 · 3 个函数）
+### lib/app/schema.js（151 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `makeFallbackSchema` | 31-72 | 42 | `function makeFallbackSchema() {` |
 | `fn` | 33-33 | 1 | `const fn = (v) => (v === undefined ? meta.default : v);` |
-| `redactConfig` | 140-147 | 8 | `export function redactConfig(cfg = {}) {` |
+| `redactConfig` | 142-150 | 9 | `export function redactConfig(cfg = {}) {` |
 
 ### lib/app/settings-bridge.js（167 行 · 9 个函数）
 
@@ -200,7 +212,7 @@
 | `getLastSlotHitStats` | 28-30 | 3 | `export function getLastSlotHitStats() {` |
 | `getLastSlotHitMeta` | 33-35 | 3 | `export function getLastSlotHitMeta() {` |
 
-### lib/app/tool-call.js（603 行 · 20 个函数）
+### lib/app/tool-call.js（658 行 · 23 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -212,18 +224,21 @@
 | `done` | 155-163 | 9 | `const done = (async () => {` |
 | `startHostJob` | 180-187 | 8 | `function startHostJob(jobs, spec, owner) {` |
 | `callCloneJob` | 201-233 | 33 | `async function callCloneJob(args, jobs, exec, log, env = {}, cfg = {}) {` |
-| `buildCloneJobSpec` | 236-253 | 18 | `function buildCloneJobSpec(target, dest, doClone) {` |
-| `done` | 241-249 | 9 | `const done = (async () => {` |
-| `callCommitPush` | 260-303 | 44 | `async function callCommitPush(args, env, cfg, log, jobs, exec) {` |
-| `doPush` | 276-276 | 1 | `const doPush = () => pushWithPostSteps(args, env, cfg);` |
-| `buildAuditOpts` | 314-325 | 12 | `function buildAuditOpts(args, cfg, scope) {` |
-| `runHistoryAuditTool` | 331-357 | 27 | `async function runHistoryAuditTool(args, env, cfg, jobs, exec, weights) {` |
-| `doHistory` | 337-340 | 4 | `const doHistory = async () => {` |
-| `callCodeAudit` | 359-371 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
-| `runStandardAuditTool` | 374-413 | 40 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
-| `callTool` | 415-574 | 160 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null) {` |
-| `shellSplit` | 577-595 | 19 | `function shellSplit(input) {` |
-| `readTextSafe` | 598-602 | 5 | `function readTextSafe(path = '') {` |
+| `callNpmPublishJob` | 241-286 | 46 | `async function callNpmPublishJob(args = {}, jobs, exec, log, env = {}, cfg = {}) {` |
+| `outcome` | 259-259 | 1 | `const outcome = (r) => (r && r.ok` |
+| `done` | 270-272 | 3 | `const done = (async () => {` |
+| `buildCloneJobSpec` | 289-306 | 18 | `function buildCloneJobSpec(target, dest, doClone) {` |
+| `done` | 294-302 | 9 | `const done = (async () => {` |
+| `callCommitPush` | 313-356 | 44 | `async function callCommitPush(args, env, cfg, log, jobs, exec) {` |
+| `doPush` | 329-329 | 1 | `const doPush = () => pushWithPostSteps(args, env, cfg);` |
+| `buildAuditOpts` | 367-378 | 12 | `function buildAuditOpts(args, cfg, scope) {` |
+| `runHistoryAuditTool` | 384-410 | 27 | `async function runHistoryAuditTool(args, env, cfg, jobs, exec, weights) {` |
+| `doHistory` | 390-393 | 4 | `const doHistory = async () => {` |
+| `callCodeAudit` | 412-424 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
+| `runStandardAuditTool` | 427-466 | 40 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
+| `callTool` | 468-629 | 162 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null) {` |
+| `shellSplit` | 632-650 | 19 | `function shellSplit(input) {` |
+| `readTextSafe` | 653-657 | 5 | `function readTextSafe(path = '') {` |
 
 ### lib/app/tools.js（27 行 · 2 个函数）
 
@@ -644,7 +659,7 @@
 | `excludePathOf` | 38-47 | 10 | `function excludePathOf(root) {` |
 | `detectIgnoreBlindSpot` | 54-101 | 48 | `export function detectIgnoreBlindSpot(root) {` |
 
-### lib/audit/orchestrate.js（466 行 · 17 个函数）
+### lib/audit/orchestrate.js（477 行 · 17 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -660,11 +675,11 @@
 | `appendTreeDocDrift` | 297-339 | 43 | `function appendTreeDocDrift(findings, repoPath) {` |
 | `by` | 330-330 | 1 | `const by = (code) => wt.filter(([, v]) => v?.status === code).length;` |
 | `appendFuncDocDrift` | 348-364 | 17 | `function appendFuncDocDrift(findings, repoPath) {` |
-| `appendSplitDocsCheck` | 372-415 | 44 | `function appendSplitDocsCheck(findings, repoPath) {` |
-| `hasMarkBlock` | 418-420 | 3 | `function hasMarkBlock(text, marker) {` |
-| `auditChanged` | 425-460 | 36 | `export async function auditChanged(repoPath, opts = {}) {` |
-| `isAuditIgnored` | 441-454 | 14 | `const isAuditIgnored = (rel) => {` |
-| `auditWithScope` | 463-465 | 3 | `export async function auditWithScope(repoPath, { scope = 'diff', ...opts } = {}) {` |
+| `appendSplitDocsCheck` | 372-426 | 55 | `function appendSplitDocsCheck(findings, repoPath) {` |
+| `hasMarkBlock` | 429-431 | 3 | `function hasMarkBlock(text, marker) {` |
+| `auditChanged` | 436-471 | 36 | `export async function auditChanged(repoPath, opts = {}) {` |
+| `isAuditIgnored` | 452-465 | 14 | `const isAuditIgnored = (rel) => {` |
+| `auditWithScope` | 474-476 | 3 | `export async function auditWithScope(repoPath, { scope = 'diff', ...opts } = {}) {` |
 
 ### lib/audit/repo-level.js（31 行 · 2 个函数）
 
@@ -928,20 +943,20 @@
 | `dshgp_browseClose` | 76-82 | 7 | `function dshgp_browseClose() {` |
 | `dshgp_browseAttach` | 83-93 | 11 | `function dshgp_browseAttach(inputEl) {` |
 
-### lib/client-parts/20-repo.js（372 行 · 10 个函数）
+### lib/client-parts/20-repo.js（375 行 · 10 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `dshgp_RepoManagerCard` | 2-32 | 31 | `function dshgp_RepoManagerCard(props) {` |
-| `dshgp_RepoLocalRow` | 35-113 | 79 | `function dshgp_RepoLocalRow(props) {` |
-| `dshgp_RepoLocalPane` | 116-153 | 38 | `function dshgp_RepoLocalPane(props) {` |
-| `dshgp_RepoCloudRow` | 156-203 | 48 | `function dshgp_RepoCloudRow(props) {` |
-| `dshgp_VisConfirmDialog` | 209-237 | 29 | `function dshgp_VisConfirmDialog(props) {` |
-| `dshgp_RepoCloudPane` | 240-291 | 52 | `function dshgp_RepoCloudPane(props) {` |
-| `dshgp_CloneProgress` | 302-319 | 18 | `function dshgp_CloneProgress(props) {` |
-| `mb` | 304-304 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
-| `dshgp_ClonePreview` | 327-370 | 44 | `function dshgp_ClonePreview(props) {` |
-| `mb` | 329-329 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
+| `dshgp_RepoManagerCard` | 2-35 | 34 | `function dshgp_RepoManagerCard(props) {` |
+| `dshgp_RepoLocalRow` | 38-116 | 79 | `function dshgp_RepoLocalRow(props) {` |
+| `dshgp_RepoLocalPane` | 119-156 | 38 | `function dshgp_RepoLocalPane(props) {` |
+| `dshgp_RepoCloudRow` | 159-206 | 48 | `function dshgp_RepoCloudRow(props) {` |
+| `dshgp_VisConfirmDialog` | 212-240 | 29 | `function dshgp_VisConfirmDialog(props) {` |
+| `dshgp_RepoCloudPane` | 243-294 | 52 | `function dshgp_RepoCloudPane(props) {` |
+| `dshgp_CloneProgress` | 305-322 | 18 | `function dshgp_CloneProgress(props) {` |
+| `mb` | 307-307 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
+| `dshgp_ClonePreview` | 330-373 | 44 | `function dshgp_ClonePreview(props) {` |
+| `mb` | 332-332 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
 
 ### lib/client-parts/21-audit.js（302 行 · 10 个函数）
 
@@ -958,13 +973,25 @@
 | `dshgp_RuleListBlock` | 241-272 | 32 | `function dshgp_RuleListBlock(props) {` |
 | `dshgp_AuditTab` | 279-299 | 21 | `function dshgp_AuditTab(props) {` |
 
-### lib/client-parts/22-settings.js（145 行 · 3 个函数）
+### lib/client-parts/22-settings.js（147 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `dshgp_CredentialBlock` | 2-67 | 66 | `function dshgp_CredentialBlock(props) {` |
-| `dshgp_PushDefaultsBlock` | 70-132 | 63 | `function dshgp_PushDefaultsBlock(props) {` |
-| `dshgp_SettingsTab` | 134-143 | 10 | `function dshgp_SettingsTab(props) {` |
+| `dshgp_CredentialBlock` | 2-69 | 68 | `function dshgp_CredentialBlock(props) {` |
+| `dshgp_PushDefaultsBlock` | 72-134 | 63 | `function dshgp_PushDefaultsBlock(props) {` |
+| `dshgp_SettingsTab` | 136-145 | 10 | `function dshgp_SettingsTab(props) {` |
+
+### lib/client-parts/23-npm.js（384 行 · 7 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `dshgp_NpmAccountCard` | 9-58 | 50 | `function dshgp_NpmAccountCard(props) {` |
+| `dshgp_NpmInstallForm` | 61-124 | 64 | `function dshgp_NpmInstallForm(props) {` |
+| `dshgp_NpmPanel` | 127-286 | 160 | `function dshgp_NpmPanel(props) {` |
+| `doInstall` | 159-175 | 17 | `const doInstall = async () => {` |
+| `dshgp_AccountSwitcher` | 292-330 | 39 | `function dshgp_AccountSwitcher(props) {` |
+| `dshgp_NpmCredFields` | 333-382 | 50 | `function dshgp_NpmCredFields() {` |
+| `save` | 345-361 | 17 | `const save = async () => {` |
 
 ### lib/client-parts/30-page.js（57 行 · 1 个函数）
 
@@ -972,12 +999,13 @@
 |------|------|------|------|
 | `dshgp_GitPushPage` | 2-55 | 54 | `function dshgp_GitPushPage(props) {` |
 
-### lib/client-parts/40-controller.js（885 行 · 2 个函数）
+### lib/client-parts/40-controller.js（1093 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `renderResult` | 783-796 | 14 | `const renderResult = (res) => {` |
-| `poll` | 799-824 | 26 | `const poll = async () => {` |
+| `tick` | 492-510 | 19 | `const tick = async () => {` |
+| `renderResult` | 991-1004 | 14 | `const renderResult = (res) => {` |
+| `poll` | 1007-1032 | 26 | `const poll = async () => {` |
 
 ### lib/client-parts/99-apply.js（72 行 · 3 个函数）
 
@@ -987,56 +1015,64 @@
 | `useCardState` | 41-44 | 4 | `const useCardState = (selector) => {` |
 | `SectionPage` | 47-52 | 6 | `function SectionPage() {` |
 
-### lib/client.js（2586 行 · 46 个函数）
+### lib/client.js（3195 行 · 54 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `dshgp_ensureCss` | 239-247 | 9 | `function dshgp_ensureCss() {` |
-| `dshgp_getJson` | 250-253 | 4 | `async function dshgp_getJson(url) {` |
-| `dshgp_postJson` | 255-264 | 10 | `async function dshgp_postJson(url, payload, timeoutMs) {` |
-| `dshgp_tokenConfigured` | 272-276 | 5 | `function dshgp_tokenConfigured(value) {` |
-| `dshgp_localGet` | 283-285 | 3 | `function dshgp_localGet(key) {` |
-| `dshgp_localSet` | 288-290 | 3 | `function dshgp_localSet(key, value) {` |
-| `dshgp_copyText` | 293-298 | 6 | `function dshgp_copyText(text) {` |
-| `dshgp_AcctHead` | 314-328 | 15 | `function dshgp_AcctHead(props) {` |
-| `dshgp_AccountCard` | 331-375 | 45 | `function dshgp_AccountCard(props) {` |
-| `dshgp_AccountTab` | 378-393 | 16 | `function dshgp_AccountTab(props) {` |
-| `dshgp_browseEnsureDom` | 400-428 | 29 | `function dshgp_browseEnsureDom() {` |
-| `dshgp_browseGuess` | 429-431 | 3 | `function dshgp_browseGuess() {` |
-| `dshgp_browseRemember` | 432-434 | 3 | `function dshgp_browseRemember(p) {` |
-| `dshgp_browseLoad` | 435-460 | 26 | `async function dshgp_browseLoad(p) {` |
-| `dshgp_browseOpen` | 461-469 | 9 | `function dshgp_browseOpen(input, onPick) {` |
-| `dshgp_browseClose` | 470-476 | 7 | `function dshgp_browseClose() {` |
-| `dshgp_browseAttach` | 477-487 | 11 | `function dshgp_browseAttach(inputEl) {` |
-| `dshgp_RepoManagerCard` | 491-521 | 31 | `function dshgp_RepoManagerCard(props) {` |
-| `dshgp_RepoLocalRow` | 524-602 | 79 | `function dshgp_RepoLocalRow(props) {` |
-| `dshgp_RepoLocalPane` | 605-642 | 38 | `function dshgp_RepoLocalPane(props) {` |
-| `dshgp_RepoCloudRow` | 645-692 | 48 | `function dshgp_RepoCloudRow(props) {` |
-| `dshgp_VisConfirmDialog` | 698-726 | 29 | `function dshgp_VisConfirmDialog(props) {` |
-| `dshgp_RepoCloudPane` | 729-780 | 52 | `function dshgp_RepoCloudPane(props) {` |
-| `dshgp_CloneProgress` | 791-808 | 18 | `function dshgp_CloneProgress(props) {` |
-| `mb` | 793-793 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
-| `dshgp_ClonePreview` | 816-859 | 44 | `function dshgp_ClonePreview(props) {` |
-| `mb` | 818-818 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
-| `dshgp_WeightRows` | 863-886 | 24 | `function dshgp_WeightRows(props) {` |
-| `dshgp_RuleRow` | 897-959 | 63 | `function dshgp_RuleRow(props, slot, idx, len) {` |
-| `countTitle` | 906-909 | 4 | `const countTitle = (kind) => {` |
-| `move` | 914-914 | 1 | `const move = (dir) => props.moveSlot(slot, dir);` |
-| `dshgp_AuditSwitchBlock` | 962-1026 | 65 | `function dshgp_AuditSwitchBlock(props) {` |
-| `dshgp_InjectPromptSwitchBlock` | 1029-1051 | 23 | `function dshgp_InjectPromptSwitchBlock(props) {` |
-| `dshgp_CommentWordingBlock` | 1054-1069 | 16 | `function dshgp_CommentWordingBlock(props) {` |
-| `dshgp_AuditAdvancedBlock` | 1072-1098 | 27 | `function dshgp_AuditAdvancedBlock(props) {` |
-| `dshgp_RuleListBlock` | 1101-1132 | 32 | `function dshgp_RuleListBlock(props) {` |
-| `dshgp_AuditTab` | 1139-1159 | 21 | `function dshgp_AuditTab(props) {` |
-| `dshgp_CredentialBlock` | 1163-1228 | 66 | `function dshgp_CredentialBlock(props) {` |
-| `dshgp_PushDefaultsBlock` | 1231-1293 | 63 | `function dshgp_PushDefaultsBlock(props) {` |
-| `dshgp_SettingsTab` | 1295-1304 | 10 | `function dshgp_SettingsTab(props) {` |
-| `dshgp_GitPushPage` | 1307-1360 | 54 | `function dshgp_GitPushPage(props) {` |
-| `renderResult` | 2144-2157 | 14 | `const renderResult = (res) => {` |
-| `poll` | 2160-2185 | 26 | `const poll = async () => {` |
-| `apply` | 2515-2579 | 65 | `function apply(ctx) {` |
-| `useCardState` | 2555-2558 | 4 | `const useCardState = (selector) => {` |
-| `SectionPage` | 2561-2566 | 6 | `function SectionPage() {` |
+| `dshgp_ensureCss` | 242-250 | 9 | `function dshgp_ensureCss() {` |
+| `dshgp_getJson` | 253-256 | 4 | `async function dshgp_getJson(url) {` |
+| `dshgp_postJson` | 258-267 | 10 | `async function dshgp_postJson(url, payload, timeoutMs) {` |
+| `dshgp_tokenConfigured` | 275-279 | 5 | `function dshgp_tokenConfigured(value) {` |
+| `dshgp_localGet` | 286-288 | 3 | `function dshgp_localGet(key) {` |
+| `dshgp_localSet` | 291-293 | 3 | `function dshgp_localSet(key, value) {` |
+| `dshgp_copyText` | 296-301 | 6 | `function dshgp_copyText(text) {` |
+| `dshgp_AcctHead` | 317-331 | 15 | `function dshgp_AcctHead(props) {` |
+| `dshgp_AccountCard` | 334-378 | 45 | `function dshgp_AccountCard(props) {` |
+| `dshgp_AccountTab` | 381-396 | 16 | `function dshgp_AccountTab(props) {` |
+| `dshgp_browseEnsureDom` | 403-431 | 29 | `function dshgp_browseEnsureDom() {` |
+| `dshgp_browseGuess` | 432-434 | 3 | `function dshgp_browseGuess() {` |
+| `dshgp_browseRemember` | 435-437 | 3 | `function dshgp_browseRemember(p) {` |
+| `dshgp_browseLoad` | 438-463 | 26 | `async function dshgp_browseLoad(p) {` |
+| `dshgp_browseOpen` | 464-472 | 9 | `function dshgp_browseOpen(input, onPick) {` |
+| `dshgp_browseClose` | 473-479 | 7 | `function dshgp_browseClose() {` |
+| `dshgp_browseAttach` | 480-490 | 11 | `function dshgp_browseAttach(inputEl) {` |
+| `dshgp_RepoManagerCard` | 494-527 | 34 | `function dshgp_RepoManagerCard(props) {` |
+| `dshgp_RepoLocalRow` | 530-608 | 79 | `function dshgp_RepoLocalRow(props) {` |
+| `dshgp_RepoLocalPane` | 611-648 | 38 | `function dshgp_RepoLocalPane(props) {` |
+| `dshgp_RepoCloudRow` | 651-698 | 48 | `function dshgp_RepoCloudRow(props) {` |
+| `dshgp_VisConfirmDialog` | 704-732 | 29 | `function dshgp_VisConfirmDialog(props) {` |
+| `dshgp_RepoCloudPane` | 735-786 | 52 | `function dshgp_RepoCloudPane(props) {` |
+| `dshgp_CloneProgress` | 797-814 | 18 | `function dshgp_CloneProgress(props) {` |
+| `mb` | 799-799 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
+| `dshgp_ClonePreview` | 822-865 | 44 | `function dshgp_ClonePreview(props) {` |
+| `mb` | 824-824 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
+| `dshgp_NpmAccountCard` | 875-924 | 50 | `function dshgp_NpmAccountCard(props) {` |
+| `dshgp_NpmInstallForm` | 927-990 | 64 | `function dshgp_NpmInstallForm(props) {` |
+| `dshgp_NpmPanel` | 993-1152 | 160 | `function dshgp_NpmPanel(props) {` |
+| `doInstall` | 1025-1041 | 17 | `const doInstall = async () => {` |
+| `dshgp_AccountSwitcher` | 1158-1196 | 39 | `function dshgp_AccountSwitcher(props) {` |
+| `dshgp_NpmCredFields` | 1199-1248 | 50 | `function dshgp_NpmCredFields() {` |
+| `save` | 1211-1227 | 17 | `const save = async () => {` |
+| `dshgp_WeightRows` | 1252-1275 | 24 | `function dshgp_WeightRows(props) {` |
+| `dshgp_RuleRow` | 1286-1348 | 63 | `function dshgp_RuleRow(props, slot, idx, len) {` |
+| `countTitle` | 1295-1298 | 4 | `const countTitle = (kind) => {` |
+| `move` | 1303-1303 | 1 | `const move = (dir) => props.moveSlot(slot, dir);` |
+| `dshgp_AuditSwitchBlock` | 1351-1415 | 65 | `function dshgp_AuditSwitchBlock(props) {` |
+| `dshgp_InjectPromptSwitchBlock` | 1418-1440 | 23 | `function dshgp_InjectPromptSwitchBlock(props) {` |
+| `dshgp_CommentWordingBlock` | 1443-1458 | 16 | `function dshgp_CommentWordingBlock(props) {` |
+| `dshgp_AuditAdvancedBlock` | 1461-1487 | 27 | `function dshgp_AuditAdvancedBlock(props) {` |
+| `dshgp_RuleListBlock` | 1490-1521 | 32 | `function dshgp_RuleListBlock(props) {` |
+| `dshgp_AuditTab` | 1528-1548 | 21 | `function dshgp_AuditTab(props) {` |
+| `dshgp_CredentialBlock` | 1552-1619 | 68 | `function dshgp_CredentialBlock(props) {` |
+| `dshgp_PushDefaultsBlock` | 1622-1684 | 63 | `function dshgp_PushDefaultsBlock(props) {` |
+| `dshgp_SettingsTab` | 1686-1695 | 10 | `function dshgp_SettingsTab(props) {` |
+| `dshgp_GitPushPage` | 1698-1751 | 54 | `function dshgp_GitPushPage(props) {` |
+| `tick` | 2244-2262 | 19 | `const tick = async () => {` |
+| `renderResult` | 2743-2756 | 14 | `const renderResult = (res) => {` |
+| `poll` | 2759-2784 | 26 | `const poll = async () => {` |
+| `apply` | 3124-3188 | 65 | `function apply(ctx) {` |
+| `useCardState` | 3164-3167 | 4 | `const useCardState = (selector) => {` |
+| `SectionPage` | 3170-3175 | 6 | `function SectionPage() {` |
 
 ### lib/client/index.js（162 行 · 5 个函数）
 
@@ -1087,7 +1123,7 @@
 |------|------|------|------|
 | `loadRequirements` | 23-40 | 18 | `export function loadRequirements() {` |
 
-### lib/core/credentials.js（235 行 · 11 个函数）
+### lib/core/credentials.js（275 行 · 13 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1101,7 +1137,9 @@
 | `isMaskedValue` | 140-143 | 4 | `export function isMaskedValue(v = '') {` |
 | `persistGithubToken` | 153-164 | 12 | `export function persistGithubToken(token, { workspaceRoot = '' } = {}) {` |
 | `persistSshPub` | 173-186 | 14 | `export function persistSshPub(pub, { workspaceRoot = '' } = {}) {` |
-| `generateSshKey` | 195-234 | 40 | `export function generateSshKey(email, { workspaceRoot = '', force = false } = {}) {` |
+| `persistNpmToken` | 199-210 | 12 | `export function persistNpmToken(token, { workspaceRoot = '' } = {}) {` |
+| `readNpmToken` | 217-226 | 10 | `export function readNpmToken({ workspaceRoot = '' } = {}) {` |
+| `generateSshKey` | 235-274 | 40 | `export function generateSshKey(email, { workspaceRoot = '', force = false } = {}) {` |
 
 ### lib/core/endpoints.js（110 行 · 6 个函数）
 
@@ -1508,6 +1546,63 @@
 | `checkLinks` | 158-182 | 25 | `export async function checkLinks({ file = '', text = '', fetcher, concurrency, timeoutMs, maxLinks = DEFAULT_OPTS.maxLinks } = {}) {` |
 | `sumLinkPenalty` | 185-187 | 3 | `export function sumLinkPenalty(findings = []) {` |
 
+### lib/npm/account.js（65 行 · 5 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `npmAccountStatusFile` | 17-19 | 3 | `export function npmAccountStatusFile({ workspaceRoot = '' } = {}) {` |
+| `readNpmAccountStatus` | 22-28 | 7 | `export function readNpmAccountStatus({ workspaceRoot = '' } = {}) {` |
+| `writeNpmAccountStatus` | 31-37 | 7 | `export function writeNpmAccountStatus(status = {}, { workspaceRoot = '' } = {}) {` |
+| `buildNpmAccountStatus` | 40-42 | 3 | `export function buildNpmAccountStatus({ user = '', registry = '', ok = false, error = '' } = {}) {` |
+| `renderNpmAccountBlock` | 50-64 | 15 | `export function renderNpmAccountBlock(snap = {}, { configured = false, maskedToken = '', registry = '' } = {}) {` |
+
+### lib/npm/install.js（212 行 · 9 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `installingKeys` | 24-26 | 3 | `export function installingKeys() {` |
+| `validatePackageNames` | 29-39 | 11 | `export function validatePackageNames(names = []) {` |
+| `validateDest` | 42-52 | 11 | `export function validateDest(dest = '') {` |
+| `buildInstallArgs` | 55-61 | 7 | `export function buildInstallArgs({ names = [], global = false, dest = '', ignoreScripts = true } = {}) {` |
+| `appendInstallLog` | 64-72 | 9 | `function appendInstallLog(line, { workspaceRoot = '' } = {}) {` |
+| `installPackages` | 80-118 | 39 | `export function installPackages({` |
+| `startInstall` | 133-194 | 62 | `export function startInstall({` |
+| `push` | 165-172 | 8 | `const push = (buf) => {` |
+| `installProgress` | 200-211 | 12 | `export function installProgress({ consume = false } = {}) {` |
+
+### lib/npm/npmrc.js（57 行 · 4 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `registryAuthPrefix` | 16-23 | 8 | `export function registryAuthPrefix(registry = '') {` |
+| `npmrcText` | 26-34 | 9 | `export function npmrcText({ registry = 'https://registry.npmjs.org/', token = '' } = {}) {` |
+| `writeNpmrc` | 40-48 | 9 | `export function writeNpmrc({ workspaceRoot = '', registry = 'https://registry.npmjs.org/', token = '' } = {}) {` |
+| `npmArgs` | 51-56 | 6 | `export function npmArgs({ npmrcFile = '', registry = 'https://registry.npmjs.org/' } = {}) {` |
+
+### lib/npm/publish.js（168 行 · 6 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `publishingKeys` | 24-26 | 3 | `export function publishingKeys() {` |
+| `readPackageInfo` | 29-44 | 16 | `export function readPackageInfo(dir = '') {` |
+| `fetchPublishedVersions` | 47-67 | 21 | `export async function fetchPublishedVersions({ name, registry = DEFAULT_REGISTRY, timeoutMs = NPM_TIMEOUT_MS } = {}) {` |
+| `packDryRun` | 70-168 | 99 | `export function packDryRun({ dir, registry = DEFAULT_REGISTRY, workspaceRoot = '', token = '', timeoutMs = PUBLISH_TIMEOUT_MS } = {}) {` |
+| `appendPublishLog` | 92-100 | 9 | `function appendPublishLog(line, { workspaceRoot = '' } = {}) {` |
+| `publishPackage` | 107-167 | 61 | `export async function publishPackage({` |
+
+### lib/npm/registry.js（148 行 · 8 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `normalizeRegistry` | 15-23 | 9 | `export function normalizeRegistry(v = '') {` |
+| `resolveNpmBin` | 32-54 | 23 | `export function resolveNpmBin({ env = process.env } = {}) {` |
+| `probe` | 35-37 | 3 | `const probe = (p) => {` |
+| `runNpm` | 60-83 | 24 | `export function runNpm(args = [], { timeoutMs = NPM_TIMEOUT_MS, env = {} } = {}) {` |
+| `parseWhoami` | 86-89 | 4 | `export function parseWhoami(text = '') {` |
+| `whoami` | 92-97 | 6 | `export function whoami({ npmArgs = [], timeoutMs = NPM_TIMEOUT_MS, env = {} } = {}) {` |
+| `listOwnedPackages` | 105-118 | 14 | `export async function listOwnedPackages(user, { registry = DEFAULT_REGISTRY, timeoutMs = NPM_TIMEOUT_MS, size = 50 } = {}) {` |
+| `searchPackages` | 119-147 | 29 | `export async function searchPackages(q, { registry = DEFAULT_REGISTRY, timeoutMs = NPM_TIMEOUT_MS, size = 20 } = {}) {` |
+
 ### lib/plugin/auto-detect.js（92 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -1817,14 +1912,14 @@
 | `loadPlaywright` | 191-199 | 9 | `function loadPlaywright(pwroot) {` |
 | `stripHtml` | 202-208 | 7 | `function stripHtml(html) {` |
 
-### scripts/build-client.mjs（119 行 · 4 个函数）
+### scripts/build-client.mjs（120 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `readParts` | 53-59 | 7 | `export function readParts(order = PART_ORDER, dir = PARTS_DIR) {` |
-| `buildClient` | 64-67 | 4 | `export function buildClient(order = PART_ORDER, dir = PARTS_DIR) {` |
-| `checkShape` | 70-79 | 10 | `export function checkShape(code) {` |
-| `main` | 83-114 | 32 | `function main(argv = process.argv.slice(2)) {` |
+| `readParts` | 54-60 | 7 | `export function readParts(order = PART_ORDER, dir = PARTS_DIR) {` |
+| `buildClient` | 65-68 | 4 | `export function buildClient(order = PART_ORDER, dir = PARTS_DIR) {` |
+| `checkShape` | 71-80 | 10 | `export function checkShape(code) {` |
+| `main` | 84-115 | 32 | `function main(argv = process.argv.slice(2)) {` |
 
 ### scripts/check.mjs（62 行 · 1 个函数）
 
@@ -1832,7 +1927,7 @@
 |------|------|------|------|
 | `collectJs` | 22-31 | 10 | `function collectJs(dir, acc = []) {` |
 
-### scripts/doc-drift.mjs（166 行 · 7 个函数）
+### scripts/doc-drift.mjs（201 行 · 9 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1840,9 +1935,11 @@
 | `docFiles` | 45-53 | 9 | `function docFiles(root = ROOT) {` |
 | `countSettings` | 60-70 | 11 | `export function countSettings(root = ROOT) {` |
 | `countRoutes` | 76-85 | 10 | `export function countRoutes(root = ROOT) {` |
-| `findCountDrift` | 92-128 | 37 | `export function findCountDrift(root = ROOT, actual = countRules(root), toolCount = null) {` |
-| `countToolsAsync` | 135-143 | 9 | `export async function countToolsAsync(root = ROOT) {` |
-| `main` | 145-163 | 19 | `async function main() {` |
+| `findCountDrift` | 92-130 | 39 | `export function findCountDrift(root = ROOT, actual = countRules(root), toolCount = null) {` |
+| `findToolListGaps` | 137-145 | 9 | `export function findToolListGaps(root = ROOT, toolNames = []) {` |
+| `toolNamesAsync` | 148-156 | 9 | `export async function toolNamesAsync(root = ROOT) {` |
+| `countToolsAsync` | 163-171 | 9 | `export async function countToolsAsync(root = ROOT) {` |
+| `main` | 173-198 | 26 | `async function main() {` |
 
 ### scripts/doc-func.mjs（213 行 · 12 个函数）
 
@@ -1886,7 +1983,7 @@
 | `filesOf` | 400-400 | 1 | `const filesOf = (r) => gitLsFiles(r);` |
 | `mapOf` | 401-401 | 1 | `const mapOf = (r) => loadMapping(r);` |
 
-### scripts/doc-version.mjs（197 行 · 9 个函数）
+### scripts/doc-version.mjs（221 行 · 10 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1894,11 +1991,12 @@
 | `resolveVersionSource` | 59-62 | 4 | `export function resolveVersionSource(root, explicit = '') {` |
 | `projectVersionOf` | 65-75 | 11 | `export function projectVersionOf(root, source = '') {` |
 | `packageVersionOf` | 78-80 | 3 | `export function packageVersionOf(root) {` |
-| `buildVersionListText` | 83-98 | 16 | `export function buildVersionListText(root, { versionSource = '' } = {}) {` |
-| `findBlock` | 101-106 | 6 | `function findBlock(text) {` |
-| `applyVersionBlock` | 109-113 | 5 | `export function applyVersionBlock(text, newContent) {` |
-| `checkVersionDrift` | 116-124 | 9 | `export function checkVersionDrift({ hostPath, root, versionSource = '' } = {}) {` |
-| `out` | 141-141 | 1 | `const out = (msg) => console.log(msg);` |
+| `buildVersionListText` | 83-122 | 40 | `export function buildVersionListText(root, { versionSource = '' } = {}) {` |
+| `releaseTitle` | 101-111 | 11 | `const releaseTitle = (() => {` |
+| `findBlock` | 125-130 | 6 | `function findBlock(text) {` |
+| `applyVersionBlock` | 133-137 | 5 | `export function applyVersionBlock(text, newContent) {` |
+| `checkVersionDrift` | 140-148 | 9 | `export function checkVersionDrift({ hostPath, root, versionSource = '' } = {}) {` |
+| `out` | 165-165 | 1 | `const out = (msg) => console.log(msg);` |
 
 ### scripts/frontend-preview-check.mjs（125 行 · 1 个函数）
 
@@ -2152,6 +2250,12 @@
 |------|------|------|------|
 | `check` | 20-21 | 2 | `function check(name, ok) { results.push([name, !!ok]); if (!ok) console.log('  ❌', name); }` |
 
+### test/e2e-npm-tab-render.mjs（91 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `read` | 17-17 | 1 | `const read = (p) => readFileSync(join(ROOT, p), 'utf8');` |
+
 ### test/helpers/test-cache.mjs（208 行 · 8 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2332,6 +2436,12 @@
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `mkTmp` | 22-22 | 1 | `const mkTmp = () => mkdtempSync(join(tmpdir(), 'dshgp-docfunc-'));` |
+
+### test/test-doc-version-release-source.mjs（61 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `fixture` | 18-29 | 12 | `function fixture(version, releases) {` |
 
 ### test/test-doc-version.mjs（81 行 · 2 个函数）
 
@@ -2520,6 +2630,12 @@
 |------|------|------|------|
 | `makeFixture` | 25-43 | 19 | `function makeFixture(dir) {` |
 
+### test/test-npm-publish.mjs（122 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `makeFixture` | 33-42 | 10 | `function makeFixture() {` |
+
 ### test/test-persist-credentials.mjs（93 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2532,13 +2648,13 @@
 |------|------|------|------|
 | `makeProject` | 20-46 | 27 | `function makeProject() {` |
 
-### test/test-plugin.mjs（653 行 · 3 个函数）
+### test/test-plugin.mjs（654 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `makeExemptRepo` | 484-490 | 7 | `function makeExemptRepo() {` |
-| `addSecretFile` | 491-494 | 4 | `function addSecretFile(root, path) {` |
-| `fsStatMode` | 648-650 | 3 | `function fsStatMode(file) {` |
+| `makeExemptRepo` | 485-491 | 7 | `function makeExemptRepo() {` |
+| `addSecretFile` | 492-495 | 4 | `function addSecretFile(root, path) {` |
+| `fsStatMode` | 649-651 | 3 | `function fsStatMode(file) {` |
 
 ### test/test-private-gate.mjs（72 行 · 1 个函数）
 

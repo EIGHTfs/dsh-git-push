@@ -100,8 +100,10 @@ export function findCountDrift(root = ROOT, actual = countRules(root), toolCount
   const toolRe = /(\d+)\s*个工具|工具\s*[（(]\s*(\d+)\s*个/g;
   // ④「N 个设置键」→ 比 settings-set 白名单条数
   const setRe = /(\d+)\s*个设置键/g;
-  // ⑤「N 条 HTTP 接口」→ 比分发器 case 唯一路径数
-  const routeRe = /(\d+)\s*条\s*HTTP\s*接口/g;
+  // ⑤「N 条 HTTP 接口 / N 条 HTTP API / HTTP 接口（N 条…）/ HTTP API（N 条…）」→ 比分发器 case 唯一路径数
+  //   为什么四个语序都要认：此前只认「N 条 HTTP 接口」，漏掉了 docs/SPEC.md 工具表里的「N 条 HTTP API」
+  //   与接口章标题「HTTP 接口（N 条，前缀…）」——实测盲区（文档写 28、实际 34 却不报）。
+  const routeRe = /(\d+)\s*条\s*HTTP\s*(?:接口|API)|HTTP\s*(?:接口|API)\s*[（(]\s*(\d+)\s*条/g;
   const tools = toolCount;
   const settings = countSettings(root);
   const routes = countRoutes(root);
@@ -128,6 +130,32 @@ export function findCountDrift(root = ROOT, actual = countRules(root), toolCount
 }
 
 /**
+ * 工具清单完整性：每个已注册工具名都必须在 `docs/SPEC.md` 出现（反引号形式）。
+ * 为什么需要：**计数一致 ≠ 清单完整**——实测出现过「计数改对了，但漏列一个新工具的行」（npm_publish）。
+ * @returns {Array<{file:string, name:string}>}
+ */
+export function findToolListGaps(root = ROOT, toolNames = []) {
+  const out = [];
+  if (!Array.isArray(toolNames) || !toolNames.length) return out;
+  const spec = join(root, 'docs', 'SPEC.md');
+  if (!existsSync(spec)) return out;
+  const text = readFileSync(spec, 'utf8');
+  for (const n of toolNames) if (!text.includes('`' + n + '`')) out.push({ file: 'docs/SPEC.md', name: n });
+  return out;
+}
+
+/** 已注册工具名清单（与 countToolsAsync 同源；取不到返回空数组，不误报）。 */
+export async function toolNamesAsync(root = ROOT) {
+  try {
+    const mod = await import('file://' + join(root, 'lib', 'app', 'tools.js'));
+    const list = typeof mod.listTools === 'function' ? mod.listTools() : null;
+    return Array.isArray(list) ? list.map((t) => t.name).filter(Boolean) : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
  * 工具数（真实口径）：直接调用插件自己的 `listTools()`——它是宿主注册表的唯一出口，
  * 比用正则数代码里的 `name:` 可靠（本次实测：正则数不出，API 一调就是 16）。
  * 取不到（环境缺依赖等）返回 null，调用方跳过该项校验（不误报）。
@@ -146,18 +174,25 @@ async function main() {
   const actual = countRules(ROOT);
   const toolCount = await countToolsAsync(ROOT);
   const issues = findCountDrift(ROOT, actual, toolCount);
+  const gaps = findToolListGaps(ROOT, await toolNamesAsync(ROOT));
   if (asJson) {
-    console.log(JSON.stringify({ ok: issues.length === 0, actual, issues }, null, 2));
-    process.exit(issues.length ? 1 : 0);
+    console.log(JSON.stringify({ ok: issues.length === 0 && gaps.length === 0, actual, issues, toolListGaps: gaps }, null, 2));
+    process.exit(issues.length || gaps.length ? 1 : 0);
   }
   if (!quiet) console.log(`实际值：${actual.slots} 个槽位 / ${actual.rules} 条规则（lib/audit-rules/）`);
-  if (!issues.length) {
+  if (!issues.length && !gaps.length) {
     console.log('文档计数一致性 ✅');
     process.exit(0);
   }
-  console.error('文档计数与代码不一致 ❌（改代码后请同步这些位置，或改为脚本生成）：');
-  for (const it of issues) {
-    console.error(`  ${it.file}:${it.line}  写的「${it.text}」→ 实际 ${it.kind} ${it.actual}`);
+  if (gaps.length) {
+    console.error('工具清单不完整 ❌（docs/SPEC.md 工具表缺少以下工具行）：');
+    for (const g of gaps) console.error(`  ${g.file}  缺工具：${g.name}`);
+  }
+  if (issues.length) {
+    console.error('文档计数与代码不一致 ❌（改代码后请同步这些位置，或改为脚本生成）：');
+    for (const it of issues) {
+      console.error(`  ${it.file}:${it.line}  写的「${it.text}」→ 实际 ${it.kind} ${it.actual}`);
+    }
   }
   process.exit(1);
 }

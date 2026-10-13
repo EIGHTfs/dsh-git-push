@@ -94,6 +94,30 @@ export function buildVersionListText(root, { versionSource = '' } = {}) {
     //   提交历史不可读时，至少以 package.json 的版本号生成一条数据行，绝不产出空表。
     rows.push(`| ${pkg} | 版本号来自 package.json（提交历史不可读，内容待补） |`);
   }
+  // ── 发布说明源（docs/releases.json）：拆掉「最新行只能来自 git log」这个环 ──
+  //   历史行的标题/日期仍来自 git log（无需维护）；**当前版本**的标题可由本文件提供 ⇒
+  //   `apply`/`check` 在提交前就能产出与提交后**完全一致**的表，发版不再需要「先提交再生成再 amend」。
+  //   取值优先级：本文件的当前版本标题 > git log 里同名版本行 > git log 最新行（版本号按 package.json 覆盖）。
+  const releaseTitle = (() => {
+    try {
+      const p = join(root, 'docs', 'releases.json');
+      if (!existsSync(p)) return '';
+      const j = JSON.parse(readFileSync(p, 'utf8'));
+      const v = j && typeof j === 'object' ? j[pkg] : '';
+      return typeof v === 'string' ? v.trim() : '';
+    } catch {
+      return ''; // 文件缺失/非法 JSON：静默退回纯 git log 行为（不因辅助源报错而阻断发版）
+    }
+  })();
+  if (pkg && releaseTitle) {
+    if (rows.length > 2) {
+      const cells = rows[2].split('|').map((s) => s.trim());
+      if (cells[1] === pkg) rows[2] = `| ${pkg} | ${releaseTitle} |`; // 版本已在 git log：只换标题
+      else rows.splice(2, 0, `| ${pkg} | ${releaseTitle} |`); // git log 尚无该版本：插入为最新行
+    } else {
+      rows.push(`| ${pkg} | ${releaseTitle} |`); // 提交历史不可读：至少出这一行
+    }
+  }
   return { text: `## 版本列表\n\n${rows.join('\n')}\n`, rows: rows.length - 2, source, packageVersion: pkg };
 }
 

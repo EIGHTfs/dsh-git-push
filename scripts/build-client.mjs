@@ -41,6 +41,7 @@ export const PART_ORDER = [
   '10-account.js',  // [4] 账号信息 Tab
   '11-browser.js',  // [5] 目录选择器
   '20-repo.js',     // [6] 仓库管理卡
+  '23-npm.js',      // [6续] NPM 面板（账号卡 + 装包表单 + npm 凭据字段）
   '21-audit.js',    // [7] 审计 Tab
   '22-settings.js', // [8] 设置 Tab
   '30-page.js',     // [9] 页面装配（GitPushPage）
