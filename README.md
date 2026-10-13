@@ -362,6 +362,12 @@ dsh-git-push/
 │   │   ├── 99-apply.js — 末片：apply/inject 导出 + factory 返回
 │   ├── context/ — 上下文注入（给 AI 会话注入环境：目录映射/工具路径/skill 入口）
 │   │   ├── index.js — 上下文注入入口（环境注入文本）
+│   ├── core/ — （待注释）
+│   │   ├── atomic-json.js — （待注释）
+│   │   ├── config.js — （待注释）
+│   │   ├── credentials.js — （待注释）
+│   │   ├── endpoints.js — （待注释）
+│   │   ├── exec.js — （待注释）
 │   ├── exempt/ — 豁免机制（dsh-skip-* 注释标记解析与文件头/行内语义）
 │   │   ├── index.js — 豁免注册表（dsh-skip-* 全标记消费）
 │   ├── fs/ — （待注释）
@@ -483,6 +489,7 @@ dsh-git-push/
 │   ├── test-audit-defaults.mjs — （待注释）
 │   ├── test-audit-empty.mjs — （待注释）
 │   ├── test-audit-ext.mjs — 审计扩展自动接入测试（契约加载/降级/match/auditFull 并入）
+│   ├── test-audit-git-boundary.mjs — （待注释）
 │   ├── test-audit-scope.mjs — 审计作用域/凭据占位符回归测试
 │   ├── test-audit.mjs — 审计总入口测试（auditFull/changed/豁免/gitignore）
 │   ├── test-auditignore.mjs — （待注释）
@@ -635,6 +642,7 @@ dsh-git-push/
 ├── .auditignore — 审计豁免清单（不影响 git 入库，仅跳过审计扫描）——排除内置第三方代码
 ├── .gitignore — 忽略规则（node_modules/产物/备份/回收站等）
 ├── CONTRIBUTING.md — （待注释）
+├── LICENSE — （待注释）
 ├── README.md — 插件 README（功能总览/用法/版本记录）
 ├── SECURITY.md — （待注释）
 ├── cli.mjs — 独立 CLI（git-sluice，不依赖宿主可独立运行）

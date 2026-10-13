@@ -1061,6 +1061,59 @@
 | `norm` | 316-321 | 6 | `const norm = (p) => {` |
 | `parseEnvInjection` | 334-363 | 30 | `export function parseEnvInjection(text = '') {` |
 
+### lib/core/atomic-json.js（99 行 · 5 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `readJson` | 19-27 | 9 | `export function readJson(file) {` |
+| `readJsonAny` | 34-41 | 8 | `export function readJsonAny(file) {` |
+| `writeJsonAtomic` | 50-63 | 14 | `export function writeJsonAtomic(file, data, { mode = 0o600, pretty = true } = {}) {` |
+| `updateJsonAtomic` | 72-76 | 5 | `export function updateJsonAtomic(file, updater, { mode = 0o600 } = {}) {` |
+| `writeTextAtomic` | 86-98 | 13 | `export function writeTextAtomic(file, text, { mode = 0o600 } = {}) {` |
+
+### lib/core/config.js（41 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `loadRequirements` | 23-40 | 18 | `export function loadRequirements() {` |
+
+### lib/core/credentials.js（235 行 · 11 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `credentialsDir` | 27-32 | 6 | `export function credentialsDir({ workspaceRoot = '' } = {}) {` |
+| `ensureCredentialsDir` | 35-39 | 5 | `function ensureCredentialsDir(workspaceRoot) {` |
+| `resolveSshKeys` | 47-57 | 11 | `export function resolveSshKeys({ workspaceRoot = '' } = {}) {` |
+| `resolveSshKey` | 60-69 | 10 | `export function resolveSshKey({ workspaceRoot = '' } = {}) {` |
+| `resolveToken` | 82-110 | 29 | `export function resolveToken({ token = '', tokenPath = '', repoPath = '', workspaceRoot = '' } = {}) {` |
+| `maskToken` | 115-119 | 5 | `export function maskToken(token = '') {` |
+| `readSshPub` | 122-134 | 13 | `export function readSshPub({ workspaceRoot = '' } = {}) {` |
+| `isMaskedValue` | 140-143 | 4 | `export function isMaskedValue(v = '') {` |
+| `persistGithubToken` | 153-164 | 12 | `export function persistGithubToken(token, { workspaceRoot = '' } = {}) {` |
+| `persistSshPub` | 173-186 | 14 | `export function persistSshPub(pub, { workspaceRoot = '' } = {}) {` |
+| `generateSshKey` | 195-234 | 40 | `export function generateSshKey(email, { workspaceRoot = '', force = false } = {}) {` |
+
+### lib/core/endpoints.js（110 行 · 6 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `mirrorPrefix` | 30-35 | 6 | `export function mirrorPrefix() {` |
+| `withMirror` | 56-65 | 10 | `export function withMirror(url, { method = 'GET', mode = 'read', noMirror = false } = {}) {` |
+| `mirrorGitConfigEnv` | 78-87 | 10 | `export function mirrorGitConfigEnv(env, { mode = 'read' } = {}) {` |
+| `blobApiUrl` | 97-99 | 3 | `export function blobApiUrl(owner, repo, sha) {` |
+| `contentsApiUrl` | 102-104 | 3 | `export function contentsApiUrl(owner, repo, encodedPath, encodedRef) {` |
+| `rawFileUrl` | 107-109 | 3 | `export function rawFileUrl(owner, repo, encodedRef, encodedPath) {` |
+
+### lib/core/exec.js（163 行 · 5 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `gitSearchPlan` | 44-51 | 8 | `export function gitSearchPlan(pathValue, { delimiter = pathDelimiter, platform = process.platform } = {}) {` |
+| `resolveGitBin` | 54-71 | 18 | `export function resolveGitBin() {` |
+| `runGit` | 87-108 | 22 | `export function runGit(args, { cwd = '', timeoutMs = 120_000, env = {} } = {}) {` |
+| `gitRaw` | 116-132 | 17 | `export function gitRaw(args, { cwd = '', timeoutMs = 600_000 } = {}) {` |
+| `runGitAsync` | 142-162 | 21 | `export function runGitAsync(args, { cwd = '', timeoutMs = 120_000, env = {} } = {}) {` |
+
 ### lib/exempt/index.js（293 行 · 10 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -1125,16 +1178,6 @@
 | `parseGithubOwnerRepo` | 96-110 | 15 | `export function parseGithubOwnerRepo(originUrl) {` |
 | `isBadCredentials` | 113-115 | 3 | `export function isBadCredentials(reason = '') {` |
 | `detectRepoVisibility` | 122-136 | 15 | `export async function detectRepoVisibility({ repoPath = '', token = '' } = {}) {` |
-
-### lib/git/atomic-json.js（99 行 · 5 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `readJson` | 19-27 | 9 | `export function readJson(file) {` |
-| `readJsonAny` | 34-41 | 8 | `export function readJsonAny(file) {` |
-| `writeJsonAtomic` | 50-63 | 14 | `export function writeJsonAtomic(file, data, { mode = 0o600, pretty = true } = {}) {` |
-| `updateJsonAtomic` | 72-76 | 5 | `export function updateJsonAtomic(file, updater, { mode = 0o600 } = {}) {` |
-| `writeTextAtomic` | 86-98 | 13 | `export function writeTextAtomic(file, text, { mode = 0o600 } = {}) {` |
 
 ### lib/git/browse.js（39 行 · 1 个函数）
 
@@ -1248,55 +1291,12 @@
 |------|------|------|------|
 | `listCloudRepos` | 21-46 | 26 | `export async function listCloudRepos({ token = '', perPage = 100 } = {}) {` |
 
-### lib/git/config.js（41 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `loadRequirements` | 23-40 | 18 | `export function loadRequirements() {` |
-
 ### lib/git/cred-env.js（88 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `buildSshEnvPrefix` | 21-23 | 3 | `function buildSshEnvPrefix(keyPath) {` |
 | `buildCredEnv` | 30-88 | 59 | `export function buildCredEnv({ workspaceRoot = '' } = {}) {` |
-
-### lib/git/credentials.js（235 行 · 11 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `credentialsDir` | 27-32 | 6 | `export function credentialsDir({ workspaceRoot = '' } = {}) {` |
-| `ensureCredentialsDir` | 35-39 | 5 | `function ensureCredentialsDir(workspaceRoot) {` |
-| `resolveSshKeys` | 47-57 | 11 | `export function resolveSshKeys({ workspaceRoot = '' } = {}) {` |
-| `resolveSshKey` | 60-69 | 10 | `export function resolveSshKey({ workspaceRoot = '' } = {}) {` |
-| `resolveToken` | 82-110 | 29 | `export function resolveToken({ token = '', tokenPath = '', repoPath = '', workspaceRoot = '' } = {}) {` |
-| `maskToken` | 115-119 | 5 | `export function maskToken(token = '') {` |
-| `readSshPub` | 122-134 | 13 | `export function readSshPub({ workspaceRoot = '' } = {}) {` |
-| `isMaskedValue` | 140-143 | 4 | `export function isMaskedValue(v = '') {` |
-| `persistGithubToken` | 153-164 | 12 | `export function persistGithubToken(token, { workspaceRoot = '' } = {}) {` |
-| `persistSshPub` | 173-186 | 14 | `export function persistSshPub(pub, { workspaceRoot = '' } = {}) {` |
-| `generateSshKey` | 195-234 | 40 | `export function generateSshKey(email, { workspaceRoot = '', force = false } = {}) {` |
-
-### lib/git/endpoints.js（110 行 · 6 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `mirrorPrefix` | 30-35 | 6 | `export function mirrorPrefix() {` |
-| `withMirror` | 56-65 | 10 | `export function withMirror(url, { method = 'GET', mode = 'read', noMirror = false } = {}) {` |
-| `mirrorGitConfigEnv` | 78-87 | 10 | `export function mirrorGitConfigEnv(env, { mode = 'read' } = {}) {` |
-| `blobApiUrl` | 97-99 | 3 | `export function blobApiUrl(owner, repo, sha) {` |
-| `contentsApiUrl` | 102-104 | 3 | `export function contentsApiUrl(owner, repo, encodedPath, encodedRef) {` |
-| `rawFileUrl` | 107-109 | 3 | `export function rawFileUrl(owner, repo, encodedRef, encodedPath) {` |
-
-### lib/git/exec.js（163 行 · 5 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `gitSearchPlan` | 44-51 | 8 | `export function gitSearchPlan(pathValue, { delimiter = pathDelimiter, platform = process.platform } = {}) {` |
-| `resolveGitBin` | 54-71 | 18 | `export function resolveGitBin() {` |
-| `runGit` | 87-108 | 22 | `export function runGit(args, { cwd = '', timeoutMs = 120_000, env = {} } = {}) {` |
-| `gitRaw` | 116-132 | 17 | `export function gitRaw(args, { cwd = '', timeoutMs = 600_000 } = {}) {` |
-| `runGitAsync` | 142-162 | 21 | `export function runGitAsync(args, { cwd = '', timeoutMs = 120_000, env = {} } = {}) {` |
 
 ### lib/git/identity-rewrite.js（298 行 · 14 个函数）
 
@@ -2190,6 +2190,15 @@
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `read` | 15-15 | 1 | `const read = (p) => readFileSync(join(ROOT, p), 'utf8');` |
+
+### test/test-audit-git-boundary.mjs（81 行 · 4 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `walk` | 20-27 | 8 | `function walk(dir, out = []) {` |
+| `stripComments` | 30-32 | 3 | `function stripComments(text) {` |
+| `specifiersOf` | 35-39 | 5 | `export function specifiersOf(text) {` |
+| `findViolations` | 42-52 | 11 | `export function findViolations(files, rules) {` |
 
 ### test/test-auditignore.mjs（145 行 · 1 个函数）
 

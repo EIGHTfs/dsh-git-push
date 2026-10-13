@@ -97,7 +97,7 @@ test('pushViaSsh：多密钥逐个尝试（避免有可用密钥却推不动）'
 });
 
 test('凭据目录自探测：脚本自己找 token/密钥，无需用户填路径', () => {
-  const src = readFileSync(join(ROOT, 'lib/git/credentials.js'), 'utf8');
+  const src = readFileSync(join(ROOT, 'lib/core/credentials.js'), 'utf8');
   assert.ok(/export function credentialsDir/.test(src), 'credentialsDir 应存在');
   assert.ok(/export function resolveSshKeys/.test(src), 'resolveSshKeys 应存在');
   assert.ok(/export function resolveToken/.test(src), 'resolveToken 应存在');

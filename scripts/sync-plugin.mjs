@@ -31,7 +31,7 @@ export const SOURCE_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 /** 随插件发布的顶层条目（通用候选：按源目录存在性过滤，兼容任意 DSH 插件）。
  *   候选含 lib/skills/scripts/assets/tools/cli.mjs/package.json/cordis.patch.yml/
  *   README.md/.auditignore/.gitignore——源里没有的条目自动跳过。 */
-export const SYNC_ENTRIES = ['lib', 'skills', 'scripts', 'assets', 'tools', 'cli.mjs', 'package.json', 'cordis.patch.yml', 'README.md', '.auditignore', '.gitignore'];
+export const SYNC_ENTRIES = ['lib', 'skills', 'scripts', 'assets', 'tools', 'cli.mjs', 'package.json', 'cordis.patch.yml', 'README.md', 'LICENSE', '.auditignore', '.gitignore'];
 
 /**
  * npm 打包的**硬性排除项**（npm-packlist 默认忽略集，与项目自定义无关）。

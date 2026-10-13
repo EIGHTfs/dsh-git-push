@@ -437,23 +437,21 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "cli.mjs": {
+      "docs/CHANGELOG.md": {
         "status": "M",
-        "mtime": "2026-10-12T22:44:07.295Z",
-        "note": "注释可能需更新"
-      },
-      "docs/FUNCTIONS.md": {
-        "status": "M",
-        "mtime": "2026-10-12T22:45:00.385Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-cli-help-registry-sync.mjs": {
-        "status": "A",
-        "mtime": "2026-10-12T22:44:52.488Z",
+        "mtime": "2026-10-13T04:16:57.053Z",
         "note": "注释可能需更新"
       }
     }
   },
   "test/test-loop-no-fallback-return.mjs": "（待注释）",
-  "test/test-cli-help-registry-sync.mjs": "（待注释）"
+  "test/test-cli-help-registry-sync.mjs": "（待注释）",
+  "lib/core": "（待注释）",
+  "LICENSE": "（待注释）",
+  "lib/core/atomic-json.js": "（待注释）",
+  "lib/core/config.js": "（待注释）",
+  "lib/core/credentials.js": "（待注释）",
+  "lib/core/endpoints.js": "（待注释）",
+  "lib/core/exec.js": "（待注释）",
+  "test/test-audit-git-boundary.mjs": "（待注释）"
 }
