@@ -435,17 +435,12 @@
     "worktree": {
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-14T14:50:20.831Z",
+        "mtime": "2026-10-14T15:13:54.292Z",
         "note": "注释可能需更新"
       },
-      "lib/npm/registry.js": {
+      "lib/app/tool-call.js": {
         "status": "M",
-        "mtime": "2026-10-14T14:49:32.050Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-npm-enobufs.mjs": {
-        "status": "A",
-        "mtime": "2026-10-14T14:49:32.060Z",
+        "mtime": "2026-10-14T15:13:43.966Z",
         "note": "注释可能需更新"
       }
     }
