@@ -1952,11 +1952,12 @@
 | `checkShape` | 71-80 | 10 | `export function checkShape(code) {` |
 | `main` | 84-115 | 32 | `function main(argv = process.argv.slice(2)) {` |
 
-### scripts/check.mjs（62 行 · 1 个函数）
+### scripts/check.mjs（89 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `collectJs` | 22-31 | 10 | `function collectJs(dir, acc = []) {` |
+| `collectJson` | 34-42 | 9 | `function collectJson(dir, acc = []) {` |
 
 ### scripts/doc-drift.mjs（201 行 · 9 个函数）
 

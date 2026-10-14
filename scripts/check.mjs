@@ -30,8 +30,23 @@ function collectJs(dir, acc = []) {
   return acc;
 }
 
+/** 递归收集 .json（同样的跳过规则，但不跳过 client-parts——那里没有 .json）。 */
+function collectJson(dir, acc = []) {
+  for (const name of readdirSync(dir)) {
+    if (name === 'node_modules' || name.startsWith('.')) continue;
+    const p = join(dir, name);
+    if (statSync(p).isDirectory()) collectJson(p, acc);
+    else if (name.endsWith('.json')) acc.push(p);
+  }
+  return acc;
+}
+
 const files = [...collectJs(join(ROOT, 'lib')), join(ROOT, 'cli.mjs')];
+// docs/*.json 也必须能解析：版本表与发版说明直接依赖 docs/releases.json，
+//   而它曾在 2.8.4 因一个尾随逗号变成非法 JSON 却**四项门禁全绿**（缺口）——这类错误必须在门禁里变红 ✗
+const jsonFiles = [...collectJson(join(ROOT, 'lib')), ...collectJson(join(ROOT, 'docs'))];
 let fail = 0;
+let jsonFail = 0;
 for (const f of files) {
   try {
     execFileSync(process.execPath, ['--check', f], { stdio: 'pipe', encoding: 'utf8' });
@@ -39,6 +54,17 @@ for (const f of files) {
   } catch (e) {
     fail++;
     console.error(`✗ ${f.replace(ROOT + '/', '')}: ${String(e?.stderr || e).trim().split('\n')[0]}`);
+  }
+}
+
+// JSON 可解析性门禁（独立计数，不并入上面的语法通过率）
+for (const f of jsonFiles) {
+  try {
+    JSON.parse(readFileSync(f, 'utf8'));
+    console.log(`✔ ${f.replace(ROOT + '/', '')}`);
+  } catch (e) {
+    jsonFail++;
+    console.error(`✗ ${f.replace(ROOT + '/', '')}: JSON 解析失败——${String(e?.message || e).split('\n')[0]}`);
   }
 }
 
@@ -58,4 +84,5 @@ try {
 }
 
 console.log(`\n${files.length - fail}/${files.length} 文件语法通过`);
-process.exitCode = fail > 0 ? 1 : 0;
+console.log(`${jsonFiles.length - jsonFail}/${jsonFiles.length} 个 JSON 可解析`);
+process.exitCode = (fail > 0 || jsonFail > 0) ? 1 : 0;
