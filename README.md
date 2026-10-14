@@ -592,6 +592,7 @@ dsh-git-push/
 │   ├── test-module-splitter-multiline.mjs — （待注释）
 │   ├── test-module-splitter.mjs — module_splitter 工具 + CLI 接入测试（契约 + 行为 + 脚本随插件发布）
 │   ├── test-name-length-scope.mjs — （待注释）
+│   ├── test-npm-enobufs.mjs — （待注释）
 │   ├── test-npm-install.mjs — （待注释）
 │   ├── test-npm-publish.mjs — （待注释）
 │   ├── test-npm-registry.mjs — （待注释）

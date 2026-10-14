@@ -433,34 +433,19 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "README.md": {
-        "status": "M",
-        "mtime": "2026-10-14T14:44:14.387Z",
-        "note": "注释可能需更新"
-      },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-14T14:47:27.786Z",
+        "mtime": "2026-10-14T14:50:20.831Z",
         "note": "注释可能需更新"
       },
-      "lib/app/audit-api.js": {
+      "lib/npm/registry.js": {
         "status": "M",
-        "mtime": "2026-10-14T14:43:55.406Z",
+        "mtime": "2026-10-14T14:49:32.050Z",
         "note": "注释可能需更新"
       },
-      "lib/app/tool-call.js": {
-        "status": "M",
-        "mtime": "2026-10-14T14:43:55.379Z",
-        "note": "注释可能需更新"
-      },
-      "lib/commit-push.js": {
-        "status": "M",
-        "mtime": "2026-10-14T14:47:10.009Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-audit-slot-order.mjs": {
+      "test/test-npm-enobufs.mjs": {
         "status": "A",
-        "mtime": "2026-10-14T14:46:35.152Z",
+        "mtime": "2026-10-14T14:49:32.060Z",
         "note": "注释可能需更新"
       }
     }
@@ -503,5 +488,6 @@
   "lib/git/commit-message.js": "（待注释）",
   "test/test-commit-message.mjs": "（待注释）",
   "test/test-audit-slot-order.mjs": "（待注释）",
-  "test/test-filter-ext.mjs": "（待注释）"
+  "test/test-filter-ext.mjs": "（待注释）",
+  "test/test-npm-enobufs.mjs": "（待注释）"
 }
