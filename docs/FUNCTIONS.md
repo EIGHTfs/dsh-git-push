@@ -1610,29 +1610,29 @@
 | `writeNpmrc` | 40-48 | 9 | `export function writeNpmrc({ workspaceRoot = '', registry = 'https://registry.npmjs.org/', token = '' } = {}) {` |
 | `npmArgs` | 51-56 | 6 | `export function npmArgs({ npmrcFile = '', registry = 'https://registry.npmjs.org/' } = {}) {` |
 
-### lib/npm/publish.js（168 行 · 6 个函数）
+### lib/npm/publish.js（172 行 · 6 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `publishingKeys` | 24-26 | 3 | `export function publishingKeys() {` |
 | `readPackageInfo` | 29-44 | 16 | `export function readPackageInfo(dir = '') {` |
 | `fetchPublishedVersions` | 47-67 | 21 | `export async function fetchPublishedVersions({ name, registry = DEFAULT_REGISTRY, timeoutMs = NPM_TIMEOUT_MS } = {}) {` |
-| `packDryRun` | 70-168 | 99 | `export function packDryRun({ dir, registry = DEFAULT_REGISTRY, workspaceRoot = '', token = '', timeoutMs = PUBLISH_TIMEOUT_MS } = {}) {` |
-| `appendPublishLog` | 92-100 | 9 | `function appendPublishLog(line, { workspaceRoot = '' } = {}) {` |
-| `publishPackage` | 107-167 | 61 | `export async function publishPackage({` |
+| `packDryRun` | 70-172 | 103 | `export function packDryRun({ dir, registry = DEFAULT_REGISTRY, workspaceRoot = '', token = '', timeoutMs = PUBLISH_TIMEOUT_MS } = {}) {` |
+| `appendPublishLog` | 94-102 | 9 | `function appendPublishLog(line, { workspaceRoot = '' } = {}) {` |
+| `publishPackage` | 109-171 | 63 | `export async function publishPackage({` |
 
-### lib/npm/registry.js（148 行 · 8 个函数）
+### lib/npm/registry.js（167 行 · 8 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `normalizeRegistry` | 15-23 | 9 | `export function normalizeRegistry(v = '') {` |
 | `resolveNpmBin` | 32-54 | 23 | `export function resolveNpmBin({ env = process.env } = {}) {` |
 | `probe` | 35-37 | 3 | `const probe = (p) => {` |
-| `runNpm` | 60-83 | 24 | `export function runNpm(args = [], { timeoutMs = NPM_TIMEOUT_MS, env = {} } = {}) {` |
-| `parseWhoami` | 86-89 | 4 | `export function parseWhoami(text = '') {` |
-| `whoami` | 92-97 | 6 | `export function whoami({ npmArgs = [], timeoutMs = NPM_TIMEOUT_MS, env = {} } = {}) {` |
-| `listOwnedPackages` | 105-118 | 14 | `export async function listOwnedPackages(user, { registry = DEFAULT_REGISTRY, timeoutMs = NPM_TIMEOUT_MS, size = 50 } = {}) {` |
-| `searchPackages` | 119-147 | 29 | `export async function searchPackages(q, { registry = DEFAULT_REGISTRY, timeoutMs = NPM_TIMEOUT_MS, size = 20 } = {}) {` |
+| `runNpm` | 74-102 | 29 | `export function runNpm(args = [], { timeoutMs = NPM_TIMEOUT_MS, env = {}, cwd = '' } = {}) {` |
+| `parseWhoami` | 105-108 | 4 | `export function parseWhoami(text = '') {` |
+| `whoami` | 111-116 | 6 | `export function whoami({ npmArgs = [], timeoutMs = NPM_TIMEOUT_MS, env = {} } = {}) {` |
+| `listOwnedPackages` | 124-137 | 14 | `export async function listOwnedPackages(user, { registry = DEFAULT_REGISTRY, timeoutMs = NPM_TIMEOUT_MS, size = 50 } = {}) {` |
+| `searchPackages` | 138-166 | 29 | `export async function searchPackages(q, { registry = DEFAULT_REGISTRY, timeoutMs = NPM_TIMEOUT_MS, size = 20 } = {}) {` |
 
 ### lib/plugin/auto-detect.js（92 行 · 4 个函数）
 
