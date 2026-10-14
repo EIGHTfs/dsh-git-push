@@ -419,6 +419,7 @@ dsh-git-push/
 │   │   ├── index.js — Git 执行层统一出口
 │   │   ├── module-splitter.js — （待注释）
 │   │   ├── post-push.js — 推送后增强（remote-tracking ref/aux remote/tag）
+│   │   ├── push-diagnose.js — （待注释）
 │   │   ├── push.js — 提交推送编排（commitAndPush 全流程：敏感扫描→add/commit→推送）
 │   │   ├── remote-resolve.js — （待注释）
 │   │   ├── remote.js — 远端仓库管理（建仓默认 private/可见性切换）
@@ -598,6 +599,7 @@ dsh-git-push/
 │   ├── test-plugin.mjs — 插件接线测试（入口导出/工具清单/双副本同步）
 │   ├── test-private-gate.mjs — （待注释）
 │   ├── test-project-type-filter.mjs — 项目类型规则适配测试（非 dsh 项目不加载 dsh 槽位/0.x 版本规则、timeout 限 js 系、folder 尊重 gitignore——Pawchive 误报消除驱动）
+│   ├── test-push-diagnose.mjs — （待注释）
 │   ├── test-push-false-success.mjs — （待注释）
 │   ├── test-push-transport.mjs — 推送通道回归（SSH 优先/一致性语义）
 │   ├── test-quality.mjs — 评分总入口测试（AST 质量检查器）

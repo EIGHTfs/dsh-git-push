@@ -1399,18 +1399,27 @@
 | `ensureAuxSshRemote` | 49-65 | 17 | `export function ensureAuxSshRemote(repoPath, owner, repo, result = {}) {` |
 | `autoTagDSHProject` | 72-101 | 30 | `export async function autoTagDSHProject({ repoPath = '', version = '', commitSha = '', owner = '', repo = '', token = '' } = {}) {` |
 
-### lib/git/push.js（424 行 · 8 个函数）
+### lib/git/push-diagnose.js（143 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `resolveRepoIdentity` | 34-40 | 7 | `function resolveRepoIdentity(repoPath) {` |
-| `commitAndPush` | 52-213 | 162 | `export async function commitAndPush({ repoPath = '', message = '', push = true, dryRun = false, token = '', customIgnorePatterns = '', requirementsConfirmed = false, force = false, pushMethod = 'ssh', pushGate = false, pushConfirmed = false, paths = '' } = {}) {` |
-| `legacyIdentity` | 140-149 | 10 | `const legacyIdentity = (() => {` |
-| `fetchRemoteBranchRef` | 226-239 | 14 | `async function fetchRemoteBranchRef(repoPath, branch, owner, repo) {` |
-| `enhanceAfterPushSuccess` | 247-353 | 107 | `async function enhanceAfterPushSuccess({ repoPath, pr, token, steps, commitSha }) {` |
-| `lsRemoteSha` | 287-299 | 13 | `const lsRemoteSha = () => {` |
-| `readmeCheckHint` | 358-363 | 6 | `export function readmeCheckHint(repoPath) {` |
-| `pushCurrentBranch` | 372-423 | 52 | `export async function pushCurrentBranch({ repoPath = '', pushMethod = 'ssh' } = {}) {` |
+| `byHttpStatus` | 92-101 | 10 | `function byHttpStatus(status) {` |
+| `classifyPushFailure` | 109-129 | 21 | `export function classifyPushFailure(text = '', opts = {}) {` |
+| `describePushDiagnosis` | 137-142 | 6 | `export function describePushDiagnosis(dg = {}) {` |
+
+### lib/git/push.js（463 行 · 9 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `resolveRepoIdentity` | 36-42 | 7 | `function resolveRepoIdentity(repoPath) {` |
+| `commitAndPush` | 54-222 | 169 | `export async function commitAndPush({ repoPath = '', message = '', push = true, dryRun = false, token = '', customIgnorePatterns = '', requirementsConfirmed = false, force = false, pushMethod = 'ssh', pushGate = false, pushConfirmed = false, paths = '' } = {}) {` |
+| `legacyIdentity` | 142-151 | 10 | `const legacyIdentity = (() => {` |
+| `fetchRemoteBranchRef` | 235-248 | 14 | `async function fetchRemoteBranchRef(repoPath, branch, owner, repo) {` |
+| `enhanceAfterPushSuccess` | 256-392 | 137 | `async function enhanceAfterPushSuccess({ repoPath, pr, token, steps, commitSha }) {` |
+| `lsRemoteProbe` | 308-322 | 15 | `const lsRemoteProbe = () => {` |
+| `lsRemoteSha` | 324-324 | 1 | `const lsRemoteSha = () => lsRemoteProbe().sha;` |
+| `readmeCheckHint` | 397-402 | 6 | `export function readmeCheckHint(repoPath) {` |
+| `pushCurrentBranch` | 411-462 | 52 | `export async function pushCurrentBranch({ repoPath = '', pushMethod = 'ssh' } = {}) {` |
 
 ### lib/git/remote-resolve.js（147 行 · 6 个函数）
 
@@ -1497,25 +1506,25 @@
 | `scanSensitiveFiles` | 112-134 | 23 | `export async function scanSensitiveFiles(repoPath) {` |
 | `walk` | 116-131 | 16 | `const walk = async (dir, rel) => {` |
 
-### lib/git/transport.js（427 行 · 15 个函数）
+### lib/git/transport.js（431 行 · 15 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `sshUrlOf` | 30-32 | 3 | `function sshUrlOf(pr) {` |
-| `knownHostsPath` | 35-37 | 3 | `function knownHostsPath() {` |
-| `fetchRemoteHeads` | 44-57 | 14 | `export async function fetchRemoteHeads({ owner = '', repo = '', branch = '', token = '', count = 3 } = {}) {` |
-| `dispatchPush` | 75-119 | 45 | `export async function dispatchPush({ repoPath = '', branch = '', token = '', force = false, pushMethod = 'ssh' } = {}) {` |
-| `sshReason` | 126-135 | 10 | `export function sshReason(stderr = '') {` |
-| `isNonFastForward` | 142-144 | 3 | `export function isNonFastForward(text = '') {` |
-| `sshMuxCtlPath` | 158-172 | 15 | `function sshMuxCtlPath() {` |
-| `buildLsRemoteSshCmd` | 175-181 | 7 | `function buildLsRemoteSshCmd(keyPath, known, { mux = true } = {}) {` |
-| `liveRemoteHead` | 188-220 | 33 | `export function liveRemoteHead({ repoPath = '', branch = '' } = {}) {` |
-| `pushViaSsh` | 223-254 | 32 | `export function pushViaSsh({ repoPath = '', branch = '', force = false }) {` |
-| `sshFallback` | 257-260 | 4 | `async function sshFallback(repoPath, branch) {` |
-| `apiOrFallback` | 263-268 | 6 | `async function apiOrFallback(api, repoPath, branch, res) {` |
-| `pushViaApi` | 275-367 | 93 | `export async function pushViaApi({ repoPath = '', branch = '', token = '', force = false } = {}) {` |
-| `uploadBlobsAndBuildTree` | 373-390 | 18 | `async function uploadBlobsAndBuildTree({ repoPath, entries, remoteBlobShas, api }) {` |
-| `liveRemoteHeadAsync` | 400-426 | 27 | `export async function liveRemoteHeadAsync({ repoPath = '', branch = '' } = {}) {` |
+| `sshUrlOf` | 32-34 | 3 | `function sshUrlOf(pr) {` |
+| `knownHostsPath` | 37-39 | 3 | `function knownHostsPath() {` |
+| `fetchRemoteHeads` | 46-59 | 14 | `export async function fetchRemoteHeads({ owner = '', repo = '', branch = '', token = '', count = 3 } = {}) {` |
+| `dispatchPush` | 77-121 | 45 | `export async function dispatchPush({ repoPath = '', branch = '', token = '', force = false, pushMethod = 'ssh' } = {}) {` |
+| `sshReason` | 128-137 | 10 | `export function sshReason(stderr = '') {` |
+| `isNonFastForward` | 144-146 | 3 | `export function isNonFastForward(text = '') {` |
+| `sshMuxCtlPath` | 160-174 | 15 | `function sshMuxCtlPath() {` |
+| `buildLsRemoteSshCmd` | 177-183 | 7 | `function buildLsRemoteSshCmd(keyPath, known, { mux = true } = {}) {` |
+| `liveRemoteHead` | 190-222 | 33 | `export function liveRemoteHead({ repoPath = '', branch = '' } = {}) {` |
+| `pushViaSsh` | 225-258 | 34 | `export function pushViaSsh({ repoPath = '', branch = '', force = false }) {` |
+| `sshFallback` | 261-264 | 4 | `async function sshFallback(repoPath, branch) {` |
+| `apiOrFallback` | 267-272 | 6 | `async function apiOrFallback(api, repoPath, branch, res) {` |
+| `pushViaApi` | 279-371 | 93 | `export async function pushViaApi({ repoPath = '', branch = '', token = '', force = false } = {}) {` |
+| `uploadBlobsAndBuildTree` | 377-394 | 18 | `async function uploadBlobsAndBuildTree({ repoPath, entries, remoteBlobShas, api }) {` |
+| `liveRemoteHeadAsync` | 404-430 | 27 | `export async function liveRemoteHeadAsync({ repoPath = '', branch = '' } = {}) {` |
 
 ### lib/git/visibility.js（36 行 · 1 个函数）
 

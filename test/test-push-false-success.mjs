@@ -105,3 +105,34 @@ test('零改动文案：源码 / 注入用法 / 工具描述三处都要写明�
   const reg = readFileSync(join(ROOT, 'lib/app/command-registry.js'), 'utf8');
   assert.match(reg, /零改动是\*\*正常成功路径\*\*/, '工具描述必须写清零改动是正常成功路径');
 });
+
+// ---------- 「推送未落地」是**否定性结论**：证据不足时不许下 ----------
+// 用户实测误报原文：插件报「推送未落地：远端查不到分支 main——两条通道一致：API HTTP 404，
+//   ls-remote 无该分支；远端可能是空仓库」，而真实成因是**凭据/权限**（探针失明），不是「未落地」✗。
+// 根因：ls-remote 探针把「失败」与「成功但为空」都压成空串 ⇒「两路都查不到」被当成「两路一致认定未落地」。
+test('探针三态：ls-remote 必须区分「失败」与「成功但为空」（不许压成同一个空串）', () => {
+  assert.match(src, /const lsRemoteProbe = \(\) => \{/, '必须有返回三态的探针函数');
+  assert.match(src, /return \{ ok: false, sha: '', err:/, '探针失败必须显式标 ok:false（否则无法与「取到但为空」区分）');
+  assert.match(src, /return \{ ok: true, sha: line \? line\.trim\(\)\.split/, '探针成功必须标 ok:true');
+});
+
+test('否定性结论的证据标准：探针失明时只报「未核验」，绝不判「未落地」', () => {
+  // 只扫**代码行**（注释里保留旧文案作为事故说明是允许的 —— 与本文件既有做法一致）
+  const codeLines = src.split('\n').filter((l) => !/^\s*(\*|\/\/|\/\*)/.test(l)).join('\n');
+  // ① 旧的错误写法必须已从代码里消失（这正是实测误报的写法）
+  assert.ok(!/远端查不到分支 \$\{branchRef\}——推送未落地/.test(codeLines), '不许再把「两条探针都没读到」判成未落地');
+  assert.ok(!/远端可能是空仓库/.test(codeLines), '不许再输出无证据的「远端可能是空仓库」');
+  assert.ok(!/且 ls-remote 未取到——推送未落地/.test(codeLines), '单路证据不足时不许判未落地');
+  // ② 新写法必须在场：探针失明 ⇒ verified=null（未核验），并接上分类诊断
+  assert.match(src, /const dg = classifyPushFailure\(String\(probe\.err \|\| ''\)/, '探针失败要接分类诊断');
+  assert.match(src, /这不构成「未落地」的证据/, '文案要明确写清「不构成未落地的证据」');
+  assert.match(src, /else if \(probe\.ok\) \{/, '只有「探针成功返回为空」才可作否定证据');
+});
+
+test('job 文案：未核验（verified=null）算完成且说清未核验，不谎报成功也不谎报失败', () => {
+  const r = pushJobOutcome({ ok: true, pushed: true, commitSha: 'abcdef12', push: { verified: null, verifyError: '未能核验远端 main：ls-remote 探针失败（auth-missing）' } });
+  assert.equal(r.status, 'completed', '未核验不是失败');
+  assert.match(r.detail, /核验未完成/, '必须说清未核验');
+  assert.match(r.detail, /未核验 ≠ 失败/, '要显式标明「未核验 ≠ 失败」');
+  assert.doesNotMatch(r.detail, /未落地/, '不许把它写成「未落地」');
+});

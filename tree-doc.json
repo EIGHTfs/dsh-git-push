@@ -433,24 +433,44 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
+      "README.md": {
+        "status": "M",
+        "mtime": "2026-10-14T01:36:15.841Z",
+        "note": "注释可能需更新"
+      },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-13T23:36:46.661Z",
+        "mtime": "2026-10-14T01:37:30.669Z",
+        "note": "注释可能需更新"
+      },
+      "lib/app/tool-call.js": {
+        "status": "M",
+        "mtime": "2026-10-14T01:34:26.523Z",
         "note": "注释可能需更新"
       },
       "lib/git/push.js": {
         "status": "M",
-        "mtime": "2026-10-13T23:32:22.987Z",
+        "mtime": "2026-10-14T01:37:15.583Z",
         "note": "注释可能需更新"
       },
-      "test/test-audit-push-boundary.mjs": {
+      "lib/git/transport.js": {
         "status": "M",
-        "mtime": "2026-10-13T23:32:33.691Z",
+        "mtime": "2026-10-14T01:37:15.547Z",
         "note": "注释可能需更新"
       },
-      "test/test-task-queue.mjs": {
+      "test/test-push-false-success.mjs": {
         "status": "M",
-        "mtime": "2026-10-13T23:35:25.854Z",
+        "mtime": "2026-10-14T01:37:30.063Z",
+        "note": "注释可能需更新"
+      },
+      "lib/git/push-diagnose.js": {
+        "status": "A",
+        "mtime": "2026-10-14T01:37:15.608Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-push-diagnose.mjs": {
+        "status": "A",
+        "mtime": "2026-10-14T01:37:15.616Z",
         "note": "注释可能需更新"
       }
     }
@@ -487,5 +507,7 @@
   "test/test-npm-publish.mjs": "（待注释）",
   "lib/git/remote-resolve.js": "（待注释）",
   "test/test-remote-resolve.mjs": "（待注释）",
-  "test/test-audit-push-boundary.mjs": "（待注释）"
+  "test/test-audit-push-boundary.mjs": "（待注释）",
+  "lib/git/push-diagnose.js": "（待注释）",
+  "test/test-push-diagnose.mjs": "（待注释）"
 }
