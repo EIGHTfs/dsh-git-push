@@ -433,24 +433,34 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "docs/CHANGELOG.md": {
+      "README.md": {
         "status": "M",
-        "mtime": "2026-10-14T05:46:40.220Z",
+        "mtime": "2026-10-14T14:44:14.387Z",
         "note": "注释可能需更新"
       },
-      "docs/releases.json": {
+      "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-14T05:46:27.316Z",
+        "mtime": "2026-10-14T14:47:27.786Z",
         "note": "注释可能需更新"
       },
-      "lib/self/index.js": {
+      "lib/app/audit-api.js": {
         "status": "M",
-        "mtime": "2026-10-14T05:45:38.365Z",
+        "mtime": "2026-10-14T14:43:55.406Z",
         "note": "注释可能需更新"
       },
-      "package.json": {
+      "lib/app/tool-call.js": {
         "status": "M",
-        "mtime": "2026-10-14T05:46:27.297Z",
+        "mtime": "2026-10-14T14:43:55.379Z",
+        "note": "注释可能需更新"
+      },
+      "lib/commit-push.js": {
+        "status": "M",
+        "mtime": "2026-10-14T14:47:10.009Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-audit-slot-order.mjs": {
+        "status": "A",
+        "mtime": "2026-10-14T14:46:35.152Z",
         "note": "注释可能需更新"
       }
     }
@@ -491,5 +501,7 @@
   "lib/git/push-diagnose.js": "（待注释）",
   "test/test-push-diagnose.mjs": "（待注释）",
   "lib/git/commit-message.js": "（待注释）",
-  "test/test-commit-message.mjs": "（待注释）"
+  "test/test-commit-message.mjs": "（待注释）",
+  "test/test-audit-slot-order.mjs": "（待注释）",
+  "test/test-filter-ext.mjs": "（待注释）"
 }

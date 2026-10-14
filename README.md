@@ -522,6 +522,7 @@ dsh-git-push/
 │   ├── test-audit-npm-publish-rules.mjs — （待注释）
 │   ├── test-audit-push-boundary.mjs — （待注释）
 │   ├── test-audit-scope.mjs — 审计作用域/凭据占位符回归测试
+│   ├── test-audit-slot-order.mjs — （待注释）
 │   ├── test-audit.mjs — 审计总入口测试（auditFull/changed/豁免/gitignore）
 │   ├── test-auditignore.mjs — （待注释）
 │   ├── test-auto-push.mjs — 任务完成自动推送测试（检测纯函数 + registerAutoPush 门控监听注册）
@@ -564,6 +565,7 @@ dsh-git-push/
 │   ├── test-ext-variable-min-length.mjs — （待注释）
 │   ├── test-false-positive-fixes.mjs — 误报修复回归测试
 │   ├── test-file-health.mjs — 文件健康度矩阵评分测试
+│   ├── test-filter-ext.mjs — （待注释）
 │   ├── test-folder-scope.mjs — 目录级审计作用域回归测试
 │   ├── test-func-doc-drift.mjs — （待注释）
 │   ├── test-generated-html-artifact.mjs — （待注释）

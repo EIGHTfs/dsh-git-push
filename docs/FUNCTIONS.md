@@ -1084,13 +1084,13 @@
 | `collectExternalRefs` | 136-141 | 6 | `export function collectExternalRefs(css = '') {` |
 | `clientModuleInfo` | 151-162 | 12 | `export function clientModuleInfo() {` |
 
-### lib/commit-push.js（144 行 · 3 个函数）
+### lib/commit-push.js（148 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `runAudit` | 33-98 | 66 | `export async function runAudit({ repoPath = '', audit, rulesetDir, slots, cfg: extCfg, visibility: extVisibility } = {}) {` |
-| `commitWithAudit` | 108-130 | 23 | `export async function commitWithAudit({` |
-| `commitMany` | 138-144 | 7 | `export async function commitMany({ repos = [], message = '', push = true, dryRun = false, requirementsConfirmed = false, customIgnorePatterns = '' } = {}) {` |
+| `runAudit` | 33-102 | 70 | `export async function runAudit({ repoPath = '', audit, rulesetDir, slots, cfg: extCfg, visibility: extVisibility } = {}) {` |
+| `commitWithAudit` | 112-134 | 23 | `export async function commitWithAudit({` |
+| `commitMany` | 142-148 | 7 | `export async function commitMany({ repos = [], message = '', push = true, dryRun = false, requirementsConfirmed = false, customIgnorePatterns = '' } = {}) {` |
 
 ### lib/context/index.js（363 行 · 10 个函数）
 
@@ -2360,6 +2360,12 @@
 |------|------|------|------|
 | `makeRepo` | 31-41 | 11 | `function makeRepo() {` |
 | `stageBlocker` | 47-54 | 8 | `function stageBlocker(dir) {` |
+
+### test/test-audit-slot-order.mjs（63 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `read` | 23-23 | 1 | `const read = (p) => readFileSync(join(ROOT, p), 'utf8');` |
 
 ### test/test-auditignore.mjs（145 行 · 1 个函数）
 
