@@ -1959,6 +1959,22 @@
 | `collectJs` | 22-31 | 10 | `function collectJs(dir, acc = []) {` |
 | `collectJson` | 34-42 | 9 | `function collectJson(dir, acc = []) {` |
 
+### scripts/cpu-sample.mjs（189 行 · 11 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `arg` | 28-31 | 4 | `const arg = (name, dflt) => {` |
+| `cpuTotals` | 40-48 | 9 | `function cpuTotals() {` |
+| `procTicks` | 51-58 | 8 | `function procTicks(pid) {` |
+| `procRssMB` | 61-66 | 6 | `function procRssMB(pid) {` |
+| `procInfo` | 69-75 | 7 | `function procInfo(pid) {` |
+| `pids` | 78-80 | 3 | `function pids() {` |
+| `memMB` | 83-89 | 7 | `function memMB() {` |
+| `detectHostPid` | 95-101 | 7 | `function detectHostPid() {` |
+| `sampleOnce` | 104-147 | 44 | `function sampleOnce() {` |
+| `line` | 149-154 | 6 | `function line(rec) {` |
+| `finish` | 170-185 | 16 | `function finish() {` |
+
 ### scripts/doc-drift.mjs（201 行 · 9 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |

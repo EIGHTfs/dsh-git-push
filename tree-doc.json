@@ -433,14 +433,24 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "docs/FUNCTIONS.md": {
+      "docs/CHANGELOG.md": {
         "status": "M",
-        "mtime": "2026-10-14T15:13:54.292Z",
+        "mtime": "2026-10-14T15:32:01.386Z",
         "note": "注释可能需更新"
       },
-      "lib/app/tool-call.js": {
+      "docs/releases.json": {
         "status": "M",
-        "mtime": "2026-10-14T15:13:43.966Z",
+        "mtime": "2026-10-14T15:32:01.249Z",
+        "note": "注释可能需更新"
+      },
+      "lib/self/index.js": {
+        "status": "M",
+        "mtime": "2026-10-14T15:31:45.204Z",
+        "note": "注释可能需更新"
+      },
+      "package.json": {
+        "status": "M",
+        "mtime": "2026-10-14T15:31:45.211Z",
         "note": "注释可能需更新"
       }
     }
@@ -484,5 +494,6 @@
   "test/test-commit-message.mjs": "（待注释）",
   "test/test-audit-slot-order.mjs": "（待注释）",
   "test/test-filter-ext.mjs": "（待注释）",
-  "test/test-npm-enobufs.mjs": "（待注释）"
+  "test/test-npm-enobufs.mjs": "（待注释）",
+  "scripts/cpu-sample.mjs": "（待注释）"
 }

@@ -11,6 +11,11 @@ metadata:
 rules:
   # ── 内存爆炸检测（文档 §13 示例规则落地：子模式 + per-pattern message）──
   - id: performance/memory-bomb
+    # astConfirm: 正则只做初筛，命中行必须再经 token 级确认「真在代码里」——
+    #   已消除**注释行**里的示例文本误报（如讲解「while(true) 占死线程」的注释 ✗）。
+    #   已知边界：匹配落在**字符串字面量内**时仍会报（makeCodeLineFilter 是行级判定，
+    #   看不到列号位置）——实测影响面仅第三方插件测试脚本 1 处，评估后**不修** ✓
+    astConfirm: true
     name: "检测可能导致内存爆炸的代码"
     category: "performance"
     severity: "warning"
@@ -135,6 +140,9 @@ rules:
 
   # ── 无界循环 / 高 CPU 轮询（性能补充）──
   - id: performance/busy-wait-loop
+    # 同上：注释里的 while(true) 已不再误报 ✓；
+    #   字符串字面量里的 'while (true) {}'（测试用）仍会报 —— 已知边界、评估后不修 ✓
+    astConfirm: true
     name: "忙等待循环（高 CPU 空转）"
     category: "performance"
     severity: "warning"

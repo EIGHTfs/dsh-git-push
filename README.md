@@ -468,6 +468,7 @@ dsh-git-push/
 │   ├── build-client.mjs — 客户端分片拼接（PART_ORDER + --check 门禁 + 形态铁律自检）
 │   ├── check.mjs — 语法检查脚本（npm run check）
 │   ├── clean-date-comments.py — （待注释）
+│   ├── cpu-sample.mjs — （待注释）
 │   ├── doc-drift.mjs — （待注释）
 │   ├── doc-func.mjs — （待注释）
 │   ├── doc-tree.mjs — （待注释）

@@ -15,7 +15,8 @@
 
 | 版本 | 内容 |
 |------|------|
-| 2.8.5 | 修 npm 发包跑错目录：runNpm 未传 cwd ⇒ npm pack / npm publish 执行在**宿主进程的工作目录**（本机为 DSH 安装目录 /volume1/@appstore/DeepSeekHarness-NAS），而不是 dir 指定的目标包目录。该目录有 package.json ⇒ npm 去打包整棵 DSH 树、输出 2,101,740 字节（2.1MB）超过 spawnSync 默认 maxBuffer（1MB）⇒ ENOBUFS，npm_publish 的体检与真发全部失败（该目录无 package.json 时则报 ENOENT）。现 publish 的 packDryRun 与 publish 两个调用点显式传 cwd=目标包目录，并给 runNpm 加 16MB maxBuffer。实测：修复后 dsh-session-conductor@1.0.10 成功发布到 npm，registry 上的 shasum 与本地打包逐字节一致。 |
+| 2.8.6 | CPU 现场采样脚本（scripts/cpu-sample.mjs：零依赖只读 /proc，按 --seconds/--interval 采样，记录系统 CPU% 与每进程占整机百分比、命令行、常驻内存、chrome/browsersvc 数量、宿主进程占用；输出控制台逐样本 + JSONL 明细 + 结束汇总）；审计性能规则误报修复（performance/memory-bomb 与 performance/busy-wait-loop 声明 astConfirm，命中行再经 token 级确认真在代码里，消除注释行误报——第三方插件副本实测 569→567 条）；规则注释写明已知边界（匹配落在字符串字面量内仍会报，影响面仅测试脚本 1 处，评估后不修） |
+| 2.8.4 | 推送失败封装 + 提交信息数组化 |
 | 2.8.3 | 零改动=正常成功路径（文案+行为）+ 修 job 输出自相矛盾 + 审计×提交推送边界回归；推送失败结构化诊断 + 否定性结论的证据标准（并入 2.8.3） |
 | 2.8.2 | 推送前自动指定正确的 GitHub remote |
 | 2.8.1 | CLI 真发姿势补齐 + doc-drift 增工具清单完整性校验 + 发包回归改 fixture + SPEC 工具表补行 |
