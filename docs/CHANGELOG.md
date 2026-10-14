@@ -15,7 +15,7 @@
 
 | 版本 | 内容 |
 |------|------|
-| 2.8.4 | 推送失败封装（新增 lib/git/push-diagnose.js）：把「原文事实」与「推断」分开——GitHub 对「仓库不存在」与「凭据无访问权限」故意返回同一句 Repository not found，该分类只输出「不存在或无权限，二者不可区分」并把置信度降为 low，禁止断言「仓库不存在」；pushViaSsh 与 push.js 的失败回执都带 diagnosis（分类 + 置信度 + 可执行下一步），工具回执按「事实 + 分类 + 下一步」渲染。推送后核验补齐证据标准：ls-remote 探针改三态 {ok, sha}，仅「探针成功返回为空」或「取到具体 sha 且 ≠ 本次推送」才判未落地，探针失明（无凭据/网络/权限）时返回 verified:null（未核验，回执写明「未核验 ≠ 失败」，不再输出无证据的「远端可能是空仓库」）。提交信息数组化（新增 lib/git/commit-message.js）：message 支持字符串（原样透传，向后兼容）/ 数组（元素为字符串或 {what,type?,scope?,why?,verify?,refs?} 混用）/ {subject?,items:[...]}，仅 what 必填，缺 what 的条目被忽略而不臆造内容；commitAndPush 在预检处单点组装，工具 schema 以 anyOf 暴露 string | array | object 三种形态（type 仍为 string，不影响 CLI/HTTP 解析层）。 |
+| 2.8.5 | 修 npm 发包跑错目录：runNpm 未传 cwd ⇒ npm pack / npm publish 执行在**宿主进程的工作目录**（本机为 DSH 安装目录 /volume1/@appstore/DeepSeekHarness-NAS），而不是 dir 指定的目标包目录。该目录有 package.json ⇒ npm 去打包整棵 DSH 树、输出 2,101,740 字节（2.1MB）超过 spawnSync 默认 maxBuffer（1MB）⇒ ENOBUFS，npm_publish 的体检与真发全部失败（该目录无 package.json 时则报 ENOENT）。现 publish 的 packDryRun 与 publish 两个调用点显式传 cwd=目标包目录，并给 runNpm 加 16MB maxBuffer。实测：修复后 dsh-session-conductor@1.0.10 成功发布到 npm，registry 上的 shasum 与本地打包逐字节一致。 |
 | 2.8.3 | 零改动=正常成功路径（文案+行为）+ 修 job 输出自相矛盾 + 审计×提交推送边界回归；推送失败结构化诊断 + 否定性结论的证据标准（并入 2.8.3） |
 | 2.8.2 | 推送前自动指定正确的 GitHub remote |
 | 2.8.1 | CLI 真发姿势补齐 + doc-drift 增工具清单完整性校验 + 发包回归改 fixture + SPEC 工具表补行 |

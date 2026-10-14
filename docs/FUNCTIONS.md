@@ -774,16 +774,16 @@
 | `checkFileHealth` | 38-150 | 113 | `export function checkFileHealth({ file, relPath, text, rules }) {` |
 | `levelOf` | 87-90 | 4 | `const levelOf = (val, levels) => {` |
 
-### lib/checks/filter.js（132 行 · 6 个函数）
+### lib/checks/filter.js（138 行 · 6 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `filterRulesByExt` | 32-44 | 13 | `export function filterRulesByExt(grouped, relPath) {` |
-| `normRelPath` | 53-55 | 3 | `function normRelPath(s) {` |
-| `includeHit` | 61-67 | 7 | `function includeHit(rel, inc) {` |
-| `excludeHit` | 70-73 | 4 | `function excludeHit(rel, ex) {` |
-| `filterRulesByPath` | 75-94 | 20 | `export function filterRulesByPath(grouped, relPath) {` |
-| `filterRulesByFileText` | 112-131 | 20 | `export function filterRulesByFileText(grouped, text) {` |
+| `filterRulesByExt` | 32-50 | 19 | `export function filterRulesByExt(grouped, relPath) {` |
+| `normRelPath` | 59-61 | 3 | `function normRelPath(s) {` |
+| `includeHit` | 67-73 | 7 | `function includeHit(rel, inc) {` |
+| `excludeHit` | 76-79 | 4 | `function excludeHit(rel, ex) {` |
+| `filterRulesByPath` | 81-100 | 20 | `export function filterRulesByPath(grouped, relPath) {` |
+| `filterRulesByFileText` | 118-137 | 20 | `export function filterRulesByFileText(grouped, text) {` |
 
 ### lib/checks/folder.js（174 行 · 3 个函数）
 
@@ -1736,15 +1736,15 @@
 | `countByDimension` | 50-80 | 31 | `export function countByDimension(findings = []) {` |
 | `scoreQuality` | 97-140 | 44 | `export function scoreQuality(findings = [], weights = {}, context = {}) {` |
 
-### lib/self/index.js（194 行 · 5 个函数）
+### lib/self/index.js（197 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `readmeTemplate` | 74-139 | 66 | `export function readmeTemplate({ name = 'dsh-git-push', description = 'DSH git 自动提交推送插件——统一函数入口架构', version = VERSION, versionTable = '' } = {}) {` |
-| `yamlTemplate` | 142-154 | 13 | `export function yamlTemplate() {` |
-| `selfVersion` | 157-159 | 3 | `export function selfVersion() {` |
-| `versionInfo` | 166-178 | 13 | `export function versionInfo(pkgJson = '') {` |
-| `helpSync` | 187-193 | 7 | `export function helpSync(helpText = '', knownFlags = []) {` |
+| `readmeTemplate` | 77-142 | 66 | `export function readmeTemplate({ name = 'dsh-git-push', description = 'DSH git 自动提交推送插件——统一函数入口架构', version = VERSION, versionTable = '' } = {}) {` |
+| `yamlTemplate` | 145-157 | 13 | `export function yamlTemplate() {` |
+| `selfVersion` | 160-162 | 3 | `export function selfVersion() {` |
+| `versionInfo` | 169-181 | 13 | `export function versionInfo(pkgJson = '') {` |
+| `helpSync` | 190-196 | 7 | `export function helpSync(helpText = '', knownFlags = []) {` |
 
 ### lib/skip-dirs.js（65 行 · 3 个函数）
 
