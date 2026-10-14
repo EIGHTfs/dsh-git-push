@@ -433,44 +433,34 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "README.md": {
-        "status": "M",
-        "mtime": "2026-10-14T01:36:15.841Z",
-        "note": "注释可能需更新"
-      },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-14T01:37:30.669Z",
+        "mtime": "2026-10-14T05:40:25.191Z",
         "note": "注释可能需更新"
       },
-      "lib/app/tool-call.js": {
+      "lib/app/command-registry.js": {
         "status": "M",
-        "mtime": "2026-10-14T01:34:26.523Z",
+        "mtime": "2026-10-14T05:39:50.183Z",
+        "note": "注释可能需更新"
+      },
+      "lib/app/tools.js": {
+        "status": "M",
+        "mtime": "2026-10-14T05:39:50.160Z",
         "note": "注释可能需更新"
       },
       "lib/git/push.js": {
         "status": "M",
-        "mtime": "2026-10-14T01:37:15.583Z",
+        "mtime": "2026-10-14T05:40:21.901Z",
         "note": "注释可能需更新"
       },
-      "lib/git/transport.js": {
-        "status": "M",
-        "mtime": "2026-10-14T01:37:15.547Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-push-false-success.mjs": {
-        "status": "M",
-        "mtime": "2026-10-14T01:37:30.063Z",
-        "note": "注释可能需更新"
-      },
-      "lib/git/push-diagnose.js": {
+      "lib/git/commit-message.js": {
         "status": "A",
-        "mtime": "2026-10-14T01:37:15.608Z",
+        "mtime": "2026-10-14T05:39:27.680Z",
         "note": "注释可能需更新"
       },
-      "test/test-push-diagnose.mjs": {
+      "test/test-commit-message.mjs": {
         "status": "A",
-        "mtime": "2026-10-14T01:37:15.616Z",
+        "mtime": "2026-10-14T05:39:27.819Z",
         "note": "注释可能需更新"
       }
     }
@@ -509,5 +499,7 @@
   "test/test-remote-resolve.mjs": "（待注释）",
   "test/test-audit-push-boundary.mjs": "（待注释）",
   "lib/git/push-diagnose.js": "（待注释）",
-  "test/test-push-diagnose.mjs": "（待注释）"
+  "test/test-push-diagnose.mjs": "（待注释）",
+  "lib/git/commit-message.js": "（待注释）",
+  "test/test-commit-message.mjs": "（待注释）"
 }

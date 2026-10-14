@@ -408,6 +408,7 @@ dsh-git-push/
 │   │   ├── clone-replay.js — （待注释）
 │   │   ├── clone.js — 克隆（Git Data API，不依赖本地凭据）
 │   │   ├── cloud.js — 云端仓库列表（/user/repos 供手动 clone）
+│   │   ├── commit-message.js — （待注释）
 │   │   ├── config.js — 路径与配置（PLUGIN_ROOT + 开发者要求清单读取）
 │   │   ├── cred-env.js — 凭据传递工具（SSH 私钥路径 GIT_SSH_COMMAND / HTTPS askpass 脚本，AI 执行外部 git 不接触明文）
 │   │   ├── credentials.js — 凭据解析（token/SSH 私钥：环境变量→凭据文件→settings）
@@ -543,6 +544,7 @@ dsh-git-push/
 │   ├── test-clone-token.mjs — （待注释）
 │   ├── test-collector-ignore.mjs — （待注释）
 │   ├── test-command-registry.mjs — 命令注册表测试（工具入表/查找/parseRegistryArgs/清单生成）
+│   ├── test-commit-message.mjs — （待注释）
 │   ├── test-context.mjs — 上下文注入测试
 │   ├── test-conv-rule-scope.mjs — （待注释）
 │   ├── test-cred-env.mjs — git_cred_env 凭据传递测试（双通道/无明文/askpass 调用/无凭据兜底）

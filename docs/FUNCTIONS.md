@@ -240,12 +240,12 @@
 | `shellSplit` | 637-655 | 19 | `function shellSplit(input) {` |
 | `readTextSafe` | 658-662 | 5 | `function readTextSafe(path = '') {` |
 
-### lib/app/tools.js（27 行 · 2 个函数）
+### lib/app/tools.js（40 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `paramsToParameters` | 12-18 | 7 | `function paramsToParameters(params = []) {` |
-| `listTools` | 21-27 | 7 | `export function listTools() {` |
+| `paramsToParameters` | 12-31 | 20 | `function paramsToParameters(params = []) {` |
+| `listTools` | 34-40 | 7 | `export function listTools() {` |
 
 ### lib/ast/brace.js（106 行 · 5 个函数）
 
@@ -1339,6 +1339,17 @@
 |------|------|------|------|
 | `listCloudRepos` | 21-46 | 26 | `export async function listCloudRepos({ token = '', perPage = 100 } = {}) {` |
 
+### lib/git/commit-message.js（142 行 · 6 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `str` | 35-37 | 3 | `function str(v) {` |
+| `uniq` | 40-50 | 11 | `function uniq(list) {` |
+| `normalizeItem` | 56-75 | 20 | `function normalizeItem(el) {` |
+| `titleOf` | 78-87 | 10 | `export function titleOf(item) {` |
+| `buildCommitMessage` | 94-136 | 43 | `export function buildCommitMessage(input) {` |
+| `describeMessageForms` | 139-141 | 3 | `export function describeMessageForms() {` |
+
 ### lib/git/cred-env.js（88 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -1407,19 +1418,19 @@
 | `classifyPushFailure` | 109-129 | 21 | `export function classifyPushFailure(text = '', opts = {}) {` |
 | `describePushDiagnosis` | 137-142 | 6 | `export function describePushDiagnosis(dg = {}) {` |
 
-### lib/git/push.js（463 行 · 9 个函数）
+### lib/git/push.js（471 行 · 9 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `resolveRepoIdentity` | 36-42 | 7 | `function resolveRepoIdentity(repoPath) {` |
-| `commitAndPush` | 54-222 | 169 | `export async function commitAndPush({ repoPath = '', message = '', push = true, dryRun = false, token = '', customIgnorePatterns = '', requirementsConfirmed = false, force = false, pushMethod = 'ssh', pushGate = false, pushConfirmed = false, paths = '' } = {}) {` |
-| `legacyIdentity` | 142-151 | 10 | `const legacyIdentity = (() => {` |
-| `fetchRemoteBranchRef` | 235-248 | 14 | `async function fetchRemoteBranchRef(repoPath, branch, owner, repo) {` |
-| `enhanceAfterPushSuccess` | 256-392 | 137 | `async function enhanceAfterPushSuccess({ repoPath, pr, token, steps, commitSha }) {` |
-| `lsRemoteProbe` | 308-322 | 15 | `const lsRemoteProbe = () => {` |
-| `lsRemoteSha` | 324-324 | 1 | `const lsRemoteSha = () => lsRemoteProbe().sha;` |
-| `readmeCheckHint` | 397-402 | 6 | `export function readmeCheckHint(repoPath) {` |
-| `pushCurrentBranch` | 411-462 | 52 | `export async function pushCurrentBranch({ repoPath = '', pushMethod = 'ssh' } = {}) {` |
+| `resolveRepoIdentity` | 37-43 | 7 | `function resolveRepoIdentity(repoPath) {` |
+| `commitAndPush` | 57-230 | 174 | `export async function commitAndPush({ repoPath = '', message = '', push = true, dryRun = false, token = '', customIgnorePatterns = '', requirementsConfirmed = false, force = false, pushMethod = 'ssh', pushGate = false, pushConfirmed = false, paths = '' } = {}) {` |
+| `legacyIdentity` | 150-159 | 10 | `const legacyIdentity = (() => {` |
+| `fetchRemoteBranchRef` | 243-256 | 14 | `async function fetchRemoteBranchRef(repoPath, branch, owner, repo) {` |
+| `enhanceAfterPushSuccess` | 264-400 | 137 | `async function enhanceAfterPushSuccess({ repoPath, pr, token, steps, commitSha }) {` |
+| `lsRemoteProbe` | 316-330 | 15 | `const lsRemoteProbe = () => {` |
+| `lsRemoteSha` | 332-332 | 1 | `const lsRemoteSha = () => lsRemoteProbe().sha;` |
+| `readmeCheckHint` | 405-410 | 6 | `export function readmeCheckHint(repoPath) {` |
+| `pushCurrentBranch` | 419-470 | 52 | `export async function pushCurrentBranch({ repoPath = '', pushMethod = 'ssh' } = {}) {` |
 
 ### lib/git/remote-resolve.js（147 行 · 6 个函数）
 
