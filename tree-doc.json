@@ -433,34 +433,24 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "docs/FUNCTIONS.md": {
+      "docs/CHANGELOG.md": {
         "status": "M",
-        "mtime": "2026-10-14T05:40:25.191Z",
+        "mtime": "2026-10-14T05:46:40.220Z",
         "note": "注释可能需更新"
       },
-      "lib/app/command-registry.js": {
+      "docs/releases.json": {
         "status": "M",
-        "mtime": "2026-10-14T05:39:50.183Z",
+        "mtime": "2026-10-14T05:46:27.316Z",
         "note": "注释可能需更新"
       },
-      "lib/app/tools.js": {
+      "lib/self/index.js": {
         "status": "M",
-        "mtime": "2026-10-14T05:39:50.160Z",
+        "mtime": "2026-10-14T05:45:38.365Z",
         "note": "注释可能需更新"
       },
-      "lib/git/push.js": {
+      "package.json": {
         "status": "M",
-        "mtime": "2026-10-14T05:40:21.901Z",
-        "note": "注释可能需更新"
-      },
-      "lib/git/commit-message.js": {
-        "status": "A",
-        "mtime": "2026-10-14T05:39:27.680Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-commit-message.mjs": {
-        "status": "A",
-        "mtime": "2026-10-14T05:39:27.819Z",
+        "mtime": "2026-10-14T05:46:27.297Z",
         "note": "注释可能需更新"
       }
     }
