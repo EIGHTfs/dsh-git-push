@@ -35,11 +35,11 @@
 | `edit_after_read` | — | 读改合一编辑（自己读→校验→字面替换→写回，比宿主守卫更严） |
 | `git_sluice` | `git` | git 命令透传（凭据自动注入） |
 | `npm_publish` | `npm-publish` | npm 发包（**后台 job** + dryRun）：默认只体检并跑 `npm publish --dry-run`（不写 registry ✗）；真发必须同时 `confirm=true` 与 `dryRun=false`；前置体检 `private:true` / 同名版本占用 / `npm pack` 清单 |
-| `git_api` | `api` | **直接调用本插件 34 条 HTTP API**（内部走 `handleHttp` 同一条代码路径）；`path` 传接口名（不传则列出全部接口），`method`/`query`/`body` 可选 |
+| `git_api` | `api` | **直接调用本插件 35 条 HTTP API**（内部走 `handleHttp` 同一条代码路径）；`path` 传接口名（不传则列出全部接口），`method`/`query`/`body` 可选 |
 
 **不变量**：工具名唯一且匹配 `^[a-zA-Z0-9_-]+$`；CLI 名唯一；宿主注册面（`listTools`）与注册表（`TOOL_REGISTRY`）同名同数——由 `test/test-tool-contract.mjs` 门禁。增删工具必须同步该测试与 README 工具表。
 
-## 三、HTTP 接口（34 条，前缀 `/api/git-push/`）
+## 三、HTTP 接口（35 条，前缀 `/api/git-push/`）
 
 > npm 相关 7 条：`npm-account`（离线快照）/ `npm-check`（在线校验）/ `npm-owned`（账号名下包）/
 > `npm-packages`（目录依赖）/ `npm-install`（安装，可 `async:true`）/ `npm-install-progress`（安装进度轮询）/

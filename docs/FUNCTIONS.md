@@ -5,12 +5,12 @@
 <!-- dshgp-functions:start -->
 ## 函数列表
 
-### lib/app/apply.js（276 行 · 2 个函数）
+### lib/app/apply.js（289 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `apply` | 43-275 | 233 | `export async function apply(ctx, config = {}) {` |
-| `envInjectText` | 98-125 | 28 | `const envInjectText = (cwdOverride) => {` |
+| `apply` | 44-288 | 245 | `export async function apply(ctx, config = {}) {` |
+| `envInjectText` | 99-138 | 40 | `const envInjectText = (cwdOverride) => {` |
 
 ### lib/app/audit-api.js（159 行 · 5 个函数）
 
@@ -127,20 +127,28 @@
 | `handleSettingsGet` | 13-19 | 7 | `export function handleSettingsGet(ctx) {` |
 | `handleSettingsSet` | 22-62 | 41 | `export async function handleSettingsSet(ctx) {` |
 
+### lib/app/handlers/workspace-paths.js（108 行 · 3 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `pathsFromBody` | 24-28 | 5 | `function pathsFromBody(body) {` |
+| `handleWorkspacePathsGet` | 31-49 | 19 | `export function handleWorkspacePathsGet() {` |
+| `handleWorkspacePathsSet` | 52-107 | 56 | `export function handleWorkspacePathsSet(ctx) {` |
+
 ### lib/app/host-doc-checks.js（26 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `installHostDocChecks` | 20-23 | 4 | `export function installHostDocChecks(checks = HOST_DOC_CHECKS) {` |
 
-### lib/app/http-handlers.js（132 行 · 4 个函数）
+### lib/app/http-handlers.js（149 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `adaptHttpHandler` | 40-57 | 18 | `export async function adaptHttpHandler(req, res, env, cfg) {` |
-| `readBody` | 60-63 | 4 | `function readBody(req) {` |
-| `buildCtx` | 66-68 | 3 | `function buildCtx(req, method, env, cfg, query, body, path) {` |
-| `handleHttp` | 78-131 | 54 | `export async function handleHttp(req = {}, env = {}, cfg = defaultConfig()) {` |
+| `adaptHttpHandler` | 43-60 | 18 | `export async function adaptHttpHandler(req, res, env, cfg) {` |
+| `readBody` | 63-77 | 15 | `function readBody(req) {` |
+| `buildCtx` | 80-82 | 3 | `function buildCtx(req, method, env, cfg, query, body, path) {` |
+| `handleHttp` | 92-148 | 57 | `export async function handleHttp(req = {}, env = {}, cfg = defaultConfig()) {` |
 
 ### lib/app/inject-text.js（193 行 · 5 个函数）
 
@@ -212,33 +220,33 @@
 | `getLastSlotHitStats` | 28-30 | 3 | `export function getLastSlotHitStats() {` |
 | `getLastSlotHitMeta` | 33-35 | 3 | `export function getLastSlotHitMeta() {` |
 
-### lib/app/tool-call.js（673 行 · 23 个函数）
+### lib/app/tool-call.js（697 行 · 23 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `pushWithPostSteps` | 56-92 | 37 | `async function pushWithPostSteps(args, env, cfg) {` |
-| `pushJobOutcome` | 113-145 | 33 | `export function pushJobOutcome(r = {}) {` |
-| `short` | 115-115 | 1 | `const short = (sha) => String(sha \|\| '').slice(0, 8);` |
-| `cloneJobOutcome` | 153-158 | 6 | `export function cloneJobOutcome(r = {}) {` |
-| `buildCommitPushJobSpec` | 161-178 | 18 | `function buildCommitPushJobSpec(repo, doPush) {` |
-| `done` | 166-174 | 9 | `const done = (async () => {` |
-| `startHostJob` | 191-198 | 8 | `function startHostJob(jobs, spec, owner) {` |
-| `callCloneJob` | 212-244 | 33 | `async function callCloneJob(args, jobs, exec, log, env = {}, cfg = {}) {` |
-| `callNpmPublishJob` | 252-301 | 50 | `async function callNpmPublishJob(args = {}, jobs, exec, log, env = {}, cfg = {}) {` |
-| `outcome` | 270-270 | 1 | `const outcome = (r) => (r && r.ok` |
-| `done` | 285-287 | 3 | `const done = (async () => {` |
-| `buildCloneJobSpec` | 304-321 | 18 | `function buildCloneJobSpec(target, dest, doClone) {` |
-| `done` | 309-317 | 9 | `const done = (async () => {` |
-| `callCommitPush` | 328-371 | 44 | `async function callCommitPush(args, env, cfg, log, jobs, exec) {` |
-| `doPush` | 344-344 | 1 | `const doPush = () => pushWithPostSteps(args, env, cfg);` |
-| `buildAuditOpts` | 382-393 | 12 | `function buildAuditOpts(args, cfg, scope) {` |
-| `runHistoryAuditTool` | 399-425 | 27 | `async function runHistoryAuditTool(args, env, cfg, jobs, exec, weights) {` |
-| `doHistory` | 405-408 | 4 | `const doHistory = async () => {` |
-| `callCodeAudit` | 427-439 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
-| `runStandardAuditTool` | 442-481 | 40 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
-| `callTool` | 483-644 | 162 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null) {` |
-| `shellSplit` | 647-665 | 19 | `function shellSplit(input) {` |
-| `readTextSafe` | 668-672 | 5 | `function readTextSafe(path = '') {` |
+| `pushWithPostSteps` | 56-116 | 61 | `async function pushWithPostSteps(args, env, cfg) {` |
+| `pushJobOutcome` | 137-169 | 33 | `export function pushJobOutcome(r = {}) {` |
+| `short` | 139-139 | 1 | `const short = (sha) => String(sha \|\| '').slice(0, 8);` |
+| `cloneJobOutcome` | 177-182 | 6 | `export function cloneJobOutcome(r = {}) {` |
+| `buildCommitPushJobSpec` | 185-202 | 18 | `function buildCommitPushJobSpec(repo, doPush) {` |
+| `done` | 190-198 | 9 | `const done = (async () => {` |
+| `startHostJob` | 215-222 | 8 | `function startHostJob(jobs, spec, owner) {` |
+| `callCloneJob` | 236-268 | 33 | `async function callCloneJob(args, jobs, exec, log, env = {}, cfg = {}) {` |
+| `callNpmPublishJob` | 276-325 | 50 | `async function callNpmPublishJob(args = {}, jobs, exec, log, env = {}, cfg = {}) {` |
+| `outcome` | 294-294 | 1 | `const outcome = (r) => (r && r.ok` |
+| `done` | 309-311 | 3 | `const done = (async () => {` |
+| `buildCloneJobSpec` | 328-345 | 18 | `function buildCloneJobSpec(target, dest, doClone) {` |
+| `done` | 333-341 | 9 | `const done = (async () => {` |
+| `callCommitPush` | 352-395 | 44 | `async function callCommitPush(args, env, cfg, log, jobs, exec) {` |
+| `doPush` | 368-368 | 1 | `const doPush = () => pushWithPostSteps(args, env, cfg);` |
+| `buildAuditOpts` | 406-417 | 12 | `function buildAuditOpts(args, cfg, scope) {` |
+| `runHistoryAuditTool` | 423-449 | 27 | `async function runHistoryAuditTool(args, env, cfg, jobs, exec, weights) {` |
+| `doHistory` | 429-432 | 4 | `const doHistory = async () => {` |
+| `callCodeAudit` | 451-463 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
+| `runStandardAuditTool` | 466-505 | 40 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
+| `callTool` | 507-668 | 162 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null) {` |
+| `shellSplit` | 671-689 | 19 | `function shellSplit(input) {` |
+| `readTextSafe` | 692-696 | 5 | `function readTextSafe(path = '') {` |
 
 ### lib/app/tools.js（34 行 · 2 个函数）
 
@@ -1179,6 +1187,15 @@
 | `runGit` | 87-108 | 22 | `export function runGit(args, { cwd = '', timeoutMs = 120_000, env = {} } = {}) {` |
 | `gitRaw` | 116-132 | 17 | `export function gitRaw(args, { cwd = '', timeoutMs = 600_000 } = {}) {` |
 | `runGitAsync` | 142-162 | 21 | `export function runGitAsync(args, { cwd = '', timeoutMs = 120_000, env = {} } = {}) {` |
+
+### lib/core/workspace-paths.js（101 行 · 4 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `workspacePathsFile` | 28-30 | 3 | `export function workspacePathsFile() {` |
+| `loadWorkspacePaths` | 36-47 | 12 | `export function loadWorkspacePaths() {` |
+| `saveWorkspacePaths` | 55-81 | 27 | `export function saveWorkspacePaths(paths, { by = 'ai' } = {}) {` |
+| `workspacePathsInjectionText` | 91-100 | 10 | `export function workspacePathsInjectionText(sep = '\n') {` |
 
 ### lib/exempt/index.js（293 行 · 10 个函数）
 
@@ -2280,7 +2297,7 @@
 | `collectFiles` | 23-35 | 13 | `function collectFiles(root, exts, dir = root, out = []) {` |
 | `parseArgs` | 38-52 | 15 | `function parseArgs(argv) {` |
 
-### scripts/sync-plugin-install.mjs（259 行 · 13 个函数）
+### scripts/sync-plugin-install.mjs（287 行 · 14 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -2292,11 +2309,12 @@
 | `inRoot` | 97-97 | 1 | `const inRoot = (p) => roots.some((r) => p === r \|\| p.startsWith(r + sep));` |
 | `lstatOrNull` | 112-114 | 3 | `function lstatOrNull(p) {` |
 | `readTextOrNull` | 117-119 | 3 | `function readTextOrNull(p) {` |
-| `copyDrift` | 135-145 | 11 | `export function copyDrift(localDir, nmDir) {` |
-| `planInstall` | 162-183 | 22 | `export function planInstall({ profileDir, pluginName }) {` |
-| `applyInstall` | 194-213 | 20 | `export function applyInstall(actions, { on = false } = {}) {` |
-| `depHints` | 220-234 | 15 | `export function depHints(profileDir, pluginName) {` |
-| `pickProfile` | 245-258 | 14 | `export function pickProfile(profiles = [], pluginName = '') {` |
+| `listFilesRecursive` | 122-132 | 11 | `function listFilesRecursive(dir, prefix = '', out = new Set()) {` |
+| `copyDrift` | 152-173 | 22 | `export function copyDrift(localDir, nmDir) {` |
+| `planInstall` | 190-211 | 22 | `export function planInstall({ profileDir, pluginName }) {` |
+| `applyInstall` | 222-241 | 20 | `export function applyInstall(actions, { on = false } = {}) {` |
+| `depHints` | 248-262 | 15 | `export function depHints(profileDir, pluginName) {` |
+| `pickProfile` | 273-286 | 14 | `export function pickProfile(profiles = [], pluginName = '') {` |
 
 ### scripts/sync-plugin.mjs（285 行 · 9 个函数）
 
@@ -2667,7 +2685,7 @@
 | `req` | 43-56 | 14 | `const req = (name) => {` |
 | `findChild` | 100-100 | 1 | `const findChild = (inputs) => inputs.find((p) => p['aria-label'] === LABEL);` |
 
-### test/test-inject-system-prompt.mjs（373 行 · 3 个函数）
+### test/test-inject-system-prompt.mjs（374 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -2888,5 +2906,12 @@
 | `makeRepo` | 24-31 | 8 | `function makeRepo(files) {` |
 | `auditHits` | 34-49 | 16 | `function auditHits(repo, extraEnv = {}) {` |
 | `col` | 66-66 | 1 | `const col = (n, needle) => lines[n - 1].indexOf(needle) + 1;` |
+
+### test/test-workspace-paths.mjs（139 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `mod` | 28-28 | 1 | `const mod = () => import('../lib/core/workspace-paths.js');` |
+| `h` | 29-29 | 1 | `const h = () => import('../lib/app/handlers/workspace-paths.js');` |
 
 <!-- dshgp-functions:end -->

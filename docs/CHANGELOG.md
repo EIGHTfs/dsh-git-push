@@ -15,7 +15,7 @@
 
 | 版本 | 内容 |
 |------|------|
-| 2.9.0 | 审计引擎接入 tree-sitter（方案 C 阶段 2，**语法树优先、token 级回退**）：新增 lib/ast/treesitter.js（懒加载 WASM 运行时与语法、按扩展名映射、内容 hash 缓存语法树、descendantForPosition + 祖先链判定「命中处是否不透明构造」、任何失败返回 used:false 由调用方回退）；编排层（async）预解析后把**同步**确认函数传入检查器（lib/audit/orchestrate.js → audit-file.js → checks/dispatch.js → checks/regex.js），只在「扩展名有语法 + 本文件规则集确实声明 astConfirmSpan」时解析；assets/tree-sitter/ 落库运行时与 javascript/typescript/python 三语法（**运行时钉 0.25.10**——实测 0.27.1 与 tree-sitter-wasms@0.1.13 的语法在 getDylinkMetadata 处不兼容，0.26.0 同样失败；且 Language.load 必须传字节，传路径会静默失败）；assets 已入 package.json files 白名单；新增 test/test-treesitter.mjs 三断言（加载器 / 端到端双向 / **判别用例**：正则字面量里的 while(true) 有资产时不报、无资产时报回来 ⇒ 同时证明语法路径在跑与回退生效）。体积：assets 3.7MB，整包由约 950KB 增至约 4.4MB |
+| 2.9.1 | 审计精筛升级为列级 + 接入 tree-sitter（语法树优先、token 级回退） |
 | 2.8.7 | 副本判定改为内容漂移，修硬链接副本被误报（2.8.7 回归） |
 | 2.8.6 | CPU 现场采样脚本 + 审计性能规则误报修复；CPU 现场采样脚本 + 审计性能规则误报修复 + message 结构化条目参数 |
 | 2.8.4 | 推送失败封装 + 提交信息数组化 |

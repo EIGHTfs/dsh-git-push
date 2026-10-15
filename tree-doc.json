@@ -433,64 +433,19 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "README.md": {
-        "status": "M",
-        "mtime": "2026-10-15T10:27:27.945Z",
-        "note": "注释可能需更新"
-      },
       "docs/CHANGELOG.md": {
         "status": "M",
-        "mtime": "2026-10-15T10:27:27.508Z",
-        "note": "注释可能需更新"
-      },
-      "docs/FUNCTIONS.md": {
-        "status": "M",
-        "mtime": "2026-10-15T10:29:44.812Z",
-        "note": "注释可能需更新"
-      },
-      "docs/releases.json": {
-        "status": "M",
-        "mtime": "2026-10-15T10:27:08.351Z",
-        "note": "注释可能需更新"
-      },
-      "lib/ast/treesitter.js": {
-        "status": "M",
-        "mtime": "2026-10-15T10:29:33.123Z",
-        "note": "注释可能需更新"
-      },
-      "lib/audit/audit-file.js": {
-        "status": "M",
-        "mtime": "2026-10-15T10:29:33.139Z",
-        "note": "注释可能需更新"
-      },
-      "lib/audit/orchestrate.js": {
-        "status": "M",
-        "mtime": "2026-10-15T10:26:53.478Z",
-        "note": "注释可能需更新"
-      },
-      "lib/checks/dispatch.js": {
-        "status": "M",
-        "mtime": "2026-10-15T10:23:40.800Z",
-        "note": "注释可能需更新"
-      },
-      "lib/checks/regex.js": {
-        "status": "M",
-        "mtime": "2026-10-15T10:23:40.781Z",
+        "mtime": "2026-10-15T11:50:42.816Z",
         "note": "注释可能需更新"
       },
       "lib/self/index.js": {
         "status": "M",
-        "mtime": "2026-10-15T10:27:16.218Z",
+        "mtime": "2026-10-15T11:50:30.600Z",
         "note": "注释可能需更新"
       },
       "package.json": {
         "status": "M",
-        "mtime": "2026-10-15T10:27:08.327Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-treesitter.mjs": {
-        "status": "A",
-        "mtime": "2026-10-15T10:27:08.017Z",
+        "mtime": "2026-10-15T11:50:30.614Z",
         "note": "注释可能需更新"
       }
     }
@@ -548,5 +503,8 @@
   "docs/2.9.0-design.md": "（待注释）",
   "assets/tree-sitter/tree-sitter.js": "（待注释）",
   "assets/tree-sitter/tree-sitter.wasm": "（待注释）",
-  "test/test-treesitter.mjs": "（待注释）"
+  "test/test-treesitter.mjs": "（待注释）",
+  "lib/app/handlers/workspace-paths.js": "（待注释）",
+  "lib/core/workspace-paths.js": "（待注释）",
+  "test/test-workspace-paths.mjs": "（待注释）"
 }

@@ -198,7 +198,8 @@ test('上下文注入：cwd 必须取会话工作区（agent.session.header.cwd�
   assert.ok(pluginSrc.includes('envInjectText(sessionCwd)'), '会话工作区必须传给 envInjectText');
   // apply 侧：缓存按 root 键化（不同会话 cwd 不串）+ mapWorkspaceDirs 的 git 探测也在会话工作区跑
   assert.ok(applySrc2.includes('const envInjectText = (cwdOverride) =>'), 'envInjectText 必须接受会话 cwd 覆盖');
-  assert.ok(applySrc2.includes('envInjectCache.has(root)'), '缓存必须按 root 键化');
+  assert.ok(applySrc2.includes('const cacheKey = aiPaths ?'), '缓存键必须带上 AI 自设工作区清单（否则改完清单注入不刷新）');
+  assert.ok(applySrc2.includes('envInjectCache.has(cacheKey)'), '缓存必须按 root（+自设清单）键化，不同会话 cwd 不串');
   assert.ok(applySrc2.includes('workspaceRoot: root, cwd: root'), 'mapWorkspaceDirs 的 cwd 必须与注入 cwd 一致');
 });
 

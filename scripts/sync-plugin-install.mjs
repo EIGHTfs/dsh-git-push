@@ -118,22 +118,50 @@ function readTextOrNull(p) {
   try { return readFileSync(p, 'utf8'); } catch { return null; }
 }
 
+/** 递归列目录内文件（相对路径；跳过 .git/node_modules/.trash 等非发布内容）。 */
+function listFilesRecursive(dir, prefix = '', out = new Set()) {
+  try {
+    for (const e of readdirSync(join(dir, prefix), { withFileTypes: true })) {
+      const rel = prefix ? `${prefix}/${e.name}` : e.name;
+      if (['.git', 'node_modules', '.trash', '.DS_Store'].includes(e.name)) continue;
+      if (e.isDirectory()) listFilesRecursive(dir, rel, out);
+      else out.add(rel);
+    }
+  } catch { /* 读不到按空处理，由调用方据结果判断 */ }
+  return out;
+}
+
 /**
- * 判定 node_modules 那份副本是否与真源**内容不一致**（漂移）。
+ * 判定 node_modules 那份副本是否与真源不一致（漂移）。**两类都要查**：
  *
- * 为什么不行「是不是目录」就当异常：pnpm 的 `file:` 目录依赖落在 node_modules 时，
- *   实测（2026-10-15 本机）是**与 local-plugins 同 inode 的硬链接副本**（stat 显示同 inode、
- *   链接数 2，内容即真源本身），属**正常安装产物**——按目录就报警会误报。
- * 真正危险的是**内容漂移**：那份副本会成为宿主实际加载源，一旦它比真源旧
- *   （实测事故：GitHub tarball 旧版 2.6.9 顶掉 2.8.6，宿主 git_api status 报 2.6.9、
- *   npm_publish 等新工具整批消失），跑的就是旧代码。
+ * ① **内容漂移**：已有文件内容与真源不同（旧副本顶掉真源 ⇒ 宿主跑旧代码）。
+ *    实测事故：GitHub tarball 旧版 2.6.9 顶掉 2.8.6 ⇒ 宿主自报 2.6.9、新工具整批消失。
+ * ② **文件清单漂移**：真源有、副本**缺** ✗ —— 硬链接孪生**不会自动带上新建文件**。
+ *    实测事故（2026-10-15 19:2x）：新增 `lib/ast/treesitter.js` 只落 local-plugins，
+ *    而 node_modules 那份的 `lib/audit/orchestrate.js` 已经 import 它 ⇒ 副本 import 失败
+ *    ⇒ 宿主日志 `dsh-git-push (dsh-git-push): failed to import`、**该插件全部工具消失** ✗✗。
+ *    本检查此前只比对内容 ⇒ 完全没发现这一类 ✗。
+ *
+ * 为什么不能按「是不是目录」报警：pnpm 的 `file:` 目录依赖落在 node_modules 时，
+ *   实测是**与 local-plugins 同 inode 的硬链接副本**（stat 同 inode、链接数 2），属正常安装产物 ✓。
  *
  * @param {string} localDir 真源（local-plugins/<插件>）
  * @param {string} nmDir node_modules/<插件>
  * @returns {string} '' = 一致（含硬链接同文件）；否则是差异描述
  */
 export function copyDrift(localDir, nmDir) {
-  // 判据取「版本三处 + 入口文件」这几个标记位：任一处不同即认为副本陈旧/被替换
+  // ② 文件清单漂移（先查：缺文件比内容不同更致命 ⇒ 直接 import 失败）。
+  //    只比**加载关键子集**：lib/ 与 assets/ 是 import 与运行必需的；
+  //    scripts/ skills/ docs/ 等不参与加载，pnpm 对 file: 依赖的拷贝口径也可能不同 ⇒
+  //    全量比对会产生上百条噪音，把真信号（如缺 lib/ast/treesitter.js）淹掉 ✗
+  const localFiles = listFilesRecursive(localDir);
+  const nmFiles = listFilesRecursive(nmDir);
+  const CRITICAL = /^(lib\/|assets\/|package\.json$|cordis\.patch\.yml$)/;
+  if (localFiles.size && nmFiles.size) {
+    const missing = [...localFiles].filter((f) => CRITICAL.test(f) && !nmFiles.has(f));
+    if (missing.length) return `副本缺少 ${missing.length} 个加载必需文件（如 ${missing[0]}）`;
+  }
+  // ① 内容漂移：判据取「版本三处 + 入口文件」这几个标记位，任一处不同即认为副本陈旧/被替换
   for (const rel of ['package.json', 'lib/self/index.js', 'lib/app/command-registry.js']) {
     const a = readTextOrNull(join(localDir, rel));
     const b = readTextOrNull(join(nmDir, rel));

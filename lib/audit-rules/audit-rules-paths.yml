@@ -44,7 +44,7 @@ rules:
     name: "路径穿越防护"
     category: "security"
     severity: "error"
-    description: "直接使用用户输入作为文件路径存在目录遍历风险"
+    description: "人工核查提示：请核对本仓库是否存在「用户输入直接拼进文件路径」的目录遍历风险（本规则是**人工核查占位**，不指向具体行；命中行号仅作锚点）"
     fixable: false
     mitigation: "使用 path.resolve + startsWith 白名单校验"
 

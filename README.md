@@ -64,7 +64,7 @@ DSH（DeepSeek Harness）git 提交推送与代码审计插件——提交前自
 
 | 文档 | 讲什么 |
 |---|---|
-| [docs/SPEC.md](docs/SPEC.md) | **当前有效规格唯一入口**：身份 / 18 个工具 / 34 条 HTTP 接口 / 20 个设置键 / 4 个数据文件 / 审计规则体系 / 文档产物 / 版本纪律 / 测试基线 |
+| [docs/SPEC.md](docs/SPEC.md) | **当前有效规格唯一入口**：身份 / 18 个工具 / 35 条 HTTP 接口 / 20 个设置键 / 4 个数据文件 / 审计规则体系 / 文档产物 / 版本纪律 / 测试基线 |
 | [docs/功能-审计规则体系.md](docs/功能-审计规则体系.md) | 22 个规则槽位 / 138 条规则的组织方式、作用域字段、三层结构、运行入口、结果怎么读、怎么豁免 |
 | [docs/功能-历史提交审计.md](docs/功能-历史提交审计.md) | 逐提交回放审计：解决什么、怎么跑、与普通审计的差异与成本 |
 | [docs/功能-文档与结构追踪.md](docs/功能-文档与结构追踪.md) | tree-doc / doc-func / doc-version 三份自动生成文档怎么更新、漂移怎么办 |
@@ -272,7 +272,7 @@ dsh-git-push/
 │   │   ├── slot-stats.js — 规则槽位命中统计（模块级状态）
 │   │   ├── tool-call.js — 工具调用分发（git_scan/commit_push/audit/status 等全部工具）
 │   │   ├── tools.js — 工具定义清单（名称/描述/参数 schema）
-│   │   └── …（9 个更深文件）
+│   │   └── …（10 个更深文件）
 │   ├── ast/ — AST 实现层（token 级判定：括号/控制流/数据流/凭据/魔数/命名/规模/分词）
 │   │   ├── brace.js — 括号配对与区间包含工具
 │   │   ├── callgraph.js — 调用链追踪（单文件调用图 + isInRequestPath，io-risk 请求路径判定升级）
@@ -391,6 +391,7 @@ dsh-git-push/
 │   │   ├── credentials.js — （待注释）
 │   │   ├── endpoints.js — （待注释）
 │   │   ├── exec.js — （待注释）
+│   │   ├── workspace-paths.js — （待注释）
 │   ├── exempt/ — 豁免机制（dsh-skip-* 注释标记解析与文件头/行内语义）
 │   │   ├── index.js — 豁免注册表（dsh-skip-* 全标记消费）
 │   ├── fs/ — （待注释）
@@ -653,6 +654,7 @@ dsh-git-push/
 │   ├── test-treesitter.mjs — （待注释）
 │   ├── test-version-metrics.mjs — （待注释）
 │   ├── test-visibility-unified.mjs — （待注释）
+│   ├── test-workspace-paths.mjs — （待注释）
 │   ├── fixtures/ — （待注释）
 │   │   ├── TimeZoneComboBox-CRnoCikG.js — Pawchive 混淆产物样本（hash 文件名——跳过判定 fixture）
 │   ├── helpers/ — （待注释）

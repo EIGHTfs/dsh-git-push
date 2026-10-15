@@ -427,8 +427,8 @@ rules:
     name: "真实邮箱入库（隐私泄漏）"
     category: "security"
     severity: "error"
-    description: "疑似真实个人邮箱硬编码/入库（隐私信息），请确认——示例域（example.com）、GitHub 匿名邮箱（users.noreply.github.com）、SSH 地址（git@github.com / git@ssh.github.com）、GitHub token 前缀用户名（ghp_/gho_/ghu_/ghs_/ghr_/github_pat_ 开头的用户名 + github.com 域；token 本体由 secret-github-pat 规则拦截）、本地虚拟域（.local/.lan/.internal/.test）豁免；真实邮箱（如 QQ 号@qq.com 等）一旦进公开仓库可被爬取，招致营销骚扰/社工"
-    pattern: "\\b(?!git@(?:ssh\\.)?github\\.com\\b|(?:gh[opsur]_|github_pat_)[A-Za-z0-9_]+@github\\.com\\b)[A-Za-z0-9._%+-]+@(?!example\\.com\\b|users\\.noreply\\.github\\.com\\b|[A-Za-z0-9-]+\\.(?:local|lan|internal|test|invalid|localhost)\\b)[A-Za-z0-9-]+\\.[A-Za-z]{2,}\\b"
+    description: "疑似真实个人邮箱硬编码/入库（隐私信息），请确认——示例域（example.com）、GitHub 匿名邮箱（users.noreply.github.com）、SSH 地址（git@github.com / git@ssh.github.com）、GitHub token 前缀用户名（ghp_/gho_/ghu_/ghs_/ghr_/github_pat_ 开头的用户名 + github.com 域；token 本体由 secret-github-pat 规则拦截）、本地虚拟域（.local/.lan/.internal/.test）豁免；真实邮箱（如 QQ 号@qq.com 等）一旦进公开仓库可被爬取，招致营销骚扰/社工；确需提交（公开联系方式/测试夹具/版权声明等）时可临时关闭审计再推送（插件设置 →「提交前审计」auditEnabled=false）"
+    pattern: "\\b(?!git@(?:ssh\\.)?github\\.com\\b|(?:gh[opsur]_|github_pat_)[A-Za-z0-9_]+@github\\.com\\b)[A-Za-z0-9._%+-]+@(?!example\\.com\\b|users\\.noreply\\.github\\.com\\b|[A-Za-z0-9-]+\\.(?:local|lan|internal|test|invalid|localhost)\\b|[A-Za-z0-9-]+\\.(?:png|jpe?g|gif|webp|svg|avif|ico|bmp|js|mjs|cjs|ts|tsx|jsx|css|scss|less|html?|json|ya?ml|md|markdown|txt|zip|gz|tgz|mp[34]|webm|pdf|woff2?|ttf|eot)\\b)[A-Za-z0-9-]+\\.[A-Za-z]{2,}\\b"
     fixable: false
     mitigation: "真实邮箱不写进代码/文档；示例一律用 your-name@example.com 占位；GitHub 匿名邮箱 users.noreply.github.com 豁免（git 提交默认 author）；已入库的用 git filter 清历史"
   - id: credfile-common

@@ -9,6 +9,7 @@
     "删除需可恢复：删除文件/目录前先确认有 git 历史或备份（禁 rm -rf 无痕删除），大删除先 commit 检查点",
     "文档对话类措辞：公开仓库文档只写做了什么，不含会话引用/决策来源/AI 许可表述/商量转述等沟通措辞（见 release-docs-rule）",
     "dryRun 先行：批量/破坏性操作（重建历史、删除、迁移）先 dryRun 预演，确认无误再执行",
-    "版本号同步：功能变更时同步更新 package.json version 与 README 版本记录表"
+    "版本号同步：功能变更时同步更新 package.json version 与 README 版本记录表",
+    "提交信息结构化：提交信息含**多个要点**或需要 why/verify 溯源时，用 messageItems 传数组（元素为字符串或 {what,type?,scope?,why?,verify?,refs?}，仅 what 必填）——message 只传字符串（宿主校验只认标量类型）并作标题，条目会渲染成要点与正文；简单一句话说清时用字符串即可，不必强行结构化"
   ]
 }
