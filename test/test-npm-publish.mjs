@@ -97,6 +97,24 @@ test('工具层：有宿主 job 服务 ⇒ 返回 jobId（后台化）；无 ⇒
   assert.equal(syncRes.result && syncRes.result.dryRun, true);
 });
 
+test('工具层：job 完成回执必须带可读 detail（回归：成功分支曾只给 output ⇒ job_output 读出「(no new output)」）', async () => {
+  // 2026-10-16 实测缺陷：npm 成功分支写的是 { status:'completed', output: JSON }——**没有 detail**，
+  //   而宿主 job 的完成回执显示的是 detail（clone/commit 都有 ⇒ 只有 npm 空 ✗）
+  //   ⇒ AI 用 job_output 去查只会拿到「(no new output)」，只能翻插件日志与 registry 侧面确认。
+  const dir = makeFixture();
+  let started = null;
+  const fakeJobs = { start: (spec) => { started = spec; return 'npm-publish-x'; } };
+  await callTool('npm_publish', { dir, dryRun: true }, { workspaceRoot: dir }, cfg, null, fakeJobs, null);
+  assert.ok(started && typeof started.run === 'function', 'job spec 应带 run');
+  const outcome = await started.run().done;
+  assert.equal(outcome.status, 'completed', JSON.stringify(outcome).slice(0, 200));
+  assert.ok(typeof outcome.detail === 'string' && outcome.detail.length > 0,
+    '成功回执必须带 detail（否则宿主 job_output 读不出任何结果）');
+  assert.match(outcome.detail, /未写入 registry|dry-run/, 'detail 应说明这是 dry-run、未写库');
+  assert.match(outcome.detail, /dsh-git-push|@\d+\.\d+\.\d+/, 'detail 应含包名或版本号');
+  assert.ok(typeof outcome.output === 'string' && outcome.output.startsWith('{'), 'output 仍保留原始 JSON');
+});
+
 test('工具层闸门：dryRun=false 未确认 ⇒ blocked（不进 job、不发请求）', async () => {
   const r = await callTool('npm_publish', { dir: ROOT, dryRun: false }, env, cfg, null, { start: () => 'never' }, null);
   assert.equal(r.ok, false);

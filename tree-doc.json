@@ -435,12 +435,17 @@
     "worktree": {
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-15T21:09:44.505Z",
+        "mtime": "2026-10-15T21:14:40.691Z",
         "note": "注释可能需更新"
       },
-      "lib/core/workspace-paths.js": {
+      "lib/app/tool-call.js": {
         "status": "M",
-        "mtime": "2026-10-15T21:09:35.275Z",
+        "mtime": "2026-10-15T21:13:08.317Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-npm-publish.mjs": {
+        "status": "M",
+        "mtime": "2026-10-15T21:14:13.524Z",
         "note": "注释可能需更新"
       }
     }
