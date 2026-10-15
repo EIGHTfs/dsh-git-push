@@ -19,11 +19,11 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 const mkTmp = () => mkdtempSync(join(tmpdir(), 'dshgp-docver-'));
 
-// end-to-end：真实项目根的版本列表必须与 git log 聚合一致。
+// end-to-end：真实项目根的版本列表必须与**文件源**（package.json + docs/releases.json）一致。
 //   为什么放测试里：doc-version check 只是脚本，不跑就没人发现漂移；改成测试后
-//   每次全量测试都会拦住「提交了新版本但没同步版本表」。
-// 条件：仓库存在带 dshgp-version 标记块的 md 才检查（其他仓库无此文档自然跳过）。
-test('end-to-end：真实项目根 checkVersionDrift 无漂移（版本表与 git log 一致）', () => {
+//   每次全量测试都会拦住「改了版本/releases.json 但没同步版本表」。
+//   2026-10-16：**不再以 git log 为判据**——普通提交不该动版本表，也不该逼人为门禁升版本。
+test('end-to-end：真实项目根 checkVersionDrift 无漂移（版本表与文件源一致）', () => {
   const host = findMarkedHostMd(ROOT, 'dshgp-version');
   const r = checkVersionDrift({ hostPath: host, root: ROOT });
   assert.equal(r.ok, true, `版本列表漂移（先跑 doc-version.mjs apply）：${JSON.stringify(r.issues)}`);
@@ -40,14 +40,17 @@ function gitRepoWithVersions(dir) {
   execSync('git add -A && git commit -qm "feat(1.0.1): add a"', { cwd: dir });
 }
 
-test('doc-version：buildVersionListText 从 git log 聚合版本表', () => {
+test('doc-version：buildVersionListText 由文件（package.json + docs/releases.json）生成版本表', () => {
   const dir = mkTmp();
   try {
     gitRepoWithVersions(dir);
     const r = buildVersionListText(dir);
     assert.match(r.text, /\| 版本 \| 内容 \|/, '应含表头');
-    assert.match(r.text, /1\.0\.0/, '应含 1.0.0 行');
-    assert.ok(r.rows >= 1, '应至少 1 版本行（patch 1.0.1 并入 1.0.0 主版本）');
+    // 2026-10-16：改为文件驱动断言——行内容来自 docs/releases.json + 当前版本（package.json 真源），
+    //   与 git log 无关（普通提交不改表）
+    assert.match(r.text, /1\.0\.1/, '应含当前版本 1.0.1 行（package.json 真源）');
+    assert.equal(r.source, 'package.json', '版本源应识别为 package.json');
+    assert.ok(r.rows >= 1, '应至少 1 版本行');
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 

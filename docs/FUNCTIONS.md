@@ -594,28 +594,28 @@
 | `pick` | 40-48 | 9 | `const pick = (v) => {` |
 | `resolveDshClientFragments` | 70-93 | 24 | `export function resolveDshClientFragments(repoRoot) {` |
 
-### lib/audit/collector.js（477 行 · 18 个函数）
+### lib/audit/collector.js（481 行 · 18 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `readIgnoreFileCached` | 47-53 | 7 | `function readIgnoreFileCached(p) {` |
-| `isGitWorkTree` | 66-77 | 12 | `function isGitWorkTree(dir) {` |
-| `tryLoadAuditIgnoreFallback` | 93-143 | 51 | `function tryLoadAuditIgnoreFallback(root, respectAuditIgnore = true) {` |
-| `handleEntry` | 122-135 | 14 | `const handleEntry = (dir, en) => {` |
-| `walkDirs` | 136-140 | 5 | `const walkDirs = (dir) => {` |
-| `tryLoadGitIgnoreSet` | 155-252 | 98 | `function tryLoadGitIgnoreSet(root, respectAuditIgnore = true) {` |
-| `walkDirs` | 196-211 | 16 | `const walkDirs = (dir) => {` |
-| `isHardSkipped` | 261-263 | 3 | `function isHardSkipped(name) {` |
-| `computeGitIgnored` | 266-271 | 6 | `function computeGitIgnored(full, gitIgnoreRoot, includeIgnored, respectAuditIgnore = true) {` |
-| `shouldSkipDirByYml` | 274-278 | 5 | `function shouldSkipDirByYml(name, ignoredByGit, gitIgnoreRoot) {` |
-| `isFileGitIgnored` | 281-292 | 12 | `function isFileGitIgnored(full, gitIgnoreRoot, includeIgnored, respectAuditIgnore = true) {` |
-| `collectTextFiles` | 294-353 | 60 | `export async function collectTextFiles(dir, { depth = 10, gitIgnoreRoot = null, includeIgnored = false, testExemptRoot = null, respectAuditIgnore = true } = {}) {` |
-| `walk` | 316-352 | 37 | `async function walk(cur, level) {` |
-| `isGitRepo` | 356-358 | 3 | `export function isGitRepo(dir) {` |
-| `collectChangedFiles` | 366-423 | 58 | `export function collectChangedFiles(repoPath) {` |
-| `isTextFile` | 426-444 | 19 | `export function isTextFile(full) {` |
-| `clearReadCache` | 458-461 | 4 | `export function clearReadCache() {` |
-| `readText` | 464-477 | 14 | `export function readText(full) {` |
+| `readIgnoreFileCached` | 51-57 | 7 | `function readIgnoreFileCached(p) {` |
+| `isGitWorkTree` | 70-81 | 12 | `function isGitWorkTree(dir) {` |
+| `tryLoadAuditIgnoreFallback` | 97-147 | 51 | `function tryLoadAuditIgnoreFallback(root, respectAuditIgnore = true) {` |
+| `handleEntry` | 126-139 | 14 | `const handleEntry = (dir, en) => {` |
+| `walkDirs` | 140-144 | 5 | `const walkDirs = (dir) => {` |
+| `tryLoadGitIgnoreSet` | 159-256 | 98 | `function tryLoadGitIgnoreSet(root, respectAuditIgnore = true) {` |
+| `walkDirs` | 200-215 | 16 | `const walkDirs = (dir) => {` |
+| `isHardSkipped` | 265-267 | 3 | `function isHardSkipped(name) {` |
+| `computeGitIgnored` | 270-275 | 6 | `function computeGitIgnored(full, gitIgnoreRoot, includeIgnored, respectAuditIgnore = true) {` |
+| `shouldSkipDirByYml` | 278-282 | 5 | `function shouldSkipDirByYml(name, ignoredByGit, gitIgnoreRoot) {` |
+| `isFileGitIgnored` | 285-296 | 12 | `function isFileGitIgnored(full, gitIgnoreRoot, includeIgnored, respectAuditIgnore = true) {` |
+| `collectTextFiles` | 298-357 | 60 | `export async function collectTextFiles(dir, { depth = 10, gitIgnoreRoot = null, includeIgnored = false, testExemptRoot = null, respectAuditIgnore = true } = {}) {` |
+| `walk` | 320-356 | 37 | `async function walk(cur, level) {` |
+| `isGitRepo` | 360-362 | 3 | `export function isGitRepo(dir) {` |
+| `collectChangedFiles` | 370-427 | 58 | `export function collectChangedFiles(repoPath) {` |
+| `isTextFile` | 430-448 | 19 | `export function isTextFile(full) {` |
+| `clearReadCache` | 462-465 | 4 | `export function clearReadCache() {` |
+| `readText` | 468-481 | 14 | `export function readText(full) {` |
 
 ### lib/audit/ext-runner.js（80 行 · 2 个函数）
 
@@ -2066,20 +2066,16 @@
 | `filesOf` | 400-400 | 1 | `const filesOf = (r) => gitLsFiles(r);` |
 | `mapOf` | 401-401 | 1 | `const mapOf = (r) => loadMapping(r);` |
 
-### scripts/doc-version.mjs（221 行 · 10 个函数）
+### scripts/doc-version.mjs（150 行 · 6 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `detectVersionSource` | 51-56 | 6 | `export function detectVersionSource(root) {` |
-| `resolveVersionSource` | 59-62 | 4 | `export function resolveVersionSource(root, explicit = '') {` |
-| `projectVersionOf` | 65-75 | 11 | `export function projectVersionOf(root, source = '') {` |
-| `packageVersionOf` | 78-80 | 3 | `export function packageVersionOf(root) {` |
-| `buildVersionListText` | 83-122 | 40 | `export function buildVersionListText(root, { versionSource = '' } = {}) {` |
-| `releaseTitle` | 101-111 | 11 | `const releaseTitle = (() => {` |
-| `findBlock` | 125-130 | 6 | `function findBlock(text) {` |
-| `applyVersionBlock` | 133-137 | 5 | `export function applyVersionBlock(text, newContent) {` |
-| `checkVersionDrift` | 140-148 | 9 | `export function checkVersionDrift({ hostPath, root, versionSource = '' } = {}) {` |
-| `out` | 165-165 | 1 | `const out = (msg) => console.log(msg);` |
+| `packageVersionOf` | 40-42 | 3 | `export function packageVersionOf(root) {` |
+| `buildVersionListText` | 46-51 | 6 | `export function buildVersionListText(root, _opts = {}) {` |
+| `findBlock` | 54-59 | 6 | `function findBlock(text) {` |
+| `applyVersionBlock` | 62-66 | 5 | `export function applyVersionBlock(text, newContent) {` |
+| `checkVersionDrift` | 69-77 | 9 | `export function checkVersionDrift({ hostPath, root, versionSource = '' } = {}) {` |
+| `out` | 94-94 | 1 | `const out = (msg) => console.log(msg);` |
 
 ### scripts/frontend-preview-check.mjs（125 行 · 1 个函数）
 
@@ -2160,7 +2156,7 @@
 | `genPreview` | 86-99 | 14 | `export function genPreview({ write = false } = {}) {` |
 | `checkPreviewDrift` | 102-119 | 18 | `export function checkPreviewDrift() {` |
 
-### scripts/readme-gen.mjs（268 行 · 13 个函数）
+### scripts/readme-gen.mjs（318 行 · 16 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -2173,10 +2169,13 @@
 | `listVersionCommits` | 143-157 | 15 | `export function listVersionCommits(repoPath) {` |
 | `scrubConvWording` | 164-178 | 15 | `export function scrubConvWording(label) {` |
 | `readVersionMetrics` | 189-196 | 8 | `export function readVersionMetrics(repoPath) {` |
-| `buildReadmeVersionTable` | 198-225 | 28 | `export function buildReadmeVersionTable(repoPath) {` |
-| `genReadme` | 228-244 | 17 | `export function genReadme({ repoPath, template = '' } = {}) {` |
-| `toString` | 246-247 | 2 | `function toString(arr) { return Array.isArray(arr) ? arr.join('\n') : String(arr \|\| ''); }` |
-| `main` | 248-260 | 13 | `function main(argv) {` |
+| `detectVersionSource` | 209-214 | 6 | `export function detectVersionSource(root) {` |
+| `projectVersionOf` | 217-227 | 11 | `export function projectVersionOf(root, source = '') {` |
+| `readReleases` | 230-237 | 8 | `export function readReleases(repoPath) {` |
+| `buildReadmeVersionTable` | 255-275 | 21 | `export function buildReadmeVersionTable(repoPath) {` |
+| `genReadme` | 278-294 | 17 | `export function genReadme({ repoPath, template = '' } = {}) {` |
+| `toString` | 296-297 | 2 | `function toString(arr) { return Array.isArray(arr) ? arr.join('\n') : String(arr \|\| ''); }` |
+| `main` | 298-310 | 13 | `function main(argv) {` |
 
 ### scripts/rename-locator.mjs（97 行 · 4 个函数）
 
@@ -2548,7 +2547,7 @@
 |------|------|------|------|
 | `fixture` | 18-29 | 12 | `function fixture(version, releases) {` |
 
-### test/test-doc-version.mjs（81 行 · 2 个函数）
+### test/test-doc-version.mjs（84 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|

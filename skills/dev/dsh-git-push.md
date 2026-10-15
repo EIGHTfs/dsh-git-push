@@ -31,7 +31,7 @@ generatedBy: deepseek-official/deepseek-v4-flash · EIGHTfs 2026-10-02
 | `git_cred_env` | — | 输出凭据环境变量前缀（SSH `GIT_SSH_COMMAND` / HTTPS `GIT_ASKPASS`，不含明文） |
 | `git_gen_ssh_key` | `email`(必填), `force?` | 生成 SSH 密钥对（写入插件配置目录；私钥不出本机，公钥整行回传） |
 | `git_sluice` | `args`(必填) | git 命令透传（凭据自动注入；返回 status + stdout/stderr 原文） |
-| `git_api` | `path?`, `method?`, `query?`, `body?` | **直接调用本插件 28 条 HTTP API**（内部走 `handleHttp` 同一条代码路径，不另写实现）；不传 `path` 则列出全部接口 |
+| `git_api` | `path?`, `method?`, `query?`, `body?` | **直接调用本插件 35 条 HTTP API**（内部走 `handleHttp` 同一条代码路径，不另写实现）；不传 `path` 则列出全部接口 |
 
 典型流程：`git_scan` 看改动 → `code_audit` 自查 → `git_commit_push`（审计通过才推）。
 
@@ -321,3 +321,20 @@ node scripts/readme-gen.mjs <repoPath> [--write <path>] [--template <path>]
 | 函数/复杂度被报为 blocker | 规则 `severity` 是上限，检查器不越级；报 blocker 说明 yml 里写的就是 error/blocker |
 | 克隆大文件反复失败 | 失败项的分片必须保留（`.dsh-parts`）才能跨轮 Range 续传；同轮清理分片会让大文件永远从 0 重来 |
 | 建了远端但推送报「远端查不到分支 master（API 404 / ls-remote 无该分支）」 | `git_remote_create` 旧版把 origin 写成 **REST API 端点**（`https://api.github.com/repos/<o>/<r>` ✗ 那不是 git remote）⇒ `git push/fetch origin` 必然失败。2026-10-09 已修（`lib/git/remote.js`）：origin 统一写 `https://github.com/<o>/<r>`，并**自愈**——仓库已存在但 origin 仍是 API 形态时 `set-url` 改回；返回体新增 `originAction`（`add`/`repair`/`keep`）。旧仓库手工修：`git remote set-url origin ssh://git@ssh.github.com:443/<o>/<r>.git` 再 `git push -u origin master`（凭据用插件 `id_rsa` + `-p 443`）。⚠️ `lib/git/clone.js` 仍写 API 形态 origin（设计如此，插件自身推送不受影响，但 `git push origin` 会失败） |
+
+## 端点：AI 自设工作区路径（workspace-paths）
+
+环境注入里的「当前工作目录 cwd」原先取自**会话文件**（`agent.session.header.cwd`），实测可能是**陈旧路径**
+（本机注入过 `0.1.6-alpha.1` 的旧工作区 ⇒ 反而误导）⇒ 改为让 AI 自己登记真实工作区：
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `/api/git-push/workspace-paths` | 读清单 + 注入预览（`injection` / `injectionActive` / `file`） |
+| POST | `/api/git-push/workspace-paths` | 写清单：`{paths:[…], mode:"set"\|"add"\|"remove"}`；`{clear:true}` 清空 |
+
+- **校验**：只收**绝对路径**、必须**存在且是目录**、去重、上限 20；全被拒或缺参一律 **400**（不返回"成功但空"）
+- **存储**：`<配置目录>/workspace-paths.json`（`paths` / `updatedAt` / `updatedBy`，原子写入）
+- **注入**：自设清单**优先显示**（逐条 + 修改入口），会话 cwd 降级标注为「仅兜底，可能陈旧」；
+  注入缓存键带上自设清单（否则改完不刷新）
+- **调用**：`git_api({path:'workspace-paths', method:'POST', body:'{"paths":["/abs/path"]}'})`
+- **回归**：`test/test-workspace-paths.mjs`（8 例，含「经 handleHttp 的 JSON 字符串 body」）

@@ -32,12 +32,9 @@ test('readVersionMetrics：缺文件/坏 json/非对象 一律返回空对象（
 
 test('buildReadmeVersionTable：量化记录拼到该版本行最前，未写量化的版本保持原样', () => {
   const repo = join(SANDBOX, 'repo');
-  mkdirSync(repo, { recursive: true });
-  execSync('git init -q && git config user.email t@t.local && git config user.name t', { cwd: repo, stdio: 'ignore' });
-  writeFileSync(join(repo, 'a.txt'), '1');
-  execSync('git add -A && git commit -qm "feat: 9.9.9 — 某版本做了什么"', { cwd: repo, stdio: 'ignore' });
-  writeFileSync(join(repo, 'b.txt'), '2');
-  execSync('git add -A && git commit -qm "fix: 9.9.8 — 另一版本做了什么"', { cwd: repo, stdio: 'ignore' });
+  mkdirSync(join(repo, 'docs'), { recursive: true });
+  // 2026-10-16 改：版本表行内容来自 docs/releases.json（**不读 git log**）⇒ 夹具改为文件驱动
+  writeFileSync(join(repo, 'docs', 'releases.json'), JSON.stringify({ '9.9.9': '某版本做了什么', '9.9.8': '另一版本做了什么' }), 'utf8');
 
   // 只为 9.9.9 写量化
   writeFileSync(join(repo, 'version-metrics.json'), JSON.stringify({ '9.9.9': '误报 16 → 0' }));

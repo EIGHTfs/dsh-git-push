@@ -1,22 +1,101 @@
 # ============================================================
-# PHP 代码审计规则集（占位）
-# 版本：0.1.0
+# PHP 代码审计规则集（首版 · 语言专项）
+# 版本：0.2.0
 # 适用：PHP 项目
-# 描述：⚠️ 占位槽位——语言专项规则待补。放入此文件即完成「槽位就绪」：
-#       审计系统自动发现本槽位（放 audit-rules-*.yml 即生效，零代码改动）。
-#       当前 PHP 文件由 nodejs 槽位的语言无关规则（凭据/路径穿越/文件健康度等）兜底审计，
-#       语言相关规则（短名/魔数/函数长度/复杂度/嵌套）待补 AST 层 phpFuncRanges 后启用。
-# 待办（补规则时）：① AST 层 lang.js 的 LANG_FUNC_RANGES.php 实现函数范围收集
-#       （function 关键字 + 花括号配对，与 JS 同构）；② 本槽位按 python/java 先例
-#       写规则，exts: ["php"]。
+# 描述：本槽位首版语言专项规则（**纯 pattern 层**，不依赖 AST 函数范围）。
+#       规则依据：对真实 PHP 仓（php-fig/log、brick/math 等样本仓）实测各候选模式的出现次数后选型——
+#       例：`@` 形态裸查有 1183 次（大量命中 phpDoc 注解 ✗）⇒ 本槽位细化为「@$变量」与「@函数(」
+#       两种真正的错误抑制写法，避免把文档注释当违规。
+#       （AST 层的 min_length/max_lines/max_complexity/magic-number 仍待补 LANG_FUNC_RANGES.php）
 # ============================================================
 
 metadata:
-  name: "PHP 审计规则集（占位）"
-  version: "0.1.0"
+  name: "PHP 审计规则集（首版 · 语言专项）"
+  version: "0.2.0"
   language: "php"
   author: "DeepSeek"
-  description: "PHP 项目语言专用规则（占位——规则待补，槽位已就绪）"
-  last_updated: "2026-10-06"
+  description: "PHP 项目语言专用规则（pattern 层首版：eval/extract/调试输出/错误抑制/md5 口令/die-exit）"
+  last_updated: "2026-10-16"
 
-rules: []
+rules:
+  # ----- 1. 安全 -----
+
+  - id: php/eval
+    name: "禁止使用 eval 执行代码"
+    category: "security"
+    severity: "error"
+    description: "eval 执行任意字符串代码，一旦拼接了外部输入即为 RCE；确需动态求值应用白名单映射或回调表"
+    patterns:
+      - "(?<![\\w$>])eval\\s*\\("
+    exts: ["php", "phtml"]
+    fixable: false
+
+  - id: php/extract
+    name: "避免 extract() 批量导入变量"
+    category: "security"
+    severity: "error"
+    description: "extract 把数组键变成当前作用域变量，可覆盖已有变量（含请求参数），是经典的变量覆盖漏洞入口"
+    patterns:
+      - "(?<![\\w$>])extract\\s*\\("
+    exts: ["php", "phtml"]
+    fixable: false
+
+  - id: php/md5-sha1-hash
+    name: "口令场景禁用 md5/sha1"
+    category: "security"
+    severity: "warning"
+    description: "md5/sha1 已可高速碰撞与暴力破解，用于口令/令牌/签名时高危；口令应 password_hash（bcrypt/argon2）。非安全用途（缓存键、内容校验）可保留但需注释说明"
+    patterns:
+      - "(?<![\\w$>])(?:md5|sha1|md5_file|sha1_file)\\s*\\("
+    exts: ["php", "phtml"]
+    fixable: false
+
+  - id: php/error-suppression
+    name: "避免用 @ 抑制错误"
+    category: "robustness"
+    severity: "warning"
+    description: "@ 把错误静默吞掉，真出问题时现场信息全无；应显式判断前置条件或捕获异常。本规则只匹配真正的抑制写法（@$变量 / @函数(），不误伤 phpDoc 注解"
+    # 只匹配**紧贴**写法 `@func(` / `@$var`：`@param (callable(…))` 这类 phpDoc 注解
+    #   带空格 ⇒ 实测（brick/math）被 `@func\s*(` 误伤过 ✗ ⇒ 去掉 \s* + 加行级代码判定双保险
+    astConfirm: true
+    patterns:
+      - "@\\$[A-Za-z_][A-Za-z0-9_]*"
+      - "@[A-Za-z_][A-Za-z0-9_]*\\("
+    exts: ["php", "phtml"]
+    exclude_paths:
+      - "vendor/"
+      - "tests/"
+      - "test/"
+    fixable: false
+
+  # ----- 2. 可维护性 -----
+
+  - id: php/var-dump-debug
+    name: "PHP 避免遗留 var_dump/print_r 调试输出"
+    category: "maintainability"
+    severity: "notice"
+    description: "var_dump/print_r/var_export 直出到响应体，既泄漏内部结构又破坏输出格式；应走日志器或调试器"
+    patterns:
+      - "(?<![\\w$>])(?:var_dump|print_r|var_export)\\s*\\("
+    exts: ["php", "phtml"]
+    exclude_paths:
+      - "tests/"
+      - "test/"
+      - "vendor/"
+    fixable: false
+
+  - id: php/die-exit
+    name: "PHP 库代码避免 die/exit 直接终止"
+    category: "robustness"
+    severity: "notice"
+    description: "die/exit 直接结束进程，跳过框架的响应收尾与错误处理；库代码应抛异常，由入口层决定输出与状态码"
+    patterns:
+      - "(?<![\\w$>])(?:die|exit)\\s*\\("
+    exts: ["php", "phtml"]
+    exclude_paths:
+      - "tests/"
+      - "test/"
+      - "vendor/"
+      - "bin/"
+      - "public/"
+    fixable: false

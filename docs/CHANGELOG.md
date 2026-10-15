@@ -15,123 +15,20 @@
 
 | 版本 | 内容 |
 |------|------|
-| 2.9.1 | 审计精筛升级为列级 + 接入 tree-sitter（语法树优先、token 级回退） |
-| 2.8.7 | 副本判定改为内容漂移，修硬链接副本被误报（2.8.7 回归） |
-| 2.8.6 | CPU 现场采样脚本 + 审计性能规则误报修复；CPU 现场采样脚本 + 审计性能规则误报修复 + message 结构化条目参数 |
-| 2.8.4 | 推送失败封装 + 提交信息数组化 |
-| 2.8.3 | 零改动=正常成功路径（文案+行为）+ 修 job 输出自相矛盾 + 审计×提交推送边界回归；推送失败结构化诊断 + 否定性结论的证据标准（并入 2.8.3） |
-| 2.8.2 | 推送前自动指定正确的 GitHub remote |
-| 2.8.1 | CLI 真发姿势补齐 + doc-drift 增工具清单完整性校验 + 发包回归改 fixture + SPEC 工具表补行 |
-| 2.8.0 | 账号信息新增 NPM 能力（三标签 + GitHub↔NPM 账号卡滑动切换 + 名下包列表）+ npm 装包与发包（API / 工具 / CLI） |
+| 2.9.2 | 版本表改为**文件驱动（不读 git log）**：scripts/readme-gen.mjs 的 buildReadmeVersionTable 不再从提交标题聚合，改为 docs/releases.json（每版一行说明）+ 版本真源文件（package.json 等）+ version-metrics.json；版本源探测统一迁入 readme-gen 并由 doc-version 再导出。为什么：行内容原先取自 git log 提交标题 ⇒ 任何不带版本号的普通提交都会改动「最新行」⇒ 版本表门禁报漂移 ⇒ 逼着「为门禁升版本」（把版本号变成讨好门禁的产物）。改为文件驱动后普通提交完全不动表。另：补齐 5 个占位语言规则包首版真规则（go/rust/cpp/php/swift 共 26 条，选型依据对真实样本仓的模式出现次数实测）+ 修 lib/audit/collector.js 的 TEXT_EXT（缺 php/phtml/swift/kt ⇒ 这两个语言的文件从未进过审计管道、规则永不命中）+ 加 astConfirm 防注释误报（rust/unimplemented-macro 16→2、cpp/raw-new 与 php/error-suppression 的注释误报清零） |
+| 2.9.1 | AI 自设工作区路径（数组 + API）：新增 lib/core/workspace-paths.js（状态 <配置目录>/workspace-paths.json，校验绝对路径/必须存在且为目录/去重/上限 20，原子写入）+ 端点 GET/POST /api/git-push/workspace-paths（set/add/remove/clear）；环境注入**优先显示自设清单**（多路径逐条 + 修改入口），会话 cwd 降级标注为「仅兜底，可能陈旧」、注入缓存键带上自设清单。修 lib/app/http-handlers.js 的 readBody：原实现只接受对象，而工具/CLI 内部调用传 JSON **字符串** ⇒ body 被静默丢成 {} ⇒ **所有 POST 端点经工具/CLI 都收不到参数**（浏览器路径正常 ⇒ 两条路径行为分叉）。副本漂移检查补「文件清单」维度（只比 lib/、assets/、package.json、cordis.patch.yml）：硬链接孪生下新建文件只落一边 ⇒ 插件整体 failed to import，此前完全查不出。新增 test/test-workspace-paths.mjs（8 例，含 handleHttp 字符串 body 回归） |
+| 2.9.0 | 审计引擎接入 tree-sitter（方案 C 阶段 2，**语法树优先、token 级回退**）：新增 lib/ast/treesitter.js（懒加载 WASM 运行时与语法、按扩展名映射、内容 hash 缓存语法树、descendantForPosition + 祖先链判定「命中处是否不透明构造」、任何失败返回 used:false 由调用方回退）；编排层（async）预解析后把**同步**确认函数传入检查器（lib/audit/orchestrate.js → audit-file.js → checks/dispatch.js → checks/regex.js），只在「扩展名有语法 + 本文件规则集确实声明 astConfirmSpan」时解析；assets/tree-sitter/ 落库运行时与 javascript/typescript/python 三语法（**运行时钉 0.25.10**——实测 0.27.1 与 tree-sitter-wasms@0.1.13 的语法在 getDylinkMetadata 处不兼容，0.26.0 同样失败；且 Language.load 必须传字节，传路径会静默失败）；assets 已入 package.json files 白名单；新增 test/test-treesitter.mjs 三断言（加载器 / 端到端双向 / **判别用例**：正则字面量里的 while(true) 有资产时不报、无资产时报回来 ⇒ 同时证明语法路径在跑与回退生效）。体积：assets 3.7MB，整包由约 950KB 增至约 4.4MB |
+| 2.8.9 | 审计精筛升级为**列级**（方案 A，为后续 tree-sitter 接入打底）：tokenizer 的 token 新增 col（1-based 列）；lib/ast/code-lines.js 新增 makeCodeSpanFilter（在行级判定之上，用 str/tmpl/comment token 构造不透明区间，isCodeHit(line,col) 判「命中那一处是不是代码」）并由 ast/index.js 导出；lib/checks/regex.js 报命中时改用 exec 取列，按**规则 opt-in 的新字段 astConfirmSpan** 做列级过滤，且绝不覆盖具名精筛（astConfirmKind: allow）——performance/memory-bomb 与 performance/busy-wait-loop 开启它，消除「字符串字面量里的 while(true)」误报。踩坑记录：把列级判定无条件挂到 astConfirm 上会让 paths/hardcoded-absolute-path 的 findings 从 5 条掉到 0 条（硬编码绝对路径本来就写在字符串里 ✗）——这正是必须 opt-in 的原因。新增 test/test-ast-confirm-span.mjs（列级单测 + 端到端双向：字符串内不报、真实空体死循环仍报） |
+| 2.8.8 | 修 2.8.7 引入的误报：node_modules 副本的判定从「是不是真实目录」改为「内容是否漂移」——pnpm 的 file: 目录依赖落在 node_modules 时实测是与真源**同 inode 的硬链接副本**（stat 同 inode、链接数 2，内容即真源本身），属正常安装产物，旧判据会误报；现只在副本与真源内容不一致（package.json / lib/self/index.js / lib/app/command-registry.js 任一不同）时输出 nm-drift（只报告不动盘）。另记录事故机理：profile 的 pnpm-lock.yaml 把 dsh-git-push 钉在旧 GitHub tarball（f61ecbc5，远早于 2.8.0），与 package.json 的 file:local-plugins 声明不一致 ⇒ 任何一次非 frozen 安装都会把旧版落成 node_modules 真实目录顶掉真源（实测宿主 git_api status 报 2.6.9、npm_publish 等新工具整批消失）；已按 DSH 自带安装流程把 lockfile 对齐为 file:local-plugins，frozen 复跑通过 |
+| 2.8.7 | 安装位置只认 local-plugins：同步脚本不再建/改 node_modules 软链——真源 = local-plugins 真实目录，node_modules 入口由 DSH/pnpm 安装流程按 profile 的 file:local-plugins 声明生成；新增「node_modules 下残留真实目录副本」报警（实测事故：旧副本 2.6.9 顶掉 2.8.6，宿主 git_api status 报 2.6.9、npm_publish 等新工具整批消失）；--fix 只修 local-plugins 侧形态（解软链 / 建真实目录），node_modules 相关只报告不动盘 |
+| 2.8.6 | CPU 现场采样脚本（scripts/cpu-sample.mjs：零依赖只读 /proc，按 --seconds/--interval 采样，记录系统 CPU% 与每进程占整机百分比、命令行、常驻内存、chrome/browsersvc 数量、宿主进程占用；输出控制台逐样本 + JSONL 明细 + 结束汇总）；审计性能规则误报修复（performance/memory-bomb 与 performance/busy-wait-loop 声明 astConfirm，命中行再经 token 级确认真在代码里，消除注释行误报——第三方插件副本实测 569→567 条）；规则注释写明已知边界（匹配落在字符串字面量内仍会报，影响面仅测试脚本 1 处，评估后不修） |
+| 2.8.5 | 修 npm 发包跑错目录：runNpm 未传 cwd ⇒ npm pack / npm publish 执行在**宿主进程的工作目录**（本机为 DSH 安装目录 /volume1/@appstore/DeepSeekHarness-NAS），而不是 dir 指定的目标包目录。该目录有 package.json ⇒ npm 去打包整棵 DSH 树、输出 2,101,740 字节（2.1MB）超过 spawnSync 默认 maxBuffer（1MB）⇒ ENOBUFS，npm_publish 的体检与真发全部失败（该目录无 package.json 时则报 ENOENT）。现 publish 的 packDryRun 与 publish 两个调用点显式传 cwd=目标包目录，并给 runNpm 加 16MB maxBuffer。实测：修复后 dsh-session-conductor@1.0.10 成功发布到 npm，registry 上的 shasum 与本地打包逐字节一致。 |
+| 2.8.4 | 推送失败封装（新增 lib/git/push-diagnose.js）：把「原文事实」与「推断」分开——GitHub 对「仓库不存在」与「凭据无访问权限」故意返回同一句 Repository not found，该分类只输出「不存在或无权限，二者不可区分」并把置信度降为 low，禁止断言「仓库不存在」；pushViaSsh 与 push.js 的失败回执都带 diagnosis（分类 + 置信度 + 可执行下一步），工具回执按「事实 + 分类 + 下一步」渲染。推送后核验补齐证据标准：ls-remote 探针改三态 {ok, sha}，仅「探针成功返回为空」或「取到具体 sha 且 ≠ 本次推送」才判未落地，探针失明（无凭据/网络/权限）时返回 verified:null（未核验，回执写明「未核验 ≠ 失败」，不再输出无证据的「远端可能是空仓库」）。提交信息数组化（新增 lib/git/commit-message.js）：message 支持字符串（原样透传，向后兼容）/ 数组（元素为字符串或 {what,type?,scope?,why?,verify?,refs?} 混用）/ {subject?,items:[...]}，仅 what 必填，缺 what 的条目被忽略而不臆造内容；commitAndPush 在预检处单点组装，工具 schema 以 anyOf 暴露 string | array | object 三种形态（type 仍为 string，不影响 CLI/HTTP 解析层）。 |
+| 2.8.3 | 文案修正：把「零改动 / 无新提交」明确写成**正常成功路径**（不会报错、返回 ok:true + committed:false 或 pushed:false、本地领先远端的提交照样会推），覆盖 AI 注入用法、git_commit_push 工具描述、README（补「零改动也安全」能力行与常见误解提示）、提交推送指南与开发文档；并修 job 输出自相矛盾——cleanSkipCommit 路径此前缺 committed 字段，导致「已提交，未推送」的误导文案（现如实输出「无变更：工作区无改动，未产生新提交」） |
+| 2.8.2 | 推送前自动指定正确的 GitHub remote：新增 lib/git/remote-resolve.js（按「归属一致 + 本机可用形态 ssh:443 + 名字优先级 origin>github-ssh」评分，必要时自动 remote set-url 或新建，dryRun 只报告不写盘；归属不符的 origin 绝不覆盖，改走 github-ssh）；transport 的 SSH/API 推送与两处 liveRemoteHead 全部改用解析结果，回执带 remote/remoteAction/remoteReasons；另：README 移除界面配图与入库的图片资源、删除 screenshots.json |
+| 2.8.1 | CLI 真发姿势补齐（npm-publish --no-dry-run 需配 --confirm、新增 --json）与 npm 端点经 api 通道可用；doc-drift 增「工具清单完整性」校验并把「N 条 HTTP API」「HTTP 接口（N 条…）」纳入计数模式（本次即抓出 SPEC 工具表缺行）；发包回归改用未发布过的 fixture 包，断言不放松；发版收尾序列补齐三条防再犯（压缩后重跑版本表 / 缩行需 --force / 压缩改信息别用 --amend --no-edit） |
+| 2.8.0 | 账号信息新增 NPM 面板：本地/GitHub/NPM 三标签，顶部 GitHub↔NPM 账号卡滑动切换（同位置、同款卡、同一套离线快照 + 在线校验链路）；npm token/registry 设置（与 githubToken 同文件、原子读改写）；账号名下包列表（与 GitHub 仓库列表同款行、行内可安装）；npm 装包（默认 --ignore-scripts、二次确认、日志留痕）；npm 发包 API 与工具（后台 job、默认 dryRun、真发需 confirm + dryRun:false）；新增 lib/npm/*（registry 探测 / npmrc 物化 / 安装编排 / 发包编排 / 账号快照） |
+| 2.7.3 | 发版拆环：版本列表最新行改由本文件提供（生成与校验在提交前即成立，不再需要「先提交再生成再 amend」） |
 | 2.7.1 | 审计按独立包设计落地——对外门面 + 子路径导出 + 审计侧与仓库脚本解耦 + 边界门禁扩列 |
-| 2.7.0 | 审计↔git 边界澄清第一期——抽出 lib/core 中立工具层，审计侧不再依赖 git |
-| 2.6.11 | 全量审计 5 个 blocker 清零 —— 修 2 处真问题 + 收窄 performance/loop-no-fallback-return 的 3 类假阳性 |
-| 2.6.10 | 预览生成/预览服务合并成一套 + 取消下发模式 + 预览产物不入库（并修绿 6 个既有测试失败） |
-| 2.6.9 | performance 槽位补 7 条实战规则（把两次 perf-slot 提交合并为一次） |
-| 2.6.8 | git_api 工具 + 硬编码路径检测改走审计引擎（本批 11 个提交压平为一次发布） |
-| 2.6.7 | 压平后的单次发布——分叉治理 + dsh 审计规则 + 部署与文档治理 |
-| 2.6.6 | sync-plugin 支持部署形态/HMR 自检与修正（--profile / --fix / 热重载报告 / 依赖提示） |
-| 2.6.5 | scrubConvWording 词库补全（裸的决策来源短语）+ 新增回归用例 + 刷新目录树/函数列表 |
-| 2.6.2 | 2.6.2 —— 克隆可续传/重来 + 忙碌键前缀统一 |
-| 2.6.1 | 2.6.1 —— git_clone 新增 history 参数（真实历史，sha 与远端一致） |
-| 2.6.0 | 2.6.0 —— 热路径探针入库（ESM/CJS 双格式）+ 审计 scope 失效修复 + 代码行口径统一 |
-| 2.5.7 | 审计评分保留三位小数，位数由常量 SCORE_DECIMALS 控制（2.5.7）；同步函数表（2.5.7 新增导出常量 SCORE_DECIMALS 引起漂移） |
-| 2.5.6 | 2.5.6 新增性能规则 performance/repeat-identical-call（循环内重复调用同一函数） |
-| 2.5.5 | 2.5.5 —— 分析覆盖率信息项 / 测试缓存 / 跨平台扫描工具 / 性能规则 |
-| 2.5.4 | 跨文件符号索引（稳定 ID + import 解析 + 跨文件调用落地 + 覆盖率）（2.5.4）；版本记录表补 2.5.4（doc-version 权威生成） |
-| 2.5.3 | 后台 job 状态不再无条件报「完成」——失败/未推送/远端 sha 不一致都如实报（2.5.3）；版本记录表补 2.5.3（doc-version 权威生成） |
-| 2.5.2 | 新增 git_identity_rewrite 工具/CLI（历史改写，默认 dry-run）+ 提交时提醒历史遗留身份（2.5.2）；版本记录表补 2.5.2（doc-version 权威生成） |
-| 2.5.1 | 提交身份自动用登录账号（未配身份的仓库自动写入局部配置）+ 三处告知 AI（2.5.1）；版本记录表补 2.5.1（doc-version 权威生成） |
-| 2.5.0 | 架构图生成器按 archify 作者契约重做——抽象层级自适应，5 个预览仓库全过官方 showcase |
-| 2.4.2 | 契约与文档加固：新增工具公开面契约门禁（4 个反向用例验证真能拦住）与版本化回归 + 工具层端到端测法；测试文件 80 → 81；≥20 高风险复杂度函数 20 → 15；docs/ 由 14 份收敛为 7 份（4 篇功能介绍 + 3 份权威文档），11 份开发者文档移入技能仓库归档——2.4.2 — 契约与文档加固批次（学习 dsh-normify 可学点） |
-| 2.4.1 | 误报 duplicate-constant 16 → 0、variable-min-length 15 → 0；4 个高风险函数复杂度全部达标（28/22/21/15）；测试文件 78 → 80——2.4.1 — 插件自身优化批次（误报修复 / 公共常量收口 / 复杂度拆分 / 豁免提示一致性） |
-| 2.4.0 | clone 链路三修（工具漏传 token 走匿名 API / 工作树内防护被 403 抢先 / 互斥按 dest 判被换目录绕过）+ 3 个回归测试——2.4.0 — clone 链路三修（工具漏传 token / 防护顺序 / 互斥判定）+ 账号与读改写回归测试；2.4.0 版本表同步（doc-version 聚合入表） |
-| 2.3.0 | 版本兼容自动切换——client 不再依赖 settingsScope 注入服务（DSH 0.2.0 移除，entry pending 报 Failed to load plugins），特性检测 0.1.6 真 scope / 0.2.0 fallback；配置真源本就走 HTTP config.json 行为一致；版本表同步（doc-version 聚合入表 2.3.0）；DSH 0.2.0 兼容修复——settings API 版本自动切换 + client 改 ctx.get 防御式读取 + apply 常驻诊断层 |
-| 2.2.1 | token API 配额实时查询显示 + 凭据区去重 + 预览服务 --local 免重启模式 |
-| 2.2.0 | git_clone 后台 job 化 + UI 显示 API 通道配额 |
-| 2.1.4 | 插件自身优化 + 存量债务整理（合并 4 批本地提交为一次推送） |
-| 2.1.3 | versioning 规则重设计——0.x 合法开发期（SemVer §4 + Go/Cargo 官方，调研驱动） |
-| 2.1.2 | 项目类型规则适配——非 dsh 项目误报消除（Pawchive 539→512/blocker 10→3） |
-| 2.1.1 | 复杂度规则口径优化——阈值 10 + blocker 50 真生效 + 算法补全 + message 分档 |
-| 2.1.0 | Java/Kotlin 专项规则 + AST 语言路由 + 误报批量修复 + preview 数据自动生成；版本表 doc-version 聚合同步（2.1.0 由 git log 权威生成入表） |
-| 2.0.8 | 修 /git-audit 斜杠命令「无摘要」回归（format 适配 code_audit 新返回）→ 2.0.8 |
-| 2.0.6 | 工具清单单源化 + 14 工具描述精简全面重写 → 2.0.6 |
-| 2.0.5 | 新手指引——README + CLI help 加「快速开始」（第一次用不用查源码）→ 2.0.5 |
-| 2.0.4 | code_audit 恢复全量审计结果输出（includeFindings=true 参数化）→ 2.0.4 |
-| 2.0.3 | API 指引 curl 加 -L（跟随反代 302 中转——直接复制可用）→ 2.0.3 |
-| 2.0.2 | external 字段值规范化——布尔 true 不合法，改为具体标识（扩展脚本名）→ 2.0.2 |
-| 2.0.1 | external 通道补构建/混淆产物豁免（Pawchive 混淆误报）→ 2.0.1 + 跳过混淆专项测试 |
-| 2.0.0 | 方案 B——命令注册表元数据驱动（免维护 CLI + 独立于 DSH）→ 2.0.0 |
-| 1.12.6 | external 机制修正——yml 具体字段路由到 ext 引擎（不经 groupByKind 过滤）→ 1.12.6 |
-| 1.12.5 | 内置审计规则抽出试点——variable-min-length 经 audit-ext 统一动态入口执行 → 1.12.5 |
-| 1.12.4 | 审计 API 指引可选参数提示——groupBy 选择性参数默认填好 + 可选项说明 → 1.12.4 |
-| 1.12.3 | 审计输出 API 指引参数自动填充——repo/scope/groupBy + 真实 IP 直接可用（去占位符）→ 1.12.3 |
-| 1.12.2 | 变量重命名位置定位工具（按作用域聚合引用——单字母变量人工重命名辅助）→ 1.12.2 |
-| 1.12.1 | 误报批量修复（Pawchive 全量核对驱动）——构建产物 hash 豁免 + magic 配置类形态豁免 → 1.12.1；magic-number 豁免扩展（Pawchive 驱动——env 兜底已 1.12.1，本次收剩余形态）→ 2.0.7 |
-| 1.12.0 | 审计扩展自动接入重构——统一入口动态加载 scripts/audit-ext/ 独立脚本 → 1.12.0 |
-| 1.11.5 | 审计输出改为聚合 API 查询指引——不再内联审计内容（数量+评分+API 用法）→ 1.11.5 |
-| 1.11.4 | 侧边栏设置页反代空白修复（available/writable 与 scope 快照解耦恒 true，绕开 isLoopback=memory 陷阱）+ git_sluice 透传工具化（注册为 AI 直接调用工具，凭据自动注入）+ 软链安装依赖解析回归测试 |
-| 1.11.3 | 新增审计规则 comment/no-date-in-comment（注释禁止写日期）+ 固化注释规范 skill |
-| 1.11.2 | git-sluice 符号链接场景入口静默不执行 + sync-plugin 自动恢复 cli.mjs 可执行权限 + no-eval 豁免 Playwright API |
-| 1.11.1 | 审计误报批量修复（KToolBox/Pawchive 实测驱动）+ 评审①②③④落地合并 |
-| 1.11.0 | 审计规则按语言划分 + 检查器语言化（Python 落地）+ 审计长尾优化合并 |
-| 1.10.5 | 1.10.5 全量合并为一次提交——①拆分 http-handlers.js 巨型 switch（923→122）到 lib/app/handlers/ 6 模块；②分体式文档：git_gen_readme 抽独立脚本 readme-gen.mjs 并移除工具；tree-doc.mjs 改名 doc-tree.mjs（统一 doc- 前缀）+ 自动探测宿主 md；新增 doc-func.mjs（函数列表）/ doc-version.mjs（版本列表）三兄弟生成器，写入 docs/版本表.md + docs/函数列表.md（带标记块），README 链接引用；审计新增分体检查（findMarkedHostMd 公共函数复用）；③废弃删除旧函数文档体系（functions_index 工具/func-index/functions-doc/docs/函数/*.md）；④sync-plugin.mjs 支持 --source 读源项目 package.json files；回归 853 全绿；分体式宿主文档改英文名（docs/CHANGELOG.md + docs/FUNCTIONS.md，标记块驱动探测不受文件名影响）；/git-audit 参数解析兼容单横线 flag（-full/-force 等价 --full/--force，未知横线参数报用法而非当路径）；doc-version 版本表清洗沟通措辞——scrubConvWording 剔除提交标题里的许可类词，消除 CHANGELOG 4 个 conv-user-decision blocker；黑名单词字符类拆分防自举误报；审计 blocker 4→0（评分 79/B）；审计优化三批次——短变量/魔数/重复串提取 + doc-version 修复 |
-| 1.10.4 | 工具探测补 node 兜底（execPath）+ 新增 /api/git-push/tool-probes 探测 API + 短变量改名，回归 846 全绿 |
-| 1.10.3 | 魔数规则再修 3 类误报——对象字面量常量定义/rgba 色值/CLI JSON 输出豁免，warning 244→237 |
-| 1.10.2 | 审计误报专项优化——重复规则去重/exs 文档豁免/vague 词表剔 res/循环变量豁免，warning 281→245 且不放过真实问题 |
-| 1.10.1 | audit-api 变量命名清理 + sync-plugin fileContentEqual 异步化（async 内 existsSync→access） |
-| 1.10.0 | 审计结果 API 化 + 自定义聚合——/api/git-push/audit（groupBy=rule/file/severity/slot + severity 过滤 + top + 明细）；修复 sync-plugin 漏同步 .auditignore（安装副本豁免失效） |
-| 1.9.5 | 全量审计低风险优化——重复硬编码/短变量/魔数提取常量 + 真高风险 I/O 异步化，评分 76.8→A 级 |
-| 1.9.4 | 自动推送范围下拉选项渲染为空（jsx 第三参数是 key 非 children）→ 1.9.4 |
-| 1.9.3 | 任务完成自动推送内置（合并删除独立仓 dsh-task-completion）→ 1.9.3 |
-| 1.9.2 | 软链加载诊断结论 + 恢复 peerDependencies（DSH 宿主注入信号）→ 1.9.2 |
-| 1.9.1 | 系统提示词注入配置化（config.json injectUsageText 覆盖）+ 浅包装 git 用法入注入文本 → 1.9.1 |
-| 1.9.0 | 浅包装 git——未知命令透传为 git（自动注入凭据，无需 token 参数）→ 1.9.0 |
-| 1.8.16 | 作用域 P4 闭包双重作用域——return/this/exports 暴露的函数按模块级（不享受 startup 豁免）→ 1.8.16 |
-| 1.8.15 | 作用域 P3 调用链追踪——io-risk 请求路径判定升级（修公共函数漏报）→ 1.8.15 |
-| 1.8.14 | 作用域 P1+P2——启动路径豁免大函数/圈复杂度 + 参数短名豁免（scope_rules 首次接入真实规则）→ 1.8.14 |
-| 1.8.13 | 审计作用域判断·最小实验（Scope 分类器 + scope_rules 机制 + magic 模块常量豁免）→ 1.8.13 |
-| 1.8.12 | git_set_visibility 工具修复——支持 repoPath 从 origin 解析 owner/repo（此前传 repoPath 恒报「缺 owner/repo」）→ 1.8.12 |
-| 1.8.11 | UI 切公开/私有按钮点击没反应——RepoCloudRow props 传参名写错（visSwitch→requestVisSwitch）→ 1.8.11 |
-| 1.8.10 | countByDimension 去重粒度细化——规则级（每文件每规则每维度计 1）+ tree-doc 测试适配 → 1.8.10 |
-| 1.8.9 | 评分公平性修复——countByDimension 文件级去重（大项目小问题不再线性累加）+ collectFnBodies 拆分 → 1.8.9 |
-| 1.8.8 | 大函数拆分（cmdClone/applySettingsToCfg/checkSyncFs）+ 测试适配 → 1.8.8（评分 74.8） |
-| 1.8.7 | 审计评分提分 68.9→74.7（README 豁免/阈值校准/建议类降级/CLI main 表驱动重构）→ 1.8.7 |
-| 1.8.6 | 方案文档措辞修复——conv-user-decision blocker 清零 → 1.8.6 |
-| 1.8.5 | io-risk 元数据操作档优化（对照诊断 97% 误报）——请求路径元数据/查询/幂等目录操作降 low，rename 同卷改名不升档 → 1.8.5 |
-| 1.8.4 | 规则单启控制变量扫描工具（scripts/rules-solo-audit.mjs，按需运行非测试常驻）→ 1.8.4 |
-| 1.8.3 | tree-doc 审计漂移修复——生成物豁免 + 新增文件 missing 降 notice，消除 git_commit_push 审计环境瞬时 tree-doc-drift warning → 1.8.3 |
-| 1.8.2 | CLI 新增 tree-doc 子命令 + CLI/源码全量审计一致性自动测试 + 版本纪律修订（每次提交默认升第三位）→ 1.8.2 |
-| 1.8.1 | --root 外调写盘落错目录 + 中文路径 quotepath 转义污染键（bump 1.8.1） |
-| 1.8.0 | git_cred_env 凭据传递（AI 执行外部 git 不接触明文）——bump 1.8.0 |
-| 1.7.0 | audit --history 历史提交审计（逐提交快照全量 + 落盘报告，三参数皆可缺省）——bump 1.7.0 |
-| 1.6.0 | git_commit_push / CLI commit 支持精确 add 路径（paths）——bump 1.6.0 |
-| 1.5.6 | 重写两点有价值功能（从 1.5.6 提交提取，剔除 start.sh/link 安装等误改）；版本保持 1.5.4（1.5.6 两提交已备份至 backup/1.5.6-rollback）；module_splitter 工具 + CLI 接入（模块拆分器复用为 AI 工具）——bump 1.5.6 |
-| 1.5.5 | bump 1.5.5——cwd 注入修正 + tree-doc --root 两功能版本号同步 |
-| 1.5.4 | 1.5.4 设置侧边栏云端仓库可见性切换（二次确认）+ /git-audit 新增 --force 强制扫描非 git 目录 |
-| 1.5.3 | bump 1.5.3——io-risk 括号配对重构 + 版本号三处同步（lib/self / package.json / README 版本表） |
-| 1.5.2 | 工具探测改上下文注入 + 工具清单 json 化（lib/tool-probes.json 模板只 key，运行时 which/where 实测落盘运行目录 tools.json，Windows 自动补 .exe；环境段从 systemPrompt 迁出改 agent/pre-step 首条注入，WeakSet 防重复 + createUserMessage + source 标记；新增 scripts/verify-prestep.mjs 自检脚本） |
-| 1.5.1 | client.js 移入 lib/，版本号改为 1.5.1 |
-| 1.4.3 | 修 jsx 按钮检测的三类误报（1.4.3 引入）+ 该检查首次纳入测试 |
-| 1.3.8 | v1.3.8 版本号同步（本轮噪音治理与实质修复存档） |
-| 1.3.4 | v1.3.4 凭据统一收进 config.json + 统一 JSON 原子读写 + 索引只存本地仓库 + 局域网地址修正 + 文件读写扫描器 |
-| 1.3.3 | v1.3.3 本地扫描完自动补查远端状态 + tree-doc 漂移并入审计 + 侧边栏预读修复 + 推送门禁开关 |
-| 1.3.2 | v1.3.2 审计结果 YAML 报告（按拦截级别→目录→文件聚合）+ 评分防空扫描满分 |
-| 1.3.1 | v1.3.1 云端扫描写索引 + 本地远端状态刷新 + 代码质量清扫（命名/魔数）+ 魔数双规则合并 |
-| 1.3.0 | v1.3.0 审计忽略全链路修复（黑名单初筛+白名单补充）+ 统一跳过目录模块 + CLI 与插件审计同源同参 + 推送通道下拉修正 |
-| 1.2.2 | v1.2.2 合并提交——官方 ctx.jobs 后台推送、/git-audit 斜杠命令、rules yml dimensions 统一绑定、文件行数注释行统计、仓库索引路径修正（dsh-git-push-User 废弃）、tree-doc sync、设置私有 config.json、健壮性/安全告警清零 |
-| 1.2.1 | v1.2.1 设置落盘改插件私有 config.json、推送判定按 ahead、审计 blocker 列文件、live ls-remote |
-| 1.2.0 | v1.2.0 — 远端状态修复/推送分叉检查/审计配置传递/tree-doc 目录树/preview-server 静态 serve |
-| 1.1.7 | 修正推送失败语义：分叉不再回落 API，remote-tracking 引用取真实 sha |
-| 1.1.6 | 推送默认走 SSH，远端 sha 与本地一致；补凭据内嵌检查与 README |
-| 1.1.5 | status 端点脱敏 token；审计页注入子开关一遍可勾选 |
-| 1.1.4 | 实现按职责拆到各文件夹（六处入口退化为纯再导出） |
-| 1.1.3 | 规则作用域字段收口 + 大仓扫描降级 + 要求清单注入开关（1.1.3） |
-| 1.1.2 | 规则包列表交互改版 + 5 类审计误报修复 |
-| 1.1.1 | 用户沟通词 blocker 规则（取消分数制/白名单豁免/黑名单直拦）+ 审计选项卡开关 + 测试目录豁免 + k 系数 5 档调低 |
-| 1.1.0 | 侧边栏三选项卡 + 账号面板美化 + 凭据落盘修复 |
-| 1.0.5 | 侧边栏增强 + 误报清理 + 客户端重写 |
-| 1.0.4 | 规则引擎加固 + 侧边栏配置面 + 提交推送对齐 |
-| 1.0.0 | 首发接线 + 缺陷修复 + 规则包对齐 |
 
 <!-- dshgp-version:end -->

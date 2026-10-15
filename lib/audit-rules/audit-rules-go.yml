@@ -1,22 +1,103 @@
 # ============================================================
-# Go 代码审计规则集（占位）
-# 版本：0.1.0
+# Go 代码审计规则集（首版 · 语言专项）
+# 版本：0.2.0
 # 适用：Go 项目
-# 描述：⚠️ 占位槽位——语言专项规则待补。放入此文件即完成「槽位就绪」：
-#       审计系统自动发现本槽位（放 audit-rules-*.yml 即生效，零代码改动）。
-#       当前 Go 文件由 nodejs 槽位的语言无关规则（凭据/路径穿越/文件健康度等）兜底审计，
-#       语言相关规则（短名/魔数/函数长度/复杂度/嵌套）待补 AST 层 goFuncRanges 后启用。
-# 待办（补规则时）：① AST 层 lang.js 的 LANG_FUNC_RANGES.go 实现函数范围收集
-#       （func 关键字 + 花括号配对）；② 本槽位按 python/java 先例写 min_length/
-#       max_depth/max_lines/max_complexity/magic-number 规则，exts: ["go"]。
+# 描述：本槽位首版语言专项规则（**纯 pattern 层**，不依赖 AST 函数范围）。
+#       规则依据：对真实 Go 仓（spf13/cobra 等样本仓）实测各候选模式的出现次数后选型——
+#       只收「高信号 + 可判事实」的形态，避免静态扫 Go 时满屏噪音。
+#       （AST 层的 min_length/max_lines/max_complexity/magic-number 仍待补 LANG_FUNC_RANGES.go）
+# 口径：exts 只认 .go；测试与示例目录用 exclude_paths 排除（测试里 panic/exit 是常态）。
 # ============================================================
 
 metadata:
-  name: "Go 审计规则集（占位）"
-  version: "0.1.0"
+  name: "Go 审计规则集（首版 · 语言专项）"
+  version: "0.2.0"
   language: "go"
   author: "DeepSeek"
-  description: "Go 项目语言专用规则（占位——规则待补，槽位已就绪）"
-  last_updated: "2026-10-06"
+  description: "Go 项目语言专用规则（pattern 层首版：panic/os.Exit/fmt.Print/context.TODO/unsafe）"
+  last_updated: "2026-10-16"
 
-rules: []
+rules:
+  # ----- 1. 健壮性 -----
+
+  - id: go/panic-outside-init
+    name: "Go 避免在库代码里 panic"
+    category: "robustness"
+    severity: "warning"
+    description: "库代码 panic 会把调用方进程直接带走；应由调用方决定错误处置（返回 error 或 os.Exit 在 main 里做）"
+    # 负向环视避免命中 `x.panic(` 这类方法调用；测试/示例目录排除（测试里 panic 是断言手段）
+    patterns:
+      - "(?<![\\w$.])panic\\s*\\("
+    # 注：exclude_paths 是**路径前缀**匹配 ⇒ 无法表达 "_test.go" 这类后缀；
+    #   同目录的测试文件仍会命中（报告里给了目录级豁免提示）。此前这里写过一条
+    #   "_test.go" 是**死条目**（永不生效 ✗），2026-10-16 已删。
+    exts: ["go"]
+    exclude_paths:
+      - "test/"
+      - "tests/"
+      - "testdata/"
+      - "example/"
+      - "examples/"
+    fixable: false
+
+  - id: go/os-exit-in-library
+    name: "Go 库代码避免 os.Exit"
+    category: "robustness"
+    severity: "warning"
+    description: "os.Exit 跳过 defer 清理（文件/锁/连接不会释放），且让调用方无法拦截；只在 main 或 CLI 入口使用"
+    patterns:
+      - "(?<![\\w$.])os\\.Exit\\s*\\("
+    exts: ["go"]
+    exclude_paths:
+      - "test/"
+      - "tests/"
+      - "example/"
+      - "examples/"
+      - "cmd/"
+    fixable: false
+
+  # ----- 2. 可维护性 -----
+
+  - id: go/fmt-print-debug
+    name: "Go 避免用 fmt.Print* 输出日志"
+    category: "maintainability"
+    severity: "notice"
+    description: "fmt.Print/Printf/Println 输出到 stdout 且无级别/时间戳，生产环境应走 log/slog 或项目日志器"
+    patterns:
+      - "(?<![\\w$.])fmt\\.Print(?:f|ln)\\s*\\("
+      - "(?<![\\w$.])fmt\\.Print\\s*\\("
+    exts: ["go"]
+    exclude_paths:
+      - "test/"
+      - "tests/"
+      - "example/"
+      - "examples/"
+    fixable: false
+
+  - id: go/context-todo
+    name: "Go 生产代码避免 context.TODO()"
+    category: "maintainability"
+    severity: "notice"
+    description: "context.TODO() 表示「还没想好」——生产路径应传调用方 context（可取消/带超时），否则请求链路无法取消"
+    patterns:
+      - "context\\.TODO\\s*\\(\\s*\\)"
+    exts: ["go"]
+    exclude_paths:
+      - "test/"
+      - "tests/"
+      - "example/"
+      - "examples/"
+    fixable: false
+
+  # ----- 3. 安全 -----
+
+  - id: go/unsafe-pointer
+    name: "Go 慎用 unsafe.Pointer"
+    category: "security"
+    severity: "error"
+    description: "unsafe 绕过 Go 类型安全与 GC 保证，跨版本/跨架构易出内存错误；确需使用时必须注释清楚不变量"
+    patterns:
+      - "unsafe\\.Pointer"
+      - "(?<![\\w$.])unsafe\\.(?:Sizeof|Offsetof|Alignof)\\s*\\("
+    exts: ["go"]
+    fixable: false

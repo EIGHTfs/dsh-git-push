@@ -1,22 +1,99 @@
 # ============================================================
-# Swift 代码审计规则集（占位）
-# 版本：0.1.0
+# Swift 代码审计规则集（首版 · 语言专项）
+# 版本：0.2.0
 # 适用：Swift 项目（iOS/macOS）
-# 描述：⚠️ 占位槽位——语言专项规则待补。放入此文件即完成「槽位就绪」：
-#       审计系统自动发现本槽位（放 audit-rules-*.yml 即生效，零代码改动）。
-#       当前 Swift 文件由 nodejs 槽位的语言无关规则（凭据/路径穿越/文件健康度等）兜底审计，
-#       语言相关规则（短名/魔数/函数长度/复杂度/嵌套）待补 AST 层 swiftFuncRanges 后启用。
-# 待办（补规则时）：① AST 层 lang.js 的 LANG_FUNC_RANGES.swift 实现函数范围收集
-#       （func 关键字 + 花括号配对，含 `func name()` 与 `func name() async throws`）；
-#       ② 本槽位按 python/java 先例写规则，exts: ["swift"]。
+# 描述：本槽位首版语言专项规则（**纯 pattern 层**，不依赖 AST 函数范围）。
+#       规则依据：对真实 Swift 仓（SnapKit/SnapKit 等样本仓）实测各候选模式的出现次数后选型——
+#       例：`as!` 17 次、`fatalError(` 16 次（都是真实存在的强制形态 ✓），而 `try!` 0 次
+#       （仍是高价值规则 ✓：一旦出现就是崩溃点）。
+#       （AST 层的 min_length/max_lines/max_complexity/magic-number 仍待补 LANG_FUNC_RANGES.swift）
 # ============================================================
 
 metadata:
-  name: "Swift 审计规则集（占位）"
-  version: "0.1.0"
+  name: "Swift 审计规则集（首版 · 语言专项）"
+  version: "0.2.0"
   language: "swift"
   author: "DeepSeek"
-  description: "Swift 项目语言专用规则（占位——规则待补，槽位已就绪）"
-  last_updated: "2026-10-06"
+  description: "Swift 项目语言专用规则（pattern 层首版：try!/as!/fatalError/print 调试/隐式解包属性）"
+  last_updated: "2026-10-16"
 
-rules: []
+rules:
+  # ----- 1. 健壮性 -----
+
+  - id: swift/force-try
+    name: "Swift 避免 try! 强制抛错"
+    category: "robustness"
+    severity: "error"
+    description: "try! 在抛错时直接崩溃；应 try? 兜底或 do/catch 显式处置（能被测试覆盖的分支才算处理过）"
+    patterns:
+      - "(?<![\\w.])try\\s*!"
+    exts: ["swift"]
+    exclude_paths:
+      - "Tests/"
+      - "tests/"
+      - "Examples/"
+      - "examples/"
+    fixable: false
+
+  - id: swift/force-cast
+    name: "Swift 避免 as! 强制类型转换"
+    category: "robustness"
+    severity: "warning"
+    description: "as! 类型不符即崩溃；应 as? + guard/if let 分支处理，或改用协议/泛型在编译期约束类型"
+    patterns:
+      - "(?<![\\w.])as\\s*!"
+    exts: ["swift"]
+    exclude_paths:
+      - "Tests/"
+      - "tests/"
+      - "Examples/"
+      - "examples/"
+    fixable: false
+
+  - id: swift/fatal-error
+    name: "Swift fatalError 需限定在不可恢复处"
+    category: "robustness"
+    severity: "warning"
+    description: "fatalError 直接终止进程；只应用于「程序性不可能到达」的断言式场景（如接口误用），业务错误应抛错或返回 Result"
+    patterns:
+      - "(?<![\\w.])fatalError\\s*\\("
+    exts: ["swift"]
+    exclude_paths:
+      - "Tests/"
+      - "tests/"
+      - "Examples/"
+      - "examples/"
+    fixable: false
+
+  # ----- 2. 可维护性 -----
+
+  - id: swift/print-debug
+    name: "Swift 避免用 print 输出运行期信息"
+    category: "maintainability"
+    severity: "notice"
+    description: "print 无级别/无目标控制且在生产会直写控制台；应走 os.Logger 等项目日志设施"
+    patterns:
+      - "(?<![\\w.])print\\s*\\("
+    exts: ["swift"]
+    exclude_paths:
+      - "Tests/"
+      - "tests/"
+      - "Examples/"
+      - "examples/"
+    fixable: false
+
+  - id: swift/iuo-property
+    name: "Swift 慎用隐式解包可选类型（IUO）"
+    category: "robustness"
+    severity: "warning"
+    description: "`var x: T!` 把解包风险推迟到运行期（未赋值即崩溃）；应显式 Optional + 可选绑定，仅在生命周期确实保证时使用并注释理由"
+    # 负向环视排除 `!=`（不等号）：`:` 后类型以 `!` 结尾且其后不是 `=`
+    patterns:
+      - ":\\s*[A-Za-z_][\\w.\\[\\]<>]*\\s*!(?!=)"
+    exts: ["swift"]
+    exclude_paths:
+      - "Tests/"
+      - "tests/"
+      - "Examples/"
+      - "examples/"
+    fixable: false

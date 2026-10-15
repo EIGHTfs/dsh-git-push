@@ -195,31 +195,81 @@ export function readVersionMetrics(repoPath) {
   } catch { return {}; }
 }
 
+/** 支持的项目类型 → 版本文件（数组顺序即探测优先级）。
+ *  2026-10-16 从 doc-version.mjs 迁来（版本源逻辑与版本表生成同源，避免两处各写一份）。 */
+export const VERSION_SOURCES = [
+  { id: 'package.json', file: 'package.json', read: (t) => JSON.parse(t).version },
+  { id: 'pyproject.toml', file: 'pyproject.toml', read: (t) => (t.match(/^\s*version\s*=\s*["']([^"']+)["']/m) || [])[1] },
+  { id: 'Cargo.toml', file: 'Cargo.toml', read: (t) => (t.match(/^\s*version\s*=\s*["']([^"']+)["']/m) || [])[1] },
+  { id: 'composer.json', file: 'composer.json', read: (t) => JSON.parse(t).version },
+  { id: 'setup.cfg', file: 'setup.cfg', read: (t) => (t.match(/^\s*version\s*=\s*([^\s#]+)/m) || [])[1] },
+];
+
+/** 按项目类型探测版本源；都不匹配返回 ''（**不再回退 git log** —— 见 buildReadmeVersionTable 说明）。 */
+export function detectVersionSource(root) {
+  for (const s of VERSION_SOURCES) {
+    if (existsSync(join(root, s.file))) return s.id;
+  }
+  return '';
+}
+
+/** 按已识别/指定的版本源读取版本号；读不到返回空串（不抛错）。 */
+export function projectVersionOf(root, source = '') {
+  const src = source || detectVersionSource(root);
+  const def = VERSION_SOURCES.find((s) => s.id === src);
+  if (!def) return '';
+  try {
+    const v = def.read(readFileSync(join(root, def.file), 'utf8'));
+    return v ? String(v).trim() : '';
+  } catch {
+    return '';
+  }
+}
+
+/** 读可选的「版本发布说明」文件（`<repo>/docs/releases.json`）——版本表行内容的真源。 */
+export function readReleases(repoPath) {
+  try {
+    const p = join(repoPath, 'docs', 'releases.json');
+    if (!existsSync(p)) return {};
+    const data = JSON.parse(readFileSync(p, 'utf8'));
+    return data && typeof data === 'object' && !Array.isArray(data) ? data : {};
+  } catch { return {}; }
+}
+
+/**
+ * 版本记录表 markdown（**全部来自文件，不读 git log**）。
+ *
+ * 数据源：
+ *   · `docs/releases.json`           —— 每个版本一行的说明（历史行真源）
+ *   · 版本真源文件（package.json / pyproject.toml / Cargo.toml / composer.json / setup.cfg）
+ *     —— 当前版本号（releases.json 未登记时也保证有这一行）
+ *   · `version-metrics.json`         —— 可选量化记录，拼到该行内容最前
+ *
+ * 为什么改成文件驱动（2026-10-16）：此前行内容取自 **git log 提交标题** ⇒
+ *   · 任何不带版本号的普通提交都会改动「最新行」的内容/条数 ⇒ 版本表门禁报漂移 ✗
+ *   · 门禁一旦红了，就只好「为门禁升版本」——把版本号变成讨好门禁的产物 ✗（本末倒置）
+ *   改为文件驱动后：**普通提交完全不动版本表**；发版只改 `docs/releases.json` 一行 ✓。
+ *
+ * `listVersionCommits` 仍保留导出（旧调用方/测试可用），但本函数不再调用它。
+ */
 export function buildReadmeVersionTable(repoPath) {
-  const groups = listVersionCommits(repoPath);
+  const releases = readReleases(repoPath);
   const metrics = readVersionMetrics(repoPath);
+  const current = projectVersionOf(repoPath);
   const lines = ['| 版本 | 内容 |', '|------|------|'];
-  if (groups.length) {
-    const by = new Map();
-    for (const g of groups) {
-      // 每个识别到的 X.Y.Z 独立成行（不把 patch>0 归并到 x.y.0）：
-      //   归并会让 1.0.1~1.0.4 的内容并进 1.0.0 行，且 doc-version check 对
-      //   真实逐版本记录（如 dsh-session-migrate）报漂移。
-      const key = g.versionStr;
-      if (!by.has(key)) by.set(key, []);
-      by.get(key).push(scrubConvWording(g.label.replace(/^\S+\s*/, '')));
-    }
-    const keys = [...by.keys()].sort((a, b) => {
-      const [am, ai, ap] = a.split('.').map(Number);
-      const [bm, bi, bp] = b.split('.').map(Number);
-      return (bm - am) || (bi - ai) || (bp - ap);
-    });
-    for (const k of keys) {
-      const body = by.get(k).filter(Boolean).join('；');
-      // 有量化记录就拼到最前（一眼看出这版改善了什么），没有则保持原样
-      const metric = metrics[k] ? `${metrics[k]}——${body}` : body;
-      lines.push(`| ${k} | ${metric} |`);
-    }
+  const keys = new Set(Object.keys(releases));
+  if (current) keys.add(current);
+  const ordered = [...keys].sort((a, b) => {
+    const [am, ai, ap] = a.split('.').map(Number);
+    const [bm, bi, bp] = b.split('.').map(Number);
+    return (bm - am) || (bi - ai) || (bp - ap);
+  });
+  for (const k of ordered) {
+    const raw = releases[k] || (k === current ? '（本版说明待补：docs/releases.json 未登记）' : '');
+    const body = scrubConvWording(String(raw));
+    if (!body) continue;
+    const metric = metrics[k] ? `${metrics[k]}——${body}` : body;
+    lines.push(`| ${k} | ${metric} |`);
   }
   return lines;
 }

@@ -1,22 +1,114 @@
 # ============================================================
-# C/C++ 代码审计规则集（占位）
-# 版本：0.1.0
+# C/C++ 代码审计规则集（首版 · 语言专项）
+# 版本：0.2.0
 # 适用：C / C++ 项目（含单片机/嵌入式）
-# 描述：⚠️ 占位槽位——语言专项规则待补。放入此文件即完成「槽位就绪」：
-#       审计系统自动发现本槽位（放 audit-rules-*.yml 即生效，零代码改动）。
-#       当前 C/C++ 文件由 nodejs 槽位的语言无关规则（凭据/路径穿越/文件健康度等）兜底审计，
-#       语言相关规则（短名/魔数/函数长度/复杂度/嵌套）待补 AST 层 cppFuncRanges 后启用。
-# 待办（补规则时）：① AST 层 lang.js 的 LANG_FUNC_RANGES.cpp 实现函数范围收集
-#       （类型+函数名( 签名 + 花括号配对，排除控制流与调用）；② 本槽位按 python/java 先例
-#       写规则，exts: ["c", "cc", "cpp", "cxx", "h", "hpp"]（头文件函数声明不计数——只有 .c/.cpp 实现）。
+# 描述：本槽位首版语言专项规则（**纯 pattern 层**，不依赖 AST 函数范围）。
+#       规则依据：对真实 C++ 仓（jarro2783/cxxopts 等样本仓）实测各候选模式的出现次数后选型。
+#       （AST 层的 min_length/max_lines/max_complexity/magic-number 仍待补 LANG_FUNC_RANGES.cpp）
+# 口径：exts 覆盖实现与头文件；第三方/构建产物目录排除（生成代码里的 new/strcpy 不该报）。
 # ============================================================
 
 metadata:
-  name: "C/C++ 审计规则集（占位）"
-  version: "0.1.0"
+  name: "C/C++ 审计规则集（首版 · 语言专项）"
+  version: "0.2.0"
   language: "cpp"
   author: "DeepSeek"
-  description: "C/C++ 项目语言专用规则（占位——规则待补，槽位已就绪）"
-  last_updated: "2026-10-06"
+  description: "C/C++ 项目语言专用规则（pattern 层首版：using namespace/裸 new/不安全 C 串函数/malloc-free/catch-all）"
+  last_updated: "2026-10-16"
 
-rules: []
+rules:
+  # ----- 1. 可维护性 -----
+
+  - id: cpp/using-namespace
+    name: "C/C++ 头文件里避免 using namespace"
+    category: "maintainability"
+    severity: "warning"
+    description: "using namespace 把整棵命名空间的名字引入作用域，头文件里会污染所有包含者并引发重载歧义；应写限定名或只 using 具体符号"
+    patterns:
+      - "using\\s+namespace\\s+[A-Za-z_]"
+    exts: ["c", "cc", "cpp", "cxx", "h", "hh", "hpp", "hxx"]
+    exclude_paths:
+      - "test/"
+      - "tests/"
+      - "third_party/"
+      - "vendor/"
+      - "external/"
+      - "examples/"
+      - "example/"
+    fixable: false
+
+  - id: cpp/raw-new
+    name: "C++ 用智能指针替代裸 new"
+    category: "maintainability"
+    severity: "warning"
+    description: "裸 new 的所有权不表达在类型里，异常/提前 return 都会泄漏；应直接用 make_unique/make_shared 或容器"
+    # 负向环视排除 `new[]`、`operator new`、`->new` 以及注释里的普通词
+    # astConfirm：行级代码判定——实测 cxxopts 命中过注释里的 "start a new line" ✗（`new ` + 普通词）
+    astConfirm: true
+    patterns:
+      - "(?<![\\w.>:])new\\s+[A-Za-z_:]"
+    exts: ["c", "cc", "cpp", "cxx", "h", "hh", "hpp", "hxx"]
+    exclude_paths:
+      - "test/"
+      - "tests/"
+      - "third_party/"
+      - "vendor/"
+      - "external/"
+      - "examples/"
+      - "example/"
+    fixable: false
+
+  # ----- 2. 安全 -----
+
+  - id: cpp/unsafe-c-string
+    name: "C/C++ 避免不检查边界的 C 串函数"
+    category: "security"
+    severity: "error"
+    description: "strcpy/strcat/sprintf/gets 不做边界检查，是栈溢出的经典来源；应用 snprintf/std::string/strncpy_s 等有界替代"
+    patterns:
+      - "(?<![\\w.>])(?:strcpy|strcat|sprintf|gets|scanf)\\s*\\("
+    exts: ["c", "cc", "cpp", "cxx", "h", "hh", "hpp", "hxx"]
+    exclude_paths:
+      - "test/"
+      - "tests/"
+      - "third_party/"
+      - "vendor/"
+      - "examples/"
+      - "example/"
+    fixable: false
+
+  - id: cpp/malloc-free
+    name: "C/C++ 手工 malloc/free 需成对且有所有权说明"
+    category: "security"
+    severity: "warning"
+    description: "裸 malloc/free（含 calloc/realloc）不表达所有权，容易漏 free/重复 free；C++ 里应优先容器与智能指针，C 里需明确释放责任"
+    patterns:
+      - "(?<![\\w.>])(?:malloc|calloc|realloc|free)\\s*\\("
+    exts: ["c", "cc", "cpp", "cxx"]
+    exclude_paths:
+      - "test/"
+      - "tests/"
+      - "third_party/"
+      - "vendor/"
+      - "examples/"
+      - "example/"
+    fixable: false
+
+  # ----- 3. 健壮性 -----
+
+  - id: cpp/catch-all
+    name: "C++ 避免 catch(...) 吞掉一切异常"
+    category: "robustness"
+    severity: "notice"
+    description: "catch(...) 会连内存不足等不可恢复异常一起吞掉，且无法记录原因；应捕获具体类型，确需兜底时要记录并重新抛出"
+    patterns:
+      - "catch\\s*\\(\\s*\\.\\.\\.\\s*\\)"
+    exts: ["c", "cc", "cpp", "cxx", "h", "hh", "hpp", "hxx"]
+    exclude_paths:
+      - "test/"
+      - "tests/"
+      - "third_party/"
+      - "vendor/"
+      - "examples/"
+      - "example/"
+    fixable: false
