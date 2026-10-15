@@ -268,14 +268,15 @@
 | `collectNamedFnRanges` | 120-122 | 3 | `export function collectNamedFnRanges(tokens) {` |
 | `matchBraceIdx` | 125-135 | 11 | `function matchBraceIdx(tokens, openIdx) {` |
 
-### lib/ast/code-lines.js（115 行 · 4 个函数）
+### lib/ast/code-lines.js（167 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `makeCodeLineFilter` | 24-47 | 24 | `export function makeCodeLineFilter(text = '', candidateLines = [], opts = {}) {` |
-| `isProseDoc` | 61-63 | 3 | `function isProseDoc(text, file) {` |
-| `makeProseCodeFilter` | 77-100 | 24 | `function makeProseCodeFilter(text, candidateLines) {` |
-| `codeStringLiterals` | 107-114 | 8 | `export function codeStringLiterals(text = '') {` |
+| `makeCodeSpanFilter` | 72-99 | 28 | `export function makeCodeSpanFilter(text = '', candidateLines = [], opts = {}) {` |
+| `isProseDoc` | 113-115 | 3 | `function isProseDoc(text, file) {` |
+| `makeProseCodeFilter` | 129-152 | 24 | `function makeProseCodeFilter(text, candidateLines) {` |
+| `codeStringLiterals` | 159-166 | 8 | `export function codeStringLiterals(text = '') {` |
 
 ### lib/ast/control-flow.js（462 行 · 13 个函数）
 
@@ -524,23 +525,39 @@
 | `unusedExportCandidates` | 377-391 | 15 | `export function unusedExportCandidates(index) {` |
 | `indexSummary` | 394-399 | 6 | `export function indexSummary(index) {` |
 
-### lib/ast/tokenizer.js（342 行 · 13 个函数）
+### lib/ast/tokenizer.js（347 行 · 13 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `tokenize` | 49-70 | 22 | `export function tokenize(text = '') {` |
 | `clearTokenCache` | 73-76 | 4 | `export function clearTokenCache() {` |
-| `tokenizeUncached` | 83-187 | 105 | `function tokenizeUncached(text = '') {` |
-| `MULTI_OPS_BY_FIRST` | 199-207 | 9 | `const MULTI_OPS_BY_FIRST = (() => {` |
-| `isCjkChar` | 224-224 | 1 | `const isCjkChar = (c) => c >= 0x4e00 && c <= 0x9fa5;` |
-| `isIdentStartCode` | 226-226 | 1 | `const isIdentStartCode = (c) => (c < 128 ? ID_START_ASCII[c] === 1 : isCjkChar(c));` |
-| `isIdentPartCode` | 228-228 | 1 | `const isIdentPartCode = (c) => (c < 128 ? ID_PART_ASCII[c] === 1 : isCjkChar(c));` |
-| `isNumPartCode` | 230-230 | 1 | `const isNumPartCode = (c) => c < 128 && NUM_PART_ASCII[c] === 1;` |
-| `isAsciiDigit` | 232-232 | 1 | `const isAsciiDigit = (c) => c >= 48 && c <= 57;` |
-| `consumeLexeme` | 243-280 | 38 | `function consumeLexeme(src, i, n, ch, next, tokens, push) { // dsh-skip-complexity: 词素分派器（六类词素分派分支为结构必然，拆分后职责单一）` |
-| `consumeString` | 283-294 | 12 | `function consumeString(src, i, n, ch, push) {` |
-| `consumeTemplate` | 297-308 | 12 | `function consumeTemplate(src, i, n, push) {` |
-| `consumeRegex` | 311-316 | 6 | `function consumeRegex(src, i, n, tokens, push) { // dsh-skip-complexity: 正则状态机（转义/字符组/闭包三态，天然多分支）` |
+| `tokenizeUncached` | 83-192 | 110 | `function tokenizeUncached(text = '') {` |
+| `MULTI_OPS_BY_FIRST` | 204-212 | 9 | `const MULTI_OPS_BY_FIRST = (() => {` |
+| `isCjkChar` | 229-229 | 1 | `const isCjkChar = (c) => c >= 0x4e00 && c <= 0x9fa5;` |
+| `isIdentStartCode` | 231-231 | 1 | `const isIdentStartCode = (c) => (c < 128 ? ID_START_ASCII[c] === 1 : isCjkChar(c));` |
+| `isIdentPartCode` | 233-233 | 1 | `const isIdentPartCode = (c) => (c < 128 ? ID_PART_ASCII[c] === 1 : isCjkChar(c));` |
+| `isNumPartCode` | 235-235 | 1 | `const isNumPartCode = (c) => c < 128 && NUM_PART_ASCII[c] === 1;` |
+| `isAsciiDigit` | 237-237 | 1 | `const isAsciiDigit = (c) => c >= 48 && c <= 57;` |
+| `consumeLexeme` | 248-285 | 38 | `function consumeLexeme(src, i, n, ch, next, tokens, push) { // dsh-skip-complexity: 词素分派器（六类词素分派分支为结构必然，拆分后职责单一）` |
+| `consumeString` | 288-299 | 12 | `function consumeString(src, i, n, ch, push) {` |
+| `consumeTemplate` | 302-313 | 12 | `function consumeTemplate(src, i, n, push) {` |
+| `consumeRegex` | 316-321 | 6 | `function consumeRegex(src, i, n, tokens, push) { // dsh-skip-complexity: 正则状态机（转义/字符组/闭包三态，天然多分支）` |
+
+### lib/ast/treesitter.js（209 行 · 11 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `treesitterAvailable` | 48-52 | 5 | `export function treesitterAvailable() {` |
+| `availableGrammars` | 55-63 | 9 | `export function availableGrammars() {` |
+| `grammarForExt` | 66-69 | 4 | `export function grammarForExt(ext = '') {` |
+| `loadModule` | 74-79 | 6 | `async function loadModule() {` |
+| `ensureInit` | 82-92 | 11 | `async function ensureInit() {` |
+| `getParser` | 95-115 | 21 | `async function getParser(grammar) {` |
+| `parseText` | 118-134 | 17 | `export async function parseText(text, grammar) {` |
+| `isOpaqueNode` | 137-144 | 8 | `export function isOpaqueNode(node) {` |
+| `confirmHits` | 154-173 | 20 | `export async function confirmHits({ text, ext = '', grammar = '', hits = [] } = {}) {` |
+| `makeSyncConfirmer` | 185-200 | 16 | `export function makeSyncConfirmer(tree) {` |
+| `resetTreeSitterCache` | 203-208 | 6 | `export function resetTreeSitterCache() {  modPromise = null;` |
 
 ### lib/audit/analysis-coverage.js（99 行 · 5 个函数）
 
@@ -659,27 +676,28 @@
 | `excludePathOf` | 38-47 | 10 | `function excludePathOf(root) {` |
 | `detectIgnoreBlindSpot` | 54-101 | 48 | `export function detectIgnoreBlindSpot(root) {` |
 
-### lib/audit/orchestrate.js（477 行 · 17 个函数）
+### lib/audit/orchestrate.js（515 行 · 18 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `setHostDocChecks` | 28-30 | 3 | `export function setHostDocChecks(checks) {` |
-| `findMarkedHostMd` | 34-34 | 1 | `const findMarkedHostMd = (...args) => (injected \|\| EMPTY_DOC_CHECKS).findMarkedHostMd(...args);` |
-| `checkDrift` | 35-35 | 1 | `const checkDrift = (...args) => (injected \|\| EMPTY_DOC_CHECKS).checkDrift(...args);` |
-| `checkFuncDrift` | 36-36 | 1 | `const checkFuncDrift = (...args) => (injected \|\| EMPTY_DOC_CHECKS).checkFuncDrift(...args);` |
-| `capScanFiles` | 57-67 | 11 | `export function capScanFiles(files, root, maxFiles) {` |
-| `appendIgnoreBlindSpot` | 80-96 | 17 | `function appendIgnoreBlindSpot(findings, repoPath, scanned) {` |
-| `auditFiles` | 108-268 | 161 | `async function auditFiles(repoPath, files, opts = {}) {` |
-| `isDshPlugin` | 133-139 | 7 | `const isDshPlugin = (() => {` |
-| `auditFull` | 270-292 | 23 | `export async function auditFull(repoPath, opts = {}) {` |
-| `appendTreeDocDrift` | 297-339 | 43 | `function appendTreeDocDrift(findings, repoPath) {` |
-| `by` | 330-330 | 1 | `const by = (code) => wt.filter(([, v]) => v?.status === code).length;` |
-| `appendFuncDocDrift` | 348-364 | 17 | `function appendFuncDocDrift(findings, repoPath) {` |
-| `appendSplitDocsCheck` | 372-426 | 55 | `function appendSplitDocsCheck(findings, repoPath) {` |
-| `hasMarkBlock` | 429-431 | 3 | `function hasMarkBlock(text, marker) {` |
-| `auditChanged` | 436-471 | 36 | `export async function auditChanged(repoPath, opts = {}) {` |
-| `isAuditIgnored` | 452-465 | 14 | `const isAuditIgnored = (rel) => {` |
-| `auditWithScope` | 474-476 | 3 | `export async function auditWithScope(repoPath, { scope = 'diff', ...opts } = {}) {` |
+| `setHostDocChecks` | 29-31 | 3 | `export function setHostDocChecks(checks) {` |
+| `findMarkedHostMd` | 35-35 | 1 | `const findMarkedHostMd = (...args) => (injected \|\| EMPTY_DOC_CHECKS).findMarkedHostMd(...args);` |
+| `checkDrift` | 36-36 | 1 | `const checkDrift = (...args) => (injected \|\| EMPTY_DOC_CHECKS).checkDrift(...args);` |
+| `checkFuncDrift` | 37-37 | 1 | `const checkFuncDrift = (...args) => (injected \|\| EMPTY_DOC_CHECKS).checkFuncDrift(...args);` |
+| `capScanFiles` | 58-68 | 11 | `export function capScanFiles(files, root, maxFiles) {` |
+| `appendIgnoreBlindSpot` | 81-97 | 17 | `function appendIgnoreBlindSpot(findings, repoPath, scanned) {` |
+| `buildTreeConfirmer` | 120-140 | 21 | `async function buildTreeConfirmer(relPath, text, grouped) {` |
+| `auditFiles` | 142-306 | 165 | `async function auditFiles(repoPath, files, opts = {}) {` |
+| `isDshPlugin` | 167-173 | 7 | `const isDshPlugin = (() => {` |
+| `auditFull` | 308-330 | 23 | `export async function auditFull(repoPath, opts = {}) {` |
+| `appendTreeDocDrift` | 335-377 | 43 | `function appendTreeDocDrift(findings, repoPath) {` |
+| `by` | 368-368 | 1 | `const by = (code) => wt.filter(([, v]) => v?.status === code).length;` |
+| `appendFuncDocDrift` | 386-402 | 17 | `function appendFuncDocDrift(findings, repoPath) {` |
+| `appendSplitDocsCheck` | 410-464 | 55 | `function appendSplitDocsCheck(findings, repoPath) {` |
+| `hasMarkBlock` | 467-469 | 3 | `function hasMarkBlock(text, marker) {` |
+| `auditChanged` | 474-509 | 36 | `export async function auditChanged(repoPath, opts = {}) {` |
+| `isAuditIgnored` | 490-503 | 14 | `const isAuditIgnored = (rel) => {` |
+| `auditWithScope` | 512-514 | 3 | `export async function auditWithScope(repoPath, { scope = 'diff', ...opts } = {}) {` |
 
 ### lib/audit/repo-level.js（31 行 · 2 个函数）
 
@@ -828,15 +846,15 @@
 |------|------|------|------|
 | `checkPrivateFiles` | 24-63 | 40 | `export function checkPrivateFiles({ root, visibility = 'unknown', privateFiles = [] }) {` |
 
-### lib/checks/regex.js（257 行 · 5 个函数）
+### lib/checks/regex.js（272 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `pickExemptHint` | 28-43 | 16 | `export function pickExemptHint(rule) {` |
 | `hit` | 31-31 | 1 | `const hit = (words) => (Array.isArray(words) ? words : []).some((w) => id.includes(w));` |
-| `checkRegexRules` | 54-179 | 126 | `export function checkRegexRules({ file, text, rules, source = '新增行', repoPath = '' }) {` |
-| `checkPathRegexRules` | 182-198 | 17 | `export function checkPathRegexRules({ file, relPath, rules }) {` |
-| `checkBlacklist` | 208-256 | 49 | `export function checkBlacklist({ file, text, rules }) {` |
+| `checkRegexRules` | 54-194 | 141 | `export function checkRegexRules({ file, text, rules, source = '新增行', repoPath = '', treeConfirm = null }) {` |
+| `checkPathRegexRules` | 197-213 | 17 | `export function checkPathRegexRules({ file, relPath, rules }) {` |
+| `checkBlacklist` | 223-271 | 49 | `export function checkBlacklist({ file, text, rules }) {` |
 
 ### lib/checks/semantic.js（135 行 · 3 个函数）
 
@@ -1702,7 +1720,7 @@
 | `loadRuleFiles` | 173-222 | 50 | `export function loadRuleFiles(order = null, opts = {}) {` |
 | `setSlotDisabled` | 236-270 | 35 | `export function setSlotDisabled(slot, disabled, opts = {}) {` |
 
-### lib/rule/registry.js（115 行 · 5 个函数）
+### lib/rule/registry.js（122 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1710,7 +1728,7 @@
 | `compileRule` | 28-61 | 34 | `export function compileRule(rule, ctx = {}) {` |
 | `withSlot` | 43-51 | 9 | `const withSlot = (res) => {` |
 | `compileAllRules` | 64-72 | 9 | `export function compileAllRules(rules, ctx = {}) {` |
-| `withRuleScope` | 89-115 | 27 | `function withRuleScope(compiled, source) {` |
+| `withRuleScope` | 89-122 | 34 | `function withRuleScope(compiled, source) {` |
 
 ### lib/rule/scope.js（67 行 · 2 个函数）
 
@@ -2342,6 +2360,12 @@
 |------|------|------|------|
 | `makeProject` | 20-27 | 8 | `function makeProject() {` |
 
+### test/test-ast-confirm-span.mjs（61 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `col` | 27-27 | 1 | `const col = (n, needle) => lines[n - 1].indexOf(needle) + 1;` |
+
 ### test/test-audit-bad-file.mjs（107 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2856,5 +2880,13 @@
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `makeReadme` | 41-43 | 3 | `function makeReadme(tree) {` |
+
+### test/test-treesitter.mjs（94 行 · 3 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `makeRepo` | 24-31 | 8 | `function makeRepo(files) {` |
+| `auditHits` | 34-49 | 16 | `function auditHits(repo, extraEnv = {}) {` |
+| `col` | 66-66 | 1 | `const col = (n, needle) => lines[n - 1].indexOf(needle) + 1;` |
 
 <!-- dshgp-functions:end -->

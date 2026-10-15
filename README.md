@@ -297,6 +297,7 @@ dsh-git-push/
 │   │   ├── size.js — 规模检查（函数长度/文件长度/重复字符串）
 │   │   ├── symbol-index.js — （待注释）
 │   │   ├── tokenizer.js — 分词器（token 流 + LRU 缓存）
+│   │   ├── treesitter.js — （待注释）
 │   ├── audit/ — 审计编排层（文件收集/逐文件检查/槽位聚合/审计出口）
 │   │   ├── analysis-coverage.js — （待注释）
 │   │   ├── audit-file.js — 单文件审计执行（跑检查+豁免）
@@ -505,6 +506,15 @@ dsh-git-push/
 ├── assets/ — 预览页与配图（preview.html 交互模拟页 + 面板截图）
 │   ├── minihost.sh — （待注释）
 │   ├── start.sh — 预览服务器启停脚本（start/stop/restart/status + --port + PID/日志/健康检查 /preview-ping）
+│   ├── tree-sitter/ — （待注释）
+│   │   ├── LICENSE — （待注释）
+│   │   ├── README.md — （待注释）
+│   │   ├── VERSIONS.txt — （待注释）
+│   │   ├── tree-sitter-javascript.wasm — （待注释）
+│   │   ├── tree-sitter-python.wasm — （待注释）
+│   │   ├── tree-sitter-typescript.wasm — （待注释）
+│   │   ├── tree-sitter.js — （待注释）
+│   │   ├── tree-sitter.wasm — （待注释）
 ├── test/ — node:test 全量单元测试（541+ 条，覆盖审计/推送/账号/HTTP/后台任务）
 │   ├── .test — 空文件豁免标记（目录级豁免 .test 目录）
 │   ├── e2e-npm-tab-render.mjs — （待注释）
@@ -513,6 +523,7 @@ dsh-git-push/
 │   ├── test-account-refresh-on-push.mjs — （待注释）
 │   ├── test-account-ssh.mjs — 账号检查 + SSH 密钥测试
 │   ├── test-analysis-coverage.mjs — （待注释）
+│   ├── test-ast-confirm-span.mjs — （待注释）
 │   ├── test-audit-api-http.mjs — （待注释）
 │   ├── test-audit-api.mjs — （待注释）
 │   ├── test-audit-bad-file.mjs — 审计拦截门禁测试（硬编码密码/API key/.env 凭据文件）
@@ -639,6 +650,7 @@ dsh-git-push/
 │   ├── test-tool-probes.mjs — （待注释）
 │   ├── test-tools-e2e.mjs — （待注释）
 │   ├── test-tree-doc.mjs — README 目录树脚本测试（gen/check/apply 闭环）
+│   ├── test-treesitter.mjs — （待注释）
 │   ├── test-version-metrics.mjs — （待注释）
 │   ├── test-visibility-unified.mjs — （待注释）
 │   ├── fixtures/ — （待注释）
@@ -647,6 +659,7 @@ dsh-git-push/
 │   │   ├── test-cache.mjs — （待注释）
 │   │   ├── tmp-dir.mjs — （待注释）
 ├── docs/ — 开发文档
+│   ├── 2.9.0-design.md — （待注释）
 │   ├── 2026-10-09-审计插件性能优化.MD — （待注释）
 │   ├── 2026-10-11-单一真源与文档漂移治理方案.MD — （待注释）
 │   ├── 2026-10-11-硬编码路径改造为审计引擎方案.MD — （待注释）

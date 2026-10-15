@@ -435,47 +435,62 @@
     "worktree": {
       "README.md": {
         "status": "M",
-        "mtime": "2026-10-15T05:01:39.324Z",
+        "mtime": "2026-10-15T10:27:27.945Z",
         "note": "注释可能需更新"
       },
       "docs/CHANGELOG.md": {
         "status": "M",
-        "mtime": "2026-10-15T05:01:54.364Z",
+        "mtime": "2026-10-15T10:27:27.508Z",
         "note": "注释可能需更新"
       },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-15T05:01:54.567Z",
+        "mtime": "2026-10-15T10:29:44.812Z",
         "note": "注释可能需更新"
       },
       "docs/releases.json": {
         "status": "M",
-        "mtime": "2026-10-15T05:01:45.561Z",
+        "mtime": "2026-10-15T10:27:08.351Z",
+        "note": "注释可能需更新"
+      },
+      "lib/ast/treesitter.js": {
+        "status": "M",
+        "mtime": "2026-10-15T10:29:33.123Z",
+        "note": "注释可能需更新"
+      },
+      "lib/audit/audit-file.js": {
+        "status": "M",
+        "mtime": "2026-10-15T10:29:33.139Z",
+        "note": "注释可能需更新"
+      },
+      "lib/audit/orchestrate.js": {
+        "status": "M",
+        "mtime": "2026-10-15T10:26:53.478Z",
+        "note": "注释可能需更新"
+      },
+      "lib/checks/dispatch.js": {
+        "status": "M",
+        "mtime": "2026-10-15T10:23:40.800Z",
+        "note": "注释可能需更新"
+      },
+      "lib/checks/regex.js": {
+        "status": "M",
+        "mtime": "2026-10-15T10:23:40.781Z",
         "note": "注释可能需更新"
       },
       "lib/self/index.js": {
         "status": "M",
-        "mtime": "2026-10-15T05:01:45.517Z",
+        "mtime": "2026-10-15T10:27:16.218Z",
         "note": "注释可能需更新"
       },
       "package.json": {
         "status": "M",
-        "mtime": "2026-10-15T05:01:45.529Z",
+        "mtime": "2026-10-15T10:27:08.327Z",
         "note": "注释可能需更新"
       },
-      "scripts/sync-plugin-install.mjs": {
-        "status": "M",
-        "mtime": "2026-10-15T05:01:24.680Z",
-        "note": "注释可能需更新"
-      },
-      "skills/guide/guide-cli-scripts.md": {
-        "status": "M",
-        "mtime": "2026-10-15T05:01:32.358Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-sync-plugin-install.mjs": {
-        "status": "M",
-        "mtime": "2026-10-15T05:01:32.336Z",
+      "test/test-treesitter.mjs": {
+        "status": "A",
+        "mtime": "2026-10-15T10:27:08.017Z",
         "note": "注释可能需更新"
       }
     }
@@ -520,5 +535,18 @@
   "test/test-audit-slot-order.mjs": "（待注释）",
   "test/test-filter-ext.mjs": "（待注释）",
   "test/test-npm-enobufs.mjs": "（待注释）",
-  "scripts/cpu-sample.mjs": "（待注释）"
+  "scripts/cpu-sample.mjs": "（待注释）",
+  "test/test-ast-confirm-span.mjs": "（待注释）",
+  "assets/tree-sitter": "（待注释）",
+  "assets/tree-sitter/LICENSE": "（待注释）",
+  "assets/tree-sitter/README.md": "（待注释）",
+  "assets/tree-sitter/VERSIONS.txt": "（待注释）",
+  "assets/tree-sitter/tree-sitter-javascript.wasm": "（待注释）",
+  "assets/tree-sitter/tree-sitter-python.wasm": "（待注释）",
+  "assets/tree-sitter/tree-sitter-typescript.wasm": "（待注释）",
+  "lib/ast/treesitter.js": "（待注释）",
+  "docs/2.9.0-design.md": "（待注释）",
+  "assets/tree-sitter/tree-sitter.js": "（待注释）",
+  "assets/tree-sitter/tree-sitter.wasm": "（待注释）",
+  "test/test-treesitter.mjs": "（待注释）"
 }
