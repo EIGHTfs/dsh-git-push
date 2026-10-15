@@ -18,7 +18,7 @@
  *   applyInstall     按 on/off 执行安装形态动作（用改动本体的 sync 步骤落真实文件）
  *   depHints         package.json 依赖声明是否还指向 node_modules / 绝对 link:
  */
-import { existsSync, readdirSync, lstatSync, readlinkSync, unlinkSync, symlinkSync, mkdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, lstatSync, unlinkSync, mkdirSync, readFileSync } from 'node:fs';
 import { join, resolve, sep } from 'node:path';
 
 /** DSH 数据根（含 .dsh 的那一层）。兼容两种入参形态：
@@ -114,8 +114,18 @@ function lstatOrNull(p) {
 }
 
 /**
- * 目标形态（对照文档 §3.2）与现状的差异清单。默认只报告，不执行。
- *   目标：`<profile>/local-plugins/<插件>` 为**真实目录**；`<profile>/node_modules/<插件>` 为**相对软链**指回去。
+ * 目标形态与现状的差异清单。默认只报告，不执行。
+ *
+ * 【2026-10-15 起】真源**只认** `<profile>/local-plugins/<插件>`（真实目录）：
+ *   `node_modules/<插件>` 的解析入口**不再由本脚本管理**（不建链、不改链）——它由
+ *   DSH/pnpm 安装流程按 profile `package.json` 的 `file:local-plugins/<插件>` 声明自动生成，
+ *   安装位置就是 local-plugins。
+ *
+ *   为什么仍要报告 node_modules：实测事故（本机 2026-10-15）——node_modules 下留了一份
+ *   **真实目录副本**（旧版 2.6.9，来自更早的 tarball 安装），它顶替 local-plugins 里的 2.8.6
+ *   成为宿主实际加载源，宿主 `git_api status` 报 2.6.9、`npm_publish` 等新工具整批消失。
+ *   更硬的证据：删掉该条目后，从 profile 根 `require.resolve('dsh-git-push')` 直接 MODULE_NOT_FOUND
+ *   ⇒ **没有入口 = 解析不到 = 插件不加载**；入口必须存在，但该由安装流程生成，而非本脚本伪造。
  * @returns {Array<{kind: string, path: string, desc: string}>}
  */
 export function planInstall({ profileDir, pluginName }) {
@@ -127,19 +137,11 @@ export function planInstall({ profileDir, pluginName }) {
   if (ls && ls.isSymbolicLink()) {
     actions.push({ kind: 'delink-local', path: local, desc: 'local-plugins 下是软链：真实加载源应是**真实目录**（执行时会先删链再落一份真实副本）' });
   } else if (!ls) {
-    actions.push({ kind: 'create-local', path: local, desc: 'local-plugins 下缺该插件：需先同步一份真实目录（HMR 的覆盖点与真实加载源都在这里）' });
+    actions.push({ kind: 'create-local', path: local, desc: 'local-plugins 下缺该插件：需先同步一份真实目录（真实加载源在这里）' });
   }
   const ns = lstatOrNull(nm);
-  if (ns && ns.isSymbolicLink()) {
-    let t = '';
-    try { t = readlinkSync(nm); } catch { t = ''; }
-    if (!t.startsWith('.')) {
-      actions.push({ kind: 'relink-nm', path: nm, desc: `node_modules 下是绝对软链（→ ${t}）：应改相对链 ../local-plugins/${pluginName}（换机/换卷仍有效）` });
-    }
-  } else if (!ns) {
-    actions.push({ kind: 'link-nm', path: nm, desc: `node_modules 下缺软链：应建相对链 ../local-plugins/${pluginName}` });
-  } else {
-    actions.push({ kind: 'dir-nm', path: nm, desc: 'node_modules 下是真实目录：按目标形态应让真实源落在 local-plugins、这里只留相对软链（本工具不自动搬移，避免动到既有数据）' });
+  if (ns && !ns.isSymbolicLink()) {
+    actions.push({ kind: 'nm-real-dir', path: nm, desc: 'node_modules 下是**真实目录副本**（不是安装流程生成的链）：它会顶掉 local-plugins 成为实际加载源（实测旧副本顶掉新版）⇒ 应删除该副本，入口交给 DSH 安装流程' });
   }
   return actions;
 }
@@ -148,26 +150,23 @@ export function planInstall({ profileDir, pluginName }) {
  * 执行安装形态动作（仅在调用方传入 on=true 时写盘）。
  *   delink-local：删软链（真实内容由后续同步步骤落进来）
  *   create-local：建目录（同上）
- *   relink-nm / link-nm：替换/新建相对软链
- *   dir-nm：只报告（搬移真实目录有数据风险，交给人工或既有搬迁流程）
+ *   nm-real-dir：只报告（删副本属破坏性动作，交人工或安装流程；本工具不动既有数据）
+ *
+ *   注：本工具**不建 node_modules 软链**（真源只认 local-plugins；解析入口由 DSH/pnpm 安装流程生成）。
  * @returns {{done: string[], skipped: string[]}}
  */
 export function applyInstall(actions, { on = false } = {}) {
   const done = [];
   const skipped = [];
   for (const a of actions) {
-    if (!on || a.kind === 'dir-nm') { skipped.push(a.kind); continue; }
+    // 只有「改 local-plugins 真实目录」是他的活；node_modules 相关一律只报告（不建链、不删数据）
+    if (!on || (a.kind !== 'delink-local' && a.kind !== 'create-local')) { skipped.push(a.kind); continue; }
     try {
       if (a.kind === 'delink-local') {
         unlinkSync(a.path);                    // 只删软链本身，不触及它指向的任何内容
         mkdirSync(a.path, { recursive: true });
       } else if (a.kind === 'create-local') {
         mkdirSync(a.path, { recursive: true });
-      } else if (a.kind === 'relink-nm') {
-        unlinkSync(a.path);
-        symlinkSync(join('..', 'local-plugins', a.path.split(sep).pop()), a.path);
-      } else if (a.kind === 'link-nm') {
-        symlinkSync(join('..', 'local-plugins', a.path.split(sep).pop()), a.path);
       }
       done.push(a.kind);
     } catch (e) {

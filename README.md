@@ -1422,7 +1422,7 @@ node scripts/audit-runtime-check.mjs --all <目录>
   - `scripts/audit-runtime-check.mjs`：三层审计的 L3 运行时检测（见「独立脚本：运行时检测」）
   - `scripts/scrub-user-wording.mjs`：清洗注释里的沟通残留措辞（见「独立脚本：清洗用户沟通措辞」）
   - `scripts/check.mjs`：全仓语法检查（`node --check` 批量）
-  - `scripts/sync-plugin.mjs`：源码仓库 → 安装副本的双副本同步（默认 dry-run，`--write` 才写）。2026-10-09 起同时做**部署形态与免重启热重载自检**：`--profile <名>` 指定 profile（多 profile 时必须显式给，否则报所有候选而不是默默取首个）、`--fix` 按目标形态修正安装位置（`local-plugins/` 真实目录 + `node_modules/` **相对**软链）；每次都报告「该插件改代码能否免重启热重载」（读 profile 的 `cordis.patch.yml` 里 `id: hmr` 的 `base`/`root`）以及 profile 依赖声明是否该改回 `file:local-plugins/<插件>`
+  - `scripts/sync-plugin.mjs`：源码仓库 → 安装副本的同步（默认 dry-run，`--write` 才写）。**安装位置 = `local-plugins/<插件>`（真源）**；`node_modules/<插件>` 只是解析入口，由 DSH/pnpm 安装流程按 profile 的 `file:local-plugins/<插件>` 声明生成——**本脚本不建链、不改链**（并会报警「node_modules 下残留真实目录副本」这种会顶掉真源的形态，实测过旧副本顶掉新版）。2026-10-09 起同时做**部署形态与免重启热重载自检**：`--profile <名>` 指定 profile（多 profile 时必须显式给，否则报所有候选而不是默默取首个）、`--fix` 只修 `local-plugins` 侧形态（解软链 / 建真实目录）；每次都报告「该插件改代码能否免重启热重载」（读 profile 的 `cordis.patch.yml` 里 `id: hmr` 的 `base`/`root`）以及 profile 依赖声明是否该写 `file:local-plugins/<插件>`
   - `scripts/sync-plugin-install.mjs`：上一条里安装形态/HMR 自检的实现模块（被 `sync-plugin.mjs` 引用，非独立入口）
 - **测试**：`npm test` 一条命令复现全绿（2026-10-09 实测 1195 用例 / 1193 通过 / 0 失败，2 跳过）
 

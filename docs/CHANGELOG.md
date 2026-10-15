@@ -15,7 +15,7 @@
 
 | 版本 | 内容 |
 |------|------|
-| 2.8.6 | CPU 现场采样脚本（scripts/cpu-sample.mjs：零依赖只读 /proc，按 --seconds/--interval 采样，记录系统 CPU% 与每进程占整机百分比、命令行、常驻内存、chrome/browsersvc 数量、宿主进程占用；输出控制台逐样本 + JSONL 明细 + 结束汇总）；审计性能规则误报修复（performance/memory-bomb 与 performance/busy-wait-loop 声明 astConfirm，命中行再经 token 级确认真在代码里，消除注释行误报——第三方插件副本实测 569→567 条）；规则注释写明已知边界（匹配落在字符串字面量内仍会报，影响面仅测试脚本 1 处，评估后不修） |
+| 2.8.7 | 安装位置只认 local-plugins：同步脚本不再建/改 node_modules 软链——真源 = local-plugins 真实目录，node_modules 入口由 DSH/pnpm 安装流程按 profile 的 file:local-plugins 声明生成；新增「node_modules 下残留真实目录副本」报警（实测事故：旧副本 2.6.9 顶掉 2.8.6，宿主 git_api status 报 2.6.9、npm_publish 等新工具整批消失）；--fix 只修 local-plugins 侧形态（解软链 / 建真实目录），node_modules 相关只报告不动盘 |
 | 2.8.4 | 推送失败封装 + 提交信息数组化 |
 | 2.8.3 | 零改动=正常成功路径（文案+行为）+ 修 job 输出自相矛盾 + 审计×提交推送边界回归；推送失败结构化诊断 + 否定性结论的证据标准（并入 2.8.3） |
 | 2.8.2 | 推送前自动指定正确的 GitHub remote |

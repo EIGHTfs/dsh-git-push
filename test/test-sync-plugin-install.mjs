@@ -3,12 +3,14 @@
 // 覆盖（对应 sync-plugin-install.mjs 的对外能力）：
 //   ① dshRootOf 两种入参形态（DSH_HOME 本尊 / 已含 .dsh）
 //   ② readHmrConfig + judgeHmr：root 为空 ⇒ 不可热重载；root 覆盖 local-plugins ⇒ 可；只在 node_modules ⇒ 不可
-//   ③ planInstall：绝对软链 ⇒ 应改相对链；缺 node_modules ⇒ 应建链；local-plugins 是软链 ⇒ 应解链
-//   ④ applyInstall：默认不动盘；on=true 才把软链改成相对链
+//   ③ planInstall：真源只认 local-plugins（缺 ⇒ create-local、是软链 ⇒ delink-local）；
+//      node_modules **不由本工具建链**（旧版 link-nm/relink-nm 已移除，入口交给 DSH 安装流程），
+//      但 node_modules 下是**真实目录副本**时必须报警（实测会顶掉真源）
+//   ④ applyInstall：默认不动盘；on=true 只处理 local-plugins，node_modules 相关只报告不删数据
 //   ⑤ depHints：link:绝对路径 ⇒ 提示改 file:local-plugins/<插件>
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, writeFileSync, symlinkSync, rmSync, lstatSync, readlinkSync } from 'node:fs';import { join } from 'node:path';
+import { mkdtempSync, mkdirSync, writeFileSync, symlinkSync, rmSync, lstatSync } from 'node:fs';import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { dshRootOf, readHmrConfig, judgeHmr, planInstall, applyInstall, depHints, pickProfile, inspectProfiles } from '../scripts/sync-plugin-install.mjs';
 
@@ -59,19 +61,25 @@ test('judgeHmr：root 覆盖 local-plugins ⇒ 可热重载；只在 node_module
   } finally { clean(tmp); }
 });
 
-test('planInstall：绝对软链⇒relink；缺链⇒link；local 是软链⇒delink', () => {
+test('planInstall：真源只认 local-plugins；node_modules 真实副本 ⇒ 报警（不再建链）', () => {
   const { tmp, pd } = fakeHome();
   try {
     const outside = join(tmp, 'outside-plugin');
     mkdirSync(outside, { recursive: true });
-    symlinkSync(outside, join(pd, 'node_modules', 'p1'));           // 绝对软链
-    const a1 = planInstall({ profileDir: pd, pluginName: 'p1' }).map((x) => x.kind);
-    assert.ok(a1.includes('relink-nm'), '绝对软链应提示改相对链');
-    assert.ok(a1.includes('create-local'), 'local-plugins 缺 ⇒ 应提示建真实目录');
-    // 换成「已有 local 真实目录 + 完全缺 node_modules」
+    // node_modules 是（绝对）软链：已不属本工具职责 ⇒ 不产生任何 node_modules 相关待办
+    symlinkSync(outside, join(pd, 'node_modules', 'p1'));
+    assert.deepEqual(planInstall({ profileDir: pd, pluginName: 'p1' }).map((x) => x.kind), ['create-local'],
+      '只应提示建 local-plugins 真实目录（入口链交给 DSH 安装流程）');
+    // 已有 local 真实目录 + node_modules 完全缺条目 ⇒ 也不再提示建链（旧版会报 link-nm）
     mkdirSync(join(pd, 'local-plugins', 'p1'), { recursive: true });
-    rmSync(join(pd, 'node_modules', 'p1'));
-    assert.deepEqual(planInstall({ profileDir: pd, pluginName: 'p1' }).map((x) => x.kind), ['link-nm']);
+    rmSync(join(pd, 'node_modules', 'p1'), { force: true });
+    assert.deepEqual(planInstall({ profileDir: pd, pluginName: 'p1' }).map((x) => x.kind), [],
+      '入口缺失不是本工具的待办（由安装流程生成）');
+    // node_modules 是**真实目录副本** ⇒ 必须报警（实测会顶掉真源：旧副本顶掉新版）
+    mkdirSync(join(pd, 'node_modules', 'p1'), { recursive: true });
+    const a3 = planInstall({ profileDir: pd, pluginName: 'p1' });
+    assert.deepEqual(a3.map((x) => x.kind), ['nm-real-dir']);
+    assert.match(a3[0].desc, /真实目录副本|顶掉/);
     // local-plugins 下是软链 ⇒ delink
     rmSync(join(pd, 'local-plugins', 'p1'), { recursive: true, force: true });
     symlinkSync(outside, join(pd, 'local-plugins', 'p1'));
@@ -79,19 +87,22 @@ test('planInstall：绝对软链⇒relink；缺链⇒link；local 是软链⇒de
   } finally { clean(tmp); }
 });
 
-test('applyInstall：默认不写盘；on=true 才把绝对软链改成相对软链', () => {
+test('applyInstall：默认不写盘；on=true 只处理 local-plugins，不碰 node_modules', () => {
   const { tmp, pd } = fakeHome();
   try {
     const outside = join(tmp, 'outside-plugin');
     mkdirSync(outside, { recursive: true });
-    mkdirSync(join(pd, 'local-plugins', 'p1'), { recursive: true });
-    symlinkSync(outside, join(pd, 'node_modules', 'p1'));
+    symlinkSync(outside, join(pd, 'local-plugins', 'p1'));            // local-plugins 是软链 ⇒ delink-local
+    mkdirSync(join(pd, 'node_modules', 'p1'), { recursive: true });   // node_modules 真实副本 ⇒ 只报告
     const actions = planInstall({ profileDir: pd, pluginName: 'p1' });
+    assert.deepEqual(actions.map((x) => x.kind), ['delink-local', 'nm-real-dir']);
     applyInstall(actions, { on: false });
-    assert.equal(lstatSync(join(pd, 'node_modules', 'p1')).isSymbolicLink(), true);
-    assert.ok(readlinkSync(join(pd, 'node_modules', 'p1')).startsWith('/'), 'dry-run 不应改动盘上软链');
-    applyInstall(actions, { on: true });
-    assert.equal(readlinkSync(join(pd, 'node_modules', 'p1')), join('..', 'local-plugins', 'p1'), 'on=true 应改成相对链');
+    assert.equal(lstatSync(join(pd, 'local-plugins', 'p1')).isSymbolicLink(), true, 'dry-run 不应动盘');
+    const r = applyInstall(actions, { on: true });
+    assert.deepEqual(r.done, ['delink-local'], '只执行 local-plugins 解链');
+    assert.equal(lstatSync(join(pd, 'local-plugins', 'p1')).isSymbolicLink(), false, '解链后应是真实目录');
+    assert.deepEqual(r.skipped, ['nm-real-dir'], 'node_modules 相关只报告、不动盘');
+    assert.equal(lstatSync(join(pd, 'node_modules', 'p1')).isDirectory(), true, '不应删掉 node_modules 里的既有数据');
   } finally { clean(tmp); }
 });
 

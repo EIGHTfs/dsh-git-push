@@ -433,34 +433,54 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
+      "README.md": {
+        "status": "M",
+        "mtime": "2026-10-15T04:53:26.485Z",
+        "note": "注释可能需更新"
+      },
+      "docs/CHANGELOG.md": {
+        "status": "M",
+        "mtime": "2026-10-15T04:55:00.044Z",
+        "note": "注释可能需更新"
+      },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-15T01:01:19.696Z",
+        "mtime": "2026-10-15T04:55:00.240Z",
         "note": "注释可能需更新"
       },
-      "lib/app/command-registry.js": {
+      "docs/releases.json": {
         "status": "M",
-        "mtime": "2026-10-15T00:58:19.411Z",
+        "mtime": "2026-10-15T04:54:51.526Z",
         "note": "注释可能需更新"
       },
-      "lib/app/inject-text.js": {
+      "lib/self/index.js": {
         "status": "M",
-        "mtime": "2026-10-15T00:59:16.031Z",
+        "mtime": "2026-10-15T04:53:04.131Z",
         "note": "注释可能需更新"
       },
-      "lib/app/tool-call.js": {
+      "package.json": {
         "status": "M",
-        "mtime": "2026-10-15T00:58:29.406Z",
+        "mtime": "2026-10-15T04:52:58.496Z",
         "note": "注释可能需更新"
       },
-      "lib/app/tools.js": {
+      "scripts/sync-plugin-install.mjs": {
         "status": "M",
-        "mtime": "2026-10-15T00:58:19.418Z",
+        "mtime": "2026-10-15T04:51:46.039Z",
         "note": "注释可能需更新"
       },
-      "lib/git/push.js": {
+      "scripts/sync-plugin.mjs": {
         "status": "M",
-        "mtime": "2026-10-15T00:58:29.382Z",
+        "mtime": "2026-10-15T04:51:56.096Z",
+        "note": "注释可能需更新"
+      },
+      "skills/guide/guide-cli-scripts.md": {
+        "status": "M",
+        "mtime": "2026-10-15T04:52:40.651Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-sync-plugin-install.mjs": {
+        "status": "M",
+        "mtime": "2026-10-15T04:52:19.663Z",
         "note": "注释可能需更新"
       }
     }

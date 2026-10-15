@@ -2,7 +2,9 @@
  * 双副本同步脚本（1.0.0）
  *
  * 源 = 本仓库（脚本所在插件仓库根）
- * 目标 = DSH 插件目录（.dsh/profiles/<profile>/node_modules/<插件名>）
+ * 目标 = DSH 插件的**真实安装位置**：`.dsh/profiles/<profile>/local-plugins/<插件名>`
+ *        （`node_modules/<插件名>` 只是**解析入口**，由 DSH/pnpm 安装流程按 profile
+ *         `package.json` 的 `file:local-plugins/<插件>` 声明生成 —— 本脚本不建链、不改链）
  *
  * 默认 **dryRun**（只打印将要同步的差异，不写入）；`--write` 才真同步。
  * 同步内容：lib/**  skills/**  scripts/**  cli.mjs  package.json  cordis.patch.yml  README.md
@@ -120,14 +122,17 @@ export async function listSyncFiles(root = SOURCE_ROOT) {
 }
 
 /**
- * 探测 DSH 插件目录。
+ * 探测 DSH 插件的部署位置。
  *
- * **两个位置都要同步**（最大教训：只同步 node_modules 导致改动看不到）：
- *   1) `<profile>/local-plugins/<插件名>`  ← **真实加载源**（profile 的 package.json
- *      写的是 `"<插件名>": "file:./local-plugins/<插件名>"`，DSH 加载这里）
- *   2) `<profile>/node_modules/<插件名>`   ← npm link 产物（部分运行路径会解析到这里）
+ * **真实安装位置 = `<profile>/local-plugins/<插件名>`**（profile 的 package.json 写的是
+ *   `"<插件名>": "file:local-plugins/<插件名>"`）—— 同步目标就是它。
  *
- * 历史上 UI 改动「刷新看不到」，根因就是只 rsync 了 node_modules。
+ * `<profile>/node_modules/<插件名>` 只作**解析入口**探测（部分解析路径经此；实测删掉条目后
+ *   从 profile 根 require.resolve 直接 MODULE_NOT_FOUND ⇒ 入口缺失 = 插件加载不到）：
+ *   该入口由 DSH/pnpm 安装流程生成与维护，**本脚本不再创建/修补它**。
+ *
+ * 历史教训（2026-10-15）：node_modules 下残留真实目录副本（旧版）会**顶替** local-plugins
+ *   成为实际加载源，宿主跑旧代码、新工具整批消失 —— 故 planInstall 会对这种形态报警。
  * @param {string} [home] DSH_HOME（默认从环境变量推断）
  * @param {string} [pluginName] 插件名
  * @returns {string[]} 命中的目标目录（local-plugins 在前）
@@ -258,13 +263,13 @@ export async function main(argv = process.argv.slice(2)) {
     console.log(`  免重启热重载：${verdict.hot ? '✅ 可（改代码后同步即生效）' : `❌ 不可 —— ${verdict.reason}`}`);
     const actions = planInstall({ profileDir: pd, pluginName });
     if (actions.length) {
-      console.log('  安装形态待办（目标：local-plugins 真实目录 + node_modules 相对软链）：');
+      console.log('  安装形态待办（真源 = local-plugins 真实目录；node_modules 入口由 DSH 安装流程生成，本脚本不建链）：');
       for (const a of actions) console.log(`    · [${a.kind}] ${a.desc}`);
       if (fix) {
         const res = applyInstall(actions, { on: true });
         console.log(`    已执行：${res.done.join(', ') || '（无）'}${res.skipped.length ? `｜跳过：${res.skipped.join(', ')}` : ''}`);
       } else {
-        console.log('    （加 --fix 才执行：删软链/建相对链，真实文件由上面的同步步骤落盘）');
+        console.log('    （加 --fix 才执行：解 local-plugins 软链 / 建真实目录；node_modules 相关只报告不动盘）');
       }
     }
     for (const h of depHints(pd, pluginName)) console.log(`  ⚠️ ${h}`);

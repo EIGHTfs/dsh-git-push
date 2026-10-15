@@ -73,7 +73,7 @@ git-sluice self-check
 | `scripts/readme-gen.mjs` | README 生成 |
 | `scripts/preview-gen.mjs`（默认生成 / `--data-only` 只更数据段 / `check` 漂移门禁 / `--watch` 监听） / `scripts/preview-server.mjs`（默认反代真后端 / `--direct` 直连插件 / `--local` 免重启） | 界面预览页生成与漂移门禁、本地真实后端测试服务 |
 | `scripts/browser-page-probe.mjs` | 无头浏览器探针：读页面真实渲染文本 + 抓前端运行时错误（零硬编码路径，自动探测环境） |
-| `scripts/sync-plugin.mjs` | 双副本同步（工作区 ↔ 安装副本）+ 部署形态与免重启热重载自检：`--profile <名>` 指定 profile（多 profile 必给）、`--fix` 按目标形态修正（local-plugins 真实目录 + node_modules 相对软链） |
+| `scripts/sync-plugin.mjs` | 同步（工作区 → 安装副本；**安装位置 = local-plugins 真源**）+ 部署形态与免重启热重载自检：`--profile <名>` 指定 profile（多 profile 必给）、`--fix` 只修 local-plugins 侧形态（解软链 / 建真实目录）。node_modules 入口由 DSH 安装流程生成，本脚本不建链；若那里残留**真实目录副本**会报警（实测会顶掉真源） |
 | `scripts/sync-plugin-install.mjs` | 安装形态 / HMR 自检的实现模块（`sync-plugin.mjs` 引用，非独立入口） |
 | `scripts/verify-prestep.mjs` | 上下文注入自检（真实触发 pre-step 校验注入内容） |
 | `scripts/rename-locator.mjs` | 变量重命名位置定位（按作用域聚合） |
