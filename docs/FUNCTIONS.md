@@ -1188,14 +1188,14 @@
 | `gitRaw` | 116-132 | 17 | `export function gitRaw(args, { cwd = '', timeoutMs = 600_000 } = {}) {` |
 | `runGitAsync` | 142-162 | 21 | `export function runGitAsync(args, { cwd = '', timeoutMs = 120_000, env = {} } = {}) {` |
 
-### lib/core/workspace-paths.js（101 行 · 4 个函数）
+### lib/core/workspace-paths.js（109 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `workspacePathsFile` | 28-30 | 3 | `export function workspacePathsFile() {` |
 | `loadWorkspacePaths` | 36-47 | 12 | `export function loadWorkspacePaths() {` |
 | `saveWorkspacePaths` | 55-81 | 27 | `export function saveWorkspacePaths(paths, { by = 'ai' } = {}) {` |
-| `workspacePathsInjectionText` | 91-100 | 10 | `export function workspacePathsInjectionText(sep = '\n') {` |
+| `workspacePathsInjectionText` | 94-108 | 15 | `export function workspacePathsInjectionText(sep = '\n') {` |
 
 ### lib/exempt/index.js（293 行 · 10 个函数）
 

@@ -433,54 +433,14 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "docs/CHANGELOG.md": {
-        "status": "M",
-        "mtime": "2026-10-15T18:04:54.151Z",
-        "note": "注释可能需更新"
-      },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-15T18:05:54.746Z",
+        "mtime": "2026-10-15T21:09:44.505Z",
         "note": "注释可能需更新"
       },
-      "docs/releases.json": {
+      "lib/core/workspace-paths.js": {
         "status": "M",
-        "mtime": "2026-10-15T18:04:26.323Z",
-        "note": "注释可能需更新"
-      },
-      "lib/audit-rules/audit-rules-go.yml": {
-        "status": "M",
-        "mtime": "2026-10-15T18:05:17.431Z",
-        "note": "注释可能需更新"
-      },
-      "lib/self/index.js": {
-        "status": "M",
-        "mtime": "2026-10-15T18:03:53.708Z",
-        "note": "注释可能需更新"
-      },
-      "scripts/doc-version.mjs": {
-        "status": "M",
-        "mtime": "2026-10-15T18:03:24.712Z",
-        "note": "注释可能需更新"
-      },
-      "scripts/readme-gen.mjs": {
-        "status": "M",
-        "mtime": "2026-10-15T18:02:39.041Z",
-        "note": "注释可能需更新"
-      },
-      "skills/dev/dsh-git-push.md": {
-        "status": "M",
-        "mtime": "2026-10-15T18:05:42.678Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-doc-version.mjs": {
-        "status": "M",
-        "mtime": "2026-10-15T18:04:40.476Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-version-metrics.mjs": {
-        "status": "M",
-        "mtime": "2026-10-15T18:04:26.398Z",
+        "mtime": "2026-10-15T21:09:35.275Z",
         "note": "注释可能需更新"
       }
     }
