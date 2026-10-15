@@ -22,16 +22,16 @@
 | `aggregateFindings` | 70-91 | 22 | `export function aggregateFindings(findings = [], opts = {}) {` |
 | `runAuditApi` | 99-158 | 60 | `export async function runAuditApi(repo, params = {}, cfg = {}) {` |
 
-### lib/app/command-registry.js（262 行 · 6 个函数）
+### lib/app/command-registry.js（266 行 · 6 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `applyFlagToken` | 200-216 | 17 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
-| `validateParamConstraints` | 219-225 | 7 | `function validateParamConstraints(args, params) {` |
-| `parseRegistryArgs` | 227-247 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
-| `registryByName` | 250-252 | 3 | `export function registryByName(name) {` |
-| `registryByCli` | 255-257 | 3 | `export function registryByCli(cli) {` |
-| `buildToolsListText` | 260-262 | 3 | `export function buildToolsListText() {` |
+| `applyFlagToken` | 204-220 | 17 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
+| `validateParamConstraints` | 223-229 | 7 | `function validateParamConstraints(args, params) {` |
+| `parseRegistryArgs` | 231-251 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
+| `registryByName` | 254-256 | 3 | `export function registryByName(name) {` |
+| `registryByCli` | 259-261 | 3 | `export function registryByCli(cli) {` |
+| `buildToolsListText` | 264-266 | 3 | `export function buildToolsListText() {` |
 
 ### lib/app/handlers/account.js（166 行 · 10 个函数）
 
@@ -142,15 +142,15 @@
 | `buildCtx` | 66-68 | 3 | `function buildCtx(req, method, env, cfg, query, body, path) {` |
 | `handleHttp` | 78-131 | 54 | `export async function handleHttp(req = {}, env = {}, cfg = defaultConfig()) {` |
 
-### lib/app/inject-text.js（192 行 · 5 个函数）
+### lib/app/inject-text.js（193 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `buildIdentityInjectionText` | 73-83 | 11 | `export function buildIdentityInjectionText() {` |
-| `buildRequirementsInjectionText` | 85-97 | 13 | `export function buildRequirementsInjectionText() {` |
-| `detectHostIp` | 118-129 | 12 | `function detectHostIp() {` |
-| `buildAuditApiGuide` | 135-162 | 28 | `export function buildAuditApiGuide(repo = '', opts = {}) {` |
-| `formatAuditBlock` | 164-191 | 28 | `export function formatAuditBlock(r = {}) {` |
+| `buildIdentityInjectionText` | 74-84 | 11 | `export function buildIdentityInjectionText() {` |
+| `buildRequirementsInjectionText` | 86-98 | 13 | `export function buildRequirementsInjectionText() {` |
+| `detectHostIp` | 119-130 | 12 | `function detectHostIp() {` |
+| `buildAuditApiGuide` | 136-163 | 28 | `export function buildAuditApiGuide(repo = '', opts = {}) {` |
+| `formatAuditBlock` | 165-192 | 28 | `export function formatAuditBlock(r = {}) {` |
 
 ### lib/app/scan-root.js（23 行 · 1 个函数）
 
@@ -212,40 +212,40 @@
 | `getLastSlotHitStats` | 28-30 | 3 | `export function getLastSlotHitStats() {` |
 | `getLastSlotHitMeta` | 33-35 | 3 | `export function getLastSlotHitMeta() {` |
 
-### lib/app/tool-call.js（667 行 · 23 个函数）
+### lib/app/tool-call.js（673 行 · 23 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `pushWithPostSteps` | 56-91 | 36 | `async function pushWithPostSteps(args, env, cfg) {` |
-| `pushJobOutcome` | 112-139 | 28 | `export function pushJobOutcome(r = {}) {` |
-| `short` | 114-114 | 1 | `const short = (sha) => String(sha \|\| '').slice(0, 8);` |
-| `cloneJobOutcome` | 147-152 | 6 | `export function cloneJobOutcome(r = {}) {` |
-| `buildCommitPushJobSpec` | 155-172 | 18 | `function buildCommitPushJobSpec(repo, doPush) {` |
-| `done` | 160-168 | 9 | `const done = (async () => {` |
-| `startHostJob` | 185-192 | 8 | `function startHostJob(jobs, spec, owner) {` |
-| `callCloneJob` | 206-238 | 33 | `async function callCloneJob(args, jobs, exec, log, env = {}, cfg = {}) {` |
-| `callNpmPublishJob` | 246-295 | 50 | `async function callNpmPublishJob(args = {}, jobs, exec, log, env = {}, cfg = {}) {` |
-| `outcome` | 264-264 | 1 | `const outcome = (r) => (r && r.ok` |
-| `done` | 279-281 | 3 | `const done = (async () => {` |
-| `buildCloneJobSpec` | 298-315 | 18 | `function buildCloneJobSpec(target, dest, doClone) {` |
-| `done` | 303-311 | 9 | `const done = (async () => {` |
-| `callCommitPush` | 322-365 | 44 | `async function callCommitPush(args, env, cfg, log, jobs, exec) {` |
-| `doPush` | 338-338 | 1 | `const doPush = () => pushWithPostSteps(args, env, cfg);` |
-| `buildAuditOpts` | 376-387 | 12 | `function buildAuditOpts(args, cfg, scope) {` |
-| `runHistoryAuditTool` | 393-419 | 27 | `async function runHistoryAuditTool(args, env, cfg, jobs, exec, weights) {` |
-| `doHistory` | 399-402 | 4 | `const doHistory = async () => {` |
-| `callCodeAudit` | 421-433 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
-| `runStandardAuditTool` | 436-475 | 40 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
-| `callTool` | 477-638 | 162 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null) {` |
-| `shellSplit` | 641-659 | 19 | `function shellSplit(input) {` |
-| `readTextSafe` | 662-666 | 5 | `function readTextSafe(path = '') {` |
+| `pushWithPostSteps` | 56-92 | 37 | `async function pushWithPostSteps(args, env, cfg) {` |
+| `pushJobOutcome` | 113-145 | 33 | `export function pushJobOutcome(r = {}) {` |
+| `short` | 115-115 | 1 | `const short = (sha) => String(sha \|\| '').slice(0, 8);` |
+| `cloneJobOutcome` | 153-158 | 6 | `export function cloneJobOutcome(r = {}) {` |
+| `buildCommitPushJobSpec` | 161-178 | 18 | `function buildCommitPushJobSpec(repo, doPush) {` |
+| `done` | 166-174 | 9 | `const done = (async () => {` |
+| `startHostJob` | 191-198 | 8 | `function startHostJob(jobs, spec, owner) {` |
+| `callCloneJob` | 212-244 | 33 | `async function callCloneJob(args, jobs, exec, log, env = {}, cfg = {}) {` |
+| `callNpmPublishJob` | 252-301 | 50 | `async function callNpmPublishJob(args = {}, jobs, exec, log, env = {}, cfg = {}) {` |
+| `outcome` | 270-270 | 1 | `const outcome = (r) => (r && r.ok` |
+| `done` | 285-287 | 3 | `const done = (async () => {` |
+| `buildCloneJobSpec` | 304-321 | 18 | `function buildCloneJobSpec(target, dest, doClone) {` |
+| `done` | 309-317 | 9 | `const done = (async () => {` |
+| `callCommitPush` | 328-371 | 44 | `async function callCommitPush(args, env, cfg, log, jobs, exec) {` |
+| `doPush` | 344-344 | 1 | `const doPush = () => pushWithPostSteps(args, env, cfg);` |
+| `buildAuditOpts` | 382-393 | 12 | `function buildAuditOpts(args, cfg, scope) {` |
+| `runHistoryAuditTool` | 399-425 | 27 | `async function runHistoryAuditTool(args, env, cfg, jobs, exec, weights) {` |
+| `doHistory` | 405-408 | 4 | `const doHistory = async () => {` |
+| `callCodeAudit` | 427-439 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
+| `runStandardAuditTool` | 442-481 | 40 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
+| `callTool` | 483-644 | 162 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null) {` |
+| `shellSplit` | 647-665 | 19 | `function shellSplit(input) {` |
+| `readTextSafe` | 668-672 | 5 | `function readTextSafe(path = '') {` |
 
-### lib/app/tools.js（40 行 · 2 个函数）
+### lib/app/tools.js（34 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `paramsToParameters` | 12-31 | 20 | `function paramsToParameters(params = []) {` |
-| `listTools` | 34-40 | 7 | `export function listTools() {` |
+| `paramsToParameters` | 12-25 | 14 | `function paramsToParameters(params = []) {` |
+| `listTools` | 28-34 | 7 | `export function listTools() {` |
 
 ### lib/ast/brace.js（106 行 · 5 个函数）
 
@@ -1418,19 +1418,19 @@
 | `classifyPushFailure` | 109-129 | 21 | `export function classifyPushFailure(text = '', opts = {}) {` |
 | `describePushDiagnosis` | 137-142 | 6 | `export function describePushDiagnosis(dg = {}) {` |
 
-### lib/git/push.js（471 行 · 9 个函数）
+### lib/git/push.js（477 行 · 9 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `resolveRepoIdentity` | 37-43 | 7 | `function resolveRepoIdentity(repoPath) {` |
-| `commitAndPush` | 57-230 | 174 | `export async function commitAndPush({ repoPath = '', message = '', push = true, dryRun = false, token = '', customIgnorePatterns = '', requirementsConfirmed = false, force = false, pushMethod = 'ssh', pushGate = false, pushConfirmed = false, paths = '' } = {}) {` |
-| `legacyIdentity` | 150-159 | 10 | `const legacyIdentity = (() => {` |
-| `fetchRemoteBranchRef` | 243-256 | 14 | `async function fetchRemoteBranchRef(repoPath, branch, owner, repo) {` |
-| `enhanceAfterPushSuccess` | 264-400 | 137 | `async function enhanceAfterPushSuccess({ repoPath, pr, token, steps, commitSha }) {` |
-| `lsRemoteProbe` | 316-330 | 15 | `const lsRemoteProbe = () => {` |
-| `lsRemoteSha` | 332-332 | 1 | `const lsRemoteSha = () => lsRemoteProbe().sha;` |
-| `readmeCheckHint` | 405-410 | 6 | `export function readmeCheckHint(repoPath) {` |
-| `pushCurrentBranch` | 419-470 | 52 | `export async function pushCurrentBranch({ repoPath = '', pushMethod = 'ssh' } = {}) {` |
+| `commitAndPush` | 57-236 | 180 | `export async function commitAndPush({ repoPath = '', message = '', messageItems = null, push = true, dryRun = false, token = '', customIgnorePatterns = '', requirementsConfirmed = false, force = false, pushMethod = 'ssh', pushGate = false, pushConfirmed = false, paths = '' } = {}) {` |
+| `legacyIdentity` | 156-165 | 10 | `const legacyIdentity = (() => {` |
+| `fetchRemoteBranchRef` | 249-262 | 14 | `async function fetchRemoteBranchRef(repoPath, branch, owner, repo) {` |
+| `enhanceAfterPushSuccess` | 270-406 | 137 | `async function enhanceAfterPushSuccess({ repoPath, pr, token, steps, commitSha }) {` |
+| `lsRemoteProbe` | 322-336 | 15 | `const lsRemoteProbe = () => {` |
+| `lsRemoteSha` | 338-338 | 1 | `const lsRemoteSha = () => lsRemoteProbe().sha;` |
+| `readmeCheckHint` | 411-416 | 6 | `export function readmeCheckHint(repoPath) {` |
+| `pushCurrentBranch` | 425-476 | 52 | `export async function pushCurrentBranch({ repoPath = '', pushMethod = 'ssh' } = {}) {` |
 
 ### lib/git/remote-resolve.js（147 行 · 6 个函数）
 
