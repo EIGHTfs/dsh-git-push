@@ -15,7 +15,7 @@
 
 | 版本 | 内容 |
 |------|------|
-| 2.8.7 | 安装位置只认 local-plugins：同步脚本不再建/改 node_modules 软链——真源 = local-plugins 真实目录，node_modules 入口由 DSH/pnpm 安装流程按 profile 的 file:local-plugins 声明生成；新增「node_modules 下残留真实目录副本」报警（实测事故：旧副本 2.6.9 顶掉 2.8.6，宿主 git_api status 报 2.6.9、npm_publish 等新工具整批消失）；--fix 只修 local-plugins 侧形态（解软链 / 建真实目录），node_modules 相关只报告不动盘 |
+| 2.8.8 | 修 2.8.7 引入的误报：node_modules 副本的判定从「是不是真实目录」改为「内容是否漂移」——pnpm 的 file: 目录依赖落在 node_modules 时实测是与真源**同 inode 的硬链接副本**（stat 同 inode、链接数 2，内容即真源本身），属正常安装产物，旧判据会误报；现只在副本与真源内容不一致（package.json / lib/self/index.js / lib/app/command-registry.js 任一不同）时输出 nm-drift（只报告不动盘）。另记录事故机理：profile 的 pnpm-lock.yaml 把 dsh-git-push 钉在旧 GitHub tarball（f61ecbc5，远早于 2.8.0），与 package.json 的 file:local-plugins 声明不一致 ⇒ 任何一次非 frozen 安装都会把旧版落成 node_modules 真实目录顶掉真源（实测宿主 git_api status 报 2.6.9、npm_publish 等新工具整批消失）；已按 DSH 自带安装流程把 lockfile 对齐为 file:local-plugins，frozen 复跑通过 |
 | 2.8.4 | 推送失败封装 + 提交信息数组化 |
 | 2.8.3 | 零改动=正常成功路径（文案+行为）+ 修 job 输出自相矛盾 + 审计×提交推送边界回归；推送失败结构化诊断 + 否定性结论的证据标准（并入 2.8.3） |
 | 2.8.2 | 推送前自动指定正确的 GitHub remote |

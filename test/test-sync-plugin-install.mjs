@@ -61,7 +61,7 @@ test('judgeHmr：root 覆盖 local-plugins ⇒ 可热重载；只在 node_module
   } finally { clean(tmp); }
 });
 
-test('planInstall：真源只认 local-plugins；node_modules 真实副本 ⇒ 报警（不再建链）', () => {
+test('planInstall：真源只认 local-plugins；副本**内容漂移**才报警（同内容硬链接副本不报）', () => {
   const { tmp, pd } = fakeHome();
   try {
     const outside = join(tmp, 'outside-plugin');
@@ -75,11 +75,17 @@ test('planInstall：真源只认 local-plugins；node_modules 真实副本 ⇒ �
     rmSync(join(pd, 'node_modules', 'p1'), { force: true });
     assert.deepEqual(planInstall({ profileDir: pd, pluginName: 'p1' }).map((x) => x.kind), [],
       '入口缺失不是本工具的待办（由安装流程生成）');
-    // node_modules 是**真实目录副本** ⇒ 必须报警（实测会顶掉真源：旧副本顶掉新版）
+    // node_modules 是真实目录、且与真源**内容一致**（模拟 pnpm 硬链接副本）⇒ 不应报警
     mkdirSync(join(pd, 'node_modules', 'p1'), { recursive: true });
+    writeFileSync(join(pd, 'local-plugins', 'p1', 'package.json'), '{"version":"9.9.9"}', 'utf8');
+    writeFileSync(join(pd, 'node_modules', 'p1', 'package.json'), '{"version":"9.9.9"}', 'utf8');
+    assert.deepEqual(planInstall({ profileDir: pd, pluginName: 'p1' }).map((x) => x.kind), [],
+      '同内容副本是正常安装产物，不该报警');
+    // 内容漂移（副本陈旧）⇒ 必须报警：它会顶掉真源、让宿主跑旧代码
+    writeFileSync(join(pd, 'node_modules', 'p1', 'package.json'), '{"version":"1.0.0"}', 'utf8');
     const a3 = planInstall({ profileDir: pd, pluginName: 'p1' });
-    assert.deepEqual(a3.map((x) => x.kind), ['nm-real-dir']);
-    assert.match(a3[0].desc, /真实目录副本|顶掉/);
+    assert.deepEqual(a3.map((x) => x.kind), ['nm-drift']);
+    assert.match(a3[0].desc, /内容不一致|顶掉/);
     // local-plugins 下是软链 ⇒ delink
     rmSync(join(pd, 'local-plugins', 'p1'), { recursive: true, force: true });
     symlinkSync(outside, join(pd, 'local-plugins', 'p1'));
@@ -92,16 +98,20 @@ test('applyInstall：默认不写盘；on=true 只处理 local-plugins，不碰 
   try {
     const outside = join(tmp, 'outside-plugin');
     mkdirSync(outside, { recursive: true });
-    symlinkSync(outside, join(pd, 'local-plugins', 'p1'));            // local-plugins 是软链 ⇒ delink-local
-    mkdirSync(join(pd, 'node_modules', 'p1'), { recursive: true });   // node_modules 真实副本 ⇒ 只报告
+    // local-plugins 是指向 outside 的软链（真源内容 = outside/*）
+    writeFileSync(join(outside, 'package.json'), '{"version":"9.9.9"}', 'utf8');
+    symlinkSync(outside, join(pd, 'local-plugins', 'p1'));            // ⇒ delink-local
+    // node_modules 是真实目录、内容与真源不一致 ⇒ nm-drift（只报告不动盘）
+    mkdirSync(join(pd, 'node_modules', 'p1'), { recursive: true });
+    writeFileSync(join(pd, 'node_modules', 'p1', 'package.json'), '{"version":"1.0.0"}', 'utf8');
     const actions = planInstall({ profileDir: pd, pluginName: 'p1' });
-    assert.deepEqual(actions.map((x) => x.kind), ['delink-local', 'nm-real-dir']);
+    assert.deepEqual(actions.map((x) => x.kind), ['delink-local', 'nm-drift']);
     applyInstall(actions, { on: false });
     assert.equal(lstatSync(join(pd, 'local-plugins', 'p1')).isSymbolicLink(), true, 'dry-run 不应动盘');
     const r = applyInstall(actions, { on: true });
     assert.deepEqual(r.done, ['delink-local'], '只执行 local-plugins 解链');
     assert.equal(lstatSync(join(pd, 'local-plugins', 'p1')).isSymbolicLink(), false, '解链后应是真实目录');
-    assert.deepEqual(r.skipped, ['nm-real-dir'], 'node_modules 相关只报告、不动盘');
+    assert.deepEqual(r.skipped, ['nm-drift'], 'node_modules 相关只报告、不动盘');
     assert.equal(lstatSync(join(pd, 'node_modules', 'p1')).isDirectory(), true, '不应删掉 node_modules 里的既有数据');
   } finally { clean(tmp); }
 });

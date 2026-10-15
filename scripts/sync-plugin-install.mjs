@@ -113,6 +113,37 @@ function lstatOrNull(p) {
   try { return lstatSync(p); } catch { return null; }
 }
 
+/** 读文本，失败返回 null（用于副本漂移判定）。 */
+function readTextOrNull(p) {
+  try { return readFileSync(p, 'utf8'); } catch { return null; }
+}
+
+/**
+ * 判定 node_modules 那份副本是否与真源**内容不一致**（漂移）。
+ *
+ * 为什么不行「是不是目录」就当异常：pnpm 的 `file:` 目录依赖落在 node_modules 时，
+ *   实测（2026-10-15 本机）是**与 local-plugins 同 inode 的硬链接副本**（stat 显示同 inode、
+ *   链接数 2，内容即真源本身），属**正常安装产物**——按目录就报警会误报。
+ * 真正危险的是**内容漂移**：那份副本会成为宿主实际加载源，一旦它比真源旧
+ *   （实测事故：GitHub tarball 旧版 2.6.9 顶掉 2.8.6，宿主 git_api status 报 2.6.9、
+ *   npm_publish 等新工具整批消失），跑的就是旧代码。
+ *
+ * @param {string} localDir 真源（local-plugins/<插件>）
+ * @param {string} nmDir node_modules/<插件>
+ * @returns {string} '' = 一致（含硬链接同文件）；否则是差异描述
+ */
+export function copyDrift(localDir, nmDir) {
+  // 判据取「版本三处 + 入口文件」这几个标记位：任一处不同即认为副本陈旧/被替换
+  for (const rel of ['package.json', 'lib/self/index.js', 'lib/app/command-registry.js']) {
+    const a = readTextOrNull(join(localDir, rel));
+    const b = readTextOrNull(join(nmDir, rel));
+    if (a === null) continue;              // 真源里没有这个文件（插件结构变体）⇒ 跳过该标记
+    if (b === null) return `${rel} 在副本里缺失`;
+    if (a !== b) return `${rel} 内容不同`;
+  }
+  return '';
+}
+
 /**
  * 目标形态与现状的差异清单。默认只报告，不执行。
  *
@@ -141,7 +172,12 @@ export function planInstall({ profileDir, pluginName }) {
   }
   const ns = lstatOrNull(nm);
   if (ns && !ns.isSymbolicLink()) {
-    actions.push({ kind: 'nm-real-dir', path: nm, desc: 'node_modules 下是**真实目录副本**（不是安装流程生成的链）：它会顶掉 local-plugins 成为实际加载源（实测旧副本顶掉新版）⇒ 应删除该副本，入口交给 DSH 安装流程' });
+    // 真实目录在 pnpm `file:` 目录依赖下是**正常产物**（实测与真源同 inode 的硬链接）⇒ 不能只看形态报警，
+    //   要比**内容**：只有副本与真源不一致（陈旧/被替换）才会顶掉真源、让宿主跑旧代码 ✓
+    const drift = copyDrift(local, nm);
+    if (drift) {
+      actions.push({ kind: 'nm-drift', path: nm, desc: `node_modules 下的副本与真源**内容不一致**（${drift}）：它会顶掉 local-plugins 成为实际加载源（实测旧副本 2.6.9 顶掉 2.8.6、新工具整批消失）⇒ 应重装该依赖或删除此副本` });
+    }
   }
   return actions;
 }

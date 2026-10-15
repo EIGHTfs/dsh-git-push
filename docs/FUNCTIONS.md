@@ -2262,7 +2262,7 @@
 | `collectFiles` | 23-35 | 13 | `function collectFiles(root, exts, dir = root, out = []) {` |
 | `parseArgs` | 38-52 | 15 | `function parseArgs(argv) {` |
 
-### scripts/sync-plugin-install.mjs（223 行 · 11 个函数）
+### scripts/sync-plugin-install.mjs（259 行 · 13 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -2273,10 +2273,12 @@
 | `judgeHmr` | 87-109 | 23 | `export function judgeHmr({ hmr, profileDir, pluginName }) {` |
 | `inRoot` | 97-97 | 1 | `const inRoot = (p) => roots.some((r) => p === r \|\| p.startsWith(r + sep));` |
 | `lstatOrNull` | 112-114 | 3 | `function lstatOrNull(p) {` |
-| `planInstall` | 131-147 | 17 | `export function planInstall({ profileDir, pluginName }) {` |
-| `applyInstall` | 158-177 | 20 | `export function applyInstall(actions, { on = false } = {}) {` |
-| `depHints` | 184-198 | 15 | `export function depHints(profileDir, pluginName) {` |
-| `pickProfile` | 209-222 | 14 | `export function pickProfile(profiles = [], pluginName = '') {` |
+| `readTextOrNull` | 117-119 | 3 | `function readTextOrNull(p) {` |
+| `copyDrift` | 135-145 | 11 | `export function copyDrift(localDir, nmDir) {` |
+| `planInstall` | 162-183 | 22 | `export function planInstall({ profileDir, pluginName }) {` |
+| `applyInstall` | 194-213 | 20 | `export function applyInstall(actions, { on = false } = {}) {` |
+| `depHints` | 220-234 | 15 | `export function depHints(profileDir, pluginName) {` |
+| `pickProfile` | 245-258 | 14 | `export function pickProfile(profiles = [], pluginName = '') {` |
 
 ### scripts/sync-plugin.mjs（285 行 · 9 个函数）
 
@@ -2822,7 +2824,7 @@
 | `buildFixture` | 25-41 | 17 | `function buildFixture() {` |
 | `runNode` | 43-45 | 3 | `function runNode(args, env) {` |
 
-### test/test-sync-plugin-install.mjs（148 行 · 1 个函数）
+### test/test-sync-plugin-install.mjs（158 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|

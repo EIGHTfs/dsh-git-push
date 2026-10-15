@@ -435,52 +435,47 @@
     "worktree": {
       "README.md": {
         "status": "M",
-        "mtime": "2026-10-15T04:53:26.485Z",
+        "mtime": "2026-10-15T05:01:39.324Z",
         "note": "注释可能需更新"
       },
       "docs/CHANGELOG.md": {
         "status": "M",
-        "mtime": "2026-10-15T04:55:00.044Z",
+        "mtime": "2026-10-15T05:01:54.364Z",
         "note": "注释可能需更新"
       },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-15T04:55:00.240Z",
+        "mtime": "2026-10-15T05:01:54.567Z",
         "note": "注释可能需更新"
       },
       "docs/releases.json": {
         "status": "M",
-        "mtime": "2026-10-15T04:54:51.526Z",
+        "mtime": "2026-10-15T05:01:45.561Z",
         "note": "注释可能需更新"
       },
       "lib/self/index.js": {
         "status": "M",
-        "mtime": "2026-10-15T04:53:04.131Z",
+        "mtime": "2026-10-15T05:01:45.517Z",
         "note": "注释可能需更新"
       },
       "package.json": {
         "status": "M",
-        "mtime": "2026-10-15T04:52:58.496Z",
+        "mtime": "2026-10-15T05:01:45.529Z",
         "note": "注释可能需更新"
       },
       "scripts/sync-plugin-install.mjs": {
         "status": "M",
-        "mtime": "2026-10-15T04:51:46.039Z",
-        "note": "注释可能需更新"
-      },
-      "scripts/sync-plugin.mjs": {
-        "status": "M",
-        "mtime": "2026-10-15T04:51:56.096Z",
+        "mtime": "2026-10-15T05:01:24.680Z",
         "note": "注释可能需更新"
       },
       "skills/guide/guide-cli-scripts.md": {
         "status": "M",
-        "mtime": "2026-10-15T04:52:40.651Z",
+        "mtime": "2026-10-15T05:01:32.358Z",
         "note": "注释可能需更新"
       },
       "test/test-sync-plugin-install.mjs": {
         "status": "M",
-        "mtime": "2026-10-15T04:52:19.663Z",
+        "mtime": "2026-10-15T05:01:32.336Z",
         "note": "注释可能需更新"
       }
     }
