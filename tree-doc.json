@@ -433,59 +433,24 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "README.md": {
+      "docs/CHANGELOG.md": {
         "status": "M",
-        "mtime": "2026-10-16T06:55:01.923Z",
+        "mtime": "2026-10-16T07:16:52.428Z",
         "note": "注释可能需更新"
       },
-      "docs/FUNCTIONS.md": {
+      "docs/releases.json": {
         "status": "M",
-        "mtime": "2026-10-16T06:58:52.267Z",
+        "mtime": "2026-10-16T07:16:43.529Z",
         "note": "注释可能需更新"
       },
-      "lib/ast/perf.js": {
+      "lib/self/index.js": {
         "status": "M",
-        "mtime": "2026-10-16T06:51:27.115Z",
+        "mtime": "2026-10-16T07:16:43.445Z",
         "note": "注释可能需更新"
       },
-      "lib/audit-rules/audit-rules-performance.yml": {
+      "package.json": {
         "status": "M",
-        "mtime": "2026-10-16T06:54:00.323Z",
-        "note": "注释可能需更新"
-      },
-      "lib/audit/orchestrate.js": {
-        "status": "M",
-        "mtime": "2026-10-16T06:52:58.497Z",
-        "note": "注释可能需更新"
-      },
-      "lib/checks/index.js": {
-        "status": "M",
-        "mtime": "2026-10-16T06:53:08.816Z",
-        "note": "注释可能需更新"
-      },
-      "lib/rule/compilers/numeric-kinds.js": {
-        "status": "M",
-        "mtime": "2026-10-16T06:54:24.013Z",
-        "note": "注释可能需更新"
-      },
-      "lib/ast/fs-hotspots.js": {
-        "status": "A",
-        "mtime": "2026-10-16T06:57:01.826Z",
-        "note": "注释可能需更新"
-      },
-      "lib/checks/fs-scanner.js": {
-        "status": "A",
-        "mtime": "2026-10-16T06:52:52.030Z",
-        "note": "注释可能需更新"
-      },
-      "scripts/scan-fs-hotspots.mjs": {
-        "status": "A",
-        "mtime": "2026-10-16T06:54:50.057Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-fs-hotspots.mjs": {
-        "status": "A",
-        "mtime": "2026-10-16T06:58:51.993Z",
+        "mtime": "2026-10-16T07:16:43.501Z",
         "note": "注释可能需更新"
       }
     }
