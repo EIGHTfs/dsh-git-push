@@ -79,19 +79,21 @@ rules:
 
   # ── 循环内重复调用同一函数（可记忆化 / 提前计算）──
   - id: performance/repeat-identical-call
-    name: "同一循环体内重复调用同一函数（实参完全相同）"
+    name: "同一循环体或同一函数体内重复调用同一函数（实参完全相同）"
     category: "performance"
     severity: "warning"
-    description: "同一循环体内 ≥2 次实参完全相同的调用：若该函数为纯函数且开销不小，应记忆化或提到循环外（真实案例：路径解析函数在解析循环内被调 8762 次、占全量扫描 89%，加记忆化后 4581ms→344ms）"
+    description: "同一循环体或同一函数体内 ≥2 次实参完全相同的调用：纯函数应记忆化、fs 属性调用（stat/readdir 等）应合并成一次（真实案例：路径解析函数在解析循环内被调 8762 次、占全量扫描 89%，加记忆化后 4581ms→344ms）"
     exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx"]
-    # 纯正则无法表达「在不在循环体内 / 实参是否相同」——由 AST 精筛（allow 语义）
+    # 纯正则无法表达「在不在循环体/函数体内 / 实参是否相同」——由 AST 精筛（allow 语义）
     astConfirmKind: "repeat-identical-call"
+    # 第三方/构建产物里的重复是上游代码的形态（实测 vendors 的 emscripten 胶水层一个文件就 37 处）⇒ 不报
+    exclude_paths: ["assets/", "vendor/", "third_party/", "dist/", "build/"]
     patterns:
       - id: repeated-call
         pattern: "[A-Za-z_$][\\w.$]*\\s*\\([^()]*\\)"
-        message: "循环体内重复调用（实参相同）：若为纯函数可记忆化或提前计算"
+        message: "循环体/函数体内重复调用（实参相同）：若为纯函数可记忆化，fs 属性调用可直接合并"
     fixable: false
-    mitigation: "加一层 Map 记忆化（键=入参组合）或把结果提到循环外；有副作用的调用（写文件/网络/日志）不适用"
+    mitigation: "加一层 Map 记忆化（键=入参组合）或把结果提到循环外/合并成一次；有副作用的调用（写文件/网络/日志）不适用"
 
   # ── 写死 User-Agent（2026-10-12 从 gbmd 实战沉淀）──
   #   教训：GameBanana 等平台的会话与「换取 cookie 时的浏览器 UA」绑定；下载路径写死 Chrome UA
@@ -217,3 +219,27 @@ rules:
         message: "长同步循环无让出点：每 N 轮 await setImmediate/延时一次（总耗时不变，服务保持可响应）"
     fixable: false
     mitigation: "循环内每 N 次迭代 `await new Promise((r) => setImmediate(r))`；或把同步 I/O 换成异步 API"
+
+  # ── 逐文件扫描实现（仓库级；2026-10-16 由 bench-template 的 scan-fs-hotspots 交接而来）──
+  #   判据：同一函数体内**同时**出现 readdir 与 stat ⇒ 一个「逐文件取属性」的扫描实现。
+  #   仓库内这类实现数 > min_occurrences（默认 3）⇒ notice：同一件事是否被独立实现了多遍，交人工判断。
+  #   为什么只报一处：这是**整个仓库**的属性（与 duplicate-code 同性质）；逐文件报会在 N 个文件上
+  #   产出 N 条同义提示 ⇒ 由 lib/audit/orchestrate.js 在文件循环后统一聚合，其余实现列进 message。
+  #   ⚠️ **不排除 test/**：交接文档 §四.1 的教训——看不到测试目录就会漏判（实测某仓
+  #   recursiveScanAll 只被 test/ 调用过，跳过 test/ 时被误判成「无调用者」）。测试文件里的
+  #   扫描实现同样计入，正是为了让人看到全貌 ✓
+  - id: performance/multi-file-scanners
+    name: "仓库内「readdir + stat」逐文件扫描实现过多（同一职责可能实现了多遍）"
+    category: "performance"
+    severity: "notice"
+    description: "全仓「同一函数体内既有 readdir 又有 stat」的扫描实现超过 min_occurrences（默认 3）：提示人工判断是否同一职责被各处独立实现（实测某仓 48 文件里 9 处各自遍历；合并成一层索引/遍历可省掉重复 readdir 与重复 stat）"
+    exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx"]
+    kind: "multi-file-scanners"
+    min_occurrences: 3
+    # L1 锚点：只让「确有 readdir/stat 调用」的文件进入本规则的候选集（仓库级聚合也因此有据可依）
+    patterns:
+      - id: fs-walk
+        pattern: "(readdirSync|readdir|statSync|stat|lstatSync|lstat)\\s*\\("
+        message: "目录遍历 + 逐文件取属性：全仓这类实现过多时应合并成一层索引/遍历"
+    fixable: false
+    mitigation: "合并成单一「目录遍历 + 一次取属性」的索引层，各处复用其输出，而不是每处各遍历一次"

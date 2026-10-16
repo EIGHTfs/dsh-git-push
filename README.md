@@ -282,6 +282,7 @@ dsh-git-push/
 │   │   ├── credential.js — 凭据标识符判定（硬编码/引用/类型检查）
 │   │   ├── dataflow.js — 数据流检查（清空后访问，三层审计 L2）
 │   │   ├── dup-code.js — （待注释）
+│   │   ├── fs-hotspots.js — （待注释）
 │   │   ├── index.js — AST 层统一出口
 │   │   ├── io-risk-const.js — IO 风险分级·常量与档位工具：fs 调用名集/操作类别/风险标签/搜索窗口与阈值 + raise 升档
 │   │   ├── io-risk-fn.js — IO 风险分级·函数边界识别与 token 配对：认普通/箭头/方法简写/类方法，圆括号花括号方括号前后向配对
@@ -352,6 +353,7 @@ dsh-git-push/
 │   │   ├── file-health.js — 文件健康度（行数/字节/行长三维打分）
 │   │   ├── filter.js — 规则作用域过滤（exts/exclude_paths）
 │   │   ├── folder.js — 目录级检查（文件夹数/单目录文件数/解包特征）
+│   │   ├── fs-scanner.js — （待注释）
 │   │   ├── hardcoded-path.js — （待注释）
 │   │   ├── index.js — 检查层统一出口
 │   │   ├── io.js — IO 风险分级包装：checkIoRisk → lib/ast/io-risk.js（转 warning finding，取代 quality/sync-fs）
@@ -493,6 +495,7 @@ dsh-git-push/
 │   ├── rule-switch.mjs — 规则槽位手动启停 CLI
 │   ├── rules-solo-audit.mjs — 规则单启控制变量扫描（基准全关+逐规则单启+全量对照，报告供 AI/人工审规则有效性与局限，按需运行非常驻）
 │   ├── scan-file-io.mjs — 文件读写扫描器（列出所有 fs 读写调用位置 + 路径参数）
+│   ├── scan-fs-hotspots.mjs — （待注释）
 │   ├── scan-hardcoded-paths.mjs — （待注释）
 │   ├── scan-repos.mjs — （待注释）
 │   ├── scan-version.mjs — 版本一致性校验脚本
@@ -580,6 +583,7 @@ dsh-git-push/
 │   ├── test-file-health.mjs — 文件健康度矩阵评分测试
 │   ├── test-filter-ext.mjs — （待注释）
 │   ├── test-folder-scope.mjs — 目录级审计作用域回归测试
+│   ├── test-fs-hotspots.mjs — （待注释）
 │   ├── test-func-doc-drift.mjs — （待注释）
 │   ├── test-generated-html-artifact.mjs — （待注释）
 │   ├── test-git-api-tool.mjs — （待注释）

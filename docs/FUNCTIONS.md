@@ -341,6 +341,18 @@
 | `countParams` | 113-166 | 54 | `function countParams(tokens, openIdx) {` |
 | `hasBoolFlagParam` | 146-166 | 21 | `function hasBoolFlagParam(tokens, openIdx) {` |
 
+### lib/ast/fs-hotspots.js（155 行 · 7 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `lineAt` | 38-42 | 5 | `function lineAt(text, idx) {` |
+| `scanFsHotspotsText` | 50-119 | 70 | `export function scanFsHotspotsText(text = '', relPath = '') {` |
+| `collect` | 58-67 | 10 | `const collect = (re) => {` |
+| `fnNameAt` | 69-72 | 4 | `const fnNameAt = (at) => {` |
+| `dups` | 78-87 | 10 | `const dups = (calls) => {` |
+| `groupOf` | 91-95 | 5 | `const groupOf = (fn, at) => {` |
+| `scanFsHotspots` | 126-154 | 29 | `export function scanFsHotspots(fileTexts = []) {` |
+
 ### lib/ast/io-risk-const.js（96 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -441,7 +453,7 @@
 | `checkSmallFileReadAst` | 236-259 | 24 | `export function checkSmallFileReadAst(text = '') {` |
 | `checkConsoleLogJsonAst` | 268-284 | 17 | `export function checkConsoleLogJsonAst(text = '') {` |
 
-### lib/ast/perf.js（473 行 · 18 个函数）
+### lib/ast/perf.js（489 行 · 19 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -449,20 +461,21 @@
 | `matchingParen` | 36-47 | 12 | `function matchingParen(text, openIdx) {` |
 | `lineOf` | 50-54 | 5 | `function lineOf(text, idx) {` |
 | `inCommentOrString` | 63-69 | 7 | `function inCommentOrString(tokens, line, matchText) {` |
-| `nextBlockRange` | 72-473 | 402 | `function nextBlockRange(text, startIdx) {` |
+| `nextBlockRange` | 72-489 | 418 | `function nextBlockRange(text, startIdx) {` |
 | `collectLoopRanges` | 86-102 | 17 | `function collectLoopRanges(text) {` |
 | `loopBodyLines` | 109-118 | 10 | `export function loopBodyLines(text = '') {` |
-| `innermostLoopRanges` | 137-140 | 4 | `function innermostLoopRanges(text) {` |
-| `repeatIdenticalCallLines` | 164-187 | 24 | `export function repeatIdenticalCallLines(text = '') {` |
-| `loopFullCollectionLines` | 201-216 | 16 | `export function loopFullCollectionLines(text = '') {` |
-| `collectFuncRanges` | 226-473 | 248 | `function collectFuncRanges(text) {` |
-| `directFullWriters` | 245-252 | 8 | `function directFullWriters(text) {` |
-| `blankCommentsAndLiterals` | 263-325 | 63 | `function blankCommentsAndLiterals(text) {` |
-| `isRegexStart` | 268-275 | 8 | `const isRegexStart = (idx) => {` |
-| `loopNoFallbackReturnLines` | 345-373 | 29 | `export function loopNoFallbackReturnLines(text = '') {` |
-| `loopFullRewriteCallLines` | 389-415 | 27 | `export function loopFullRewriteCallLines(text = '') {` |
-| `nestedLinearScanLines` | 428-446 | 19 | `export function nestedLinearScanLines(text = '') {` |
-| `longSyncLoopLines` | 458-472 | 15 | `export function longSyncLoopLines(text = '') {` |
+| `innermostLoopRanges` | 146-149 | 4 | `function innermostLoopRanges(text) {` |
+| `repeatIdenticalCallLines` | 175-203 | 29 | `export function repeatIdenticalCallLines(text = '') {` |
+| `scanRange` | 180-196 | 17 | `const scanRange = (a, b) => {` |
+| `loopFullCollectionLines` | 217-232 | 16 | `export function loopFullCollectionLines(text = '') {` |
+| `collectFuncRanges` | 242-489 | 248 | `export function collectFuncRanges(text) {` |
+| `directFullWriters` | 261-268 | 8 | `function directFullWriters(text) {` |
+| `blankCommentsAndLiterals` | 279-341 | 63 | `function blankCommentsAndLiterals(text) {` |
+| `isRegexStart` | 284-291 | 8 | `const isRegexStart = (idx) => {` |
+| `loopNoFallbackReturnLines` | 361-389 | 29 | `export function loopNoFallbackReturnLines(text = '') {` |
+| `loopFullRewriteCallLines` | 405-431 | 27 | `export function loopFullRewriteCallLines(text = '') {` |
+| `nestedLinearScanLines` | 444-462 | 19 | `export function nestedLinearScanLines(text = '') {` |
+| `longSyncLoopLines` | 474-488 | 15 | `export function longSyncLoopLines(text = '') {` |
 
 ### lib/ast/scope.js（242 行 · 11 个函数）
 
@@ -684,7 +697,7 @@
 | `excludePathOf` | 38-47 | 10 | `function excludePathOf(root) {` |
 | `detectIgnoreBlindSpot` | 54-101 | 48 | `export function detectIgnoreBlindSpot(root) {` |
 
-### lib/audit/orchestrate.js（515 行 · 18 个函数）
+### lib/audit/orchestrate.js（517 行 · 18 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -695,17 +708,17 @@
 | `capScanFiles` | 58-68 | 11 | `export function capScanFiles(files, root, maxFiles) {` |
 | `appendIgnoreBlindSpot` | 81-97 | 17 | `function appendIgnoreBlindSpot(findings, repoPath, scanned) {` |
 | `buildTreeConfirmer` | 120-140 | 21 | `async function buildTreeConfirmer(relPath, text, grouped) {` |
-| `auditFiles` | 142-306 | 165 | `async function auditFiles(repoPath, files, opts = {}) {` |
+| `auditFiles` | 142-308 | 167 | `async function auditFiles(repoPath, files, opts = {}) {` |
 | `isDshPlugin` | 167-173 | 7 | `const isDshPlugin = (() => {` |
-| `auditFull` | 308-330 | 23 | `export async function auditFull(repoPath, opts = {}) {` |
-| `appendTreeDocDrift` | 335-377 | 43 | `function appendTreeDocDrift(findings, repoPath) {` |
-| `by` | 368-368 | 1 | `const by = (code) => wt.filter(([, v]) => v?.status === code).length;` |
-| `appendFuncDocDrift` | 386-402 | 17 | `function appendFuncDocDrift(findings, repoPath) {` |
-| `appendSplitDocsCheck` | 410-464 | 55 | `function appendSplitDocsCheck(findings, repoPath) {` |
-| `hasMarkBlock` | 467-469 | 3 | `function hasMarkBlock(text, marker) {` |
-| `auditChanged` | 474-509 | 36 | `export async function auditChanged(repoPath, opts = {}) {` |
-| `isAuditIgnored` | 490-503 | 14 | `const isAuditIgnored = (rel) => {` |
-| `auditWithScope` | 512-514 | 3 | `export async function auditWithScope(repoPath, { scope = 'diff', ...opts } = {}) {` |
+| `auditFull` | 310-332 | 23 | `export async function auditFull(repoPath, opts = {}) {` |
+| `appendTreeDocDrift` | 337-379 | 43 | `function appendTreeDocDrift(findings, repoPath) {` |
+| `by` | 370-370 | 1 | `const by = (code) => wt.filter(([, v]) => v?.status === code).length;` |
+| `appendFuncDocDrift` | 388-404 | 17 | `function appendFuncDocDrift(findings, repoPath) {` |
+| `appendSplitDocsCheck` | 412-466 | 55 | `function appendSplitDocsCheck(findings, repoPath) {` |
+| `hasMarkBlock` | 469-471 | 3 | `function hasMarkBlock(text, marker) {` |
+| `auditChanged` | 476-511 | 36 | `export async function auditChanged(repoPath, opts = {}) {` |
+| `isAuditIgnored` | 492-505 | 14 | `const isAuditIgnored = (rel) => {` |
+| `auditWithScope` | 514-516 | 3 | `export async function auditWithScope(repoPath, { scope = 'diff', ...opts } = {}) {` |
 
 ### lib/audit/repo-level.js（31 行 · 2 个函数）
 
@@ -818,6 +831,12 @@
 | `checkFolderRules` | 23-173 | 151 | `export function checkFolderRules({ root, rules, gitignoreText = '' }) {` |
 | `isPackageDir` | 89-89 | 1 | `const isPackageDir = (d) => /\/src\/(?:main\|test\|androidTest)\/(?:java\|kotlin)\//.test(d.full)` |
 | `isIgnored` | 148-148 | 1 | `const isIgnored = (p) => lines.some((l) => l === p \|\| l === p.replace(/^\*/, '') \|\| l.replace(/\/$/, '') === p);` |
+
+### lib/checks/fs-scanner.js（58 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `checkMultiFileScanners` | 21-57 | 37 | `export function checkMultiFileScanners(fileTexts = [], rules = null) {` |
 
 ### lib/checks/hardcoded-path.js（99 行 · 4 个函数）
 
@@ -2234,6 +2253,13 @@
 | `summarize` | 603-620 | 18 | `export function summarize(hits) {` |
 | `count` | 604-608 | 5 | `const count = (key) => {` |
 | `printReport` | 632-708 | 77 | `function printReport(hits, opts = {}) {` |
+
+### scripts/scan-fs-hotspots.mjs（108 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `parseArgs` | 31-43 | 13 | `function parseArgs(argv) {` |
+| `collectFiles` | 46-67 | 22 | `function collectFiles(dir, o, out = []) {` |
 
 ### scripts/scan-hardcoded-paths.mjs（126 行 · 5 个函数）
 

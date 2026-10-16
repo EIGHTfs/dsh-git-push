@@ -433,29 +433,59 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
+      "README.md": {
+        "status": "M",
+        "mtime": "2026-10-16T06:55:01.923Z",
+        "note": "注释可能需更新"
+      },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-16T05:46:45.592Z",
+        "mtime": "2026-10-16T06:58:52.267Z",
         "note": "注释可能需更新"
       },
-      "lib/app/command-registry.js": {
+      "lib/ast/perf.js": {
         "status": "M",
-        "mtime": "2026-10-16T05:46:31.619Z",
+        "mtime": "2026-10-16T06:51:27.115Z",
         "note": "注释可能需更新"
       },
-      "lib/app/tool-call.js": {
+      "lib/audit-rules/audit-rules-performance.yml": {
         "status": "M",
-        "mtime": "2026-10-16T05:46:32.569Z",
+        "mtime": "2026-10-16T06:54:00.323Z",
         "note": "注释可能需更新"
       },
-      "lib/fs/edit-after-read.js": {
+      "lib/audit/orchestrate.js": {
         "status": "M",
-        "mtime": "2026-10-16T05:46:01.090Z",
+        "mtime": "2026-10-16T06:52:58.497Z",
         "note": "注释可能需更新"
       },
-      "test/test-edit-after-read.mjs": {
+      "lib/checks/index.js": {
         "status": "M",
-        "mtime": "2026-10-16T05:46:32.696Z",
+        "mtime": "2026-10-16T06:53:08.816Z",
+        "note": "注释可能需更新"
+      },
+      "lib/rule/compilers/numeric-kinds.js": {
+        "status": "M",
+        "mtime": "2026-10-16T06:54:24.013Z",
+        "note": "注释可能需更新"
+      },
+      "lib/ast/fs-hotspots.js": {
+        "status": "A",
+        "mtime": "2026-10-16T06:57:01.826Z",
+        "note": "注释可能需更新"
+      },
+      "lib/checks/fs-scanner.js": {
+        "status": "A",
+        "mtime": "2026-10-16T06:52:52.030Z",
+        "note": "注释可能需更新"
+      },
+      "scripts/scan-fs-hotspots.mjs": {
+        "status": "A",
+        "mtime": "2026-10-16T06:54:50.057Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-fs-hotspots.mjs": {
+        "status": "A",
+        "mtime": "2026-10-16T06:58:51.993Z",
         "note": "注释可能需更新"
       }
     }
@@ -516,5 +546,9 @@
   "test/test-treesitter.mjs": "（待注释）",
   "lib/app/handlers/workspace-paths.js": "（待注释）",
   "lib/core/workspace-paths.js": "（待注释）",
-  "test/test-workspace-paths.mjs": "（待注释）"
+  "test/test-workspace-paths.mjs": "（待注释）",
+  "lib/ast/fs-hotspots.js": "（待注释）",
+  "lib/checks/fs-scanner.js": "（待注释）",
+  "scripts/scan-fs-hotspots.mjs": "（待注释）",
+  "test/test-fs-hotspots.mjs": "（待注释）"
 }
