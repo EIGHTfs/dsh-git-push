@@ -435,17 +435,27 @@
     "worktree": {
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-15T21:14:40.691Z",
+        "mtime": "2026-10-16T05:46:45.592Z",
+        "note": "注释可能需更新"
+      },
+      "lib/app/command-registry.js": {
+        "status": "M",
+        "mtime": "2026-10-16T05:46:31.619Z",
         "note": "注释可能需更新"
       },
       "lib/app/tool-call.js": {
         "status": "M",
-        "mtime": "2026-10-15T21:13:08.317Z",
+        "mtime": "2026-10-16T05:46:32.569Z",
         "note": "注释可能需更新"
       },
-      "test/test-npm-publish.mjs": {
+      "lib/fs/edit-after-read.js": {
         "status": "M",
-        "mtime": "2026-10-15T21:14:13.524Z",
+        "mtime": "2026-10-16T05:46:01.090Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-edit-after-read.mjs": {
+        "status": "M",
+        "mtime": "2026-10-16T05:46:32.696Z",
         "note": "注释可能需更新"
       }
     }

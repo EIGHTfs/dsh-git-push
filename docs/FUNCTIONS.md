@@ -22,16 +22,16 @@
 | `aggregateFindings` | 70-91 | 22 | `export function aggregateFindings(findings = [], opts = {}) {` |
 | `runAuditApi` | 99-158 | 60 | `export async function runAuditApi(repo, params = {}, cfg = {}) {` |
 
-### lib/app/command-registry.js（266 行 · 6 个函数）
+### lib/app/command-registry.js（267 行 · 6 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `applyFlagToken` | 204-220 | 17 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
-| `validateParamConstraints` | 223-229 | 7 | `function validateParamConstraints(args, params) {` |
-| `parseRegistryArgs` | 231-251 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
-| `registryByName` | 254-256 | 3 | `export function registryByName(name) {` |
-| `registryByCli` | 259-261 | 3 | `export function registryByCli(cli) {` |
-| `buildToolsListText` | 264-266 | 3 | `export function buildToolsListText() {` |
+| `applyFlagToken` | 205-221 | 17 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
+| `validateParamConstraints` | 224-230 | 7 | `function validateParamConstraints(args, params) {` |
+| `parseRegistryArgs` | 232-252 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
+| `registryByName` | 255-257 | 3 | `export function registryByName(name) {` |
+| `registryByCli` | 260-262 | 3 | `export function registryByCli(cli) {` |
+| `buildToolsListText` | 265-267 | 3 | `export function buildToolsListText() {` |
 
 ### lib/app/handlers/account.js（166 行 · 10 个函数）
 
@@ -220,7 +220,7 @@
 | `getLastSlotHitStats` | 28-30 | 3 | `export function getLastSlotHitStats() {` |
 | `getLastSlotHitMeta` | 33-35 | 3 | `export function getLastSlotHitMeta() {` |
 
-### lib/app/tool-call.js（723 行 · 23 个函数）
+### lib/app/tool-call.js（725 行 · 23 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -244,9 +244,9 @@
 | `doHistory` | 455-458 | 4 | `const doHistory = async () => {` |
 | `callCodeAudit` | 477-489 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
 | `runStandardAuditTool` | 492-531 | 40 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
-| `callTool` | 533-694 | 162 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null) {` |
-| `shellSplit` | 697-715 | 19 | `function shellSplit(input) {` |
-| `readTextSafe` | 718-722 | 5 | `function readTextSafe(path = '') {` |
+| `callTool` | 533-696 | 164 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null) {` |
+| `shellSplit` | 699-717 | 19 | `function shellSplit(input) {` |
+| `readTextSafe` | 720-724 | 5 | `function readTextSafe(path = '') {` |
 
 ### lib/app/tools.js（34 行 · 2 个函数）
 
@@ -1212,13 +1212,13 @@
 | `isSampleExemptDir` | 242-262 | 21 | `export function isSampleExemptDir(repoPath, relPath = '') {` |
 | `isTestExemptDir` | 272-292 | 21 | `export function isTestExemptDir(repoPath, relPath = '') {` |
 
-### lib/fs/edit-after-read.js（104 行 · 3 个函数）
+### lib/fs/edit-after-read.js（143 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `countOccurrences` | 18-27 | 10 | `export function countOccurrences(text, needle) {` |
 | `fingerprint` | 30-37 | 8 | `function fingerprint(statFile, path) {` |
-| `editAfterRead` | 51-103 | 53 | `export function editAfterRead({` |
+| `editAfterRead` | 51-142 | 92 | `export function editAfterRead({` |
 
 ### lib/fsx.js（88 行 · 3 个函数）
 
@@ -2580,12 +2580,12 @@
 | `mk` | 142-142 | 1 | `const mk = (fnName) => `` |
 | `mk` | 160-160 | 1 | `const mk = (fnName, params) => `` |
 
-### test/test-edit-after-read.mjs（117 行 · 2 个函数）
+### test/test-edit-after-read.mjs（142 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `fixture` | 22-28 | 7 | `function fixture(content = 'const a = 1;\n') {` |
-| `statFile` | 95-98 | 4 | `const statFile = () => {` |
+| `statFile` | 120-123 | 4 | `const statFile = () => {` |
 
 ### test/test-empty-catch-single-source.mjs（29 行 · 1 个函数）
 

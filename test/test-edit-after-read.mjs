@@ -27,6 +27,31 @@ function fixture(content = 'const a = 1;\n') {
   return { root, file };
 }
 
+test('防写重（2026-10-16 实测事故）：new 里带了整份原文 ⇒ 拒绝写入且文件原样不动', () => {
+  // 事故形态：old 只是一个小锚点（某段正文），new 却把整份文档又带上了
+  //   ⇒ 替换后产物完整包含原文件 ⇒ 文档被写成两份（实测 17.7KB → ~2 倍，章节出现两次）
+  const body = '# 标题\n\n## 一、总览\n内容A\n\n## 二、逐条\n内容B\n';
+  const { file } = fixture(body);
+  const r = editAfterRead({ path: file, old: '## 一、总览\n内容A', new: body + '\n新增章节\n' });
+  assert.equal(r.ok, false, '应拒绝写入');
+  assert.match(String(r.reason), /完整包含原文件|出现 \d+ 次/, r.reason);
+  assert.equal(readFileSync(file, 'utf8'), body, '被拒时文件必须原样不动（不能写坏再让人恢复）');
+});
+
+test('逃生阀：allowDuplicate:true 才放行该形态', () => {
+  const { file } = fixture('A\nB\n');
+  const r = editAfterRead({ path: file, old: 'A', new: 'A\nA', allowDuplicate: true });
+  assert.equal(r.ok, true, r.reason || '');
+  assert.equal(readFileSync(file, 'utf8'), 'A\nA\nB\n');
+});
+
+test('正常编辑在写后自检下依然通过（长度/重复检查都不误伤）', () => {
+  const { file } = fixture('const a = 1;\nconst b = 2;\n');
+  const r = editAfterRead({ path: file, old: 'const a = 1;', new: 'const a = 42;' });
+  assert.equal(r.ok, true, r.reason || '');
+  assert.equal(readFileSync(file, 'utf8'), 'const a = 42;\nconst b = 2;\n');
+});
+
 test('countOccurrences：不重叠计数', () => {
   assert.equal(countOccurrences('aaa', 'aa'), 1, '不重叠');
   assert.equal(countOccurrences('abab', 'ab'), 2);
