@@ -534,6 +534,7 @@ dsh-git-push/
 │   ├── test-audit-defaults.mjs — （待注释）
 │   ├── test-audit-empty.mjs — （待注释）
 │   ├── test-audit-ext.mjs — 审计扩展自动接入测试（契约加载/降级/match/auditFull 并入）
+│   ├── test-audit-false-positive-guards.mjs — （待注释）
 │   ├── test-audit-git-boundary.mjs — （待注释）
 │   ├── test-audit-npm-publish-rules.mjs — （待注释）
 │   ├── test-audit-push-boundary.mjs — （待注释）

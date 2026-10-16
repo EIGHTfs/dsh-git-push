@@ -433,24 +433,54 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "docs/CHANGELOG.md": {
+      "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-16T22:46:51.601Z",
+        "mtime": "2026-10-16T23:02:19.262Z",
         "note": "注释可能需更新"
       },
-      "docs/releases.json": {
+      "lib/app/audit-api.js": {
         "status": "M",
-        "mtime": "2026-10-16T22:46:44.319Z",
+        "mtime": "2026-10-16T22:56:19.430Z",
         "note": "注释可能需更新"
       },
-      "lib/self/index.js": {
+      "lib/app/handlers/repo-actions.js": {
         "status": "M",
-        "mtime": "2026-10-16T22:46:44.291Z",
+        "mtime": "2026-10-16T22:56:24.148Z",
         "note": "注释可能需更新"
       },
-      "package.json": {
+      "lib/app/tool-call.js": {
         "status": "M",
-        "mtime": "2026-10-16T22:46:44.305Z",
+        "mtime": "2026-10-16T22:56:19.401Z",
+        "note": "注释可能需更新"
+      },
+      "lib/audit/audit-file.js": {
+        "status": "M",
+        "mtime": "2026-10-16T22:56:55.955Z",
+        "note": "注释可能需更新"
+      },
+      "lib/audit/file-context.js": {
+        "status": "M",
+        "mtime": "2026-10-16T22:59:21.688Z",
+        "note": "注释可能需更新"
+      },
+      "lib/audit/finding.js": {
+        "status": "M",
+        "mtime": "2026-10-16T22:56:05.685Z",
+        "note": "注释可能需更新"
+      },
+      "lib/audit/index.js": {
+        "status": "M",
+        "mtime": "2026-10-16T22:56:55.968Z",
+        "note": "注释可能需更新"
+      },
+      "lib/checks/button-bind.js": {
+        "status": "M",
+        "mtime": "2026-10-16T22:58:03.892Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-audit-false-positive-guards.mjs": {
+        "status": "A",
+        "mtime": "2026-10-16T23:02:02.836Z",
         "note": "注释可能需更新"
       }
     }
@@ -516,5 +546,6 @@
   "lib/checks/fs-scanner.js": "（待注释）",
   "scripts/scan-fs-hotspots.mjs": "（待注释）",
   "test/test-fs-hotspots.mjs": "（待注释）",
-  "test/test-exempt-hint-effective.mjs": "（待注释）"
+  "test/test-exempt-hint-effective.mjs": "（待注释）",
+  "test/test-audit-false-positive-guards.mjs": "（待注释）"
 }
