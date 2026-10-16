@@ -577,6 +577,7 @@ dsh-git-push/
 │   ├── test-empty-catch-promise.mjs — （待注释）
 │   ├── test-empty-catch-single-source.mjs — （待注释）
 │   ├── test-exempt-hint-classify.mjs — （待注释）
+│   ├── test-exempt-hint-effective.mjs — （待注释）
 │   ├── test-exempt.mjs — 豁免总入口测试（7 标记 + 位置语义）
 │   ├── test-ext-variable-min-length.mjs — （待注释）
 │   ├── test-false-positive-fixes.mjs — 误报修复回归测试

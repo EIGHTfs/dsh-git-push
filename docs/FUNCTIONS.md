@@ -649,13 +649,14 @@
 | `detectRepoJsYamlImport` | 110-119 | 10 | `export function detectRepoJsYamlImport(files) {` |
 | `isVersionInPathContext` | 132-138 | 7 | `export function isVersionInPathContext(line) {` |
 
-### lib/audit/finding.js（51 行 · 3 个函数）
+### lib/audit/finding.js（80 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `makeFinding` | 2-4 | 3 | `export function makeFinding({ file, line, rule, kind, severity = 'warning', message, dimensions = [], exemptHint = '', scoreImpact = 0 }) {` |
-| `decorateTestExemptHint` | 14-25 | 12 | `export function decorateTestExemptHint(findings = []) {` |
-| `summarize` | 38-47 | 10 | `export function summarize(findings = []) {` |
+| `makeFinding` | 4-6 | 3 | `export function makeFinding({ file, line, rule, kind, severity = 'warning', message, dimensions = [], exemptHint = '', scoreImpact = 0 }) {` |
+| `normalizeExemptHints` | 22-33 | 12 | `export function normalizeExemptHints(findings = []) {` |
+| `decorateTestExemptHint` | 43-54 | 12 | `export function decorateTestExemptHint(findings = []) {` |
+| `summarize` | 67-76 | 10 | `export function summarize(findings = []) {` |
 
 ### lib/audit/gitignore-match.js（114 行 · 4 个函数）
 
@@ -697,7 +698,7 @@
 | `excludePathOf` | 38-47 | 10 | `function excludePathOf(root) {` |
 | `detectIgnoreBlindSpot` | 54-101 | 48 | `export function detectIgnoreBlindSpot(root) {` |
 
-### lib/audit/orchestrate.js（517 行 · 18 个函数）
+### lib/audit/orchestrate.js（522 行 · 18 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -708,17 +709,17 @@
 | `capScanFiles` | 58-68 | 11 | `export function capScanFiles(files, root, maxFiles) {` |
 | `appendIgnoreBlindSpot` | 81-97 | 17 | `function appendIgnoreBlindSpot(findings, repoPath, scanned) {` |
 | `buildTreeConfirmer` | 120-140 | 21 | `async function buildTreeConfirmer(relPath, text, grouped) {` |
-| `auditFiles` | 142-308 | 167 | `async function auditFiles(repoPath, files, opts = {}) {` |
+| `auditFiles` | 142-313 | 172 | `async function auditFiles(repoPath, files, opts = {}) {` |
 | `isDshPlugin` | 167-173 | 7 | `const isDshPlugin = (() => {` |
-| `auditFull` | 310-332 | 23 | `export async function auditFull(repoPath, opts = {}) {` |
-| `appendTreeDocDrift` | 337-379 | 43 | `function appendTreeDocDrift(findings, repoPath) {` |
-| `by` | 370-370 | 1 | `const by = (code) => wt.filter(([, v]) => v?.status === code).length;` |
-| `appendFuncDocDrift` | 388-404 | 17 | `function appendFuncDocDrift(findings, repoPath) {` |
-| `appendSplitDocsCheck` | 412-466 | 55 | `function appendSplitDocsCheck(findings, repoPath) {` |
-| `hasMarkBlock` | 469-471 | 3 | `function hasMarkBlock(text, marker) {` |
-| `auditChanged` | 476-511 | 36 | `export async function auditChanged(repoPath, opts = {}) {` |
-| `isAuditIgnored` | 492-505 | 14 | `const isAuditIgnored = (rel) => {` |
-| `auditWithScope` | 514-516 | 3 | `export async function auditWithScope(repoPath, { scope = 'diff', ...opts } = {}) {` |
+| `auditFull` | 315-337 | 23 | `export async function auditFull(repoPath, opts = {}) {` |
+| `appendTreeDocDrift` | 342-384 | 43 | `function appendTreeDocDrift(findings, repoPath) {` |
+| `by` | 375-375 | 1 | `const by = (code) => wt.filter(([, v]) => v?.status === code).length;` |
+| `appendFuncDocDrift` | 393-409 | 17 | `function appendFuncDocDrift(findings, repoPath) {` |
+| `appendSplitDocsCheck` | 417-471 | 55 | `function appendSplitDocsCheck(findings, repoPath) {` |
+| `hasMarkBlock` | 474-476 | 3 | `function hasMarkBlock(text, marker) {` |
+| `auditChanged` | 481-516 | 36 | `export async function auditChanged(repoPath, opts = {}) {` |
+| `isAuditIgnored` | 497-510 | 14 | `const isAuditIgnored = (rel) => {` |
+| `auditWithScope` | 519-521 | 3 | `export async function auditWithScope(repoPath, { scope = 'diff', ...opts } = {}) {` |
 
 ### lib/audit/repo-level.js（31 行 · 2 个函数）
 
@@ -873,15 +874,15 @@
 |------|------|------|------|
 | `checkPrivateFiles` | 24-63 | 40 | `export function checkPrivateFiles({ root, visibility = 'unknown', privateFiles = [] }) {` |
 
-### lib/checks/regex.js（272 行 · 5 个函数）
+### lib/checks/regex.js（276 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `pickExemptHint` | 28-43 | 16 | `export function pickExemptHint(rule) {` |
+| `pickExemptHint` | 28-47 | 20 | `export function pickExemptHint(rule) {` |
 | `hit` | 31-31 | 1 | `const hit = (words) => (Array.isArray(words) ? words : []).some((w) => id.includes(w));` |
-| `checkRegexRules` | 54-194 | 141 | `export function checkRegexRules({ file, text, rules, source = '新增行', repoPath = '', treeConfirm = null }) {` |
-| `checkPathRegexRules` | 197-213 | 17 | `export function checkPathRegexRules({ file, relPath, rules }) {` |
-| `checkBlacklist` | 223-271 | 49 | `export function checkBlacklist({ file, text, rules }) {` |
+| `checkRegexRules` | 58-198 | 141 | `export function checkRegexRules({ file, text, rules, source = '新增行', repoPath = '', treeConfirm = null }) {` |
+| `checkPathRegexRules` | 201-217 | 17 | `export function checkPathRegexRules({ file, relPath, rules }) {` |
+| `checkBlacklist` | 227-275 | 49 | `export function checkBlacklist({ file, text, rules }) {` |
 
 ### lib/checks/semantic.js（135 行 · 3 个函数）
 
@@ -1216,20 +1217,24 @@
 | `saveWorkspacePaths` | 55-81 | 27 | `export function saveWorkspacePaths(paths, { by = 'ai' } = {}) {` |
 | `workspacePathsInjectionText` | 94-108 | 15 | `export function workspacePathsInjectionText(sep = '\n') {` |
 
-### lib/exempt/index.js（293 行 · 10 个函数）
+### lib/exempt/index.js（339 行 · 14 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `hasHeaderExempt` | 102-106 | 5 | `export function hasHeaderExempt(text, marker) {` |
-| `hasLineExempt` | 109-111 | 3 | `export function hasLineExempt(line, marker) {` |
-| `isCategoryExempt` | 129-137 | 9 | `export function isCategoryExempt(finding = {}) {` |
-| `exemptForFinding` | 148-186 | 39 | `export function exemptForFinding(finding, text = '') { // dsh-skip-complexity: 豁免判定器本体（9 标记 × blocked/细分规则多条件链，职责单一）` |
-| `exemptHintFor` | 189-194 | 6 | `export function exemptHintFor(ruleOrKind) {` |
-| `cacheGet` | 210-211 | 2 | `function cacheGet(cache, dir) { return cache.has(dir) ? cache.get(dir) : undefined; }` |
-| `dirHasEmptyMarker` | 213-225 | 13 | `function dirHasEmptyMarker(dir, name, cache) {` |
-| `clearExemptMarkerCache` | 228-231 | 4 | `export function clearExemptMarkerCache() {` |
-| `isSampleExemptDir` | 242-262 | 21 | `export function isSampleExemptDir(repoPath, relPath = '') {` |
-| `isTestExemptDir` | 272-292 | 21 | `export function isTestExemptDir(repoPath, relPath = '') {` |
+| `hasHeaderExempt` | 118-122 | 5 | `export function hasHeaderExempt(text, marker) {` |
+| `hasLineExempt` | 125-127 | 3 | `export function hasLineExempt(line, marker) {` |
+| `isCategoryExempt` | 145-153 | 9 | `export function isCategoryExempt(finding = {}) {` |
+| `markerCovers` | 162-181 | 20 | `function markerCovers(meta, kind, rule) {` |
+| `has` | 165-165 | 1 | `const has = (a) => Array.isArray(a) && a.length > 0;` |
+| `exemptMarkerCovers` | 184-186 | 3 | `export function exemptMarkerCovers(marker, finding = {}) {` |
+| `exemptHintForFinding` | 194-204 | 11 | `export function exemptHintForFinding(finding = {}) {` |
+| `exemptForFinding` | 215-232 | 18 | `export function exemptForFinding(finding, text = '') { // dsh-skip-complexity: 豁免判定器本体（9 标记 × blocked/细分规则多条件链，职责单一）` |
+| `exemptHintFor` | 235-240 | 6 | `export function exemptHintFor(ruleOrKind) {` |
+| `cacheGet` | 256-257 | 2 | `function cacheGet(cache, dir) { return cache.has(dir) ? cache.get(dir) : undefined; }` |
+| `dirHasEmptyMarker` | 259-271 | 13 | `function dirHasEmptyMarker(dir, name, cache) {` |
+| `clearExemptMarkerCache` | 274-277 | 4 | `export function clearExemptMarkerCache() {` |
+| `isSampleExemptDir` | 288-308 | 21 | `export function isSampleExemptDir(repoPath, relPath = '') {` |
+| `isTestExemptDir` | 318-338 | 21 | `export function isTestExemptDir(repoPath, relPath = '') {` |
 
 ### lib/fs/edit-after-read.js（143 行 · 3 个函数）
 
@@ -2618,6 +2623,12 @@
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `read` | 14-14 | 1 | `const read = (p) => readFileSync(join(ROOT, p), 'utf8');` |
+
+### test/test-exempt-hint-effective.mjs（115 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `withHeader` | 29-29 | 1 | `const withHeader = (text, marker) => `// ${marker}\n${text}`;` |
 
 ### test/test-exempt.mjs（407 行 · 2 个函数）
 

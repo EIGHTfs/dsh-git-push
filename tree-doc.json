@@ -433,24 +433,44 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "docs/CHANGELOG.md": {
+      "README.md": {
         "status": "M",
-        "mtime": "2026-10-16T07:16:52.428Z",
+        "mtime": "2026-10-16T22:31:21.673Z",
         "note": "注释可能需更新"
       },
-      "docs/releases.json": {
+      "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-16T07:16:43.529Z",
+        "mtime": "2026-10-16T22:33:42.830Z",
         "note": "注释可能需更新"
       },
-      "lib/self/index.js": {
+      "lib/audit/finding.js": {
         "status": "M",
-        "mtime": "2026-10-16T07:16:43.445Z",
+        "mtime": "2026-10-16T22:25:28.927Z",
         "note": "注释可能需更新"
       },
-      "package.json": {
+      "lib/audit/index.js": {
         "status": "M",
-        "mtime": "2026-10-16T07:16:43.501Z",
+        "mtime": "2026-10-16T22:29:09.144Z",
+        "note": "注释可能需更新"
+      },
+      "lib/audit/orchestrate.js": {
+        "status": "M",
+        "mtime": "2026-10-16T22:26:35.031Z",
+        "note": "注释可能需更新"
+      },
+      "lib/checks/regex.js": {
+        "status": "M",
+        "mtime": "2026-10-16T22:25:49.335Z",
+        "note": "注释可能需更新"
+      },
+      "lib/exempt/index.js": {
+        "status": "M",
+        "mtime": "2026-10-16T22:33:30.302Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-exempt-hint-effective.mjs": {
+        "status": "A",
+        "mtime": "2026-10-16T22:29:04.867Z",
         "note": "注释可能需更新"
       }
     }
@@ -515,5 +535,6 @@
   "lib/ast/fs-hotspots.js": "（待注释）",
   "lib/checks/fs-scanner.js": "（待注释）",
   "scripts/scan-fs-hotspots.mjs": "（待注释）",
-  "test/test-fs-hotspots.mjs": "（待注释）"
+  "test/test-fs-hotspots.mjs": "（待注释）",
+  "test/test-exempt-hint-effective.mjs": "（待注释）"
 }
