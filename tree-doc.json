@@ -366,7 +366,6 @@
   "lib/ast/symbol-index.js": "（待注释）",
   "lib/audit/analysis-coverage.js": "（待注释）",
   "lib/audit/client-entry.js": "（待注释）",
-  "lib/fs/edit-after-read.js": "（待注释）",
   "lib/git/clone-history-mode.js": "（待注释）",
   "lib/git/clone-history.js": "（待注释）",
   "lib/git/clone-replay-io.js": "（待注释）",
@@ -388,7 +387,6 @@
   "test/test-clone-history.mjs": "（待注释）",
   "test/test-clone-replay-io.mjs": "（待注释）",
   "test/test-clone-replay.mjs": "（待注释）",
-  "test/test-edit-after-read.mjs": "（待注释）",
   "test/test-git-bin-plan.mjs": "（待注释）",
   "test/test-line-count.mjs": "（待注释）",
   "test/test-max-lines-scope.mjs": "（待注释）",
@@ -433,14 +431,69 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
+      "README.md": {
+        "status": "M",
+        "mtime": "2026-10-17T07:17:53.249Z",
+        "note": "注释可能需更新"
+      },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-17T01:16:48.340Z",
+        "mtime": "2026-10-17T07:18:21.782Z",
+        "note": "注释可能需更新"
+      },
+      "docs/SPEC.md": {
+        "status": "M",
+        "mtime": "2026-10-17T07:17:53.243Z",
+        "note": "注释可能需更新"
+      },
+      "lib/app/apply.js": {
+        "status": "M",
+        "mtime": "2026-10-17T07:17:53.251Z",
+        "note": "注释可能需更新"
+      },
+      "lib/app/command-registry.js": {
+        "status": "M",
+        "mtime": "2026-10-17T07:17:53.219Z",
+        "note": "注释可能需更新"
+      },
+      "lib/app/tool-call.js": {
+        "status": "M",
+        "mtime": "2026-10-17T07:17:53.210Z",
+        "note": "注释可能需更新"
+      },
+      "lib/fs/edit-after-read.js": {
+        "status": "D",
+        "mtime": "",
         "note": "注释可能需更新"
       },
       "lib/fs/observe.js": {
         "status": "M",
-        "mtime": "2026-10-17T00:53:27.504Z",
+        "mtime": "2026-10-17T07:17:53.252Z",
+        "note": "注释可能需更新"
+      },
+      "skills/dev/dsh-git-push.md": {
+        "status": "M",
+        "mtime": "2026-10-17T07:17:53.245Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-cli-help-registry-sync.mjs": {
+        "status": "M",
+        "mtime": "2026-10-17T07:17:53.253Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-edit-after-read.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-plugin.mjs": {
+        "status": "M",
+        "mtime": "2026-10-17T07:17:53.241Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-tool-contract.mjs": {
+        "status": "M",
+        "mtime": "2026-10-17T07:17:53.239Z",
         "note": "注释可能需更新"
       }
     }

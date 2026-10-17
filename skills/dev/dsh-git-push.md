@@ -24,7 +24,6 @@ generatedBy: deepseek-official/deepseek-v4-flash · EIGHTfs 2026-10-02
 | `link_check` | `repo?`, `paths?` | 检查文档链接：404/403→-3、DNS→-2、超时/5xx→-1；只 warning，永不 blocker |
 | `io_scan` | `repo?`, `writeOnly?` | I/O 风险扫描（AST 四级分级 high/medium/low/safe，与审计 io-risk 同标准） |
 | `git_clone_preview` | `target`, `branch?` | clone 预演（不落盘，报告将拉取什么） |
-| `edit_after_read` | `path`/`file_path`, `old`/`old_string`, `new`/`new_string`, `all?` | 读改合一编辑（读后文件被改动则拒绝；old 默认必须唯一匹配；字面匹配不做正则解释） |
 | `git_identity_rewrite` | `paths?`, `root?`, `dryRun?`, `push?` | 提交身份历史改写（默认 dryRun 只报告；真改写先建备份引用 + 自检，通过才 force-with-lease） |
 | `module_splitter` | `command`, `file`/`plan`, `dryRun?` | 巨型单文件拆分：analyze（先看依赖）→ split → verify（校验导出一致） |
 | `git_account_check` | `token?`, `sshPub?` | 校验 GitHub 账号与凭据（登录态/用户名/公钥数/套餐；token 不传自动解析） |

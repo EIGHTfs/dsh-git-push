@@ -43,7 +43,7 @@ function usageLines(cmd) {
 
 /**
  * cli.mjs 里以**引号短名**出现过的命令名 = CLI 真正分发的子命令；
- * 未出现的（如 edit-after-read、api 这类仅 DSH 工具条目）没有 shell 用法行 ⇒ 不参与 HELP 对齐检查。
+ * 未出现的（如 api 这类仅 DSH 工具条目）没有 shell 用法行 ⇒ 不参与 HELP 对齐检查。
  * 判据数据驱动（读 cli.mjs 的引号 token），不手工登记例外，避免例外表腐烂。
  */
 const DISPATCHED = new Set([...cliText.matchAll(/'([a-z][a-z0-9-]*)'/g)].map((m) => m[1]));

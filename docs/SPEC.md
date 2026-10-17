@@ -14,7 +14,7 @@
 | 装载声明 | `package.json` 的 `dsh.bundle.patch` → `./cordis.patch.yml`；`dsh.client` 声明 web 端注入；`dsh.skills` 列出随包发布的 skill |
 | 配置目录 | `<DSH_HOME>/git-push/`（凭据与状态文件都落在这里） |
 
-## 二、工具（18 个，宿主可见公开面）
+## 二、工具（17 个，宿主可见公开面）
 
 | 工具 | CLI 名 | 用途 |
 |---|---|---|
@@ -32,7 +32,6 @@
 | `git_cred_env` | `cred-env` | 输出凭据环境变量前缀（不含明文） |
 | `git_gen_ssh_key` | `gen-ssh-key` | 生成 SSH 密钥对（私钥不出本机） |
 | `git_identity_rewrite` | `git-sluice identity-rewrite` | 提交身份历史改写（默认 dry-run；`--write` 才改，先建备份引用；`--push` 用 force-with-lease） |
-| `edit_after_read` | — | 读改合一编辑（自己读→校验→字面替换→写回，比宿主守卫更严） |
 | `git_sluice` | `git` | git 命令透传（凭据自动注入） |
 | `npm_publish` | `npm-publish` | npm 发包（**后台 job** + dryRun）：默认只体检并跑 `npm publish --dry-run`（不写 registry ✗）；真发必须同时 `confirm=true` 与 `dryRun=false`；前置体检 `private:true` / 同名版本占用 / `npm pack` 清单 |
 | `git_api` | `api` | **直接调用本插件 35 条 HTTP API**（内部走 `handleHttp` 同一条代码路径）；`path` 传接口名（不传则列出全部接口），`method`/`query`/`body` 可选 |

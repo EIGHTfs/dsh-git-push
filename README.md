@@ -64,7 +64,7 @@ DSH（DeepSeek Harness）git 提交推送与代码审计插件——提交前自
 
 | 文档 | 讲什么 |
 |---|---|
-| [docs/SPEC.md](docs/SPEC.md) | **当前有效规格唯一入口**：身份 / 18 个工具 / 35 条 HTTP 接口 / 20 个设置键 / 4 个数据文件 / 审计规则体系 / 文档产物 / 版本纪律 / 测试基线 |
+| [docs/SPEC.md](docs/SPEC.md) | **当前有效规格唯一入口**：身份 / 17 个工具 / 35 条 HTTP 接口 / 20 个设置键 / 4 个数据文件 / 审计规则体系 / 文档产物 / 版本纪律 / 测试基线 |
 | [docs/功能-审计规则体系.md](docs/功能-审计规则体系.md) | 22 个规则槽位 / 165 条规则的组织方式、作用域字段、三层结构、运行入口、结果怎么读、怎么豁免 |
 | [docs/功能-历史提交审计.md](docs/功能-历史提交审计.md) | 逐提交回放审计：解决什么、怎么跑、与普通审计的差异与成本 |
 | [docs/功能-文档与结构追踪.md](docs/功能-文档与结构追踪.md) | tree-doc / doc-func / doc-version 三份自动生成文档怎么更新、漂移怎么办 |
@@ -397,7 +397,6 @@ dsh-git-push/
 │   ├── exempt/ — 豁免机制（dsh-skip-* 注释标记解析与文件头/行内语义）
 │   │   ├── index.js — 豁免注册表（dsh-skip-* 全标记消费）
 │   ├── fs/ — （待注释）
-│   │   ├── edit-after-read.js — （待注释）
 │   │   ├── observe.js — （待注释）
 │   ├── git/ — Git 执行层（runGit/账号/API/克隆/凭据/推送/扫描/索引维护/敏感扫描/传输通道）
 │   │   ├── account-status.js — （待注释）
@@ -575,7 +574,6 @@ dsh-git-push/
 │   ├── test-dup-code.mjs — （待注释）
 │   ├── test-dup-const-idiom.mjs — （待注释）
 │   ├── test-dup-const.mjs — duplicate-const 规则测试（多语言提取 JS/Kotlin/Java/Go/Rust/Python、模块级过滤、跨文件聚合、test 目录排除、同值不同名不报）
-│   ├── test-edit-after-read.mjs — （待注释）
 │   ├── test-empty-catch-promise.mjs — （待注释）
 │   ├── test-empty-catch-single-source.mjs — （待注释）
 │   ├── test-exempt-hint-classify.mjs — （待注释）
@@ -1163,7 +1161,6 @@ token 与 GitHub token 存**同一份** `config.json`（0600，写入走原子�
 · git_account_check —— 校验 GitHub 账号与凭据（token 在线校验 + SSH 公钥指纹）
 · git_identity_rewrite —— 提交身份历史改写（非规范身份→登录账号规范身份；默认 dry-run，
   真改写先建备份引用、自检通过才改写，push 用 force-with-lease；只处理本人远端仓库）
-· edit_after_read —— 读改合一编辑（自己读当前文件 → 校验 → 字面替换 → 写回；比宿主编辑守卫更严：读后文件被改动则拒绝写入、old 默认必须唯一匹配、按字面匹配不做正则解释）。**参数名与宿主编辑工具对齐**：path/file_path、old/old_string、new/new_string、all/replace_all 两套都认；**new 必传** —— 缺参数只报错、绝不把内容删掉（删除须显式传空串）
 · git_sluice —— 浅包装 git 透传（AI 直接调用任意 git 命令，凭据自动注入）：args 传与 git 一致的参数串，返回 status + stdout/stderr；git 的 log/diff/branch/tag 等其余能力用它
 · git_clone / link_check —— git_clone 从 GitHub 拉仓库：target=owner/repo、dest=目标目录、branch=分支。
   **默认带真实历史**：用 git fetch 取回原始对象，克隆结果与远端 HEAD 逐字节一致（可推回远端、可 git log 读演进），

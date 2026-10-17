@@ -22,16 +22,16 @@
 | `aggregateFindings` | 71-92 | 22 | `export function aggregateFindings(findings = [], opts = {}) {` |
 | `runAuditApi` | 100-161 | 62 | `export async function runAuditApi(repo, params = {}, cfg = {}) {` |
 
-### lib/app/command-registry.js（267 行 · 6 个函数）
+### lib/app/command-registry.js（256 行 · 6 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `applyFlagToken` | 205-221 | 17 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
-| `validateParamConstraints` | 224-230 | 7 | `function validateParamConstraints(args, params) {` |
-| `parseRegistryArgs` | 232-252 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
-| `registryByName` | 255-257 | 3 | `export function registryByName(name) {` |
-| `registryByCli` | 260-262 | 3 | `export function registryByCli(cli) {` |
-| `buildToolsListText` | 265-267 | 3 | `export function buildToolsListText() {` |
+| `applyFlagToken` | 194-210 | 17 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
+| `validateParamConstraints` | 213-219 | 7 | `function validateParamConstraints(args, params) {` |
+| `parseRegistryArgs` | 221-241 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
+| `registryByName` | 244-246 | 3 | `export function registryByName(name) {` |
+| `registryByCli` | 249-251 | 3 | `export function registryByCli(cli) {` |
+| `buildToolsListText` | 254-256 | 3 | `export function buildToolsListText() {` |
 
 ### lib/app/handlers/account.js（166 行 · 10 个函数）
 
@@ -220,7 +220,7 @@
 | `getLastSlotHitStats` | 28-30 | 3 | `export function getLastSlotHitStats() {` |
 | `getLastSlotHitMeta` | 33-35 | 3 | `export function getLastSlotHitMeta() {` |
 
-### lib/app/tool-call.js（738 行 · 23 个函数）
+### lib/app/tool-call.js（709 行 · 23 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -244,9 +244,9 @@
 | `doHistory` | 455-458 | 4 | `const doHistory = async () => {` |
 | `callCodeAudit` | 477-489 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
 | `runStandardAuditTool` | 492-533 | 42 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
-| `callTool` | 535-709 | 175 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null, fsCtx = null) {` |
-| `shellSplit` | 712-730 | 19 | `function shellSplit(input) {` |
-| `readTextSafe` | 733-737 | 5 | `function readTextSafe(path = '') {` |
+| `callTool` | 535-680 | 146 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null, fsCtx = null) {` |
+| `shellSplit` | 683-701 | 19 | `function shellSplit(input) {` |
+| `readTextSafe` | 704-708 | 5 | `function readTextSafe(path = '') {` |
 
 ### lib/app/tools.js（34 行 · 2 个函数）
 
@@ -1238,14 +1238,6 @@
 | `clearExemptMarkerCache` | 274-277 | 4 | `export function clearExemptMarkerCache() {` |
 | `isSampleExemptDir` | 288-308 | 21 | `export function isSampleExemptDir(repoPath, relPath = '') {` |
 | `isTestExemptDir` | 318-338 | 21 | `export function isTestExemptDir(repoPath, relPath = '') {` |
-
-### lib/fs/edit-after-read.js（143 行 · 3 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `countOccurrences` | 18-27 | 10 | `export function countOccurrences(text, needle) {` |
-| `fingerprint` | 30-37 | 8 | `function fingerprint(statFile, path) {` |
-| `editAfterRead` | 51-142 | 92 | `export function editAfterRead({` |
 
 ### lib/fs/observe.js（49 行 · 1 个函数）
 
@@ -2626,13 +2618,6 @@
 | `mk` | 142-142 | 1 | `const mk = (fnName) => `` |
 | `mk` | 160-160 | 1 | `const mk = (fnName, params) => `` |
 
-### test/test-edit-after-read.mjs（142 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `fixture` | 22-28 | 7 | `function fixture(content = 'const a = 1;\n') {` |
-| `statFile` | 120-123 | 4 | `const statFile = () => {` |
-
 ### test/test-empty-catch-single-source.mjs（29 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2810,13 +2795,13 @@
 |------|------|------|------|
 | `makeProject` | 20-46 | 27 | `function makeProject() {` |
 
-### test/test-plugin.mjs（654 行 · 3 个函数）
+### test/test-plugin.mjs（655 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `makeExemptRepo` | 485-491 | 7 | `function makeExemptRepo() {` |
-| `addSecretFile` | 492-495 | 4 | `function addSecretFile(root, path) {` |
-| `fsStatMode` | 649-651 | 3 | `function fsStatMode(file) {` |
+| `makeExemptRepo` | 486-492 | 7 | `function makeExemptRepo() {` |
+| `addSecretFile` | 493-496 | 4 | `function addSecretFile(root, path) {` |
+| `fsStatMode` | 650-652 | 3 | `function fsStatMode(file) {` |
 
 ### test/test-private-gate.mjs（72 行 · 1 个函数）
 
