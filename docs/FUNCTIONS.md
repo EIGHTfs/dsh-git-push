@@ -1472,7 +1472,7 @@
 | `classifyPushFailure` | 109-129 | 21 | `export function classifyPushFailure(text = '', opts = {}) {` |
 | `describePushDiagnosis` | 137-142 | 6 | `export function describePushDiagnosis(dg = {}) {` |
 
-### lib/git/push.js（477 行 · 9 个函数）
+### lib/git/push.js（487 行 · 9 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1480,11 +1480,11 @@
 | `commitAndPush` | 57-236 | 180 | `export async function commitAndPush({ repoPath = '', message = '', messageItems = null, push = true, dryRun = false, token = '', customIgnorePatterns = '', requirementsConfirmed = false, force = false, pushMethod = 'ssh', pushGate = false, pushConfirmed = false, paths = '' } = {}) {` |
 | `legacyIdentity` | 156-165 | 10 | `const legacyIdentity = (() => {` |
 | `fetchRemoteBranchRef` | 249-262 | 14 | `async function fetchRemoteBranchRef(repoPath, branch, owner, repo) {` |
-| `enhanceAfterPushSuccess` | 270-406 | 137 | `async function enhanceAfterPushSuccess({ repoPath, pr, token, steps, commitSha }) {` |
-| `lsRemoteProbe` | 322-336 | 15 | `const lsRemoteProbe = () => {` |
-| `lsRemoteSha` | 338-338 | 1 | `const lsRemoteSha = () => lsRemoteProbe().sha;` |
-| `readmeCheckHint` | 411-416 | 6 | `export function readmeCheckHint(repoPath) {` |
-| `pushCurrentBranch` | 425-476 | 52 | `export async function pushCurrentBranch({ repoPath = '', pushMethod = 'ssh' } = {}) {` |
+| `enhanceAfterPushSuccess` | 270-416 | 147 | `async function enhanceAfterPushSuccess({ repoPath, pr, token, steps, commitSha }) {` |
+| `lsRemoteProbe` | 326-346 | 21 | `const lsRemoteProbe = () => {` |
+| `lsRemoteSha` | 348-348 | 1 | `const lsRemoteSha = () => lsRemoteProbe().sha;` |
+| `readmeCheckHint` | 421-426 | 6 | `export function readmeCheckHint(repoPath) {` |
+| `pushCurrentBranch` | 435-486 | 52 | `export async function pushCurrentBranch({ repoPath = '', pushMethod = 'ssh' } = {}) {` |
 
 ### lib/git/remote-resolve.js（147 行 · 6 个函数）
 
