@@ -433,34 +433,14 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "README.md": {
-        "status": "M",
-        "mtime": "2026-10-17T00:43:19.932Z",
-        "note": "注释可能需更新"
-      },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-17T00:48:34.439Z",
-        "note": "注释可能需更新"
-      },
-      "lib/app/apply.js": {
-        "status": "M",
-        "mtime": "2026-10-17T00:40:09.132Z",
-        "note": "注释可能需更新"
-      },
-      "lib/app/tool-call.js": {
-        "status": "M",
-        "mtime": "2026-10-17T00:40:22.201Z",
+        "mtime": "2026-10-17T01:16:48.340Z",
         "note": "注释可能需更新"
       },
       "lib/fs/observe.js": {
-        "status": "A",
-        "mtime": "2026-10-17T00:48:16.505Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-fs-observe.mjs": {
-        "status": "A",
-        "mtime": "2026-10-17T00:48:16.527Z",
+        "status": "M",
+        "mtime": "2026-10-17T00:53:27.504Z",
         "note": "注释可能需更新"
       }
     }

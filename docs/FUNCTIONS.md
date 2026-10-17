@@ -1247,11 +1247,11 @@
 | `fingerprint` | 30-37 | 8 | `function fingerprint(statFile, path) {` |
 | `editAfterRead` | 51-142 | 92 | `export function editAfterRead({` |
 
-### lib/fs/observe.js（47 行 · 1 个函数）
+### lib/fs/observe.js（49 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `observeFileForHost` | 27-46 | 20 | `export async function observeFileForHost(ctx, exec, hostPath) {` |
+| `observeFileForHost` | 27-48 | 22 | `export async function observeFileForHost(ctx, exec, hostPath) {` |
 
 ### lib/fsx.js（88 行 · 3 个函数）
 
