@@ -396,6 +396,7 @@ dsh-git-push/
 │   │   ├── workspace-paths.js — （待注释）
 │   ├── exempt/ — 豁免机制（dsh-skip-* 注释标记解析与文件头/行内语义）
 │   │   ├── index.js — 豁免注册表（dsh-skip-* 全标记消费）
+│   │   ├── tool.js — （待注释）
 │   ├── git/ — Git 执行层（runGit/账号/API/克隆/凭据/推送/扫描/索引维护/敏感扫描/传输通道）
 │   │   ├── account-status.js — （待注释）
 │   │   ├── account.js — 账号校验（token 在线 + SSH 公钥指纹，输出账号状态块）
@@ -568,6 +569,7 @@ dsh-git-push/
 │   ├── test-empty-catch-single-source.mjs — （待注释）
 │   ├── test-exempt-hint-classify.mjs — （待注释）
 │   ├── test-exempt-hint-effective.mjs — （待注释）
+│   ├── test-exempt-tool.mjs — （待注释）
 │   ├── test-exempt.mjs — 豁免总入口测试（7 标记 + 位置语义）
 │   ├── test-ext-variable-min-length.mjs — （待注释）
 │   ├── test-false-positive-fixes.mjs — 误报修复回归测试
@@ -599,6 +601,7 @@ dsh-git-push/
 │   ├── test-mirror-gates.mjs — （待注释）
 │   ├── test-module-splitter-multiline.mjs — （待注释）
 │   ├── test-module-splitter.mjs — module_splitter 工具 + CLI 接入测试（契约 + 行为 + 脚本随插件发布）
+│   ├── test-multi-remote.mjs — （待注释）
 │   ├── test-name-length-scope.mjs — （待注释）
 │   ├── test-npm-enobufs.mjs — （待注释）
 │   ├── test-npm-install.mjs — （待注释）
