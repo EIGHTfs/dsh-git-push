@@ -522,6 +522,7 @@ dsh-git-push/
 │   ├── test-audit-bad-file.mjs — 审计拦截门禁测试（硬编码密码/API key/.env 凭据文件）
 │   ├── test-audit-defaults.mjs — （待注释）
 │   ├── test-audit-empty.mjs — （待注释）
+│   ├── test-audit-exempt-paths.mjs — 提交时按文件临时豁免审计（auditExemptPaths）回归
 │   ├── test-audit-ext.mjs — 审计扩展自动接入测试（契约加载/降级/match/auditFull 并入）
 │   ├── test-audit-false-positive-guards.mjs — （待注释）
 │   ├── test-audit-git-boundary.mjs — （待注释）

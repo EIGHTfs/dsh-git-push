@@ -418,19 +418,49 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "README.md": {
+      "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-17T07:38:33.914Z",
+        "mtime": "2026-10-17T12:03:37.032Z",
         "note": "注释可能需更新"
       },
-      "skills/dev/dsh-git-push.md": {
+      "lib/app/command-registry.js": {
         "status": "M",
-        "mtime": "2026-10-17T07:38:33.923Z",
+        "mtime": "2026-10-17T10:28:03.794Z",
         "note": "注释可能需更新"
       },
-      "skills/guide/guide-cli-scripts.md": {
+      "lib/app/handlers/meta.js": {
         "status": "M",
-        "mtime": "2026-10-17T07:38:33.956Z",
+        "mtime": "2026-10-17T10:36:11.367Z",
+        "note": "注释可能需更新"
+      },
+      "lib/app/http-handlers.js": {
+        "status": "M",
+        "mtime": "2026-10-17T10:36:20.141Z",
+        "note": "注释可能需更新"
+      },
+      "lib/app/tool-call.js": {
+        "status": "M",
+        "mtime": "2026-10-17T10:33:53.978Z",
+        "note": "注释可能需更新"
+      },
+      "lib/ast/control-flow.js": {
+        "status": "M",
+        "mtime": "2026-10-17T12:01:24.983Z",
+        "note": "注释可能需更新"
+      },
+      "lib/ast/size.js": {
+        "status": "M",
+        "mtime": "2026-10-17T12:01:00.997Z",
+        "note": "注释可能需更新"
+      },
+      "lib/commit-push.js": {
+        "status": "M",
+        "mtime": "2026-10-17T10:27:56.725Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-audit-exempt-paths.mjs": {
+        "status": "A",
+        "mtime": "2026-10-17T10:34:37.798Z",
         "note": "注释可能需更新"
       }
     }
@@ -497,5 +527,6 @@
   "scripts/scan-fs-hotspots.mjs": "（待注释）",
   "test/test-fs-hotspots.mjs": "（待注释）",
   "test/test-exempt-hint-effective.mjs": "（待注释）",
-  "test/test-audit-false-positive-guards.mjs": "（待注释）"
+  "test/test-audit-false-positive-guards.mjs": "（待注释）",
+  "test/test-audit-exempt-paths.mjs": "提交时按文件临时豁免审计（auditExemptPaths）回归"
 }

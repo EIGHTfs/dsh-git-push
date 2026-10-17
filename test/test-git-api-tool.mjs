@@ -30,7 +30,7 @@ ok('git_api 的 params 含 path/method/query/body', !!spec && ['path', 'method',
 // ── ② 不传 path ⇒ 列出全部接口（口径 = 分发器 case，即路由真相）──
 const listed = await callTool('git_api', {});
 ok('不传 path 返回接口清单', listed.ok === true && Array.isArray(listed.endpoints));
-ok('接口数与分发器一致（35 条）', listed.count === 35, '实际 ' + listed.count);
+ok('接口数与分发器一致（36 条）', listed.count === 36, '实际 ' + listed.count);
 ok('清单里含 status / settings-set / repo-push', ['status', 'settings-set', 'repo-push'].every((e) => listed.endpoints.includes(e)));
 
 // ── ③ 传 path ⇒ 真调通（内部 handleHttp，读接口免 Origin）──
