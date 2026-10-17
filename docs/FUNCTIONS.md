@@ -1241,20 +1241,21 @@
 | `isSampleExemptDir` | 288-308 | 21 | `export function isSampleExemptDir(repoPath, relPath = '') {` |
 | `isTestExemptDir` | 318-338 | 21 | `export function isTestExemptDir(repoPath, relPath = '') {` |
 
-### lib/exempt/tool.js（185 行 · 10 个函数）
+### lib/exempt/tool.js（199 行 · 11 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `readText` | 22-24 | 3 | `function readText(file) {` |
-| `resolveTarget` | 27-35 | 9 | `function resolveTarget(repoPath, p) {` |
-| `resolveMarker` | 38-64 | 27 | `function resolveMarker({ rule = '', marker = '', scope = '' }) {` |
-| `hasMarker` | 67-72 | 6 | `function hasMarker(lines, marker, scope, line) {` |
-| `headerComment` | 75-77 | 3 | `function headerComment(marker, reason) {` |
-| `addExempt` | 83-124 | 42 | `export function addExempt({ repoPath = '', path: p, line, scope = '', rule = '', marker = '', reason = '', dryRun = false } = {}) {` |
-| `removeExempt` | 127-144 | 18 | `export function removeExempt({ repoPath = '', path: p, marker = '', dryRun = false } = {}) {` |
-| `listExempt` | 147-171 | 25 | `export function listExempt({ repoPath = '', root = '' } = {}) {` |
-| `walk` | 150-168 | 19 | `const walk = (dir, depth) => {` |
-| `checkExempt` | 174-184 | 11 | `export function checkExempt({ repoPath = '', root = '' } = {}) {` |
+| `findRuleKind` | 23-31 | 9 | `async function findRuleKind(repoPath, ruleId) {` |
+| `readText` | 34-36 | 3 | `function readText(file) {` |
+| `resolveTarget` | 39-47 | 9 | `function resolveTarget(repoPath, p) {` |
+| `resolveMarker` | 50-76 | 27 | `function resolveMarker({ rule = '', marker = '', scope = '', kind = '' }) {` |
+| `hasMarker` | 79-84 | 6 | `function hasMarker(lines, marker, scope, line) {` |
+| `headerComment` | 87-89 | 3 | `function headerComment(marker, reason) {` |
+| `addExempt` | 95-138 | 44 | `export async function addExempt({ repoPath = '', path: p, line, scope = '', rule = '', marker = '', reason = '', dryRun = false } = {}) {` |
+| `removeExempt` | 141-158 | 18 | `export function removeExempt({ repoPath = '', path: p, marker = '', dryRun = false } = {}) {` |
+| `listExempt` | 161-185 | 25 | `export function listExempt({ repoPath = '', root = '' } = {}) {` |
+| `walk` | 164-182 | 19 | `const walk = (dir, depth) => {` |
+| `checkExempt` | 188-198 | 11 | `export function checkExempt({ repoPath = '', root = '' } = {}) {` |
 
 ### lib/fsx.js（88 行 · 3 个函数）
 
@@ -1688,16 +1689,17 @@
 | `writeNpmrc` | 40-48 | 9 | `export function writeNpmrc({ workspaceRoot = '', registry = 'https://registry.npmjs.org/', token = '' } = {}) {` |
 | `npmArgs` | 51-56 | 6 | `export function npmArgs({ npmrcFile = '', registry = 'https://registry.npmjs.org/' } = {}) {` |
 
-### lib/npm/publish.js（172 行 · 6 个函数）
+### lib/npm/publish.js（199 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `publishingKeys` | 24-26 | 3 | `export function publishingKeys() {` |
-| `readPackageInfo` | 29-44 | 16 | `export function readPackageInfo(dir = '') {` |
-| `fetchPublishedVersions` | 47-67 | 21 | `export async function fetchPublishedVersions({ name, registry = DEFAULT_REGISTRY, timeoutMs = NPM_TIMEOUT_MS } = {}) {` |
-| `packDryRun` | 70-172 | 103 | `export function packDryRun({ dir, registry = DEFAULT_REGISTRY, workspaceRoot = '', token = '', timeoutMs = PUBLISH_TIMEOUT_MS } = {}) {` |
-| `appendPublishLog` | 94-102 | 9 | `function appendPublishLog(line, { workspaceRoot = '' } = {}) {` |
-| `publishPackage` | 109-171 | 63 | `export async function publishPackage({` |
+| `sleep` | 24-26 | 3 | `function sleep(ms) {` |
+| `publishingKeys` | 32-34 | 3 | `export function publishingKeys() {` |
+| `readPackageInfo` | 37-52 | 16 | `export function readPackageInfo(dir = '') {` |
+| `fetchPublishedVersions` | 55-75 | 21 | `export async function fetchPublishedVersions({ name, registry = DEFAULT_REGISTRY, timeoutMs = NPM_TIMEOUT_MS } = {}) {` |
+| `packDryRun` | 78-199 | 122 | `export function packDryRun({ dir, registry = DEFAULT_REGISTRY, workspaceRoot = '', token = '', timeoutMs = PUBLISH_TIMEOUT_MS } = {}) {` |
+| `appendPublishLog` | 102-110 | 9 | `function appendPublishLog(line, { workspaceRoot = '' } = {}) {` |
+| `publishPackage` | 117-198 | 82 | `export async function publishPackage({` |
 
 ### lib/npm/registry.js（172 行 · 8 个函数）
 

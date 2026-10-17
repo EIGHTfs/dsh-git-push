@@ -15,6 +15,7 @@
 
 | 版本 | 内容 |
 |------|------|
+| 2.9.9 | npm_publish 真发后轮询 registry 确认版本可见：每分钟 1 次、最多 5 分钟；远端更新即返回（verified=true），超时输出原结果（verified=false + pollTimeout + pollNote，结果以 npm 返回为准），轮询过程写 npm-publish.log。dryRun 不触发轮询。实测：test-npm-publish 8/8。 |
 | 2.9.8 | ①git_commit_push 支持 remote 参数（多 remote / fork 场景）：推送与核验使用同一 remote，修复「origin=上游无写权限 → 推失败 + 核验拿到上游 SHA 误报未落地」；新增 resolveRemoteTarget 解析指定 remote。②新增 exempt 注释豁免工具（add/remove/list/check）：按 rule 自动选标记（写错拒绝并给正确标记）、写前校验（块注释/字符串/越界拒绝）、多文件原子、check 识别死标记；标记映射读同进程 EXEMPT_MARKERS（单一真源）。实测：test-multi-remote 3/3、test-exempt-tool 6/6；1293 项回归 0 失败。 |
 | 2.9.7 | 提交时按文件临时豁免（auditExemptPaths/auditExemptReason，含 blocker、不落盘、结果回显 files/count/rules）+ 只读端点 GET /api/git-push/exempt-hint（按 rule/kind 反查可用豁免标记，供外部工具避免复制注册表）；规则误报修复：max-nesting-depth 归属改用 function 栈（模块级嵌套不再归到已结束的旧函数）、no-repeated-hardcoded-literals 跳过模板字符串（生成代码排版不再算重复字面量）。实测：dsh-useful-tools 误报 33→31（模板串 2 条消失、归属修正）；1284 项回归 0 失败。 |
 | 2.9.6 | 私有库统一前置判断：可见性（GitHub API）决定走不走 gh-proxy 镜像——克隆/真实历史 fetch、ls-remote 探针、推送核验三处共用 accessPlan；私有或未知一律不走镜像（改 SSH 形态 ssh.github.com:443）。修复「私有库经镜像必然 404/认证失败」导致的克隆失败、探针失明、核验未完成三类同源问题。实测：私有库克隆改用 SSH 后成功拿到 10 条真实历史；探针 ok=true（via id_rsa）；推送核验一致。 |
