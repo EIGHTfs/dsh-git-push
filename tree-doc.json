@@ -418,9 +418,19 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "skills/guide/guide-inject-ui.md": {
+      "README.md": {
         "status": "M",
-        "mtime": "2026-10-17T07:36:12.789Z",
+        "mtime": "2026-10-17T07:38:33.914Z",
+        "note": "注释可能需更新"
+      },
+      "skills/dev/dsh-git-push.md": {
+        "status": "M",
+        "mtime": "2026-10-17T07:38:33.923Z",
+        "note": "注释可能需更新"
+      },
+      "skills/guide/guide-cli-scripts.md": {
+        "status": "M",
+        "mtime": "2026-10-17T07:38:33.956Z",
         "note": "注释可能需更新"
       }
     }

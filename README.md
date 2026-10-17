@@ -959,7 +959,7 @@ console.log(x); // dsh-skip-residue: 本行为刻意保留的调试输出样本
 
 ## 界面预览页（assets/preview.html，真实后端数据）
 
-`assets/preview.html` 由 **dsh-useful-tools** 的 `preview` 工具生成（`action=gen`）（内联真实 `client.js`，只垫片宿主环境 `window.__ModuleLoader__`/`react`/`settingsScope`/`fetch`，界面与真实插件一致）；**用 `assets/start.sh` 启动本地反代服务访问**（服务入口 `scripts/preview-server.mjs`；产物属生成物、不入库，缺失时生成器与 minihost 会自动生成一次）：
+`assets/preview.html` 由 **dsh-useful-tools** 的 `preview` 工具生成（`action=gen`）（内联真实 `client.js`，只垫片宿主环境 `window.__ModuleLoader__`/`react`/`settingsScope`/`fetch`，界面与真实插件一致）；**用 `assets/start.sh` 启动本地反代服务访问**（服务入口 ``preview` 工具 action=serve（dsh-useful-tools）`；产物属生成物、不入库，缺失时生成器与 minihost 会自动生成一次）：
 
 ```
 ./assets/start.sh start [--port 31000]   # 启动（默认 30999；已有项目占用时用 --port 错开）
@@ -1259,7 +1259,7 @@ node scripts/rule-switch.mjs disable comment    # 禁用安装版本的 comment 
 node scripts/rule-switch.mjs enable comment     # 重新启用
 ```
 
-边界：`nodejs` / `private` 属安全红线强制槽位，禁用会被拦截（返回错误、不写 yml），与 UI 行为一致。注意与 `scripts/sync-plugin.mjs --write` 的协作：同步会按工作区规则文件覆盖部署副本的 disabled 状态（工作区文件里没有 disabled 行则同步后恢复启用）。
+边界：`nodejs` / `private` 属安全红线强制槽位，禁用会被拦截（返回错误、不写 yml），与 UI 行为一致。注意与 ``sync_plugin` 工具（write:true）` 的协作：同步会按工作区规则文件覆盖部署副本的 disabled 状态（工作区文件里没有 disabled 行则同步后恢复启用）。
 
 ## 用户输入框斜杠命令
 
