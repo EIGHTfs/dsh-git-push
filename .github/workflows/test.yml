@@ -1,0 +1,30 @@
+name: test
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # 部分测试需要 git 提交身份（临时仓库 init/commit）
+      - name: 配置 git 身份
+        run: |
+          git config --global user.name "dsh-git-push CI"
+          git config --global user.email "ci@example.invalid"
+      # DSH_HOME 用 runner 临时目录：测试不依赖宿主真实配置；
+      # 凭据/在线类测试在缺环境时自行条件跳过（见各测试文件）。
+      - name: 回归测试（--all 忽略缓存）
+        env:
+          DSH_HOME: ${{ runner.temp }}/dsh-home
+        run: node test/run-tests.mjs --all

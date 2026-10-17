@@ -418,19 +418,14 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "docs/FUNCTIONS.md": {
+      "test/test-self.mjs": {
         "status": "M",
-        "mtime": "2026-10-17T12:21:39.914Z",
+        "mtime": "2026-10-17T12:30:07.757Z",
         "note": "注释可能需更新"
       },
-      "test/test-audit-slot-order.mjs": {
-        "status": "M",
-        "mtime": "2026-10-17T12:20:01.704Z",
-        "note": "注释可能需更新"
-      },
-      "audit-samples/": {
+      ".github/": {
         "status": "A",
-        "mtime": "2026-10-17T12:18:20.776Z",
+        "mtime": "2026-10-17T12:30:15.503Z",
         "note": "注释可能需更新"
       }
     }
@@ -502,5 +497,8 @@
   "audit-samples": "（待注释）",
   "audit-samples/.samples": "（待注释）",
   "audit-samples/js-bad.js": "（待注释）",
-  "audit-samples/py-bad.py": "（待注释）"
+  "audit-samples/py-bad.py": "（待注释）",
+  ".github/workflows": "（待注释）",
+  ".github": "（待注释）",
+  ".github/workflows/test.yml": "（待注释）"
 }
