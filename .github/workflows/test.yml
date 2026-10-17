@@ -22,9 +22,13 @@ jobs:
         run: |
           git config --global user.name "dsh-git-push CI"
           git config --global user.email "ci@example.invalid"
+      # lib/client.js 是构建产物（.gitignore 忽略、不入库）：doc-func/构建一致性测试需要它
+      - name: 构建 client 产物
+        run: node scripts/build-client.mjs
       # DSH_HOME 用 runner 临时目录：测试不依赖宿主真实配置；
       # 凭据/在线类测试在缺环境时自行条件跳过（见各测试文件）。
+      # 串行跑：多个测试会写同一仓库的 index/工作区，并发时偶发互相干扰
       - name: 回归测试（--all 忽略缓存）
         env:
           DSH_HOME: ${{ runner.temp }}/dsh-home
-        run: node test/run-tests.mjs --all
+        run: node test/run-tests.mjs --all --concurrency=1

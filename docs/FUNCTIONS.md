@@ -2596,12 +2596,12 @@
 | `identities` | 45-47 | 3 | `function identities(dir) {` |
 | `repoWrongEmails` | 49-51 | 3 | `function repoWrongEmails() {` |
 
-### test/test-git-identity.mjs（117 行 · 2 个函数）
+### test/test-git-identity.mjs（123 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `makeRepo` | 25-29 | 5 | `function makeRepo() {` |
-| `repoConfig` | 32-34 | 3 | `function repoConfig(dir, key) {` |
+| `makeRepo` | 31-35 | 5 | `function makeRepo() {` |
+| `repoConfig` | 38-40 | 3 | `function repoConfig(dir, key) {` |
 
 ### test/test-git.mjs（868 行 · 2 个函数）
 

@@ -64,8 +64,11 @@ if (argv.includes('--dry-run')) {
 }
 
 const started = Date.now();
-// 流式透传（长跑要能看到进度）
-const child = spawn(process.execPath, ['--test', ...plan.run], { stdio: ['ignore', 'pipe', 'pipe'] });
+// 并发度：默认交给 node 决定；CI 建议 --concurrency=1 —— 多个测试会写同一仓库的
+//   index/工作区（如 test-audit-bad-file 在 ROOT 里 git add 临时文件），全量并发时偶发互相干扰。
+const concArg = argv.find((a) => a.startsWith('--concurrency='));
+const testArgs = ['--test', ...(concArg ? [`--test-concurrency=${concArg.split('=')[1]}`] : []), ...plan.run];
+const child = spawn(process.execPath, testArgs, { stdio: ['ignore', 'pipe', 'pipe'] });
 child.stdout.on('data', (d) => process.stdout.write(String(d)));
 child.stderr.on('data', (d) => process.stderr.write(String(d)));
 const status = await new Promise((res) => child.on('close', (code) => res(code)));

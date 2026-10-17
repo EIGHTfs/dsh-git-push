@@ -10,13 +10,19 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { rmSync } from 'node:fs';
+import { rmSync, writeFileSync } from 'node:fs';
 import { mkdtempTracked } from './helpers/tmp-dir.mjs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { runGit } from '../lib/git/exec.js';
 import { ensureRepoIdentity, identityFromAccount, noreplyEmail, resolveCommitIdentity } from '../lib/git/identity.js';
+
+// CI 环境可能配置了全局 git 身份（如 Actions 里 git config --global），会干扰
+//   「临时仓库未配身份 → 应写入局部配置」的判定。这里隔离全局配置（指向空文件），
+//   让测试自洽：不依赖运行环境是否配过身份。
+process.env.GIT_CONFIG_GLOBAL = join(tmpdir(), 'dshgp-empty-gitconfig');
+writeFileSync(process.env.GIT_CONFIG_GLOBAL, '');
 
 const ACCOUNT = { login: 'EIGHTfs', id: 38984640 };
 const CANON_EMAIL = '38984640+EIGHTfs@users.noreply.github.com';
