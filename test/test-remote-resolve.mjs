@@ -116,10 +116,12 @@ test('非 GitHub remote（内网 gitlab）不参与判定', () => {
   assert.equal(getUrl(dir, 'github-ssh'), SSH443);
 });
 
-test('本仓库实况：解析应命中既有 remote 且形态已是 ssh:443（keep）', () => {
+test('本仓库实况：解析应命中既有 remote（ssh 形态 keep / https 形态修复）', () => {
   const root = join(import.meta.dirname, '..');
   const r = resolveGithubRemote({ repoPath: root, owner: OWNER, repo: REPO });
   assert.equal(r.ok, true, JSON.stringify(r.reasons));
-  assert.equal(r.action, 'keep', `本仓库 remote 已是正确形态，应 keep（实得 ${r.action}：${r.reasons.join('；')}）`);
+  // 本地 remote 已是 ssh:443 → keep；CI checkout 默认 https → 应修复为 ssh:443（fixed）。
+  //   两种都是正确行为，不能硬断言 keep（否则换环境即失败）。
+  assert.ok(r.action === 'keep' || r.action === 'fixed', `应 keep 或 fixed（实得 ${r.action}：${r.reasons.join('；')}）`);
   assert.equal(r.url, SSH443);
 });

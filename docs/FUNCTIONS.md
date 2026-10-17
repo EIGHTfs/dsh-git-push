@@ -1683,18 +1683,18 @@
 | `appendPublishLog` | 94-102 | 9 | `function appendPublishLog(line, { workspaceRoot = '' } = {}) {` |
 | `publishPackage` | 109-171 | 63 | `export async function publishPackage({` |
 
-### lib/npm/registry.js（169 行 · 8 个函数）
+### lib/npm/registry.js（172 行 · 8 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `normalizeRegistry` | 15-23 | 9 | `export function normalizeRegistry(v = '') {` |
 | `resolveNpmBin` | 32-54 | 23 | `export function resolveNpmBin({ env = process.env } = {}) {` |
 | `probe` | 35-37 | 3 | `const probe = (p) => {` |
-| `runNpm` | 74-104 | 31 | `export function runNpm(args = [], { timeoutMs = NPM_TIMEOUT_MS, env = {}, cwd = '', maxBuffer } = {}) {` |
-| `parseWhoami` | 107-110 | 4 | `export function parseWhoami(text = '') {` |
-| `whoami` | 113-118 | 6 | `export function whoami({ npmArgs = [], timeoutMs = NPM_TIMEOUT_MS, env = {} } = {}) {` |
-| `listOwnedPackages` | 126-139 | 14 | `export async function listOwnedPackages(user, { registry = DEFAULT_REGISTRY, timeoutMs = NPM_TIMEOUT_MS, size = 50 } = {}) {` |
-| `searchPackages` | 140-168 | 29 | `export async function searchPackages(q, { registry = DEFAULT_REGISTRY, timeoutMs = NPM_TIMEOUT_MS, size = 20 } = {}) {` |
+| `runNpm` | 74-107 | 34 | `export function runNpm(args = [], { timeoutMs = NPM_TIMEOUT_MS, env = {}, cwd = '', maxBuffer } = {}) {` |
+| `parseWhoami` | 110-113 | 4 | `export function parseWhoami(text = '') {` |
+| `whoami` | 116-121 | 6 | `export function whoami({ npmArgs = [], timeoutMs = NPM_TIMEOUT_MS, env = {} } = {}) {` |
+| `listOwnedPackages` | 129-142 | 14 | `export async function listOwnedPackages(user, { registry = DEFAULT_REGISTRY, timeoutMs = NPM_TIMEOUT_MS, size = 50 } = {}) {` |
+| `searchPackages` | 143-171 | 29 | `export async function searchPackages(q, { registry = DEFAULT_REGISTRY, timeoutMs = NPM_TIMEOUT_MS, size = 20 } = {}) {` |
 
 ### lib/plugin/auto-detect.js（92 行 · 4 个函数）
 
@@ -2733,7 +2733,7 @@
 |------|------|------|------|
 | `tempRepo` | 31-41 | 11 | `function tempRepo() {` |
 
-### test/test-remote-resolve.mjs（126 行 · 3 个函数）
+### test/test-remote-resolve.mjs（128 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
