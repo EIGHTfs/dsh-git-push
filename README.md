@@ -398,6 +398,7 @@ dsh-git-push/
 │   │   ├── index.js — 豁免注册表（dsh-skip-* 全标记消费）
 │   ├── fs/ — （待注释）
 │   │   ├── edit-after-read.js — （待注释）
+│   │   ├── observe.js — （待注释）
 │   ├── git/ — Git 执行层（runGit/账号/API/克隆/凭据/推送/扫描/索引维护/敏感扫描/传输通道）
 │   │   ├── account-status.js — （待注释）
 │   │   ├── account.js — 账号校验（token 在线 + SSH 公钥指纹，输出账号状态块）
@@ -586,6 +587,7 @@ dsh-git-push/
 │   ├── test-filter-ext.mjs — （待注释）
 │   ├── test-folder-scope.mjs — 目录级审计作用域回归测试
 │   ├── test-fs-hotspots.mjs — （待注释）
+│   ├── test-fs-observe.mjs — （待注释）
 │   ├── test-func-doc-drift.mjs — （待注释）
 │   ├── test-generated-html-artifact.mjs — （待注释）
 │   ├── test-git-api-tool.mjs — （待注释）

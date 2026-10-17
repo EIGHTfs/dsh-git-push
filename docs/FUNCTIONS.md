@@ -5,12 +5,12 @@
 <!-- dshgp-functions:start -->
 ## 函数列表
 
-### lib/app/apply.js（289 行 · 2 个函数）
+### lib/app/apply.js（296 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `apply` | 44-288 | 245 | `export async function apply(ctx, config = {}) {` |
-| `envInjectText` | 99-138 | 40 | `const envInjectText = (cwdOverride) => {` |
+| `apply` | 44-295 | 252 | `export async function apply(ctx, config = {}) {` |
+| `envInjectText` | 106-145 | 40 | `const envInjectText = (cwdOverride) => {` |
 
 ### lib/app/audit-api.js（162 行 · 5 个函数）
 
@@ -220,7 +220,7 @@
 | `getLastSlotHitStats` | 28-30 | 3 | `export function getLastSlotHitStats() {` |
 | `getLastSlotHitMeta` | 33-35 | 3 | `export function getLastSlotHitMeta() {` |
 
-### lib/app/tool-call.js（727 行 · 23 个函数）
+### lib/app/tool-call.js（738 行 · 23 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -244,9 +244,9 @@
 | `doHistory` | 455-458 | 4 | `const doHistory = async () => {` |
 | `callCodeAudit` | 477-489 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
 | `runStandardAuditTool` | 492-533 | 42 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
-| `callTool` | 535-698 | 164 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null) {` |
-| `shellSplit` | 701-719 | 19 | `function shellSplit(input) {` |
-| `readTextSafe` | 722-726 | 5 | `function readTextSafe(path = '') {` |
+| `callTool` | 535-709 | 175 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null, fsCtx = null) {` |
+| `shellSplit` | 712-730 | 19 | `function shellSplit(input) {` |
+| `readTextSafe` | 733-737 | 5 | `function readTextSafe(path = '') {` |
 
 ### lib/app/tools.js（34 行 · 2 个函数）
 
@@ -1246,6 +1246,12 @@
 | `countOccurrences` | 18-27 | 10 | `export function countOccurrences(text, needle) {` |
 | `fingerprint` | 30-37 | 8 | `function fingerprint(statFile, path) {` |
 | `editAfterRead` | 51-142 | 92 | `export function editAfterRead({` |
+
+### lib/fs/observe.js（47 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `observeFileForHost` | 27-46 | 20 | `export async function observeFileForHost(ctx, exec, hostPath) {` |
 
 ### lib/fsx.js（88 行 · 3 个函数）
 
@@ -2670,6 +2676,12 @@
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `countSourceDirs` | 28-47 | 20 | `function countSourceDirs(tree, { threshold = 1, excludeDirs = [] } = {}) {` |
+
+### test/test-fs-observe.mjs（65 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `fakeCtx` | 17-28 | 12 | `function fakeCtx({ resolved = { targetKey: '/x/t.md', displayPath: '/x/t.md' }, info = { version: 'v1', type: 'file', size: 3 }, throwOn } = {}) {` |
 
 ### test/test-func-doc-drift.mjs（71 行 · 2 个函数）
 
