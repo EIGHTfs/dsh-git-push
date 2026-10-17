@@ -10,9 +10,6 @@ import { fileURLToPath } from 'node:url';
 
 import { VERSION, readmeTemplate, yamlTemplate, versionInfo, helpSync } from '../lib/self/index.js';
 import { parseArgv, KNOWN_FLAGS, main, cmdVersion } from '../cli.mjs';
-import {
-  SOURCE_ROOT, SYNC_ENTRIES, NPM_ALWAYS_IGNORE_SEGMENTS, listSyncFiles, detectTargets, syncPlugin,
-} from '../scripts/sync-plugin.mjs';
 import { mkdtempSync, rmSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 
@@ -163,115 +160,6 @@ test('CLI：parseArgv 支持 --depth 与 --full', () => {
 test('CLI：未知参数报错（不走 HELP 静默）', () => {
   const { error } = parseArgv(['--not-exist']);
   assert.match(error, /未知参数/);
-});
-
-// ---------- 双副本同步与发布准备（原 test-plugin，归属自身总入口）----------
-test('同步：同步清单含入口与规则，排除 test/看板', async () => {
-  const files = await listSyncFiles(ROOT);
-  assert.ok(files.includes('package.json'));
-  assert.ok(files.includes('cli.mjs'));
-  assert.ok(files.includes('lib/index.js'));
-  assert.ok(files.some((f) => f.startsWith('lib/audit-rules/')));
-  assert.ok(!files.some((f) => f.startsWith('test/')), 'test 不应随插件发布');
-  assert.ok(!files.some((f) => f.includes('WORKBOARD')), '开发看板不应随插件发布');
-  assert.ok(!files.some((f) => f.includes('node_modules')));
-});
-
-test('同步：dry-run 不写文件（默认安全）', async () => {
-  const target = join(ROOT, '.tmp-sync-test');
-  const r = await syncPlugin({ source: ROOT, target, write: false });
-  assert.equal(r.ok, true);
-  assert.ok(r.written > 0);
-  assert.equal(existsSync(target), false, 'dry-run 不应创建目标目录');
-});
-
-test('同步：缺目标目录时报错不静默', async () => {
-  const r = await syncPlugin({ source: ROOT, target: '' });
-  assert.equal(r.ok, false);
-  assert.ok(r.error.includes('未指定目标'));
-});
-
-test('同步：真实写入到临时目录（幂等）', async () => {
-  const target = join(ROOT, '.tmp-sync-write');
-  const r1 = await syncPlugin({ source: ROOT, target, write: true });
-  assert.equal(r1.ok, true);
-  assert.ok(existsSync(join(target, 'package.json')));
-  const r2 = await syncPlugin({ source: ROOT, target, write: true });
-  assert.equal(r2.written, 0, '第二次应全部一致（幂等）');
-  assert.ok(r2.skipped > 0);
-  // 清理：必须**同步**删——原实现写成 `import('node:fs').then(...)`（异步且不等），
-  //   测试早已结束、清理还没跑完，于是每次跑全量都留下一个整仓副本 `.tmp-sync-write/`；
-  //   它会让 .auditignore 里 lib/vendor/ 的豁免因路径前缀变化失效，制造 5 个审计 blocker。
-  //   （rmSync 本文件第 16 行已经导入，无需再动态 import。）
-  rmSync(target, { recursive: true, force: true });
-  assert.equal(existsSync(target), false, '清理后临时目录不应存在');
-});
-
-test('同步：常量声明齐全', () => {
-  assert.ok(SYNC_ENTRIES.includes('lib'), 'SYNC_ENTRIES 是「package.json 未声明 files」时的候选白名单');
-  // npm 硬性排除项（不是项目自定义规则）：版本库与依赖目录永不进安装副本
-  assert.ok(NPM_ALWAYS_IGNORE_SEGMENTS.includes('.git'), 'npm 语义下 .git 必须排除');
-  assert.ok(NPM_ALWAYS_IGNORE_SEGMENTS.includes('node_modules'), 'npm 语义下 node_modules 必须排除');
-});
-
-// 实测返回集，确保排除规则真的作用于 listSyncFiles（不只是常量里写了名字）
-// 语义回归（2026-10-07）：同步清单**只由 package.json 的 files 决定**，不再有自定义排除表。
-//   事故：旧实现用 `rel.includes('test')` 把 lib/shared/test-hooks.js（正式发布模块）排掉，
-//   同步报成功但安装副本少文件、版本间 lib/ 对不齐。这里用夹具插件根钉死语义：
-//   files 里声明的目录→全量同步（哪怕文件名带 test）；未声明的目录→不进清单（不靠名字猜）。
-test('同步：清单严格来自 package.json files（名字含 test 的正式模块不被误排）', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'sync-files-'));
-  try {
-    mkdirSync(join(dir, 'lib', 'shared'), { recursive: true });
-    mkdirSync(join(dir, 'test', 'unit'), { recursive: true });
-    writeFileSync(join(dir, 'package.json'), JSON.stringify({ name: 'fixture', version: '1.0.0', files: ['lib'] }));
-    writeFileSync(join(dir, 'lib', 'index.js'), 'export const a = 1;\n');
-    writeFileSync(join(dir, 'lib', 'shared', 'test-hooks.js'), 'export const b = 2;\n');
-    writeFileSync(join(dir, 'lib', 'notes.bak'), 'backup\n');
-    writeFileSync(join(dir, 'test', 'unit', 'a.mjs'), 'export const c = 3;\n');
-
-    const files = await listSyncFiles(dir);
-    assert.ok(files.includes('lib/index.js'), 'files 声明的 lib/ 应全量同步');
-    assert.ok(files.includes('lib/shared/test-hooks.js'), 'lib/ 下名字含 test 的正式模块必须同步（旧 bug 点）');
-    assert.ok(files.includes('lib/notes.bak'), 'files 声明的目录内文件按 npm 语义原样同步（不猜后缀）');
-    assert.ok(files.includes('package.json'), 'package.json 永远随包（npm 语义）');
-    assert.ok(!files.some((f) => f.startsWith('test/')), '未列入 files 的 test/ 不进清单');
-  } finally {
-    rmSync(dir, { recursive: true, force: true });
-  }
-});
-
-test('同步：listSyncFiles 返回集不含 .bak / .trash 残留', async () => {
-  const files = await listSyncFiles(ROOT);
-  const bad = files.filter((f) => f.includes('.bak') || f.includes('.trash'));
-  assert.deepEqual(bad, [], `备份/回收站文件不得进安装副本：${bad.join(', ')}`);
-  assert.ok(files.length > 0, '同步清单不应为空');
-});
-
-// SYNC_ENTRIES 曾漏 client.js（侧边栏前端主文件当时在仓库根），
-//   而 package.json 的 files 白名单里有它 → 同步到已安装副本时前端改动装不进去。
-// client.js 移到 lib/client.js，随 'lib' 整目录同步，此类漏列风险消除；
-//   断言保留——仍锁死 files 白名单与 SYNC_ENTRIES 一致，避免以后新增发布文件又漏同步。
-test('同步：SYNC_ENTRIES 覆盖 package.json files 白名单', () => {
-  const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
-  for (const f of pkg.files) {
-    assert.ok(SYNC_ENTRIES.includes(f),
-      `package.json files 里的 ${f} 未在 SYNC_ENTRIES 中——同步会漏掉它（发布有、安装副本无）`);
-  }
-  // 审计豁免文件必须随插件发布——SYNC_ENTRIES 曾漏 .auditignore，安装副本豁免失效
-  assert.ok(SYNC_ENTRIES.includes('.auditignore'), 'SYNC_ENTRIES 必须含 .auditignore（审计豁免随插件发布）');
-  assert.ok(SYNC_ENTRIES.includes('.gitignore'), 'SYNC_ENTRIES 必须含 .gitignore');
-});
-
-test('同步：listSyncFiles 实际包含 .auditignore / .gitignore', async () => {
-  const files = await listSyncFiles(ROOT);
-  assert.ok(files.includes('.auditignore'), '同步清单应含 .auditignore（实测 listSyncFiles 漏它）');
-  assert.ok(files.includes('.gitignore'), '同步清单应含 .gitignore');
-});
-
-test('同步：detectTargets 对无 HOME 返回空数组（不崩）', () => {
-  assert.deepEqual(detectTargets(''), []);
-  assert.deepEqual(detectTargets('/no/such/home'), []);
 });
 
 // ---------- 推送准备（产物完整） ----------

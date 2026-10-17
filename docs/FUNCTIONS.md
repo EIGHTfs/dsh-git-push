@@ -1239,12 +1239,6 @@
 | `isSampleExemptDir` | 288-308 | 21 | `export function isSampleExemptDir(repoPath, relPath = '') {` |
 | `isTestExemptDir` | 318-338 | 21 | `export function isTestExemptDir(repoPath, relPath = '') {` |
 
-### lib/fs/observe.js（49 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `observeFileForHost` | 27-48 | 22 | `export async function observeFileForHost(ctx, exec, hostPath) {` |
-
 ### lib/fsx.js（88 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2102,12 +2096,6 @@
 | `checkVersionDrift` | 69-77 | 9 | `export function checkVersionDrift({ hostPath, root, versionSource = '' } = {}) {` |
 | `out` | 94-94 | 1 | `const out = (msg) => console.log(msg);` |
 
-### scripts/frontend-preview-check.mjs（125 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `clickText` | 60-64 | 5 | `const clickText = async (re) => {` |
-
 ### scripts/hot-path-probe.mjs（154 行 · 6 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2128,58 +2116,6 @@
 | `scanPlatformCode` | 87-115 | 29 | `export function scanPlatformCode(root, { exts = DEFAULT_EXTS } = {}) {` |
 | `parseArgs` | 118-132 | 15 | `function parseArgs(argv) {` |
 | `printReport` | 135-153 | 19 | `function printReport(result, top) {` |
-
-### scripts/preview-gen.mjs（490 行 · 10 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `findDshRoot` | 56-70 | 15 | `function findDshRoot() {` |
-| `isRoot` | 58-58 | 1 | `const isRoot = (d) => d && existsSync(join(d, 'package.json')) && existsSync(join(d, 'node_modules'));` |
-| `pickUmdDir` | 83-110 | 28 | `function pickUmdDir(pkg) {` |
-| `has` | 86-86 | 1 | `const has = (d) => Boolean(d) && existsSync(join(d, want));` |
-| `ensureReactDomUmd` | 126-146 | 21 | `function ensureReactDomUmd(dir) {` |
-| `regen` | 188-193 | 6 | `const regen = () => {` |
-| `__err` | 243-254 | 12 | `function __err(kind, msg) {` |
-| `forwardBackend` | 315-327 | 13 | `function forwardBackend(urlStr, init) {` |
-| `passthroughFetch` | 330-352 | 23 | `function passthroughFetch(urlStr, init) {` |
-| `mockFetch` | 353-490 | 138 | `function mockFetch(urlStr, init) { // dsh-skip-complexity: mock 路由表（8 路由 if/else 为结构必然，各路由是独立假数据）` |
-
-### scripts/preview-local-runner.mjs（56 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `load` | 25-25 | 1 | `const load = (rel) => import(pathToFileURL(resolve(ROOT, rel)).href);` |
-
-### scripts/preview-server-direct.mjs（116 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `detectLanIp` | 29-41 | 13 | `function detectLanIp() {` |
-
-### scripts/preview-server.mjs（306 行 · 8 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `resolveToken` | 107-120 | 14 | `function resolveToken() {` |
-| `ensureAuthCookie` | 126-147 | 22 | `async function ensureAuthCookie() {` |
-| `proxyToDsh` | 150-187 | 38 | `function proxyToDsh(req, res, upstreamPath) {` |
-| `send` | 189-192 | 4 | `function send(res, status, body, type) {` |
-| `serveFile` | 194-199 | 6 | `function serveFile(res, file) {` |
-| `openBrowser` | 231-254 | 24 | `async function openBrowser() {` |
-| `serveLocalApi` | 274-305 | 32 | `function serveLocalApi(req, res) {` |
-| `finish` | 280-288 | 9 | `const finish = (status, body, tag) => {` |
-
-### scripts/preview-slot-data.mjs（124 行 · 7 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `buildPreviewSlotData` | 29-36 | 8 | `export function buildPreviewSlotData() {` |
-| `readPreviewSlotData` | 39-49 | 11 | `export function readPreviewSlotData(html = readPreviewHtml()) {` |
-| `ensurePreviewHtml` | 57-70 | 14 | `export function ensurePreviewHtml() {` |
-| `readPreviewHtmlText` | 73-79 | 7 | `export function readPreviewHtmlText() {` |
-| `readPreviewHtml` | 81-83 | 3 | `function readPreviewHtml() {` |
-| `genPreview` | 86-99 | 14 | `export function genPreview({ write = false } = {}) {` |
-| `checkPreviewDrift` | 102-119 | 18 | `export function checkPreviewDrift() {` |
 
 ### scripts/readme-gen.mjs（318 行 · 16 个函数）
 
@@ -2327,39 +2263,6 @@
 |------|------|------|------|
 | `collectFiles` | 23-35 | 13 | `function collectFiles(root, exts, dir = root, out = []) {` |
 | `parseArgs` | 38-52 | 15 | `function parseArgs(argv) {` |
-
-### scripts/sync-plugin-install.mjs（287 行 · 14 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `dshRootOf` | 28-34 | 7 | `export function dshRootOf(home = process.env.DSH_HOME \|\| '') {` |
-| `profilesDirOf` | 37-40 | 4 | `export function profilesDirOf(home = process.env.DSH_HOME \|\| '') {` |
-| `inspectProfiles` | 43-56 | 14 | `export function inspectProfiles(home = process.env.DSH_HOME \|\| '') {` |
-| `readHmrConfig` | 62-80 | 19 | `export function readHmrConfig(profileDir, home = process.env.DSH_HOME \|\| '') {` |
-| `judgeHmr` | 87-109 | 23 | `export function judgeHmr({ hmr, profileDir, pluginName }) {` |
-| `inRoot` | 97-97 | 1 | `const inRoot = (p) => roots.some((r) => p === r \|\| p.startsWith(r + sep));` |
-| `lstatOrNull` | 112-114 | 3 | `function lstatOrNull(p) {` |
-| `readTextOrNull` | 117-119 | 3 | `function readTextOrNull(p) {` |
-| `listFilesRecursive` | 122-132 | 11 | `function listFilesRecursive(dir, prefix = '', out = new Set()) {` |
-| `copyDrift` | 152-173 | 22 | `export function copyDrift(localDir, nmDir) {` |
-| `planInstall` | 190-211 | 22 | `export function planInstall({ profileDir, pluginName }) {` |
-| `applyInstall` | 222-241 | 20 | `export function applyInstall(actions, { on = false } = {}) {` |
-| `depHints` | 248-262 | 15 | `export function depHints(profileDir, pluginName) {` |
-| `pickProfile` | 273-286 | 14 | `export function pickProfile(profiles = [], pluginName = '') {` |
-
-### scripts/sync-plugin.mjs（285 行 · 9 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `isNpmIgnored` | 61-65 | 5 | `export function isNpmIgnored(rel) {` |
-| `exists` | 68-70 | 3 | `async function exists(p) {` |
-| `packageFilesOf` | 79-95 | 17 | `export async function packageFilesOf(root) {` |
-| `listSyncFiles` | 102-122 | 21 | `export async function listSyncFiles(root = SOURCE_ROOT) {` |
-| `walk` | 106-114 | 9 | `const walk = async (dir) => {` |
-| `detectTargets` | 140-160 | 21 | `export function detectTargets(home = process.env.DSH_HOME \|\| '', pluginName = '', profileName = '') {` |
-| `fileContentEqual` | 172-181 | 10 | `async function fileContentEqual(from, to) {` |
-| `syncPlugin` | 183-213 | 31 | `export async function syncPlugin({ source = SOURCE_ROOT, target = '', write = false } = {}) {` |
-| `main` | 217-278 | 62 | `export async function main(argv = process.argv.slice(2)) {` |
 
 ### scripts/verify-prestep.mjs（101 行 · 1 个函数）
 
@@ -2662,12 +2565,6 @@
 |------|------|------|------|
 | `countSourceDirs` | 28-47 | 20 | `function countSourceDirs(tree, { threshold = 1, excludeDirs = [] } = {}) {` |
 
-### test/test-fs-observe.mjs（65 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `fakeCtx` | 17-28 | 12 | `function fakeCtx({ resolved = { targetKey: '/x/t.md', displayPath: '/x/t.md' }, info = { version: 'v1', type: 'file', size: 3 }, throwOn } = {}) {` |
-
 ### test/test-func-doc-drift.mjs（71 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2795,13 +2692,13 @@
 |------|------|------|------|
 | `makeProject` | 20-46 | 27 | `function makeProject() {` |
 
-### test/test-plugin.mjs（655 行 · 3 个函数）
+### test/test-plugin.mjs（654 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `makeExemptRepo` | 486-492 | 7 | `function makeExemptRepo() {` |
-| `addSecretFile` | 493-496 | 4 | `function addSecretFile(root, path) {` |
-| `fsStatMode` | 650-652 | 3 | `function fsStatMode(file) {` |
+| `makeExemptRepo` | 485-491 | 7 | `function makeExemptRepo() {` |
+| `addSecretFile` | 492-495 | 4 | `function addSecretFile(root, path) {` |
+| `fsStatMode` | 649-651 | 3 | `function fsStatMode(file) {` |
 
 ### test/test-private-gate.mjs（72 行 · 1 个函数）
 
@@ -2845,13 +2742,6 @@
 | `apply` | 347-351 | 5 | `const apply = (s) => {` |
 | `block` | 362-365 | 4 | `const block = (text) => {` |
 
-### test/test-rule-slots-render.mjs（203 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `renderRuleRows` | 38-132 | 95 | `async function renderRuleRows(value, { publishAfterLoad = false } = {}) {` |
-| `req` | 56-67 | 12 | `const req = (name) => {` |
-
 ### test/test-scope.mjs（177 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2880,14 +2770,6 @@
 | `clsOf` | 88-88 | 1 | `const clsOf = (n) => String((n.props && n.props.className) \|\| '');` |
 | `findClass` | 89-89 | 1 | `const findClass = (tree, cls) => walk(tree).find((n) => clsOf(n).includes(cls));` |
 
-### test/test-sidebar-state.mjs（267 行 · 3 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `loadSettingsBody` | 27-32 | 6 | `function loadSettingsBody() {` |
-| `readbackKeys` | 35-38 | 4 | `function readbackKeys() {` |
-| `schemaKeys` | 41-43 | 3 | `function schemaKeys() {` |
-
 ### test/test-slash-commands.mjs（287 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2907,12 +2789,6 @@
 |------|------|------|------|
 | `buildFixture` | 25-41 | 17 | `function buildFixture() {` |
 | `runNode` | 43-45 | 3 | `function runNode(args, env) {` |
-
-### test/test-sync-plugin-install.mjs（158 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `fakeHome` | 18-25 | 8 | `function fakeHome({ profile = 'web' } = {}) {` |
 
 ### test/test-task-queue.mjs（232 行 · 4 个函数）
 

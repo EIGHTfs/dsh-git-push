@@ -11,7 +11,6 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
 import { listTools } from '../lib/app/tools.js';
-import { SYNC_ENTRIES } from '../scripts/sync-plugin.mjs';
 import { cmdModuleSplitter } from '../cli.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -51,10 +50,6 @@ test('module_splitter：CLI 命令 + HELP + parseArgv 兼容', () => {
   assert.match(doc, /export async function cmdModuleSplitter/, 'lib/cli/commands-doc.mjs 缺 cmdModuleSplitter 实现');
 });
 
-test('module_splitter：脚本存在且随插件同步（SYNC_ENTRIES 覆盖 scripts/）', () => {
-  assert.ok(existsSync(join(rootDir, 'scripts/module-splitter.py')), 'scripts/module-splitter.py 缺失');
-  assert.ok(SYNC_ENTRIES.includes('scripts'), 'SYNC_ENTRIES 必须含 scripts（module-splitter.py 随插件发布）');
-});
 
 test('module_splitter：analyze 真实跑通（python3）', async () => {
   const tmp = mkdtempSync(join(tmpdir(), 'dshgp-ms-'));

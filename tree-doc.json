@@ -157,14 +157,12 @@
   "scripts": "开发工具脚本（版本校验/双副本同步/预览服务/README 目录树维护）",
   "scripts/audit-runtime-check.mjs": "三层审计 L3 运行时检测脚本",
   "scripts/check.mjs": "语法检查脚本（npm run check）",
-  "scripts/preview-server.mjs": "本地真实后端测试服务（preview.html 接真实 handleHttp）",
   "scripts/probe-recheck.mjs": "探针：「重新检测」按钮链路实测（在线校验 token/SSH）",
   "scripts/rule-switch.mjs": "规则槽位手动启停 CLI",
   "scripts/scan-file-io.mjs": "文件读写扫描器（列出所有 fs 读写调用位置 + 路径参数）",
   "scripts/scan-repos.mjs": "（待注释）",
   "scripts/scan-version.mjs": "版本一致性校验脚本",
   "scripts/scrub-user-wording.mjs": "清理「用户沟通措辞」独立脚本",
-  "scripts/sync-plugin.mjs": "双副本同步脚本（源仓库 → 部署安装副本）",
   "skills": "插件权威 skill（功能手册/规则/使用说明，安装副本的 skills/ 同步）",
   "skills/dsh-repo-index.md": "dsh-repo-index skill（源码索引权威说明）",
   "test": "node:test 全量单元测试（541+ 条，覆盖审计/推送/账号/HTTP/后台任务）",
@@ -200,11 +198,9 @@
   "test/test-readme-gen.mjs": "README 生成测试（模板渲染/版本表）",
   "test/test-repo-list.mjs": "仓库列表测试（本地扫描/索引读写/HTTP 端点/远端状态）",
   "test/test-rule-packs.mjs": "规则总入口测试（编译注册/字段指派）",
-  "test/test-rule-slots-render.mjs": "规则包列表统计渲染回归",
   "test/test-self.mjs": "自身总入口测试（VERSION/CLI/help 比对）",
   "test/test-settings-persistence.mjs": "设置侧边栏持久化专项测试（L1 提交/L2 白名单/L3 回读/L4 消费四层断言）",
   "test/test-sidebar-interaction.mjs": "侧边栏规则包列表交互自检",
-  "test/test-sidebar-state.mjs": "设置侧边栏状态自检（设置键回读/凭据已填写判断/统一刷新入口/产物同步）",
   "test/test-slash-commands.mjs": "用户输入框 /git-audit 斜杠命令（解析/接线/对本仓库跑 quick）",
   "test/test-smart-hint.mjs": "扫描智能提示 + 评分对数衰减测试",
   "test/test-status-secret.mjs": "token 明文不下发安全回归",
@@ -307,7 +303,6 @@
   "skills/workflow/task-completion-report.md": "（待注释）",
   "skills/workflow/tool-json-add-ask.md": "（待注释）",
   "skills/workflow/versioning-rule.md": "（待注释）",
-  "assets/minihost.sh": "（待注释）",
   "lib/git/visibility.js": "（待注释）",
   "scripts/browser-page-probe.mjs": "（待注释）",
   "skills/dev/dsh-git-push.md": "（待注释）",
@@ -357,7 +352,6 @@
   "test/test-git-identity-rewrite.mjs": "（待注释）",
   "lib/git/identity.js": "（待注释）",
   "test/test-git-identity.mjs": "（待注释）",
-  "lib/fs": "（待注释）",
   "test/helpers": "（待注释）",
   "docs/2026-10-09-审计插件性能优化.MD": "（待注释）",
   "docs/PERF-BASELINE.md": "（待注释）",
@@ -370,7 +364,6 @@
   "lib/git/clone-history.js": "（待注释）",
   "lib/git/clone-replay-io.js": "（待注释）",
   "lib/git/clone-replay.js": "（待注释）",
-  "scripts/frontend-preview-check.mjs": "（待注释）",
   "scripts/hot-path-probe-cjs.cjs": "（待注释）",
   "scripts/hot-path-probe-fs-shim.mjs": "（待注释）",
   "scripts/hot-path-probe-fsp-shim.mjs": "（待注释）",
@@ -412,20 +405,14 @@
   "lib/client-parts/41-actions.js": "[10] Controller：动作注入（269 行）",
   "lib/client-parts/99-apply.js": "末片：apply/inject 导出 + factory 返回",
   "scripts/build-client.mjs": "客户端分片拼接（PART_ORDER + --check 门禁 + 形态铁律自检）",
-  "scripts/sync-plugin-install.mjs": "插件安装形态与免重启热重载自检（被 sync-plugin.mjs 引用）",
   "test/test-build-client.mjs": "分片构建门禁测试（产物一致/幂等/形态铁律/dshgp_ 前缀）",
   "test/test-client-fragment-scope.mjs": "客户端分片作用域推导测试（dsh-client-fragment）",
   "test/test-scrub-conv-wording.mjs": "（待注释）",
-  "test/test-sync-plugin-install.mjs": "（待注释）",
   "docs/2026-10-11-单一真源与文档漂移治理方案.MD": "（待注释）",
   "docs/2026-10-11-硬编码路径改造为审计引擎方案.MD": "（待注释）",
   "lib/audit-rules/audit-rules-paths.yml": "（待注释）",
   "lib/checks/hardcoded-path.js": "（待注释）",
   "scripts/doc-drift.mjs": "（待注释）",
-  "scripts/preview-gen.mjs": "（待注释）",
-  "scripts/preview-local-runner.mjs": "（待注释）",
-  "scripts/preview-server-direct.mjs": "（待注释）",
-  "scripts/preview-slot-data.mjs": "（待注释）",
   "scripts/scan-hardcoded-paths.mjs": "（待注释）",
   "test/test-git-api-tool.mjs": "（待注释）",
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
@@ -433,67 +420,107 @@
     "worktree": {
       "README.md": {
         "status": "M",
-        "mtime": "2026-10-17T07:17:53.249Z",
+        "mtime": "2026-10-17T07:32:51.269Z",
+        "note": "注释可能需更新"
+      },
+      "assets/minihost.sh": {
+        "status": "D",
+        "mtime": "",
         "note": "注释可能需更新"
       },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-17T07:18:21.782Z",
-        "note": "注释可能需更新"
-      },
-      "docs/SPEC.md": {
-        "status": "M",
-        "mtime": "2026-10-17T07:17:53.243Z",
-        "note": "注释可能需更新"
-      },
-      "lib/app/apply.js": {
-        "status": "M",
-        "mtime": "2026-10-17T07:17:53.251Z",
-        "note": "注释可能需更新"
-      },
-      "lib/app/command-registry.js": {
-        "status": "M",
-        "mtime": "2026-10-17T07:17:53.219Z",
-        "note": "注释可能需更新"
-      },
-      "lib/app/tool-call.js": {
-        "status": "M",
-        "mtime": "2026-10-17T07:17:53.210Z",
-        "note": "注释可能需更新"
-      },
-      "lib/fs/edit-after-read.js": {
-        "status": "D",
-        "mtime": "",
+        "mtime": "2026-10-17T07:32:51.582Z",
         "note": "注释可能需更新"
       },
       "lib/fs/observe.js": {
-        "status": "M",
-        "mtime": "2026-10-17T07:17:53.252Z",
-        "note": "注释可能需更新"
-      },
-      "skills/dev/dsh-git-push.md": {
-        "status": "M",
-        "mtime": "2026-10-17T07:17:53.245Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-cli-help-registry-sync.mjs": {
-        "status": "M",
-        "mtime": "2026-10-17T07:17:53.253Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-edit-after-read.mjs": {
         "status": "D",
         "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "package.json": {
+        "status": "M",
+        "mtime": "2026-10-17T07:25:22.483Z",
+        "note": "注释可能需更新"
+      },
+      "scripts/frontend-preview-check.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "scripts/preview-gen.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "scripts/preview-local-runner.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "scripts/preview-server-direct.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "scripts/preview-server.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "scripts/preview-slot-data.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "scripts/sync-plugin-install.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "scripts/sync-plugin.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "skills/guide/guide-inject-ui.md": {
+        "status": "M",
+        "mtime": "2026-10-17T07:32:51.276Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-fs-observe.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-module-splitter.mjs": {
+        "status": "M",
+        "mtime": "2026-10-17T07:26:15.208Z",
         "note": "注释可能需更新"
       },
       "test/test-plugin.mjs": {
         "status": "M",
-        "mtime": "2026-10-17T07:17:53.241Z",
+        "mtime": "2026-10-17T07:25:22.460Z",
         "note": "注释可能需更新"
       },
-      "test/test-tool-contract.mjs": {
+      "test/test-rule-slots-render.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-self.mjs": {
         "status": "M",
-        "mtime": "2026-10-17T07:17:53.239Z",
+        "mtime": "2026-10-17T07:27:55.709Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-sidebar-state.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-sync-plugin-install.mjs": {
+        "status": "D",
+        "mtime": "",
         "note": "注释可能需更新"
       }
     }
@@ -560,7 +587,5 @@
   "scripts/scan-fs-hotspots.mjs": "（待注释）",
   "test/test-fs-hotspots.mjs": "（待注释）",
   "test/test-exempt-hint-effective.mjs": "（待注释）",
-  "test/test-audit-false-positive-guards.mjs": "（待注释）",
-  "lib/fs/observe.js": "（待注释）",
-  "test/test-fs-observe.mjs": "（待注释）"
+  "test/test-audit-false-positive-guards.mjs": "（待注释）"
 }

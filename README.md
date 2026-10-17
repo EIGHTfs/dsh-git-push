@@ -396,8 +396,6 @@ dsh-git-push/
 │   │   ├── workspace-paths.js — （待注释）
 │   ├── exempt/ — 豁免机制（dsh-skip-* 注释标记解析与文件头/行内语义）
 │   │   ├── index.js — 豁免注册表（dsh-skip-* 全标记消费）
-│   ├── fs/ — （待注释）
-│   │   ├── observe.js — （待注释）
 │   ├── git/ — Git 执行层（runGit/账号/API/克隆/凭据/推送/扫描/索引维护/敏感扫描/传输通道）
 │   │   ├── account-status.js — （待注释）
 │   │   ├── account.js — 账号校验（token 在线 + SSH 公钥指纹，输出账号状态块）
@@ -477,18 +475,12 @@ dsh-git-push/
 │   ├── doc-func.mjs — （待注释）
 │   ├── doc-tree.mjs — （待注释）
 │   ├── doc-version.mjs — （待注释）
-│   ├── frontend-preview-check.mjs — （待注释）
 │   ├── hot-path-probe-cjs.cjs — （待注释）
 │   ├── hot-path-probe-fs-shim.mjs — （待注释）
 │   ├── hot-path-probe-fsp-shim.mjs — （待注释）
 │   ├── hot-path-probe.mjs — （待注释）
 │   ├── module-splitter.py — 巨型单文件按顶层块拆分脚本（analyze/split/verify 三命令，python3 零依赖；module_splitter 工具与 CLI 的底层实现）
 │   ├── platform-scan.mjs — （待注释）
-│   ├── preview-gen.mjs — （待注释）
-│   ├── preview-local-runner.mjs — （待注释）
-│   ├── preview-server-direct.mjs — （待注释）
-│   ├── preview-server.mjs — 本地真实后端测试服务（preview.html 接真实 handleHttp）
-│   ├── preview-slot-data.mjs — （待注释）
 │   ├── probe-recheck.mjs — 探针：「重新检测」按钮链路实测（在线校验 token/SSH）
 │   ├── readme-gen.mjs — README 生成独立脚本（git_gen_readme 抽出：模板渲染/版本表/目录）
 │   ├── rename-locator.mjs — 变量重命名位置定位工具（按作用域聚合引用——单字母变量人工重命名辅助）
@@ -501,14 +493,11 @@ dsh-git-push/
 │   ├── scan-version.mjs — 版本一致性校验脚本
 │   ├── scrub-user-wording.mjs — 清理「用户沟通措辞」独立脚本
 │   ├── symbol-index.mjs — （待注释）
-│   ├── sync-plugin-install.mjs — 插件安装形态与免重启热重载自检（被 sync-plugin.mjs 引用）
-│   ├── sync-plugin.mjs — 双副本同步脚本（源仓库 → 部署安装副本）
 │   ├── verify-prestep.mjs — 上下文注入自检脚本（真实触发 agent/pre-step 验证注入）
 │   ├── audit-ext/ — （待注释）
 │   │   ├── _example-readme-present.mjs — 审计扩展契约示例（_ 前缀：演示不参与实际审计）
 │   │   ├── variable-min-length.mjs — 审计扩展：variable-min-length（内置规则抽出试点——统一动态入口）
 ├── assets/ — 预览页与配图（preview.html 交互模拟页 + 面板截图）
-│   ├── minihost.sh — （待注释）
 │   ├── start.sh — 预览服务器启停脚本（start/stop/restart/status + --port + PID/日志/健康检查 /preview-ping）
 │   ├── tree-sitter/ — （待注释）
 │   │   ├── LICENSE — （待注释）
@@ -585,7 +574,6 @@ dsh-git-push/
 │   ├── test-filter-ext.mjs — （待注释）
 │   ├── test-folder-scope.mjs — 目录级审计作用域回归测试
 │   ├── test-fs-hotspots.mjs — （待注释）
-│   ├── test-fs-observe.mjs — （待注释）
 │   ├── test-func-doc-drift.mjs — （待注释）
 │   ├── test-generated-html-artifact.mjs — （待注释）
 │   ├── test-git-api-tool.mjs — （待注释）
@@ -635,7 +623,6 @@ dsh-git-push/
 │   ├── test-repo-list.mjs — 仓库列表测试（本地扫描/索引读写/HTTP 端点/远端状态）
 │   ├── test-rule-include-paths.mjs — （待注释）
 │   ├── test-rule-packs.mjs — 规则总入口测试（编译注册/字段指派）
-│   ├── test-rule-slots-render.mjs — 规则包列表统计渲染回归
 │   ├── test-scan-hardcoded-paths.mjs — （待注释）
 │   ├── test-scope.mjs — 作用域最小实验测试（分类器/机制/magic 接入）
 │   ├── test-scrub-conv-wording.mjs — （待注释）
@@ -643,13 +630,11 @@ dsh-git-push/
 │   ├── test-settings-persistence.mjs — 设置侧边栏持久化专项测试（L1 提交/L2 白名单/L3 回读/L4 消费四层断言）
 │   ├── test-settings-roundtrip.mjs — （待注释）
 │   ├── test-sidebar-interaction.mjs — 侧边栏规则包列表交互自检
-│   ├── test-sidebar-state.mjs — 设置侧边栏状态自检（设置键回读/凭据已填写判断/统一刷新入口/产物同步）
 │   ├── test-slash-commands.mjs — 用户输入框 /git-audit 斜杠命令（解析/接线/对本仓库跑 quick）
 │   ├── test-smart-hint.mjs — 扫描智能提示 + 评分对数衰减测试
 │   ├── test-status-secret.mjs — token 明文不下发安全回归
 │   ├── test-symbol-index.mjs — （待注释）
 │   ├── test-symlink-resolution.mjs — 软链安装依赖解析回归测试（默认失败/--preserve-symlinks/NODE_PATH/真实副本四种场景）
-│   ├── test-sync-plugin-install.mjs — （待注释）
 │   ├── test-task-queue.mjs — 后台化回归测试（官方 job 注册 / 无 jobs 同步保底 / blocker 拦截）
 │   ├── test-test-cache.mjs — （待注释）
 │   ├── test-tokenizer-multiline-template.mjs — （待注释）
@@ -974,14 +959,14 @@ console.log(x); // dsh-skip-residue: 本行为刻意保留的调试输出样本
 
 ## 界面预览页（assets/preview.html，真实后端数据）
 
-`assets/preview.html` 由 `scripts/preview-gen.mjs` 生成（内联真实 `client.js`，只垫片宿主环境 `window.__ModuleLoader__`/`react`/`settingsScope`/`fetch`，界面与真实插件一致）；**用 `assets/start.sh` 启动本地反代服务访问**（服务入口 `scripts/preview-server.mjs`；产物属生成物、不入库，缺失时生成器与 minihost 会自动生成一次）：
+`assets/preview.html` 由 **dsh-useful-tools** 的 `preview` 工具生成（`action=gen`）（内联真实 `client.js`，只垫片宿主环境 `window.__ModuleLoader__`/`react`/`settingsScope`/`fetch`，界面与真实插件一致）；**用 `assets/start.sh` 启动本地反代服务访问**（服务入口 `scripts/preview-server.mjs`；产物属生成物、不入库，缺失时生成器与 minihost 会自动生成一次）：
 
 ```
 ./assets/start.sh start [--port 31000]   # 启动（默认 30999；已有项目占用时用 --port 错开）
 ./assets/start.sh status / restart / stop
 ```
 
-- **完全真实后端数据**：`scripts/preview-server.mjs` 反向代理——`/api/git-push/*` 全部转发到 DSH 真实后端（默认 http://127.0.0.1:30800 反代，`--dsh` 可覆盖），并自动完成 token 认证（`--token` > 环境变量 `DSH_PREVIEW_TOKEN` > 解析 `dsh-proxy.log` 兜底）。预览里的账号信息 / 本地仓库 / 云端仓库 / 规则包 / 审计结果 / 设置**全部来自真实后端**（读取与写入都真实）。
+- **完全真实后端数据**：**dsh-useful-tools** 的 `preview` 工具（`action=serve`）反向代理——`/api/git-push/*` 全部转发到 DSH 真实后端（默认 http://127.0.0.1:30800 反代，`--dsh` 可覆盖），并自动完成 token 认证（`--token` > 环境变量 `DSH_PREVIEW_TOKEN` > 解析 `dsh-proxy.log` 兜底）。预览里的账号信息 / 本地仓库 / 云端仓库 / 规则包 / 审计结果 / 设置**全部来自真实后端**（读取与写入都真实）。
 - **离线调试**：URL 加 `?mock=1` 切回内置假数据（改动只留页面内、不写文件）；跨后端实测用 `?backend=http://127.0.0.1:端口`。
 - **全部可点**：三选项卡切换 · 审计开关 · **注入系统提示词开关** · 「注入开发者要求清单」子开关（含置灰联动）· 规则包启停与 ↑↓ 调序 · 权重编辑 · token/SSH 保存 · 邮箱一键生成 SSH 并回填
 - 健康检查 `GET /preview-ping`（start.sh 启动判定）；PID 落 `dsh-git-push.pid`（插件根）；日志 `assets/preview-server.log`（超 10MB 轮转）
@@ -1013,7 +998,7 @@ lib/client-parts/00-loader.js      loader + factory 头 + require + NS（必须�
                     语法只对拼起来的产物才有意义）
 ② npm run build:client   按 PART_ORDER 拼接 → 写 lib/client.js（幂等：分片不变则产物逐字节不变）
 ③ npm run check     语法检查（跳过 client-parts）+ **产物新鲜度校验**：client.js 必须与分片拼出来的一致
-④ node scripts/preview-gen.mjs   用产物重生成预览页，实际点三选项卡确认渲染与交互
+④ （用 dsh-useful-tools 的 preview 工具 action=gen 重生成预览页），实际点三选项卡确认渲染与交互
 ```
 
 - **不要手改 `lib/client.js`**：它是构建产物，下次构建即被覆盖，改动静默丢失；`npm run check` 会直接报「产物与分片不一致」。
@@ -1033,7 +1018,7 @@ lib/client-parts/00-loader.js      loader + factory 头 + require + NS（必须�
 
 ```
 npm run build:client        # 先拼产物
-node scripts/preview-gen.mjs # 再用产物重生成预览页
+（用 dsh-useful-tools 的 preview 工具 action=gen 重生成预览页）
 ```
 
 渲染自检（改了客户端代码或预览生成器后必跑；把「改前端必须真的看一眼」变成一条命令）：
@@ -1436,14 +1421,14 @@ node scripts/audit-runtime-check.mjs --all <目录>
   已被 `.gitignore` 忽略。安装/拉取后若该文件缺失，跑一次 `npm run build:client` 即可补齐
   （`package.json` 的 **`prepare`** 会在 npm 安装与装 git 依赖时自动构建，**`prepack`** 覆盖打包/发布；
   `cli.mjs` 与 `lib/**` 都不依赖该产物——缺了只影响设置页 UI）。
-- **随插件发布的脚本**：`scripts/` 在发布白名单内（`package.json` 的 `files` 与 `scripts/sync-plugin.mjs` 的 `SYNC_ENTRIES` 两处一致，由 `test-self.mjs` 的「SYNC_ENTRIES 覆盖 files 白名单」测试守住），装好插件后 7 个脚本在**安装副本目录内**同样可直接运行（零外部依赖，只用 node 内置模块）：
+- **随插件发布的脚本**：`scripts/` 在发布白名单内（`package.json` 的 `files` 的 `SYNC_ENTRIES` 两处一致，由 `test-self.mjs` 的「SYNC_ENTRIES 覆盖 files 白名单」测试守住），装好插件后 7 个脚本在**安装副本目录内**同样可直接运行（零外部依赖，只用 node 内置模块）：
   - `scripts/build-client.mjs`：客户端分片拼接（PART_ORDER 顺序拼接 + `--check` 一致性门禁 + 形态铁律自检；见「客户端分片构建」）
   - `scripts/scan-version.mjs`：版本一致性自检（lib/self 的 VERSION ↔ `package.json` `version` ↔ README 版本列表 ↔ cli HELP 模板），不一致 exit 1
   - `scripts/audit-runtime-check.mjs`：三层审计的 L3 运行时检测（见「独立脚本：运行时检测」）
   - `scripts/scrub-user-wording.mjs`：清洗注释里的沟通残留措辞（见「独立脚本：清洗用户沟通措辞」）
   - `scripts/check.mjs`：全仓语法检查（`node --check` 批量）
-  - `scripts/sync-plugin.mjs`：源码仓库 → 安装副本的同步（默认 dry-run，`--write` 才写）。**安装位置 = `local-plugins/<插件>`（真源）**；`node_modules/<插件>` 只是解析入口，由 DSH/pnpm 安装流程按 profile 的 `file:local-plugins/<插件>` 声明生成——**本脚本不建链、不改链**（并会报警「node_modules 下的副本内容与真源不一致」这种会顶掉真源的形态，实测过旧副本顶掉新版；与真源同 inode 的硬链接副本属正常安装产物、不报警）。2026-10-09 起同时做**部署形态与免重启热重载自检**：`--profile <名>` 指定 profile（多 profile 时必须显式给，否则报所有候选而不是默默取首个）、`--fix` 只修 `local-plugins` 侧形态（解软链 / 建真实目录）；每次都报告「该插件改代码能否免重启热重载」（读 profile 的 `cordis.patch.yml` 里 `id: hmr` 的 `base`/`root`）以及 profile 依赖声明是否该写 `file:local-plugins/<插件>`
-  - `scripts/sync-plugin-install.mjs`：上一条里安装形态/HMR 自检的实现模块（被 `sync-plugin.mjs` 引用，非独立入口）
+  - 同步与安装自检能力已迁往 **dsh-useful-tools**（`sync_plugin` 工具，默认 dry-run）。**安装位置 = `local-plugins/<插件>`（真源）**；`node_modules/<插件>` 只是解析入口，由 DSH/pnpm 安装流程按 profile 的 `file:local-plugins/<插件>` 声明生成——**本脚本不建链、不改链**（并会报警「node_modules 下的副本内容与真源不一致」这种会顶掉真源的形态，实测过旧副本顶掉新版；与真源同 inode 的硬链接副本属正常安装产物、不报警）。2026-10-09 起同时做**部署形态与免重启热重载自检**：`--profile <名>` 指定 profile（多 profile 时必须显式给，否则报所有候选而不是默默取首个）、`--fix` 只修 `local-plugins` 侧形态（解软链 / 建真实目录）；每次都报告「该插件改代码能否免重启热重载」（读 profile 的 `cordis.patch.yml` 里 `id: hmr` 的 `base`/`root`）以及 profile 依赖声明是否该写 `file:local-plugins/<插件>`
+  - 安装形态/HMR 自检实现随同迁移（`dsh-useful-tools/lib/core/plugin-sync/`）；引用，非独立入口）
 - **测试**：`npm test` 一条命令复现全绿（2026-10-09 实测 1195 用例 / 1193 通过 / 0 失败，2 跳过）
 
 ### 测试缓存（未变更的纯本地测试自动跳过）
