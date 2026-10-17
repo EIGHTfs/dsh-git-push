@@ -123,7 +123,7 @@ generatedBy: deepseek-official/deepseek-v4-flash · EIGHTfs 2026-10-02
 ```
 
 - 访问 `http://<本机IP>:30999`（默认端口）。反代把 `/api/git-push/*` 全部转发到真实 DSH 后端（默认 `http://<本机IP>:30800`），并自动完成 token 认证——账号信息 / 本地仓库 / 云端仓库 / 规则包 / 审计结果 / 设置全部来自真实后端，读取与写入都真实。
-- 指定后端或直接跑：`node scripts/preview-server.mjs --port 30999 --dsh http://<本机IP>:30800 --token <launch-token>`（同一入口还有 `--direct` 直连插件 handleHttp、`--local` 每请求 fork 子进程跑工作区最新代码）；token 解析顺序：`--token` > 环境变量 `DSH_PREVIEW_TOKEN` > 解析 `dsh-proxy.log` 兜底。
+- 指定后端或直接跑：`preview` 工具 `action=serve`（port / backend 参数）（同一入口还有 `--direct` 直连插件 handleHttp、`--local` 每请求 fork 子进程跑工作区最新代码）；token 解析顺序：`--token` > 环境变量 `DSH_PREVIEW_TOKEN` > 解析 `dsh-proxy.log` 兜底。
 - 离线调试：URL 加 `?mock=1` 切内置假数据（改动只留页面内、不写文件）；跨后端实测：URL 加 `?backend=http://<本机IP>:端口`。
 - 全部可点：三选项卡切换、审计开关、注入系统提示词开关、注入要求清单子开关（含置灰联动）、规则包启停与调序、权重编辑、token/SSH 保存、邮箱一键生成 SSH 并回填。
 - 健康检查 `GET /preview-ping`；PID 落 `dsh-git-push.pid`（插件根）；日志 `assets/preview-server.log`（超 10 MB 轮转）。
