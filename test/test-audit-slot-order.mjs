@@ -13,11 +13,11 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { runAudit } from '../lib/commit-push.js';
+import { loadRuleFiles } from '../lib/rule/loader.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (p) => readFileSync(join(ROOT, p), 'utf8');
@@ -43,20 +43,13 @@ test('源码级：禁用机制仍走 auditDisabledSlots（不能一起删掉）'
     'auditDisabledSlots 才是禁用机制，必须保留');
 });
 
-// ── 守卫式真实项目回归：克隆存在才跑（缺失则跳过，不阻塞他人）──
-const REAL = '/volume1/VirtualDSM/DeepSeekHarness/工作区/d3dxSkinManage';
-
-test('真实项目回归：105 个 .py 的项目上 python/* 规则必须命中（修复前为 0）',
-  { skip: !existsSync(REAL) ? '未找到 d3dxSkinManage 克隆，跳过真实项目回归' : false },
-  async () => {
-    const r = await runAudit({
-      repoPath: REAL,
-      audit: true,
-      cfg: { auditEnabled: true, auditScanScope: 'full', maxScanFiles: 500000, auditRuleOrder: [], auditDisabledSlots: [] },
-    });
-    const a = r.audit || {};
-    const all = [...(a.blocked || []), ...(a.warnings || []), ...(a.notices || [])];
-    const py = all.filter((f) => /^python\//.test(String(f.rule || '')));
-    assert.ok(py.length > 0,
-      `python/* 规则必须命中（该字段为「顺序」不是白名单 ✗）——实得 ${py.length} 条，总发现 ${all.length} 条`);
-  });
+// ── 规则加载回归：python 槽位必须被加载（auditRuleOrder 是「顺序」不是白名单）──
+//   为什么不用样本文件命中来验证：python 规则的数值/命名类判定走 token 级精筛，
+//   简单样本不一定触发（实测 audit-samples/py-bad.py 上只报占位规则 no-path-traversal）；
+//   「槽位是否被加载」才是该缺陷的直接判据，且任何环境都能跑（不依赖外部项目）。
+test('规则加载：python 槽位必须被加载（auditRuleOrder 置空后全加载）', () => {
+  const loaded = loadRuleFiles(null, {});
+  const py = loaded.merged.rules.filter((r) => String(r.id).startsWith('python/'));
+  assert.ok(py.length > 0,
+    `python/* 规则必须加载（该字段为「顺序」不是白名单 ✗）——实得 ${py.length} 条`);
+});

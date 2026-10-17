@@ -2376,7 +2376,7 @@
 | `makeRepo` | 31-41 | 11 | `function makeRepo() {` |
 | `stageBlocker` | 47-54 | 8 | `function stageBlocker(dir) {` |
 
-### test/test-audit-slot-order.mjs（63 行 · 1 个函数）
+### test/test-audit-slot-order.mjs（56 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|

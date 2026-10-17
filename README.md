@@ -692,6 +692,10 @@ dsh-git-push/
 │   │   ├── task-completion-report.md — （待注释）
 │   │   ├── tool-json-add-ask.md — （待注释）
 │   │   ├── versioning-rule.md — （待注释）
+├── audit-samples/ — （待注释）
+│   ├── .samples — （待注释）
+│   ├── js-bad.js — （待注释）
+│   ├── py-bad.py — （待注释）
 ├── .auditignore — 审计豁免清单（不影响 git 入库，仅跳过审计扫描）——排除内置第三方代码
 ├── .gitignore — 忽略规则（node_modules/产物/备份/回收站等）
 ├── CONTRIBUTING.md — （待注释）
