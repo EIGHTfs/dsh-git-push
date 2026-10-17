@@ -11,34 +11,34 @@ function makeRepo() {
   return mkdtempSync(join(tmpdir(), 'dshgp-exempt-'));
 }
 
-test('add：header 模式按 rule 自动选标记并写入文件头', () => {
+test('add：header 模式按 rule 自动选标记并写入文件头', async () => {
   const dir = makeRepo();
   try {
     const f = join(dir, 'a.js');
     writeFileSync(f, 'const a = 1;\n');
-    const r = addExempt({ repoPath: dir, path: 'a.js', rule: 'maintainability/max-complexity', reason: '天然多分支' });
+    const r = await addExempt({ repoPath: dir, path: 'a.js', rule: 'maintainability/max-complexity', reason: '天然多分支' });
     assert.equal(r.ok, true, JSON.stringify(r));
     assert.match(readFileSync(f, 'utf8'), /^\/\/ dsh-skip-complexity: 天然多分支/);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-test('add：显式 marker 与 rule 冲突 ⇒ 拒绝并给正确标记', () => {
+test('add：显式 marker 与 rule 冲突 ⇒ 拒绝并给正确标记', async () => {
   const dir = makeRepo();
   try {
     const f = join(dir, 'a.js');
     writeFileSync(f, 'x\n');
-    const r = addExempt({ repoPath: dir, path: 'a.js', marker: 'dsh-skip-size', rule: 'maintainability/max-complexity' });
+    const r = await addExempt({ repoPath: dir, path: 'a.js', marker: 'dsh-skip-size', rule: 'maintainability/max-complexity' });
     assert.equal(r.ok, false);
     assert.match(r.error, /dsh-skip-complexity/);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-test('add：line 越界拒绝（且不写入）', () => {
+test('add：line 越界拒绝（且不写入）', async () => {
   const dir = makeRepo();
   try {
     const f = join(dir, 'a.js');
     writeFileSync(f, 'a\nb\n');
-    const r = addExempt({ repoPath: dir, path: 'a.js', rule: 'maintainability/max-complexity', scope: 'line', line: 99 });
+    const r = await addExempt({ repoPath: dir, path: 'a.js', rule: 'maintainability/max-complexity', scope: 'line', line: 99 });
     assert.equal(r.ok, false);
     assert.equal(readFileSync(f, 'utf8'), 'a\nb\n', '校验失败时不应写盘');
   } finally { rmSync(dir, { recursive: true, force: true }); }
