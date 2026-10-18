@@ -1,8 +1,8 @@
 ---
 name: guide-audit
-description: dsh-git-push 代码审计：三个入口、审计范围、10 维度评分、规则包槽位、豁免机制、严重级与报告聚合。处理代码审计/质量评分类请求时加载。
-whenToUse: 要审计仓库、看质量分与问题明细、加停审计规则、豁免误报、查审计 API 时。
-updated: 2026-10-02
+description: dsh-git-push 代码审计：三个入口、审计范围、10 维度评分、规则包槽位、豁免机制、严重级与报告聚合，以及低成本整改（提取公共函数一次动作多规则清零）。处理代码审计/质量评分/整改提分类请求时加载。
+whenToUse: 要审计仓库、看质量分与问题明细、加停审计规则、豁免误报、查审计 API 时；要把审计分从 B 提到 A、低成本消 warning、规划重构整改时。
+updated: 2026-10-18
 generatedBy: deepseek-official/deepseek-v4-flash · EIGHTfs 2026-10-02
 ---
 
@@ -143,6 +143,45 @@ console.log(x); // dsh-skip-residue: 本行为刻意保留的调试输出样本
 
 - `groupBy` 四维度：`rule`（规则类型，默认）/ `file` / `severity` / `slot`（规则包）；`groups` 按条数降序，每组带一条 `sample`；`severity` 白名单过滤 + `top` 截断（`0` = 全部），过滤后条数见 `filtered`。
 - `exemptStats` 输出本次被豁免的类型与数量；`blocked` 直接列出 blocker 明细（文件 / 行 / 规则 / 消息）；YAML 报告：HTTP `withYaml=true` → `yaml` 字段，工具 `includeFindings=true` 时含 `yaml`。
+
+### 13. 低成本整改：提取公共函数 = 一次动作多规则清零
+
+**先看计分口径（决定性价比）**
+
+| 口径 | 事实 | 含义 |
+|---|---|---|
+| 计数去重 | warning/info 按「规则 × 维度 × 文件」每文件每规则只计 1 次（blocker 每次计 2） | 同一文件同类问题修**一个代表点**，该文件对该规则的扣分即清零；warning 列表条数不受去重影响（想清空列表要逐条修或逐条豁免） |
+| scoreImpact | `0` 的 finding 不计分（魔数、嵌套深度、重复字面量、低风险 io-risk 等） | 冲分先修 `scoreImpact=1` 的规则；`0` 的只影响 warning 条数 |
+| 豁免等价 | 豁免标记会让 finding 直接消失、不计数 | 「修代码」与「加豁免」在**计分上等价**；区别只在代码质量本身与列表展示 |
+| 对数衰减 | 单维度 `max(0.1, 10 - k·ln(1+问题数))`（k：安全 1.5 / 可读·可维护·健壮 1.3 / 性能 1.1） | 计数从 20 降到 10 的收益远大于 10 降到 0；先处理计数高的维度 |
+
+**为什么提取公共函数最划算**
+
+函数太长 / 嵌套太深 / 圈复杂度高 / 重复调用 / 重复代码，根因都是「没抽出公共函数」。抽一次，多条规则同时消失：
+
+| 规则 | 覆盖方式 |
+|---|---|
+| max-cyclomatic-complexity、max-nesting-depth、max-function-length | 直接：拆成子函数 + 早返回 |
+| repeat-identical-call | 直接：重复调用合并进一个 helper |
+| vague-function-name、variable-min-length、vague-variable-name | 顺带：提取时给函数/参数/局部变量起具名；契约要求导出名不变时用 `export { 具名实现 as run }`（模块仍只导出约定名） |
+| magic-number-smart、duplicate-constant-def、no-repeated-hardcoded-literals | 顺带：提取时把字面量提成命名常量 |
+| mkdir-before-write | 顺带：写操作移进公共函数后，写目标来自形参 ⇒ 规则语义豁免 |
+| comment/no-date、hardcoded-absolute-path、io-risk、memory-bomb | **不覆盖**：需单独处理（删日期 / 提候选常量+行级豁免 / 异步化或行级豁免 / 接受） |
+
+实测（一次全量整改，29 文件）：评分 83.0/B → 97.9/A，warning 99 → 5；其中「提取函数 + 顺带命名/常量化」覆盖约 55/99 条，其余 44 条是注释/路径/IO/内存类。
+
+**危险级不高的前提（照做才安全）**
+
+1. 只搬运结构、不改行为：判断、异常、短路 return、错误处理边界保持原样。
+2. 三类**不拆、改豁免**：
+   - 跨回调共享闭包状态（如子进程 stdout/stderr/error/close/超时五路共享 settled 标志）；
+   - 字符级扫描器（字符串/注释/括号三态一次遍历，拆开反而割裂状态机）；
+   - 单调用点且拆完没有更清楚（过度抽象）。
+3. 同步改异步会外溢：io-risk 真修成 async 会波及整条同步调用链（CLI/测试），多数场景行级 `dsh-skip-residue` 更划算。
+4. 拆完必须复跑审计：新函数名/变量名可能触发新规则（实测：`handleXxxCommand` 被 io-risk 判成「请求处理路径」，把整文件同步 IO 从 low 升到 medium/high；局部变量取通用词名（如 result）会触发 vague-variable-name）。改名（如 `dispatchXxxCommand` / `actionResult`）后恢复。
+5. 验证闭环：`node --test` + 重新全量审计，确认分数只升不降、无新 blocker。
+
+**操作顺序**：`groupBy=rule` 看明细 → 按「文件 × 规则」挑代表点 → 提取函数/常量/改名 → 复跑审计 → 只剩 `scoreImpact=1` 的顽固项时才逐条修或逐条豁免。
 
 ## 三、边界与坑
 
