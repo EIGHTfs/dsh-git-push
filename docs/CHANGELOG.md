@@ -15,6 +15,7 @@
 
 | 版本 | 内容 |
 |------|------|
+| 2.9.10 | npm_publish 成功判定改为「上传成功即成功」：以 npm publish 返回码为准，不再把 registry 可见性当成败（发布后可见延迟几分钟是已知现象）。可见性降级为附加信息（visible / visibleNote）；新增可选 waitVisible（默认 false；true 时每分钟查一次、最多 5 分钟，等待可见性仅作确认）。job 完成文案同步改写。实测：test-npm-publish 8/8。 |
 | 2.9.9 | npm_publish 真发后轮询 registry 确认版本可见：每分钟 1 次、最多 5 分钟；远端更新即返回（verified=true），超时输出原结果（verified=false + pollTimeout + pollNote，结果以 npm 返回为准），轮询过程写 npm-publish.log。dryRun 不触发轮询。实测：test-npm-publish 8/8。 |
 | 2.9.8 | ①git_commit_push 支持 remote 参数（多 remote / fork 场景）：推送与核验使用同一 remote，修复「origin=上游无写权限 → 推失败 + 核验拿到上游 SHA 误报未落地」；新增 resolveRemoteTarget 解析指定 remote。②新增 exempt 注释豁免工具（add/remove/list/check）：按 rule 自动选标记（写错拒绝并给正确标记）、写前校验（块注释/字符串/越界拒绝）、多文件原子、check 识别死标记；标记映射读同进程 EXEMPT_MARKERS（单一真源）。实测：test-multi-remote 3/3、test-exempt-tool 6/6；1293 项回归 0 失败。 |
 | 2.9.7 | 提交时按文件临时豁免（auditExemptPaths/auditExemptReason，含 blocker、不落盘、结果回显 files/count/rules）+ 只读端点 GET /api/git-push/exempt-hint（按 rule/kind 反查可用豁免标记，供外部工具避免复制注册表）；规则误报修复：max-nesting-depth 归属改用 function 栈（模块级嵌套不再归到已结束的旧函数）、no-repeated-hardcoded-literals 跳过模板字符串（生成代码排版不再算重复字面量）。实测：dsh-useful-tools 误报 33→31（模板串 2 条消失、归属修正）；1284 项回归 0 失败。 |

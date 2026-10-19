@@ -22,16 +22,16 @@
 | `aggregateFindings` | 71-92 | 22 | `export function aggregateFindings(findings = [], opts = {}) {` |
 | `runAuditApi` | 100-161 | 62 | `export async function runAuditApi(repo, params = {}, cfg = {}) {` |
 
-### lib/app/command-registry.js（273 行 · 6 个函数）
+### lib/app/command-registry.js（274 行 · 6 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `applyFlagToken` | 211-227 | 17 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
-| `validateParamConstraints` | 230-236 | 7 | `function validateParamConstraints(args, params) {` |
-| `parseRegistryArgs` | 238-258 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
-| `registryByName` | 261-263 | 3 | `export function registryByName(name) {` |
-| `registryByCli` | 266-268 | 3 | `export function registryByCli(cli) {` |
-| `buildToolsListText` | 271-273 | 3 | `export function buildToolsListText() {` |
+| `applyFlagToken` | 212-228 | 17 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
+| `validateParamConstraints` | 231-237 | 7 | `function validateParamConstraints(args, params) {` |
+| `parseRegistryArgs` | 239-259 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
+| `registryByName` | 262-264 | 3 | `export function registryByName(name) {` |
+| `registryByCli` | 267-269 | 3 | `export function registryByCli(cli) {` |
+| `buildToolsListText` | 272-274 | 3 | `export function buildToolsListText() {` |
 
 ### lib/app/handlers/account.js（166 行 · 10 个函数）
 
@@ -221,7 +221,7 @@
 | `getLastSlotHitStats` | 28-30 | 3 | `export function getLastSlotHitStats() {` |
 | `getLastSlotHitMeta` | 33-35 | 3 | `export function getLastSlotHitMeta() {` |
 
-### lib/app/tool-call.js（730 行 · 23 个函数）
+### lib/app/tool-call.js（734 行 · 23 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -233,21 +233,21 @@
 | `done` | 192-200 | 9 | `const done = (async () => {` |
 | `startHostJob` | 217-224 | 8 | `function startHostJob(jobs, spec, owner) {` |
 | `callCloneJob` | 238-270 | 33 | `async function callCloneJob(args, jobs, exec, log, env = {}, cfg = {}) {` |
-| `callNpmPublishJob` | 278-353 | 76 | `async function callNpmPublishJob(args = {}, jobs, exec, log, env = {}, cfg = {}) {` |
-| `outcome` | 306-328 | 23 | `const outcome = (r) => {` |
-| `done` | 337-339 | 3 | `const done = (async () => {` |
-| `buildCloneJobSpec` | 356-373 | 18 | `function buildCloneJobSpec(target, dest, doClone) {` |
-| `done` | 361-369 | 9 | `const done = (async () => {` |
-| `callCommitPush` | 380-426 | 47 | `async function callCommitPush(args, env, cfg, log, jobs, exec) {` |
-| `doPush` | 399-399 | 1 | `const doPush = () => pushWithPostSteps(args, env, cfg);` |
-| `buildAuditOpts` | 437-448 | 12 | `function buildAuditOpts(args, cfg, scope) {` |
-| `runHistoryAuditTool` | 454-480 | 27 | `async function runHistoryAuditTool(args, env, cfg, jobs, exec, weights) {` |
-| `doHistory` | 460-463 | 4 | `const doHistory = async () => {` |
-| `callCodeAudit` | 482-494 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
-| `runStandardAuditTool` | 497-538 | 42 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
-| `callTool` | 540-701 | 162 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null, fsCtx = null) {` |
-| `shellSplit` | 704-722 | 19 | `function shellSplit(input) {` |
-| `readTextSafe` | 725-729 | 5 | `function readTextSafe(path = '') {` |
+| `callNpmPublishJob` | 278-357 | 80 | `async function callNpmPublishJob(args = {}, jobs, exec, log, env = {}, cfg = {}) {` |
+| `outcome` | 308-332 | 25 | `const outcome = (r) => {` |
+| `done` | 341-343 | 3 | `const done = (async () => {` |
+| `buildCloneJobSpec` | 360-377 | 18 | `function buildCloneJobSpec(target, dest, doClone) {` |
+| `done` | 365-373 | 9 | `const done = (async () => {` |
+| `callCommitPush` | 384-430 | 47 | `async function callCommitPush(args, env, cfg, log, jobs, exec) {` |
+| `doPush` | 403-403 | 1 | `const doPush = () => pushWithPostSteps(args, env, cfg);` |
+| `buildAuditOpts` | 441-452 | 12 | `function buildAuditOpts(args, cfg, scope) {` |
+| `runHistoryAuditTool` | 458-484 | 27 | `async function runHistoryAuditTool(args, env, cfg, jobs, exec, weights) {` |
+| `doHistory` | 464-467 | 4 | `const doHistory = async () => {` |
+| `callCodeAudit` | 486-498 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
+| `runStandardAuditTool` | 501-542 | 42 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
+| `callTool` | 544-705 | 162 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null, fsCtx = null) {` |
+| `shellSplit` | 708-726 | 19 | `function shellSplit(input) {` |
+| `readTextSafe` | 729-733 | 5 | `function readTextSafe(path = '') {` |
 
 ### lib/app/tools.js（34 行 · 2 个函数）
 
@@ -1689,7 +1689,7 @@
 | `writeNpmrc` | 40-48 | 9 | `export function writeNpmrc({ workspaceRoot = '', registry = 'https://registry.npmjs.org/', token = '' } = {}) {` |
 | `npmArgs` | 51-56 | 6 | `export function npmArgs({ npmrcFile = '', registry = 'https://registry.npmjs.org/' } = {}) {` |
 
-### lib/npm/publish.js（199 行 · 7 个函数）
+### lib/npm/publish.js（201 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1697,9 +1697,9 @@
 | `publishingKeys` | 32-34 | 3 | `export function publishingKeys() {` |
 | `readPackageInfo` | 37-52 | 16 | `export function readPackageInfo(dir = '') {` |
 | `fetchPublishedVersions` | 55-75 | 21 | `export async function fetchPublishedVersions({ name, registry = DEFAULT_REGISTRY, timeoutMs = NPM_TIMEOUT_MS } = {}) {` |
-| `packDryRun` | 78-199 | 122 | `export function packDryRun({ dir, registry = DEFAULT_REGISTRY, workspaceRoot = '', token = '', timeoutMs = PUBLISH_TIMEOUT_MS } = {}) {` |
+| `packDryRun` | 78-201 | 124 | `export function packDryRun({ dir, registry = DEFAULT_REGISTRY, workspaceRoot = '', token = '', timeoutMs = PUBLISH_TIMEOUT_MS } = {}) {` |
 | `appendPublishLog` | 102-110 | 9 | `function appendPublishLog(line, { workspaceRoot = '' } = {}) {` |
-| `publishPackage` | 117-198 | 82 | `export async function publishPackage({` |
+| `publishPackage` | 117-200 | 84 | `export async function publishPackage({` |
 
 ### lib/npm/registry.js（172 行 · 8 个函数）
 
