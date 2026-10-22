@@ -405,29 +405,24 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "README.md": {
+      "docs/CHANGELOG.md": {
         "status": "M",
-        "mtime": "2026-10-22T16:59:26.771Z",
+        "mtime": "2026-10-22T18:09:17.642Z",
         "note": "注释可能需更新"
       },
-      "docs/FUNCTIONS.md": {
+      "docs/releases.json": {
         "status": "M",
-        "mtime": "2026-10-22T17:19:36.747Z",
+        "mtime": "2026-10-22T18:08:12.199Z",
         "note": "注释可能需更新"
       },
-      "scripts/build-client.mjs": {
+      "lib/self/index.js": {
         "status": "M",
-        "mtime": "2026-10-22T17:09:07.609Z",
+        "mtime": "2026-10-22T18:06:47.257Z",
         "note": "注释可能需更新"
       },
-      "test/test-build-client.mjs": {
+      "package.json": {
         "status": "M",
-        "mtime": "2026-10-22T17:14:33.212Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-picker-layout.mjs": {
-        "status": "A",
-        "mtime": "2026-10-22T17:12:23.214Z",
+        "mtime": "2026-10-22T18:06:25.092Z",
         "note": "注释可能需更新"
       }
     }
