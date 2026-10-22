@@ -405,24 +405,49 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
+      "README.md": {
+        "status": "M",
+        "mtime": "2026-10-22T18:39:46.394Z",
+        "note": "注释可能需更新"
+      },
       "docs/CHANGELOG.md": {
         "status": "M",
-        "mtime": "2026-10-22T18:09:17.642Z",
+        "mtime": "2026-10-22T18:44:35.415Z",
+        "note": "注释可能需更新"
+      },
+      "docs/FUNCTIONS.md": {
+        "status": "M",
+        "mtime": "2026-10-22T18:44:36.300Z",
         "note": "注释可能需更新"
       },
       "docs/releases.json": {
         "status": "M",
-        "mtime": "2026-10-22T18:08:12.199Z",
+        "mtime": "2026-10-22T18:44:35.123Z",
+        "note": "注释可能需更新"
+      },
+      "lib/client-parts/const.js": {
+        "status": "M",
+        "mtime": "2026-10-22T18:39:32.634Z",
         "note": "注释可能需更新"
       },
       "lib/self/index.js": {
         "status": "M",
-        "mtime": "2026-10-22T18:06:47.257Z",
+        "mtime": "2026-10-22T18:44:25.642Z",
         "note": "注释可能需更新"
       },
       "package.json": {
         "status": "M",
-        "mtime": "2026-10-22T18:06:25.092Z",
+        "mtime": "2026-10-22T18:44:25.640Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-picker-layout.mjs": {
+        "status": "M",
+        "mtime": "2026-10-22T18:38:57.899Z",
+        "note": "注释可能需更新"
+      },
+      "scripts/picker-repro.mjs": {
+        "status": "A",
+        "mtime": "2026-10-22T18:39:12.006Z",
         "note": "注释可能需更新"
       }
     }
@@ -515,5 +540,6 @@
   "lib/client-parts/page.js": "（待注释）",
   "lib/client-parts/repo.js": "（待注释）",
   "lib/client-parts/settings.js": "（待注释）",
-  "lib/client-parts/utils.js": "（待注释）"
+  "lib/client-parts/utils.js": "（待注释）",
+  "scripts/picker-repro.mjs": "（待注释）"
 }

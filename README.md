@@ -481,6 +481,7 @@ dsh-git-push/
 │   ├── hot-path-probe-fsp-shim.mjs — （待注释）
 │   ├── hot-path-probe.mjs — （待注释）
 │   ├── module-splitter.py — 巨型单文件按顶层块拆分脚本（analyze/split/verify 三命令，python3 零依赖；module_splitter 工具与 CLI 的底层实现）
+│   ├── picker-repro.mjs — （待注释）
 │   ├── platform-scan.mjs — （待注释）
 │   ├── probe-recheck.mjs — 探针：「重新检测」按钮链路实测（在线校验 token/SSH）
 │   ├── readme-gen.mjs — README 生成独立脚本（git_gen_readme 抽出：模板渲染/版本表/目录）

@@ -34,10 +34,24 @@ function ruleBody(cls) {
   return m ? m[1] : '';
 }
 
+test('browsedir 必须 flex:0 0 auto（禁止被压扁——行数多时挤压的真正根因）', () => {
+  // 2026-10-23 第二轮的真正修复。第一版只给容器加 min-height:0，测试也只断言容器，
+  //   于是 bug 仍在而测试全绿——「断言 CSS 文本存在」不等于「布局正确」。
+  //   真实渲染复现后定位到子项收缩：
+  //     .browselist 是纵向 flex 容器 → .browsedir 是 flex 子项；
+  //     子项默认 flex-shrink:1，而行上写着 overflow:hidden（为省略号截断），
+  //     overflow:hidden 使 automatic minimum size 归零 ⇒ 内容超容器时行被无限压扁，
+  //     容器根本不滚动。实测 73 条 / 1080px 视口：行高 27px 被压到 10px。
+  const body = ruleBody('dshgp_browsedir');
+  assert.ok(body, '应能找到 .dshgp_browsedir 规则');
+  assert.match(body, /flex:\s*0\s+0\s+auto/, `browsedir 必须 flex:0 0 auto，实际：${body}`);
+  assert.ok(!/flex-shrink:\s*[1-9]/.test(body), `browsedir 不得可收缩，实际：${body}`);
+});
+
 test('browselist 必须显式 min-height:0（flex 子项默认 auto 会顶破 max-height）', () => {
   const body = ruleBody('dshgp_browselist');
   assert.ok(body, '应能找到 .dshgp_browselist 规则');
-  // 核心判据：这一行缺失 = 条目多时弹窗被撑穿（本次 bug 的根因）
+  // 容器侧封顶：缺失时 list 会被内容撑高，max-height 形同虚设
   assert.ok(/min-height:\s*0(?:px)?[;}]/.test(body), `browselist 必须 min-height:0，实际：${body}`);
   // 封顶与滚动必须都在（否则列表无界增长）
   assert.ok(/max-height:/.test(body), 'browselist 应保留 max-height 封顶');

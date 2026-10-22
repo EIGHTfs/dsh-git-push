@@ -1065,64 +1065,64 @@
 | `dshgp_localSet` | 51-53 | 3 | `function dshgp_localSet(key, value) {` |
 | `dshgp_copyText` | 56-61 | 6 | `function dshgp_copyText(text) {` |
 
-### lib/client.js（3210 行 · 54 个函数）
+### lib/client.js（3216 行 · 54 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `dshgp_ensureCss` | 243-251 | 9 | `function dshgp_ensureCss() {` |
-| `dshgp_getJson` | 254-257 | 4 | `async function dshgp_getJson(url) {` |
-| `dshgp_postJson` | 259-268 | 10 | `async function dshgp_postJson(url, payload, timeoutMs) {` |
-| `dshgp_tokenConfigured` | 276-280 | 5 | `function dshgp_tokenConfigured(value) {` |
-| `dshgp_localGet` | 287-289 | 3 | `function dshgp_localGet(key) {` |
-| `dshgp_localSet` | 292-294 | 3 | `function dshgp_localSet(key, value) {` |
-| `dshgp_copyText` | 297-302 | 6 | `function dshgp_copyText(text) {` |
-| `dshgp_AcctHead` | 318-332 | 15 | `function dshgp_AcctHead(props) {` |
-| `dshgp_AccountCard` | 335-379 | 45 | `function dshgp_AccountCard(props) {` |
-| `dshgp_AccountTab` | 382-397 | 16 | `function dshgp_AccountTab(props) {` |
-| `dshgp_browseEnsureDom` | 407-435 | 29 | `function dshgp_browseEnsureDom() {` |
-| `dshgp_browseGuess` | 436-438 | 3 | `function dshgp_browseGuess() {` |
-| `dshgp_browseRemember` | 439-441 | 3 | `function dshgp_browseRemember(p) {` |
-| `dshgp_browseLoad` | 442-475 | 34 | `async function dshgp_browseLoad(p) {` |
-| `dshgp_browseOpen` | 476-484 | 9 | `function dshgp_browseOpen(input, onPick) {` |
-| `dshgp_browseClose` | 485-491 | 7 | `function dshgp_browseClose() {` |
-| `dshgp_browseAttach` | 492-502 | 11 | `function dshgp_browseAttach(inputEl) {` |
-| `dshgp_RepoManagerCard` | 506-539 | 34 | `function dshgp_RepoManagerCard(props) {` |
-| `dshgp_RepoLocalRow` | 542-620 | 79 | `function dshgp_RepoLocalRow(props) {` |
-| `dshgp_RepoLocalPane` | 623-660 | 38 | `function dshgp_RepoLocalPane(props) {` |
-| `dshgp_RepoCloudRow` | 663-710 | 48 | `function dshgp_RepoCloudRow(props) {` |
-| `dshgp_VisConfirmDialog` | 716-744 | 29 | `function dshgp_VisConfirmDialog(props) {` |
-| `dshgp_RepoCloudPane` | 747-798 | 52 | `function dshgp_RepoCloudPane(props) {` |
-| `dshgp_CloneProgress` | 809-826 | 18 | `function dshgp_CloneProgress(props) {` |
-| `mb` | 811-811 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
-| `dshgp_ClonePreview` | 834-877 | 44 | `function dshgp_ClonePreview(props) {` |
-| `mb` | 836-836 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
-| `dshgp_NpmAccountCard` | 888-937 | 50 | `function dshgp_NpmAccountCard(props) {` |
-| `dshgp_NpmInstallForm` | 940-1003 | 64 | `function dshgp_NpmInstallForm(props) {` |
-| `dshgp_NpmPanel` | 1006-1165 | 160 | `function dshgp_NpmPanel(props) {` |
-| `doInstall` | 1038-1054 | 17 | `const doInstall = async () => {` |
-| `dshgp_AccountSwitcher` | 1171-1209 | 39 | `function dshgp_AccountSwitcher(props) {` |
-| `dshgp_NpmCredFields` | 1212-1261 | 50 | `function dshgp_NpmCredFields() {` |
-| `save` | 1224-1240 | 17 | `const save = async () => {` |
-| `dshgp_WeightRows` | 1265-1288 | 24 | `function dshgp_WeightRows(props) {` |
-| `dshgp_RuleRow` | 1299-1361 | 63 | `function dshgp_RuleRow(props, slot, idx, len) {` |
-| `countTitle` | 1308-1311 | 4 | `const countTitle = (kind) => {` |
-| `move` | 1316-1316 | 1 | `const move = (dir) => props.moveSlot(slot, dir);` |
-| `dshgp_AuditSwitchBlock` | 1364-1428 | 65 | `function dshgp_AuditSwitchBlock(props) {` |
-| `dshgp_InjectPromptSwitchBlock` | 1431-1453 | 23 | `function dshgp_InjectPromptSwitchBlock(props) {` |
-| `dshgp_CommentWordingBlock` | 1456-1471 | 16 | `function dshgp_CommentWordingBlock(props) {` |
-| `dshgp_AuditAdvancedBlock` | 1474-1500 | 27 | `function dshgp_AuditAdvancedBlock(props) {` |
-| `dshgp_RuleListBlock` | 1503-1534 | 32 | `function dshgp_RuleListBlock(props) {` |
-| `dshgp_AuditTab` | 1541-1561 | 21 | `function dshgp_AuditTab(props) {` |
-| `dshgp_CredentialBlock` | 1565-1632 | 68 | `function dshgp_CredentialBlock(props) {` |
-| `dshgp_PushDefaultsBlock` | 1635-1697 | 63 | `function dshgp_PushDefaultsBlock(props) {` |
-| `dshgp_SettingsTab` | 1699-1708 | 10 | `function dshgp_SettingsTab(props) {` |
-| `dshgp_GitPushPage` | 1711-1764 | 54 | `function dshgp_GitPushPage(props) {` |
-| `tick` | 2257-2275 | 19 | `const tick = async () => {` |
-| `renderResult` | 2756-2769 | 14 | `const renderResult = (res) => {` |
-| `poll` | 2772-2797 | 26 | `const poll = async () => {` |
-| `apply` | 3139-3203 | 65 | `function apply(ctx) {` |
-| `useCardState` | 3179-3182 | 4 | `const useCardState = (selector) => {` |
-| `SectionPage` | 3185-3190 | 6 | `function SectionPage() {` |
+| `dshgp_ensureCss` | 249-257 | 9 | `function dshgp_ensureCss() {` |
+| `dshgp_getJson` | 260-263 | 4 | `async function dshgp_getJson(url) {` |
+| `dshgp_postJson` | 265-274 | 10 | `async function dshgp_postJson(url, payload, timeoutMs) {` |
+| `dshgp_tokenConfigured` | 282-286 | 5 | `function dshgp_tokenConfigured(value) {` |
+| `dshgp_localGet` | 293-295 | 3 | `function dshgp_localGet(key) {` |
+| `dshgp_localSet` | 298-300 | 3 | `function dshgp_localSet(key, value) {` |
+| `dshgp_copyText` | 303-308 | 6 | `function dshgp_copyText(text) {` |
+| `dshgp_AcctHead` | 324-338 | 15 | `function dshgp_AcctHead(props) {` |
+| `dshgp_AccountCard` | 341-385 | 45 | `function dshgp_AccountCard(props) {` |
+| `dshgp_AccountTab` | 388-403 | 16 | `function dshgp_AccountTab(props) {` |
+| `dshgp_browseEnsureDom` | 413-441 | 29 | `function dshgp_browseEnsureDom() {` |
+| `dshgp_browseGuess` | 442-444 | 3 | `function dshgp_browseGuess() {` |
+| `dshgp_browseRemember` | 445-447 | 3 | `function dshgp_browseRemember(p) {` |
+| `dshgp_browseLoad` | 448-481 | 34 | `async function dshgp_browseLoad(p) {` |
+| `dshgp_browseOpen` | 482-490 | 9 | `function dshgp_browseOpen(input, onPick) {` |
+| `dshgp_browseClose` | 491-497 | 7 | `function dshgp_browseClose() {` |
+| `dshgp_browseAttach` | 498-508 | 11 | `function dshgp_browseAttach(inputEl) {` |
+| `dshgp_RepoManagerCard` | 512-545 | 34 | `function dshgp_RepoManagerCard(props) {` |
+| `dshgp_RepoLocalRow` | 548-626 | 79 | `function dshgp_RepoLocalRow(props) {` |
+| `dshgp_RepoLocalPane` | 629-666 | 38 | `function dshgp_RepoLocalPane(props) {` |
+| `dshgp_RepoCloudRow` | 669-716 | 48 | `function dshgp_RepoCloudRow(props) {` |
+| `dshgp_VisConfirmDialog` | 722-750 | 29 | `function dshgp_VisConfirmDialog(props) {` |
+| `dshgp_RepoCloudPane` | 753-804 | 52 | `function dshgp_RepoCloudPane(props) {` |
+| `dshgp_CloneProgress` | 815-832 | 18 | `function dshgp_CloneProgress(props) {` |
+| `mb` | 817-817 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
+| `dshgp_ClonePreview` | 840-883 | 44 | `function dshgp_ClonePreview(props) {` |
+| `mb` | 842-842 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
+| `dshgp_NpmAccountCard` | 894-943 | 50 | `function dshgp_NpmAccountCard(props) {` |
+| `dshgp_NpmInstallForm` | 946-1009 | 64 | `function dshgp_NpmInstallForm(props) {` |
+| `dshgp_NpmPanel` | 1012-1171 | 160 | `function dshgp_NpmPanel(props) {` |
+| `doInstall` | 1044-1060 | 17 | `const doInstall = async () => {` |
+| `dshgp_AccountSwitcher` | 1177-1215 | 39 | `function dshgp_AccountSwitcher(props) {` |
+| `dshgp_NpmCredFields` | 1218-1267 | 50 | `function dshgp_NpmCredFields() {` |
+| `save` | 1230-1246 | 17 | `const save = async () => {` |
+| `dshgp_WeightRows` | 1271-1294 | 24 | `function dshgp_WeightRows(props) {` |
+| `dshgp_RuleRow` | 1305-1367 | 63 | `function dshgp_RuleRow(props, slot, idx, len) {` |
+| `countTitle` | 1314-1317 | 4 | `const countTitle = (kind) => {` |
+| `move` | 1322-1322 | 1 | `const move = (dir) => props.moveSlot(slot, dir);` |
+| `dshgp_AuditSwitchBlock` | 1370-1434 | 65 | `function dshgp_AuditSwitchBlock(props) {` |
+| `dshgp_InjectPromptSwitchBlock` | 1437-1459 | 23 | `function dshgp_InjectPromptSwitchBlock(props) {` |
+| `dshgp_CommentWordingBlock` | 1462-1477 | 16 | `function dshgp_CommentWordingBlock(props) {` |
+| `dshgp_AuditAdvancedBlock` | 1480-1506 | 27 | `function dshgp_AuditAdvancedBlock(props) {` |
+| `dshgp_RuleListBlock` | 1509-1540 | 32 | `function dshgp_RuleListBlock(props) {` |
+| `dshgp_AuditTab` | 1547-1567 | 21 | `function dshgp_AuditTab(props) {` |
+| `dshgp_CredentialBlock` | 1571-1638 | 68 | `function dshgp_CredentialBlock(props) {` |
+| `dshgp_PushDefaultsBlock` | 1641-1703 | 63 | `function dshgp_PushDefaultsBlock(props) {` |
+| `dshgp_SettingsTab` | 1705-1714 | 10 | `function dshgp_SettingsTab(props) {` |
+| `dshgp_GitPushPage` | 1717-1770 | 54 | `function dshgp_GitPushPage(props) {` |
+| `tick` | 2263-2281 | 19 | `const tick = async () => {` |
+| `renderResult` | 2762-2775 | 14 | `const renderResult = (res) => {` |
+| `poll` | 2778-2803 | 26 | `const poll = async () => {` |
+| `apply` | 3145-3209 | 65 | `function apply(ctx) {` |
+| `useCardState` | 3185-3188 | 4 | `const useCardState = (selector) => {` |
+| `SectionPage` | 3191-3196 | 6 | `function SectionPage() {` |
 
 ### lib/client/index.js（162 行 · 5 个函数）
 
@@ -2133,6 +2133,15 @@
 | `load` | 105-153 | 49 | `export async function load(url, context, next) {` |
 | `__wrapped` | 141-145 | 5 | `const __wrapped = function (...__a) {` |
 
+### scripts/picker-repro.mjs（114 行 · 4 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `extractCss` | 35-36 | 2 | `export function extractCss(src = readFileSync(CONST_FILE, 'utf8')) {` |
+| `buildReproHtml` | 42-63 | 22 | `export function buildReproHtml({ count = DEFAULT_COUNT, css = extractCss() } = {}) {` |
+| `argOf` | 84-87 | 4 | `function argOf(name, def) {` |
+| `main` | 89-108 | 20 | `function main() {` |
+
 ### scripts/platform-scan.mjs（169 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2738,7 +2747,7 @@
 |------|------|------|------|
 | `withIsolatedDshHome` | 19-30 | 12 | `function withIsolatedDshHome(fn) {` |
 
-### test/test-picker-layout.mjs（94 行 · 1 个函数）
+### test/test-picker-layout.mjs（108 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
