@@ -420,52 +420,37 @@
     "worktree": {
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-17T13:07:28.456Z",
+        "mtime": "2026-10-22T08:31:12.687Z",
         "note": "注释可能需更新"
       },
-      "lib/app/command-registry.js": {
+      "lib/audit/collector.js": {
         "status": "M",
-        "mtime": "2026-10-17T13:05:15.188Z",
+        "mtime": "2026-10-22T08:30:49.507Z",
         "note": "注释可能需更新"
       },
-      "lib/app/tool-call.js": {
+      "lib/audit/ignore-blind.js": {
         "status": "M",
-        "mtime": "2026-10-17T13:05:00.400Z",
+        "mtime": "2026-10-22T08:26:56.380Z",
         "note": "注释可能需更新"
       },
-      "lib/git/push.js": {
+      "lib/audit/orchestrate.js": {
         "status": "M",
-        "mtime": "2026-10-17T13:03:14.953Z",
+        "mtime": "2026-10-22T08:27:30.405Z",
         "note": "注释可能需更新"
       },
-      "lib/git/transport.js": {
+      "lib/checks/private.js": {
         "status": "M",
-        "mtime": "2026-10-17T13:03:50.561Z",
+        "mtime": "2026-10-22T08:27:30.415Z",
         "note": "注释可能需更新"
       },
-      "test/test-plugin.mjs": {
+      "lib/context/index.js": {
         "status": "M",
-        "mtime": "2026-10-17T13:06:41.108Z",
+        "mtime": "2026-10-22T08:27:30.418Z",
         "note": "注释可能需更新"
       },
-      "test/test-tool-contract.mjs": {
-        "status": "M",
-        "mtime": "2026-10-17T13:06:49.924Z",
-        "note": "注释可能需更新"
-      },
-      "lib/exempt/tool.js": {
+      "test/test-git-path-args.mjs": {
         "status": "A",
-        "mtime": "2026-10-17T13:07:08.336Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-exempt-tool.mjs": {
-        "status": "A",
-        "mtime": "2026-10-17T13:07:15.762Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-multi-remote.mjs": {
-        "status": "A",
-        "mtime": "2026-10-17T13:04:15.455Z",
+        "mtime": "2026-10-22T08:30:16.898Z",
         "note": "注释可能需更新"
       }
     }
@@ -543,5 +528,6 @@
   ".github/workflows/test.yml": "（待注释）",
   "lib/exempt/tool.js": "（待注释）",
   "test/test-exempt-tool.mjs": "（待注释）",
-  "test/test-multi-remote.mjs": "（待注释）"
+  "test/test-multi-remote.mjs": "（待注释）",
+  "test/test-git-path-args.mjs": "（待注释）"
 }

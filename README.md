@@ -583,6 +583,7 @@ dsh-git-push/
 │   ├── test-git-bin-plan.mjs — （待注释）
 │   ├── test-git-identity-rewrite.mjs — （待注释）
 │   ├── test-git-identity.mjs — （待注释）
+│   ├── test-git-path-args.mjs — （待注释）
 │   ├── test-git.mjs — git 总入口测试（runGit/commitAndPush/凭据/克隆）
 │   ├── test-gitignore-match.mjs — gitignore 兜底匹配（与真 git 对拍 + 非 git 端到端）
 │   ├── test-gitignore-nongit-dir.mjs — （待注释）
