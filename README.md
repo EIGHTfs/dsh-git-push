@@ -371,20 +371,20 @@ dsh-git-push/
 │   ├── client/ — 客户端配置（DEFAULT_CONFIG + SETTINGS_SCHEMA 侧边栏设置项定义）
 │   │   ├── index.js — 侧边栏设置 UI 总入口（DEFAULT_CONFIG + SETTINGS_SCHEMA）
 │   ├── client-parts/ — 客户端分片源码（13 片，拼接成 lib/client.js；产物不入库）
-│   │   ├── 00-loader.js — 首片：__ModuleLoader__.load + factory 头 + require + NS
-│   │   ├── 01-const.js — [1] 常量区（忙碌状态键/10 维度表/超时/样式串）
-│   │   ├── 02-utils.js — [2] 工具区（ensureCss/getJson/postJson/localGet/copyText）
-│   │   ├── 03-icons.js — [3] 图标区
-│   │   ├── 10-account.js — [4] 账号信息 Tab
-│   │   ├── 11-browser.js — [5] 目录选择器（browse*）
-│   │   ├── 20-repo.js — [6] 仓库管理卡（本地/云端仓库、推送、可见性）
-│   │   ├── 21-audit.js — [7] 审计 Tab（权重/规则行/规则包/注入开关）
-│   │   ├── 22-settings.js — [8] 设置 Tab（token/SSH/邮箱）
-│   │   ├── 23-npm.js — （待注释）
-│   │   ├── 30-page.js — [9] 页面装配（GitPushPage 三选项卡聚合）
-│   │   ├── 40-controller.js — [10] Controller：状态机 + 数据加载（884 行，跨两片）
-│   │   ├── 41-actions.js — [10] Controller：动作注入（269 行）
-│   │   ├── 99-apply.js — 末片：apply/inject 导出 + factory 返回
+│   │   ├── account.js — （待注释）
+│   │   ├── actions.js — （待注释）
+│   │   ├── apply.js — （待注释）
+│   │   ├── audit.js — （待注释）
+│   │   ├── browser.js — （待注释）
+│   │   ├── const.js — （待注释）
+│   │   ├── controller.js — （待注释）
+│   │   ├── icons.js — （待注释）
+│   │   ├── loader.js — （待注释）
+│   │   ├── npm.js — （待注释）
+│   │   ├── page.js — （待注释）
+│   │   ├── repo.js — （待注释）
+│   │   ├── settings.js — （待注释）
+│   │   ├── utils.js — （待注释）
 │   ├── context/ — 上下文注入（给 AI 会话注入环境：目录映射/工具路径/skill 入口）
 │   │   ├── index.js — 上下文注入入口（环境注入文本）
 │   ├── core/ — （待注释）
@@ -612,6 +612,7 @@ dsh-git-push/
 │   ├── test-perf-loop-collection.mjs — （待注释）
 │   ├── test-perf-repeat-call.mjs — （待注释）
 │   ├── test-persist-credentials.mjs — 凭据持久化测试
+│   ├── test-picker-layout.mjs — （待注释）
 │   ├── test-platform-scan.mjs — （待注释）
 │   ├── test-plugin.mjs — 插件接线测试（入口导出/工具清单/双副本同步）
 │   ├── test-private-gate.mjs — （待注释）

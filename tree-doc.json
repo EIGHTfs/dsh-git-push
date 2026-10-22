@@ -391,19 +391,6 @@
   "test/test-symbol-index.mjs": "（待注释）",
   "test/test-test-cache.mjs": "（待注释）",
   "lib/client-parts": "客户端分片源码（13 片，拼接成 lib/client.js；产物不入库）",
-  "lib/client-parts/00-loader.js": "首片：__ModuleLoader__.load + factory 头 + require + NS",
-  "lib/client-parts/01-const.js": "[1] 常量区（忙碌状态键/10 维度表/超时/样式串）",
-  "lib/client-parts/02-utils.js": "[2] 工具区（ensureCss/getJson/postJson/localGet/copyText）",
-  "lib/client-parts/03-icons.js": "[3] 图标区",
-  "lib/client-parts/10-account.js": "[4] 账号信息 Tab",
-  "lib/client-parts/11-browser.js": "[5] 目录选择器（browse*）",
-  "lib/client-parts/20-repo.js": "[6] 仓库管理卡（本地/云端仓库、推送、可见性）",
-  "lib/client-parts/21-audit.js": "[7] 审计 Tab（权重/规则行/规则包/注入开关）",
-  "lib/client-parts/22-settings.js": "[8] 设置 Tab（token/SSH/邮箱）",
-  "lib/client-parts/30-page.js": "[9] 页面装配（GitPushPage 三选项卡聚合）",
-  "lib/client-parts/40-controller.js": "[10] Controller：状态机 + 数据加载（884 行，跨两片）",
-  "lib/client-parts/41-actions.js": "[10] Controller：动作注入（269 行）",
-  "lib/client-parts/99-apply.js": "末片：apply/inject 导出 + factory 返回",
   "scripts/build-client.mjs": "客户端分片拼接（PART_ORDER + --check 门禁 + 形态铁律自检）",
   "test/test-build-client.mjs": "分片构建门禁测试（产物一致/幂等/形态铁律/dshgp_ 前缀）",
   "test/test-client-fragment-scope.mjs": "客户端分片作用域推导测试（dsh-client-fragment）",
@@ -418,39 +405,29 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
+      "README.md": {
+        "status": "M",
+        "mtime": "2026-10-22T16:59:26.771Z",
+        "note": "注释可能需更新"
+      },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-22T08:31:12.687Z",
+        "mtime": "2026-10-22T17:19:36.747Z",
         "note": "注释可能需更新"
       },
-      "lib/audit/collector.js": {
+      "scripts/build-client.mjs": {
         "status": "M",
-        "mtime": "2026-10-22T08:30:49.507Z",
+        "mtime": "2026-10-22T17:09:07.609Z",
         "note": "注释可能需更新"
       },
-      "lib/audit/ignore-blind.js": {
+      "test/test-build-client.mjs": {
         "status": "M",
-        "mtime": "2026-10-22T08:26:56.380Z",
+        "mtime": "2026-10-22T17:14:33.212Z",
         "note": "注释可能需更新"
       },
-      "lib/audit/orchestrate.js": {
-        "status": "M",
-        "mtime": "2026-10-22T08:27:30.405Z",
-        "note": "注释可能需更新"
-      },
-      "lib/checks/private.js": {
-        "status": "M",
-        "mtime": "2026-10-22T08:27:30.415Z",
-        "note": "注释可能需更新"
-      },
-      "lib/context/index.js": {
-        "status": "M",
-        "mtime": "2026-10-22T08:27:30.418Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-git-path-args.mjs": {
+      "test/test-picker-layout.mjs": {
         "status": "A",
-        "mtime": "2026-10-22T08:30:16.898Z",
+        "mtime": "2026-10-22T17:12:23.214Z",
         "note": "注释可能需更新"
       }
     }
@@ -479,7 +456,6 @@
   "test/test-npm-registry.mjs": "（待注释）",
   "lib/npm/install.js": "（待注释）",
   "test/test-npm-install.mjs": "（待注释）",
-  "lib/client-parts/23-npm.js": "（待注释）",
   "test/e2e-npm-tab-render.mjs": "（待注释）",
   "lib/npm/account.js": "（待注释）",
   "docs/2026-10-13-UI账号信息-NPM对齐GitHub方案.MD": "（待注释）",
@@ -529,5 +505,20 @@
   "lib/exempt/tool.js": "（待注释）",
   "test/test-exempt-tool.mjs": "（待注释）",
   "test/test-multi-remote.mjs": "（待注释）",
-  "test/test-git-path-args.mjs": "（待注释）"
+  "test/test-git-path-args.mjs": "（待注释）",
+  "test/test-picker-layout.mjs": "（待注释）",
+  "lib/client-parts/account.js": "（待注释）",
+  "lib/client-parts/actions.js": "（待注释）",
+  "lib/client-parts/apply.js": "（待注释）",
+  "lib/client-parts/audit.js": "（待注释）",
+  "lib/client-parts/browser.js": "（待注释）",
+  "lib/client-parts/const.js": "（待注释）",
+  "lib/client-parts/controller.js": "（待注释）",
+  "lib/client-parts/icons.js": "（待注释）",
+  "lib/client-parts/loader.js": "（待注释）",
+  "lib/client-parts/npm.js": "（待注释）",
+  "lib/client-parts/page.js": "（待注释）",
+  "lib/client-parts/repo.js": "（待注释）",
+  "lib/client-parts/settings.js": "（待注释）",
+  "lib/client-parts/utils.js": "（待注释）"
 }

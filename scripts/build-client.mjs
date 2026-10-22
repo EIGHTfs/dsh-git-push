@@ -32,22 +32,27 @@ export const OUT_FILE = join(ROOT, 'lib', 'client.js');
  * 拼接顺序 = 依赖顺序（先定义后使用）。
  * 函数声明会提升、但 `const`/`let` 不会——顺序错会在**运行时**才炸（静态查不出），
  * 所以这里与 client.js 的分节标记 `[N]` 一一对应，改分片必须同步改本表。
+ *
+ * 命名约定：分片文件名**不带数字序号**（顺序只由本表这一处权威声明）。
+ *   序号前缀看似方便，实则会漂移——重排/插片时新旧序号并存，扫目录看到的顺序
+ *   与真实拼接顺序不一致，比没有序号更坏。顺序信息集中在 PART_ORDER +
+ *   每个分片头注释的「第 N/14 片」锚点，改序只改这两处。
  */
 export const PART_ORDER = [
-  '00-loader.js',   // loader + factory 头 + require + NS（必须首片）
-  '01-const.js',    // [1] 常量区（BUSY/维度表/超时/样式串）
-  '02-utils.js',    // [2] 工具区（ensureCss/getJson/postJson/tokenConfigured/localGet…）
-  '03-icons.js',    // [3] 图标区
-  '10-account.js',  // [4] 账号信息 Tab
-  '11-browser.js',  // [5] 目录选择器
-  '20-repo.js',     // [6] 仓库管理卡
-  '23-npm.js',      // [6续] NPM 面板（账号卡 + 装包表单 + npm 凭据字段）
-  '21-audit.js',    // [7] 审计 Tab
-  '22-settings.js', // [8] 设置 Tab
-  '30-page.js',     // [9] 页面装配（GitPushPage）
-  '40-controller.js', // [10] Controller：状态机 + 数据加载
-  '41-actions.js',    // [10续] Controller：动作注入
-  '99-apply.js',    // 收尾：注册 settings.section + factory 返回（必须末片）
+  'loader.js',     // [1] loader + factory 头 + require + NS（必须首片）
+  'const.js',      // [2] 常量区（BUSY/维度表/超时/样式串）
+  'utils.js',      // [3] 工具区（ensureCss/getJson/postJson/tokenConfigured/localGet…）
+  'icons.js',      // [4] 图标区
+  'account.js',    // [5] 账号信息 Tab
+  'browser.js',    // [6] 目录选择器
+  'repo.js',       // [7] 仓库管理卡
+  'npm.js',        // [7续] NPM 面板（账号卡 + 装包表单 + npm 凭据字段）
+  'audit.js',      // [8] 审计 Tab
+  'settings.js',   // [9] 设置 Tab
+  'page.js',       // [10] 页面装配（GitPushPage）
+  'controller.js', // [11] Controller：状态机 + 数据加载
+  'actions.js',    // [11续] Controller：动作注入
+  'apply.js',      // [12] 收尾：注册 settings.section + factory 返回（必须末片）
 ];
 
 /** 读出全部分片内容（缺片直接报错，避免拼出半份产物当成功）。 */

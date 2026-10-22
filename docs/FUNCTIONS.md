@@ -961,19 +961,7 @@
 | `printCloneResult` | 153-165 | 13 | `function printCloneResult(r, flags, target, dest) {` |
 | `cmdClone` | 168-175 | 8 | `export async function cmdClone(flags, positional) {` |
 
-### lib/client-parts/02-utils.js（63 行 · 7 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `dshgp_ensureCss` | 2-10 | 9 | `function dshgp_ensureCss() {` |
-| `dshgp_getJson` | 13-16 | 4 | `async function dshgp_getJson(url) {` |
-| `dshgp_postJson` | 18-27 | 10 | `async function dshgp_postJson(url, payload, timeoutMs) {` |
-| `dshgp_tokenConfigured` | 35-39 | 5 | `function dshgp_tokenConfigured(value) {` |
-| `dshgp_localGet` | 46-48 | 3 | `function dshgp_localGet(key) {` |
-| `dshgp_localSet` | 51-53 | 3 | `function dshgp_localSet(key, value) {` |
-| `dshgp_copyText` | 56-61 | 6 | `function dshgp_copyText(text) {` |
-
-### lib/client-parts/10-account.js（84 行 · 3 个函数）
+### lib/client-parts/account.js（84 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -981,34 +969,15 @@
 | `dshgp_AccountCard` | 20-64 | 45 | `function dshgp_AccountCard(props) {` |
 | `dshgp_AccountTab` | 67-82 | 16 | `function dshgp_AccountTab(props) {` |
 
-### lib/client-parts/11-browser.js（96 行 · 7 个函数）
+### lib/client-parts/apply.js（73 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `dshgp_browseEnsureDom` | 6-34 | 29 | `function dshgp_browseEnsureDom() {` |
-| `dshgp_browseGuess` | 35-37 | 3 | `function dshgp_browseGuess() {` |
-| `dshgp_browseRemember` | 38-40 | 3 | `function dshgp_browseRemember(p) {` |
-| `dshgp_browseLoad` | 41-66 | 26 | `async function dshgp_browseLoad(p) {` |
-| `dshgp_browseOpen` | 67-75 | 9 | `function dshgp_browseOpen(input, onPick) {` |
-| `dshgp_browseClose` | 76-82 | 7 | `function dshgp_browseClose() {` |
-| `dshgp_browseAttach` | 83-93 | 11 | `function dshgp_browseAttach(inputEl) {` |
+| `apply` | 2-66 | 65 | `function apply(ctx) {` |
+| `useCardState` | 42-45 | 4 | `const useCardState = (selector) => {` |
+| `SectionPage` | 48-53 | 6 | `function SectionPage() {` |
 
-### lib/client-parts/20-repo.js（375 行 · 10 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `dshgp_RepoManagerCard` | 2-35 | 34 | `function dshgp_RepoManagerCard(props) {` |
-| `dshgp_RepoLocalRow` | 38-116 | 79 | `function dshgp_RepoLocalRow(props) {` |
-| `dshgp_RepoLocalPane` | 119-156 | 38 | `function dshgp_RepoLocalPane(props) {` |
-| `dshgp_RepoCloudRow` | 159-206 | 48 | `function dshgp_RepoCloudRow(props) {` |
-| `dshgp_VisConfirmDialog` | 212-240 | 29 | `function dshgp_VisConfirmDialog(props) {` |
-| `dshgp_RepoCloudPane` | 243-294 | 52 | `function dshgp_RepoCloudPane(props) {` |
-| `dshgp_CloneProgress` | 305-322 | 18 | `function dshgp_CloneProgress(props) {` |
-| `mb` | 307-307 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
-| `dshgp_ClonePreview` | 330-373 | 44 | `function dshgp_ClonePreview(props) {` |
-| `mb` | 332-332 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
-
-### lib/client-parts/21-audit.js（302 行 · 10 个函数）
+### lib/client-parts/audit.js（302 行 · 10 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1023,33 +992,19 @@
 | `dshgp_RuleListBlock` | 241-272 | 32 | `function dshgp_RuleListBlock(props) {` |
 | `dshgp_AuditTab` | 279-299 | 21 | `function dshgp_AuditTab(props) {` |
 
-### lib/client-parts/22-settings.js（147 行 · 3 个函数）
+### lib/client-parts/browser.js（107 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `dshgp_CredentialBlock` | 2-69 | 68 | `function dshgp_CredentialBlock(props) {` |
-| `dshgp_PushDefaultsBlock` | 72-134 | 63 | `function dshgp_PushDefaultsBlock(props) {` |
-| `dshgp_SettingsTab` | 136-145 | 10 | `function dshgp_SettingsTab(props) {` |
+| `dshgp_browseEnsureDom` | 9-37 | 29 | `function dshgp_browseEnsureDom() {` |
+| `dshgp_browseGuess` | 38-40 | 3 | `function dshgp_browseGuess() {` |
+| `dshgp_browseRemember` | 41-43 | 3 | `function dshgp_browseRemember(p) {` |
+| `dshgp_browseLoad` | 44-77 | 34 | `async function dshgp_browseLoad(p) {` |
+| `dshgp_browseOpen` | 78-86 | 9 | `function dshgp_browseOpen(input, onPick) {` |
+| `dshgp_browseClose` | 87-93 | 7 | `function dshgp_browseClose() {` |
+| `dshgp_browseAttach` | 94-104 | 11 | `function dshgp_browseAttach(inputEl) {` |
 
-### lib/client-parts/23-npm.js（384 行 · 7 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `dshgp_NpmAccountCard` | 9-58 | 50 | `function dshgp_NpmAccountCard(props) {` |
-| `dshgp_NpmInstallForm` | 61-124 | 64 | `function dshgp_NpmInstallForm(props) {` |
-| `dshgp_NpmPanel` | 127-286 | 160 | `function dshgp_NpmPanel(props) {` |
-| `doInstall` | 159-175 | 17 | `const doInstall = async () => {` |
-| `dshgp_AccountSwitcher` | 292-330 | 39 | `function dshgp_AccountSwitcher(props) {` |
-| `dshgp_NpmCredFields` | 333-382 | 50 | `function dshgp_NpmCredFields() {` |
-| `save` | 345-361 | 17 | `const save = async () => {` |
-
-### lib/client-parts/30-page.js（57 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `dshgp_GitPushPage` | 2-55 | 54 | `function dshgp_GitPushPage(props) {` |
-
-### lib/client-parts/40-controller.js（1093 行 · 3 个函数）
+### lib/client-parts/controller.js（1093 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1057,72 +1012,117 @@
 | `renderResult` | 991-1004 | 14 | `const renderResult = (res) => {` |
 | `poll` | 1007-1032 | 26 | `const poll = async () => {` |
 
-### lib/client-parts/99-apply.js（72 行 · 3 个函数）
+### lib/client-parts/npm.js（385 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `apply` | 1-65 | 65 | `function apply(ctx) {` |
-| `useCardState` | 41-44 | 4 | `const useCardState = (selector) => {` |
-| `SectionPage` | 47-52 | 6 | `function SectionPage() {` |
+| `dshgp_NpmAccountCard` | 10-59 | 50 | `function dshgp_NpmAccountCard(props) {` |
+| `dshgp_NpmInstallForm` | 62-125 | 64 | `function dshgp_NpmInstallForm(props) {` |
+| `dshgp_NpmPanel` | 128-287 | 160 | `function dshgp_NpmPanel(props) {` |
+| `doInstall` | 160-176 | 17 | `const doInstall = async () => {` |
+| `dshgp_AccountSwitcher` | 293-331 | 39 | `function dshgp_AccountSwitcher(props) {` |
+| `dshgp_NpmCredFields` | 334-383 | 50 | `function dshgp_NpmCredFields() {` |
+| `save` | 346-362 | 17 | `const save = async () => {` |
 
-### lib/client.js（3195 行 · 54 个函数）
+### lib/client-parts/page.js（57 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `dshgp_ensureCss` | 242-250 | 9 | `function dshgp_ensureCss() {` |
-| `dshgp_getJson` | 253-256 | 4 | `async function dshgp_getJson(url) {` |
-| `dshgp_postJson` | 258-267 | 10 | `async function dshgp_postJson(url, payload, timeoutMs) {` |
-| `dshgp_tokenConfigured` | 275-279 | 5 | `function dshgp_tokenConfigured(value) {` |
-| `dshgp_localGet` | 286-288 | 3 | `function dshgp_localGet(key) {` |
-| `dshgp_localSet` | 291-293 | 3 | `function dshgp_localSet(key, value) {` |
-| `dshgp_copyText` | 296-301 | 6 | `function dshgp_copyText(text) {` |
-| `dshgp_AcctHead` | 317-331 | 15 | `function dshgp_AcctHead(props) {` |
-| `dshgp_AccountCard` | 334-378 | 45 | `function dshgp_AccountCard(props) {` |
-| `dshgp_AccountTab` | 381-396 | 16 | `function dshgp_AccountTab(props) {` |
-| `dshgp_browseEnsureDom` | 403-431 | 29 | `function dshgp_browseEnsureDom() {` |
-| `dshgp_browseGuess` | 432-434 | 3 | `function dshgp_browseGuess() {` |
-| `dshgp_browseRemember` | 435-437 | 3 | `function dshgp_browseRemember(p) {` |
-| `dshgp_browseLoad` | 438-463 | 26 | `async function dshgp_browseLoad(p) {` |
-| `dshgp_browseOpen` | 464-472 | 9 | `function dshgp_browseOpen(input, onPick) {` |
-| `dshgp_browseClose` | 473-479 | 7 | `function dshgp_browseClose() {` |
-| `dshgp_browseAttach` | 480-490 | 11 | `function dshgp_browseAttach(inputEl) {` |
-| `dshgp_RepoManagerCard` | 494-527 | 34 | `function dshgp_RepoManagerCard(props) {` |
-| `dshgp_RepoLocalRow` | 530-608 | 79 | `function dshgp_RepoLocalRow(props) {` |
-| `dshgp_RepoLocalPane` | 611-648 | 38 | `function dshgp_RepoLocalPane(props) {` |
-| `dshgp_RepoCloudRow` | 651-698 | 48 | `function dshgp_RepoCloudRow(props) {` |
-| `dshgp_VisConfirmDialog` | 704-732 | 29 | `function dshgp_VisConfirmDialog(props) {` |
-| `dshgp_RepoCloudPane` | 735-786 | 52 | `function dshgp_RepoCloudPane(props) {` |
-| `dshgp_CloneProgress` | 797-814 | 18 | `function dshgp_CloneProgress(props) {` |
-| `mb` | 799-799 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
-| `dshgp_ClonePreview` | 822-865 | 44 | `function dshgp_ClonePreview(props) {` |
-| `mb` | 824-824 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
-| `dshgp_NpmAccountCard` | 875-924 | 50 | `function dshgp_NpmAccountCard(props) {` |
-| `dshgp_NpmInstallForm` | 927-990 | 64 | `function dshgp_NpmInstallForm(props) {` |
-| `dshgp_NpmPanel` | 993-1152 | 160 | `function dshgp_NpmPanel(props) {` |
-| `doInstall` | 1025-1041 | 17 | `const doInstall = async () => {` |
-| `dshgp_AccountSwitcher` | 1158-1196 | 39 | `function dshgp_AccountSwitcher(props) {` |
-| `dshgp_NpmCredFields` | 1199-1248 | 50 | `function dshgp_NpmCredFields() {` |
-| `save` | 1211-1227 | 17 | `const save = async () => {` |
-| `dshgp_WeightRows` | 1252-1275 | 24 | `function dshgp_WeightRows(props) {` |
-| `dshgp_RuleRow` | 1286-1348 | 63 | `function dshgp_RuleRow(props, slot, idx, len) {` |
-| `countTitle` | 1295-1298 | 4 | `const countTitle = (kind) => {` |
-| `move` | 1303-1303 | 1 | `const move = (dir) => props.moveSlot(slot, dir);` |
-| `dshgp_AuditSwitchBlock` | 1351-1415 | 65 | `function dshgp_AuditSwitchBlock(props) {` |
-| `dshgp_InjectPromptSwitchBlock` | 1418-1440 | 23 | `function dshgp_InjectPromptSwitchBlock(props) {` |
-| `dshgp_CommentWordingBlock` | 1443-1458 | 16 | `function dshgp_CommentWordingBlock(props) {` |
-| `dshgp_AuditAdvancedBlock` | 1461-1487 | 27 | `function dshgp_AuditAdvancedBlock(props) {` |
-| `dshgp_RuleListBlock` | 1490-1521 | 32 | `function dshgp_RuleListBlock(props) {` |
-| `dshgp_AuditTab` | 1528-1548 | 21 | `function dshgp_AuditTab(props) {` |
-| `dshgp_CredentialBlock` | 1552-1619 | 68 | `function dshgp_CredentialBlock(props) {` |
-| `dshgp_PushDefaultsBlock` | 1622-1684 | 63 | `function dshgp_PushDefaultsBlock(props) {` |
-| `dshgp_SettingsTab` | 1686-1695 | 10 | `function dshgp_SettingsTab(props) {` |
-| `dshgp_GitPushPage` | 1698-1751 | 54 | `function dshgp_GitPushPage(props) {` |
-| `tick` | 2244-2262 | 19 | `const tick = async () => {` |
-| `renderResult` | 2743-2756 | 14 | `const renderResult = (res) => {` |
-| `poll` | 2759-2784 | 26 | `const poll = async () => {` |
-| `apply` | 3124-3188 | 65 | `function apply(ctx) {` |
-| `useCardState` | 3164-3167 | 4 | `const useCardState = (selector) => {` |
-| `SectionPage` | 3170-3175 | 6 | `function SectionPage() {` |
+| `dshgp_GitPushPage` | 2-55 | 54 | `function dshgp_GitPushPage(props) {` |
+
+### lib/client-parts/repo.js（375 行 · 10 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `dshgp_RepoManagerCard` | 2-35 | 34 | `function dshgp_RepoManagerCard(props) {` |
+| `dshgp_RepoLocalRow` | 38-116 | 79 | `function dshgp_RepoLocalRow(props) {` |
+| `dshgp_RepoLocalPane` | 119-156 | 38 | `function dshgp_RepoLocalPane(props) {` |
+| `dshgp_RepoCloudRow` | 159-206 | 48 | `function dshgp_RepoCloudRow(props) {` |
+| `dshgp_VisConfirmDialog` | 212-240 | 29 | `function dshgp_VisConfirmDialog(props) {` |
+| `dshgp_RepoCloudPane` | 243-294 | 52 | `function dshgp_RepoCloudPane(props) {` |
+| `dshgp_CloneProgress` | 305-322 | 18 | `function dshgp_CloneProgress(props) {` |
+| `mb` | 307-307 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
+| `dshgp_ClonePreview` | 330-373 | 44 | `function dshgp_ClonePreview(props) {` |
+| `mb` | 332-332 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
+
+### lib/client-parts/settings.js（147 行 · 3 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `dshgp_CredentialBlock` | 2-69 | 68 | `function dshgp_CredentialBlock(props) {` |
+| `dshgp_PushDefaultsBlock` | 72-134 | 63 | `function dshgp_PushDefaultsBlock(props) {` |
+| `dshgp_SettingsTab` | 136-145 | 10 | `function dshgp_SettingsTab(props) {` |
+
+### lib/client-parts/utils.js（63 行 · 7 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `dshgp_ensureCss` | 2-10 | 9 | `function dshgp_ensureCss() {` |
+| `dshgp_getJson` | 13-16 | 4 | `async function dshgp_getJson(url) {` |
+| `dshgp_postJson` | 18-27 | 10 | `async function dshgp_postJson(url, payload, timeoutMs) {` |
+| `dshgp_tokenConfigured` | 35-39 | 5 | `function dshgp_tokenConfigured(value) {` |
+| `dshgp_localGet` | 46-48 | 3 | `function dshgp_localGet(key) {` |
+| `dshgp_localSet` | 51-53 | 3 | `function dshgp_localSet(key, value) {` |
+| `dshgp_copyText` | 56-61 | 6 | `function dshgp_copyText(text) {` |
+
+### lib/client.js（3210 行 · 54 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `dshgp_ensureCss` | 243-251 | 9 | `function dshgp_ensureCss() {` |
+| `dshgp_getJson` | 254-257 | 4 | `async function dshgp_getJson(url) {` |
+| `dshgp_postJson` | 259-268 | 10 | `async function dshgp_postJson(url, payload, timeoutMs) {` |
+| `dshgp_tokenConfigured` | 276-280 | 5 | `function dshgp_tokenConfigured(value) {` |
+| `dshgp_localGet` | 287-289 | 3 | `function dshgp_localGet(key) {` |
+| `dshgp_localSet` | 292-294 | 3 | `function dshgp_localSet(key, value) {` |
+| `dshgp_copyText` | 297-302 | 6 | `function dshgp_copyText(text) {` |
+| `dshgp_AcctHead` | 318-332 | 15 | `function dshgp_AcctHead(props) {` |
+| `dshgp_AccountCard` | 335-379 | 45 | `function dshgp_AccountCard(props) {` |
+| `dshgp_AccountTab` | 382-397 | 16 | `function dshgp_AccountTab(props) {` |
+| `dshgp_browseEnsureDom` | 407-435 | 29 | `function dshgp_browseEnsureDom() {` |
+| `dshgp_browseGuess` | 436-438 | 3 | `function dshgp_browseGuess() {` |
+| `dshgp_browseRemember` | 439-441 | 3 | `function dshgp_browseRemember(p) {` |
+| `dshgp_browseLoad` | 442-475 | 34 | `async function dshgp_browseLoad(p) {` |
+| `dshgp_browseOpen` | 476-484 | 9 | `function dshgp_browseOpen(input, onPick) {` |
+| `dshgp_browseClose` | 485-491 | 7 | `function dshgp_browseClose() {` |
+| `dshgp_browseAttach` | 492-502 | 11 | `function dshgp_browseAttach(inputEl) {` |
+| `dshgp_RepoManagerCard` | 506-539 | 34 | `function dshgp_RepoManagerCard(props) {` |
+| `dshgp_RepoLocalRow` | 542-620 | 79 | `function dshgp_RepoLocalRow(props) {` |
+| `dshgp_RepoLocalPane` | 623-660 | 38 | `function dshgp_RepoLocalPane(props) {` |
+| `dshgp_RepoCloudRow` | 663-710 | 48 | `function dshgp_RepoCloudRow(props) {` |
+| `dshgp_VisConfirmDialog` | 716-744 | 29 | `function dshgp_VisConfirmDialog(props) {` |
+| `dshgp_RepoCloudPane` | 747-798 | 52 | `function dshgp_RepoCloudPane(props) {` |
+| `dshgp_CloneProgress` | 809-826 | 18 | `function dshgp_CloneProgress(props) {` |
+| `mb` | 811-811 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
+| `dshgp_ClonePreview` | 834-877 | 44 | `function dshgp_ClonePreview(props) {` |
+| `mb` | 836-836 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
+| `dshgp_NpmAccountCard` | 888-937 | 50 | `function dshgp_NpmAccountCard(props) {` |
+| `dshgp_NpmInstallForm` | 940-1003 | 64 | `function dshgp_NpmInstallForm(props) {` |
+| `dshgp_NpmPanel` | 1006-1165 | 160 | `function dshgp_NpmPanel(props) {` |
+| `doInstall` | 1038-1054 | 17 | `const doInstall = async () => {` |
+| `dshgp_AccountSwitcher` | 1171-1209 | 39 | `function dshgp_AccountSwitcher(props) {` |
+| `dshgp_NpmCredFields` | 1212-1261 | 50 | `function dshgp_NpmCredFields() {` |
+| `save` | 1224-1240 | 17 | `const save = async () => {` |
+| `dshgp_WeightRows` | 1265-1288 | 24 | `function dshgp_WeightRows(props) {` |
+| `dshgp_RuleRow` | 1299-1361 | 63 | `function dshgp_RuleRow(props, slot, idx, len) {` |
+| `countTitle` | 1308-1311 | 4 | `const countTitle = (kind) => {` |
+| `move` | 1316-1316 | 1 | `const move = (dir) => props.moveSlot(slot, dir);` |
+| `dshgp_AuditSwitchBlock` | 1364-1428 | 65 | `function dshgp_AuditSwitchBlock(props) {` |
+| `dshgp_InjectPromptSwitchBlock` | 1431-1453 | 23 | `function dshgp_InjectPromptSwitchBlock(props) {` |
+| `dshgp_CommentWordingBlock` | 1456-1471 | 16 | `function dshgp_CommentWordingBlock(props) {` |
+| `dshgp_AuditAdvancedBlock` | 1474-1500 | 27 | `function dshgp_AuditAdvancedBlock(props) {` |
+| `dshgp_RuleListBlock` | 1503-1534 | 32 | `function dshgp_RuleListBlock(props) {` |
+| `dshgp_AuditTab` | 1541-1561 | 21 | `function dshgp_AuditTab(props) {` |
+| `dshgp_CredentialBlock` | 1565-1632 | 68 | `function dshgp_CredentialBlock(props) {` |
+| `dshgp_PushDefaultsBlock` | 1635-1697 | 63 | `function dshgp_PushDefaultsBlock(props) {` |
+| `dshgp_SettingsTab` | 1699-1708 | 10 | `function dshgp_SettingsTab(props) {` |
+| `dshgp_GitPushPage` | 1711-1764 | 54 | `function dshgp_GitPushPage(props) {` |
+| `tick` | 2257-2275 | 19 | `const tick = async () => {` |
+| `renderResult` | 2756-2769 | 14 | `const renderResult = (res) => {` |
+| `poll` | 2772-2797 | 26 | `const poll = async () => {` |
+| `apply` | 3139-3203 | 65 | `function apply(ctx) {` |
+| `useCardState` | 3179-3182 | 4 | `const useCardState = (selector) => {` |
+| `SectionPage` | 3185-3190 | 6 | `function SectionPage() {` |
 
 ### lib/client/index.js（162 行 · 5 个函数）
 
@@ -2023,14 +2023,14 @@
 | `loadPlaywright` | 191-199 | 9 | `function loadPlaywright(pwroot) {` |
 | `stripHtml` | 202-208 | 7 | `function stripHtml(html) {` |
 
-### scripts/build-client.mjs（120 行 · 4 个函数）
+### scripts/build-client.mjs（125 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `readParts` | 54-60 | 7 | `export function readParts(order = PART_ORDER, dir = PARTS_DIR) {` |
-| `buildClient` | 65-68 | 4 | `export function buildClient(order = PART_ORDER, dir = PARTS_DIR) {` |
-| `checkShape` | 71-80 | 10 | `export function checkShape(code) {` |
-| `main` | 84-115 | 32 | `function main(argv = process.argv.slice(2)) {` |
+| `readParts` | 59-65 | 7 | `export function readParts(order = PART_ORDER, dir = PARTS_DIR) {` |
+| `buildClient` | 70-73 | 4 | `export function buildClient(order = PART_ORDER, dir = PARTS_DIR) {` |
+| `checkShape` | 76-85 | 10 | `export function checkShape(code) {` |
+| `main` | 89-120 | 32 | `function main(argv = process.argv.slice(2)) {` |
 
 ### scripts/check.mjs（89 行 · 2 个函数）
 
@@ -2737,6 +2737,12 @@
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `withIsolatedDshHome` | 19-30 | 12 | `function withIsolatedDshHome(fn) {` |
+
+### test/test-picker-layout.mjs（94 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `ruleBody` | 32-33 | 2 | `function ruleBody(cls) {` |
 
 ### test/test-platform-scan.mjs（98 行 · 1 个函数）
 

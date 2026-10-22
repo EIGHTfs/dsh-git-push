@@ -45,3 +45,25 @@ test('工厂体内函数声明统一 dshgp_ 前缀（防 combo 拼接撞名）',
     .filter((n) => !n.startsWith('dshgp_') && !API_NAMES.includes(n));
   assert.deepEqual(bad, [], `未加 dshgp_ 前缀的工厂体函数：${bad.join(' / ')}`);
 });
+
+test('分片文件名不带数字序号（顺序唯一权威 = PART_ORDER）', () => {
+  // 为什么禁序号：`00-loader.js` 这类前缀会**漂移**——重排/插片时新旧序号并存，
+  //   扫目录看到的顺序与真实拼接顺序不一致，比没有序号更坏（误导性信息）。
+  //   顺序信息集中在两处：PART_ORDER（构建用）+ 分片头注释的「第 N/M 片」锚点（人读用）。
+  const numbered = PART_ORDER.filter((f) => /^\d/.test(f));
+  assert.deepEqual(numbered, [], `分片名不应带数字序号：${numbered.join(' / ')}`);
+  // 目录里也不该残留带序号的文件（除未登记的会被上一条测试抓到）
+  const onDisk = readdirSync(PARTS_DIR).filter((f) => f.endsWith('.js'));
+  const numberedOnDisk = onDisk.filter((f) => /^\d/.test(f));
+  assert.deepEqual(numberedOnDisk, [], `目录中残留带序号的分片：${numberedOnDisk.join(' / ')}`);
+});
+
+test('每个分片头注释都有「第 N/M 片」顺序锚点', () => {
+  // 单文件也能定位自己在拼接链里的位置（替代序号前缀的可读性）
+  const total = PART_ORDER.length;
+  PART_ORDER.forEach((f, i) => {
+    const src = readFileSync(join(PARTS_DIR, f), 'utf8');
+    const tag = `第 ${i + 1}/${total} 片`;
+    assert.ok(src.includes(tag), `${f} 头部缺少顺序锚点「${tag}」`);
+  });
+});
