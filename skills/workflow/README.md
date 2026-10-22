@@ -18,4 +18,4 @@ generatedBy: deepseek-official/deepseek-v4-flash · EIGHTfs 2026-10-02
 ## 已内置化
 
 - 开发者要求清单 → `lib/user-requirements.json`（随插件分发；v2 未移植，待验收）
-- 仓库索引 → 废弃 md 表格，改用 JSON 索引（生成于插件配置目录的 `dsh-repo-index.json`）
+- 仓库索引 → 废弃 md 表格，改用 JSON 索引（生成于插件配置目录的 `dsh-repo-index.jsonl`）

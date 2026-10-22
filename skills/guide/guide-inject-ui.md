@@ -107,7 +107,7 @@ generatedBy: deepseek-official/deepseek-v4-flash · EIGHTfs 2026-10-02
 
 | 时机 | 账号信息 | 本地仓库列表 |
 |---|---|---|
-| 插件启动（侧边栏加载） | 离线读 `account-status.json` | 离线读 `dsh-repo-index.json` |
+| 插件启动（侧边栏加载） | 离线读 `account-status.json` | 离线读 `dsh-repo-index.jsonl` |
 | 云端 push 完成后 | 离线读（push 时已在线更新 json） | 离线读（push 时已重建索引） |
 | 手动刷新 | `重新检测` = 在线校验写 json，再离线读回 | `扫描` = 独立进程后台离线扫描，逐条追加 |
 
@@ -137,7 +137,7 @@ generatedBy: deepseek-official/deepseek-v4-flash · EIGHTfs 2026-10-02
 |---|---|
 | `config.json` | 全部设置与凭据真源（0600）：开关、扫描范围、文件上限、权重覆盖、规则包顺序、推送通道/门禁、自动推送、`githubToken`、`sshPub`，以及可选的 `injectUsageText` |
 | `account-status.json` | 账号快照：登录名、是否登录、token/SSH 各自有效性与校验时间 |
-| `dsh-repo-index.json` | 仓库索引：本地/云端仓库的归属、可见性、路径、默认分支、领先/落后等（自动生成，请勿手改） |
+| `dsh-repo-index.jsonl` | 仓库索引：本地/云端仓库的归属、可见性、路径、默认分支、领先/落后等（自动生成，请勿手改） |
 | `scan-live.json` | 本地扫描进度：`version` / 已发现仓库 / 是否完成 |
 | `tools.json` | 工具探测结果（工具名 → 本机实测路径） |
 | `settings-ui.log` | 侧边栏每次保存设置的追加日志（凭据值打码） |

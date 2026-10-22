@@ -407,47 +407,122 @@
     "worktree": {
       "README.md": {
         "status": "M",
-        "mtime": "2026-10-22T18:39:46.394Z",
+        "mtime": "2026-10-22T18:56:45.846Z",
         "note": "注释可能需更新"
       },
       "docs/CHANGELOG.md": {
         "status": "M",
-        "mtime": "2026-10-22T18:44:35.415Z",
+        "mtime": "2026-10-22T18:56:44.542Z",
         "note": "注释可能需更新"
       },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-22T18:44:36.300Z",
+        "mtime": "2026-10-22T19:10:51.292Z",
+        "note": "注释可能需更新"
+      },
+      "docs/SPEC.md": {
+        "status": "M",
+        "mtime": "2026-10-22T18:52:17.365Z",
         "note": "注释可能需更新"
       },
       "docs/releases.json": {
         "status": "M",
-        "mtime": "2026-10-22T18:44:35.123Z",
+        "mtime": "2026-10-22T18:56:44.227Z",
         "note": "注释可能需更新"
       },
-      "lib/client-parts/const.js": {
+      "docs/功能-仓库索引与账号状态.md": {
         "status": "M",
-        "mtime": "2026-10-22T18:39:32.634Z",
+        "mtime": "2026-10-22T18:52:31.438Z",
+        "note": "注释可能需更新"
+      },
+      "lib/app/handlers/repos.js": {
+        "status": "M",
+        "mtime": "2026-10-22T18:55:04.578Z",
+        "note": "注释可能需更新"
+      },
+      "lib/client-parts/apply.js": {
+        "status": "M",
+        "mtime": "2026-10-22T18:52:17.363Z",
+        "note": "注释可能需更新"
+      },
+      "lib/client-parts/controller.js": {
+        "status": "M",
+        "mtime": "2026-10-22T18:52:17.321Z",
+        "note": "注释可能需更新"
+      },
+      "lib/core/atomic-json.js": {
+        "status": "M",
+        "mtime": "2026-10-22T18:52:17.364Z",
+        "note": "注释可能需更新"
+      },
+      "lib/git/index.js": {
+        "status": "M",
+        "mtime": "2026-10-22T18:53:09.405Z",
+        "note": "注释可能需更新"
+      },
+      "lib/git/repo-index.js": {
+        "status": "M",
+        "mtime": "2026-10-22T18:51:33.819Z",
+        "note": "注释可能需更新"
+      },
+      "lib/git/scan-runner.js": {
+        "status": "M",
+        "mtime": "2026-10-22T18:52:17.317Z",
         "note": "注释可能需更新"
       },
       "lib/self/index.js": {
         "status": "M",
-        "mtime": "2026-10-22T18:44:25.642Z",
+        "mtime": "2026-10-22T18:56:34.233Z",
         "note": "注释可能需更新"
       },
       "package.json": {
         "status": "M",
-        "mtime": "2026-10-22T18:44:25.640Z",
+        "mtime": "2026-10-22T18:56:34.232Z",
         "note": "注释可能需更新"
       },
-      "test/test-picker-layout.mjs": {
+      "skills/dsh-repo-index.md": {
         "status": "M",
-        "mtime": "2026-10-22T18:38:57.899Z",
+        "mtime": "2026-10-22T18:52:55.037Z",
         "note": "注释可能需更新"
       },
-      "scripts/picker-repro.mjs": {
+      "skills/guide/guide-cli-scripts.md": {
+        "status": "M",
+        "mtime": "2026-10-22T18:52:55.026Z",
+        "note": "注释可能需更新"
+      },
+      "skills/guide/guide-clone-repos.md": {
+        "status": "M",
+        "mtime": "2026-10-22T18:52:31.409Z",
+        "note": "注释可能需更新"
+      },
+      "skills/guide/guide-inject-ui.md": {
+        "status": "M",
+        "mtime": "2026-10-22T18:52:31.411Z",
+        "note": "注释可能需更新"
+      },
+      "skills/workflow/README.md": {
+        "status": "M",
+        "mtime": "2026-10-22T18:52:55.038Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-repo-list.mjs": {
+        "status": "M",
+        "mtime": "2026-10-22T19:03:47.185Z",
+        "note": "注释可能需更新"
+      },
+      "lib/git/index-format.js": {
         "status": "A",
-        "mtime": "2026-10-22T18:39:12.006Z",
+        "mtime": "2026-10-22T18:50:21.356Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-index-jsonl.mjs": {
+        "status": "A",
+        "mtime": "2026-10-22T18:53:30.158Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-repos-live-budget.mjs": {
+        "status": "A",
+        "mtime": "2026-10-22T18:54:55.301Z",
         "note": "注释可能需更新"
       }
     }
@@ -541,5 +616,8 @@
   "lib/client-parts/repo.js": "（待注释）",
   "lib/client-parts/settings.js": "（待注释）",
   "lib/client-parts/utils.js": "（待注释）",
-  "scripts/picker-repro.mjs": "（待注释）"
+  "scripts/picker-repro.mjs": "（待注释）",
+  "lib/git/index-format.js": "（待注释）",
+  "test/test-index-jsonl.mjs": "（待注释）",
+  "test/test-repos-live-budget.mjs": "（待注释）"
 }

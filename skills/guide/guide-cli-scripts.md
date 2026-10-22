@@ -20,7 +20,7 @@ generatedBy: deepseek-official/deepseek-v4-flash · EIGHTfs 2026-10-02
 | `ruleset [槽位...]` | 编译规则包并输出统计 | 槽位名（可多个） |
 | `scan <root>` | 全量扫描目录（非 git 目录也能查） | `--depth N` |
 | `repos <root>` | 扫描本地 git 仓库（尊重 `.gitignore`，被忽略目录整棵跳过） | `--depth N`、`--max N`、`--json` |
-| `index <root>` | 重建仓库索引 `dsh-repo-index.json` | `--owner <账号>`、`--depth N`、`--max N`、`--offline`、`--json` |
+| `index <root>` | 重建仓库索引 `dsh-repo-index.jsonl` | `--owner <账号>`、`--depth N`、`--max N`、`--offline`、`--json` |
 | `audit <root>` | 审计并输出质量评分与 findings | `--full`、`--level quick\|standard\|deep`、`--ruleset <目录>`、`--weights <JSON>`、`--include-ignored`、`--json` |
 | `commit <repo>` | 提交（可选推送） | `-m <msg>`、`--push`/`--no-push`、`--dry-run`、`--force`、`--req-confirm`、`--json` |
 | `link-check <路径>` | 检查 md/文本里的链接有效性（只 warning） | — |

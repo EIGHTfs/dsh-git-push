@@ -29,6 +29,7 @@ import {
   locateRepoIndex, readRepoIndexMap, indexEntryForRepo, updateRepoRemoteStateInIndex,
   mergeCloudReposIntoIndex, updateRepoIndex,
 } from '../lib/git/repo-index.js';
+import { parseIndex } from '../lib/git/index-format.js';
 
 const ONLINE = process.env.DSH_TEST_ONLINE === '1';
 const ROOT = fileURLToPath(new URL('..', import.meta.url)).replace(/\/$/, '');
@@ -183,7 +184,7 @@ test('索引：updateRepoRemoteStateInIndex 只改该条目、保留其他条目
     });
     assert.equal(r.ok, true, r.error || '');
 
-    const after = JSON.parse(readFileSync(target, 'utf8'));
+    const after = parseIndex(readFileSync(target, 'utf8'));
     const upd = after.repos.find((x) => x.name === 'upd');
     const keep = after.repos.find((x) => x.name === 'keepme');
     assert.equal(upd.remoteHead, 'bbbbbbb', '目标条目应被更新');
@@ -225,7 +226,7 @@ test('索引：mergeCloudReposIntoIndex 只更新已有本地条目，不新增�
     });
     assert.equal(r.ok, true, r.error || '');
 
-    const after = JSON.parse(readFileSync(target, 'utf8'));
+    const after = parseIndex(readFileSync(target, 'utf8'));
     const mine = after.repos.find((x) => x.name === 'mine');
     assert.ok(mine, '已有本地条目应保留');
     assert.equal(mine.defaultBranch, 'main', '本地条目应补上云端默认分支');
@@ -413,7 +414,7 @@ test('索引：remoteState 传 visibility 时写回可见性（push 后刷新用
       syncTarget: target,
     });
     assert.equal(r.ok, true, r.error || '');
-    const hit = JSON.parse(readFileSync(target, 'utf8')).repos.find((x) => x.name === 'r');
+    const hit = parseIndex(readFileSync(target, 'utf8')).repos.find((x) => x.name === 'r');
     assert.equal(hit.visibility, '私有', '传了 visibility 就必须写回（此前只更新 5 个远端字段，可见性永远停在旧值）');
     assert.equal(hit.remoteHead, 'cafe123', '远端 HEAD 应写回');
     assert.equal(hit.synced, true, '同步态应写回');
@@ -437,7 +438,7 @@ test('索引：remoteState 不带 visibility 时不得抹掉既有可见性', ()
       syncTarget: target,
     });
     assert.equal(r.ok, true, r.error || '');
-    const hit = JSON.parse(readFileSync(target, 'utf8')).repos.find((x) => x.name === 'r');
+    const hit = parseIndex(readFileSync(target, 'utf8')).repos.find((x) => x.name === 'r');
     assert.equal(hit.visibility, '公开', '未传 visibility 时必须保留既有值，不能覆盖成空/未知');
     assert.equal(hit.remoteHead, 'dead456', '其余远端字段照常更新');
   });
@@ -509,12 +510,12 @@ test('索引：updateRepoIndex rebuild 合并不全量覆盖（保留未扫描�
     const r1 = await updateRepoIndex({ workspaceRoot: ws, owner: 'EIGHTfs', offline: true, mode: 'rebuild' });
     assert.equal(r1.ok, true, r1.error || '');
     assert.equal(r1.indexUpdated, true, 'rebuild 成功应返回 indexUpdated');
-    const idx1 = JSON.parse(readFileSync(r1.target, 'utf8'));
+    const idx1 = parseIndex(readFileSync(r1.target, 'utf8'));
     assert.ok(idx1.repos.some((x) => x.name === 'repo-a') && idx1.repos.some((x) => x.name === 'repo-b'), '首建应含两条');
     // 第二次：repo-b 目录删除（模拟扫描范围变化——旧行为会把索引整文件覆盖成只剩 repo-a）
     rmSync(join(ws, 'repo-b'), { recursive: true, force: true });
     const r2 = await updateRepoIndex({ workspaceRoot: ws, owner: 'EIGHTfs', offline: true, mode: 'rebuild' });
-    const idx2 = JSON.parse(readFileSync(r2.target, 'utf8'));
+    const idx2 = parseIndex(readFileSync(r2.target, 'utf8'));
     const names = idx2.repos.map((x) => x.name);
     assert.ok(names.includes('repo-a'), 'repo-a 仍应在');
     assert.ok(names.includes('repo-b'), 'repo-b 旧条目必须保留（读-改-写合并不全量覆盖——修复「数据被覆盖成只剩最新一次」）');
@@ -541,7 +542,7 @@ test('索引：updateRepoIndex merge-cloud / single 模式返回 indexUpdated', 
     });
     assert.equal(s.ok, true, s.error || '');
     assert.equal(s.indexUpdated, true, 'single 成功应返回 indexUpdated');
-    const after = JSON.parse(readFileSync(target, 'utf8'));
+    const after = parseIndex(readFileSync(target, 'utf8'));
     assert.equal(after.repos.find((x) => x.name === 'x').remoteHead, 'abc', 'single 模式应写回远端状态');
   });
 });

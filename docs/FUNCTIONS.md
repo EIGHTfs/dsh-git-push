@@ -108,18 +108,19 @@
 | `handleRepoPush` | 49-93 | 45 | `export async function handleRepoPush(ctx) {` |
 | `handleRepoCommit` | 96-145 | 50 | `export async function handleRepoCommit(ctx) {` |
 
-### lib/app/handlers/repos.js（231 行 · 8 个函数）
+### lib/app/handlers/repos.js（247 行 · 9 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `buildLocalList` | 23-55 | 33 | `function buildLocalList(indexMap, root, deadline) {` |
-| `applyLiveRemote` | 58-109 | 52 | `async function applyLiveRemote(list, deadline) {` |
-| `handleReposLocal` | 112-133 | 22 | `export async function handleReposLocal(ctx) {` |
-| `handleReposLocalScan` | 135-144 | 10 | `export function handleReposLocalScan(ctx) {` |
-| `handleReposLocalScanWait` | 147-152 | 6 | `export async function handleReposLocalScanWait(ctx) {` |
-| `refreshOneTarget` | 158-192 | 35 | `async function refreshOneTarget(t, env) {` |
-| `handleReposLocalRefresh` | 195-204 | 10 | `export async function handleReposLocalRefresh(ctx) {` |
-| `handleReposCloud` | 207-231 | 25 | `export async function handleReposCloud(ctx) {` |
+| `isProbeOverBudget` | 66-68 | 3 | `export function isProbeOverBudget(deadline, now = Date.now()) {` |
+| `applyLiveRemote` | 71-125 | 55 | `async function applyLiveRemote(list, deadline) {` |
+| `handleReposLocal` | 128-149 | 22 | `export async function handleReposLocal(ctx) {` |
+| `handleReposLocalScan` | 151-160 | 10 | `export function handleReposLocalScan(ctx) {` |
+| `handleReposLocalScanWait` | 163-168 | 6 | `export async function handleReposLocalScanWait(ctx) {` |
+| `refreshOneTarget` | 174-208 | 35 | `async function refreshOneTarget(t, env) {` |
+| `handleReposLocalRefresh` | 211-220 | 10 | `export async function handleReposLocalRefresh(ctx) {` |
+| `handleReposCloud` | 223-247 | 25 | `export async function handleReposCloud(ctx) {` |
 
 ### lib/app/handlers/settings.js（62 行 · 2 个函数）
 
@@ -1467,6 +1468,20 @@
 |------|------|------|------|
 | `ensureGitignore` | 29-69 | 41 | `export async function ensureGitignore(repoPath, { customIgnorePatterns = '' } = {}) {` |
 
+### lib/git/index-format.js（183 行 · 9 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `serializeIndex` | 37-62 | 26 | `export function serializeIndex(index) {` |
+| `parseIndex` | 65-183 | 119 | `export function parseIndex(text) {` |
+| `readIndexFile` | 114-124 | 11 | `export function readIndexFile(dir) {` |
+| `writeIndexFile` | 133-151 | 19 | `export function writeIndexFile(dir, index) {` |
+| `indexFileExists` | 154-156 | 3 | `export function indexFileExists(dir) {` |
+| `findIndexPath` | 159-165 | 7 | `export function findIndexPath(dir) {` |
+| `indexAsJsonText` | 168-170 | 3 | `export function indexAsJsonText(index) {` |
+| `listIndexFiles` | 173-177 | 5 | `export function listIndexFiles(dir) {` |
+| `indexDirOf` | 180-182 | 3 | `export function indexDirOf(filePath) {` |
+
 ### lib/git/module-splitter.js（48 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -1525,29 +1540,29 @@
 | `parseOwnerRepoFromRemote` | 102-109 | 8 | `export function parseOwnerRepoFromRemote(remoteUrl) {` |
 | `setVisibility` | 112-128 | 17 | `export async function setVisibility({ owner = '', repo = '', visibility = '', token = '', repoPath = '' } = {}) {` |
 
-### lib/git/repo-index.js（513 行 · 19 个函数）
+### lib/git/repo-index.js（524 行 · 19 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `locateRepoIndex` | 38-41 | 4 | `export function locateRepoIndex(workspaceRoot) {` |
-| `readRepoIndexMap` | 44-77 | 34 | `export function readRepoIndexMap(workspaceRoot) {` |
-| `indexEntryForRepo` | 80-84 | 5 | `export function indexEntryForRepo(localPath, indexMap) {` |
-| `parseMdFrontmatterName` | 89-94 | 6 | `export function parseMdFrontmatterName(content) {` |
-| `collectProjectSkills` | 97-127 | 31 | `export async function collectProjectSkills(projectPath) {` |
-| `exists` | 130-132 | 3 | `async function exists(p) {` |
-| `parseManualVisibility` | 135-147 | 13 | `export function parseManualVisibility(existingContent) {` |
-| `queryGitHubVisibility` | 150-161 | 12 | `async function queryGitHubVisibility(repoName, token, owner = 'EIGHTfs') {` |
-| `remoteToRepoInfo` | 164-173 | 10 | `function remoteToRepoInfo(remote, visibility) {` |
-| `buildRepoIndexVisibility` | 176-192 | 17 | `async function buildRepoIndexVisibility({ repos, token, manualVisibility, owner }) {` |
-| `buildRepoIndexLocalOnly` | 195-208 | 14 | `async function buildRepoIndexLocalOnly({ workspaceRoot, repos, localOnlyExtra }) {` |
-| `buildRepoIndex` | 215-260 | 46 | `export async function buildRepoIndex({ workspaceRoot, depth = 20, extraRepos = [], extraReposFile = '', token = '', manualVisibility = {}, localOnlyExtra = [], owner = 'EIGHTfs', offline = false, maxRepos = 200 } = {}) {` |
-| `repoList` | 232-239 | 8 | `const repoList = (await Promise.all(ownedRepos.map(async (r) => {` |
-| `syncRepoIndex` | 266-285 | 20 | `export function syncRepoIndex({ content, workspaceRoot = '', owner = 'EIGHTfs', syncTarget = '' } = {}) {` |
-| `mergeFreshIntoExisting` | 300-347 | 48 | `function mergeFreshIntoExisting(existing, freshContent) {` |
-| `updateRepoIndex` | 364-391 | 28 | `export async function updateRepoIndex({ workspaceRoot = '', token = '', owner = 'EIGHTfs', depth = 20, extraRepos = [], extraReposFile = '', syncTarget = '', offline = false, maxRepos = 200, mode = 'rebuild', cloudRepos = [], repoName = '', remoteState = {} } = {}) {` |
-| `maintainRepoIndex` | 398-401 | 4 | `export async function maintainRepoIndex({ workspaceRoot = '', token = '', owner = 'EIGHTfs', depth = 20, extraRepos = [], extraReposFile = '', syncTarget = '', offline = false, maxRepos = 200 } = {}) {` |
-| `mergeCloudReposIntoIndex` | 416-469 | 54 | `export function mergeCloudReposIntoIndex({ workspaceRoot = '', owner = 'EIGHTfs', cloudRepos = [], syncTarget = '' } = {}) {` |
-| `updateRepoRemoteStateInIndex` | 486-512 | 27 | `export function updateRepoRemoteStateInIndex({ workspaceRoot = '', repoName = '', remoteState = {}, syncTarget = '' } = {}) {` |
+| `locateRepoIndex` | 40-43 | 4 | `export function locateRepoIndex(workspaceRoot) {` |
+| `readRepoIndexMap` | 46-79 | 34 | `export function readRepoIndexMap(workspaceRoot) {` |
+| `indexEntryForRepo` | 82-86 | 5 | `export function indexEntryForRepo(localPath, indexMap) {` |
+| `parseMdFrontmatterName` | 91-96 | 6 | `export function parseMdFrontmatterName(content) {` |
+| `collectProjectSkills` | 99-129 | 31 | `export async function collectProjectSkills(projectPath) {` |
+| `exists` | 132-134 | 3 | `async function exists(p) {` |
+| `parseManualVisibility` | 137-149 | 13 | `export function parseManualVisibility(existingContent) {` |
+| `queryGitHubVisibility` | 152-163 | 12 | `async function queryGitHubVisibility(repoName, token, owner = 'EIGHTfs') {` |
+| `remoteToRepoInfo` | 166-175 | 10 | `function remoteToRepoInfo(remote, visibility) {` |
+| `buildRepoIndexVisibility` | 178-194 | 17 | `async function buildRepoIndexVisibility({ repos, token, manualVisibility, owner }) {` |
+| `buildRepoIndexLocalOnly` | 197-210 | 14 | `async function buildRepoIndexLocalOnly({ workspaceRoot, repos, localOnlyExtra }) {` |
+| `buildRepoIndex` | 217-263 | 47 | `export async function buildRepoIndex({ workspaceRoot, depth = 20, extraRepos = [], extraReposFile = '', token = '', manualVisibility = {}, localOnlyExtra = [], owner = 'EIGHTfs', offline = false, maxRepos = 200 } = {}) {` |
+| `repoList` | 234-241 | 8 | `const repoList = (await Promise.all(ownedRepos.map(async (r) => {` |
+| `syncRepoIndex` | 269-293 | 25 | `export function syncRepoIndex({ content, workspaceRoot = '', owner = 'EIGHTfs', syncTarget = '' } = {}) {` |
+| `mergeFreshIntoExisting` | 308-355 | 48 | `function mergeFreshIntoExisting(existing, freshContent) {` |
+| `updateRepoIndex` | 372-402 | 31 | `export async function updateRepoIndex({ workspaceRoot = '', token = '', owner = 'EIGHTfs', depth = 20, extraRepos = [], extraReposFile = '', syncTarget = '', offline = false, maxRepos = 200, mode = 'rebuild', cloudRepos = [], repoName = '', remoteState = {} } = {}) {` |
+| `maintainRepoIndex` | 409-412 | 4 | `export async function maintainRepoIndex({ workspaceRoot = '', token = '', owner = 'EIGHTfs', depth = 20, extraRepos = [], extraReposFile = '', syncTarget = '', offline = false, maxRepos = 200 } = {}) {` |
+| `mergeCloudReposIntoIndex` | 427-480 | 54 | `export function mergeCloudReposIntoIndex({ workspaceRoot = '', owner = 'EIGHTfs', cloudRepos = [], syncTarget = '' } = {}) {` |
+| `updateRepoRemoteStateInIndex` | 497-523 | 27 | `export function updateRepoRemoteStateInIndex({ workspaceRoot = '', repoName = '', remoteState = {}, syncTarget = '' } = {}) {` |
 
 ### lib/git/repos.js（236 行 · 11 个函数）
 
@@ -2671,6 +2686,12 @@
 |------|------|------|------|
 | `makeRepo` | 17-29 | 13 | `function makeRepo() {` |
 
+### test/test-index-jsonl.mjs（135 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `sampleIndex` | 26-135 | 110 | `function sampleIndex() {` |
+
 ### test/test-inject-switch.mjs（141 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2793,14 +2814,14 @@
 | `addRemote` | 30-32 | 3 | `function addRemote(dir, name, url) {` |
 | `getUrl` | 33-39 | 7 | `function getUrl(dir, name) {` |
 
-### test/test-repo-list.mjs（548 行 · 4 个函数）
+### test/test-repo-list.mjs（549 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `makeRepo` | 37-48 | 12 | `function makeRepo(dir, { remote = '', commit = true } = {}) {` |
-| `sandbox` | 51-63 | 13 | `function sandbox(fn) {` |
-| `pick` | 460-460 | 1 | `const pick = (push) => String(push?.commitSha \|\| '').slice(0, 40) \|\| localHead;` |
-| `sandboxAsync` | 490-502 | 13 | `async function sandboxAsync(fn) {` |
+| `makeRepo` | 38-49 | 12 | `function makeRepo(dir, { remote = '', commit = true } = {}) {` |
+| `sandbox` | 52-64 | 13 | `function sandbox(fn) {` |
+| `pick` | 461-461 | 1 | `const pick = (push) => String(push?.commitSha \|\| '').slice(0, 40) \|\| localHead;` |
+| `sandboxAsync` | 491-503 | 13 | `async function sandboxAsync(fn) {` |
 
 ### test/test-rule-packs.mjs（609 行 · 2 个函数）
 

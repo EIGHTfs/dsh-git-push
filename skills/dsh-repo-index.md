@@ -12,7 +12,7 @@ generatedBy: deepseek-official/deepseek-v4-flash · EIGHTfs 2026-10-02
 
 ## 一、权威文件
 
-插件配置目录下的 `git-push/dsh-repo-index.json`（解析顺序：`DSH_HOME/git-push/` → `~/.dsh/git-push/`）
+插件配置目录下的 `git-push/dsh-repo-index.jsonl`（JSONL，每行一个仓库；解析顺序：`DSH_HOME/git-push/` → `~/.dsh/git-push/`）
 
 | 事实 | 说明 |
 |------|------|

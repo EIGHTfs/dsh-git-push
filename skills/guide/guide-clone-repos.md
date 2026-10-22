@@ -22,7 +22,7 @@ generatedBy: deepseek-official/deepseek-v4-flash · EIGHTfs 2026-10-02
 | 本地仓库扫描 | `git_scan` 逐层下钻列仓库：分支 / 远端（脱敏）/ 未提交数 / 最近提交 / 领先落后 |
 | 远端仓库管理 | `git_remote_create` 建仓（默认 private，已存在则复用并设 origin）；`git_set_visibility` 切 public/private |
 | 账号与配额 | 账号状态（离线读快照）/ 在线校验 / API 配额查询（`/rate_limit`，不消耗配额） |
-| 仓库索引 | 推送成功、云端加载、本地扫描时维护 `dsh-repo-index.json`；本地仓库列表据此标注每个仓库的 GitHub 归属 |
+| 仓库索引 | 推送成功、云端加载、本地扫描时维护 `dsh-repo-index.jsonl`；本地仓库列表据此标注每个仓库的 GitHub 归属 |
 
 ## 二、怎么用（工具 + HTTP 接口参数表与返回字段）
 
@@ -169,5 +169,5 @@ git_set_visibility({ repo: "<本地仓库路径>", visibility: "private" })
 | `git_commit_push` | 克隆完成后的提交推送（审计门禁 + 凭据注入）；推送成功会重建仓库索引 |
 | `git_sluice` | 在克隆下来的仓库里执行 log/diff/branch 等 git 命令（凭据自动注入） |
 | `git_account_check` / `git_cred_env` | 克隆私有库前先确认 token/SSH 可用；外部命令取凭据环境前缀 |
-| `dsh-repo-index.json` | 仓库索引（权威源码索引，存插件配置目录 `DSH_HOME/git-push/`）：记录每个项目的仓库地址、可见性、恢复命令 `cloneCmd`、skills 与本地 `path`，`version` 恒为 1、`generatedAt` 每次刷新；源码丢失时按它 `git_clone` 恢复，本地列表据此标注仓库归属 |
+| `dsh-repo-index.jsonl` | 仓库索引（权威源码索引，存插件配置目录 `DSH_HOME/git-push/`）：记录每个项目的仓库地址、可见性、恢复命令 `cloneCmd`、skills 与本地 `path`，`version` 恒为 1、`generatedAt` 每次刷新；源码丢失时按它 `git_clone` 恢复，本地列表据此标注仓库归属 |
 | 侧边栏「账号信息 → 仓库管理」 | 本地子选项卡按索引标注归属并可 `push`；云端子选项卡「加载仓库列表」选目录后走同一套后台克隆 |

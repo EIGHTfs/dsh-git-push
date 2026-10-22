@@ -81,7 +81,7 @@ settings-get  settings-set
 |---|---|---|
 | `config.json` | 设置与凭据真源 | `settings-set` / 凭据工具 |
 | `account-status.json` | 凭据校验快照（有效性/登录名/时间/配额） | **每次推送/提交验证账号时刷新**；侧边栏打开只读 |
-| `dsh-repo-index.json` | 工作区仓库索引 | 扫描/刷新；推送成功后先全量重建再精确回写 |
+| `dsh-repo-index.jsonl` | 工作区仓库索引（JSONL，每行一个仓库；旧 `dsh-repo-index.json` 只读兼容并自动迁移） | 扫描/刷新；推送成功后先全量重建再精确回写 |
 | `scan-live.json` | 扫描进度 | 扫描进行中 |
 
 **不变量**：写只走收口函数（账号状态 `writeAccountStatusFromResult` / `updateAccountStatusQuota`；索引走索引维护模块）；落盘走**原子写**；「是否已配置凭据」一律查凭据真源，不看快照。

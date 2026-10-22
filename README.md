@@ -420,6 +420,7 @@ dsh-git-push/
 │   │   ├── identity-rewrite.js — （待注释）
 │   │   ├── identity.js — （待注释）
 │   │   ├── ignore.js — .gitignore 兜底（DEFAULT_IGNORE_PATTERNS 补齐）
+│   │   ├── index-format.js — （待注释）
 │   │   ├── index.js — Git 执行层统一出口
 │   │   ├── module-splitter.js — （待注释）
 │   │   ├── post-push.js — 推送后增强（remote-tracking ref/aux remote/tag）
@@ -590,6 +591,7 @@ dsh-git-push/
 │   ├── test-gitignore-nongit-dir.mjs — （待注释）
 │   ├── test-history-audit.mjs — （待注释）
 │   ├── test-http.mjs — HTTP 总入口测试（Origin/CSRF/413/路由）
+│   ├── test-index-jsonl.mjs — （待注释）
 │   ├── test-inject-switch.mjs — 注入开发者要求清单子开关回归
 │   ├── test-inject-system-prompt.mjs — 注入系统提示词回归
 │   ├── test-io-risk.mjs — IO 风险分级测试（四级判定/字段完整性/汇总/排序/finding 转换）
@@ -628,6 +630,7 @@ dsh-git-push/
 │   ├── test-remote-resolve.mjs — （待注释）
 │   ├── test-rename-locator.mjs — rename-locator 测试（同名不同作用域分组/模块级/过滤）
 │   ├── test-repo-list.mjs — 仓库列表测试（本地扫描/索引读写/HTTP 端点/远端状态）
+│   ├── test-repos-live-budget.mjs — （待注释）
 │   ├── test-rule-include-paths.mjs — （待注释）
 │   ├── test-rule-packs.mjs — 规则总入口测试（编译注册/字段指派）
 │   ├── test-scan-hardcoded-paths.mjs — （待注释）
