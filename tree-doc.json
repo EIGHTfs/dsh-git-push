@@ -405,84 +405,19 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "README.md": {
-        "status": "M",
-        "mtime": "2026-10-24T10:32:39.821Z",
-        "note": "注释可能需更新"
-      },
-      "docs/CHANGELOG.md": {
-        "status": "M",
-        "mtime": "2026-10-24T10:32:51.380Z",
-        "note": "注释可能需更新"
-      },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-24T10:32:59.584Z",
+        "mtime": "2026-10-24T14:15:10.737Z",
         "note": "注释可能需更新"
       },
-      "docs/releases.json": {
+      "lib/ARCHITECTURE.md": {
         "status": "M",
-        "mtime": "2026-10-24T10:32:51.219Z",
+        "mtime": "2026-10-24T14:09:44.306Z",
         "note": "注释可能需更新"
       },
-      "lib/ast/brace.js": {
+      "scripts/check.mjs": {
         "status": "M",
-        "mtime": "2026-10-24T10:20:28.060Z",
-        "note": "注释可能需更新"
-      },
-      "lib/ast/size.js": {
-        "status": "M",
-        "mtime": "2026-10-24T10:20:40.512Z",
-        "note": "注释可能需更新"
-      },
-      "lib/audit-rules/audit-rules-frontend.yml": {
-        "status": "M",
-        "mtime": "2026-10-24T10:18:22.166Z",
-        "note": "注释可能需更新"
-      },
-      "lib/checks/button-bind.js": {
-        "status": "M",
-        "mtime": "2026-10-24T10:31:52.740Z",
-        "note": "注释可能需更新"
-      },
-      "lib/checks/dispatch.js": {
-        "status": "M",
-        "mtime": "2026-10-24T10:29:56.755Z",
-        "note": "注释可能需更新"
-      },
-      "lib/checks/structural.js": {
-        "status": "M",
-        "mtime": "2026-10-24T10:24:57.780Z",
-        "note": "注释可能需更新"
-      },
-      "lib/exempt/index.js": {
-        "status": "M",
-        "mtime": "2026-10-24T10:16:54.296Z",
-        "note": "注释可能需更新"
-      },
-      "lib/self/index.js": {
-        "status": "M",
-        "mtime": "2026-10-24T10:32:51.218Z",
-        "note": "注释可能需更新"
-      },
-      "package.json": {
-        "status": "M",
-        "mtime": "2026-10-24T10:32:51.217Z",
-        "note": "注释可能需更新"
-      },
-      "scripts/picker-repro.mjs": {
-        "status": "M",
-        "mtime": "2026-10-24T10:32:01.493Z",
-        "note": "注释可能需更新"
-      },
-      "skills/guide/guide-audit.md": {
-        "status": "M",
-        "mtime": "2026-10-24T10:32:29.651Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-button-bind-events.mjs": {
-        "status": "A",
-        "mtime": "2026-10-24T10:18:35.909Z",
+        "mtime": "2026-10-24T14:04:50.671Z",
         "note": "注释可能需更新"
       }
     }

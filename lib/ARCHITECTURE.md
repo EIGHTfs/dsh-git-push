@@ -32,3 +32,30 @@
   `lib/rule/compilers.js` 只做纯再导出。
 - 仓库级/文件系统上下文类检查（如读 .gitignore、git 命令）不在逐文件检查器里臆测，
   交给 `lib/audit/` 编排层或 `lib/checks/` 中带上下文参数的入口。
+
+## 审计引擎与提交推送：不拆成两个包，但把边界钉死
+
+**决策（2026-10-24）**：保持单包 `dsh-git-push`，不拆出独立审计 npm 包。
+
+拆包换不到收益：
+
+- 外部使用者的需求是「提交前拦截」这个整体（`git_commit_push` 的门禁 + `code_audit`），不是「只装审计引擎」；
+- 「脱离 DSH 跑审计」已由 `cli.mjs`（`git-sluice`，不依赖宿主）覆盖；
+- 而拆包的代价是**持续**的：两包版本同步、固定发布顺序、依赖范围约束——同类 monorepo 双包仓库上刚观察到这些成本落地成 bug（版本各升各的、`files` 声明漂移）。
+
+但不拆包 ≠ 放弃边界。实测依赖方向是干净的：
+
+| 方向 | 数量 | 说明 |
+|---|---|---|
+| 审计层 → git/npm/commit-push | **0** | 审计层完全不知道提交推送存在 |
+| git/npm/commit-push → 审计层 | **7** | 唯一耦合面：`commit-push.js` 3 处（audit/exempt/score）+ `git/{ignore,repos,sensitive}.js` 4 处 |
+
+由 `scripts/check.mjs` 的**层边界门禁**钉住（两处都已自证会变红）：
+
+1. 审计层任一文件 import git 层 ⇒ 直接失败；
+2. 反向接缝数超过预算 7 ⇒ 失败（要上调必须写明理由）。
+
+**维护约定**：审计层需要 git 能力时（读 `.gitignore`、跑 `git status`），走**自己文件内的轻量
+`execFileSync('git', …)`**（如 `lib/audit/collector.js`），不得顺手 `import` `lib/git/` 的
+`runGit`/`transport.js`——那 7 处接缝是「提交门禁要调审计」的必需耦合，多一处都是在把它糊掉。
+真出现外部只要审计引擎的用户，按这张表拆：动那 7 行 import + 建包，其余是机械操作。

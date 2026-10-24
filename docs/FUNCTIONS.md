@@ -2050,12 +2050,13 @@
 | `checkShape` | 76-85 | 10 | `export function checkShape(code) {` |
 | `main` | 89-120 | 32 | `function main(argv = process.argv.slice(2)) {` |
 
-### scripts/check.mjs（89 行 · 2 个函数）
+### scripts/check.mjs（157 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `collectJs` | 22-31 | 10 | `function collectJs(dir, acc = []) {` |
 | `collectJson` | 34-42 | 9 | `function collectJson(dir, acc = []) {` |
+| `layerOf` | 102-109 | 8 | `const layerOf = (rel) => {` |
 
 ### scripts/cpu-sample.mjs（189 行 · 11 个函数）
 

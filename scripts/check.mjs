@@ -83,6 +83,74 @@ try {
   console.error(`✗ 分片构建校验失败：${e.message}`);
 }
 
+// ── 层边界门禁（2026-10-24）────────────────────────────────────────────
+// 背景：审计引擎与提交推送**决定不拆成两个 npm 包**（拆包的持续成本——双包版本同步、
+//   固定发布顺序、依赖范围——换不到真实收益：外部使用者要的是「提交前拦截」这个整体，
+//   而「脱离 DSH 跑审计」已由 cli.mjs 的独立 CLI 覆盖）。
+//   但不拆包不等于放弃边界：审计层对 git 层是**实测零依赖**，这个事实一旦被顺手 import
+//   侵蚀就再也回不来（历史包袱太重 = 不可逆）。所以把它钉成门禁。
+// 不变量：
+//   ① 审计层任何文件都不得 import git/npm/commit-push 层（方向唯一：git → audit）；
+//   ② 反向接缝数量有预算上限——允许存在（提交门禁必须调审计），但要能看见它在膨胀。
+const AUDIT_DIRS = new Set(['ast', 'audit', 'audit-rules', 'checks', 'exempt', 'rule', 'score']);
+const GIT_DIRS = new Set(['git', 'npm']);
+const GIT_TOP = new Set(['commit-push.js']);
+const AUDIT_TOP = new Set(['audit-defaults.js', 'skip-dirs.js']);
+/** 反向接缝预算：实测 7 处（commit-push 3 + git/{ignore,repos,sensitive} 4）；上调需写明理由。 */
+const SEAM_BUDGET = 7;
+
+const layerOf = (rel) => {
+  const top = rel.split('/')[0];
+  if (rel.includes('/') && AUDIT_DIRS.has(top)) return 'AUDIT';
+  if (rel.includes('/') && GIT_DIRS.has(top)) return 'GIT';
+  if (!rel.includes('/') && GIT_TOP.has(rel)) return 'GIT';
+  if (!rel.includes('/') && AUDIT_TOP.has(rel)) return 'AUDIT';
+  return 'OTHER';
+};
+
+let boundaryViolations = 0;
+const seams = [];
+for (const f of files) {
+  const rel = f.replace(ROOT + '/', '');
+  if (!rel.startsWith('lib/')) continue;
+  const inner = rel.slice('lib/'.length);
+  if (layerOf(inner) !== 'AUDIT') continue;
+  let src = '';
+  try { src = readFileSync(f, 'utf8'); } catch { continue; }
+  for (const m of src.matchAll(/from\s+['"](\.[^'"]+)['"]/g)) {
+    const target = join(dirname(f), m[1]).replace(ROOT + '/lib/', '');
+    if (layerOf(target) === 'GIT') {
+      boundaryViolations++;
+      console.error(`✗ 层边界违规：审计层 lib/${inner} import 了 git 层 ${m[1]}（审计引擎解耦）`);
+    }
+  }
+}
+// 反向接缝统计（允许，但要可见）
+for (const f of files) {
+  const rel = f.replace(ROOT + '/', '');
+  if (!rel.startsWith('lib/')) continue;
+  const inner = rel.slice('lib/'.length);
+  if (layerOf(inner) !== 'GIT') continue;
+  let src = '';
+  try { src = readFileSync(f, 'utf8'); } catch { continue; }
+  for (const m of src.matchAll(/from\s+['"](\.[^'"]+)['"]/g)) {
+    const target = join(dirname(f), m[1]).replace(ROOT + '/lib/', '');
+    if (layerOf(target) === 'AUDIT') seams.push(`${inner} → ${target}`);
+  }
+}
+if (boundaryViolations) {
+  fail += boundaryViolations;
+  console.error(`✗ 层边界：${boundaryViolations} 处违规——审计层不得依赖 git/npm/commit-push`);
+} else {
+  console.log(`✔ 层边界：审计层对 git 层 0 依赖（解耦成立）`);
+}
+if (seams.length > SEAM_BUDGET) {
+  fail++;
+  console.error(`✗ 反向接缝 ${seams.length} 处 > 预算 ${SEAM_BUDGET}：提交门禁调审计是必需的，但膨胀说明边界在糊掉——要么收敛，要么改预算并写明理由`);
+} else {
+  console.log(`✔ 反向接缝（git → audit，唯一耦合面）：${seams.length}/${SEAM_BUDGET} 处`);
+}
+
 console.log(`\n${files.length - fail}/${files.length} 文件语法通过`);
 console.log(`${jsonFiles.length - jsonFail}/${jsonFiles.length} 个 JSON 可解析`);
 process.exitCode = (fail > 0 || jsonFail > 0) ? 1 : 0;
