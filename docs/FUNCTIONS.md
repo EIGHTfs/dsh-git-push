@@ -257,15 +257,16 @@
 | `paramsToParameters` | 12-25 | 14 | `function paramsToParameters(params = []) {` |
 | `listTools` | 28-34 | 7 | `export function listTools() {` |
 
-### lib/ast/brace.js（106 行 · 5 个函数）
+### lib/ast/brace.js（121 行 · 6 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `matchBrace` | 13-25 | 13 | `export function matchBrace(tokens, openIdx) {` |
-| `matchPairBack` | 37-46 | 10 | `export function matchPairBack(tokens, closeIdx, openPunct, closePunct) {` |
-| `isBlockParen` | 56-68 | 13 | `export function isBlockParen(tokens, closeTok) {` |
-| `matchingOpen` | 71-73 | 3 | `export function matchingOpen(tokens, closeIdx) {` |
-| `collectInnerFnRanges` | 91-106 | 16 | `export function collectInnerFnRanges(tokens, from, to) {` |
+| `matchParenForward` | 28-40 | 13 | `export function matchParenForward(tokens, startIdx) {` |
+| `matchPairBack` | 52-61 | 10 | `export function matchPairBack(tokens, closeIdx, openPunct, closePunct) {` |
+| `isBlockParen` | 71-83 | 13 | `export function isBlockParen(tokens, closeTok) {` |
+| `matchingOpen` | 86-88 | 3 | `export function matchingOpen(tokens, closeIdx) {` |
+| `collectInnerFnRanges` | 106-121 | 16 | `export function collectInnerFnRanges(tokens, from, to) {` |
 
 ### lib/ast/callgraph.js（135 行 · 6 个函数）
 
@@ -505,21 +506,23 @@
 | `extractWriteTarget` | 88-94 | 7 | `function extractWriteTarget(line) {` |
 | `writeIntoGitignoredLines` | 106-131 | 26 | `export function writeIntoGitignoredLines(text, repoPath = '') {` |
 
-### lib/ast/size.js（382 行 · 11 个函数）
+### lib/ast/size.js（449 行 · 13 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `funcNameAt` | 31-45 | 15 | `function funcNameAt(tokens, i) {` |
 | `pythonFuncRanges` | 60-84 | 25 | `export function pythonFuncRanges(text = '') {` |
 | `maxFunctionLength` | 95-101 | 7 | `export function maxFunctionLength(text = '') {` |
-| `funcRangesAst` | 103-382 | 280 | `export function funcRangesAst(text = '') {` |
-| `countCommentLinesInRange` | 146-159 | 14 | `export function countCommentLinesInRange(tokens, startLine = 1, endLine = Infinity) {` |
-| `checkFuncLinesAst` | 169-186 | 18 | `export function checkFuncLinesAst(text = '', { warn = FUNC_LINES_WARN, block = FUNC_LINES_BLOCK } = {}) {` |
-| `checkFuncDensityAst` | 210-231 | 22 | `export function checkFuncDensityAst(text = '', { threshold = FUNC_LINES_WARN, blockThreshold = FUNC_LINES_BLOCK, skipLines = new Set() } = {}) {` |
-| `countCommentLines` | 239-252 | 14 | `export function countCommentLines(text = '') {` |
-| `checkFileLines` | 263-272 | 10 | `export function checkFileLines(text = '', { warn = 500, block = 1000, excludeComments = true } = {}) {` |
-| `checkCommentDensityAst` | 294-329 | 36 | `export function checkCommentDensityAst(text = '', { warn = COMMENT_DENSITY_WARN_DEFAULT, minCodeLines = 5 } = {}) {` |
-| `checkRepeatedStringsAst` | 339-381 | 43 | `export function checkRepeatedStringsAst(text = '', { min = 3, ignore = [] } = {}) {` |
+| `arrowAndMethodRanges` | 130-449 | 320 | `function arrowAndMethodRanges(tokens) {` |
+| `push` | 132-136 | 5 | `const push = (range, name) => {` |
+| `funcRangesAst` | 165-449 | 285 | `export function funcRangesAst(text = '') {` |
+| `countCommentLinesInRange` | 213-226 | 14 | `export function countCommentLinesInRange(tokens, startLine = 1, endLine = Infinity) {` |
+| `checkFuncLinesAst` | 236-253 | 18 | `export function checkFuncLinesAst(text = '', { warn = FUNC_LINES_WARN, block = FUNC_LINES_BLOCK } = {}) {` |
+| `checkFuncDensityAst` | 277-298 | 22 | `export function checkFuncDensityAst(text = '', { threshold = FUNC_LINES_WARN, blockThreshold = FUNC_LINES_BLOCK, skipLines = new Set() } = {}) {` |
+| `countCommentLines` | 306-319 | 14 | `export function countCommentLines(text = '') {` |
+| `checkFileLines` | 330-339 | 10 | `export function checkFileLines(text = '', { warn = 500, block = 1000, excludeComments = true } = {}) {` |
+| `checkCommentDensityAst` | 361-396 | 36 | `export function checkCommentDensityAst(text = '', { warn = COMMENT_DENSITY_WARN_DEFAULT, minCodeLines = 5 } = {}) {` |
+| `checkRepeatedStringsAst` | 406-448 | 43 | `export function checkRepeatedStringsAst(text = '', { min = 3, ignore = [] } = {}) {` |
 
 ### lib/ast/symbol-index.js（400 行 · 22 个函数）
 
@@ -749,14 +752,14 @@
 | `buildRuleSlotMap` | 48-55 | 8 | `export function buildRuleSlotMap(compiledRules = []) {` |
 | `countRulesBySlot` | 58-65 | 8 | `export function countRulesBySlot(compiledRules = []) {` |
 
-### lib/checks/button-bind.js（300 行 · 4 个函数）
+### lib/checks/button-bind.js（348 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `readBalancedCall` | 28-48 | 21 | `export function readBalancedCall(text, startIdx, maxLen = 4000) {` |
 | `extractJsxButtons` | 60-92 | 33 | `export function extractJsxButtons(text) {` |
 | `stripCommentLines` | 106-120 | 15 | `function stripCommentLines(text) {` |
-| `checkButtonBindings` | 138-300 | 163 | `export function checkButtonBindings({ file, text, rules }) {` |
+| `checkButtonBindings` | 138-348 | 211 | `export function checkButtonBindings({ file, text, rules, fileScope = '' }) {` |
 
 ### lib/checks/common.js（171 行 · 12 个函数）
 
@@ -897,7 +900,7 @@
 | `isRepoLevelSemanticRule` | 69-78 | 10 | `export function isRepoLevelSemanticRule(rule) {` |
 | `checkPatchInsert` | 93-134 | 42 | `export function checkPatchInsert({ file, text, rules }) {` |
 
-### lib/checks/structural.js（275 行 · 9 个函数）
+### lib/checks/structural.js（282 行 · 9 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -907,9 +910,9 @@
 | `checkMinLength` | 101-122 | 22 | `export function checkMinLength({ file, text, rules }) {` |
 | `checkComplexity` | 125-151 | 27 | `export function checkComplexity({ file, text, rules }) {` |
 | `checkDepth` | 154-170 | 17 | `export function checkDepth({ file, text, rules }) {` |
-| `checkMaxLines` | 173-224 | 52 | `export function checkMaxLines({ file, text, rules, fileScope = '' }) {` |
-| `checkCommentDensity` | 232-247 | 16 | `export function checkCommentDensity({ file, text, rules }) {` |
-| `checkRepeated` | 250-274 | 25 | `export function checkRepeated({ file, text, rules }) {` |
+| `checkMaxLines` | 173-231 | 59 | `export function checkMaxLines({ file, text, rules, fileScope = '' }) {` |
+| `checkCommentDensity` | 239-254 | 16 | `export function checkCommentDensity({ file, text, rules }) {` |
+| `checkRepeated` | 257-281 | 25 | `export function checkRepeated({ file, text, rules }) {` |
 
 ### lib/cli/commands-account.mjs（108 行 · 6 个函数）
 
@@ -1223,24 +1226,24 @@
 | `saveWorkspacePaths` | 55-81 | 27 | `export function saveWorkspacePaths(paths, { by = 'ai' } = {}) {` |
 | `workspacePathsInjectionText` | 94-108 | 15 | `export function workspacePathsInjectionText(sep = '\n') {` |
 
-### lib/exempt/index.js（339 行 · 14 个函数）
+### lib/exempt/index.js（344 行 · 14 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `hasHeaderExempt` | 118-122 | 5 | `export function hasHeaderExempt(text, marker) {` |
-| `hasLineExempt` | 125-127 | 3 | `export function hasLineExempt(line, marker) {` |
-| `isCategoryExempt` | 145-153 | 9 | `export function isCategoryExempt(finding = {}) {` |
-| `markerCovers` | 162-181 | 20 | `function markerCovers(meta, kind, rule) {` |
-| `has` | 165-165 | 1 | `const has = (a) => Array.isArray(a) && a.length > 0;` |
-| `exemptMarkerCovers` | 184-186 | 3 | `export function exemptMarkerCovers(marker, finding = {}) {` |
-| `exemptHintForFinding` | 194-204 | 11 | `export function exemptHintForFinding(finding = {}) {` |
-| `exemptForFinding` | 215-232 | 18 | `export function exemptForFinding(finding, text = '') { // dsh-skip-complexity: 豁免判定器本体（9 标记 × blocked/细分规则多条件链，职责单一）` |
-| `exemptHintFor` | 235-240 | 6 | `export function exemptHintFor(ruleOrKind) {` |
-| `cacheGet` | 256-257 | 2 | `function cacheGet(cache, dir) { return cache.has(dir) ? cache.get(dir) : undefined; }` |
-| `dirHasEmptyMarker` | 259-271 | 13 | `function dirHasEmptyMarker(dir, name, cache) {` |
-| `clearExemptMarkerCache` | 274-277 | 4 | `export function clearExemptMarkerCache() {` |
-| `isSampleExemptDir` | 288-308 | 21 | `export function isSampleExemptDir(repoPath, relPath = '') {` |
-| `isTestExemptDir` | 318-338 | 21 | `export function isTestExemptDir(repoPath, relPath = '') {` |
+| `hasHeaderExempt` | 123-127 | 5 | `export function hasHeaderExempt(text, marker) {` |
+| `hasLineExempt` | 130-132 | 3 | `export function hasLineExempt(line, marker) {` |
+| `isCategoryExempt` | 150-158 | 9 | `export function isCategoryExempt(finding = {}) {` |
+| `markerCovers` | 167-186 | 20 | `function markerCovers(meta, kind, rule) {` |
+| `has` | 170-170 | 1 | `const has = (a) => Array.isArray(a) && a.length > 0;` |
+| `exemptMarkerCovers` | 189-191 | 3 | `export function exemptMarkerCovers(marker, finding = {}) {` |
+| `exemptHintForFinding` | 199-209 | 11 | `export function exemptHintForFinding(finding = {}) {` |
+| `exemptForFinding` | 220-237 | 18 | `export function exemptForFinding(finding, text = '') { // dsh-skip-complexity: 豁免判定器本体（9 标记 × blocked/细分规则多条件链，职责单一）` |
+| `exemptHintFor` | 240-245 | 6 | `export function exemptHintFor(ruleOrKind) {` |
+| `cacheGet` | 261-262 | 2 | `function cacheGet(cache, dir) { return cache.has(dir) ? cache.get(dir) : undefined; }` |
+| `dirHasEmptyMarker` | 264-276 | 13 | `function dirHasEmptyMarker(dir, name, cache) {` |
+| `clearExemptMarkerCache` | 279-282 | 4 | `export function clearExemptMarkerCache() {` |
+| `isSampleExemptDir` | 293-313 | 21 | `export function isSampleExemptDir(repoPath, relPath = '') {` |
+| `isTestExemptDir` | 323-343 | 21 | `export function isTestExemptDir(repoPath, relPath = '') {` |
 
 ### lib/exempt/tool.js（199 行 · 11 个函数）
 
@@ -2148,14 +2151,14 @@
 | `load` | 105-153 | 49 | `export async function load(url, context, next) {` |
 | `__wrapped` | 141-145 | 5 | `const __wrapped = function (...__a) {` |
 
-### scripts/picker-repro.mjs（114 行 · 4 个函数）
+### scripts/picker-repro.mjs（116 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `extractCss` | 35-36 | 2 | `export function extractCss(src = readFileSync(CONST_FILE, 'utf8')) {` |
-| `buildReproHtml` | 42-63 | 22 | `export function buildReproHtml({ count = DEFAULT_COUNT, css = extractCss() } = {}) {` |
-| `argOf` | 84-87 | 4 | `function argOf(name, def) {` |
-| `main` | 89-108 | 20 | `function main() {` |
+| `extractCss` | 37-38 | 2 | `export function extractCss(src = readFileSync(CONST_FILE, 'utf8')) {` |
+| `buildReproHtml` | 44-65 | 22 | `export function buildReproHtml({ count = DEFAULT_COUNT, css = extractCss() } = {}) {` |
+| `argOf` | 86-89 | 4 | `function argOf(name, def) {` |
+| `main` | 91-110 | 20 | `function main() {` |
 
 ### scripts/platform-scan.mjs（169 行 · 5 个函数）
 
@@ -2429,6 +2432,12 @@
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `setupRepo` | 11-32 | 22 | `function setupRepo() {` |
+
+### test/test-button-bind-events.mjs（136 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `auditFiles` | 33-41 | 9 | `async function auditFiles(files) {` |
 
 ### test/test-cli-audit-parity.mjs（68 行 · 1 个函数）
 

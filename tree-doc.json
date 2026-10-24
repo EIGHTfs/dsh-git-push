@@ -407,122 +407,82 @@
     "worktree": {
       "README.md": {
         "status": "M",
-        "mtime": "2026-10-22T18:56:45.846Z",
+        "mtime": "2026-10-24T10:32:39.821Z",
         "note": "注释可能需更新"
       },
       "docs/CHANGELOG.md": {
         "status": "M",
-        "mtime": "2026-10-22T18:56:44.542Z",
+        "mtime": "2026-10-24T10:32:51.380Z",
         "note": "注释可能需更新"
       },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-22T19:10:51.292Z",
-        "note": "注释可能需更新"
-      },
-      "docs/SPEC.md": {
-        "status": "M",
-        "mtime": "2026-10-22T18:52:17.365Z",
+        "mtime": "2026-10-24T10:32:59.584Z",
         "note": "注释可能需更新"
       },
       "docs/releases.json": {
         "status": "M",
-        "mtime": "2026-10-22T18:56:44.227Z",
+        "mtime": "2026-10-24T10:32:51.219Z",
         "note": "注释可能需更新"
       },
-      "docs/功能-仓库索引与账号状态.md": {
+      "lib/ast/brace.js": {
         "status": "M",
-        "mtime": "2026-10-22T18:52:31.438Z",
+        "mtime": "2026-10-24T10:20:28.060Z",
         "note": "注释可能需更新"
       },
-      "lib/app/handlers/repos.js": {
+      "lib/ast/size.js": {
         "status": "M",
-        "mtime": "2026-10-22T18:55:04.578Z",
+        "mtime": "2026-10-24T10:20:40.512Z",
         "note": "注释可能需更新"
       },
-      "lib/client-parts/apply.js": {
+      "lib/audit-rules/audit-rules-frontend.yml": {
         "status": "M",
-        "mtime": "2026-10-22T18:52:17.363Z",
+        "mtime": "2026-10-24T10:18:22.166Z",
         "note": "注释可能需更新"
       },
-      "lib/client-parts/controller.js": {
+      "lib/checks/button-bind.js": {
         "status": "M",
-        "mtime": "2026-10-22T18:52:17.321Z",
+        "mtime": "2026-10-24T10:31:52.740Z",
         "note": "注释可能需更新"
       },
-      "lib/core/atomic-json.js": {
+      "lib/checks/dispatch.js": {
         "status": "M",
-        "mtime": "2026-10-22T18:52:17.364Z",
+        "mtime": "2026-10-24T10:29:56.755Z",
         "note": "注释可能需更新"
       },
-      "lib/git/index.js": {
+      "lib/checks/structural.js": {
         "status": "M",
-        "mtime": "2026-10-22T18:53:09.405Z",
+        "mtime": "2026-10-24T10:24:57.780Z",
         "note": "注释可能需更新"
       },
-      "lib/git/repo-index.js": {
+      "lib/exempt/index.js": {
         "status": "M",
-        "mtime": "2026-10-22T18:51:33.819Z",
-        "note": "注释可能需更新"
-      },
-      "lib/git/scan-runner.js": {
-        "status": "M",
-        "mtime": "2026-10-22T18:52:17.317Z",
+        "mtime": "2026-10-24T10:16:54.296Z",
         "note": "注释可能需更新"
       },
       "lib/self/index.js": {
         "status": "M",
-        "mtime": "2026-10-22T18:56:34.233Z",
+        "mtime": "2026-10-24T10:32:51.218Z",
         "note": "注释可能需更新"
       },
       "package.json": {
         "status": "M",
-        "mtime": "2026-10-22T18:56:34.232Z",
+        "mtime": "2026-10-24T10:32:51.217Z",
         "note": "注释可能需更新"
       },
-      "skills/dsh-repo-index.md": {
+      "scripts/picker-repro.mjs": {
         "status": "M",
-        "mtime": "2026-10-22T18:52:55.037Z",
+        "mtime": "2026-10-24T10:32:01.493Z",
         "note": "注释可能需更新"
       },
-      "skills/guide/guide-cli-scripts.md": {
+      "skills/guide/guide-audit.md": {
         "status": "M",
-        "mtime": "2026-10-22T18:52:55.026Z",
+        "mtime": "2026-10-24T10:32:29.651Z",
         "note": "注释可能需更新"
       },
-      "skills/guide/guide-clone-repos.md": {
-        "status": "M",
-        "mtime": "2026-10-22T18:52:31.409Z",
-        "note": "注释可能需更新"
-      },
-      "skills/guide/guide-inject-ui.md": {
-        "status": "M",
-        "mtime": "2026-10-22T18:52:31.411Z",
-        "note": "注释可能需更新"
-      },
-      "skills/workflow/README.md": {
-        "status": "M",
-        "mtime": "2026-10-22T18:52:55.038Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-repo-list.mjs": {
-        "status": "M",
-        "mtime": "2026-10-22T19:03:47.185Z",
-        "note": "注释可能需更新"
-      },
-      "lib/git/index-format.js": {
+      "test/test-button-bind-events.mjs": {
         "status": "A",
-        "mtime": "2026-10-22T18:50:21.356Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-index-jsonl.mjs": {
-        "status": "A",
-        "mtime": "2026-10-22T18:53:30.158Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-repos-live-budget.mjs": {
-        "status": "A",
-        "mtime": "2026-10-22T18:54:55.301Z",
+        "mtime": "2026-10-24T10:18:35.909Z",
         "note": "注释可能需更新"
       }
     }
@@ -619,5 +579,6 @@
   "scripts/picker-repro.mjs": "（待注释）",
   "lib/git/index-format.js": "（待注释）",
   "test/test-index-jsonl.mjs": "（待注释）",
-  "test/test-repos-live-budget.mjs": "（待注释）"
+  "test/test-repos-live-budget.mjs": "（待注释）",
+  "test/test-button-bind-events.mjs": "（待注释）"
 }

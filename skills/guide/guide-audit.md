@@ -204,3 +204,38 @@ console.log(x); // dsh-skip-residue: 本行为刻意保留的调试输出样本
 | skills/guide/guide-cli-scripts.md | 独立 CLI 与脚本（含 `git-sluice`、`rule-switch`） |
 | skills/guide/guide-slash-completion.md | 输入框斜杠命令（`/git-audit`、`/link-check`） |
 | skills/guide/guide-clone-repos.md | 克隆仓库与本地仓库扫描 |
+
+## 14. 按插件架构修订规则，且按性价比取舍误报
+
+规则不是通用前端 linter：它主要服务于 **DSH 插件**这种架构，判定要贴合插件真实形态，
+否则「按通用项目写的判据」在插件上系统性失真。
+
+**已按插件架构落地的适配**
+
+| 插件架构事实 | 通用判据为何失真 | 规则怎么改 |
+|---|---|---|
+| 客户端是**构建产物**（`dsh.client` 指向单文件） | 产物行数天然超阈值 | `dsh-client-entry` 作用域降级为 info（仍报不扣分，不用 exempt 藏掉事实） |
+| 源码按**分片**维护（`lib/client-parts/**` → 拼接） | 分片是片段，单文件语法都不成立；创建元素与绑定事件可能在不同分片 | 标准 `client-parts/` 由 exclude_dirs 跳过且规模规则按 `dsh-client-fragment` 降级；自定义分片目录由 button-bind 降级 info（完整判定交给产物） |
+| 插件 UI 常用**事件委托** + 原生触发（label.click() 开文件框） | 只认 `addEventListener('click')` ⇒ 表单控件/文件框全被判未绑 | 按元素类型分流：button 要 click 类；input 接受 change/input/submit 等；`type=file` 有程序化触发即视为原生接好 |
+| 测试聚合文件（每条 `rec(...)` 一个用例） | 「文件长」被判臃肿，且只认 `function` ⇒ 箭头用例全部计 0 行 | 识别箭头/方法简写/asynс 体；最大函数≤阈值 → 聚合型 info；无函数时文案改成「顶层语句堆叠」而不是「藏着超大函数」 |
+
+**性价比取舍（不追求零误报）**
+
+先算「修判定的成本 vs 这类误报的出现频率与危害」，再决定：
+
+- **值得修**：判定明确、可静态判定、且形态高频——如上面四类（事件类型、函数形态、产物/分片、聚合型文案）。
+  这类修一次，整类消失。
+- **不值得修（用豁免兜底）**：需要数据流/跨文件调用图才能证伪的判定——例如「事件委托是否真的覆盖某个
+  `createElement` 出来的按钮」、跨文件（非分片）绑定、运行时动态注入。做精确分析的成本远超收益，
+  保留启发式判定 + `dsh-skip-quality` 文件头豁免。
+- **不算误报**：规则判对了事实、只是不想改（如自包含 151 行组件、静态自检页的装饰按钮）——
+  走豁免，不要改判定逻辑（否则会连带放过真问题）。
+
+**豁免的前提**：标记必须**真能生效**。历史上多次出现「规则 exemptHint 写着 `dsh-skip-quality`，
+但该 kind 不在任何标记的 blocked 里」⇒ 用户按提示写了完全不生效（button-bind 就是 2026-10-24 补上的）。
+新增 kind 时同步检查 `exemptHintForFinding({kind})` 是否返回标记。
+
+**判定引用范围时 grep 要 `-i`**：同一概念会以 `camelCase`/`PascalCase`/`SCREAMING_CASE`/`snake_case`
+多种形态出现，小写搜会漏（实测：搜 `partFilter` 漏掉 `setPartFilter`，误判「零引用」而删掉底层实现）。
+注意这只针对「人工核查引用」；规则内部的**标识符匹配必须保持大小写敏感**（JS/Python 本身区分大小写，
+放宽只会引入新误报）。

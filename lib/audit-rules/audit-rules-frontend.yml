@@ -244,15 +244,15 @@ rules:
     severity: "warning"
     description: "HTML 字符串中有按钮，但同文件 JS 中找不到对应绑定证据（addEventListener/onclick=/选择器引用）——若通过事件委托或封装函数绑定请加豁免标记"
     fixable: false
-    mitigation: "确认是否需要绑定；事件委托/封装函数绑定请加豁免标记"
+    mitigation: "确认是否需要绑定；事件委托/封装函数绑定请加 dsh-skip-quality（文件头）豁免标记"
 
   - id: button/create-element-binding
-    name: "createElement 创建的按钮应显式绑定"
+    name: "createElement 创建的元素应显式绑定"
     category: "button"
     severity: "warning"
-    description: "用 createElement('button'/'input') 创建按钮但同文件无 addEventListener/onclick 绑定痕迹，则为未绑定"
+    description: "用 createElement('button'/'input') 创建元素但同文件找不到对应事件的绑定痕迹则为未绑定。按元素类型分流判据：button 要求 click 类（addEventListener('click')/onclick=/@click/事件委托）；input 接受 change/input/submit/pointerdown/keydown 等表单控件标准事件；<input type=\"file\"> 由原生交互触发（label.click()/input.click() 打开选择框），存在程序化触发即视为已接好，不要求 click 绑定"
     fixable: false
-    mitigation: "在 appendChild 前调用 btn.addEventListener('click', fn)"
+    mitigation: "按钮在 appendChild 前调用 addEventListener('click', fn)；表单控件绑定 change/input；原生文件选择框无需额外绑定，如判定仍不准可加 dsh-skip-quality 文件头标记"
 
   - id: button/event-delegation-detected
     name: "检测到事件委托模式"
