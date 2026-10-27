@@ -1,0 +1,4 @@
+// 端到端忽略样本：keep —— 应被审计扫到并报 blocker（对照组）
+// 内容故意含硬编码密码：只要这个文件进了审计范围，必然产出 blocker，便于断言。
+const dbPassword = "S3cretP@ssKeep";
+console.log(dbPassword);

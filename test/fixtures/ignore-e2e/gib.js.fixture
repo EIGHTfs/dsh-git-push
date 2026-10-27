@@ -1,0 +1,3 @@
+// 端到端忽略样本：gib —— 应由 .gitignore 排除（不得进审计范围）
+const dbPassword = "S3cretP@ssGit";
+console.log(dbPassword);

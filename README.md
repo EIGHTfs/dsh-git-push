@@ -592,6 +592,7 @@ dsh-git-push/
 │   ├── test-gitignore-nongit-dir.mjs — （待注释）
 │   ├── test-history-audit.mjs — （待注释）
 │   ├── test-http.mjs — HTTP 总入口测试（Origin/CSRF/413/路由）
+│   ├── test-ignore-e2e.mjs — （待注释）
 │   ├── test-index-jsonl.mjs — （待注释）
 │   ├── test-inject-switch.mjs — 注入开发者要求清单子开关回归
 │   ├── test-inject-system-prompt.mjs — 注入系统提示词回归
@@ -659,6 +660,7 @@ dsh-git-push/
 │   ├── test-workspace-paths.mjs — （待注释）
 │   ├── fixtures/ — （待注释）
 │   │   ├── TimeZoneComboBox-CRnoCikG.js — Pawchive 混淆产物样本（hash 文件名——跳过判定 fixture）
+│   │   └── …（5 个更深文件）
 │   ├── helpers/ — （待注释）
 │   │   ├── test-cache.mjs — （待注释）
 │   │   ├── tmp-dir.mjs — （待注释）

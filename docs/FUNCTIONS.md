@@ -2696,6 +2696,13 @@
 |------|------|------|------|
 | `makeRepo` | 17-29 | 13 | `function makeRepo() {` |
 
+### test/test-ignore-e2e.mjs（93 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `setupRepo` | 38-51 | 14 | `function setupRepo({ git = true } = {}) {` |
+| `hitNames` | 54-54 | 1 | `const hitNames = (findings) => [...new Set((findings \|\| []).map((f) => String(f.file \|\| '').replace(/^.*\//, '')))].sort();` |
+
 ### test/test-index-jsonl.mjs（135 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |

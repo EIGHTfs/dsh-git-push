@@ -405,19 +405,49 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
+      "README.md": {
+        "status": "M",
+        "mtime": "2026-10-27T05:39:48.848Z",
+        "note": "注释可能需更新"
+      },
+      "docs/CHANGELOG.md": {
+        "status": "M",
+        "mtime": "2026-10-27T05:54:30.146Z",
+        "note": "注释可能需更新"
+      },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-24T14:15:10.737Z",
+        "mtime": "2026-10-27T05:54:31.243Z",
         "note": "注释可能需更新"
       },
-      "lib/ARCHITECTURE.md": {
+      "docs/releases.json": {
         "status": "M",
-        "mtime": "2026-10-24T14:09:44.306Z",
+        "mtime": "2026-10-27T05:54:13.648Z",
         "note": "注释可能需更新"
       },
-      "scripts/check.mjs": {
+      "lib/self/index.js": {
         "status": "M",
-        "mtime": "2026-10-24T14:04:50.671Z",
+        "mtime": "2026-10-27T05:53:10.201Z",
+        "note": "注释可能需更新"
+      },
+      "package.json": {
+        "status": "M",
+        "mtime": "2026-10-27T05:52:35.166Z",
+        "note": "注释可能需更新"
+      },
+      "skills/guide/guide-audit.md": {
+        "status": "M",
+        "mtime": "2026-10-27T05:40:34.521Z",
+        "note": "注释可能需更新"
+      },
+      "test/fixtures/ignore-e2e/": {
+        "status": "A",
+        "mtime": "2026-10-27T05:35:16.841Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-ignore-e2e.mjs": {
+        "status": "A",
+        "mtime": "2026-10-27T05:37:16.403Z",
         "note": "注释可能需更新"
       }
     }
@@ -515,5 +545,12 @@
   "lib/git/index-format.js": "（待注释）",
   "test/test-index-jsonl.mjs": "（待注释）",
   "test/test-repos-live-budget.mjs": "（待注释）",
-  "test/test-button-bind-events.mjs": "（待注释）"
+  "test/test-button-bind-events.mjs": "（待注释）",
+  "test/fixtures/ignore-e2e": "（待注释）",
+  "test/fixtures/ignore-e2e/aud.js.fixture": "（待注释）",
+  "test/fixtures/ignore-e2e/auditignore.rules": "（待注释）",
+  "test/fixtures/ignore-e2e/gib.js.fixture": "（待注释）",
+  "test/fixtures/ignore-e2e/gitignore.rules": "（待注释）",
+  "test/fixtures/ignore-e2e/keep.js.fixture": "（待注释）",
+  "test/test-ignore-e2e.mjs": "（待注释）"
 }

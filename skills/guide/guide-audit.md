@@ -239,3 +239,32 @@ console.log(x); // dsh-skip-residue: 本行为刻意保留的调试输出样本
 多种形态出现，小写搜会漏（实测：搜 `partFilter` 漏掉 `setPartFilter`，误判「零引用」而删掉底层实现）。
 注意这只针对「人工核查引用」；规则内部的**标识符匹配必须保持大小写敏感**（JS/Python 本身区分大小写，
 放宽只会引入新误报）。
+
+## 15. 忽略链路（.gitignore / .auditignore）的测试纪律
+
+**这块历史上反复回归，而且每次都不是判定逻辑写错，而是接线层断掉。** 已知三次形态：
+
+| 回归形态 | 症状 | 为什么内部函数测试挡不住 |
+|---|---|---|
+| 以**空 stdin** 调 `check-ignore`，从未传文件路径 | 忽略集恒空 ⇒ 全仓文件都进审计 | `buildIgnoreSet` 内部逻辑没改，改的是它的输入 |
+| 大仓库降级：枚举全部文件被改成目录级判定 | 文件级规则（单个文件名）失效 | 降级是**性能分支**，内部单测仍走全量分支 |
+| 调用方**漏传 `gitIgnoreRoot`** | 函数默认值 `null` = 不判定忽略 ⇒ 忽略完全不生效 | 函数行为没变，变的是调用参数 |
+
+**纪律**：
+
+- 忽略相关改动必须跑**端到端**（`auditFull` / `runAudit`），不能只测 `collectTextFiles`。
+  既有 `test-collector-ignore.mjs` / `test-auditignore.mjs` 都只测内部函数，对上面三类天然失明；
+  端到端守门员是 `test/test-ignore-e2e.mjs`（三条链路 + 对照组）。
+- **必须有对照组**：断言「忽略的文件没出现」时，同时断言「该被审的文件出现了」。
+  否则「全部文件都被排除」也会让测试假通过。
+- 三条链路各自要有一条用例：full（走 `gitIgnoreRoot`）、diff（走 `collectChangedFiles` 独立路径）、
+  非 git 目录（git check-ignore 不可用，靠 `parseGitignore` 纯 JS 兜底）。
+- 样本要**入库**为固定 fixture（`test/fixtures/ignore-e2e/`），不要测试里现造：
+  现造样本会随实现漂移，也让「什么叫被忽略」没有唯一答案。
+  样本文件名用 `.js.fixture` / `.rules` 后缀——若直接叫 `gib.js` 且同目录放 `.gitignore`，
+  这两份样本自己就会被忽略而**无法入库**（自我反噬）。
+- 新增/修改忽略相关代码后，用「把 `gitIgnoreRoot` 强制改 `null`」自证测试会红——这是最容易复发的接线断点。
+
+**排查时的第一个坑（我踩过）**：直接调 `collectTextFiles(dir, { repoPath: dir })` 会得到
+「忽略全失效」的假象——因为参数名是 `gitIgnoreRoot`，传错就等于显式关掉忽略判定。
+复现前先确认自己的探针参数与真实调用方一致（见 `lib/audit/orchestrate.js` 的调用处）。
