@@ -407,72 +407,77 @@
     "worktree": {
       "README.md": {
         "status": "M",
-        "mtime": "2026-10-27T18:37:09.601Z",
+        "mtime": "2026-10-27T19:16:40.467Z",
         "note": "注释可能需更新"
       },
       "docs/CHANGELOG.md": {
         "status": "M",
-        "mtime": "2026-10-27T18:51:09.476Z",
+        "mtime": "2026-10-27T19:20:29.395Z",
         "note": "注释可能需更新"
       },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-27T18:51:10.250Z",
+        "mtime": "2026-10-27T19:20:29.921Z",
         "note": "注释可能需更新"
       },
       "docs/releases.json": {
         "status": "M",
-        "mtime": "2026-10-27T18:51:09.139Z",
+        "mtime": "2026-10-27T19:20:28.755Z",
         "note": "注释可能需更新"
       },
-      "lib/git/clone-history-mode.js": {
+      "lib/app/audit-api.js": {
         "status": "M",
-        "mtime": "2026-10-27T18:36:20.579Z",
+        "mtime": "2026-10-27T19:14:08.692Z",
         "note": "注释可能需更新"
       },
-      "lib/git/clone-replay-io.js": {
+      "lib/app/tool-call.js": {
         "status": "M",
-        "mtime": "2026-10-27T18:36:19.726Z",
+        "mtime": "2026-10-27T19:14:08.689Z",
         "note": "注释可能需更新"
       },
-      "lib/git/clone.js": {
+      "lib/audit/audit-file.js": {
         "status": "M",
-        "mtime": "2026-10-27T18:23:13.814Z",
+        "mtime": "2026-10-27T19:13:14.146Z",
+        "note": "注释可能需更新"
+      },
+      "lib/audit/orchestrate.js": {
+        "status": "M",
+        "mtime": "2026-10-27T19:13:14.149Z",
+        "note": "注释可能需更新"
+      },
+      "lib/cli/commands-audit.mjs": {
+        "status": "M",
+        "mtime": "2026-10-27T19:14:49.315Z",
         "note": "注释可能需更新"
       },
       "lib/self/index.js": {
         "status": "M",
-        "mtime": "2026-10-27T18:50:46.527Z",
+        "mtime": "2026-10-27T19:20:28.753Z",
         "note": "注释可能需更新"
       },
       "package.json": {
         "status": "M",
-        "mtime": "2026-10-27T18:49:44.374Z",
+        "mtime": "2026-10-27T19:20:28.752Z",
         "note": "注释可能需更新"
       },
-      "test/test-clone-concurrency.mjs": {
-        "status": "M",
-        "mtime": "2026-10-27T18:36:55.018Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-clone-history-mode.mjs": {
-        "status": "M",
-        "mtime": "2026-10-27T18:36:54.977Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-clone-replay-io.mjs": {
-        "status": "M",
-        "mtime": "2026-10-27T18:36:54.974Z",
-        "note": "注释可能需更新"
-      },
-      "lib/git/init-compat.js": {
+      "lib/app/repo-ownership.js": {
         "status": "A",
-        "mtime": "2026-10-27T18:35:47.643Z",
+        "mtime": "2026-10-27T19:12:59.067Z",
         "note": "注释可能需更新"
       },
-      "test/test-init-compat.mjs": {
+      "lib/audit/ownership.js": {
         "status": "A",
-        "mtime": "2026-10-27T18:25:26.661Z",
+        "mtime": "2026-10-27T19:12:34.692Z",
+        "note": "注释可能需更新"
+      },
+      "scripts/bump-version.mjs": {
+        "status": "A",
+        "mtime": "2026-10-27T18:53:47.135Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-privacy-ownership.mjs": {
+        "status": "A",
+        "mtime": "2026-10-27T19:15:54.880Z",
         "note": "注释可能需更新"
       }
     }
@@ -579,5 +584,9 @@
   "test/fixtures/ignore-e2e/keep.js.fixture": "（待注释）",
   "test/test-ignore-e2e.mjs": "（待注释）",
   "lib/git/init-compat.js": "（待注释）",
-  "test/test-init-compat.mjs": "（待注释）"
+  "test/test-init-compat.mjs": "（待注释）",
+  "lib/audit/ownership.js": "（待注释）",
+  "scripts/bump-version.mjs": "（待注释）",
+  "test/test-privacy-ownership.mjs": "（待注释）",
+  "lib/app/repo-ownership.js": "（待注释）"
 }

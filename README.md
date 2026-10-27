@@ -265,6 +265,7 @@ dsh-git-push/
 │   │   ├── http-handlers.js — HTTP 路由分发（薄 router：前置校验 + switch 各端点调 handlers/ 模块）
 │   │   ├── index.js — 插件入口再导出（宿主 main 指向）
 │   │   ├── inject-text.js — 注入文本（工具用法提示 FUNCTION_USAGE_HINT）
+│   │   ├── repo-ownership.js — （待注释）
 │   │   ├── scan-root.js — 默认扫描根解析（配置优先→DSH 家根自动识别）
 │   │   ├── schema.js — 配置 schema（宿主导出缺失时兜底）
 │   │   ├── settings-bridge.js — 设置读写桥（host scope 共享；绕开 client isLoopback=memory 落盘陷阱）
@@ -315,6 +316,7 @@ dsh-git-push/
 │   │   ├── ignore-blind.js — 审计静默失明检测（本地 git 排除配置把整仓判成忽略时告警）
 │   │   ├── index.js — 审计层统一出口（auditFull/auditChanged）
 │   │   ├── orchestrate.js — 审计编排（收集→检查→汇总）
+│   │   ├── ownership.js — （待注释）
 │   │   ├── public.js — （待注释）
 │   │   ├── repo-level.js — 仓库级语义规则
 │   │   ├── report-yaml.js — （待注释）
@@ -471,6 +473,7 @@ dsh-git-push/
 │   ├── audit-runtime-check.mjs — 三层审计 L3 运行时检测脚本
 │   ├── browser-page-probe.mjs — （待注释）
 │   ├── build-client.mjs — 客户端分片拼接（PART_ORDER + --check 门禁 + 形态铁律自检）
+│   ├── bump-version.mjs — （待注释）
 │   ├── check.mjs — 语法检查脚本（npm run check）
 │   ├── clean-date-comments.py — （待注释）
 │   ├── cpu-sample.mjs — （待注释）
@@ -622,6 +625,7 @@ dsh-git-push/
 │   ├── test-picker-layout.mjs — （待注释）
 │   ├── test-platform-scan.mjs — （待注释）
 │   ├── test-plugin.mjs — 插件接线测试（入口导出/工具清单/双副本同步）
+│   ├── test-privacy-ownership.mjs — （待注释）
 │   ├── test-private-gate.mjs — （待注释）
 │   ├── test-project-type-filter.mjs — 项目类型规则适配测试（非 dsh 项目不加载 dsh 槽位/0.x 版本规则、timeout 限 js 系、folder 尊重 gitignore——Pawchive 误报消除驱动）
 │   ├── test-push-diagnose.mjs — （待注释）

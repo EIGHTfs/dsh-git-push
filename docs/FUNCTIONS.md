@@ -12,15 +12,15 @@
 | `apply` | 44-295 | 252 | `export async function apply(ctx, config = {}) {` |
 | `envInjectText` | 106-145 | 40 | `const envInjectText = (cwdOverride) => {` |
 
-### lib/app/audit-api.js（162 行 · 5 个函数）
+### lib/app/audit-api.js（164 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `exemptStatsOf` | 28-44 | 17 | `export function exemptStatsOf(findings = []) {` |
-| `groupKeyOf` | 47-52 | 6 | `function groupKeyOf(finding, groupBy, ruleSlotMap) {` |
-| `parseSeverityFilter` | 58-62 | 5 | `export function parseSeverityFilter(raw) {` |
-| `aggregateFindings` | 71-92 | 22 | `export function aggregateFindings(findings = [], opts = {}) {` |
-| `runAuditApi` | 100-161 | 62 | `export async function runAuditApi(repo, params = {}, cfg = {}) {` |
+| `exemptStatsOf` | 29-45 | 17 | `export function exemptStatsOf(findings = []) {` |
+| `groupKeyOf` | 48-53 | 6 | `function groupKeyOf(finding, groupBy, ruleSlotMap) {` |
+| `parseSeverityFilter` | 59-63 | 5 | `export function parseSeverityFilter(raw) {` |
+| `aggregateFindings` | 72-93 | 22 | `export function aggregateFindings(findings = [], opts = {}) {` |
+| `runAuditApi` | 101-163 | 63 | `export async function runAuditApi(repo, params = {}, cfg = {}) {` |
 
 ### lib/app/command-registry.js（274 行 · 6 个函数）
 
@@ -162,6 +162,15 @@
 | `buildAuditApiGuide` | 136-163 | 28 | `export function buildAuditApiGuide(repo = '', opts = {}) {` |
 | `formatAuditBlock` | 165-192 | 28 | `export function formatAuditBlock(r = {}) {` |
 
+### lib/app/repo-ownership.js（66 行 · 4 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `localLogin` | 26-34 | 9 | `export function localLogin() {` |
+| `remoteOwner` | 37-47 | 11 | `export function remoteOwner(repoPath) {` |
+| `probeRepoOwnership` | 54-60 | 7 | `export function probeRepoOwnership(repoPath = '') {` |
+| `resetRepoOwnershipCache` | 63-65 | 3 | `export function resetRepoOwnershipCache() {` |
+
 ### lib/app/scan-root.js（23 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -222,33 +231,33 @@
 | `getLastSlotHitStats` | 28-30 | 3 | `export function getLastSlotHitStats() {` |
 | `getLastSlotHitMeta` | 33-35 | 3 | `export function getLastSlotHitMeta() {` |
 
-### lib/app/tool-call.js（734 行 · 23 个函数）
+### lib/app/tool-call.js（738 行 · 23 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `pushWithPostSteps` | 56-118 | 63 | `async function pushWithPostSteps(args, env, cfg) {` |
-| `pushJobOutcome` | 139-171 | 33 | `export function pushJobOutcome(r = {}) {` |
-| `short` | 141-141 | 1 | `const short = (sha) => String(sha \|\| '').slice(0, 8);` |
-| `cloneJobOutcome` | 179-184 | 6 | `export function cloneJobOutcome(r = {}) {` |
-| `buildCommitPushJobSpec` | 187-204 | 18 | `function buildCommitPushJobSpec(repo, doPush) {` |
-| `done` | 192-200 | 9 | `const done = (async () => {` |
-| `startHostJob` | 217-224 | 8 | `function startHostJob(jobs, spec, owner) {` |
-| `callCloneJob` | 238-270 | 33 | `async function callCloneJob(args, jobs, exec, log, env = {}, cfg = {}) {` |
-| `callNpmPublishJob` | 278-357 | 80 | `async function callNpmPublishJob(args = {}, jobs, exec, log, env = {}, cfg = {}) {` |
-| `outcome` | 308-332 | 25 | `const outcome = (r) => {` |
-| `done` | 341-343 | 3 | `const done = (async () => {` |
-| `buildCloneJobSpec` | 360-377 | 18 | `function buildCloneJobSpec(target, dest, doClone) {` |
-| `done` | 365-373 | 9 | `const done = (async () => {` |
-| `callCommitPush` | 384-430 | 47 | `async function callCommitPush(args, env, cfg, log, jobs, exec) {` |
-| `doPush` | 403-403 | 1 | `const doPush = () => pushWithPostSteps(args, env, cfg);` |
-| `buildAuditOpts` | 441-452 | 12 | `function buildAuditOpts(args, cfg, scope) {` |
-| `runHistoryAuditTool` | 458-484 | 27 | `async function runHistoryAuditTool(args, env, cfg, jobs, exec, weights) {` |
-| `doHistory` | 464-467 | 4 | `const doHistory = async () => {` |
-| `callCodeAudit` | 486-498 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
-| `runStandardAuditTool` | 501-542 | 42 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
-| `callTool` | 544-705 | 162 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null, fsCtx = null) {` |
-| `shellSplit` | 708-726 | 19 | `function shellSplit(input) {` |
-| `readTextSafe` | 729-733 | 5 | `function readTextSafe(path = '') {` |
+| `pushWithPostSteps` | 57-119 | 63 | `async function pushWithPostSteps(args, env, cfg) {` |
+| `pushJobOutcome` | 140-172 | 33 | `export function pushJobOutcome(r = {}) {` |
+| `short` | 142-142 | 1 | `const short = (sha) => String(sha \|\| '').slice(0, 8);` |
+| `cloneJobOutcome` | 180-185 | 6 | `export function cloneJobOutcome(r = {}) {` |
+| `buildCommitPushJobSpec` | 188-205 | 18 | `function buildCommitPushJobSpec(repo, doPush) {` |
+| `done` | 193-201 | 9 | `const done = (async () => {` |
+| `startHostJob` | 218-225 | 8 | `function startHostJob(jobs, spec, owner) {` |
+| `callCloneJob` | 239-271 | 33 | `async function callCloneJob(args, jobs, exec, log, env = {}, cfg = {}) {` |
+| `callNpmPublishJob` | 279-358 | 80 | `async function callNpmPublishJob(args = {}, jobs, exec, log, env = {}, cfg = {}) {` |
+| `outcome` | 309-333 | 25 | `const outcome = (r) => {` |
+| `done` | 342-344 | 3 | `const done = (async () => {` |
+| `buildCloneJobSpec` | 361-378 | 18 | `function buildCloneJobSpec(target, dest, doClone) {` |
+| `done` | 366-374 | 9 | `const done = (async () => {` |
+| `callCommitPush` | 385-431 | 47 | `async function callCommitPush(args, env, cfg, log, jobs, exec) {` |
+| `doPush` | 404-404 | 1 | `const doPush = () => pushWithPostSteps(args, env, cfg);` |
+| `buildAuditOpts` | 442-456 | 15 | `function buildAuditOpts(args, cfg, scope) {` |
+| `runHistoryAuditTool` | 462-488 | 27 | `async function runHistoryAuditTool(args, env, cfg, jobs, exec, weights) {` |
+| `doHistory` | 468-471 | 4 | `const doHistory = async () => {` |
+| `callCodeAudit` | 490-502 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
+| `runStandardAuditTool` | 505-546 | 42 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
+| `callTool` | 548-709 | 162 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null, fsCtx = null) {` |
+| `shellSplit` | 712-730 | 19 | `function shellSplit(input) {` |
+| `readTextSafe` | 733-737 | 5 | `function readTextSafe(path = '') {` |
 
 ### lib/app/tools.js（34 行 · 2 个函数）
 
@@ -595,14 +604,14 @@
 | `topUnresolvedFiles` | 78-85 | 8 | `function topUnresolvedFiles(unresolved, topN) {` |
 | `formatAnalysisCoverageLine` | 92-98 | 7 | `export function formatAnalysisCoverageLine(cov = {}) {` |
 
-### lib/audit/audit-file.js（185 行 · 4 个函数）
+### lib/audit/audit-file.js（199 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `isMinifiedOneLine` | 29-39 | 11 | `function isMinifiedOneLine(text) {` |
-| `isHashSegment` | 43-45 | 3 | `function isHashSegment(seg) {` |
-| `isBuildArtifactFile` | 47-77 | 31 | `export function isBuildArtifactFile(relPathOrFile = '', text = '') {` |
-| `auditFile` | 79-185 | 107 | `export function auditFile({ file, relPath, text, grouped }, opts = {}) {` |
+| `isMinifiedOneLine` | 30-40 | 11 | `function isMinifiedOneLine(text) {` |
+| `isHashSegment` | 44-46 | 3 | `function isHashSegment(seg) {` |
+| `isBuildArtifactFile` | 48-78 | 31 | `export function isBuildArtifactFile(relPathOrFile = '', text = '') {` |
+| `auditFile` | 80-199 | 120 | `export function auditFile({ file, relPath, text, grouped }, opts = {}) {` |
 
 ### lib/audit/client-entry.js（94 行 · 3 个函数）
 
@@ -706,7 +715,7 @@
 | `excludePathOf` | 39-48 | 10 | `function excludePathOf(root) {` |
 | `detectIgnoreBlindSpot` | 55-102 | 48 | `export function detectIgnoreBlindSpot(root) {` |
 
-### lib/audit/orchestrate.js（523 行 · 18 个函数）
+### lib/audit/orchestrate.js（524 行 · 18 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -717,17 +726,25 @@
 | `capScanFiles` | 59-69 | 11 | `export function capScanFiles(files, root, maxFiles) {` |
 | `appendIgnoreBlindSpot` | 82-98 | 17 | `function appendIgnoreBlindSpot(findings, repoPath, scanned) {` |
 | `buildTreeConfirmer` | 121-141 | 21 | `async function buildTreeConfirmer(relPath, text, grouped) {` |
-| `auditFiles` | 143-314 | 172 | `async function auditFiles(repoPath, files, opts = {}) {` |
+| `auditFiles` | 143-315 | 173 | `async function auditFiles(repoPath, files, opts = {}) {` |
 | `isDshPlugin` | 168-174 | 7 | `const isDshPlugin = (() => {` |
-| `auditFull` | 316-338 | 23 | `export async function auditFull(repoPath, opts = {}) {` |
-| `appendTreeDocDrift` | 343-385 | 43 | `function appendTreeDocDrift(findings, repoPath) {` |
-| `by` | 376-376 | 1 | `const by = (code) => wt.filter(([, v]) => v?.status === code).length;` |
-| `appendFuncDocDrift` | 394-410 | 17 | `function appendFuncDocDrift(findings, repoPath) {` |
-| `appendSplitDocsCheck` | 418-472 | 55 | `function appendSplitDocsCheck(findings, repoPath) {` |
-| `hasMarkBlock` | 475-477 | 3 | `function hasMarkBlock(text, marker) {` |
-| `auditChanged` | 482-517 | 36 | `export async function auditChanged(repoPath, opts = {}) {` |
-| `isAuditIgnored` | 498-511 | 14 | `const isAuditIgnored = (rel) => {` |
-| `auditWithScope` | 520-522 | 3 | `export async function auditWithScope(repoPath, { scope = 'diff', ...opts } = {}) {` |
+| `auditFull` | 317-339 | 23 | `export async function auditFull(repoPath, opts = {}) {` |
+| `appendTreeDocDrift` | 344-386 | 43 | `function appendTreeDocDrift(findings, repoPath) {` |
+| `by` | 377-377 | 1 | `const by = (code) => wt.filter(([, v]) => v?.status === code).length;` |
+| `appendFuncDocDrift` | 395-411 | 17 | `function appendFuncDocDrift(findings, repoPath) {` |
+| `appendSplitDocsCheck` | 419-473 | 55 | `function appendSplitDocsCheck(findings, repoPath) {` |
+| `hasMarkBlock` | 476-478 | 3 | `function hasMarkBlock(text, marker) {` |
+| `auditChanged` | 483-518 | 36 | `export async function auditChanged(repoPath, opts = {}) {` |
+| `isAuditIgnored` | 499-512 | 14 | `const isAuditIgnored = (rel) => {` |
+| `auditWithScope` | 521-523 | 3 | `export async function auditWithScope(repoPath, { scope = 'diff', ...opts } = {}) {` |
+
+### lib/audit/ownership.js（47 行 · 3 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `classifyOwnership` | 27-32 | 6 | `export function classifyOwnership(login = '', owner = '') {` |
+| `privacyRulesEnabled` | 39-41 | 3 | `export function privacyRulesEnabled(ownership) {` |
+| `isPrivacyRule` | 44-46 | 3 | `export function isPrivacyRule(ruleId) {` |
 
 ### lib/audit/repo-level.js（31 行 · 2 个函数）
 
@@ -925,19 +942,19 @@
 | `cmdGenSshKey` | 85-96 | 12 | `export async function cmdGenSshKey(flags) {` |
 | `resolveRepoOwnerName` | 99-107 | 9 | `async function resolveRepoOwnerName(repoPath) {` |
 
-### lib/cli/commands-audit.mjs（145 行 · 9 个函数）
+### lib/cli/commands-audit.mjs（148 行 · 9 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `cliPluginConfig` | 27-36 | 10 | `export function cliPluginConfig() {` |
-| `pluginEqualAuditOpts` | 43-55 | 13 | `export function pluginEqualAuditOpts(cfg, flags, { scope = 'diff' } = {}) {` |
-| `pluginEqualWeights` | 58-62 | 5 | `export function pluginEqualWeights(cfg, flags) {` |
-| `pathExists` | 65-67 | 3 | `async function pathExists(p) {` |
-| `cmdAudit` | 70-74 | 5 | `export async function cmdAudit(root, flags) {` |
-| `runHistoryAuditCmd` | 77-92 | 16 | `async function runHistoryAuditCmd(root, flags) {` |
-| `runStandardAudit` | 95-107 | 13 | `async function runStandardAudit(root, flags) {` |
-| `printAuditResult` | 110-128 | 19 | `function printAuditResult(root, auditResult, opts, weights, quality) {` |
-| `cmdScan` | 136-144 | 9 | `export async function cmdScan(root, flags) {` |
+| `cliPluginConfig` | 28-37 | 10 | `export function cliPluginConfig() {` |
+| `pluginEqualAuditOpts` | 44-56 | 13 | `export function pluginEqualAuditOpts(cfg, flags, { scope = 'diff' } = {}) {` |
+| `pluginEqualWeights` | 59-63 | 5 | `export function pluginEqualWeights(cfg, flags) {` |
+| `pathExists` | 66-68 | 3 | `async function pathExists(p) {` |
+| `cmdAudit` | 71-75 | 5 | `export async function cmdAudit(root, flags) {` |
+| `runHistoryAuditCmd` | 78-94 | 17 | `async function runHistoryAuditCmd(root, flags) {` |
+| `runStandardAudit` | 97-110 | 14 | `async function runStandardAudit(root, flags) {` |
+| `printAuditResult` | 113-131 | 19 | `function printAuditResult(root, auditResult, opts, weights, quality) {` |
+| `cmdScan` | 139-147 | 9 | `export async function cmdScan(root, flags) {` |
 
 ### lib/cli/commands-doc.mjs（128 行 · 7 个函数）
 
@@ -2059,6 +2076,16 @@
 | `checkShape` | 76-85 | 10 | `export function checkShape(code) {` |
 | `main` | 89-120 | 32 | `function main(argv = process.argv.slice(2)) {` |
 
+### scripts/bump-version.mjs（164 行 · 5 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `parseArgs` | 38-48 | 11 | `function parseArgs(argv) {` |
+| `cmpVer` | 53-58 | 6 | `function cmpVer(a, b) {` |
+| `bumpPatch` | 61-64 | 4 | `function bumpPatch(v) {` |
+| `readJson` | 66-68 | 3 | `function readJson(p) {` |
+| `buildVersionLine` | 75-88 | 14 | `function buildVersionLine(oldLine, newVer, oldVer, message) {` |
+
 ### scripts/check.mjs（157 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2820,6 +2847,12 @@
 | `makeExemptRepo` | 486-492 | 7 | `function makeExemptRepo() {` |
 | `addSecretFile` | 493-496 | 4 | `function addSecretFile(root, path) {` |
 | `fsStatMode` | 650-652 | 3 | `function fsStatMode(file) {` |
+
+### test/test-privacy-ownership.mjs（87 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `hits` | 56-59 | 4 | `const hits = async (ownership) => {` |
 
 ### test/test-private-gate.mjs（72 行 · 1 个函数）
 
