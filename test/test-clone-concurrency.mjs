@@ -261,7 +261,9 @@ test('clone 失败路径：不落 .git，故不会被误判为完整仓库', () 
   const src = readFileSync(join(ROOT, 'lib/git/clone.js'), 'utf8');
   const dlIdx = src.indexOf('await downloadBlobs(');
   const failIdx = src.indexOf('if (failed.length > 0) {');
-  const gitIdx = src.indexOf("['init', '-q']");
+  // 初始化现在统一走 init-compat（本地盘内部仍是 git init，CIFS 走手工 .git 结构），
+  //   故按「是否调用初始化」判定，而不是找旧的字面量 ['init','-q']
+  const gitIdx = src.indexOf('initRepoCompat(');
   assert.ok(dlIdx > 0 && failIdx > 0 && gitIdx > 0);
   // 失败判断必须早于 git init：否则失败目录里会有 .git，下次会被当成完整仓库
   assert.ok(failIdx < gitIdx, '失败分支必须位于 git init 之前（否则保留的目录会带 .git）');

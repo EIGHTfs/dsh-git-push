@@ -1329,14 +1329,14 @@
 | `fetchToFile` | 315-397 | 83 | `async function fetchToFile({ owner, repo, branch, relPath, token, out, partPath, size, onBytes, signal = null, mode = 0o644 }) {` |
 | `mkHeaders` | 349-356 | 8 | `const mkHeaders = (raw, withRange) => {` |
 
-### lib/git/clone-history-mode.js（163 行 · 4 个函数）
+### lib/git/clone-history-mode.js（176 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `resolveBranchHead` | 28-38 | 11 | `export async function resolveBranchHead({ owner = '', repo = '', branch = '', token = '', deps = {} } = {}) {` |
-| `cloneWithHistory` | 53-88 | 36 | `export async function cloneWithHistory({` |
-| `cloneWithGitFetch` | 109-162 | 54 | `export async function cloneWithGitFetch({` |
-| `run` | 130-134 | 5 | `const run = (args) => {` |
+| `resolveBranchHead` | 29-39 | 11 | `export async function resolveBranchHead({ owner = '', repo = '', branch = '', token = '', deps = {} } = {}) {` |
+| `cloneWithHistory` | 54-89 | 36 | `export async function cloneWithHistory({` |
+| `cloneWithGitFetch` | 110-175 | 66 | `export async function cloneWithGitFetch({` |
+| `run` | 131-135 | 5 | `const run = (args) => {` |
 
 ### lib/git/clone-history.js（176 行 · 5 个函数）
 
@@ -1368,11 +1368,11 @@
 | `setPreview` | 237-245 | 9 | `export function setPreview(key, data) {` |
 | `__resetCloneJobs` | 248-250 | 3 | `export function __resetCloneJobs() {` |
 
-### lib/git/clone-replay-io.js（173 行 · 1 个函数）
+### lib/git/clone-replay-io.js（179 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `createReplayIo` | 47-172 | 126 | `export function createReplayIo({` |
+| `createReplayIo` | 48-178 | 131 | `export function createReplayIo({` |
 
 ### lib/git/clone-replay.js（276 行 · 18 个函数）
 
@@ -1397,17 +1397,17 @@
 | `localBranchRef` | 268-270 | 3 | `export function localBranchRef(branch) {` |
 | `markerJson` | 273-275 | 3 | `export function markerJson({ branch = '', replayedSha = '', at = '' } = {}) {` |
 
-### lib/git/clone.js（446 行 · 7 个函数）
+### lib/git/clone.js（452 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `isPartialCloneDir` | 48-55 | 8 | `export function isPartialCloneDir(dir) {` |
-| `resolveMaxCloneFileMB` | 68-71 | 4 | `export function resolveMaxCloneFileMB(cfg = {}) {` |
-| `enclosingGitRoot` | 88-106 | 19 | `export function enclosingGitRoot(dir) {` |
-| `cloneViaApi` | 115-344 | 230 | `export async function cloneViaApi({` |
-| `cleanupPartial` | 357-361 | 5 | `async function cleanupPartial(dir) {` |
-| `classifyCloneFailure` | 375-388 | 14 | `export function classifyCloneFailure(failed = []) {` |
-| `previewClone` | 416-445 | 30 | `export async function previewClone({ target = '', token = '', branch = '', maxFileMB = DEFAULT_MAX_FILE_MB } = {}) {` |
+| `isPartialCloneDir` | 49-56 | 8 | `export function isPartialCloneDir(dir) {` |
+| `resolveMaxCloneFileMB` | 69-72 | 4 | `export function resolveMaxCloneFileMB(cfg = {}) {` |
+| `enclosingGitRoot` | 89-107 | 19 | `export function enclosingGitRoot(dir) {` |
+| `cloneViaApi` | 116-350 | 235 | `export async function cloneViaApi({` |
+| `cleanupPartial` | 363-367 | 5 | `async function cleanupPartial(dir) {` |
+| `classifyCloneFailure` | 381-394 | 14 | `export function classifyCloneFailure(failed = []) {` |
+| `previewClone` | 422-451 | 30 | `export async function previewClone({ target = '', token = '', branch = '', maxFileMB = DEFAULT_MAX_FILE_MB } = {}) {` |
 
 ### lib/git/cloud.js（47 行 · 1 个函数）
 
@@ -1484,6 +1484,15 @@
 | `indexAsJsonText` | 168-170 | 3 | `export function indexAsJsonText(index) {` |
 | `listIndexFiles` | 173-177 | 5 | `export function listIndexFiles(dir) {` |
 | `indexDirOf` | 180-182 | 3 | `export function indexDirOf(filePath) {` |
+
+### lib/git/init-compat.js（119 行 · 4 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `fsSupportsChmod` | 37-51 | 15 | `export function fsSupportsChmod(dir) {` |
+| `writeMinimalGitDir` | 64-83 | 20 | `export function writeMinimalGitDir(dir, { branch = 'master', remoteName = 'origin', remoteUrl = '' } = {}) {` |
+| `initRepoCompat` | 97-113 | 17 | `export function initRepoCompat(dir, { branch = 'master', remoteUrl = '', chmodOk, gitInit } = {}) {` |
+| `hasGitDir` | 116-118 | 3 | `export function hasGitDir(dir) {` |
 
 ### lib/git/module-splitter.js（48 行 · 1 个函数）
 
@@ -2467,13 +2476,13 @@
 | `req` | 402-421 | 20 | `const req = (name) => {` |
 | `req` | 470-488 | 19 | `const req = (name) => {` |
 
-### test/test-clone-concurrency.mjs（456 行 · 3 个函数）
+### test/test-clone-concurrency.mjs（458 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `probe` | 129-153 | 25 | `const probe = async (useNew) => {` |
 | `writer` | 134-140 | 7 | `const writer = (async () => {` |
-| `call` | 433-433 | 1 | `const call = async (body) => (await handleHttp(` |
+| `call` | 435-435 | 1 | `const call = async (body) => (await handleHttp(` |
 
 ### test/test-clone-history-defaults.mjs（49 行 · 1 个函数）
 
@@ -2481,7 +2490,7 @@
 |------|------|------|------|
 | `read` | 16-16 | 1 | `const read = (rel) => readFileSync(join(ROOT, rel), 'utf8');` |
 
-### test/test-clone-history-mode.mjs（129 行 · 3 个函数）
+### test/test-clone-history-mode.mjs（132 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -2708,6 +2717,13 @@
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `sampleIndex` | 26-135 | 110 | `function sampleIndex() {` |
+
+### test/test-init-compat.mjs（118 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `tmpRepo` | 31-35 | 5 | `function tmpRepo() {` |
+| `git` | 38-40 | 3 | `function git(dir, args) {` |
 
 ### test/test-inject-switch.mjs（141 行 · 3 个函数）
 

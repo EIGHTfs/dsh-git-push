@@ -32,13 +32,13 @@ const fakeApi = (json) => async () => ({ ok: true, status: 200, json });
 
 test('prepare：先探测 origin，不存在才 add 真实 git URL；并显式写 core.fileMode=false', async () => {
   const { seen, runGit } = fakeGit({ hasOrigin: false });
-  const io = createReplayIo({ repoPath: '/x', gitDir: '/x/.git', owner: 'o', repo: 'r', branch: 'master', deps: { runGit } });
+  const io = createReplayIo({ repoPath: '/x', gitDir: '/x/.git', owner: 'o', repo: 'r', branch: 'master', deps: { runGit, chmodOk: true } });
   const r = await io.prepare();
   assert.equal(r.ok, true);
   assert.equal(r.fileModeSet, true);
   assert.equal(r.originSet, true);
   assert.deepEqual(seen, [
-    'init',
+    'init -q',
     'config core.fileMode false',
     'remote get-url origin',
     'remote add origin https://github.com/o/r.git',
@@ -47,7 +47,7 @@ test('prepare：先探测 origin，不存在才 add 真实 git URL；并显式�
 
 test('prepare：已有 origin 时不得再 remote add（避免失败或覆盖）', async () => {
   const { seen, runGit } = fakeGit({ hasOrigin: true });
-  const io = createReplayIo({ repoPath: '/x', gitDir: '/x/.git', owner: 'o', repo: 'r', branch: 'master', deps: { runGit } });
+  const io = createReplayIo({ repoPath: '/x', gitDir: '/x/.git', owner: 'o', repo: 'r', branch: 'master', deps: { runGit, chmodOk: true } });
   await io.prepare();
   assert.equal(seen.some((l) => l.startsWith('remote add')), false);
 });
@@ -72,7 +72,7 @@ test('fetchTreeEntries：转发 API 并交给 blobEntriesOf；树被截断时如
 
 test('commit：命令序列为 add -A → write-tree → commit-tree（父按顺序逐个 -p）', async () => {
   const { seen, runGit } = fakeGit();
-  const io = createReplayIo({ repoPath: '/x', gitDir: '/x/.git', owner: 'o', repo: 'r', branch: 'master', deps: { runGit } });
+  const io = createReplayIo({ repoPath: '/x', gitDir: '/x/.git', owner: 'o', repo: 'r', branch: 'master', deps: { runGit, chmodOk: true } });
   const r = await io.commit({ env: { GIT_AUTHOR_NAME: 'A' }, message: 'm', parentShas: ['p1', 'p2'] });
   assert.equal(r.ok, true);
   assert.equal(r.sha, 'SHA1');
@@ -81,7 +81,7 @@ test('commit：命令序列为 add -A → write-tree → commit-tree（父按顺
 
 test('commit：write-tree 失败时如实报错，不发 commit-tree', async () => {
   const { seen, runGit } = fakeGit({ failAt: 'write-tree' });
-  const io = createReplayIo({ repoPath: '/x', gitDir: '/x/.git', owner: 'o', repo: 'r', branch: 'master', deps: { runGit } });
+  const io = createReplayIo({ repoPath: '/x', gitDir: '/x/.git', owner: 'o', repo: 'r', branch: 'master', deps: { runGit, chmodOk: true } });
   const r = await io.commit({ message: 'm' });
   assert.equal(r.ok, false);
   assert.match(r.error, /write-tree/);
@@ -142,7 +142,7 @@ test('标记读写：真实 .git 目录下写入后可读回；损坏 JSON 当�
 
 test('finish：把分支与远端跟踪引用指到重放结果并设上游；分支引用失败则 ok:false', async () => {
   const { seen, runGit } = fakeGit();
-  const io = createReplayIo({ repoPath: '/x', gitDir: '/x/.git', owner: 'o', repo: 'r', branch: 'master', deps: { runGit } });
+  const io = createReplayIo({ repoPath: '/x', gitDir: '/x/.git', owner: 'o', repo: 'r', branch: 'master', deps: { runGit, chmodOk: true } });
   const r = await io.finish({ headSha: 'SHA1' });
   assert.equal(r.ok, true);
   assert.deepEqual(seen, [

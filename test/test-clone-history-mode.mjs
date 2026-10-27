@@ -64,6 +64,7 @@ test('cloneWithHistory：完整流水线（拉链 → 准备 → 重放 → 收�
     deps: {
       githubFetch: fakeApi({ headSha: 'b', trees: TREES, commits: COMMITS }),
       runGit,
+      chmodOk: true, // 假 git 不需要真目录；固定走标准 init 分支（chmod 能力与断言无关）
       downloadBlobs: async (o2) => { refs.push(o2.branch); return { files: o2.blobs.length, failed: [], modePreserved: true }; },
     },
   });
@@ -75,7 +76,7 @@ test('cloneWithHistory：完整流水线（拉链 → 准备 → 重放 → 收�
   //   否则会拿到 HEAD 版本（长度不符 + 中间提交被写成 HEAD 的样子，sha 保真失效）
   assert.deepEqual(refs, ['a', 'b']);
   // 编排顺序：init/config/remote → 下载 → 提交 → 收尾挂引用
-  assert.equal(seen[0], 'init');
+  assert.equal(seen[0], 'init -q');
   assert.equal(seen[1], 'config core.fileMode false');
   assert.equal(seen.includes('add -A -f'), true);   // -f：重建远端树时不遵守 .gitignore
   assert.deepEqual(seen.slice(-3), [
@@ -104,6 +105,7 @@ test('cloneWithHistory：下载失败时中断并如实回报已重放条数', a
     deps: {
       githubFetch: fakeApi({ headSha: 'b', trees: TREES, commits: COMMITS }),
       runGit,
+      chmodOk: true, // 假 git 不需要真目录；固定走标准 init 分支（chmod 能力与断言无关）
       downloadBlobs: async () => { call += 1; return call === 2 ? { files: 0, failed: [{ path: 'f2', reason: 'HTTP 500' }], modePreserved: true } : { files: 1, failed: [], modePreserved: true }; },
     },
   });
@@ -119,6 +121,7 @@ test('cloneWithHistory：depth 截断信息透传（大仓可控）', async () =
     deps: {
       githubFetch: fakeApi({ headSha: 'b', trees: TREES, commits: COMMITS }),
       runGit: fakeGit().runGit,
+      chmodOk: true,
       downloadBlobs: async (o2) => ({ files: o2.blobs.length, failed: [], modePreserved: true }),
     },
   });
