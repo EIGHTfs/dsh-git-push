@@ -400,34 +400,64 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
+      "docs/2026-10-28-弃零依赖引入npm与AST优先规则方案.MD": {
+        "status": "M",
+        "mtime": "2026-10-28T17:27:35.546Z",
+        "note": "注释可能需更新"
+      },
       "docs/CHANGELOG.md": {
         "status": "M",
-        "mtime": "2026-10-28T16:11:43.265Z",
+        "mtime": "2026-10-28T17:28:23.596Z",
+        "note": "注释可能需更新"
+      },
+      "docs/FILE-TREE.md": {
+        "status": "M",
+        "mtime": "2026-10-28T17:27:35.786Z",
         "note": "注释可能需更新"
       },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-28T16:11:43.753Z",
+        "mtime": "2026-10-28T17:28:24.276Z",
         "note": "注释可能需更新"
       },
       "docs/releases.json": {
         "status": "M",
-        "mtime": "2026-10-28T16:11:43.093Z",
+        "mtime": "2026-10-28T17:28:23.379Z",
         "note": "注释可能需更新"
       },
       "lib/ast/treesitter.js": {
         "status": "M",
-        "mtime": "2026-10-28T16:07:24.727Z",
+        "mtime": "2026-10-28T16:30:40.608Z",
+        "note": "注释可能需更新"
+      },
+      "lib/audit/collector.js": {
+        "status": "M",
+        "mtime": "2026-10-28T17:21:49.771Z",
+        "note": "注释可能需更新"
+      },
+      "lib/audit/finding.js": {
+        "status": "M",
+        "mtime": "2026-10-28T17:02:39.028Z",
         "note": "注释可能需更新"
       },
       "lib/self/index.js": {
         "status": "M",
-        "mtime": "2026-10-28T16:11:43.089Z",
+        "mtime": "2026-10-28T17:28:23.376Z",
         "note": "注释可能需更新"
       },
       "package.json": {
         "status": "M",
-        "mtime": "2026-10-28T16:11:43.087Z",
+        "mtime": "2026-10-28T17:28:23.374Z",
+        "note": "注释可能需更新"
+      },
+      "docs/2026-10-29-多语言AST接通实测记录.MD": {
+        "status": "A",
+        "mtime": "2026-10-28T17:04:00.317Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-treesitter-grammars.mjs": {
+        "status": "A",
+        "mtime": "2026-10-28T16:59:24.893Z",
         "note": "注释可能需更新"
       }
     }
@@ -542,5 +572,7 @@
   "docs/FILE-TREE.md": "（待注释）",
   "docs/2026-10-28-弃零依赖引入npm与AST优先规则方案.MD": "弃零依赖引入 npm 与 AST 优先规则：决策清单、实测证据、里程碑与新增语言/规则的长期流程",
   "package-lock.json": "依赖锁文件（npm install --no-bin-links 生成，保证依赖版本与 tree-sitter ABI 配对）",
-  "scripts/version-source.mjs": "（待注释）"
+  "scripts/version-source.mjs": "（待注释）",
+  "docs/2026-10-29-多语言AST接通实测记录.MD": "M2 多语言 AST 接通的改前/改后命中实测：C# 进管道的文件与命中变化、六槽位三档计数（正则初筛/token 级/语法树）与 M3 取舍输入",
+  "test/test-treesitter-grammars.mjs": "多语言 AST 接通自检：语法映射与 wasms 包实存核对、每语言 0 ERROR 解析、注释与带引号原始字符串的精筛、以及无语法资产时的回退契约（D5）"
 }

@@ -578,23 +578,23 @@
 | `consumeTemplate` | 302-313 | 12 | `function consumeTemplate(src, i, n, push) {` |
 | `consumeRegex` | 316-321 | 6 | `function consumeRegex(src, i, n, tokens, push) { // dsh-skip-complexity: 正则状态机（转义/字符组/闭包三态，天然多分支）` |
 
-### lib/ast/treesitter.js（265 行 · 13 个函数）
+### lib/ast/treesitter.js（281 行 · 13 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `resolveDirs` | 46-64 | 19 | `function resolveDirs() {` |
 | `pick` | 48-50 | 3 | `const pick = (spec) => {` |
-| `treesitterAvailable` | 86-94 | 9 | `export function treesitterAvailable() {` |
-| `availableGrammars` | 97-107 | 11 | `export function availableGrammars() {` |
-| `grammarForExt` | 110-113 | 4 | `export function grammarForExt(ext = '') {` |
-| `loadModule` | 118-131 | 14 | `async function loadModule() {` |
-| `ensureInit` | 134-147 | 14 | `async function ensureInit() {` |
-| `getParser` | 150-171 | 22 | `async function getParser(grammar) {` |
-| `parseText` | 174-190 | 17 | `export async function parseText(text, grammar) {` |
-| `isOpaqueNode` | 193-200 | 8 | `export function isOpaqueNode(node) {` |
-| `confirmHits` | 210-229 | 20 | `export async function confirmHits({ text, ext = '', grammar = '', hits = [] } = {}) {` |
-| `makeSyncConfirmer` | 241-256 | 16 | `export function makeSyncConfirmer(tree) {` |
-| `resetTreeSitterCache` | 259-264 | 6 | `export function resetTreeSitterCache() {  modPromise = null;` |
+| `treesitterAvailable` | 102-110 | 9 | `export function treesitterAvailable() {` |
+| `availableGrammars` | 113-123 | 11 | `export function availableGrammars() {` |
+| `grammarForExt` | 126-129 | 4 | `export function grammarForExt(ext = '') {` |
+| `loadModule` | 134-147 | 14 | `async function loadModule() {` |
+| `ensureInit` | 150-163 | 14 | `async function ensureInit() {` |
+| `getParser` | 166-187 | 22 | `async function getParser(grammar) {` |
+| `parseText` | 190-206 | 17 | `export async function parseText(text, grammar) {` |
+| `isOpaqueNode` | 209-216 | 8 | `export function isOpaqueNode(node) {` |
+| `confirmHits` | 226-245 | 20 | `export async function confirmHits({ text, ext = '', grammar = '', hits = [] } = {}) {` |
+| `makeSyncConfirmer` | 257-272 | 16 | `export function makeSyncConfirmer(tree) {` |
+| `resetTreeSitterCache` | 275-280 | 6 | `export function resetTreeSitterCache() {  modPromise = null;` |
 
 ### lib/audit/analysis-coverage.js（99 行 · 5 个函数）
 
@@ -623,28 +623,28 @@
 | `pick` | 40-48 | 9 | `const pick = (v) => {` |
 | `resolveDshClientFragments` | 70-93 | 24 | `export function resolveDshClientFragments(repoRoot) {` |
 
-### lib/audit/collector.js（490 行 · 18 个函数）
+### lib/audit/collector.js（498 行 · 18 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `readIgnoreFileCached` | 60-66 | 7 | `function readIgnoreFileCached(p) {` |
-| `isGitWorkTree` | 79-90 | 12 | `function isGitWorkTree(dir) {` |
-| `tryLoadAuditIgnoreFallback` | 106-156 | 51 | `function tryLoadAuditIgnoreFallback(root, respectAuditIgnore = true) {` |
-| `handleEntry` | 135-148 | 14 | `const handleEntry = (dir, en) => {` |
-| `walkDirs` | 149-153 | 5 | `const walkDirs = (dir) => {` |
-| `tryLoadGitIgnoreSet` | 168-265 | 98 | `function tryLoadGitIgnoreSet(root, respectAuditIgnore = true) {` |
-| `walkDirs` | 209-224 | 16 | `const walkDirs = (dir) => {` |
-| `isHardSkipped` | 274-276 | 3 | `function isHardSkipped(name) {` |
-| `computeGitIgnored` | 279-284 | 6 | `function computeGitIgnored(full, gitIgnoreRoot, includeIgnored, respectAuditIgnore = true) {` |
-| `shouldSkipDirByYml` | 287-291 | 5 | `function shouldSkipDirByYml(name, ignoredByGit, gitIgnoreRoot) {` |
-| `isFileGitIgnored` | 294-305 | 12 | `function isFileGitIgnored(full, gitIgnoreRoot, includeIgnored, respectAuditIgnore = true) {` |
-| `collectTextFiles` | 307-366 | 60 | `export async function collectTextFiles(dir, { depth = 10, gitIgnoreRoot = null, includeIgnored = false, testExemptRoot = null, respectAuditIgnore = true } = {}) {` |
-| `walk` | 329-365 | 37 | `async function walk(cur, level) {` |
-| `isGitRepo` | 369-371 | 3 | `export function isGitRepo(dir) {` |
-| `collectChangedFiles` | 379-436 | 58 | `export function collectChangedFiles(repoPath) {` |
-| `isTextFile` | 439-457 | 19 | `export function isTextFile(full) {` |
-| `clearReadCache` | 471-474 | 4 | `export function clearReadCache() {` |
-| `readText` | 477-490 | 14 | `export function readText(full) {` |
+| `readIgnoreFileCached` | 68-74 | 7 | `function readIgnoreFileCached(p) {` |
+| `isGitWorkTree` | 87-98 | 12 | `function isGitWorkTree(dir) {` |
+| `tryLoadAuditIgnoreFallback` | 114-164 | 51 | `function tryLoadAuditIgnoreFallback(root, respectAuditIgnore = true) {` |
+| `handleEntry` | 143-156 | 14 | `const handleEntry = (dir, en) => {` |
+| `walkDirs` | 157-161 | 5 | `const walkDirs = (dir) => {` |
+| `tryLoadGitIgnoreSet` | 176-273 | 98 | `function tryLoadGitIgnoreSet(root, respectAuditIgnore = true) {` |
+| `walkDirs` | 217-232 | 16 | `const walkDirs = (dir) => {` |
+| `isHardSkipped` | 282-284 | 3 | `function isHardSkipped(name) {` |
+| `computeGitIgnored` | 287-292 | 6 | `function computeGitIgnored(full, gitIgnoreRoot, includeIgnored, respectAuditIgnore = true) {` |
+| `shouldSkipDirByYml` | 295-299 | 5 | `function shouldSkipDirByYml(name, ignoredByGit, gitIgnoreRoot) {` |
+| `isFileGitIgnored` | 302-313 | 12 | `function isFileGitIgnored(full, gitIgnoreRoot, includeIgnored, respectAuditIgnore = true) {` |
+| `collectTextFiles` | 315-374 | 60 | `export async function collectTextFiles(dir, { depth = 10, gitIgnoreRoot = null, includeIgnored = false, testExemptRoot = null, respectAuditIgnore = true } = {}) {` |
+| `walk` | 337-373 | 37 | `async function walk(cur, level) {` |
+| `isGitRepo` | 377-379 | 3 | `export function isGitRepo(dir) {` |
+| `collectChangedFiles` | 387-444 | 58 | `export function collectChangedFiles(repoPath) {` |
+| `isTextFile` | 447-465 | 19 | `export function isTextFile(full) {` |
+| `clearReadCache` | 479-482 | 4 | `export function clearReadCache() {` |
+| `readText` | 485-498 | 14 | `export function readText(full) {` |
 
 ### lib/audit/ext-runner.js（80 行 · 2 个函数）
 
@@ -667,7 +667,7 @@
 | `detectRepoJsYamlImport` | 199-208 | 10 | `export function detectRepoJsYamlImport(files) {` |
 | `isVersionInPathContext` | 221-227 | 7 | `export function isVersionInPathContext(line) {` |
 
-### lib/audit/finding.js（94 行 · 5 个函数）
+### lib/audit/finding.js（101 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -2942,6 +2942,16 @@
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `makeReadme` | 41-43 | 3 | `function makeReadme(tree) {` |
+
+### test/test-treesitter-grammars.mjs（241 行 · 5 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `countBrokenNodes` | 124-133 | 10 | `function countBrokenNodes(tree) {` |
+| `walk` | 126-130 | 5 | `const walk = (node) => {` |
+| `textOf` | 135-135 | 1 | `const textOf = (c) => c.lines.join('\n');` |
+| `makeRepo` | 200-207 | 8 | `function makeRepo(files) {` |
+| `auditRuleHits` | 210-223 | 14 | `function auditRuleHits(repo, rule) {` |
 
 ### test/test-treesitter.mjs（94 行 · 3 个函数）
 
