@@ -436,6 +436,7 @@ dsh-git-push/
 │   ├── 2026-10-11-硬编码路径改造为审计引擎方案.MD — （待注释）
 │   ├── 2026-10-13-UI账号信息-NPM对齐GitHub方案.MD — （待注释）
 │   ├── 2026-10-13-UI账号信息-NPM账号卡片与三标签页.MD — （待注释）
+│   ├── 2026-10-28-弃零依赖引入npm与AST优先规则方案.MD — 弃零依赖引入 npm 与 AST 优先规则：决策清单、实测证据、里程碑与新增语言/规则的长期流程
 │   ├── CHANGELOG.md — 版本列表宿主（doc-version apply 写 dshgp-version 标记块）
 │   ├── DETAILS-EXEMPT-AND-RULES.md — 细节补充：豁免注释与规则 yml 用法全录
 │   ├── FILE-TREE.md — （待注释）

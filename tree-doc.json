@@ -405,24 +405,9 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "README.md": {
-        "status": "M",
-        "mtime": "2026-10-28T10:12:50.012Z",
-        "note": "注释可能需更新"
-      },
-      "docs/FUNCTIONS.md": {
-        "status": "M",
-        "mtime": "2026-10-28T10:14:27.287Z",
-        "note": "注释可能需更新"
-      },
-      "scripts/doc-tree.mjs": {
-        "status": "M",
-        "mtime": "2026-10-28T10:14:18.910Z",
-        "note": "注释可能需更新"
-      },
-      "docs/FILE-TREE.md": {
+      "docs/2026-10-28-弃零依赖引入npm与AST优先规则方案.MD": {
         "status": "A",
-        "mtime": "2026-10-28T10:12:13.684Z",
+        "mtime": "2026-10-28T15:26:28.276Z",
         "note": "注释可能需更新"
       }
     }
@@ -534,5 +519,6 @@
   "scripts/bump-version.mjs": "（待注释）",
   "test/test-privacy-ownership.mjs": "（待注释）",
   "lib/app/repo-ownership.js": "（待注释）",
-  "docs/FILE-TREE.md": "（待注释）"
+  "docs/FILE-TREE.md": "（待注释）",
+  "docs/2026-10-28-弃零依赖引入npm与AST优先规则方案.MD": "弃零依赖引入 npm 与 AST 优先规则：决策清单、实测证据、里程碑与新增语言/规则的长期流程"
 }
