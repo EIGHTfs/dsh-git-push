@@ -578,23 +578,23 @@
 | `consumeTemplate` | 302-313 | 12 | `function consumeTemplate(src, i, n, push) {` |
 | `consumeRegex` | 316-321 | 6 | `function consumeRegex(src, i, n, tokens, push) { // dsh-skip-complexity: 正则状态机（转义/字符组/闭包三态，天然多分支）` |
 
-### lib/ast/treesitter.js（250 行 · 13 个函数）
+### lib/ast/treesitter.js（265 行 · 13 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `resolveDirs` | 46-56 | 11 | `function resolveDirs() {` |
+| `resolveDirs` | 46-64 | 19 | `function resolveDirs() {` |
 | `pick` | 48-50 | 3 | `const pick = (spec) => {` |
-| `treesitterAvailable` | 78-86 | 9 | `export function treesitterAvailable() {` |
-| `availableGrammars` | 89-99 | 11 | `export function availableGrammars() {` |
-| `grammarForExt` | 102-105 | 4 | `export function grammarForExt(ext = '') {` |
-| `loadModule` | 110-116 | 7 | `async function loadModule() {` |
-| `ensureInit` | 119-132 | 14 | `async function ensureInit() {` |
-| `getParser` | 135-156 | 22 | `async function getParser(grammar) {` |
-| `parseText` | 159-175 | 17 | `export async function parseText(text, grammar) {` |
-| `isOpaqueNode` | 178-185 | 8 | `export function isOpaqueNode(node) {` |
-| `confirmHits` | 195-214 | 20 | `export async function confirmHits({ text, ext = '', grammar = '', hits = [] } = {}) {` |
-| `makeSyncConfirmer` | 226-241 | 16 | `export function makeSyncConfirmer(tree) {` |
-| `resetTreeSitterCache` | 244-249 | 6 | `export function resetTreeSitterCache() {  modPromise = null;` |
+| `treesitterAvailable` | 86-94 | 9 | `export function treesitterAvailable() {` |
+| `availableGrammars` | 97-107 | 11 | `export function availableGrammars() {` |
+| `grammarForExt` | 110-113 | 4 | `export function grammarForExt(ext = '') {` |
+| `loadModule` | 118-131 | 14 | `async function loadModule() {` |
+| `ensureInit` | 134-147 | 14 | `async function ensureInit() {` |
+| `getParser` | 150-171 | 22 | `async function getParser(grammar) {` |
+| `parseText` | 174-190 | 17 | `export async function parseText(text, grammar) {` |
+| `isOpaqueNode` | 193-200 | 8 | `export function isOpaqueNode(node) {` |
+| `confirmHits` | 210-229 | 20 | `export async function confirmHits({ text, ext = '', grammar = '', hits = [] } = {}) {` |
+| `makeSyncConfirmer` | 241-256 | 16 | `export function makeSyncConfirmer(tree) {` |
+| `resetTreeSitterCache` | 259-264 | 6 | `export function resetTreeSitterCache() {  modPromise = null;` |
 
 ### lib/audit/analysis-coverage.js（99 行 · 5 个函数）
 

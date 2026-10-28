@@ -402,152 +402,32 @@
     "worktree": {
       "docs/CHANGELOG.md": {
         "status": "M",
-        "mtime": "2026-10-28T16:04:47.743Z",
-        "note": "注释可能需更新"
-      },
-      "docs/FILE-TREE.md": {
-        "status": "M",
-        "mtime": "2026-10-28T15:59:48.143Z",
+        "mtime": "2026-10-28T16:11:43.265Z",
         "note": "注释可能需更新"
       },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-28T16:04:48.883Z",
+        "mtime": "2026-10-28T16:11:43.753Z",
         "note": "注释可能需更新"
       },
       "docs/releases.json": {
         "status": "M",
-        "mtime": "2026-10-28T16:04:47.498Z",
-        "note": "注释可能需更新"
-      },
-      "lib/app/inject-text.js": {
-        "status": "M",
-        "mtime": "2026-10-28T15:58:56.980Z",
-        "note": "注释可能需更新"
-      },
-      "lib/app/tool-call.js": {
-        "status": "M",
-        "mtime": "2026-10-28T15:58:56.984Z",
-        "note": "注释可能需更新"
-      },
-      "lib/ast/io-risk-loop.js": {
-        "status": "M",
-        "mtime": "2026-10-28T15:59:23.409Z",
+        "mtime": "2026-10-28T16:11:43.093Z",
         "note": "注释可能需更新"
       },
       "lib/ast/treesitter.js": {
         "status": "M",
-        "mtime": "2026-10-28T15:42:18.967Z",
-        "note": "注释可能需更新"
-      },
-      "lib/audit-rules/audit-rules-comment.yml": {
-        "status": "M",
-        "mtime": "2026-10-28T15:51:17.485Z",
-        "note": "注释可能需更新"
-      },
-      "lib/audit-rules/audit-rules-structure.yml": {
-        "status": "M",
-        "mtime": "2026-10-28T15:59:37.320Z",
-        "note": "注释可能需更新"
-      },
-      "lib/audit/report-yaml.js": {
-        "status": "M",
-        "mtime": "2026-10-28T15:38:39.643Z",
-        "note": "注释可能需更新"
-      },
-      "lib/git/push.js": {
-        "status": "M",
-        "mtime": "2026-10-28T15:59:37.323Z",
-        "note": "注释可能需更新"
-      },
-      "lib/readme-templates/readme.yml": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "lib/rule/loader.js": {
-        "status": "M",
-        "mtime": "2026-10-28T15:38:39.640Z",
+        "mtime": "2026-10-28T16:07:24.727Z",
         "note": "注释可能需更新"
       },
       "lib/self/index.js": {
         "status": "M",
-        "mtime": "2026-10-28T16:04:47.495Z",
-        "note": "注释可能需更新"
-      },
-      "lib/skip-dirs.js": {
-        "status": "M",
-        "mtime": "2026-10-28T15:51:31.628Z",
+        "mtime": "2026-10-28T16:11:43.089Z",
         "note": "注释可能需更新"
       },
       "package.json": {
         "status": "M",
-        "mtime": "2026-10-28T16:04:47.478Z",
-        "note": "注释可能需更新"
-      },
-      "scripts/doc-version.mjs": {
-        "status": "M",
-        "mtime": "2026-10-28T15:58:56.947Z",
-        "note": "注释可能需更新"
-      },
-      "scripts/readme-gen.mjs": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "scripts/scrub-user-wording.mjs": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "skills/dev/dsh-git-push.md": {
-        "status": "M",
-        "mtime": "2026-10-28T15:59:22.326Z",
-        "note": "注释可能需更新"
-      },
-      "skills/guide/guide-cli-scripts.md": {
-        "status": "M",
-        "mtime": "2026-10-28T15:59:22.329Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-doc-version.mjs": {
-        "status": "M",
-        "mtime": "2026-10-28T15:59:23.414Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-plugin.mjs": {
-        "status": "M",
-        "mtime": "2026-10-28T15:58:56.990Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-readme-gen.mjs": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "test/test-rule-packs.mjs": {
-        "status": "M",
-        "mtime": "2026-10-28T15:51:25.094Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-scrub-conv-wording.mjs": {
-        "status": "M",
-        "mtime": "2026-10-28T15:58:56.975Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-version-metrics.mjs": {
-        "status": "M",
-        "mtime": "2026-10-28T15:58:56.951Z",
-        "note": "注释可能需更新"
-      },
-      "package-lock.json": {
-        "status": "A",
-        "mtime": "2026-10-28T15:35:29.449Z",
-        "note": "注释可能需更新"
-      },
-      "scripts/version-source.mjs": {
-        "status": "A",
-        "mtime": "2026-10-28T15:58:40.550Z",
+        "mtime": "2026-10-28T16:11:43.087Z",
         "note": "注释可能需更新"
       }
     }
