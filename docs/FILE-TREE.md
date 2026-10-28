@@ -83,6 +83,7 @@ dsh-git-push/
 │   ├── audit-rules/ — 规则包 yml（nodejs/npm/frontend/comment/dsh/private/structure 等动态槽位）
 │   │   ├── audit-rules-comment.yml — 注释类规则（黑名单措辞/对话残留）（规则包 comment）
 │   │   ├── audit-rules-cpp.yml — C/C++ 规则包（占位：规则待补，槽位就绪）（规则包 cpp）
+│   │   ├── audit-rules-csharp.yml — （待注释）
 │   │   ├── audit-rules-docs.yml — 文档类规则（README/文档措辞）（规则包 docs）
 │   │   ├── audit-rules-dsh.yml — DSH 生态规则（宿主/插件约定）（规则包 dsh）
 │   │   ├── audit-rules-filehealth.yml — 文件健康度规则（三维分级）（规则包 filehealth）
@@ -291,6 +292,7 @@ dsh-git-push/
 │   ├── test-audit-git-boundary.mjs — （待注释）
 │   ├── test-audit-npm-publish-rules.mjs — （待注释）
 │   ├── test-audit-push-boundary.mjs — （待注释）
+│   ├── test-audit-rules-csharp.mjs — （待注释）
 │   ├── test-audit-scope.mjs — 审计作用域/凭据占位符回归测试
 │   ├── test-audit-slot-order.mjs — （待注释）
 │   ├── test-audit.mjs — 审计总入口测试（auditFull/changed/豁免/gitignore）

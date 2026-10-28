@@ -400,44 +400,59 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
+      "docs/2026-10-29-多语言AST接通实测记录.MD": {
+        "status": "M",
+        "mtime": "2026-10-28T18:10:12.739Z",
+        "note": "注释可能需更新"
+      },
       "docs/CHANGELOG.md": {
         "status": "M",
-        "mtime": "2026-10-28T18:04:06.413Z",
+        "mtime": "2026-10-28T18:23:35.016Z",
         "note": "注释可能需更新"
       },
       "docs/FILE-TREE.md": {
         "status": "M",
-        "mtime": "2026-10-28T17:56:12.077Z",
+        "mtime": "2026-10-28T18:10:14.243Z",
         "note": "注释可能需更新"
       },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-28T18:04:07.027Z",
+        "mtime": "2026-10-28T18:23:35.544Z",
+        "note": "注释可能需更新"
+      },
+      "docs/SPEC.md": {
+        "status": "M",
+        "mtime": "2026-10-28T18:17:10.309Z",
         "note": "注释可能需更新"
       },
       "docs/releases.json": {
         "status": "M",
-        "mtime": "2026-10-28T18:04:05.593Z",
+        "mtime": "2026-10-28T18:23:34.813Z",
         "note": "注释可能需更新"
       },
-      "lib/ast/tokenizer.js": {
+      "docs/功能-审计规则体系.md": {
         "status": "M",
-        "mtime": "2026-10-28T17:56:05.146Z",
+        "mtime": "2026-10-28T18:17:10.319Z",
         "note": "注释可能需更新"
       },
       "lib/self/index.js": {
         "status": "M",
-        "mtime": "2026-10-28T18:04:05.590Z",
+        "mtime": "2026-10-28T18:23:34.808Z",
         "note": "注释可能需更新"
       },
       "package.json": {
         "status": "M",
-        "mtime": "2026-10-28T18:04:05.584Z",
+        "mtime": "2026-10-28T18:23:34.805Z",
         "note": "注释可能需更新"
       },
-      "test/test-repeated-strings-cs.mjs": {
+      "lib/audit-rules/audit-rules-csharp.yml": {
         "status": "A",
-        "mtime": "2026-10-28T17:55:59.878Z",
+        "mtime": "2026-10-28T18:09:11.437Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-audit-rules-csharp.mjs": {
+        "status": "A",
+        "mtime": "2026-10-28T18:08:55.977Z",
         "note": "注释可能需更新"
       }
     }
@@ -555,5 +570,7 @@
   "scripts/version-source.mjs": "（待注释）",
   "docs/2026-10-29-多语言AST接通实测记录.MD": "M2 多语言 AST 接通的改前/改后命中实测：C# 进管道的文件与命中变化、六槽位三档计数（正则初筛/token 级/语法树）与 M3 取舍输入",
   "test/test-treesitter-grammars.mjs": "多语言 AST 接通自检：语法映射与 wasms 包实存核对、每语言 0 ERROR 解析、注释与带引号原始字符串的精筛、以及无语法资产时的回退契约（D5）",
-  "test/test-repeated-strings-cs.mjs": "（待注释）"
+  "test/test-repeated-strings-cs.mjs": "（待注释）",
+  "lib/audit-rules/audit-rules-csharp.yml": "（待注释）",
+  "test/test-audit-rules-csharp.mjs": "（待注释）"
 }

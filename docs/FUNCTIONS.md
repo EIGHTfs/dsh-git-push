@@ -2432,6 +2432,13 @@
 | `makeRepo` | 31-41 | 11 | `function makeRepo() {` |
 | `stageBlocker` | 47-54 | 8 | `function stageBlocker(dir) {` |
 
+### test/test-audit-rules-csharp.mjs（125 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `makeRepo` | 21-28 | 8 | `function makeRepo(files) {` |
+| `auditCsharp` | 31-39 | 9 | `async function auditCsharp(repo) {` |
+
 ### test/test-audit-slot-order.mjs（56 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |

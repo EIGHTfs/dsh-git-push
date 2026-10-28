@@ -1,0 +1,82 @@
+# ============================================================
+# C# 代码审计规则集（首版 · 语言专项）
+# 版本：0.1.0
+# 适用：C# 项目（.cs）
+# 描述：本槽位首版规则。选型依据是真实 C# 语料上的**两档计数**（正则初筛命中 / 精筛后命中），
+#       只收「精筛后仍是真命中且形态可静态确认」的项；靠正则数量堆砌的候选一律不收。
+#       未收清单与理由见 docs/2026-10-29-多语言AST接通实测记录.MD「M3-B 收规则与不收清单」。
+# 口径：exts 只认 .cs；astConfirm 走 token 级行列判定（注释/字符串里的同名文本不算代码）。
+# ============================================================
+
+metadata:
+  name: "C# 审计规则集（首版 · 语言专项）"
+  version: "0.1.0"
+  language: "csharp"
+  author: "DeepSeek"
+  description: "C# 项目语言专用规则（首版：throw ex / 抛通用 Exception / 显式 GC.Collect / lock(this|typeof)）"
+  last_updated: "2026-10-29"
+
+rules:
+  # ----- 1. 健壮性 -----
+
+  - id: csharp/throw-ex
+    name: "C# 重抛异常不要用 throw ex"
+    category: "robustness"
+    severity: "warning"
+    dimensions: ["健壮性"]
+    description: "`throw ex;` 会把异常栈重置到当前行，原始抛出点丢失；应写 `throw;` 保留栈，或包成带 innerException 的新异常"
+    # astConfirm + astConfirmSpan：行级 + **列级**双重判定。
+    #   只写 astConfirm 时按「行」判，`const string S = "throw ex;";` 这种行仍是代码行 ⇒ 字符串里的文本会被报出来；
+    #   加 astConfirmSpan 后按命中列判（有语法树时用 c_sharp 树，无树时回退 token 列级），才算真排除。
+    astConfirm: true
+    astConfirmSpan: true
+    patterns:
+      - "\\bthrow\\s+[A-Za-z_]\\w*\\s*;"
+    exts: ["cs"]
+    exclude_paths:
+      - "test/"
+      - "tests/"
+      - "examples/"
+      - "example/"
+    fixable: false
+
+  - id: csharp/generic-exception
+    name: "C# 不要抛通用 Exception"
+    category: "robustness"
+    severity: "warning"
+    dimensions: ["健壮性"]
+    description: "抛 `System.Exception` 让调用方无法按类型区分处置，且容易与框架异常混淆；应抛具体异常类型（ArgumentException/InvalidOperationException 或自定义异常）"
+    # 只匹配直接 new 通用 Exception 的形态：new ArgumentException(...) 等子类不在命中范围
+    # astConfirmSpan：同 throw-ex，字符串/注释里的示例文本按列级排除
+    astConfirm: true
+    astConfirmSpan: true
+    patterns:
+      - "throw\\s+new\\s+(?:System\\s*\\.\\s*)?Exception\\s*\\("
+    exts: ["cs"]
+    exclude_paths:
+      - "test/"
+      - "tests/"
+      - "examples/"
+      - "example/"
+    fixable: false
+
+  # ----- 3. 并发安全 -----
+
+  - id: csharp/lock-on-self-or-type
+    name: "C# 不要在 this / typeof(T) 上加锁"
+    category: "robustness"
+    severity: "warning"
+    dimensions: ["健壮性"]
+    description: "锁 this 或 typeof(T) 会和外部代码共享同一把锁（外部也能锁同一个对象/类型），易造成死锁与不可控争用；应使用私有 readonly 锁对象"
+    astConfirm: true
+    astConfirmSpan: true
+    patterns:
+      - "lock\\s*\\(\\s*this\\s*\\)"
+      - "lock\\s*\\(\\s*typeof\\s*\\("
+    exts: ["cs"]
+    exclude_paths:
+      - "test/"
+      - "tests/"
+      - "examples/"
+      - "example/"
+    fixable: false
