@@ -392,6 +392,7 @@ dsh-git-push/
 │   ├── test-remote-name-ascii.mjs — （待注释）
 │   ├── test-remote-resolve.mjs — （待注释）
 │   ├── test-rename-locator.mjs — rename-locator 测试（同名不同作用域分组/模块级/过滤）
+│   ├── test-repeated-strings-cs.mjs — （待注释）
 │   ├── test-repo-list.mjs — 仓库列表测试（本地扫描/索引读写/HTTP 端点/远端状态）
 │   ├── test-repos-live-budget.mjs — （待注释）
 │   ├── test-rule-include-paths.mjs — （待注释）

@@ -560,23 +560,24 @@
 | `unusedExportCandidates` | 377-391 | 15 | `export function unusedExportCandidates(index) {` |
 | `indexSummary` | 394-399 | 6 | `export function indexSummary(index) {` |
 
-### lib/ast/tokenizer.js（347 行 · 13 个函数）
+### lib/ast/tokenizer.js（422 行 · 14 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `tokenize` | 49-70 | 22 | `export function tokenize(text = '') {` |
 | `clearTokenCache` | 73-76 | 4 | `export function clearTokenCache() {` |
-| `tokenizeUncached` | 83-192 | 110 | `function tokenizeUncached(text = '') {` |
-| `MULTI_OPS_BY_FIRST` | 204-212 | 9 | `const MULTI_OPS_BY_FIRST = (() => {` |
-| `isCjkChar` | 229-229 | 1 | `const isCjkChar = (c) => c >= 0x4e00 && c <= 0x9fa5;` |
-| `isIdentStartCode` | 231-231 | 1 | `const isIdentStartCode = (c) => (c < 128 ? ID_START_ASCII[c] === 1 : isCjkChar(c));` |
-| `isIdentPartCode` | 233-233 | 1 | `const isIdentPartCode = (c) => (c < 128 ? ID_PART_ASCII[c] === 1 : isCjkChar(c));` |
-| `isNumPartCode` | 235-235 | 1 | `const isNumPartCode = (c) => c < 128 && NUM_PART_ASCII[c] === 1;` |
-| `isAsciiDigit` | 237-237 | 1 | `const isAsciiDigit = (c) => c >= 48 && c <= 57;` |
-| `consumeLexeme` | 248-285 | 38 | `function consumeLexeme(src, i, n, ch, next, tokens, push) { // dsh-skip-complexity: 词素分派器（六类词素分派分支为结构必然，拆分后职责单一）` |
-| `consumeString` | 288-299 | 12 | `function consumeString(src, i, n, ch, push) {` |
-| `consumeTemplate` | 302-313 | 12 | `function consumeTemplate(src, i, n, push) {` |
-| `consumeRegex` | 316-321 | 6 | `function consumeRegex(src, i, n, tokens, push) { // dsh-skip-complexity: 正则状态机（转义/字符组/闭包三态，天然多分支）` |
+| `tokenizeUncached` | 83-195 | 113 | `function tokenizeUncached(text = '') {` |
+| `MULTI_OPS_BY_FIRST` | 207-215 | 9 | `const MULTI_OPS_BY_FIRST = (() => {` |
+| `isCjkChar` | 232-232 | 1 | `const isCjkChar = (c) => c >= 0x4e00 && c <= 0x9fa5;` |
+| `isIdentStartCode` | 234-234 | 1 | `const isIdentStartCode = (c) => (c < 128 ? ID_START_ASCII[c] === 1 : isCjkChar(c));` |
+| `isIdentPartCode` | 236-236 | 1 | `const isIdentPartCode = (c) => (c < 128 ? ID_PART_ASCII[c] === 1 : isCjkChar(c));` |
+| `isNumPartCode` | 238-238 | 1 | `const isNumPartCode = (c) => c < 128 && NUM_PART_ASCII[c] === 1;` |
+| `isAsciiDigit` | 240-240 | 1 | `const isAsciiDigit = (c) => c >= 48 && c <= 57;` |
+| `consumeLexeme` | 251-293 | 43 | `function consumeLexeme(src, i, n, ch, next, tokens, push) { // dsh-skip-complexity: 词素分派器（六类词素分派分支为结构必然，拆分后职责单一）` |
+| `consumeCsharpInterpolated` | 311-360 | 50 | `function consumeCsharpInterpolated(src, i, n, push) { // dsh-skip-complexity: 三前缀组合 + 洞内嵌套串 + verbatim 转义` |
+| `consumeString` | 363-374 | 12 | `function consumeString(src, i, n, ch, push) {` |
+| `consumeTemplate` | 377-388 | 12 | `function consumeTemplate(src, i, n, push) {` |
+| `consumeRegex` | 391-396 | 6 | `function consumeRegex(src, i, n, tokens, push) { // dsh-skip-complexity: 正则状态机（转义/字符组/闭包三态，天然多分支）` |
 
 ### lib/ast/treesitter.js（281 行 · 13 个函数）
 
@@ -2852,6 +2853,12 @@
 | `makeRepo` | 25-29 | 5 | `function makeRepo() {` |
 | `addRemote` | 30-32 | 3 | `function addRemote(dir, name, url) {` |
 | `getUrl` | 33-39 | 7 | `function getUrl(dir, name) {` |
+
+### test/test-repeated-strings-cs.mjs（53 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `kinds` | 18-18 | 1 | `const kinds = (src) => tokenize(src).filter((t) => t.type === 'str' \|\| t.type === 'tmpl').map((t) => t.type);` |
 
 ### test/test-repo-list.mjs（549 行 · 4 个函数）
 

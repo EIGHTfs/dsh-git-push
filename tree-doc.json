@@ -400,64 +400,44 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "docs/2026-10-28-弃零依赖引入npm与AST优先规则方案.MD": {
-        "status": "M",
-        "mtime": "2026-10-28T17:27:35.546Z",
-        "note": "注释可能需更新"
-      },
       "docs/CHANGELOG.md": {
         "status": "M",
-        "mtime": "2026-10-28T17:28:23.596Z",
+        "mtime": "2026-10-28T18:04:06.413Z",
         "note": "注释可能需更新"
       },
       "docs/FILE-TREE.md": {
         "status": "M",
-        "mtime": "2026-10-28T17:27:35.786Z",
+        "mtime": "2026-10-28T17:56:12.077Z",
         "note": "注释可能需更新"
       },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-28T17:28:24.276Z",
+        "mtime": "2026-10-28T18:04:07.027Z",
         "note": "注释可能需更新"
       },
       "docs/releases.json": {
         "status": "M",
-        "mtime": "2026-10-28T17:28:23.379Z",
+        "mtime": "2026-10-28T18:04:05.593Z",
         "note": "注释可能需更新"
       },
-      "lib/ast/treesitter.js": {
+      "lib/ast/tokenizer.js": {
         "status": "M",
-        "mtime": "2026-10-28T16:30:40.608Z",
-        "note": "注释可能需更新"
-      },
-      "lib/audit/collector.js": {
-        "status": "M",
-        "mtime": "2026-10-28T17:21:49.771Z",
-        "note": "注释可能需更新"
-      },
-      "lib/audit/finding.js": {
-        "status": "M",
-        "mtime": "2026-10-28T17:02:39.028Z",
+        "mtime": "2026-10-28T17:56:05.146Z",
         "note": "注释可能需更新"
       },
       "lib/self/index.js": {
         "status": "M",
-        "mtime": "2026-10-28T17:28:23.376Z",
+        "mtime": "2026-10-28T18:04:05.590Z",
         "note": "注释可能需更新"
       },
       "package.json": {
         "status": "M",
-        "mtime": "2026-10-28T17:28:23.374Z",
+        "mtime": "2026-10-28T18:04:05.584Z",
         "note": "注释可能需更新"
       },
-      "docs/2026-10-29-多语言AST接通实测记录.MD": {
+      "test/test-repeated-strings-cs.mjs": {
         "status": "A",
-        "mtime": "2026-10-28T17:04:00.317Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-treesitter-grammars.mjs": {
-        "status": "A",
-        "mtime": "2026-10-28T16:59:24.893Z",
+        "mtime": "2026-10-28T17:55:59.878Z",
         "note": "注释可能需更新"
       }
     }
@@ -574,5 +554,6 @@
   "package-lock.json": "依赖锁文件（npm install --no-bin-links 生成，保证依赖版本与 tree-sitter ABI 配对）",
   "scripts/version-source.mjs": "（待注释）",
   "docs/2026-10-29-多语言AST接通实测记录.MD": "M2 多语言 AST 接通的改前/改后命中实测：C# 进管道的文件与命中变化、六槽位三档计数（正则初筛/token 级/语法树）与 M3 取舍输入",
-  "test/test-treesitter-grammars.mjs": "多语言 AST 接通自检：语法映射与 wasms 包实存核对、每语言 0 ERROR 解析、注释与带引号原始字符串的精筛、以及无语法资产时的回退契约（D5）"
+  "test/test-treesitter-grammars.mjs": "多语言 AST 接通自检：语法映射与 wasms 包实存核对、每语言 0 ERROR 解析、注释与带引号原始字符串的精筛、以及无语法资产时的回退契约（D5）",
+  "test/test-repeated-strings-cs.mjs": "（待注释）"
 }
