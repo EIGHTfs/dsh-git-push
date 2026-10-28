@@ -17,6 +17,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+      # 2.11.0 起插件带运行时依赖（js-yaml 为静态导入）：干净 runner 不装依赖会在规则加载期
+      #   直接 ERR_MODULE_NOT_FOUND（CI #20–#28 连续失败的根因，106 个测试文件全红）。
+      #   npm ci 严格按 package-lock.json 安装、锁文件漂移在此报错；--legacy-peer-deps 与
+      #   锁文件生成口径一致（web-tree-sitter 的 peer @types/emscripten 未锁入，TS 类型运行时不需要）。
+      - name: 安装依赖（按 lockfile）
+        run: npm ci --legacy-peer-deps --no-audit --no-fund
       # 部分测试需要 git 提交身份（临时仓库 init/commit）
       - name: 配置 git 身份
         run: |

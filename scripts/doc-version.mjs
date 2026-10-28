@@ -6,9 +6,9 @@
  * 分体式文档三兄弟之一（doc-tree 文件树 / doc-func 函数列表 / doc-version 版本列表）。
  * 版本表数据源 = `docs/releases.json`（每版一行说明）+ 版本真源文件（package.json 等）
  *   + `version-metrics.json`（可选量化记录）；**不读 git log**（2026-10-16 改，原因见
- *   readme-gen.mjs 的 buildReadmeVersionTable 注释）。
+ *   version-source.mjs 的 buildReadmeVersionTable 注释）。
  * 写入宿主 md（README 有 dshgp-version 标记块用 README，否则 docs/ 带块 md）。
- * 复用 readme-gen.mjs 的 buildReadmeVersionTable（版本聚合逻辑单一事实源）。
+ * 复用 version-source.mjs 的 buildReadmeVersionTable（版本聚合逻辑单一事实源）。
  *
  * 用法：
  *   node scripts/doc-version.mjs gen   [--root <项目根>]   # 打印版本表文本
@@ -19,7 +19,7 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join, resolve, relative, basename, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { findMarkedHostMd } from './doc-tree.mjs';
-import { buildReadmeVersionTable, detectVersionSource, projectVersionOf, readReleases, VERSION_SOURCES } from './readme-gen.mjs';
+import { buildReadmeVersionTable, detectVersionSource, projectVersionOf, readReleases, VERSION_SOURCES } from './version-source.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const MARKER = 'dshgp-version';
@@ -27,7 +27,7 @@ const MARK_START = `<!-- ${MARKER}:start -->`;
 const MARK_END = `<!-- ${MARKER}:end -->`;
 
 /**
- * 版本源探测与读取**已迁到 scripts/readme-gen.mjs**（版本表生成与版本源同源，避免两处各写一份）。
+ * 版本源探测与读取**在 scripts/version-source.mjs**（版本表生成与版本源同源，避免两处各写一份）。
  * 这里只做再导出，保持旧调用方的 import 路径不变。
  *
  * ⚠️ 2026-10-16 起：版本表**不再读 git log**（`detectVersionSource` 不再回退 'git-log'）——

@@ -6,7 +6,7 @@
 //   根因是词库只覆盖「括号内短语 + 用户同意/要求/许可」四类裸词，裸的「按用户确认…」漏网（覆盖不全，非设计如此）。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { scrubConvWording } from '../scripts/readme-gen.mjs';
+import { scrubConvWording } from '../scripts/version-source.mjs';
 
 test('裸的「按/经用户确认」被清洗，且不留「按」残字', () => {
   assert.equal(scrubConvWording('1.1.0 命名空间清理（按用户确认删除旧键迁移）'), '1.1.0 命名空间清理（删除旧键迁移）');

@@ -123,8 +123,6 @@
   "lib/link-check/index.js": "链接判断总入口（分级扣分，断网不拦）",
   "lib/plugin": "Host 侧接线层（插件注册到 DSH：工具/HTTP/配置 schema）",
   "lib/plugin/index.js": "Host 侧接线（插件注册：工具/HTTP/配置注入宿主）",
-  "lib/readme-templates": "README 模板 yml",
-  "lib/readme-templates/readme.yml": "README 章节模板（git_gen_readme 用）",
   "lib/rule": "规则引擎（yml 装载/编译注册表/同形字符检测/槽位启停）",
   "lib/rule/compilers": "各规则 kind 编译器（regex/structure/func/frontend/link-semantic/credential/dataflow/file-health/numeric-kinds）",
   "lib/rule/compilers.js": "规则编译器注册表（纯引用文件）",
@@ -153,7 +151,7 @@
   "lib/vendor/js-yaml": "（待注释）",
   "lib/vendor/js-yaml/LICENSE": "js-yaml 上游 MIT 许可证",
   "lib/vendor/js-yaml/js-yaml.mjs": "js-yaml 4.3.1 上游构建产物（MIT，自包含 ESM）——内置以实现零依赖",
-  "package.json": "包声明（零依赖、files 白名单、scripts）",
+  "package.json": "包声明（dependencies 精确锁版、files 白名单、scripts）",
   "scripts": "开发工具脚本（版本校验/双副本同步/预览服务/README 目录树维护）",
   "scripts/audit-runtime-check.mjs": "三层审计 L3 运行时检测脚本",
   "scripts/check.mjs": "语法检查脚本（npm run check）",
@@ -162,7 +160,6 @@
   "scripts/scan-file-io.mjs": "文件读写扫描器（列出所有 fs 读写调用位置 + 路径参数）",
   "scripts/scan-repos.mjs": "（待注释）",
   "scripts/scan-version.mjs": "版本一致性校验脚本",
-  "scripts/scrub-user-wording.mjs": "清理「用户沟通措辞」独立脚本",
   "skills": "插件权威 skill（功能手册/规则/使用说明，安装副本的 skills/ 同步）",
   "skills/dsh-repo-index.md": "dsh-repo-index skill（源码索引权威说明）",
   "test": "node:test 全量单元测试（541+ 条，覆盖审计/推送/账号/HTTP/后台任务）",
@@ -195,7 +192,6 @@
   "test/test-plugin.mjs": "插件接线测试（入口导出/工具清单/双副本同步）",
   "test/test-push-transport.mjs": "推送通道回归（SSH 优先/一致性语义）",
   "test/test-quality.mjs": "评分总入口测试（AST 质量检查器）",
-  "test/test-readme-gen.mjs": "README 生成测试（模板渲染/版本表）",
   "test/test-repo-list.mjs": "仓库列表测试（本地扫描/索引读写/HTTP 端点/远端状态）",
   "test/test-rule-packs.mjs": "规则总入口测试（编译注册/字段指派）",
   "test/test-self.mjs": "自身总入口测试（VERSION/CLI/help 比对）",
@@ -241,7 +237,6 @@
   "lib/app/handlers/repos.js": "HTTP 处理·仓库列表/扫描（repos-local/-scan/-wait/-refresh/repos-cloud）",
   "lib/app/handlers/settings.js": "HTTP 处理·设置读写（settings-get/settings-set，白名单键）",
   "lib/app/handlers": "（待注释）",
-  "scripts/readme-gen.mjs": "README 生成独立脚本（git_gen_readme 抽出：模板渲染/版本表/目录）",
   "scripts/doc-tree.mjs": "（待注释）",
   "scripts/doc-func.mjs": "（待注释）",
   "scripts/doc-version.mjs": "（待注释）",
@@ -405,9 +400,154 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "docs/2026-10-28-弃零依赖引入npm与AST优先规则方案.MD": {
+      "docs/CHANGELOG.md": {
+        "status": "M",
+        "mtime": "2026-10-28T16:04:47.743Z",
+        "note": "注释可能需更新"
+      },
+      "docs/FILE-TREE.md": {
+        "status": "M",
+        "mtime": "2026-10-28T15:59:48.143Z",
+        "note": "注释可能需更新"
+      },
+      "docs/FUNCTIONS.md": {
+        "status": "M",
+        "mtime": "2026-10-28T16:04:48.883Z",
+        "note": "注释可能需更新"
+      },
+      "docs/releases.json": {
+        "status": "M",
+        "mtime": "2026-10-28T16:04:47.498Z",
+        "note": "注释可能需更新"
+      },
+      "lib/app/inject-text.js": {
+        "status": "M",
+        "mtime": "2026-10-28T15:58:56.980Z",
+        "note": "注释可能需更新"
+      },
+      "lib/app/tool-call.js": {
+        "status": "M",
+        "mtime": "2026-10-28T15:58:56.984Z",
+        "note": "注释可能需更新"
+      },
+      "lib/ast/io-risk-loop.js": {
+        "status": "M",
+        "mtime": "2026-10-28T15:59:23.409Z",
+        "note": "注释可能需更新"
+      },
+      "lib/ast/treesitter.js": {
+        "status": "M",
+        "mtime": "2026-10-28T15:42:18.967Z",
+        "note": "注释可能需更新"
+      },
+      "lib/audit-rules/audit-rules-comment.yml": {
+        "status": "M",
+        "mtime": "2026-10-28T15:51:17.485Z",
+        "note": "注释可能需更新"
+      },
+      "lib/audit-rules/audit-rules-structure.yml": {
+        "status": "M",
+        "mtime": "2026-10-28T15:59:37.320Z",
+        "note": "注释可能需更新"
+      },
+      "lib/audit/report-yaml.js": {
+        "status": "M",
+        "mtime": "2026-10-28T15:38:39.643Z",
+        "note": "注释可能需更新"
+      },
+      "lib/git/push.js": {
+        "status": "M",
+        "mtime": "2026-10-28T15:59:37.323Z",
+        "note": "注释可能需更新"
+      },
+      "lib/readme-templates/readme.yml": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "lib/rule/loader.js": {
+        "status": "M",
+        "mtime": "2026-10-28T15:38:39.640Z",
+        "note": "注释可能需更新"
+      },
+      "lib/self/index.js": {
+        "status": "M",
+        "mtime": "2026-10-28T16:04:47.495Z",
+        "note": "注释可能需更新"
+      },
+      "lib/skip-dirs.js": {
+        "status": "M",
+        "mtime": "2026-10-28T15:51:31.628Z",
+        "note": "注释可能需更新"
+      },
+      "package.json": {
+        "status": "M",
+        "mtime": "2026-10-28T16:04:47.478Z",
+        "note": "注释可能需更新"
+      },
+      "scripts/doc-version.mjs": {
+        "status": "M",
+        "mtime": "2026-10-28T15:58:56.947Z",
+        "note": "注释可能需更新"
+      },
+      "scripts/readme-gen.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "scripts/scrub-user-wording.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "skills/dev/dsh-git-push.md": {
+        "status": "M",
+        "mtime": "2026-10-28T15:59:22.326Z",
+        "note": "注释可能需更新"
+      },
+      "skills/guide/guide-cli-scripts.md": {
+        "status": "M",
+        "mtime": "2026-10-28T15:59:22.329Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-doc-version.mjs": {
+        "status": "M",
+        "mtime": "2026-10-28T15:59:23.414Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-plugin.mjs": {
+        "status": "M",
+        "mtime": "2026-10-28T15:58:56.990Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-readme-gen.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-rule-packs.mjs": {
+        "status": "M",
+        "mtime": "2026-10-28T15:51:25.094Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-scrub-conv-wording.mjs": {
+        "status": "M",
+        "mtime": "2026-10-28T15:58:56.975Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-version-metrics.mjs": {
+        "status": "M",
+        "mtime": "2026-10-28T15:58:56.951Z",
+        "note": "注释可能需更新"
+      },
+      "package-lock.json": {
         "status": "A",
-        "mtime": "2026-10-28T15:26:28.276Z",
+        "mtime": "2026-10-28T15:35:29.449Z",
+        "note": "注释可能需更新"
+      },
+      "scripts/version-source.mjs": {
+        "status": "A",
+        "mtime": "2026-10-28T15:58:40.550Z",
         "note": "注释可能需更新"
       }
     }
@@ -520,5 +660,7 @@
   "test/test-privacy-ownership.mjs": "（待注释）",
   "lib/app/repo-ownership.js": "（待注释）",
   "docs/FILE-TREE.md": "（待注释）",
-  "docs/2026-10-28-弃零依赖引入npm与AST优先规则方案.MD": "弃零依赖引入 npm 与 AST 优先规则：决策清单、实测证据、里程碑与新增语言/规则的长期流程"
+  "docs/2026-10-28-弃零依赖引入npm与AST优先规则方案.MD": "弃零依赖引入 npm 与 AST 优先规则：决策清单、实测证据、里程碑与新增语言/规则的长期流程",
+  "package-lock.json": "依赖锁文件（npm install --no-bin-links 生成，保证依赖版本与 tree-sitter ABI 配对）",
+  "scripts/version-source.mjs": "（待注释）"
 }

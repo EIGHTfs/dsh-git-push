@@ -182,10 +182,11 @@ test('工具分发：git_scan 扫到本仓（含 .git）', async () => {
   assert.ok(r.repos.some((x) => x.path === ROOT));
 });
 
-test('工具分发：git_gen_readme 已移除（返回提示用独立脚本）', async () => {
+test('工具分发：git_gen_readme 已移除（不再指向已下线的生成脚本）', async () => {
   const r = await callTool('git_gen_readme', { repo: ROOT }, { workspaceRoot: '' }, {});
   assert.equal(r.ok, false, '已移除的工具应返回 ok:false');
-  assert.match(r.error, /readme-gen\.mjs/, '错误信息应提示独立脚本 scripts/readme-gen.mjs');
+  assert.match(r.error, /已移除/, '错误信息应说明该能力已移除');
+  assert.doesNotMatch(r.error, /readme-gen/, '不得再指向已删除的生成脚本');
 });
 
 test('工具分发：缺 repo 参数明确报错（不静默）', async () => {

@@ -1,7 +1,7 @@
 // dsh-git-push 测试：scripts/doc-version.mjs（版本列表生成器，2026-09-29）
 /**
  * 覆盖：buildVersionListText / applyVersionBlock / checkVersionDrift
- * （gen/apply/check 闭环 + 复用 readme-gen 版本聚合）。
+ * （gen/apply/check 闭环 + 复用 version-source 版本聚合）。
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';

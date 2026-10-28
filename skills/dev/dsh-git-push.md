@@ -227,17 +227,10 @@ pnpm add github:EIGHTfs/dsh-git-push#<commit>
 
 **约定**：README 不直接内嵌长文档（版本表/文件树/函数列表），改为「## 分体式文档」节链接引用。三脚本命令统一 `gen`（打印）/ `apply`（写宿主，自动探测带标记块的 md）/ `check`（查漂移）；宿主探测复用公共函数 `findMarkedHostMd(root, marker)`（优先 README，README 无标记块时扫描 .md 找含块文件）。
 
-### 9.2 README 生成（已抽独立脚本，非插件工具）
+### 9.2 README 生成（能力已下线）
 
-`git_gen_readme` 插件工具已于 2026-09-29 移除，改为**独立脚本**：
-
-```bash
-node scripts/readme-gen.mjs <repoPath> [--write <path>] [--template <path>]
-```
-
-- 只打印不写 → 不传 `--write`；`--write README.md` 才落盘
-- `--template` 指定自定义模板（缺省 `lib/readme-templates/readme.yml`）；占位符 `{{name}} {{description}} {{version}} {{toc}} {{versionTable}}`
-- 插件不再内置生成能力，push.js 的「仓库无 README」提示引用此脚本
+`git_gen_readme` 工具与模板渲染脚本均已移除：README 由使用手册规范手工维护，不再按模板生成。
+「仓库无 README」之类的提示保留，但不再指向任何生成脚本。
 
 ### 9.3 doc-tree 自动探测 md（2026-09-29）
 
@@ -272,7 +265,6 @@ node scripts/readme-gen.mjs <repoPath> [--write <path>] [--template <path>]
 | `git_remote_create` | **`repo`**、`visibility?`(默认 private)、`dryRun?` | 同名存在则复用，否则创建并把 origin 指向 API 地址；`ensureRemoteRepo` |
 | `git_set_visibility` | **`repo`**、**`visibility`** | `PATCH /repos/{owner}/{repo}` 的 private 字段；改 public 前须确认无凭据暴露；`setVisibility` |
 | `link_check` | `path?`（缺省 workspaceRoot） | 分级扣分（404/403 −3、DNS −2、超时/5xx −1，flaky 域名 ×0.2）；**只 warning 永不 blocker**；并发 10；`checkLinks`/`probeLinks` |
-| `git_gen_readme` | **`repo`**、`writePath?`（缺省只返回内容） | 模板优先级：插件 `template/README.md` > 内置 `readme.yml` > 代码兜底；版本表由 `git log --reverse` 聚合；`genReadme` |
 
 **接线层**（`lib/plugin/index.js`，Host 侧四段真实 API）：工具 `ctx.inject(['tools'])` → `register(defineTool(spec))`（`output.render` **必须返回块数组**）；提示词注入 `inject(['systemPrompt'])` → `section({name, order, text})`；HTTP `inject(['webServer'])` → `register({kind:'prefix', path, handler})`；客户端**不在此注册**（由 package.json `dsh.client` + `exports["./client"]` 自动发现）。
 

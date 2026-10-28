@@ -9,7 +9,6 @@ import assert from 'node:assert/strict';
 import '../lib/rule/compilers.js'; // 副作用导入：注册编译函数
 import { registerCompiler, compileRule, compileAllRules, RULE_COMPILERS } from '../lib/rule/registry.js';
 import { loadRuleFiles, RULE_SLOTS, resolveSlotOrder, discoverRuleSlots, setSlotDisabled } from '../lib/rule/loader.js';
-import { loadWordingRewrites } from '../scripts/scrub-user-wording.mjs';
 import { safeRe } from '../lib/rule/compilers.js';
 import { checkBlacklist } from '../lib/audit/checks.js';
 import { checkRegexRules } from '../lib/checks/regex.js';
@@ -334,24 +333,12 @@ test('1.0.3：blacklist kind 编译（comment 槽位，2026-09-13 取消分数�
 });
 
 // 约定：关键词取消分数制——白名单命中不拦截，黑名单命中直接拦截（专项测试）
-test('comment yml 顶层 rewrites 不进审计 rules', () => {
+test('comment 槽位：规则结构合法（每条须有 id，数据表不混入 rules）', () => {
   const r = loadRuleFiles(['comment']);
   assert.equal(r.ok, true, r.errors?.join('; '));
-  assert.ok(!r.merged.rules.some((x) => x && (x.match || x.replace)), 'rewrites 不得混进 rules');
   assert.ok(r.merged.rules.every((x) => x && x.id), '每条审计规则须有 id');
-});
-
-test('scrub 从 audit-rules-comment.yml 读改写表', () => {
-  const rows = loadWordingRewrites();
-  assert.ok(rows.length >= 20, `rewrites 条数过少: ${rows.length}`);
-  const apply = (s) => {
-    let t = s;
-    for (const { re, fn } of rows) t = t.replace(re, fn);
-    return t;
-  };
-  assert.equal(apply('2026-09-14 用户同意改接口'), '2026-09-14改接口');
-  assert.equal(apply('（用户原话）foo'), 'foo');
-  assert.equal(apply('用户说：这里'), '这里');
+  // yml 里的非规则数据块（历史上曾有 rewrites 改写表，随清洗脚本一并移除）不得混进 rules
+  assert.ok(!r.merged.rules.some((x) => x && (x.match || x.replace)), '数据表不得混进 rules');
 });
 
 test('blacklist blocker 模式：黑名单命中即拦 / 白名单命中整行豁免', () => {

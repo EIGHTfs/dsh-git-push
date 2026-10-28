@@ -211,8 +211,6 @@ dsh-git-push/
 │   │   ├── auto-detect.js — 任务完成自动推送·检测层（纯函数：✅任务完成 触发/❌⚠ 阻断/自定义正则/许可合成判断）
 │   │   ├── auto-push.js — 任务完成自动推送·核心（turn/end 监听→检测→autoPushEnabled 开关→调 commitWithAudit 完整门禁，不裸提交）
 │   │   ├── index.js — Host 侧接线（插件注册：工具/HTTP/配置注入宿主）
-│   ├── readme-templates/ — README 模板 yml
-│   │   ├── readme.yml — README 章节模板（git_gen_readme 用）
 │   ├── rule/ — 规则引擎（yml 装载/编译注册表/同形字符检测/槽位启停）
 │   │   ├── compilers.js — 规则编译器注册表（纯引用文件）
 │   │   ├── homoglyph.js — 同形字符检测（yml kind/id 防 ASCII 混淆）
@@ -248,7 +246,6 @@ dsh-git-push/
 │   ├── picker-repro.mjs — （待注释）
 │   ├── platform-scan.mjs — （待注释）
 │   ├── probe-recheck.mjs — 探针：「重新检测」按钮链路实测（在线校验 token/SSH）
-│   ├── readme-gen.mjs — README 生成独立脚本（git_gen_readme 抽出：模板渲染/版本表/目录）
 │   ├── rename-locator.mjs — 变量重命名位置定位工具（按作用域聚合引用——单字母变量人工重命名辅助）
 │   ├── rule-switch.mjs — 规则槽位手动启停 CLI
 │   ├── rules-solo-audit.mjs — 规则单启控制变量扫描（基准全关+逐规则单启+全量对照，报告供 AI/人工审规则有效性与局限，按需运行非常驻）
@@ -257,9 +254,9 @@ dsh-git-push/
 │   ├── scan-hardcoded-paths.mjs — （待注释）
 │   ├── scan-repos.mjs — （待注释）
 │   ├── scan-version.mjs — 版本一致性校验脚本
-│   ├── scrub-user-wording.mjs — 清理「用户沟通措辞」独立脚本
 │   ├── symbol-index.mjs — （待注释）
 │   ├── verify-prestep.mjs — 上下文注入自检脚本（真实触发 agent/pre-step 验证注入）
+│   ├── version-source.mjs — （待注释）
 │   ├── audit-ext/ — （待注释）
 │   │   ├── _example-readme-present.mjs — 审计扩展契约示例（_ 前缀：演示不参与实际审计）
 │   │   ├── variable-min-length.mjs — 审计扩展：variable-min-length（内置规则抽出试点——统一动态入口）
@@ -392,7 +389,6 @@ dsh-git-push/
 │   ├── test-push-transport.mjs — 推送通道回归（SSH 优先/一致性语义）
 │   ├── test-quality.mjs — 评分总入口测试（AST 质量检查器）
 │   ├── test-quota-write.mjs — （待注释）
-│   ├── test-readme-gen.mjs — README 生成测试（模板渲染/版本表）
 │   ├── test-remote-name-ascii.mjs — （待注释）
 │   ├── test-remote-resolve.mjs — （待注释）
 │   ├── test-rename-locator.mjs — rename-locator 测试（同名不同作用域分组/模块级/过滤）
@@ -486,7 +482,8 @@ dsh-git-push/
 ├── SECURITY.md — （待注释）
 ├── cli.mjs — 独立 CLI（git-sluice，不依赖宿主可独立运行）
 ├── cordis.patch.yml — DSH 插件组合 patch（loader 注入定义）
-├── package.json — 包声明（零依赖、files 白名单、scripts）
+├── package-lock.json — 依赖锁文件（npm install --no-bin-links 生成，保证依赖版本与 tree-sitter ABI 配对）
+├── package.json — 包声明（dependencies 精确锁版、files 白名单、scripts）
 ├── tree-doc.json — 目录结构注释映射（路径→一句话介绍，AI 维护）
 ├── version-metrics.json — （待注释）
 ```

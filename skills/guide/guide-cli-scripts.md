@@ -57,7 +57,6 @@ git-sluice self-check
 | 脚本 | 作用 | 用法要点 |
 |------|------|----------|
 | `scripts/rule-switch.mjs` | 手动启停安装版本的规则槽位（与侧边栏 UI 启停同一套实现） | `node scripts/rule-switch.mjs <status\|enable\|disable> <槽位>` |
-| `scripts/scrub-user-wording.mjs` | 清洗代码注释里的沟通残留措辞（只警告不改、逐条确认、每文件 `.bak`） | `node scripts/scrub-user-wording.mjs <路径...> [--apply [--yes]]`；`--repo <仓库>` 只处理未提交 diff |
 | `scripts/audit-runtime-check.mjs` | 三层审计的 L3 运行时检测：动态 import 后清空再访问，抓静态查不出的 bug | `node scripts/audit-runtime-check.mjs <js 文件> [--obj 名]`；`--all <目录>` |
 | `scripts/scan-file-io.mjs` | 扫描脚本里的文件读写调用与路径，标四级风险（与审计 `robustness/io-risk` 同标准） | `node scripts/scan-file-io.mjs <路径> [--write]` |
 | `scripts/scan-repos.mjs` | 扫描本地 git 仓库清单 | `node scripts/scan-repos.mjs --root <root> --owner <owner> [--depth 10] [--max 200]` |
@@ -70,7 +69,6 @@ git-sluice self-check
 | `scripts/check.mjs` | 语法检查（递归查 lib 与 CLI 入口） |
 | `scripts/scan-version.mjs` | 版本一致性校验（三处版本号是否同步） |
 | `scripts/doc-func.mjs` / `doc-tree.mjs` / `doc-version.mjs` | 函数列表 / 目录树 / 版本记录 三份文档与代码同步（`check` 查漂移、`apply` 写回） |
-| `scripts/readme-gen.mjs` | README 生成 |
 | （已迁移）dsh-useful-tools 的 `preview` 工具（action=gen / 只更数据段 / check` 漂移门禁 / `--watch` 监听） / ``preview` 工具 action=serve（dsh-useful-tools）`（默认反代真后端 / `--direct` 直连插件 / `--local` 免重启） | 界面预览页生成与漂移门禁、本地真实后端测试服务 |
 | `scripts/browser-page-probe.mjs` | 无头浏览器探针：读页面真实渲染文本 + 抓前端运行时错误（零硬编码路径，自动探测环境） |
 | ``sync_plugin` 工具（dsh-useful-tools）` | 同步（工作区 → 安装副本；**安装位置 = local-plugins 真源**）+ 部署形态与免重启热重载自检：`--profile <名>` 指定 profile（多 profile 必给）、`--fix` 只修 local-plugins 侧形态（解软链 / 建真实目录）。node_modules 入口由 DSH 安装流程生成，本脚本不建链；若那里的副本**内容与真源不一致**会报警（实测会顶掉真源；同 inode 硬链接副本不报） |

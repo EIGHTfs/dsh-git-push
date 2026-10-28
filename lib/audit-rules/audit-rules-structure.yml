@@ -31,7 +31,7 @@ decisions:
     reason: "现有 docs/（复数）已建立索引习惯，改名纯成本；新增目录一律单数，存量 docs/ 作为历史约定保留"
   - item: "script/ config/ dist/ log/"
     keep: false
-    reason: "无构建步骤（源码即产物）；配置走 settings 机制 + lib/ 内 yml 规则数据（audit-rules/ readme-templates/ 同源部署，不抽顶层）"
+    reason: "无构建步骤（源码即产物）；配置走 settings 机制 + lib/ 内 yml 规则数据（audit-rules/ 同源部署，不抽顶层）"
   - item: "skills/"
     keep: true
     reason: "DSH 插件特性：注入给 AI 的手册（dsh-git-push.md / dsh-git-push-functions.md / git-workflow-gitpush/），通用规范未覆盖"
@@ -46,7 +46,7 @@ principles:
   - "一致性优先于花哨：同类文件放同目录，同目录命名风格统一"
   - "统一单数：所有功能目录用单数（tool/、test/、doc/、lib/），不用复数（tools/、tests/、docs/、libs/）"
   - "工具与源码同库：cli.mjs 根级 + lib/plugin-tools.js 注册 agent 工具，不建空 tool/ 目录"
-  - "规则数据随代码：audit-rules/*.yml、readme-templates/*.yml 放 lib/ 子目录（files 白名单 + 相对路径解析依赖）"
+  - "规则数据随代码：audit-rules/*.yml 放 lib/ 子目录（files 白名单 + 相对路径解析依赖）"
   - "最小可用：不预设未来需求，目录按需添加"
 
 # ============================================================
@@ -86,7 +86,6 @@ directory_roles:
       - "audit.js           - 审计引擎（L0 静态 + 规则执行）"
       - "rule-packs.js      - YAML 规则装载/编译"
       - "audit-rules/       - 规则数据（nodejs/frontend/comment/dsh/npm/version/template/private/structure）"
-      - "readme-templates/  - README 模板 yml"
       - "plugin-*.js        - 装配层（host 等价：工具注册/HTTP/设置/审计服务接线）"
       - "client.js viewer.js- 客户端 UI（DSH 命名空间内）"
     dependencies: "模块间单向依赖、无环（拆分时保证）；装配层依赖业务模块，业务模块不依赖装配层"

@@ -1,6 +1,6 @@
 {
   "name": "dsh-git-push",
-  "version": "2.10.5",
+  "version": "2.11.0",
   "description": "DSH git 自动提交推送插件——统一函数入口架构（规则/审计/git/自身/侧边栏/评分/豁免/上下文/HTTP/测试十大总入口）",
   "type": "module",
   "main": "lib/index.js",
@@ -92,5 +92,10 @@
     "check": "node scripts/check.mjs",
     "scan-version": "node scripts/scan-version.mjs",
     "check:drift": "node scripts/doc-drift.mjs"
+  },
+  "dependencies": {
+    "js-yaml": "4.1.0",
+    "tree-sitter-wasms": "0.1.13",
+    "web-tree-sitter": "0.25.10"
   }
 }

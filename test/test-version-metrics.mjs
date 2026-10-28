@@ -9,7 +9,7 @@ import { execSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { readVersionMetrics, buildReadmeVersionTable } from '../scripts/readme-gen.mjs';
+import { readVersionMetrics, buildReadmeVersionTable } from '../scripts/version-source.mjs';
 
 const SANDBOX = mkdtempSync(join(tmpdir(), 'dshgp-vmetrics-'));
 after(() => rmSync(SANDBOX, { recursive: true, force: true }));
