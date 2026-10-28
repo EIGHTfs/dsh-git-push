@@ -13,7 +13,7 @@
 //   DSH_GIT_PUSH_TS_ASSETS=<临时目录下不存在的路径>（用 join(tmpdir(),...) 计算，避免绝对路径字面量 ✗）
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, existsSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -51,7 +51,13 @@ function auditHits(repo, extraEnv = {}) {
 const NO_ASSETS = { DSH_GIT_PUSH_TS_ASSETS: join(tmpdir(), 'dsh-no-such-assets-dir') };
 
 test('① 加载器：资产可用 + confirmHits 判定正确（列/节点）', async () => {
-  assert.ok(existsSync(join(REPO_ROOT, 'assets/tree-sitter/tree-sitter.js')), '运行时 JS 应已落库');
+  // 运行时来自 npm 依赖，仓库内不再保存副本。断言「包能解析到位 + 版本等于锁定值」——
+  //   这两条一起才能证明运行时真的可用（只断言某路径存在，既证明不了可用性、删包后还会变成过期断言）。
+  const runtimeEntry = import.meta.resolve('web-tree-sitter');
+  assert.match(runtimeEntry, /web-tree-sitter/, `web-tree-sitter 应可解析，实际：${runtimeEntry}`);
+  const runtimePkg = JSON.parse(readFileSync(new URL('../node_modules/web-tree-sitter/package.json', import.meta.url), 'utf8'));
+  assert.equal(runtimePkg.version, '0.25.10',
+    '运行时版本必须等于锁定版本：0.27.x 与本套语法 ABI 不兼容，会静默降级为 token 级');
   const { treesitterAvailable, availableGrammars, confirmHits } = await import('../lib/ast/treesitter.js');
   assert.equal(treesitterAvailable(), true, '资产应就位');
   const grams = availableGrammars();

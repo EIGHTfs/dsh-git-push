@@ -147,10 +147,6 @@
   "lib/self/index.js": "自身总入口（VERSION 一致性/versionInfo）",
   "lib/skip-dirs.js": "跳过目录统一判定（硬编码基线 + yml exclude_dirs 并集 + gitignore 白名单恢复）",
   "lib/user-requirements.json": "开发者特殊要求清单（提交推送前逐条核对）",
-  "lib/vendor": "（待注释）",
-  "lib/vendor/js-yaml": "（待注释）",
-  "lib/vendor/js-yaml/LICENSE": "js-yaml 上游 MIT 许可证",
-  "lib/vendor/js-yaml/js-yaml.mjs": "js-yaml 4.3.1 上游构建产物（MIT，自包含 ESM）——内置以实现零依赖",
   "package.json": "包声明（dependencies 精确锁版、files 白名单、scripts）",
   "scripts": "开发工具脚本（版本校验/双副本同步/预览服务/README 目录树维护）",
   "scripts/audit-runtime-check.mjs": "三层审计 L3 运行时检测脚本",
@@ -400,59 +396,119 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "docs/2026-10-29-多语言AST接通实测记录.MD": {
+      ".auditignore": {
         "status": "M",
-        "mtime": "2026-10-28T18:10:12.739Z",
+        "mtime": "2026-10-28T18:33:58.800Z",
+        "note": "注释可能需更新"
+      },
+      "assets/tree-sitter/LICENSE": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "assets/tree-sitter/README.md": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "assets/tree-sitter/VERSIONS.txt": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "assets/tree-sitter/tree-sitter-javascript.wasm": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "assets/tree-sitter/tree-sitter-python.wasm": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "assets/tree-sitter/tree-sitter-typescript.wasm": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "assets/tree-sitter/tree-sitter.js": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "assets/tree-sitter/tree-sitter.wasm": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "docs/2026-10-28-弃零依赖引入npm与AST优先规则方案.MD": {
+        "status": "M",
+        "mtime": "2026-10-28T18:28:55.545Z",
         "note": "注释可能需更新"
       },
       "docs/CHANGELOG.md": {
         "status": "M",
-        "mtime": "2026-10-28T18:23:35.016Z",
+        "mtime": "2026-10-28T18:44:35.792Z",
         "note": "注释可能需更新"
       },
       "docs/FILE-TREE.md": {
         "status": "M",
-        "mtime": "2026-10-28T18:10:14.243Z",
+        "mtime": "2026-10-28T18:28:33.984Z",
         "note": "注释可能需更新"
       },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-28T18:23:35.544Z",
-        "note": "注释可能需更新"
-      },
-      "docs/SPEC.md": {
-        "status": "M",
-        "mtime": "2026-10-28T18:17:10.309Z",
+        "mtime": "2026-10-28T18:44:36.401Z",
         "note": "注释可能需更新"
       },
       "docs/releases.json": {
         "status": "M",
-        "mtime": "2026-10-28T18:23:34.813Z",
+        "mtime": "2026-10-28T18:44:35.566Z",
         "note": "注释可能需更新"
       },
-      "docs/功能-审计规则体系.md": {
+      "lib/ast/treesitter.js": {
         "status": "M",
-        "mtime": "2026-10-28T18:17:10.319Z",
+        "mtime": "2026-10-28T18:27:46.355Z",
+        "note": "注释可能需更新"
+      },
+      "lib/audit/report-yaml.js": {
+        "status": "M",
+        "mtime": "2026-10-28T18:27:59.661Z",
+        "note": "注释可能需更新"
+      },
+      "lib/rule/loader.js": {
+        "status": "M",
+        "mtime": "2026-10-28T18:27:59.664Z",
         "note": "注释可能需更新"
       },
       "lib/self/index.js": {
         "status": "M",
-        "mtime": "2026-10-28T18:23:34.808Z",
+        "mtime": "2026-10-28T18:44:35.562Z",
+        "note": "注释可能需更新"
+      },
+      "lib/skip-dirs.js": {
+        "status": "M",
+        "mtime": "2026-10-28T18:27:59.688Z",
+        "note": "注释可能需更新"
+      },
+      "lib/vendor/js-yaml/LICENSE": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "lib/vendor/js-yaml/js-yaml.mjs": {
+        "status": "D",
+        "mtime": "",
         "note": "注释可能需更新"
       },
       "package.json": {
         "status": "M",
-        "mtime": "2026-10-28T18:23:34.805Z",
+        "mtime": "2026-10-28T18:44:35.559Z",
         "note": "注释可能需更新"
       },
-      "lib/audit-rules/audit-rules-csharp.yml": {
-        "status": "A",
-        "mtime": "2026-10-28T18:09:11.437Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-audit-rules-csharp.mjs": {
-        "status": "A",
-        "mtime": "2026-10-28T18:08:55.977Z",
+      "test/test-treesitter.mjs": {
+        "status": "M",
+        "mtime": "2026-10-28T18:33:58.793Z",
         "note": "注释可能需更新"
       }
     }
@@ -498,17 +554,8 @@
   "test/test-npm-enobufs.mjs": "（待注释）",
   "scripts/cpu-sample.mjs": "（待注释）",
   "test/test-ast-confirm-span.mjs": "（待注释）",
-  "assets/tree-sitter": "（待注释）",
-  "assets/tree-sitter/LICENSE": "（待注释）",
-  "assets/tree-sitter/README.md": "（待注释）",
-  "assets/tree-sitter/VERSIONS.txt": "（待注释）",
-  "assets/tree-sitter/tree-sitter-javascript.wasm": "（待注释）",
-  "assets/tree-sitter/tree-sitter-python.wasm": "（待注释）",
-  "assets/tree-sitter/tree-sitter-typescript.wasm": "（待注释）",
   "lib/ast/treesitter.js": "（待注释）",
   "docs/2.9.0-design.md": "（待注释）",
-  "assets/tree-sitter/tree-sitter.js": "（待注释）",
-  "assets/tree-sitter/tree-sitter.wasm": "（待注释）",
   "test/test-treesitter.mjs": "（待注释）",
   "lib/app/handlers/workspace-paths.js": "（待注释）",
   "lib/core/workspace-paths.js": "（待注释）",

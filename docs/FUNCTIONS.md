@@ -579,23 +579,23 @@
 | `consumeTemplate` | 377-388 | 12 | `function consumeTemplate(src, i, n, push) {` |
 | `consumeRegex` | 391-396 | 6 | `function consumeRegex(src, i, n, tokens, push) { // dsh-skip-complexity: 正则状态机（转义/字符组/闭包三态，天然多分支）` |
 
-### lib/ast/treesitter.js（281 行 · 13 个函数）
+### lib/ast/treesitter.js（273 行 · 13 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `resolveDirs` | 46-64 | 19 | `function resolveDirs() {` |
+| `resolveDirs` | 46-56 | 11 | `function resolveDirs() {` |
 | `pick` | 48-50 | 3 | `const pick = (spec) => {` |
-| `treesitterAvailable` | 102-110 | 9 | `export function treesitterAvailable() {` |
-| `availableGrammars` | 113-123 | 11 | `export function availableGrammars() {` |
-| `grammarForExt` | 126-129 | 4 | `export function grammarForExt(ext = '') {` |
-| `loadModule` | 134-147 | 14 | `async function loadModule() {` |
-| `ensureInit` | 150-163 | 14 | `async function ensureInit() {` |
-| `getParser` | 166-187 | 22 | `async function getParser(grammar) {` |
-| `parseText` | 190-206 | 17 | `export async function parseText(text, grammar) {` |
-| `isOpaqueNode` | 209-216 | 8 | `export function isOpaqueNode(node) {` |
-| `confirmHits` | 226-245 | 20 | `export async function confirmHits({ text, ext = '', grammar = '', hits = [] } = {}) {` |
-| `makeSyncConfirmer` | 257-272 | 16 | `export function makeSyncConfirmer(tree) {` |
-| `resetTreeSitterCache` | 275-280 | 6 | `export function resetTreeSitterCache() {  modPromise = null;` |
+| `treesitterAvailable` | 94-102 | 9 | `export function treesitterAvailable() {` |
+| `availableGrammars` | 105-115 | 11 | `export function availableGrammars() {` |
+| `grammarForExt` | 118-121 | 4 | `export function grammarForExt(ext = '') {` |
+| `loadModule` | 126-139 | 14 | `async function loadModule() {` |
+| `ensureInit` | 142-155 | 14 | `async function ensureInit() {` |
+| `getParser` | 158-179 | 22 | `async function getParser(grammar) {` |
+| `parseText` | 182-198 | 17 | `export async function parseText(text, grammar) {` |
+| `isOpaqueNode` | 201-208 | 8 | `export function isOpaqueNode(node) {` |
+| `confirmHits` | 218-237 | 20 | `export async function confirmHits({ text, ext = '', grammar = '', hits = [] } = {}) {` |
+| `makeSyncConfirmer` | 249-264 | 16 | `export function makeSyncConfirmer(tree) {` |
+| `resetTreeSitterCache` | 267-272 | 6 | `export function resetTreeSitterCache() {  modPromise = null;` |
 
 ### lib/audit/analysis-coverage.js（99 行 · 5 个函数）
 
@@ -1881,161 +1881,6 @@
 | `loadYamlBlacklistDirs` | 38-57 | 20 | `export function loadYamlBlacklistDirs() {` |
 | `getSkipSet` | 63-67 | 5 | `export function getSkipSet() {` |
 
-### lib/vendor/js-yaml/js-yaml.mjs（3074 行 · 150 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `getDefaultExportFromCjs` | 1-3 | 3 | `function getDefaultExportFromCjs(x) {` |
-| `requireCommon` | 8-49 | 42 | `function requireCommon() {` |
-| `isNothing` | 11-13 | 3 | `function isNothing(subject) {` |
-| `isObject` | 14-16 | 3 | `function isObject(subject) {` |
-| `toArray` | 17-21 | 5 | `function toArray(sequence) {` |
-| `extend` | 22-31 | 10 | `function extend(target, source) {` |
-| `repeat` | 32-38 | 7 | `function repeat(string, count) {` |
-| `isNegativeZero` | 39-41 | 3 | `function isNegativeZero(number) {` |
-| `requireException` | 52-87 | 36 | `function requireException() {` |
-| `formatError` | 55-67 | 13 | `function formatError(exception2, compact) {` |
-| `YAMLException2` | 68-79 | 12 | `function YAMLException2(reason, mark) {` |
-| `requireSnippet` | 90-167 | 78 | `function requireSnippet() {` |
-| `getLine` | 94-111 | 18 | `function getLine(buffer, lineStart, lineEnd, position, maxLineLength) {` |
-| `padStart` | 112-114 | 3 | `function padStart(string, max) {` |
-| `makeSnippet` | 115-164 | 50 | `function makeSnippet(mark, options) {` |
-| `requireType` | 170-231 | 62 | `function requireType() {` |
-| `compileStyleAliases` | 191-201 | 11 | `function compileStyleAliases(map2) {` |
-| `Type2` | 202-228 | 27 | `function Type2(tag, options) {` |
-| `requireSchema` | 234-320 | 87 | `function requireSchema() {` |
-| `compileList` | 239-251 | 13 | `function compileList(schema2, name) {` |
-| `compileMap` | 252-277 | 26 | `function compileMap() {` |
-| `collectType` | 265-272 | 8 | `function collectType(type2) {` |
-| `Schema2` | 278-280 | 3 | `function Schema2(definition) {` |
-| `requireStr` | 323-334 | 12 | `function requireStr() {` |
-| `requireSeq` | 337-348 | 12 | `function requireSeq() {` |
-| `requireMap` | 351-362 | 12 | `function requireMap() {` |
-| `requireFailsafe` | 365-377 | 13 | `function requireFailsafe() {` |
-| `require_null` | 380-420 | 41 | `function require_null() {` |
-| `resolveYamlNull` | 384-388 | 5 | `function resolveYamlNull(data) {` |
-| `constructYamlNull` | 389-391 | 3 | `function constructYamlNull() {` |
-| `isNull` | 392-394 | 3 | `function isNull(object) {` |
-| `requireBool` | 423-457 | 35 | `function requireBool() {` |
-| `resolveYamlBoolean` | 427-431 | 5 | `function resolveYamlBoolean(data) {` |
-| `constructYamlBoolean` | 432-434 | 3 | `function constructYamlBoolean(data) {` |
-| `isBoolean` | 435-437 | 3 | `function isBoolean(object) {` |
-| `requireInt` | 460-573 | 114 | `function requireInt() {` |
-| `isHexCode` | 465-467 | 3 | `function isHexCode(c) {` |
-| `isOctCode` | 468-470 | 3 | `function isOctCode(c) {` |
-| `isDecCode` | 471-473 | 3 | `function isDecCode(c) {` |
-| `resolveYamlInteger` | 474-521 | 48 | `function resolveYamlInteger(data) {` |
-| `parseYamlInteger` | 522-538 | 17 | `function parseYamlInteger(data) {` |
-| `constructYamlInteger` | 539-541 | 3 | `function constructYamlInteger(data) {` |
-| `isInteger` | 542-544 | 3 | `function isInteger(object) {` |
-| `requireFloat` | 576-658 | 83 | `function requireFloat() {` |
-| `resolveYamlFloat` | 588-597 | 10 | `function resolveYamlFloat(data) {` |
-| `constructYamlFloat` | 598-610 | 13 | `function constructYamlFloat(data) {` |
-| `representYamlFloat` | 612-645 | 34 | `function representYamlFloat(object, style) {` |
-| `isFloat` | 646-648 | 3 | `function isFloat(object) {` |
-| `requireJson` | 661-673 | 13 | `function requireJson() {` |
-| `requireCore` | 676-681 | 6 | `function requireCore() {` |
-| `requireTimestamp` | 684-743 | 60 | `function requireTimestamp() {` |
-| `resolveYamlTimestamp` | 694-699 | 6 | `function resolveYamlTimestamp(data) {` |
-| `constructYamlTimestamp` | 700-731 | 32 | `function constructYamlTimestamp(data) {` |
-| `representYamlTimestamp` | 732-734 | 3 | `function representYamlTimestamp(object) {` |
-| `requireMerge` | 746-758 | 13 | `function requireMerge() {` |
-| `resolveYamlMerge` | 750-752 | 3 | `function resolveYamlMerge(data) {` |
-| `requireBinary` | 761-850 | 90 | `function requireBinary() {` |
-| `resolveYamlBinary` | 766-778 | 13 | `function resolveYamlBinary(data) {` |
-| `constructYamlBinary` | 779-805 | 27 | `function constructYamlBinary(data) {` |
-| `representYamlBinary` | 806-838 | 33 | `function representYamlBinary(object) {` |
-| `isBinary` | 839-841 | 3 | `function isBinary(obj) {` |
-| `requireOmap` | 853-889 | 37 | `function requireOmap() {` |
-| `resolveYamlOmap` | 859-879 | 21 | `function resolveYamlOmap(data) {` |
-| `constructYamlOmap` | 880-882 | 3 | `function constructYamlOmap(data) {` |
-| `requirePairs` | 892-927 | 36 | `function requirePairs() {` |
-| `resolveYamlPairs` | 897-909 | 13 | `function resolveYamlPairs(data) {` |
-| `constructYamlPairs` | 910-920 | 11 | `function constructYamlPairs(data) {` |
-| `requireSet` | 930-954 | 25 | `function requireSet() {` |
-| `resolveYamlSet` | 935-944 | 10 | `function resolveYamlSet(data) {` |
-| `constructYamlSet` | 945-947 | 3 | `function constructYamlSet(data) {` |
-| `require_default` | 957-973 | 17 | `function require_default() {` |
-| `requireLoader` | 975-2344 | 1370 | `function requireLoader() {` |
-| `_class` | 995-997 | 3 | `function _class(obj) {` |
-| `isEol` | 998-1000 | 3 | `function isEol(c) {` |
-| `isWhiteSpace` | 1001-1003 | 3 | `function isWhiteSpace(c) {` |
-| `isWsOrEol` | 1004-1006 | 3 | `function isWsOrEol(c) {` |
-| `isFlowIndicator` | 1007-1009 | 3 | `function isFlowIndicator(c) {` |
-| `fromHexCode` | 1010-1019 | 10 | `function fromHexCode(c) {` |
-| `escapedHexLen` | 1020-1031 | 12 | `function escapedHexLen(c) {` |
-| `fromDecimalCode` | 1032-1037 | 6 | `function fromDecimalCode(c) {` |
-| `simpleEscapeSequence` | 1038-1079 | 42 | `function simpleEscapeSequence(c) {` |
-| `charFromCodepoint` | 1080-1088 | 9 | `function charFromCodepoint(c) {` |
-| `setProperty` | 1089-1100 | 12 | `function setProperty(object, key, value) {` |
-| `State` | 1107-1129 | 23 | `function State(input, options) {` |
-| `generateError` | 1130-1141 | 12 | `function generateError(state, message) {` |
-| `throwError` | 1142-1144 | 3 | `function throwError(state, message) {` |
-| `throwWarning` | 1145-1149 | 5 | `function throwWarning(state, message) {` |
-| `storeAnchor` | 1150-1162 | 13 | `function storeAnchor(state, name, value) {` |
-| `beginAnchorTransaction` | 1163-1165 | 3 | `function beginAnchorTransaction(state) {` |
-| `commitAnchorTransaction` | 1166-1178 | 13 | `function commitAnchorTransaction(state) {` |
-| `rollbackAnchorTransaction` | 1179-1190 | 12 | `function rollbackAnchorTransaction(state) {` |
-| `snapshotState` | 1191-1203 | 13 | `function snapshotState(state) {` |
-| `restoreState` | 1204-1214 | 11 | `function restoreState(state, snapshot) {` |
-| `captureSegment` | 1262-1277 | 16 | `function captureSegment(state, start, end, checkJson) {` |
-| `mergeMappings` | 1278-1293 | 16 | `function mergeMappings(state, destination, source, overridableKeys) {` |
-| `storeMappingPair` | 1294-1332 | 39 | `function storeMappingPair(state, _result, overridableKeys, keyTag, keyNode, valueNode, startLine, startLineStart, startPos) {` |
-| `readLineBreak` | 1333-1348 | 16 | `function readLineBreak(state) {` |
-| `skipSeparationSpace` | 1349-1381 | 33 | `function skipSeparationSpace(state, allowComments, checkIndent) {` |
-| `testDocumentSeparator` | 1382-1393 | 12 | `function testDocumentSeparator(state) {` |
-| `writeFoldedLines` | 1394-1400 | 7 | `function writeFoldedLines(state, count) {` |
-| `readPlainScalar` | 1401-1472 | 72 | `function readPlainScalar(state, nodeIndent, withinFlowCollection) {` |
-| `readSingleQuotedScalar` | 1473-1509 | 37 | `function readSingleQuotedScalar(state, nodeIndent) {` |
-| `readDoubleQuotedScalar` | 1510-1566 | 57 | `function readDoubleQuotedScalar(state, nodeIndent) {` |
-| `readFlowCollection` | 1567-1656 | 90 | `function readFlowCollection(state, nodeIndent) {` |
-| `readBlockScalar` | 1657-1762 | 106 | `function readBlockScalar(state, nodeIndent) {` |
-| `readBlockSequence` | 1763-1813 | 51 | `function readBlockSequence(state, nodeIndent) {` |
-| `readBlockMapping` | 1814-1934 | 121 | `function readBlockMapping(state, nodeIndent, flowIndent) {` |
-| `readTagProperty` | 1935-2008 | 74 | `function readTagProperty(state) {` |
-| `readAnchorProperty` | 2009-2025 | 17 | `function readAnchorProperty(state) {` |
-| `readAlias` | 2026-2044 | 19 | `function readAlias(state) {` |
-| `tryReadBlockMappingFromProperty` | 2045-2060 | 16 | `function tryReadBlockMappingFromProperty(state, propertyStart, nodeIndent, flowIndent) {` |
-| `composeNode` | 2061-2218 | 158 | `function composeNode(state, parentIndent, nodeContext, allowToSeek, allowCompact) {` |
-| `readDocument` | 2219-2291 | 73 | `function readDocument(state) {` |
-| `loadDocuments` | 2292-2318 | 27 | `function loadDocuments(input, options) {` |
-| `loadAll2` | 2319-2331 | 13 | `function loadAll2(input, iterator, options) {` |
-| `load2` | 2332-2340 | 9 | `function load2(input, options) {` |
-| `requireDumper` | 2347-2997 | 651 | `function requireDumper() {` |
-| `compileStyleMap` | 2415-2432 | 18 | `function compileStyleMap(schema2, map2) {` |
-| `encodeHex` | 2433-2450 | 18 | `function encodeHex(character) {` |
-| `State` | 2453-2474 | 22 | `function State(options) {` |
-| `indentString` | 2475-2494 | 20 | `function indentString(string, spaces) {` |
-| `generateNextLine` | 2495-2497 | 3 | `function generateNextLine(state, level) {` |
-| `testImplicitResolving` | 2498-2506 | 9 | `function testImplicitResolving(state, str2) {` |
-| `isWhitespace` | 2507-2509 | 3 | `function isWhitespace(c) {` |
-| `isPrintable` | 2510-2512 | 3 | `function isPrintable(c) {` |
-| `isNsCharOrWhitespace` | 2513-2516 | 4 | `function isNsCharOrWhitespace(c) {` |
-| `isPlainSafe` | 2517-2529 | 13 | `function isPlainSafe(c, prev, inblock) {` |
-| `isPlainSafeFirst` | 2530-2537 | 8 | `function isPlainSafeFirst(c) {` |
-| `isPlainSafeLast` | 2538-2540 | 3 | `function isPlainSafeLast(c) {` |
-| `codePointAt` | 2541-2551 | 11 | `function codePointAt(string, pos) {` |
-| `needIndentIndicator` | 2552-2555 | 4 | `function needIndentIndicator(string) {` |
-| `chooseScalarStyle` | 2561-2610 | 50 | `function chooseScalarStyle(string, singleLineOnly, indentPerLevel, lineWidth, testAmbiguousType, quotingType, forceQuotes, inblock) {` |
-| `writeScalar` | 2611-2652 | 42 | `function writeScalar(state, string, level, iskey, inblock) {` |
-| `testAmbiguity` | 2625-2627 | 3 | `function testAmbiguity(string2) {` |
-| `blockHeader` | 2653-2659 | 7 | `function blockHeader(string, indentPerLevel) {` |
-| `dropEndingNewline` | 2660-2662 | 3 | `function dropEndingNewline(string) {` |
-| `foldString` | 2663-2682 | 20 | `function foldString(string, width) {` |
-| `foldLine` | 2683-2708 | 26 | `function foldLine(line, width) {` |
-| `escapeString` | 2709-2723 | 15 | `function escapeString(string) {` |
-| `writeFlowSequence` | 2724-2739 | 16 | `function writeFlowSequence(state, level, object) {` |
-| `writeBlockSequence` | 2740-2762 | 23 | `function writeBlockSequence(state, level, object, compact) {` |
-| `writeFlowMapping` | 2763-2789 | 27 | `function writeFlowMapping(state, level, object) {` |
-| `writeBlockMapping` | 2790-2839 | 50 | `function writeBlockMapping(state, level, object, compact) {` |
-| `detectType` | 2840-2870 | 31 | `function detectType(state, object, explicit) {` |
-| `writeNode` | 2871-2951 | 81 | `function writeNode(state, level, object, block, compact, iskey, isblockseq) {` |
-| `getDuplicateReferences` | 2952-2961 | 10 | `function getDuplicateReferences(object, state) {` |
-| `inspectNode` | 2962-2983 | 22 | `function inspectNode(object, objects, duplicatesIndexes) {` |
-| `dump2` | 2984-2994 | 11 | `function dump2(input, options) {` |
-| `requireJsYaml` | 2999-3038 | 40 | `function requireJsYaml() {` |
-| `renamed` | 3004-3008 | 5 | `function renamed(from, to) {` |
-
 ### scripts/audit-ext/variable-min-length.mjs（102 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2967,13 +2812,13 @@
 | `makeRepo` | 200-207 | 8 | `function makeRepo(files) {` |
 | `auditRuleHits` | 210-223 | 14 | `function auditRuleHits(repo, rule) {` |
 
-### test/test-treesitter.mjs（94 行 · 3 个函数）
+### test/test-treesitter.mjs（100 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `makeRepo` | 24-31 | 8 | `function makeRepo(files) {` |
 | `auditHits` | 34-49 | 16 | `function auditHits(repo, extraEnv = {}) {` |
-| `col` | 66-66 | 1 | `const col = (n, needle) => lines[n - 1].indexOf(needle) + 1;` |
+| `col` | 72-72 | 1 | `const col = (n, needle) => lines[n - 1].indexOf(needle) + 1;` |
 
 ### test/test-workspace-paths.mjs（139 行 · 2 个函数）
 

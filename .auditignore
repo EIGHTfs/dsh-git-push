@@ -2,10 +2,8 @@
 # 语法同 .gitignore；用于「要入库但不该被自家规则审」的内容。
 
 # 第三方内置代码（vendor）：构建产物、非本项目编写。
-#   已内置 js-yaml（MIT，dist/js-yaml.mjs）以实现零依赖发布。
-#   其 parser 有 1370 行的单函数，会被 readability/max-function-length 报 blocker——
-#   但我们不改这份代码，报出来只是噪声。
-lib/vendor/
+#   仓库内已不再内置任何第三方副本（tree-sitter 运行时/语法与 js-yaml 均改走 npm 依赖），
+#   故此条不再需要；若将来重新引入 vendored 目录，按目录在此登记豁免。
 
 # 评分参数表：DEFAULT_WEIGHTS / DIMENSION_K 的数字是「维度名 → 参数」映射值，
 #   键名已表意，拆成 WEIGHT_X = 15 这类常量反而割裂表格、降低可读性；

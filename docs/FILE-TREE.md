@@ -224,8 +224,6 @@ dsh-git-push/
 │   │   ├── index.js — 评分总入口（10 维度加权）
 │   ├── self/ — 插件自身总入口（VERSION/versionInfo/CLI 帮助）
 │   │   ├── index.js — 自身总入口（VERSION 一致性/versionInfo）
-│   ├── vendor/ — （待注释）
-│   │   └── …（2 个更深文件）
 ├── scripts/ — 开发工具脚本（版本校验/双副本同步/预览服务/README 目录树维护）
 │   ├── audit-runner.mjs — 审计扩展 CLI 统一入口（独立跑 scripts/audit-ext/ 全部扩展）
 │   ├── audit-runtime-check.mjs — 三层审计 L3 运行时检测脚本
@@ -263,15 +261,6 @@ dsh-git-push/
 │   │   ├── variable-min-length.mjs — 审计扩展：variable-min-length（内置规则抽出试点——统一动态入口）
 ├── assets/ — 预览页与配图（preview.html 交互模拟页 + 面板截图）
 │   ├── start.sh — 预览服务器启停脚本（start/stop/restart/status + --port + PID/日志/健康检查 /preview-ping）
-│   ├── tree-sitter/ — （待注释）
-│   │   ├── LICENSE — （待注释）
-│   │   ├── README.md — （待注释）
-│   │   ├── VERSIONS.txt — （待注释）
-│   │   ├── tree-sitter-javascript.wasm — （待注释）
-│   │   ├── tree-sitter-python.wasm — （待注释）
-│   │   ├── tree-sitter-typescript.wasm — （待注释）
-│   │   ├── tree-sitter.js — （待注释）
-│   │   ├── tree-sitter.wasm — （待注释）
 ├── test/ — node:test 全量单元测试（541+ 条，覆盖审计/推送/账号/HTTP/后台任务）
 │   ├── .test — 空文件豁免标记（目录级豁免 .test 目录）
 │   ├── e2e-npm-tab-render.mjs — （待注释）
