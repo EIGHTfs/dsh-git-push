@@ -300,8 +300,10 @@ function applyBlock(text, newTree) {
 
 /* ───────────────────────── check：漂移对比 ───────────────────────── */
 
-export function checkDrift({ readmePath = DEFAULT_README, root = ROOT } = {}) {
-  const text = readReadme(readmePath);
+export function checkDrift({ readmePath = '', root = ROOT } = {}) {
+  // 树宿主可迁移（README 拆出后落到 docs/ 下带标记块的 md）⇒ 与 apply 同用 resolveTargetMd
+  //   自动探测，而不是写死 README。显式传 readmePath 时行为不变。
+  const text = readReadme(resolveTargetMd(root, readmePath));
   const block = findBlock(text);
   const real = buildTreeText(gitLsFiles(root), loadMapping(root), basename(root));
   const map = loadMapping(root);

@@ -2141,7 +2141,7 @@
 | `checkFuncDrift` | 166-178 | 13 | `export function checkFuncDrift({ hostPath, root, includeDirs = DEFAULT_SCAN_DIRS } = {}) {` |
 | `out` | 188-188 | 1 | `const out = (msg) => console.log(msg);` |
 
-### scripts/doc-tree.mjs（456 行 · 20 个函数）
+### scripts/doc-tree.mjs（458 行 · 20 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -2161,10 +2161,10 @@
 | `findBlock` | 281-288 | 8 | `function findBlock(text, marker = 'dshgp-tree') {` |
 | `readReadme` | 290-293 | 4 | `function readReadme(path) {` |
 | `applyBlock` | 295-299 | 5 | `function applyBlock(text, newTree) {` |
-| `checkDrift` | 303-381 | 79 | `export function checkDrift({ readmePath = DEFAULT_README, root = ROOT } = {}) {` |
-| `isToolGenerated` | 352-352 | 1 | `const isToolGenerated = (p) => p === 'functions-index.json' \|\| p === '_meta'` |
-| `filesOf` | 400-400 | 1 | `const filesOf = (r) => gitLsFiles(r);` |
-| `mapOf` | 401-401 | 1 | `const mapOf = (r) => loadMapping(r);` |
+| `checkDrift` | 303-383 | 81 | `export function checkDrift({ readmePath = '', root = ROOT } = {}) {` |
+| `isToolGenerated` | 354-354 | 1 | `const isToolGenerated = (p) => p === 'functions-index.json' \|\| p === '_meta'` |
+| `filesOf` | 402-402 | 1 | `const filesOf = (r) => gitLsFiles(r);` |
+| `mapOf` | 403-403 | 1 | `const mapOf = (r) => loadMapping(r);` |
 
 ### scripts/doc-version.mjs（150 行 · 6 个函数）
 

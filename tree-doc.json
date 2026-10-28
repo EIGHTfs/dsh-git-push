@@ -407,77 +407,22 @@
     "worktree": {
       "README.md": {
         "status": "M",
-        "mtime": "2026-10-27T19:16:40.467Z",
-        "note": "注释可能需更新"
-      },
-      "docs/CHANGELOG.md": {
-        "status": "M",
-        "mtime": "2026-10-27T19:20:29.395Z",
+        "mtime": "2026-10-28T10:12:50.012Z",
         "note": "注释可能需更新"
       },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-27T19:20:29.921Z",
+        "mtime": "2026-10-28T10:14:27.287Z",
         "note": "注释可能需更新"
       },
-      "docs/releases.json": {
+      "scripts/doc-tree.mjs": {
         "status": "M",
-        "mtime": "2026-10-27T19:20:28.755Z",
+        "mtime": "2026-10-28T10:14:18.910Z",
         "note": "注释可能需更新"
       },
-      "lib/app/audit-api.js": {
-        "status": "M",
-        "mtime": "2026-10-27T19:14:08.692Z",
-        "note": "注释可能需更新"
-      },
-      "lib/app/tool-call.js": {
-        "status": "M",
-        "mtime": "2026-10-27T19:14:08.689Z",
-        "note": "注释可能需更新"
-      },
-      "lib/audit/audit-file.js": {
-        "status": "M",
-        "mtime": "2026-10-27T19:13:14.146Z",
-        "note": "注释可能需更新"
-      },
-      "lib/audit/orchestrate.js": {
-        "status": "M",
-        "mtime": "2026-10-27T19:13:14.149Z",
-        "note": "注释可能需更新"
-      },
-      "lib/cli/commands-audit.mjs": {
-        "status": "M",
-        "mtime": "2026-10-27T19:14:49.315Z",
-        "note": "注释可能需更新"
-      },
-      "lib/self/index.js": {
-        "status": "M",
-        "mtime": "2026-10-27T19:20:28.753Z",
-        "note": "注释可能需更新"
-      },
-      "package.json": {
-        "status": "M",
-        "mtime": "2026-10-27T19:20:28.752Z",
-        "note": "注释可能需更新"
-      },
-      "lib/app/repo-ownership.js": {
+      "docs/FILE-TREE.md": {
         "status": "A",
-        "mtime": "2026-10-27T19:12:59.067Z",
-        "note": "注释可能需更新"
-      },
-      "lib/audit/ownership.js": {
-        "status": "A",
-        "mtime": "2026-10-27T19:12:34.692Z",
-        "note": "注释可能需更新"
-      },
-      "scripts/bump-version.mjs": {
-        "status": "A",
-        "mtime": "2026-10-27T18:53:47.135Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-privacy-ownership.mjs": {
-        "status": "A",
-        "mtime": "2026-10-27T19:15:54.880Z",
+        "mtime": "2026-10-28T10:12:13.684Z",
         "note": "注释可能需更新"
       }
     }
@@ -588,5 +533,6 @@
   "lib/audit/ownership.js": "（待注释）",
   "scripts/bump-version.mjs": "（待注释）",
   "test/test-privacy-ownership.mjs": "（待注释）",
-  "lib/app/repo-ownership.js": "（待注释）"
+  "lib/app/repo-ownership.js": "（待注释）",
+  "docs/FILE-TREE.md": "（待注释）"
 }
