@@ -7,7 +7,13 @@ import assert from 'node:assert/strict';
 import { githubFetch } from '../lib/git/api.js';
 
 const OFFLINE = process.env.DSH_GIT_PUSH_OFFLINE === '1';
-const SKIP = OFFLINE ? '离线模式（DSH_GIT_PUSH_OFFLINE=1）跳过：该用例需要一次真实请求' : false;
+// 联网用例门禁（与 test-repo-list.mjs 既有约定一致）：这三条要真发一次 GitHub 请求，而 CI runner
+//   无 token、匿名访问会被限流（实测 403，是环境而非代码问题）⇒ 必须显式 DSH_TEST_ONLINE=1 才跑，
+//   否则 CI 必因环境而红、把真实回归信号淹掉。
+const ONLINE = process.env.DSH_TEST_ONLINE === '1';
+const SKIP = OFFLINE
+  ? '离线模式（DSH_GIT_PUSH_OFFLINE=1）跳过：该用例需要一次真实请求'
+  : (ONLINE ? false : '联网用例（设 DSH_TEST_ONLINE=1 才跑）：CI 匿名访问会被 GitHub 限流（403）');
 
 const withMirror = async (value, fn) => {
   const old = process.env.DSH_GIT_MIRROR_PREFIX;

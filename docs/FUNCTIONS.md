@@ -2618,11 +2618,11 @@
 |------|------|------|------|
 | `withScope` | 24-26 | 3 | `function withScope(action) {` |
 
-### test/test-mirror-fallback.mjs（43 行 · 1 个函数）
+### test/test-mirror-fallback.mjs（49 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `withMirror` | 12-20 | 9 | `const withMirror = async (value, fn) => {` |
+| `withMirror` | 18-26 | 9 | `const withMirror = async (value, fn) => {` |
 
 ### test/test-mirror-gates.mjs（83 行 · 1 个函数）
 
