@@ -718,7 +718,7 @@
 | `excludePathOf` | 39-48 | 10 | `function excludePathOf(root) {` |
 | `detectIgnoreBlindSpot` | 55-102 | 48 | `export function detectIgnoreBlindSpot(root) {` |
 
-### lib/audit/orchestrate.js（524 行 · 18 个函数）
+### lib/audit/orchestrate.js（582 行 · 19 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -729,17 +729,18 @@
 | `capScanFiles` | 59-69 | 11 | `export function capScanFiles(files, root, maxFiles) {` |
 | `appendIgnoreBlindSpot` | 82-98 | 17 | `function appendIgnoreBlindSpot(findings, repoPath, scanned) {` |
 | `buildTreeConfirmer` | 121-141 | 21 | `async function buildTreeConfirmer(relPath, text, grouped) {` |
-| `auditFiles` | 143-315 | 173 | `async function auditFiles(repoPath, files, opts = {}) {` |
-| `isDshPlugin` | 168-174 | 7 | `const isDshPlugin = (() => {` |
-| `auditFull` | 317-339 | 23 | `export async function auditFull(repoPath, opts = {}) {` |
-| `appendTreeDocDrift` | 344-386 | 43 | `function appendTreeDocDrift(findings, repoPath) {` |
-| `by` | 377-377 | 1 | `const by = (code) => wt.filter(([, v]) => v?.status === code).length;` |
-| `appendFuncDocDrift` | 395-411 | 17 | `function appendFuncDocDrift(findings, repoPath) {` |
-| `appendSplitDocsCheck` | 419-473 | 55 | `function appendSplitDocsCheck(findings, repoPath) {` |
-| `hasMarkBlock` | 476-478 | 3 | `function hasMarkBlock(text, marker) {` |
-| `auditChanged` | 483-518 | 36 | `export async function auditChanged(repoPath, opts = {}) {` |
-| `isAuditIgnored` | 499-512 | 14 | `const isAuditIgnored = (rel) => {` |
-| `auditWithScope` | 521-523 | 3 | `export async function auditWithScope(repoPath, { scope = 'diff', ...opts } = {}) {` |
+| `computeDimFileCounts` | 162-196 | 35 | `export function computeDimFileCounts(grouped, normFiles) {` |
+| `auditFiles` | 198-373 | 176 | `async function auditFiles(repoPath, files, opts = {}) {` |
+| `isDshPlugin` | 223-229 | 7 | `const isDshPlugin = (() => {` |
+| `auditFull` | 375-397 | 23 | `export async function auditFull(repoPath, opts = {}) {` |
+| `appendTreeDocDrift` | 402-444 | 43 | `function appendTreeDocDrift(findings, repoPath) {` |
+| `by` | 435-435 | 1 | `const by = (code) => wt.filter(([, v]) => v?.status === code).length;` |
+| `appendFuncDocDrift` | 453-469 | 17 | `function appendFuncDocDrift(findings, repoPath) {` |
+| `appendSplitDocsCheck` | 477-531 | 55 | `function appendSplitDocsCheck(findings, repoPath) {` |
+| `hasMarkBlock` | 534-536 | 3 | `function hasMarkBlock(text, marker) {` |
+| `auditChanged` | 541-576 | 36 | `export async function auditChanged(repoPath, opts = {}) {` |
+| `isAuditIgnored` | 557-570 | 14 | `const isAuditIgnored = (rel) => {` |
+| `auditWithScope` | 579-581 | 3 | `export async function auditWithScope(repoPath, { scope = 'diff', ...opts } = {}) {` |
 
 ### lib/audit/ownership.js（47 行 · 3 个函数）
 
@@ -1860,14 +1861,15 @@
 | `maxVersion` | 156-166 | 11 | `function maxVersion(list) {` |
 | `cmp` | 157-164 | 8 | `const cmp = (a, b) => {` |
 
-### lib/score/index.js（190 行 · 4 个函数）
+### lib/score/index.js（199 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `countByDimension` | 50-80 | 31 | `export function countByDimension(findings = []) {` |
 | `countHitFilesByDimension` | 90-104 | 15 | `export function countHitFilesByDimension(findings = []) {` |
-| `scoreQuality` | 121-190 | 70 | `export function scoreQuality(findings = [], weights = {}, context = {}) {` |
-| `dynamicRatio` | 167-175 | 9 | `const dynamicRatio = (dim) => {` |
+| `scoreQuality` | 121-199 | 79 | `export function scoreQuality(findings = [], weights = {}, context = {}) {` |
+| `denomOf` | 169-172 | 4 | `const denomOf = (dim) => {` |
+| `dynamicRatio` | 175-184 | 10 | `const dynamicRatio = (dim) => {` |
 
 ### lib/self/index.js（197 行 · 5 个函数）
 

@@ -90,7 +90,7 @@ settings-get  settings-set
 
 - **23 个槽位 / 168 条规则**（默认实际加载 164 条：`i18n` 槽位顶层 `disabled: true` 默认关闭占 3 条，`template` 槽位需显式开启占 1 条），声明在 `lib/audit-rules/audit-rules-<槽位>.yml`；判定在 `lib/ast/*`；产出 finding 在 `lib/checks/*`；调度汇总在 `lib/audit/*`。
 - 作用域字段：`exts` / `include_paths`（路径白名单，按文件名或路径前后缀）/ `exclude_paths` / `file_patterns`（**内容**初筛）。
-- 分级：`blocker` / `warning` / `info`；评分 10 维度加权得 0-100 + 等级。**动态权重**：`维度得分 = max(0.1, 10 − k × ln(1 + 命中次数))`、`动态权重 = 命中文件数 ÷ 扫描文件数`（按文件去重）、`实际权重 = 设定权重 × 动态权重`、`总分 = Σ(维度得分 × 实际权重) ÷ Σ实际权重 × 10`；口径：无命中的维度不缩放（用设定权重）、分母用 Σ实际权重、文档维度的命中文件数取 `docsScore.files ÷ 总文件数`（无文档文件信息时回退不缩放）、不设下限；`files` 未提供时全部不缩放（静态口径）。
+- 分级：`blocker` / `warning` / `info`；评分 10 维度加权得 0-100 + 等级。**动态权重**：`维度得分 = max(0.1, 10 − k × ln(1 + 命中次数))`、`动态权重 = 命中文件数 ÷ 该维度可作用文件数`（按文件去重；分母由编排层 `computeDimFileCounts` 按规则 `exts` 声明统计——未声明 `exts` 的规则按代码文件 CODE_EXTS 计，缺统计时回退扫描文件总数）、`实际权重 = 设定权重 × 动态权重`、`总分 = Σ(维度得分 × 实际权重) ÷ Σ实际权重 × 10`；口径：无命中的维度不缩放（用设定权重）、分母用 Σ实际权重、文档维度的命中文件数取 `docsScore.files ÷ 总文件数`（无文档文件信息时回退不缩放）、不设下限；`files` 未提供时全部不缩放（静态口径）。
 - 豁免标记 9 个（`dsh-skip-*`），判定入口 `lib/exempt/index.js`；finding 的 `exemptHint` 必须与实际生效的标记一致。
 - 详细用法见 `docs/功能-审计规则体系.md`；豁免与规则字段全录见 `docs/DETAILS-EXEMPT-AND-RULES.md`。
 

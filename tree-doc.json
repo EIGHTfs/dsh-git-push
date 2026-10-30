@@ -398,52 +398,67 @@
     "worktree": {
       "docs/CHANGELOG.md": {
         "status": "M",
-        "mtime": "2026-10-30T11:23:06.738Z",
-        "note": "注释可能需更新"
-      },
-      "docs/FILE-TREE.md": {
-        "status": "M",
-        "mtime": "2026-10-30T11:22:37.053Z",
+        "mtime": "2026-10-30T19:51:04.775Z",
         "note": "注释可能需更新"
       },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-30T11:23:07.227Z",
+        "mtime": "2026-10-30T19:51:05.312Z",
+        "note": "注释可能需更新"
+      },
+      "docs/SPEC.md": {
+        "status": "M",
+        "mtime": "2026-10-30T19:51:04.593Z",
         "note": "注释可能需更新"
       },
       "docs/releases.json": {
         "status": "M",
-        "mtime": "2026-10-30T11:23:06.509Z",
+        "mtime": "2026-10-30T19:51:04.561Z",
         "note": "注释可能需更新"
       },
-      "lib/app/command-registry.js": {
+      "lib/app/audit-api.js": {
         "status": "M",
-        "mtime": "2026-10-30T11:06:05.796Z",
+        "mtime": "2026-10-30T19:35:34.327Z",
         "note": "注释可能需更新"
       },
-      "lib/core/exec.js": {
+      "lib/app/tool-call.js": {
         "status": "M",
-        "mtime": "2026-10-30T11:05:50.905Z",
+        "mtime": "2026-10-30T19:35:34.330Z",
         "note": "注释可能需更新"
       },
-      "lib/git/clone-history-mode.js": {
+      "lib/audit/history.js": {
         "status": "M",
-        "mtime": "2026-10-30T11:06:59.886Z",
+        "mtime": "2026-10-30T19:35:34.355Z",
+        "note": "注释可能需更新"
+      },
+      "lib/audit/orchestrate.js": {
+        "status": "M",
+        "mtime": "2026-10-30T19:49:25.890Z",
+        "note": "注释可能需更新"
+      },
+      "lib/cli/commands-audit.mjs": {
+        "status": "M",
+        "mtime": "2026-10-30T19:36:23.625Z",
+        "note": "注释可能需更新"
+      },
+      "lib/score/index.js": {
+        "status": "M",
+        "mtime": "2026-10-30T19:46:47.869Z",
         "note": "注释可能需更新"
       },
       "lib/self/index.js": {
         "status": "M",
-        "mtime": "2026-10-30T11:23:06.507Z",
+        "mtime": "2026-10-30T19:51:04.557Z",
         "note": "注释可能需更新"
       },
       "package.json": {
         "status": "M",
-        "mtime": "2026-10-30T11:23:06.504Z",
+        "mtime": "2026-10-30T19:51:04.553Z",
         "note": "注释可能需更新"
       },
-      "test/test-git-stream.mjs": {
+      "test/test-dim-denominator.mjs": {
         "status": "A",
-        "mtime": "2026-10-30T11:06:58.217Z",
+        "mtime": "2026-10-30T19:49:54.186Z",
         "note": "注释可能需更新"
       }
     }
@@ -556,5 +571,6 @@
   "lib/audit-rules/audit-rules-csharp.yml": "（待注释）",
   "test/test-audit-rules-csharp.mjs": "（待注释）",
   "test/test-dynamic-weight.mjs": "（待注释）",
-  "test/test-git-stream.mjs": "（待注释）"
+  "test/test-git-stream.mjs": "（待注释）",
+  "test/test-dim-denominator.mjs": "（待注释）"
 }

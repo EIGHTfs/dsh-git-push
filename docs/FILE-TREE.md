@@ -312,6 +312,7 @@ dsh-git-push/
 │   ├── test-conv-rule-scope.mjs — （待注释）
 │   ├── test-cred-env.mjs — git_cred_env 凭据传递测试（双通道/无明文/askpass 调用/无凭据兜底）
 │   ├── test-dataflow.mjs — 三层审计 L2 数据流测试
+│   ├── test-dim-denominator.mjs — （待注释）
 │   ├── test-doc-func.mjs — （待注释）
 │   ├── test-doc-version-release-source.mjs — （待注释）
 │   ├── test-doc-version.mjs — （待注释）
