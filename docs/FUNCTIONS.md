@@ -1227,7 +1227,7 @@
 | `contentsApiUrl` | 102-104 | 3 | `export function contentsApiUrl(owner, repo, encodedPath, encodedRef) {` |
 | `rawFileUrl` | 107-109 | 3 | `export function rawFileUrl(owner, repo, encodedRef, encodedPath) {` |
 
-### lib/core/exec.js（165 行 · 5 个函数）
+### lib/core/exec.js（273 行 · 9 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1236,6 +1236,10 @@
 | `runGit` | 87-109 | 23 | `export function runGit(args, { cwd = '', timeoutMs = 120_000, env = {}, noMirror = false } = {}) {` |
 | `gitRaw` | 117-133 | 17 | `export function gitRaw(args, { cwd = '', timeoutMs = 600_000 } = {}) {` |
 | `runGitAsync` | 143-164 | 22 | `export function runGitAsync(args, { cwd = '', timeoutMs = 120_000, env = {}, noMirror = false } = {}) {` |
+| `runGitStream` | 188-272 | 85 | `export function runGitStream(args, { cwd = '', env = {}, noMirror = false, stallMs, onProgress } = {}) {` |
+| `feed` | 222-237 | 16 | `const feed = (chunk, isErr) => {` |
+| `signal` | 243-250 | 8 | `const signal = (sig) => {` |
+| `finish` | 259-268 | 10 | `const finish = (code, errMsg) => {` |
 
 ### lib/core/workspace-paths.js（109 行 · 4 个函数）
 
@@ -1349,13 +1353,13 @@
 | `fetchToFile` | 315-397 | 83 | `async function fetchToFile({ owner, repo, branch, relPath, token, out, partPath, size, onBytes, signal = null, mode = 0o644 }) {` |
 | `mkHeaders` | 349-356 | 8 | `const mkHeaders = (raw, withRange) => {` |
 
-### lib/git/clone-history-mode.js（176 行 · 4 个函数）
+### lib/git/clone-history-mode.js（197 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `resolveBranchHead` | 29-39 | 11 | `export async function resolveBranchHead({ owner = '', repo = '', branch = '', token = '', deps = {} } = {}) {` |
 | `cloneWithHistory` | 54-89 | 36 | `export async function cloneWithHistory({` |
-| `cloneWithGitFetch` | 110-175 | 66 | `export async function cloneWithGitFetch({` |
+| `cloneWithGitFetch` | 110-196 | 87 | `export async function cloneWithGitFetch({` |
 | `run` | 131-135 | 5 | `const run = (args) => {` |
 
 ### lib/git/clone-history.js（176 行 · 5 个函数）
@@ -2531,6 +2535,12 @@
 |------|------|------|------|
 | `setupRepo` | 28-44 | 17 | `function setupRepo() {` |
 | `commitAll` | 47-50 | 4 | `function commitAll(dir, msg = 'init') {` |
+
+### test/test-git-stream.mjs（117 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `runFetchCase` | 67-82 | 16 | `async function runFetchCase(streamResult) {` |
 
 ### test/test-git.mjs（868 行 · 2 个函数）
 

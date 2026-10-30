@@ -398,47 +398,52 @@
     "worktree": {
       "docs/CHANGELOG.md": {
         "status": "M",
-        "mtime": "2026-10-30T04:41:53.146Z",
+        "mtime": "2026-10-30T11:23:06.738Z",
         "note": "注释可能需更新"
       },
       "docs/FILE-TREE.md": {
         "status": "M",
-        "mtime": "2026-10-30T04:42:00.036Z",
+        "mtime": "2026-10-30T11:22:37.053Z",
         "note": "注释可能需更新"
       },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-30T04:44:29.600Z",
-        "note": "注释可能需更新"
-      },
-      "docs/SPEC.md": {
-        "status": "M",
-        "mtime": "2026-10-30T04:44:17.939Z",
+        "mtime": "2026-10-30T11:23:07.227Z",
         "note": "注释可能需更新"
       },
       "docs/releases.json": {
         "status": "M",
-        "mtime": "2026-10-30T04:44:23.096Z",
+        "mtime": "2026-10-30T11:23:06.509Z",
         "note": "注释可能需更新"
       },
-      "lib/score/index.js": {
+      "lib/app/command-registry.js": {
         "status": "M",
-        "mtime": "2026-10-30T04:41:14.294Z",
+        "mtime": "2026-10-30T11:06:05.796Z",
+        "note": "注释可能需更新"
+      },
+      "lib/core/exec.js": {
+        "status": "M",
+        "mtime": "2026-10-30T11:05:50.905Z",
+        "note": "注释可能需更新"
+      },
+      "lib/git/clone-history-mode.js": {
+        "status": "M",
+        "mtime": "2026-10-30T11:06:59.886Z",
         "note": "注释可能需更新"
       },
       "lib/self/index.js": {
         "status": "M",
-        "mtime": "2026-10-30T04:41:47.191Z",
+        "mtime": "2026-10-30T11:23:06.507Z",
         "note": "注释可能需更新"
       },
       "package.json": {
         "status": "M",
-        "mtime": "2026-10-30T04:41:47.184Z",
+        "mtime": "2026-10-30T11:23:06.504Z",
         "note": "注释可能需更新"
       },
-      "test/test-dynamic-weight.mjs": {
+      "test/test-git-stream.mjs": {
         "status": "A",
-        "mtime": "2026-10-30T04:41:04.559Z",
+        "mtime": "2026-10-30T11:06:58.217Z",
         "note": "注释可能需更新"
       }
     }
@@ -550,5 +555,6 @@
   "test/test-repeated-strings-cs.mjs": "（待注释）",
   "lib/audit-rules/audit-rules-csharp.yml": "（待注释）",
   "test/test-audit-rules-csharp.mjs": "（待注释）",
-  "test/test-dynamic-weight.mjs": "（待注释）"
+  "test/test-dynamic-weight.mjs": "（待注释）",
+  "test/test-git-stream.mjs": "（待注释）"
 }
