@@ -396,119 +396,49 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      ".auditignore": {
-        "status": "M",
-        "mtime": "2026-10-28T18:33:58.800Z",
-        "note": "注释可能需更新"
-      },
-      "assets/tree-sitter/LICENSE": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "assets/tree-sitter/README.md": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "assets/tree-sitter/VERSIONS.txt": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "assets/tree-sitter/tree-sitter-javascript.wasm": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "assets/tree-sitter/tree-sitter-python.wasm": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "assets/tree-sitter/tree-sitter-typescript.wasm": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "assets/tree-sitter/tree-sitter.js": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "assets/tree-sitter/tree-sitter.wasm": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "docs/2026-10-28-弃零依赖引入npm与AST优先规则方案.MD": {
-        "status": "M",
-        "mtime": "2026-10-28T18:28:55.545Z",
-        "note": "注释可能需更新"
-      },
       "docs/CHANGELOG.md": {
         "status": "M",
-        "mtime": "2026-10-28T18:44:35.792Z",
+        "mtime": "2026-10-30T04:41:53.146Z",
         "note": "注释可能需更新"
       },
       "docs/FILE-TREE.md": {
         "status": "M",
-        "mtime": "2026-10-28T18:28:33.984Z",
+        "mtime": "2026-10-30T04:42:00.036Z",
         "note": "注释可能需更新"
       },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-28T18:44:36.401Z",
+        "mtime": "2026-10-30T04:44:29.600Z",
+        "note": "注释可能需更新"
+      },
+      "docs/SPEC.md": {
+        "status": "M",
+        "mtime": "2026-10-30T04:44:17.939Z",
         "note": "注释可能需更新"
       },
       "docs/releases.json": {
         "status": "M",
-        "mtime": "2026-10-28T18:44:35.566Z",
+        "mtime": "2026-10-30T04:44:23.096Z",
         "note": "注释可能需更新"
       },
-      "lib/ast/treesitter.js": {
+      "lib/score/index.js": {
         "status": "M",
-        "mtime": "2026-10-28T18:27:46.355Z",
-        "note": "注释可能需更新"
-      },
-      "lib/audit/report-yaml.js": {
-        "status": "M",
-        "mtime": "2026-10-28T18:27:59.661Z",
-        "note": "注释可能需更新"
-      },
-      "lib/rule/loader.js": {
-        "status": "M",
-        "mtime": "2026-10-28T18:27:59.664Z",
+        "mtime": "2026-10-30T04:41:14.294Z",
         "note": "注释可能需更新"
       },
       "lib/self/index.js": {
         "status": "M",
-        "mtime": "2026-10-28T18:44:35.562Z",
-        "note": "注释可能需更新"
-      },
-      "lib/skip-dirs.js": {
-        "status": "M",
-        "mtime": "2026-10-28T18:27:59.688Z",
-        "note": "注释可能需更新"
-      },
-      "lib/vendor/js-yaml/LICENSE": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "lib/vendor/js-yaml/js-yaml.mjs": {
-        "status": "D",
-        "mtime": "",
+        "mtime": "2026-10-30T04:41:47.191Z",
         "note": "注释可能需更新"
       },
       "package.json": {
         "status": "M",
-        "mtime": "2026-10-28T18:44:35.559Z",
+        "mtime": "2026-10-30T04:41:47.184Z",
         "note": "注释可能需更新"
       },
-      "test/test-treesitter.mjs": {
-        "status": "M",
-        "mtime": "2026-10-28T18:33:58.793Z",
+      "test/test-dynamic-weight.mjs": {
+        "status": "A",
+        "mtime": "2026-10-30T04:41:04.559Z",
         "note": "注释可能需更新"
       }
     }
@@ -619,5 +549,6 @@
   "test/test-treesitter-grammars.mjs": "多语言 AST 接通自检：语法映射与 wasms 包实存核对、每语言 0 ERROR 解析、注释与带引号原始字符串的精筛、以及无语法资产时的回退契约（D5）",
   "test/test-repeated-strings-cs.mjs": "（待注释）",
   "lib/audit-rules/audit-rules-csharp.yml": "（待注释）",
-  "test/test-audit-rules-csharp.mjs": "（待注释）"
+  "test/test-audit-rules-csharp.mjs": "（待注释）",
+  "test/test-dynamic-weight.mjs": "（待注释）"
 }

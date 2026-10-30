@@ -1856,12 +1856,14 @@
 | `maxVersion` | 156-166 | 11 | `function maxVersion(list) {` |
 | `cmp` | 157-164 | 8 | `const cmp = (a, b) => {` |
 
-### lib/score/index.js（140 行 · 2 个函数）
+### lib/score/index.js（190 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `countByDimension` | 50-80 | 31 | `export function countByDimension(findings = []) {` |
-| `scoreQuality` | 97-140 | 44 | `export function scoreQuality(findings = [], weights = {}, context = {}) {` |
+| `countHitFilesByDimension` | 90-104 | 15 | `export function countHitFilesByDimension(findings = []) {` |
+| `scoreQuality` | 121-190 | 70 | `export function scoreQuality(findings = [], weights = {}, context = {}) {` |
+| `dynamicRatio` | 167-175 | 9 | `const dynamicRatio = (dim) => {` |
 
 ### lib/self/index.js（197 行 · 5 个函数）
 
