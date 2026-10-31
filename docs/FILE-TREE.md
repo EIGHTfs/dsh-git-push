@@ -155,6 +155,8 @@ dsh-git-push/
 │   │   ├── credentials.js — （待注释）
 │   │   ├── endpoints.js — （待注释）
 │   │   ├── exec.js — （待注释）
+│   │   ├── mirror-candidates.json — （待注释）
+│   │   ├── mirror-store.js — （待注释）
 │   │   ├── workspace-paths.js — （待注释）
 │   ├── exempt/ — 豁免机制（dsh-skip-* 注释标记解析与文件头/行内语义）
 │   │   ├── index.js — 豁免注册表（dsh-skip-* 全标记消费）
@@ -361,6 +363,7 @@ dsh-git-push/
 │   ├── test-max-lines-scope.mjs — （待注释）
 │   ├── test-mirror-fallback.mjs — （待注释）
 │   ├── test-mirror-gates.mjs — （待注释）
+│   ├── test-mirror-store.mjs — （待注释）
 │   ├── test-module-splitter-multiline.mjs — （待注释）
 │   ├── test-module-splitter.mjs — module_splitter 工具 + CLI 接入测试（契约 + 行为 + 脚本随插件发布）
 │   ├── test-multi-remote.mjs — （待注释）

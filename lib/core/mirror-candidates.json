@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "note": "GitHub 只读镜像候选清单。mirror 必须以 / 结尾（withMirror 做纯前缀拼接）。顺序即优先级：靠前的先用。运行期会把 failures/disabled/lastOkAt/lastError 学习结果写到配置目录的 mirror-state.json，本文件保持为「出厂清单」不被回写污染。降权是自动的：某镜像连续 3 次数据校验失败（声明总长不符 / blob sha 不符）即停用，一次成功清零。",
+  "candidates": [
+    {
+      "mirror": "https://gh-proxy.com/",
+      "note": "历史默认镜像，实测吞吐最好（2026-10-03：codeload 21KB/s → 12MB/s）。2026-10-30 观测到它对个别大文件返回截断缓存（total=590454 而真实 8059635）——属**单文件缓存**问题而非镜像整体失效，故保持首选；真出问题时由下载器的 total/sha 校验自动累计失败并降权到后续候选。"
+    },
+    {
+      "mirror": "https://ghfast.top/",
+      "note": "备用。实测对同一文件返回正确总长（content-range /8059635）且支持 Range 续传"
+    },
+    {
+      "mirror": "https://ghproxy.net/",
+      "note": "备用。实测同样返回正确总长、支持 Range"
+    }
+  ]
+}

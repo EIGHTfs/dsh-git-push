@@ -83,6 +83,9 @@ settings-get  settings-set
 | `account-status.json` | 凭据校验快照（有效性/登录名/时间/配额） | **每次推送/提交验证账号时刷新**；侧边栏打开只读 |
 | `dsh-repo-index.jsonl` | 工作区仓库索引（JSONL，每行一个仓库；旧 `dsh-repo-index.json` 只读兼容并自动迁移） | 扫描/刷新；推送成功后先全量重建再精确回写 |
 | `scan-live.json` | 扫描进度 | 扫描进行中 |
+| `mirror-state.json` | 镜像健康度学习结果（每个镜像 failures/disabled/lastOkAt/lastError） | 下载数据校验失败/成功时；可用 `DSH_GIT_MIRROR_STATE` 覆盖位置 |
+
+**镜像选择**：`DSH_GIT_MIRROR_PREFIX` 显式值 > 出厂清单 `lib/core/mirror-candidates.json` 首个**未停用**候选 > 全部停用则直连；停用判据为**数据校验**（声明总长 / blob sha 不符），连续 3 次停用、一次成功清零。
 
 **不变量**：写只走收口函数（账号状态 `writeAccountStatusFromResult` / `updateAccountStatusQuota`；索引走索引维护模块）；落盘走**原子写**；「是否已配置凭据」一律查凭据真源，不看快照。
 
@@ -114,5 +117,6 @@ settings-get  settings-set
 ## 九、测试基线
 
 - 全量 `test/*.mjs` **必须 0 失败**；新增/修改行为必须带回归；
+- 执行器 `test/run-tests.mjs` **分批**跑（默认 40 文件/批，每批独立 `node --test` 进程 + 1GB 堆上限）：单进程跑完全部文件时堆只涨不还，8GB 机器（宿主常驻 5GB+）上会挤爆内存；`--batch-size` / `DSH_TEST_HEAP_MB` 可调，`--only=<子串>` 只跑命中文件；
 - 公开面由 `test/test-tool-contract.mjs` 门禁；版本行为基线由 `test/regression-<版本>.mjs` 汇总；
 - 工具层端到端见 `test/test-tools-e2e.mjs`（最小 env/cfg 直接驱动 `callTool`）。

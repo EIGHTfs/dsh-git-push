@@ -1217,16 +1217,16 @@
 | `readNpmToken` | 217-226 | 10 | `export function readNpmToken({ workspaceRoot = '' } = {}) {` |
 | `generateSshKey` | 235-274 | 40 | `export function generateSshKey(email, { workspaceRoot = '', force = false } = {}) {` |
 
-### lib/core/endpoints.js（110 行 · 6 个函数）
+### lib/core/endpoints.js（120 行 · 6 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `mirrorPrefix` | 30-35 | 6 | `export function mirrorPrefix() {` |
-| `withMirror` | 56-65 | 10 | `export function withMirror(url, { method = 'GET', mode = 'read', noMirror = false } = {}) {` |
-| `mirrorGitConfigEnv` | 78-87 | 10 | `export function mirrorGitConfigEnv(env, { mode = 'read' } = {}) {` |
-| `blobApiUrl` | 97-99 | 3 | `export function blobApiUrl(owner, repo, sha) {` |
-| `contentsApiUrl` | 102-104 | 3 | `export function contentsApiUrl(owner, repo, encodedPath, encodedRef) {` |
-| `rawFileUrl` | 107-109 | 3 | `export function rawFileUrl(owner, repo, encodedRef, encodedPath) {` |
+| `mirrorPrefix` | 32-45 | 14 | `export function mirrorPrefix() {` |
+| `withMirror` | 66-75 | 10 | `export function withMirror(url, { method = 'GET', mode = 'read', noMirror = false } = {}) {` |
+| `mirrorGitConfigEnv` | 88-97 | 10 | `export function mirrorGitConfigEnv(env, { mode = 'read' } = {}) {` |
+| `blobApiUrl` | 107-109 | 3 | `export function blobApiUrl(owner, repo, sha) {` |
+| `contentsApiUrl` | 112-114 | 3 | `export function contentsApiUrl(owner, repo, encodedPath, encodedRef) {` |
+| `rawFileUrl` | 117-119 | 3 | `export function rawFileUrl(owner, repo, encodedRef, encodedPath) {` |
 
 ### lib/core/exec.js（273 行 · 9 个函数）
 
@@ -1241,6 +1241,22 @@
 | `feed` | 222-237 | 16 | `const feed = (chunk, isErr) => {` |
 | `signal` | 243-250 | 8 | `const signal = (sig) => {` |
 | `finish` | 259-268 | 10 | `const finish = (code, errMsg) => {` |
+
+### lib/core/mirror-store.js（244 行 · 11 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `normalizeMirror` | 51-55 | 5 | `export function normalizeMirror(raw) {` |
+| `statePath` | 61-66 | 6 | `export function statePath({ configDir = '' } = {}) {` |
+| `readSeed` | 69-77 | 9 | `export function readSeed(path = SEED_PATH) {` |
+| `readState` | 80-99 | 20 | `export function readState(path = statePath()) {` |
+| `writeState` | 102-111 | 10 | `export function writeState(state, path = statePath()) {` |
+| `listCandidates` | 117-131 | 15 | `export function listCandidates({ seedPath = SEED_PATH, stateFile = statePath() } = {}) {` |
+| `pickMirror` | 134-145 | 12 | `export function pickMirror({ seedPath, stateFile } = {}) {` |
+| `invalidateMirrorCache` | 148-151 | 4 | `export function invalidateMirrorCache() {` |
+| `recordOutcome` | 162-193 | 32 | `export function recordOutcome(mirror, { ok, error = '', stateFile = statePath() } = {}) {` |
+| `probeMirror` | 204-228 | 25 | `export async function probeMirror({` |
+| `probeAll` | 234-243 | 10 | `export async function probeAll({ seedPath, stateFile = statePath(), fetchImpl, timeoutMs, expectedBytes } = {}) {` |
 
 ### lib/core/workspace-paths.js（109 行 · 4 个函数）
 
@@ -1334,26 +1350,29 @@
 |------|------|------|------|
 | `browseDir` | 17-38 | 22 | `export function browseDir(p = '', { root = '' } = {}) {` |
 
-### lib/git/clone-download.js（474 行 · 16 个函数）
+### lib/git/clone-download.js（524 行 · 19 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `partitionBySize` | 55-66 | 12 | `export function partitionBySize(blobs = [], maxFileMB = DEFAULT_MAX_FILE_MB) {` |
-| `downloadSymlinkEntry` | 93-105 | 13 | `async function downloadSymlinkEntry(entry, { owner, repo, token, out, rel }) {` |
-| `posixModeOf` | 119-121 | 3 | `function posixModeOf(gitMode) {` |
-| `downloadRegularEntry` | 129-143 | 15 | `async function downloadRegularEntry(entry, { owner, repo, branch, token, out, partPath, signal, rel, onBytes }) {` |
-| `runDownloadPool` | 151-162 | 12 | `async function runDownloadPool(blobs, one, concurrency, signal) {` |
-| `worker` | 153-160 | 8 | `const worker = async () => {` |
-| `cleanupPartsIfAllSucceeded` | 174-177 | 4 | `async function cleanupPartsIfAllSucceeded(partsDir, failed, signal) {` |
-| `downloadOneEntry` | 189-215 | 27 | `async function downloadOneEntry(entry, ctx) {` |
-| `downloadBlobs` | 217-248 | 32 | `export async function downloadBlobs(o) {` |
-| `emit` | 228-232 | 5 | `const emit = () => {` |
-| `one` | 239-239 | 1 | `const one = (entry) => downloadOneEntry(entry, ctx);` |
-| `fetchBlobJson` | 253-268 | 16 | `async function fetchBlobJson(owner, repo, sha, token) {` |
-| `removeDirForce` | 294-313 | 20 | `export async function removeDirForce(dir, attempts = 3) {` |
-| `totalFromResponse` | 316-325 | 10 | `function totalFromResponse(resp) {` |
-| `fetchToFile` | 327-473 | 147 | `async function fetchToFile({ owner, repo, branch, relPath, token, out, partPath, size, onBytes, signal = null, mode = 0o644, expectSha = '' }) {` |
-| `mkHeaders` | 361-368 | 8 | `const mkHeaders = (raw, withRange) => {` |
+| `partitionBySize` | 56-67 | 12 | `export function partitionBySize(blobs = [], maxFileMB = DEFAULT_MAX_FILE_MB) {` |
+| `downloadSymlinkEntry` | 94-106 | 13 | `async function downloadSymlinkEntry(entry, { owner, repo, token, out, rel }) {` |
+| `posixModeOf` | 120-122 | 3 | `function posixModeOf(gitMode) {` |
+| `downloadRegularEntry` | 130-144 | 15 | `async function downloadRegularEntry(entry, { owner, repo, branch, token, out, partPath, signal, rel, onBytes }) {` |
+| `runDownloadPool` | 152-163 | 12 | `async function runDownloadPool(blobs, one, concurrency, signal) {` |
+| `worker` | 154-161 | 8 | `const worker = async () => {` |
+| `cleanupPartsIfAllSucceeded` | 175-178 | 4 | `async function cleanupPartsIfAllSucceeded(partsDir, failed, signal) {` |
+| `downloadOneEntry` | 190-216 | 27 | `async function downloadOneEntry(entry, ctx) {` |
+| `downloadBlobs` | 218-249 | 32 | `export async function downloadBlobs(o) {` |
+| `emit` | 229-233 | 5 | `const emit = () => {` |
+| `one` | 240-240 | 1 | `const one = (entry) => downloadOneEntry(entry, ctx);` |
+| `fetchBlobJson` | 254-269 | 16 | `async function fetchBlobJson(owner, repo, sha, token) {` |
+| `removeDirForce` | 295-314 | 20 | `export async function removeDirForce(dir, attempts = 3) {` |
+| `mirrorOf` | 322-327 | 6 | `function mirrorOf(url) {` |
+| `noteMirror` | 334-338 | 5 | `function noteMirror(url, ok, error) {` |
+| `totalFromResponse` | 341-350 | 10 | `function totalFromResponse(resp) {` |
+| `fetchToFile` | 352-523 | 172 | `async function fetchToFile({ owner, repo, branch, relPath, token, out, partPath, size, onBytes, signal = null, mode = 0o644, expectSha = '' }) {` |
+| `altMirrors` | 392-400 | 9 | `const altMirrors = (() => {` |
+| `mkHeaders` | 401-408 | 8 | `const mkHeaders = (raw, withRange) => {` |
 
 ### lib/git/clone-history-mode.js（197 行 · 4 个函数）
 
@@ -2218,6 +2237,13 @@
 | `tempRepo` | 79-85 | 7 | `export function tempRepo(label = 'repo', { t = null, name = '', email = '' } = {}) {` |
 | `sweepStaleTempDirs` | 93-116 | 24 | `export function sweepStaleTempDirs({ maxAgeMs = 60 * 60 * 1000, log = null } = {}) {` |
 
+### test/run-tests.mjs（175 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `runBatch` | 92-124 | 33 | `function runBatch(files) {` |
+| `emit` | 108-119 | 12 | `const emit = (chunk) => {` |
+
 ### test/test-account-ssh.mjs（149 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2655,6 +2681,12 @@
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `withEnv` | 15-23 | 9 | `const withEnv = (v, fn) => {` |
+
+### test/test-mirror-store.mjs（157 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `withStateFile` | 28-42 | 15 | `function withStateFile(fn) {` |
 
 ### test/test-module-splitter-multiline.mjs（80 行 · 1 个函数）
 
