@@ -396,69 +396,44 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "docs/CHANGELOG.md": {
-        "status": "M",
-        "mtime": "2026-10-30T19:51:04.775Z",
-        "note": "注释可能需更新"
-      },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-10-30T19:51:05.312Z",
-        "note": "注释可能需更新"
-      },
-      "docs/SPEC.md": {
-        "status": "M",
-        "mtime": "2026-10-30T19:51:04.593Z",
+        "mtime": "2026-10-31T05:13:37.389Z",
         "note": "注释可能需更新"
       },
       "docs/releases.json": {
         "status": "M",
-        "mtime": "2026-10-30T19:51:04.561Z",
+        "mtime": "2026-10-31T05:13:33.573Z",
         "note": "注释可能需更新"
       },
-      "lib/app/audit-api.js": {
+      "lib/git/clone-download.js": {
         "status": "M",
-        "mtime": "2026-10-30T19:35:34.327Z",
-        "note": "注释可能需更新"
-      },
-      "lib/app/tool-call.js": {
-        "status": "M",
-        "mtime": "2026-10-30T19:35:34.330Z",
-        "note": "注释可能需更新"
-      },
-      "lib/audit/history.js": {
-        "status": "M",
-        "mtime": "2026-10-30T19:35:34.355Z",
-        "note": "注释可能需更新"
-      },
-      "lib/audit/orchestrate.js": {
-        "status": "M",
-        "mtime": "2026-10-30T19:49:25.890Z",
-        "note": "注释可能需更新"
-      },
-      "lib/cli/commands-audit.mjs": {
-        "status": "M",
-        "mtime": "2026-10-30T19:36:23.625Z",
-        "note": "注释可能需更新"
-      },
-      "lib/score/index.js": {
-        "status": "M",
-        "mtime": "2026-10-30T19:46:47.869Z",
+        "mtime": "2026-10-31T05:01:52.647Z",
         "note": "注释可能需更新"
       },
       "lib/self/index.js": {
         "status": "M",
-        "mtime": "2026-10-30T19:51:04.557Z",
+        "mtime": "2026-10-31T05:13:33.526Z",
         "note": "注释可能需更新"
       },
       "package.json": {
         "status": "M",
-        "mtime": "2026-10-30T19:51:04.553Z",
+        "mtime": "2026-10-31T05:13:33.522Z",
         "note": "注释可能需更新"
       },
-      "test/test-dim-denominator.mjs": {
+      "test/test-clone-concurrency.mjs": {
+        "status": "M",
+        "mtime": "2026-10-31T05:04:36.923Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-clone-parts-keep.mjs": {
+        "status": "M",
+        "mtime": "2026-10-31T05:11:56.064Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-clone-mirror-truncation.mjs": {
         "status": "A",
-        "mtime": "2026-10-30T19:49:54.186Z",
+        "mtime": "2026-10-31T05:11:56.062Z",
         "note": "注释可能需更新"
       }
     }
@@ -572,5 +547,6 @@
   "test/test-audit-rules-csharp.mjs": "（待注释）",
   "test/test-dynamic-weight.mjs": "（待注释）",
   "test/test-git-stream.mjs": "（待注释）",
-  "test/test-dim-denominator.mjs": "（待注释）"
+  "test/test-dim-denominator.mjs": "（待注释）",
+  "test/test-clone-mirror-truncation.mjs": "（待注释）"
 }

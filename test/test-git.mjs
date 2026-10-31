@@ -6,6 +6,7 @@
  */
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, existsSync, readFileSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { join } from 'node:path';
@@ -76,6 +77,16 @@ function mockFetch(routes) {
     }
     return new Response(JSON.stringify({ message: 'not found' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
   };
+}
+
+/**
+ * git blob 对象哈希（`blob <size>\0` + 内容，sha1）。
+ *   clone 下载器现在会用 tree 记录的 sha 做**增量内容校验**（防镜像截断/旧缓存拼脏分片），
+ *   桩里写 'b1' 这类假 sha 必然校验失败 ⇒ 所有「下载成功」用例必须给真实哈希才自洽。
+ */
+function gitBlobSha(content) {
+  const buf = Buffer.isBuffer(content) ? content : Buffer.from(String(content), 'utf8');
+  return createHash('sha1').update(`blob ${buf.length}\u0000`, 'latin1').update(buf).digest('hex');
 }
 
 /**
@@ -516,7 +527,7 @@ test('cloneViaApi：完整 mock 流程（tree + blob 写文件）', async () => 
   const dest = join(tmp, 'cloned');
   mockFetch([
     { match: (u, m) => m === 'GET' && u.endsWith('/repos/o/r'), status: 200, body: { default_branch: 'main' } },
-    { match: (u, m) => m === 'GET' && u.includes('/git/trees/main?recursive=1'), status: 200, body: { sha: 'x'.repeat(40), tree: [{ path: 'hello.txt', type: 'blob', sha: 'b1', size: 5, mode: '100644' }, { path: 'sub/nested.txt', type: 'blob', sha: 'b2', size: 6, mode: '100644' }] } },
+    { match: (u, m) => m === 'GET' && u.includes('/git/trees/main?recursive=1'), status: 200, body: { sha: 'x'.repeat(40), tree: [{ path: 'hello.txt', type: 'blob', sha: gitBlobSha('hello'), size: 5, mode: '100644' }, { path: 'sub/nested.txt', type: 'blob', sha: gitBlobSha('nested'), size: 6, mode: '100644' }] } },
     ...mockRawRoutes({ 'hello.txt': 'hello', 'sub/nested.txt': 'nested' }),
   ]);
   const r = await cloneViaApi({ target: 'o/r', dest, token: 'ghp_clone' });
@@ -612,7 +623,7 @@ test('cloneViaApi：失败清理后可直接重试成功（回归：本 bug 的�
   // 第一次：blob 超时 → 失败并清理
   mockFetch([
     { match: (u, m) => m === 'GET' && u.endsWith('/repos/o/r'), status: 200, body: { default_branch: 'main' } },
-    { match: (u) => u.includes('/git/trees/main?recursive=1'), status: 200, body: { sha: 'y'.repeat(40), tree: [{ path: 'f.txt', type: 'blob', sha: 'c1' , size: 2, mode: '100644'}] } },
+    { match: (u) => u.includes('/git/trees/main?recursive=1'), status: 200, body: { sha: 'y'.repeat(40), tree: [{ path: 'f.txt', type: 'blob', sha: gitBlobSha('ok') , size: 2, mode: '100644'}] } },
     { match: (u) => u.includes('raw.githubusercontent.com') && decodeURIComponent(u).endsWith('/f.txt'), status: 0 },
   ]);
   const r1 = await cloneViaApi({ target: 'o/r', dest, token: 'ghp_clone' });
@@ -620,7 +631,7 @@ test('cloneViaApi：失败清理后可直接重试成功（回归：本 bug 的�
   // 第二次：网络恢复 → 应直接成功，不再撞「目标目录已存在且非空」
   mockFetch([
     { match: (u, m) => m === 'GET' && u.endsWith('/repos/o/r'), status: 200, body: { default_branch: 'main' } },
-    { match: (u) => u.includes('/git/trees/main?recursive=1'), status: 200, body: { sha: 'y'.repeat(40), tree: [{ path: 'f.txt', type: 'blob', sha: 'c1' , size: 2, mode: '100644'}] } },
+    { match: (u) => u.includes('/git/trees/main?recursive=1'), status: 200, body: { sha: 'y'.repeat(40), tree: [{ path: 'f.txt', type: 'blob', sha: gitBlobSha('ok') , size: 2, mode: '100644'}] } },
     { match: (u) => u.includes('raw.githubusercontent.com') && decodeURIComponent(u).endsWith('/f.txt'), status: 200, raw: 'ok' },
   ]);
   const r2 = await cloneViaApi({ target: 'o/r', dest, token: 'ghp_clone' });
@@ -636,7 +647,7 @@ test('cloneViaApi：进程被中断留下的残留（有标记、无提交）可
   writeFileSync(join(dest, '.dsh-git-push-cloning'), String(Date.now()));
   mockFetch([
     { match: (u, m) => m === 'GET' && u.endsWith('/repos/o/r'), status: 200, body: { default_branch: 'main' } },
-    { match: (u) => u.includes('/git/trees/main?recursive=1'), status: 200, body: { sha: 'z'.repeat(40), tree: [{ path: 'ok.txt', type: 'blob', sha: 'd1' , size: 1, mode: '100644'}] } },
+    { match: (u) => u.includes('/git/trees/main?recursive=1'), status: 200, body: { sha: 'z'.repeat(40), tree: [{ path: 'ok.txt', type: 'blob', sha: gitBlobSha('x') , size: 1, mode: '100644'}] } },
     { match: (u) => u.includes('raw.githubusercontent.com') && decodeURIComponent(u).endsWith('/ok.txt'), status: 200, raw: 'x' },
   ]);
   const r = await cloneViaApi({ target: 'o/r', dest, token: 'ghp_clone' });
@@ -663,7 +674,7 @@ test('cloneViaApi：成功后不留进行中标记', async () => {
   const dest = join(tmp, 'clone-no-marker');
   mockFetch([
     { match: (u, m) => m === 'GET' && u.endsWith('/repos/o/r'), status: 200, body: { default_branch: 'main' } },
-    { match: (u) => u.includes('/git/trees/main?recursive=1'), status: 200, body: { sha: 'w'.repeat(40), tree: [{ path: 'x.txt', type: 'blob', sha: 'e1' , size: 1, mode: '100644'}] } },
+    { match: (u) => u.includes('/git/trees/main?recursive=1'), status: 200, body: { sha: 'w'.repeat(40), tree: [{ path: 'x.txt', type: 'blob', sha: gitBlobSha('x') , size: 1, mode: '100644'}] } },
     { match: (u) => u.includes('raw.githubusercontent.com') && decodeURIComponent(u).endsWith('/x.txt'), status: 200, raw: 'x' },
   ]);
   const r = await cloneViaApi({ target: 'o/r', dest, token: 'ghp_clone' });

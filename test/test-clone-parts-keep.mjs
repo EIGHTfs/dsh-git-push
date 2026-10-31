@@ -5,6 +5,7 @@
 //   实测：1.1GB 大 PNG（6~23MB/个）连跑两轮，失败项 105 → 78 几乎不变，且 .part 每轮归零。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { mkdtempSync, existsSync, readdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -13,17 +14,28 @@ import { downloadBlobs, PARTS_DIR } from '../lib/git/clone-download.js';
 
 // 打桩全局 fetch：'bad.png' 只回 5 字节（声明 size=10）→ 长度校验失败、留下半截 .part；
 //   其余文件按声明长度返回 → 成功。两个通道（api/raw）都被同一桩接管，故失败是确定性的。
+//   返回的字节流固定为 'x'*n（与 blobSha 同源），成功文件的 sha 校验因此真实可过——
+//   桩必须与真实校验规则自洽，否则测的就不是「保留/清理」而是「校验必挂」。
 function stubFetch() {
   const orig = globalThis.fetch;
   globalThis.fetch = async (url) => {
     const u = String(url);
-    const body = u.includes('bad.png') ? 'x'.repeat(5) : 'x'.repeat(10);
+    const fname = decodeURIComponent(u.split('/').pop().split('?')[0]);
+    // 内容含文件名首字符 ⇒ 不同 path 得到不同 git sha ⇒ 分片文件名 <sha>.part 不会互相撞车
+    const body = fname.includes('bad') ? 'x'.repeat(5) : fname[0] + 'x'.repeat(9);
     return new Response(body, { status: 200 });
   };
   return () => { globalThis.fetch = orig; };
 }
 
-const blob = (path, size) => ({ path, size, sha: path.padEnd(40, '0'), mode: '100644' });
+// git blob 对象哈希（header 的 \0 按 latin1 单字节，与 clone-download 的增量哈希同口径）
+function blobSha(content, size) {
+  return createHash('sha1')
+    .update(`blob ${size}\u0000`, 'latin1')
+    .update(content, 'utf8')
+    .digest('hex');
+}
+const blob = (path, size) => ({ path, size, sha: blobSha(path[0] + 'x'.repeat(9), 10), mode: '100644' });
 
 test('有失败项 → 保留 .dsh-parts 与半截分片（跨轮续传的前提）', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'dshgp-parts-keep-'));

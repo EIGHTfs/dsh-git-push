@@ -1334,7 +1334,7 @@
 |------|------|------|------|
 | `browseDir` | 17-38 | 22 | `export function browseDir(p = '', { root = '' } = {}) {` |
 
-### lib/git/clone-download.js（398 行 · 15 个函数）
+### lib/git/clone-download.js（474 行 · 16 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1351,8 +1351,9 @@
 | `one` | 239-239 | 1 | `const one = (entry) => downloadOneEntry(entry, ctx);` |
 | `fetchBlobJson` | 253-268 | 16 | `async function fetchBlobJson(owner, repo, sha, token) {` |
 | `removeDirForce` | 294-313 | 20 | `export async function removeDirForce(dir, attempts = 3) {` |
-| `fetchToFile` | 315-397 | 83 | `async function fetchToFile({ owner, repo, branch, relPath, token, out, partPath, size, onBytes, signal = null, mode = 0o644 }) {` |
-| `mkHeaders` | 349-356 | 8 | `const mkHeaders = (raw, withRange) => {` |
+| `totalFromResponse` | 316-325 | 10 | `function totalFromResponse(resp) {` |
+| `fetchToFile` | 327-473 | 147 | `async function fetchToFile({ owner, repo, branch, relPath, token, out, partPath, size, onBytes, signal = null, mode = 0o644, expectSha = '' }) {` |
+| `mkHeaders` | 361-368 | 8 | `const mkHeaders = (raw, withRange) => {` |
 
 ### lib/git/clone-history-mode.js（197 行 · 4 个函数）
 
@@ -2337,13 +2338,13 @@
 | `req` | 402-421 | 20 | `const req = (name) => {` |
 | `req` | 470-488 | 19 | `const req = (name) => {` |
 
-### test/test-clone-concurrency.mjs（458 行 · 3 个函数）
+### test/test-clone-concurrency.mjs（459 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `probe` | 129-153 | 25 | `const probe = async (useNew) => {` |
-| `writer` | 134-140 | 7 | `const writer = (async () => {` |
-| `call` | 435-435 | 1 | `const call = async (body) => (await handleHttp(` |
+| `probe` | 130-154 | 25 | `const probe = async (useNew) => {` |
+| `writer` | 135-141 | 7 | `const writer = (async () => {` |
+| `call` | 436-436 | 1 | `const call = async (body) => (await handleHttp(` |
 
 ### test/test-clone-history-defaults.mjs（49 行 · 1 个函数）
 
@@ -2365,11 +2366,21 @@
 |------|------|------|------|
 | `stubApi` | 28-38 | 11 | `function stubApi(chain) {` |
 
-### test/test-clone-parts-keep.mjs（64 行 · 1 个函数）
+### test/test-clone-mirror-truncation.mjs（138 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `stubFetch` | 16-24 | 9 | `function stubFetch() {` |
+| `stubChannels` | 25-52 | 28 | `function stubChannels({ rawBroken = true, apiBroken = false } = {}) {` |
+| `blobSha` | 56-58 | 3 | `function blobSha(content, size) {` |
+| `newDir` | 63-64 | 2 | `function newDir() { return mkdtempSync(join(tmpdir(), 'dshgp-trunc-')); }` |
+| `partOf` | 64-65 | 2 | `function partOf(dir) { return join(dir, PARTS_DIR, `${blob.sha}.part`); }` |
+
+### test/test-clone-parts-keep.mjs（76 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `stubFetch` | 19-29 | 11 | `function stubFetch() {` |
+| `blobSha` | 32-37 | 6 | `function blobSha(content, size) {` |
 
 ### test/test-clone-preview-buttons.mjs（134 行 · 5 个函数）
 
@@ -2544,12 +2555,13 @@
 |------|------|------|------|
 | `runFetchCase` | 67-82 | 16 | `async function runFetchCase(streamResult) {` |
 
-### test/test-git.mjs（868 行 · 2 个函数）
+### test/test-git.mjs（879 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `mockFetch` | 62-79 | 18 | `function mockFetch(routes) {` |
-| `mockRawRoutes` | 86-96 | 11 | `function mockRawRoutes(files) {` |
+| `mockFetch` | 63-80 | 18 | `function mockFetch(routes) {` |
+| `gitBlobSha` | 87-90 | 4 | `function gitBlobSha(content) {` |
+| `mockRawRoutes` | 97-107 | 11 | `function mockRawRoutes(files) {` |
 
 ### test/test-gitignore-match.mjs（141 行 · 4 个函数）
 

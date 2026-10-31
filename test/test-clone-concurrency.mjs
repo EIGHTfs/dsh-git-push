@@ -18,6 +18,7 @@
  *   CIFS 用例在非 CIFS 环境自动跳过（rmSync 本就成功，无从对照）。
  */
 import { test } from 'node:test';
+import { createHash } from 'node:crypto';
 import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, existsSync, createWriteStream, rmSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
