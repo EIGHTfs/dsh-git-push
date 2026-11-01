@@ -607,14 +607,14 @@
 | `topUnresolvedFiles` | 78-85 | 8 | `function topUnresolvedFiles(unresolved, topN) {` |
 | `formatAnalysisCoverageLine` | 92-98 | 7 | `export function formatAnalysisCoverageLine(cov = {}) {` |
 
-### lib/audit/audit-file.js（199 行 · 4 个函数）
+### lib/audit/audit-file.js（206 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `isMinifiedOneLine` | 30-40 | 11 | `function isMinifiedOneLine(text) {` |
-| `isHashSegment` | 44-46 | 3 | `function isHashSegment(seg) {` |
-| `isBuildArtifactFile` | 48-78 | 31 | `export function isBuildArtifactFile(relPathOrFile = '', text = '') {` |
-| `auditFile` | 80-199 | 120 | `export function auditFile({ file, relPath, text, grouped }, opts = {}) {` |
+| `isMinifiedOneLine` | 31-41 | 11 | `function isMinifiedOneLine(text) {` |
+| `isHashSegment` | 45-47 | 3 | `function isHashSegment(seg) {` |
+| `isBuildArtifactFile` | 49-79 | 31 | `export function isBuildArtifactFile(relPathOrFile = '', text = '') {` |
+| `auditFile` | 81-206 | 126 | `export function auditFile({ file, relPath, text, grouped }, opts = {}) {` |
 
 ### lib/audit/auditignore-rules.js（149 行 · 6 个函数）
 
@@ -666,21 +666,25 @@
 | `loadAuditExt` | 28-51 | 24 | `export async function loadAuditExt(dir = DEFAULT_EXT_DIR) {` |
 | `runAuditExt` | 59-80 | 22 | `export async function runAuditExt(repo, opts = {}) {` |
 
-### lib/audit/file-context.js（296 行 · 11 个函数）
+### lib/audit/file-context.js（392 行 · 15 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `hasMkdirInSameFunction` | 19-43 | 25 | `export function hasMkdirInSameFunction(lines, lineIdx) {` |
-| `functionScope` | 46-296 | 251 | `function functionScope(lines, lineIdx) {` |
-| `mkdirHelperNames` | 80-102 | 23 | `function mkdirHelperNames(lines) {` |
-| `hasForeignWriteTarget` | 126-151 | 26 | `export function hasForeignWriteTarget(lines, lineIdx) {` |
-| `enclosingParams` | 161-166 | 6 | `function enclosingParams(lines, lineIdx) {` |
-| `hasTimeoutInRange` | 219-224 | 6 | `function hasTimeoutInRange(lines, start, end) {` |
-| `isCallClosed` | 227-228 | 2 | `function isCallClosed(s, depth) {` |
-| `hasTimeoutAfterCall` | 241-251 | 11 | `function hasTimeoutAfterCall(line, lines, lineIdx) {` |
-| `hasExternalCallTimeout` | 253-258 | 6 | `export function hasExternalCallTimeout(line, lines, lineIdx) {` |
-| `detectRepoJsYamlImport` | 267-276 | 10 | `export function detectRepoJsYamlImport(files) {` |
-| `isVersionInPathContext` | 289-295 | 7 | `export function isVersionInPathContext(line) {` |
+| `hasMkdirInSameFunction` | 19-48 | 30 | `export function hasMkdirInSameFunction(lines, lineIdx) {` |
+| `enclosingScopes` | 55-63 | 9 | `function enclosingScopes(lines, lineIdx) {` |
+| `topLevelFunctionScope` | 69-392 | 324 | `function topLevelFunctionScope(lines, lineIdx) {` |
+| `isBestEffortWrite` | 99-120 | 22 | `export function isBestEffortWrite(lines, lineIdx) {` |
+| `functionScope` | 123-392 | 270 | `function functionScope(lines, lineIdx) {` |
+| `stripBracesNoise` | 167-173 | 7 | `function stripBracesNoise(line) {` |
+| `mkdirHelperNames` | 176-198 | 23 | `function mkdirHelperNames(lines) {` |
+| `hasForeignWriteTarget` | 222-247 | 26 | `export function hasForeignWriteTarget(lines, lineIdx) {` |
+| `enclosingParams` | 257-262 | 6 | `function enclosingParams(lines, lineIdx) {` |
+| `hasTimeoutInRange` | 315-320 | 6 | `function hasTimeoutInRange(lines, start, end) {` |
+| `isCallClosed` | 323-324 | 2 | `function isCallClosed(s, depth) {` |
+| `hasTimeoutAfterCall` | 337-347 | 11 | `function hasTimeoutAfterCall(line, lines, lineIdx) {` |
+| `hasExternalCallTimeout` | 349-354 | 6 | `export function hasExternalCallTimeout(line, lines, lineIdx) {` |
+| `detectRepoJsYamlImport` | 363-372 | 10 | `export function detectRepoJsYamlImport(files) {` |
+| `isVersionInPathContext` | 385-391 | 7 | `export function isVersionInPathContext(line) {` |
 
 ### lib/audit/finding.js（102 行 · 5 个函数）
 
@@ -2297,7 +2301,7 @@
 | `makeRepo` | 20-29 | 10 | `function makeRepo(t) {` |
 | `writeBlocker` | 32-39 | 8 | `function writeBlocker(dir, name = 'bad.js') {` |
 
-### test/test-audit-false-positive-guards.mjs（134 行 · 1 个函数）
+### test/test-audit-false-positive-guards.mjs（196 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|

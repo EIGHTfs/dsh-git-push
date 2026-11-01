@@ -13,7 +13,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { auditWithScope } from '../lib/audit/orchestrate.js';
-import { hasMkdirInSameFunction } from '../lib/audit/file-context.js';
+import { hasMkdirInSameFunction, isBestEffortWrite } from '../lib/audit/file-context.js';
 import { summarize, isBlockerFinding } from '../lib/audit/index.js';
 import { hasForeignWriteTarget } from '../lib/audit/index.js';
 import { runAuditApi } from '../lib/app/audit-api.js';
@@ -130,4 +130,66 @@ test('mkdir-before-write：别的函数里有 mkdir 不算（作用域必须是�
     '}',
   ];
   assert.equal(hasMkdirInSameFunction(lines, 4), false, '不得跨函数借用 mkdir');
+});
+
+/* ───────── mkdir-before-write：三个真实样本（2026-11-01 复测反馈） ───────── */
+
+test('mkdir 紧邻上一行、实参是 path.dirname(临时名) ⇒ 视为已建目录', () => {
+  const lines = [
+    'export function saveConfig(roots) {',
+    "  const header = '// cfg';",
+    '  const body = JSON.stringify({ roots }, null, 2);',
+    "  fs.mkdirSync(path.dirname(CONFIG_FILE + '.tmp'), { recursive: true });",
+    "  fs.writeFileSync(CONFIG_FILE + '.tmp', header + body + '\\n', 'utf8');",
+    '}',
+  ];
+  assert.equal(hasMkdirInSameFunction(lines, 4), true);
+});
+
+test('同文件**私有** ensureDir + 调用在 for 循环体内 ⇒ 视为已建目录', () => {
+  const lines = [
+    'function ensureDir(dir) {',
+    '  fs.mkdirSync(dir, { recursive: true });',
+    '}',
+    '',
+    'export async function writeResult({ res }) {',
+    '  try {',
+    '    for (const { path: relPath } of res.files.entries) {',
+    '      const dst = path.join(tmpDir, "files", relPath);',
+    '      ensureDir(path.dirname(dst));',
+    '      fs.writeFileSync(dst, bytes);',
+    '    }',
+    '  } catch (e) { throw e; }',
+    '}',
+  ];
+  assert.equal(hasMkdirInSameFunction(lines, 9), true);
+});
+
+test('写在 try 内、catch 兜底 ⇒ 判为 best-effort（可降级为提示）', () => {
+  const lines = [
+    'export function touch(fp, index) {',
+    '  try {',
+    '    fs.writeFileSync(indexPath(fp), JSON.stringify(index), "utf8");',
+    '  } catch { /* 只影响 LRU 精度 */ }',
+    '}',
+  ];
+  assert.equal(isBestEffortWrite(lines, 2), true);
+  assert.equal(isBestEffortWrite(lines, 0), false, '函数签名行不在任何 try 块内');
+});
+
+test('normal write（无 try）⇒ 不算 best-effort', () => {
+  const lines = ['export function save(f, d) {', '  fs.writeFileSync(f, d);', '}'];
+  assert.equal(isBestEffortWrite(lines, 1), false);
+});
+
+test('mkdir 在**另一个**顶层函数里 ⇒ 不借用（跨函数静态证明不了，仍需报）', () => {
+  const lines = [
+    'function prepare(dir) {',
+    '  fs.mkdirSync(dir, { recursive: true });',
+    '}',
+    'function write(f, d) {',
+    '  fs.writeFileSync(f, d);',
+    '}',
+  ];
+  assert.equal(hasMkdirInSameFunction(lines, 4), false);
 });
