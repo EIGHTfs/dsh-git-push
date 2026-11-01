@@ -100,6 +100,8 @@ settings-get  settings-set
 **采集来源**：git 仓库里用 `git ls-files --cached --others --exclude-standard` 枚举（挂载盘上比 FS 遍历快三个数量级），
 非 git 目录仍走目录遍历；两条路径共用同一套过滤，`DSH_AUDIT_NO_GIT_FASTPATH=1` 可强制回退。
 
+**本地 registry 彩排**：`node scripts/local-registry.mjs --selftest` 在本机起一个零依赖 registry，跑 publish → install → 加载公开面，结束即清理（不写公共 registry）。未知包透传公有 registry 当镜像。
+
 **npm 发布门禁**：dryRun 与真发前都会跑发布前冒烟——`npm pack` → 干净目录 `npm i <tgz>` → 按 `exports` 公开面逐个 import → 校验 dependencies 已装入；失败即拦（`blocked: smoke-failed`）。浏览器端入口（`./client`）不参与 Node import 校验。
 
 **远程仓库改名**：`git_remote_rename`（PATCH name）。dryRun 默认开，报告当前名→新名、本地 remote 改动、以及旧名在仓库内的出现位置（`git grep`，URL 形态与文字分开统计、URL 优先展示）；真改后同步 remote。

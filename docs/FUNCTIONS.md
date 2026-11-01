@@ -2108,6 +2108,17 @@
 | `load` | 105-153 | 49 | `export async function load(url, context, next) {` |
 | `__wrapped` | 141-145 | 5 | `const __wrapped = function (...__a) {` |
 
+### scripts/local-registry.mjs（249 行 · 6 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `createRegistry` | 32-249 | 218 | `function createRegistry({ storeDir }) {` |
+| `json` | 49-53 | 5 | `const json = (res, code, obj) => {` |
+| `proxyToUpstream` | 58-75 | 18 | `async function proxyToUpstream(req, res) {` |
+| `startLocalRegistry` | 152-168 | 17 | `export async function startLocalRegistry({ storeDir, port = 0 } = {}) {` |
+| `run` | 176-186 | 11 | `function run(cmd, args, { cwd, env, timeoutMs = 300000 } = {}) {` |
+| `selftest` | 189-233 | 45 | `async function selftest() {` |
+
 ### scripts/picker-repro.mjs（116 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
