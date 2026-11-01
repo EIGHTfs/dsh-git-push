@@ -182,6 +182,7 @@ dsh-git-push/
 │   │   ├── credentials.js — 凭据解析（token/SSH 私钥：环境变量→凭据文件→settings）
 │   │   ├── endpoints.js — （待注释）
 │   │   ├── exec.js — git 进程调用（runGit 统一超时/错误规整 + gitRaw 原始字节）
+│   │   ├── hooks.js — （待注释）
 │   │   ├── identity-rewrite.js — （待注释）
 │   │   ├── identity.js — （待注释）
 │   │   ├── ignore.js — .gitignore 兜底（DEFAULT_IGNORE_PATTERNS 补齐）
@@ -194,6 +195,7 @@ dsh-git-push/
 │   │   ├── push.js — 提交推送编排（commitAndPush 全流程：敏感扫描→add/commit→推送）
 │   │   ├── remote-resolve.js — （待注释）
 │   │   ├── remote.js — 远端仓库管理（建仓默认 private/可见性切换）
+│   │   ├── rename.js — （待注释）
 │   │   ├── repo-index.js — dsh-repo-index 自动维护（扫描 workspace 生成索引 JSON）
 │   │   ├── repos.js — 仓库扫描与展示（describeRepo 分支/远端/领先落后/未提交）
 │   │   ├── scan-runner.js — （待注释）
@@ -281,6 +283,7 @@ dsh-git-push/
 │   ├── test-audit-exempt-paths.mjs — 提交时按文件临时豁免审计（auditExemptPaths）回归
 │   ├── test-audit-ext.mjs — 审计扩展自动接入测试（契约加载/降级/match/auditFull 并入）
 │   ├── test-audit-false-positive-guards.mjs — （待注释）
+│   ├── test-audit-fastpath.mjs — （待注释）
 │   ├── test-audit-git-boundary.mjs — （待注释）
 │   ├── test-audit-npm-publish-rules.mjs — （待注释）
 │   ├── test-audit-push-boundary.mjs — （待注释）
@@ -342,9 +345,11 @@ dsh-git-push/
 │   ├── test-generated-html-artifact.mjs — （待注释）
 │   ├── test-git-api-tool.mjs — （待注释）
 │   ├── test-git-bin-plan.mjs — （待注释）
+│   ├── test-git-hooks.mjs — （待注释）
 │   ├── test-git-identity-rewrite.mjs — （待注释）
 │   ├── test-git-identity.mjs — （待注释）
 │   ├── test-git-path-args.mjs — （待注释）
+│   ├── test-git-rename.mjs — （待注释）
 │   ├── test-git-stream.mjs — （待注释）
 │   ├── test-git.mjs — git 总入口测试（runGit/commitAndPush/凭据/克隆）
 │   ├── test-gitignore-match.mjs — gitignore 兜底匹配（与真 git 对拍 + 非 git 端到端）
@@ -484,6 +489,7 @@ dsh-git-push/
 ├── LICENSE — （待注释）
 ├── README.md — 插件 README（功能总览/用法/版本记录）
 ├── SECURITY.md — （待注释）
+├── _tmp_18220_ff573fea50a53cdb09da94c7977bfe1b — （待注释）
 ├── cli.mjs — 独立 CLI（git-sluice，不依赖宿主可独立运行）
 ├── cordis.patch.yml — DSH 插件组合 patch（loader 注入定义）
 ├── package-lock.json — 依赖锁文件（npm install --no-bin-links 生成，保证依赖版本与 tree-sitter ABI 配对）

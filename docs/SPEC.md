@@ -14,7 +14,7 @@
 | 装载声明 | `package.json` 的 `dsh.bundle.patch` → `./cordis.patch.yml`；`dsh.client` 声明 web 端注入；`dsh.skills` 列出随包发布的 skill |
 | 配置目录 | `<DSH_HOME>/git-push/`（凭据与状态文件都落在这里） |
 
-## 二、工具（18 个，宿主可见公开面）
+## 二、工具（19 个，宿主可见公开面）
 
 | 工具 | CLI 名 | 用途 |
 |---|---|---|
@@ -96,6 +96,14 @@ settings-get  settings-set
 
 细粒度规则段必须形如 `slot/rule`，否则整行按文件模式处理（防 `C:\`、`https://`、`a:b` 误判）。
 命中后 finding 标记 `exempted: true / exemptBy: 'auditignore' / exemptReason`，**标记而非丢弃**。
+
+**采集来源**：git 仓库里用 `git ls-files --cached --others --exclude-standard` 枚举（挂载盘上比 FS 遍历快三个数量级），
+非 git 目录仍走目录遍历；两条路径共用同一套过滤，`DSH_AUDIT_NO_GIT_FASTPATH=1` 可强制回退。
+
+**远程仓库改名**：`git_remote_rename`（PATCH name）。dryRun 默认开，报告当前名→新名、本地 remote 改动、以及旧名在仓库内的出现位置（`git grep`，URL 形态与文字分开统计、URL 优先展示）；真改后同步 remote。
+
+**git 钩子**：提交/预演回执列出本次会触发的钩子；只有「可证明坏掉」（解释器不存在 / 引用不存在的机器路径）才注入
+`LEFTHOOK=0`，正常钩子照跑。不依赖 `core.hooksPath` 绕行——挂载盘上写 `.git/config` 会 EPERM。
 
 **镜像选择**：镜像选择**：`DSH_GIT_MIRROR_PREFIX` 显式值 > 出厂清单 `lib/core/mirror-candidates.json` 首个**未停用**候选 > 全部停用则直连；停用判据为**数据校验**（声明总长 / blob sha 不符），连续 3 次停用、一次成功清零。
 

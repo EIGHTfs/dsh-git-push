@@ -14,6 +14,7 @@ DSH 的 git 提交推送与代码审计插件：提交前自动过审计门禁�
 | 克隆预演 | 只看将拉取什么，不落盘 | `git_clone_preview` / `clone-preview` |
 | 建远端仓 | 给本地仓库建远端并设置 origin | `git_remote_create` / `remote-create` |
 | 可见性 | 切换仓库 public / private | `git_set_visibility` / `set-visibility` |
+| 改名 | 给远程仓库改名（dryRun 默认开，列出旧名出现位置） | `git_remote_rename` / `rename` |
 | 凭据与账号 | 校验 GitHub token 与 SSH 公钥、生成密钥对 | `git_account_check` / `git_gen_ssh_key` |
 | 身份改写 | 把历史提交身份统一成登录账号 | `git_identity_rewrite` / `identity-rewrite` |
 | npm 发包 | 发布前体检，默认 dry-run，真发需二次确认 | `npm_publish` / `npm-publish` |

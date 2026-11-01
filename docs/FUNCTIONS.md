@@ -22,16 +22,16 @@
 | `aggregateFindings` | 82-103 | 22 | `export function aggregateFindings(findings = [], opts = {}) {` |
 | `runAuditApi` | 111-173 | 63 | `export async function runAuditApi(repo, params = {}, cfg = {}) {` |
 
-### lib/app/command-registry.js（274 行 · 6 个函数）
+### lib/app/command-registry.js（283 行 · 6 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `applyFlagToken` | 212-228 | 17 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
-| `validateParamConstraints` | 231-237 | 7 | `function validateParamConstraints(args, params) {` |
-| `parseRegistryArgs` | 239-259 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
-| `registryByName` | 262-264 | 3 | `export function registryByName(name) {` |
-| `registryByCli` | 267-269 | 3 | `export function registryByCli(cli) {` |
-| `buildToolsListText` | 272-274 | 3 | `export function buildToolsListText() {` |
+| `applyFlagToken` | 221-237 | 17 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
+| `validateParamConstraints` | 240-246 | 7 | `function validateParamConstraints(args, params) {` |
+| `parseRegistryArgs` | 248-268 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
+| `registryByName` | 271-273 | 3 | `export function registryByName(name) {` |
+| `registryByCli` | 276-278 | 3 | `export function registryByCli(cli) {` |
+| `buildToolsListText` | 281-283 | 3 | `export function buildToolsListText() {` |
 
 ### lib/app/handlers/account.js（166 行 · 10 个函数）
 
@@ -231,7 +231,7 @@
 | `getLastSlotHitStats` | 28-30 | 3 | `export function getLastSlotHitStats() {` |
 | `getLastSlotHitMeta` | 33-35 | 3 | `export function getLastSlotHitMeta() {` |
 
-### lib/app/tool-call.js（738 行 · 23 个函数）
+### lib/app/tool-call.js（745 行 · 23 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -255,9 +255,9 @@
 | `doHistory` | 468-471 | 4 | `const doHistory = async () => {` |
 | `callCodeAudit` | 490-502 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
 | `runStandardAuditTool` | 505-546 | 42 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
-| `callTool` | 548-709 | 162 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null, fsCtx = null) {` |
-| `shellSplit` | 712-730 | 19 | `function shellSplit(input) {` |
-| `readTextSafe` | 733-737 | 5 | `function readTextSafe(path = '') {` |
+| `callTool` | 548-716 | 169 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null, fsCtx = null) {` |
+| `shellSplit` | 719-737 | 19 | `function shellSplit(input) {` |
+| `readTextSafe` | 740-744 | 5 | `function readTextSafe(path = '') {` |
 
 ### lib/app/tools.js（34 行 · 2 个函数）
 
@@ -635,7 +635,7 @@
 | `pick` | 40-48 | 9 | `const pick = (v) => {` |
 | `resolveDshClientFragments` | 70-93 | 24 | `export function resolveDshClientFragments(repoRoot) {` |
 
-### lib/audit/collector.js（526 行 · 19 个函数）
+### lib/audit/collector.js（610 行 · 20 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -651,13 +651,14 @@
 | `computeGitIgnored` | 315-320 | 6 | `function computeGitIgnored(full, gitIgnoreRoot, includeIgnored, respectAuditIgnore = true) {` |
 | `shouldSkipDirByYml` | 323-327 | 5 | `function shouldSkipDirByYml(name, ignoredByGit, gitIgnoreRoot) {` |
 | `isFileGitIgnored` | 330-341 | 12 | `function isFileGitIgnored(full, gitIgnoreRoot, includeIgnored, respectAuditIgnore = true) {` |
-| `collectTextFiles` | 343-402 | 60 | `export async function collectTextFiles(dir, { depth = 10, gitIgnoreRoot = null, includeIgnored = false, testExemptRoot = null, respectAuditIgnore = true } = {}) {` |
-| `walk` | 365-401 | 37 | `async function walk(cur, level) {` |
-| `isGitRepo` | 405-407 | 3 | `export function isGitRepo(dir) {` |
-| `collectChangedFiles` | 415-472 | 58 | `export function collectChangedFiles(repoPath) {` |
-| `isTextFile` | 475-493 | 19 | `export function isTextFile(full) {` |
-| `clearReadCache` | 507-510 | 4 | `export function clearReadCache() {` |
-| `readText` | 513-526 | 14 | `export function readText(full) {` |
+| `collectTextFiles` | 343-413 | 71 | `export async function collectTextFiles(dir, { depth = 10, gitIgnoreRoot = null, includeIgnored = false, testExemptRoot = null, respectAuditIgnore = true } = {}) {` |
+| `walk` | 376-412 | 37 | `async function walk(cur, level) {` |
+| `gitListTextFiles` | 424-486 | 63 | `function gitListTextFiles(dir, { gitIgnoreRoot = null, includeIgnored = false, testExemptRoot = null, respectAuditIgnore = true } = {}) {` |
+| `isGitRepo` | 489-491 | 3 | `export function isGitRepo(dir) {` |
+| `collectChangedFiles` | 499-556 | 58 | `export function collectChangedFiles(repoPath) {` |
+| `isTextFile` | 559-577 | 19 | `export function isTextFile(full) {` |
+| `clearReadCache` | 591-594 | 4 | `export function clearReadCache() {` |
+| `readText` | 597-610 | 14 | `export function readText(full) {` |
 
 ### lib/audit/ext-runner.js（80 行 · 2 个函数）
 
@@ -1497,6 +1498,14 @@
 | `buildSshEnvPrefix` | 21-23 | 3 | `function buildSshEnvPrefix(keyPath) {` |
 | `buildCredEnv` | 30-88 | 59 | `export function buildCredEnv({ workspaceRoot = '' } = {}) {` |
 
+### lib/git/hooks.js（92 行 · 3 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `inspectHook` | 31-52 | 22 | `function inspectHook(path) {` |
+| `probeHooks` | 61-84 | 24 | `export function probeHooks(repoPath) {` |
+| `describeHooks` | 87-91 | 5 | `export function describeHooks(probe) {` |
+
 ### lib/git/identity-rewrite.js（298 行 · 14 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -1581,19 +1590,19 @@
 | `classifyPushFailure` | 109-129 | 21 | `export function classifyPushFailure(text = '', opts = {}) {` |
 | `describePushDiagnosis` | 137-142 | 6 | `export function describePushDiagnosis(dg = {}) {` |
 
-### lib/git/push.js（492 行 · 9 个函数）
+### lib/git/push.js（507 行 · 9 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `resolveRepoIdentity` | 37-43 | 7 | `function resolveRepoIdentity(repoPath) {` |
-| `commitAndPush` | 57-236 | 180 | `export async function commitAndPush({ repoPath = '', message = '', messageItems = null, push = true, dryRun = false, token = '', customIgnorePatterns = '', requirementsConfirmed = false, force = false, pushMethod = 'ssh', pushGate = false, pushConfirmed = false, paths = '', remote = '' } = {}) {` |
-| `legacyIdentity` | 156-165 | 10 | `const legacyIdentity = (() => {` |
-| `fetchRemoteBranchRef` | 249-262 | 14 | `async function fetchRemoteBranchRef(repoPath, branch, owner, repo) {` |
-| `enhanceAfterPushSuccess` | 270-420 | 151 | `async function enhanceAfterPushSuccess({ repoPath, pr, token, steps, commitSha, remote = '' }) {` |
-| `lsRemoteProbe` | 329-350 | 22 | `const lsRemoteProbe = () => {` |
-| `lsRemoteSha` | 352-352 | 1 | `const lsRemoteSha = () => lsRemoteProbe().sha;` |
-| `readmeCheckHint` | 425-430 | 6 | `export function readmeCheckHint(repoPath) {` |
-| `pushCurrentBranch` | 439-491 | 53 | `export async function pushCurrentBranch({ repoPath = '', pushMethod = 'ssh', remote = '' } = {}) {` |
+| `resolveRepoIdentity` | 38-44 | 7 | `function resolveRepoIdentity(repoPath) {` |
+| `commitAndPush` | 58-251 | 194 | `export async function commitAndPush({ repoPath = '', message = '', messageItems = null, push = true, dryRun = false, token = '', customIgnorePatterns = '', requirementsConfirmed = false, force = false, pushMethod = 'ssh', pushGate = false, pushConfirmed = false, paths = '', remote = '' } = {}) {` |
+| `legacyIdentity` | 165-174 | 10 | `const legacyIdentity = (() => {` |
+| `fetchRemoteBranchRef` | 264-277 | 14 | `async function fetchRemoteBranchRef(repoPath, branch, owner, repo) {` |
+| `enhanceAfterPushSuccess` | 285-435 | 151 | `async function enhanceAfterPushSuccess({ repoPath, pr, token, steps, commitSha, remote = '' }) {` |
+| `lsRemoteProbe` | 344-365 | 22 | `const lsRemoteProbe = () => {` |
+| `lsRemoteSha` | 367-367 | 1 | `const lsRemoteSha = () => lsRemoteProbe().sha;` |
+| `readmeCheckHint` | 440-445 | 6 | `export function readmeCheckHint(repoPath) {` |
+| `pushCurrentBranch` | 454-506 | 53 | `export async function pushCurrentBranch({ repoPath = '', pushMethod = 'ssh', remote = '' } = {}) {` |
 
 ### lib/git/remote-resolve.js（147 行 · 6 个函数）
 
@@ -1615,6 +1624,14 @@
 | `ensureRemoteRepo` | 53-99 | 47 | `export async function ensureRemoteRepo({ repoPath = '', owner = '', visibility = 'private', dryRun = false, token = '' } = {}) {` |
 | `parseOwnerRepoFromRemote` | 102-109 | 8 | `export function parseOwnerRepoFromRemote(remoteUrl) {` |
 | `setVisibility` | 112-128 | 17 | `export async function setVisibility({ owner = '', repo = '', visibility = '', token = '', repoPath = '' } = {}) {` |
+
+### lib/git/rename.js（138 行 · 3 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `scanOldName` | 27-54 | 28 | `export function scanOldName(repoPath, oldName, { limit = 60, timeoutMs = 20000 } = {}) {` |
+| `remotesPointingTo` | 57-69 | 13 | `export function remotesPointingTo(repoPath, owner, repo) {` |
+| `renameRepo` | 76-137 | 62 | `export async function renameRepo({` |
 
 ### lib/git/repo-index.js（524 行 · 19 个函数）
 
@@ -2307,6 +2324,13 @@
 |------|------|------|------|
 | `repo` | 23-31 | 9 | `function repo(files) {` |
 
+### test/test-audit-fastpath.mjs（89 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `withGitRepo` | 23-28 | 6 | `async function withGitRepo(fn) {` |
+| `pathsOf` | 30-30 | 1 | `const pathsOf = (files) => files.map((f) => f.path).sort();` |
+
 ### test/test-audit-git-boundary.mjs（94 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2571,6 +2595,13 @@
 | `fixture` | 19-71 | 53 | `function fixture(block) {` |
 | `driftFindings` | 37-40 | 4 | `async function driftFindings(dir) {` |
 
+### test/test-git-hooks.mjs（93 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `withRepo` | 20-24 | 5 | `function withRepo(fn) {` |
+| `writeHook` | 26-31 | 6 | `function writeHook(root, name, body, mode = 0o755) {` |
+
 ### test/test-git-identity-rewrite.mjs（191 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2593,6 +2624,12 @@
 |------|------|------|------|
 | `setupRepo` | 28-44 | 17 | `function setupRepo() {` |
 | `commitAll` | 47-50 | 4 | `function commitAll(dir, msg = 'init') {` |
+
+### test/test-git-rename.mjs（75 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `withRepo` | 20-24 | 5 | `function withRepo(fn) {` |
 
 ### test/test-git-stream.mjs（117 行 · 1 个函数）
 
