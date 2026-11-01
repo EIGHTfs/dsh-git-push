@@ -22,16 +22,16 @@
 | `aggregateFindings` | 82-103 | 22 | `export function aggregateFindings(findings = [], opts = {}) {` |
 | `runAuditApi` | 111-173 | 63 | `export async function runAuditApi(repo, params = {}, cfg = {}) {` |
 
-### lib/app/command-registry.js（283 行 · 6 个函数）
+### lib/app/command-registry.js（284 行 · 6 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `applyFlagToken` | 221-237 | 17 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
-| `validateParamConstraints` | 240-246 | 7 | `function validateParamConstraints(args, params) {` |
-| `parseRegistryArgs` | 248-268 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
-| `registryByName` | 271-273 | 3 | `export function registryByName(name) {` |
-| `registryByCli` | 276-278 | 3 | `export function registryByCli(cli) {` |
-| `buildToolsListText` | 281-283 | 3 | `export function buildToolsListText() {` |
+| `applyFlagToken` | 222-238 | 17 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
+| `validateParamConstraints` | 241-247 | 7 | `function validateParamConstraints(args, params) {` |
+| `parseRegistryArgs` | 249-269 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
+| `registryByName` | 272-274 | 3 | `export function registryByName(name) {` |
+| `registryByCli` | 277-279 | 3 | `export function registryByCli(cli) {` |
+| `buildToolsListText` | 282-284 | 3 | `export function buildToolsListText() {` |
 
 ### lib/app/handlers/account.js（166 行 · 10 个函数）
 
@@ -231,7 +231,7 @@
 | `getLastSlotHitStats` | 28-30 | 3 | `export function getLastSlotHitStats() {` |
 | `getLastSlotHitMeta` | 33-35 | 3 | `export function getLastSlotHitMeta() {` |
 
-### lib/app/tool-call.js（745 行 · 23 个函数）
+### lib/app/tool-call.js（747 行 · 23 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -243,21 +243,21 @@
 | `done` | 193-201 | 9 | `const done = (async () => {` |
 | `startHostJob` | 218-225 | 8 | `function startHostJob(jobs, spec, owner) {` |
 | `callCloneJob` | 239-271 | 33 | `async function callCloneJob(args, jobs, exec, log, env = {}, cfg = {}) {` |
-| `callNpmPublishJob` | 279-358 | 80 | `async function callNpmPublishJob(args = {}, jobs, exec, log, env = {}, cfg = {}) {` |
-| `outcome` | 309-333 | 25 | `const outcome = (r) => {` |
-| `done` | 342-344 | 3 | `const done = (async () => {` |
-| `buildCloneJobSpec` | 361-378 | 18 | `function buildCloneJobSpec(target, dest, doClone) {` |
-| `done` | 366-374 | 9 | `const done = (async () => {` |
-| `callCommitPush` | 385-431 | 47 | `async function callCommitPush(args, env, cfg, log, jobs, exec) {` |
-| `doPush` | 404-404 | 1 | `const doPush = () => pushWithPostSteps(args, env, cfg);` |
-| `buildAuditOpts` | 442-456 | 15 | `function buildAuditOpts(args, cfg, scope) {` |
-| `runHistoryAuditTool` | 462-488 | 27 | `async function runHistoryAuditTool(args, env, cfg, jobs, exec, weights) {` |
-| `doHistory` | 468-471 | 4 | `const doHistory = async () => {` |
-| `callCodeAudit` | 490-502 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
-| `runStandardAuditTool` | 505-546 | 42 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
-| `callTool` | 548-716 | 169 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null, fsCtx = null) {` |
-| `shellSplit` | 719-737 | 19 | `function shellSplit(input) {` |
-| `readTextSafe` | 740-744 | 5 | `function readTextSafe(path = '') {` |
+| `callNpmPublishJob` | 279-360 | 82 | `async function callNpmPublishJob(args = {}, jobs, exec, log, env = {}, cfg = {}) {` |
+| `outcome` | 311-335 | 25 | `const outcome = (r) => {` |
+| `done` | 344-346 | 3 | `const done = (async () => {` |
+| `buildCloneJobSpec` | 363-380 | 18 | `function buildCloneJobSpec(target, dest, doClone) {` |
+| `done` | 368-376 | 9 | `const done = (async () => {` |
+| `callCommitPush` | 387-433 | 47 | `async function callCommitPush(args, env, cfg, log, jobs, exec) {` |
+| `doPush` | 406-406 | 1 | `const doPush = () => pushWithPostSteps(args, env, cfg);` |
+| `buildAuditOpts` | 444-458 | 15 | `function buildAuditOpts(args, cfg, scope) {` |
+| `runHistoryAuditTool` | 464-490 | 27 | `async function runHistoryAuditTool(args, env, cfg, jobs, exec, weights) {` |
+| `doHistory` | 470-473 | 4 | `const doHistory = async () => {` |
+| `callCodeAudit` | 492-504 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
+| `runStandardAuditTool` | 507-548 | 42 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
+| `callTool` | 550-718 | 169 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null, fsCtx = null) {` |
+| `shellSplit` | 721-739 | 19 | `function shellSplit(input) {` |
+| `readTextSafe` | 742-746 | 5 | `function readTextSafe(path = '') {` |
 
 ### lib/app/tools.js（34 行 · 2 个函数）
 
@@ -1797,17 +1797,17 @@
 | `writeNpmrc` | 40-48 | 9 | `export function writeNpmrc({ workspaceRoot = '', registry = 'https://registry.npmjs.org/', token = '' } = {}) {` |
 | `npmArgs` | 51-56 | 6 | `export function npmArgs({ npmrcFile = '', registry = 'https://registry.npmjs.org/' } = {}) {` |
 
-### lib/npm/publish.js（201 行 · 7 个函数）
+### lib/npm/publish.js（220 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `sleep` | 24-26 | 3 | `function sleep(ms) {` |
-| `publishingKeys` | 32-34 | 3 | `export function publishingKeys() {` |
-| `readPackageInfo` | 37-52 | 16 | `export function readPackageInfo(dir = '') {` |
-| `fetchPublishedVersions` | 55-75 | 21 | `export async function fetchPublishedVersions({ name, registry = DEFAULT_REGISTRY, timeoutMs = NPM_TIMEOUT_MS } = {}) {` |
-| `packDryRun` | 78-201 | 124 | `export function packDryRun({ dir, registry = DEFAULT_REGISTRY, workspaceRoot = '', token = '', timeoutMs = PUBLISH_TIMEOUT_MS } = {}) {` |
-| `appendPublishLog` | 102-110 | 9 | `function appendPublishLog(line, { workspaceRoot = '' } = {}) {` |
-| `publishPackage` | 117-200 | 84 | `export async function publishPackage({` |
+| `sleep` | 25-27 | 3 | `function sleep(ms) {` |
+| `publishingKeys` | 33-35 | 3 | `export function publishingKeys() {` |
+| `readPackageInfo` | 38-53 | 16 | `export function readPackageInfo(dir = '') {` |
+| `fetchPublishedVersions` | 56-76 | 21 | `export async function fetchPublishedVersions({ name, registry = DEFAULT_REGISTRY, timeoutMs = NPM_TIMEOUT_MS } = {}) {` |
+| `packDryRun` | 79-220 | 142 | `export function packDryRun({ dir, registry = DEFAULT_REGISTRY, workspaceRoot = '', token = '', timeoutMs = PUBLISH_TIMEOUT_MS } = {}) {` |
+| `appendPublishLog` | 103-111 | 9 | `function appendPublishLog(line, { workspaceRoot = '' } = {}) {` |
+| `publishPackage` | 118-219 | 102 | `export async function publishPackage({` |
 
 ### lib/npm/registry.js（172 行 · 8 个函数）
 
@@ -1821,6 +1821,14 @@
 | `whoami` | 116-121 | 6 | `export function whoami({ npmArgs = [], timeoutMs = NPM_TIMEOUT_MS, env = {} } = {}) {` |
 | `listOwnedPackages` | 129-142 | 14 | `export async function listOwnedPackages(user, { registry = DEFAULT_REGISTRY, timeoutMs = NPM_TIMEOUT_MS, size = 50 } = {}) {` |
 | `searchPackages` | 143-171 | 29 | `export async function searchPackages(q, { registry = DEFAULT_REGISTRY, timeoutMs = NPM_TIMEOUT_MS, size = 20 } = {}) {` |
+
+### lib/npm/smoke.js（163 行 · 3 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `isBrowserEntry` | 34-37 | 4 | `export function isBrowserEntry(key) {` |
+| `entrySpecsOf` | 39-52 | 14 | `export function entrySpecsOf(pkg) {` |
+| `smokeTestPackage` | 55-162 | 108 | `export async function smokeTestPackage({ dir = '', workspaceRoot = '', registry = '', timeoutMs = SMOKE_TIMEOUT_MS } = {}) {` |
 
 ### lib/plugin/auto-detect.js（92 行 · 4 个函数）
 
