@@ -210,6 +210,7 @@ dsh-git-push/
 │   ├── npm/ — （待注释）
 │   │   ├── account.js — （待注释）
 │   │   ├── install.js — （待注释）
+│   │   ├── local-registry.js — （待注释）
 │   │   ├── npmrc.js — （待注释）
 │   │   ├── publish.js — （待注释）
 │   │   ├── registry.js — （待注释）
@@ -379,6 +380,7 @@ dsh-git-push/
 │   ├── test-name-length-scope.mjs — （待注释）
 │   ├── test-npm-enobufs.mjs — （待注释）
 │   ├── test-npm-install.mjs — （待注释）
+│   ├── test-npm-local-registry.mjs — （待注释）
 │   ├── test-npm-publish.mjs — （待注释）
 │   ├── test-npm-registry.mjs — （待注释）
 │   ├── test-npm-smoke.mjs — （待注释）

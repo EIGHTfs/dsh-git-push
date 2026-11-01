@@ -22,16 +22,16 @@
 | `aggregateFindings` | 82-103 | 22 | `export function aggregateFindings(findings = [], opts = {}) {` |
 | `runAuditApi` | 111-173 | 63 | `export async function runAuditApi(repo, params = {}, cfg = {}) {` |
 
-### lib/app/command-registry.js（284 行 · 6 个函数）
+### lib/app/command-registry.js（285 行 · 6 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `applyFlagToken` | 222-238 | 17 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
-| `validateParamConstraints` | 241-247 | 7 | `function validateParamConstraints(args, params) {` |
-| `parseRegistryArgs` | 249-269 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
-| `registryByName` | 272-274 | 3 | `export function registryByName(name) {` |
-| `registryByCli` | 277-279 | 3 | `export function registryByCli(cli) {` |
-| `buildToolsListText` | 282-284 | 3 | `export function buildToolsListText() {` |
+| `applyFlagToken` | 223-239 | 17 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
+| `validateParamConstraints` | 242-248 | 7 | `function validateParamConstraints(args, params) {` |
+| `parseRegistryArgs` | 250-270 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
+| `registryByName` | 273-275 | 3 | `export function registryByName(name) {` |
+| `registryByCli` | 278-280 | 3 | `export function registryByCli(cli) {` |
+| `buildToolsListText` | 283-285 | 3 | `export function buildToolsListText() {` |
 
 ### lib/app/handlers/account.js（166 行 · 10 个函数）
 
@@ -231,7 +231,7 @@
 | `getLastSlotHitStats` | 28-30 | 3 | `export function getLastSlotHitStats() {` |
 | `getLastSlotHitMeta` | 33-35 | 3 | `export function getLastSlotHitMeta() {` |
 
-### lib/app/tool-call.js（747 行 · 23 个函数）
+### lib/app/tool-call.js（749 行 · 23 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -243,21 +243,21 @@
 | `done` | 193-201 | 9 | `const done = (async () => {` |
 | `startHostJob` | 218-225 | 8 | `function startHostJob(jobs, spec, owner) {` |
 | `callCloneJob` | 239-271 | 33 | `async function callCloneJob(args, jobs, exec, log, env = {}, cfg = {}) {` |
-| `callNpmPublishJob` | 279-360 | 82 | `async function callNpmPublishJob(args = {}, jobs, exec, log, env = {}, cfg = {}) {` |
-| `outcome` | 311-335 | 25 | `const outcome = (r) => {` |
-| `done` | 344-346 | 3 | `const done = (async () => {` |
-| `buildCloneJobSpec` | 363-380 | 18 | `function buildCloneJobSpec(target, dest, doClone) {` |
-| `done` | 368-376 | 9 | `const done = (async () => {` |
-| `callCommitPush` | 387-433 | 47 | `async function callCommitPush(args, env, cfg, log, jobs, exec) {` |
-| `doPush` | 406-406 | 1 | `const doPush = () => pushWithPostSteps(args, env, cfg);` |
-| `buildAuditOpts` | 444-458 | 15 | `function buildAuditOpts(args, cfg, scope) {` |
-| `runHistoryAuditTool` | 464-490 | 27 | `async function runHistoryAuditTool(args, env, cfg, jobs, exec, weights) {` |
-| `doHistory` | 470-473 | 4 | `const doHistory = async () => {` |
-| `callCodeAudit` | 492-504 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
-| `runStandardAuditTool` | 507-548 | 42 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
-| `callTool` | 550-718 | 169 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null, fsCtx = null) {` |
-| `shellSplit` | 721-739 | 19 | `function shellSplit(input) {` |
-| `readTextSafe` | 742-746 | 5 | `function readTextSafe(path = '') {` |
+| `callNpmPublishJob` | 279-362 | 84 | `async function callNpmPublishJob(args = {}, jobs, exec, log, env = {}, cfg = {}) {` |
+| `outcome` | 313-337 | 25 | `const outcome = (r) => {` |
+| `done` | 346-348 | 3 | `const done = (async () => {` |
+| `buildCloneJobSpec` | 365-382 | 18 | `function buildCloneJobSpec(target, dest, doClone) {` |
+| `done` | 370-378 | 9 | `const done = (async () => {` |
+| `callCommitPush` | 389-435 | 47 | `async function callCommitPush(args, env, cfg, log, jobs, exec) {` |
+| `doPush` | 408-408 | 1 | `const doPush = () => pushWithPostSteps(args, env, cfg);` |
+| `buildAuditOpts` | 446-460 | 15 | `function buildAuditOpts(args, cfg, scope) {` |
+| `runHistoryAuditTool` | 466-492 | 27 | `async function runHistoryAuditTool(args, env, cfg, jobs, exec, weights) {` |
+| `doHistory` | 472-475 | 4 | `const doHistory = async () => {` |
+| `callCodeAudit` | 494-506 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
+| `runStandardAuditTool` | 509-550 | 42 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
+| `callTool` | 552-720 | 169 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null, fsCtx = null) {` |
+| `shellSplit` | 723-741 | 19 | `function shellSplit(input) {` |
+| `readTextSafe` | 744-748 | 5 | `function readTextSafe(path = '') {` |
 
 ### lib/app/tools.js（34 行 · 2 个函数）
 
@@ -1788,6 +1788,16 @@
 | `push` | 165-172 | 8 | `const push = (buf) => {` |
 | `installProgress` | 200-211 | 12 | `export function installProgress({ consume = false } = {}) {` |
 
+### lib/npm/local-registry.js（219 行 · 5 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `run` | 34-44 | 11 | `function run(cmd, args, { cwd, env, timeoutMs = 300000 } = {}) {` |
+| `startLocalRegistry` | 51-219 | 169 | `export async function startLocalRegistry({ storeDir, port = 0 } = {}) {` |
+| `json` | 57-61 | 5 | `const json = (res, code, obj) => {` |
+| `proxyToUpstream` | 75-92 | 18 | `async function proxyToUpstream(req, res) {` |
+| `runLocalPreview` | 174-218 | 45 | `export async function runLocalPreview({ dir, tag = 'beta', packageName = '', entrySpecs = [], timeoutMs = 300000 } = {}) {` |
+
 ### lib/npm/npmrc.js（57 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -1797,17 +1807,17 @@
 | `writeNpmrc` | 40-48 | 9 | `export function writeNpmrc({ workspaceRoot = '', registry = 'https://registry.npmjs.org/', token = '' } = {}) {` |
 | `npmArgs` | 51-56 | 6 | `export function npmArgs({ npmrcFile = '', registry = 'https://registry.npmjs.org/' } = {}) {` |
 
-### lib/npm/publish.js（220 行 · 7 个函数）
+### lib/npm/publish.js（244 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `sleep` | 25-27 | 3 | `function sleep(ms) {` |
-| `publishingKeys` | 33-35 | 3 | `export function publishingKeys() {` |
-| `readPackageInfo` | 38-53 | 16 | `export function readPackageInfo(dir = '') {` |
-| `fetchPublishedVersions` | 56-76 | 21 | `export async function fetchPublishedVersions({ name, registry = DEFAULT_REGISTRY, timeoutMs = NPM_TIMEOUT_MS } = {}) {` |
-| `packDryRun` | 79-220 | 142 | `export function packDryRun({ dir, registry = DEFAULT_REGISTRY, workspaceRoot = '', token = '', timeoutMs = PUBLISH_TIMEOUT_MS } = {}) {` |
-| `appendPublishLog` | 103-111 | 9 | `function appendPublishLog(line, { workspaceRoot = '' } = {}) {` |
-| `publishPackage` | 118-219 | 102 | `export async function publishPackage({` |
+| `sleep` | 26-28 | 3 | `function sleep(ms) {` |
+| `publishingKeys` | 34-36 | 3 | `export function publishingKeys() {` |
+| `readPackageInfo` | 39-54 | 16 | `export function readPackageInfo(dir = '') {` |
+| `fetchPublishedVersions` | 57-77 | 21 | `export async function fetchPublishedVersions({ name, registry = DEFAULT_REGISTRY, timeoutMs = NPM_TIMEOUT_MS } = {}) {` |
+| `packDryRun` | 80-244 | 165 | `export function packDryRun({ dir, registry = DEFAULT_REGISTRY, workspaceRoot = '', token = '', timeoutMs = PUBLISH_TIMEOUT_MS } = {}) {` |
+| `appendPublishLog` | 104-112 | 9 | `function appendPublishLog(line, { workspaceRoot = '' } = {}) {` |
+| `publishPackage` | 119-243 | 125 | `export async function publishPackage({` |
 
 ### lib/npm/registry.js（172 行 · 8 个函数）
 
@@ -2107,17 +2117,6 @@
 | `resolve` | 93-102 | 10 | `export async function resolve(specifier, context, next) {` |
 | `load` | 105-153 | 49 | `export async function load(url, context, next) {` |
 | `__wrapped` | 141-145 | 5 | `const __wrapped = function (...__a) {` |
-
-### scripts/local-registry.mjs（249 行 · 6 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `createRegistry` | 32-249 | 218 | `function createRegistry({ storeDir }) {` |
-| `json` | 49-53 | 5 | `const json = (res, code, obj) => {` |
-| `proxyToUpstream` | 58-75 | 18 | `async function proxyToUpstream(req, res) {` |
-| `startLocalRegistry` | 152-168 | 17 | `export async function startLocalRegistry({ storeDir, port = 0 } = {}) {` |
-| `run` | 176-186 | 11 | `function run(cmd, args, { cwd, env, timeoutMs = 300000 } = {}) {` |
-| `selftest` | 189-233 | 45 | `async function selftest() {` |
 
 ### scripts/picker-repro.mjs（116 行 · 4 个函数）
 
@@ -2774,6 +2773,13 @@
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `makeRepo` | 12-21 | 10 | `function makeRepo() {` |
+
+### test/test-npm-local-registry.mjs（82 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `publishBody` | 19-28 | 10 | `function publishBody({ name = 'demo-pkg', version = '1.2.3', tag = 'beta', bytes = 'FAKE-TARBALL' } = {}) {` |
+| `withRegistry` | 30-33 | 4 | `async function withRegistry(fn) {` |
 
 ### test/test-npm-publish.mjs（140 行 · 1 个函数）
 

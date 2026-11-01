@@ -100,6 +100,8 @@ settings-get  settings-set
 **采集来源**：git 仓库里用 `git ls-files --cached --others --exclude-standard` 枚举（挂载盘上比 FS 遍历快三个数量级），
 非 git 目录仍走目录遍历；两条路径共用同一套过滤，`DSH_AUDIT_NO_GIT_FASTPATH=1` 可强制回退。
 
+**本地 registry 彩排（可选选项）**：`npm_publish({ localPreview: true })` 会在发布前真实 publish 到本机 registry、再从它安装并加载公开面，失败即拦（`blocked: local-preview-failed`）；不写公共 registry。
+
 **本地 registry 彩排**：`node scripts/local-registry.mjs --selftest` 在本机起一个零依赖 registry，跑 publish → install → 加载公开面，结束即清理（不写公共 registry）。未知包透传公有 registry 当镜像。
 
 **npm 发布门禁**：dryRun 与真发前都会跑发布前冒烟——`npm pack` → 干净目录 `npm i <tgz>` → 按 `exports` 公开面逐个 import → 校验 dependencies 已装入；失败即拦（`blocked: smoke-failed`）。浏览器端入口（`./client`）不参与 Node import 校验。

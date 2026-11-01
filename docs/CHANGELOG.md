@@ -15,6 +15,7 @@
 
 | 版本 | 内容 |
 |------|------|
+| 2.15.3 | 本地 registry 接成 `npm_publish` 的选项 `localPreview`（默认关）。开启后发布前会：真实 `npm publish` 到本机 registry → 校验 packument（dist-tags/versions）→ 从该 registry `npm install` → 加载公开面，任一步失败即拦（`blocked: local-preview-failed`），**不写公共 registry**。registry 实现从 `scripts/local-registry.mjs` 提到 `lib/npm/local-registry.js`（脚本退化为 CLI 壳，单一实现），运行期随机生成认证令牌（不在仓库里留任何像凭据的字面量）。与发布前冒烟的分工：冒烟验「包内容」（pack→本地装→import，秒级）；本地彩排验「真实发布/安装语义」（版本冲突 403、dist-tags、exports、依赖解析，分钟级）。新增 `test/test-npm-local-registry.mjs`（6 例协议测试：PUT 201 / 同版本 403 / 多版本叠加与 dist-tags / tarball 字节一致 / 404 / ping）。 |
 | 2.15.2 | 新增**本地 npm registry**（`scripts/local-registry.mjs`，零依赖）：把本机当 npm 网站做发布彩排——`npm publish` 到本地（真实 201/版本冲突 403/dist-tags 语义）→ 从本地 `npm install` → 加载公开面，全程不写公共 registry，结束即删临时目录（公网零痕迹）。协议面只实现必要的三条：`PUT /:name`（收 base64 tarball）、`GET /:name`（packument）、`GET /:name/-/:file`（tarball）；未知包**透传公网**（当镜像用），否则安装依赖时会 404。
 
 `node scripts/local-registry.mjs --selftest` 一条命令跑完全链路。实现里两个坑已固化：① 调用方与 registry 同进程时**不能用 spawnSync**（会阻塞事件循环 → npm 等响应、这边等 npm，死锁）；② npm publish 需要 `--userconfig` 指定一份含该 registry 认证令牌的 npmrc（只在环境变量里给令牌，客户端仍报 ENEEDAUTH）。 |
