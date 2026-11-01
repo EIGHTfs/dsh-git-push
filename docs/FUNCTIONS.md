@@ -12,15 +12,15 @@
 | `apply` | 44-295 | 252 | `export async function apply(ctx, config = {}) {` |
 | `envInjectText` | 106-145 | 40 | `const envInjectText = (cwdOverride) => {` |
 
-### lib/app/audit-api.js（164 行 · 5 个函数）
+### lib/app/audit-api.js（174 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `exemptStatsOf` | 29-45 | 17 | `export function exemptStatsOf(findings = []) {` |
-| `groupKeyOf` | 48-53 | 6 | `function groupKeyOf(finding, groupBy, ruleSlotMap) {` |
-| `parseSeverityFilter` | 59-63 | 5 | `export function parseSeverityFilter(raw) {` |
-| `aggregateFindings` | 72-93 | 22 | `export function aggregateFindings(findings = [], opts = {}) {` |
-| `runAuditApi` | 101-163 | 63 | `export async function runAuditApi(repo, params = {}, cfg = {}) {` |
+| `exemptStatsOf` | 29-55 | 27 | `export function exemptStatsOf(findings = []) {` |
+| `groupKeyOf` | 58-63 | 6 | `function groupKeyOf(finding, groupBy, ruleSlotMap) {` |
+| `parseSeverityFilter` | 69-73 | 5 | `export function parseSeverityFilter(raw) {` |
+| `aggregateFindings` | 82-103 | 22 | `export function aggregateFindings(findings = [], opts = {}) {` |
+| `runAuditApi` | 111-173 | 63 | `export async function runAuditApi(repo, params = {}, cfg = {}) {` |
 
 ### lib/app/command-registry.js（274 行 · 6 个函数）
 
@@ -152,15 +152,15 @@
 | `buildCtx` | 80-82 | 3 | `function buildCtx(req, method, env, cfg, query, body, path) {` |
 | `handleHttp` | 92-150 | 59 | `export async function handleHttp(req = {}, env = {}, cfg = defaultConfig()) {` |
 
-### lib/app/inject-text.js（192 行 · 5 个函数）
+### lib/app/inject-text.js（198 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `buildIdentityInjectionText` | 73-83 | 11 | `export function buildIdentityInjectionText() {` |
 | `buildRequirementsInjectionText` | 85-97 | 13 | `export function buildRequirementsInjectionText() {` |
 | `detectHostIp` | 118-129 | 12 | `function detectHostIp() {` |
-| `buildAuditApiGuide` | 135-162 | 28 | `export function buildAuditApiGuide(repo = '', opts = {}) {` |
-| `formatAuditBlock` | 164-191 | 28 | `export function formatAuditBlock(r = {}) {` |
+| `buildAuditApiGuide` | 135-168 | 34 | `export function buildAuditApiGuide(repo = '', opts = {}) {` |
+| `formatAuditBlock` | 170-197 | 28 | `export function formatAuditBlock(r = {}) {` |
 
 ### lib/app/repo-ownership.js（66 行 · 4 个函数）
 
@@ -288,15 +288,15 @@
 | `collectNamedFnRanges` | 120-122 | 3 | `export function collectNamedFnRanges(tokens) {` |
 | `matchBraceIdx` | 125-135 | 11 | `function matchBraceIdx(tokens, openIdx) {` |
 
-### lib/ast/code-lines.js（167 行 · 5 个函数）
+### lib/ast/code-lines.js（176 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `makeCodeLineFilter` | 24-47 | 24 | `export function makeCodeLineFilter(text = '', candidateLines = [], opts = {}) {` |
-| `makeCodeSpanFilter` | 72-99 | 28 | `export function makeCodeSpanFilter(text = '', candidateLines = [], opts = {}) {` |
-| `isProseDoc` | 113-115 | 3 | `function isProseDoc(text, file) {` |
-| `makeProseCodeFilter` | 129-152 | 24 | `function makeProseCodeFilter(text, candidateLines) {` |
-| `codeStringLiterals` | 159-166 | 8 | `export function codeStringLiterals(text = '') {` |
+| `makeCodeSpanFilter` | 72-108 | 37 | `export function makeCodeSpanFilter(text = '', candidateLines = [], opts = {}) {` |
+| `isProseDoc` | 122-124 | 3 | `function isProseDoc(text, file) {` |
+| `makeProseCodeFilter` | 138-161 | 24 | `function makeProseCodeFilter(text, candidateLines) {` |
+| `codeStringLiterals` | 168-175 | 8 | `export function codeStringLiterals(text = '') {` |
 
 ### lib/ast/control-flow.js（471 行 · 13 个函数）
 
@@ -616,6 +616,17 @@
 | `isBuildArtifactFile` | 48-78 | 31 | `export function isBuildArtifactFile(relPathOrFile = '', text = '') {` |
 | `auditFile` | 80-199 | 120 | `export function auditFile({ file, relPath, text, grouped }, opts = {}) {` |
 
+### lib/audit/auditignore-rules.js（149 行 · 6 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `parseScopedLine` | 43-60 | 18 | `export function parseScopedLine(line) {` |
+| `splitAuditIgnore` | 68-80 | 13 | `export function splitAuditIgnore(text = '') {` |
+| `ruleMatches` | 83-91 | 9 | `export function ruleMatches(pattern, ruleId) {` |
+| `matchScopedExemption` | 100-109 | 10 | `export function matchScopedExemption(scoped, relPath, ruleId) {` |
+| `hasScopedEntries` | 112-114 | 3 | `export function hasScopedEntries(text = '') {` |
+| `applyScopedExemptions` | 125-148 | 24 | `export function applyScopedExemptions(findings = [], root = '') {` |
+
 ### lib/audit/client-entry.js（94 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -624,28 +635,29 @@
 | `pick` | 40-48 | 9 | `const pick = (v) => {` |
 | `resolveDshClientFragments` | 70-93 | 24 | `export function resolveDshClientFragments(repoRoot) {` |
 
-### lib/audit/collector.js（498 行 · 18 个函数）
+### lib/audit/collector.js（526 行 · 19 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `readIgnoreFileCached` | 68-74 | 7 | `function readIgnoreFileCached(p) {` |
-| `isGitWorkTree` | 87-98 | 12 | `function isGitWorkTree(dir) {` |
-| `tryLoadAuditIgnoreFallback` | 114-164 | 51 | `function tryLoadAuditIgnoreFallback(root, respectAuditIgnore = true) {` |
-| `handleEntry` | 143-156 | 14 | `const handleEntry = (dir, en) => {` |
-| `walkDirs` | 157-161 | 5 | `const walkDirs = (dir) => {` |
-| `tryLoadGitIgnoreSet` | 176-273 | 98 | `function tryLoadGitIgnoreSet(root, respectAuditIgnore = true) {` |
-| `walkDirs` | 217-232 | 16 | `const walkDirs = (dir) => {` |
-| `isHardSkipped` | 282-284 | 3 | `function isHardSkipped(name) {` |
-| `computeGitIgnored` | 287-292 | 6 | `function computeGitIgnored(full, gitIgnoreRoot, includeIgnored, respectAuditIgnore = true) {` |
-| `shouldSkipDirByYml` | 295-299 | 5 | `function shouldSkipDirByYml(name, ignoredByGit, gitIgnoreRoot) {` |
-| `isFileGitIgnored` | 302-313 | 12 | `function isFileGitIgnored(full, gitIgnoreRoot, includeIgnored, respectAuditIgnore = true) {` |
-| `collectTextFiles` | 315-374 | 60 | `export async function collectTextFiles(dir, { depth = 10, gitIgnoreRoot = null, includeIgnored = false, testExemptRoot = null, respectAuditIgnore = true } = {}) {` |
-| `walk` | 337-373 | 37 | `async function walk(cur, level) {` |
-| `isGitRepo` | 377-379 | 3 | `export function isGitRepo(dir) {` |
-| `collectChangedFiles` | 387-444 | 58 | `export function collectChangedFiles(repoPath) {` |
-| `isTextFile` | 447-465 | 19 | `export function isTextFile(full) {` |
-| `clearReadCache` | 479-482 | 4 | `export function clearReadCache() {` |
-| `readText` | 485-498 | 14 | `export function readText(full) {` |
+| `readIgnoreFileCached` | 71-77 | 7 | `function readIgnoreFileCached(p) {` |
+| `isGitWorkTree` | 90-101 | 12 | `function isGitWorkTree(dir) {` |
+| `auditIgnoreExcludesFile` | 110-125 | 16 | `function auditIgnoreExcludesFile(root, auditIgnorePath) {` |
+| `tryLoadAuditIgnoreFallback` | 141-192 | 52 | `function tryLoadAuditIgnoreFallback(root, respectAuditIgnore = true) {` |
+| `handleEntry` | 171-184 | 14 | `const handleEntry = (dir, en) => {` |
+| `walkDirs` | 185-189 | 5 | `const walkDirs = (dir) => {` |
+| `tryLoadGitIgnoreSet` | 204-301 | 98 | `function tryLoadGitIgnoreSet(root, respectAuditIgnore = true) {` |
+| `walkDirs` | 245-260 | 16 | `const walkDirs = (dir) => {` |
+| `isHardSkipped` | 310-312 | 3 | `function isHardSkipped(name) {` |
+| `computeGitIgnored` | 315-320 | 6 | `function computeGitIgnored(full, gitIgnoreRoot, includeIgnored, respectAuditIgnore = true) {` |
+| `shouldSkipDirByYml` | 323-327 | 5 | `function shouldSkipDirByYml(name, ignoredByGit, gitIgnoreRoot) {` |
+| `isFileGitIgnored` | 330-341 | 12 | `function isFileGitIgnored(full, gitIgnoreRoot, includeIgnored, respectAuditIgnore = true) {` |
+| `collectTextFiles` | 343-402 | 60 | `export async function collectTextFiles(dir, { depth = 10, gitIgnoreRoot = null, includeIgnored = false, testExemptRoot = null, respectAuditIgnore = true } = {}) {` |
+| `walk` | 365-401 | 37 | `async function walk(cur, level) {` |
+| `isGitRepo` | 405-407 | 3 | `export function isGitRepo(dir) {` |
+| `collectChangedFiles` | 415-472 | 58 | `export function collectChangedFiles(repoPath) {` |
+| `isTextFile` | 475-493 | 19 | `export function isTextFile(full) {` |
+| `clearReadCache` | 507-510 | 4 | `export function clearReadCache() {` |
+| `readText` | 513-526 | 14 | `export function readText(full) {` |
 
 ### lib/audit/ext-runner.js（80 行 · 2 个函数）
 
@@ -668,7 +680,7 @@
 | `detectRepoJsYamlImport` | 199-208 | 10 | `export function detectRepoJsYamlImport(files) {` |
 | `isVersionInPathContext` | 221-227 | 7 | `export function isVersionInPathContext(line) {` |
 
-### lib/audit/finding.js（101 行 · 5 个函数）
+### lib/audit/finding.js（102 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -676,7 +688,7 @@
 | `makeFinding` | 18-20 | 3 | `export function makeFinding({ file, line, rule, kind, severity = 'warning', message, dimensions = [], exemptHint = '', scoreImpact = 0 }) {` |
 | `normalizeExemptHints` | 36-47 | 12 | `export function normalizeExemptHints(findings = []) {` |
 | `decorateTestExemptHint` | 57-68 | 12 | `export function decorateTestExemptHint(findings = []) {` |
-| `summarize` | 81-90 | 10 | `export function summarize(findings = []) {` |
+| `summarize` | 81-91 | 11 | `export function summarize(findings = []) {` |
 
 ### lib/audit/gitignore-match.js（114 行 · 4 个函数）
 
@@ -718,29 +730,29 @@
 | `excludePathOf` | 39-48 | 10 | `function excludePathOf(root) {` |
 | `detectIgnoreBlindSpot` | 55-102 | 48 | `export function detectIgnoreBlindSpot(root) {` |
 
-### lib/audit/orchestrate.js（582 行 · 19 个函数）
+### lib/audit/orchestrate.js（586 行 · 19 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `setHostDocChecks` | 30-32 | 3 | `export function setHostDocChecks(checks) {` |
-| `findMarkedHostMd` | 36-36 | 1 | `const findMarkedHostMd = (...args) => (injected \|\| EMPTY_DOC_CHECKS).findMarkedHostMd(...args);` |
-| `checkDrift` | 37-37 | 1 | `const checkDrift = (...args) => (injected \|\| EMPTY_DOC_CHECKS).checkDrift(...args);` |
-| `checkFuncDrift` | 38-38 | 1 | `const checkFuncDrift = (...args) => (injected \|\| EMPTY_DOC_CHECKS).checkFuncDrift(...args);` |
-| `capScanFiles` | 59-69 | 11 | `export function capScanFiles(files, root, maxFiles) {` |
-| `appendIgnoreBlindSpot` | 82-98 | 17 | `function appendIgnoreBlindSpot(findings, repoPath, scanned) {` |
-| `buildTreeConfirmer` | 121-141 | 21 | `async function buildTreeConfirmer(relPath, text, grouped) {` |
-| `computeDimFileCounts` | 162-196 | 35 | `export function computeDimFileCounts(grouped, normFiles) {` |
-| `auditFiles` | 198-373 | 176 | `async function auditFiles(repoPath, files, opts = {}) {` |
-| `isDshPlugin` | 223-229 | 7 | `const isDshPlugin = (() => {` |
-| `auditFull` | 375-397 | 23 | `export async function auditFull(repoPath, opts = {}) {` |
-| `appendTreeDocDrift` | 402-444 | 43 | `function appendTreeDocDrift(findings, repoPath) {` |
-| `by` | 435-435 | 1 | `const by = (code) => wt.filter(([, v]) => v?.status === code).length;` |
-| `appendFuncDocDrift` | 453-469 | 17 | `function appendFuncDocDrift(findings, repoPath) {` |
-| `appendSplitDocsCheck` | 477-531 | 55 | `function appendSplitDocsCheck(findings, repoPath) {` |
-| `hasMarkBlock` | 534-536 | 3 | `function hasMarkBlock(text, marker) {` |
-| `auditChanged` | 541-576 | 36 | `export async function auditChanged(repoPath, opts = {}) {` |
-| `isAuditIgnored` | 557-570 | 14 | `const isAuditIgnored = (rel) => {` |
-| `auditWithScope` | 579-581 | 3 | `export async function auditWithScope(repoPath, { scope = 'diff', ...opts } = {}) {` |
+| `setHostDocChecks` | 31-33 | 3 | `export function setHostDocChecks(checks) {` |
+| `findMarkedHostMd` | 37-37 | 1 | `const findMarkedHostMd = (...args) => (injected \|\| EMPTY_DOC_CHECKS).findMarkedHostMd(...args);` |
+| `checkDrift` | 38-38 | 1 | `const checkDrift = (...args) => (injected \|\| EMPTY_DOC_CHECKS).checkDrift(...args);` |
+| `checkFuncDrift` | 39-39 | 1 | `const checkFuncDrift = (...args) => (injected \|\| EMPTY_DOC_CHECKS).checkFuncDrift(...args);` |
+| `capScanFiles` | 60-70 | 11 | `export function capScanFiles(files, root, maxFiles) {` |
+| `appendIgnoreBlindSpot` | 83-99 | 17 | `function appendIgnoreBlindSpot(findings, repoPath, scanned) {` |
+| `buildTreeConfirmer` | 122-142 | 21 | `async function buildTreeConfirmer(relPath, text, grouped) {` |
+| `computeDimFileCounts` | 163-197 | 35 | `export function computeDimFileCounts(grouped, normFiles) {` |
+| `auditFiles` | 199-377 | 179 | `async function auditFiles(repoPath, files, opts = {}) {` |
+| `isDshPlugin` | 224-230 | 7 | `const isDshPlugin = (() => {` |
+| `auditFull` | 379-401 | 23 | `export async function auditFull(repoPath, opts = {}) {` |
+| `appendTreeDocDrift` | 406-448 | 43 | `function appendTreeDocDrift(findings, repoPath) {` |
+| `by` | 439-439 | 1 | `const by = (code) => wt.filter(([, v]) => v?.status === code).length;` |
+| `appendFuncDocDrift` | 457-473 | 17 | `function appendFuncDocDrift(findings, repoPath) {` |
+| `appendSplitDocsCheck` | 481-535 | 55 | `function appendSplitDocsCheck(findings, repoPath) {` |
+| `hasMarkBlock` | 538-540 | 3 | `function hasMarkBlock(text, marker) {` |
+| `auditChanged` | 545-580 | 36 | `export async function auditChanged(repoPath, opts = {}) {` |
+| `isAuditIgnored` | 561-574 | 14 | `const isAuditIgnored = (rel) => {` |
+| `auditWithScope` | 583-585 | 3 | `export async function auditWithScope(repoPath, { scope = 'diff', ...opts } = {}) {` |
 
 ### lib/audit/ownership.js（47 行 · 3 个函数）
 
@@ -764,14 +776,14 @@
 | `findingsToYaml` | 32-81 | 50 | `export function findingsToYaml(findings = [], { includeMessage = true, maxMessageLen = 200 } = {}) {` |
 | `countSeverity` | 84-90 | 7 | `function countSeverity(dirMap) {` |
 
-### lib/audit/slot.js（66 行 · 4 个函数）
+### lib/audit/slot.js（67 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `slotStatsFromFindings` | 17-45 | 29 | `export function slotStatsFromFindings(findings = [], ruleSlotMap = new Map(), slotRuleCount = {}) {` |
-| `ensure` | 25-28 | 4 | `const ensure = (slot) => {` |
-| `buildRuleSlotMap` | 48-55 | 8 | `export function buildRuleSlotMap(compiledRules = []) {` |
-| `countRulesBySlot` | 58-65 | 8 | `export function countRulesBySlot(compiledRules = []) {` |
+| `slotStatsFromFindings` | 17-46 | 30 | `export function slotStatsFromFindings(findings = [], ruleSlotMap = new Map(), slotRuleCount = {}) {` |
+| `ensure` | 26-29 | 4 | `const ensure = (slot) => {` |
+| `buildRuleSlotMap` | 49-56 | 8 | `export function buildRuleSlotMap(compiledRules = []) {` |
+| `countRulesBySlot` | 59-66 | 8 | `export function countRulesBySlot(compiledRules = []) {` |
 
 ### lib/checks/button-bind.js（348 行 · 4 个函数）
 
@@ -903,15 +915,16 @@
 |------|------|------|------|
 | `checkPrivateFiles` | 25-64 | 40 | `export function checkPrivateFiles({ root, visibility = 'unknown', privateFiles = [] }) {` |
 
-### lib/checks/regex.js（276 行 · 5 个函数）
+### lib/checks/regex.js（294 行 · 6 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `pickExemptHint` | 28-47 | 20 | `export function pickExemptHint(rule) {` |
 | `hit` | 31-31 | 1 | `const hit = (words) => (Array.isArray(words) ? words : []).some((w) => id.includes(w));` |
-| `checkRegexRules` | 58-198 | 141 | `export function checkRegexRules({ file, text, rules, source = '新增行', repoPath = '', treeConfirm = null }) {` |
-| `checkPathRegexRules` | 201-217 | 17 | `export function checkPathRegexRules({ file, relPath, rules }) {` |
-| `checkBlacklist` | 227-275 | 49 | `export function checkBlacklist({ file, text, rules }) {` |
+| `checkRegexRules` | 58-216 | 159 | `export function checkRegexRules({ file, text, rules, source = '新增行', repoPath = '', treeConfirm = null }) {` |
+| `inComment` | 94-101 | 8 | `const inComment = (line, col) => {` |
+| `checkPathRegexRules` | 219-235 | 17 | `export function checkPathRegexRules({ file, relPath, rules }) {` |
+| `checkBlacklist` | 245-293 | 49 | `export function checkBlacklist({ file, text, rules }) {` |
 
 ### lib/checks/semantic.js（135 行 · 3 个函数）
 
@@ -1881,15 +1894,15 @@
 | `maxVersion` | 156-166 | 11 | `function maxVersion(list) {` |
 | `cmp` | 157-164 | 8 | `const cmp = (a, b) => {` |
 
-### lib/score/index.js（199 行 · 5 个函数）
+### lib/score/index.js（202 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `countByDimension` | 50-80 | 31 | `export function countByDimension(findings = []) {` |
-| `countHitFilesByDimension` | 90-104 | 15 | `export function countHitFilesByDimension(findings = []) {` |
-| `scoreQuality` | 121-199 | 79 | `export function scoreQuality(findings = [], weights = {}, context = {}) {` |
-| `denomOf` | 169-172 | 4 | `const denomOf = (dim) => {` |
-| `dynamicRatio` | 175-184 | 10 | `const dynamicRatio = (dim) => {` |
+| `countByDimension` | 50-82 | 33 | `export function countByDimension(findings = []) {` |
+| `countHitFilesByDimension` | 92-107 | 16 | `export function countHitFilesByDimension(findings = []) {` |
+| `scoreQuality` | 124-202 | 79 | `export function scoreQuality(findings = [], weights = {}, context = {}) {` |
+| `denomOf` | 172-175 | 4 | `const denomOf = (dim) => {` |
+| `dynamicRatio` | 178-187 | 10 | `const dynamicRatio = (dim) => {` |
 
 ### lib/self/index.js（197 行 · 5 个函数）
 

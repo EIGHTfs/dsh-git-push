@@ -7,8 +7,10 @@
 
 # 评分参数表：DEFAULT_WEIGHTS / DIMENSION_K 的数字是「维度名 → 参数」映射值，
 #   键名已表意，拆成 WEIGHT_X = 15 这类常量反而割裂表格、降低可读性；
-#   权重另由侧边栏配置项可调，不是散落魔数。故整文件豁免质量类规则。
-lib/score/index.js
+#   权重另由侧边栏配置项可调，不是散落魔数。
+#   2026-11-01 起改用**细粒度豁免**（路径 : 规则）：只免魔数与冗长函数这两类
+#   「表格本身固有」的命中，其余规则照常审——整文件豁免会让可读性/健壮性问题一起消失。
+lib/score/index.js : readability/magic-number-smart, maintainability/max-function-length  # 维度权重参数表，键名已表意
 
 # 侧边栏设置 UI（lib/client.js，package.json 的 "./client" 入口）：**不再整文件豁免**。
 #   改为**规则声明降级**：audit-rules-nodejs.yml 的 readability/max-file-length 声明

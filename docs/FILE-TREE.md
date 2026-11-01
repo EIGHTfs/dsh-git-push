@@ -62,6 +62,7 @@ dsh-git-push/
 │   ├── audit/ — 审计编排层（文件收集/逐文件检查/槽位聚合/审计出口）
 │   │   ├── analysis-coverage.js — （待注释）
 │   │   ├── audit-file.js — 单文件审计执行（跑检查+豁免）
+│   │   ├── auditignore-rules.js — （待注释）
 │   │   ├── checks.js — 检查器入口（纯引用表）
 │   │   ├── client-entry.js — （待注释）
 │   │   ├── collector.js — 文件收集（gitignore 感知）
@@ -287,6 +288,7 @@ dsh-git-push/
 │   ├── test-audit-scope.mjs — 审计作用域/凭据占位符回归测试
 │   ├── test-audit-slot-order.mjs — （待注释）
 │   ├── test-audit.mjs — 审计总入口测试（auditFull/changed/豁免/gitignore）
+│   ├── test-auditignore-rules.mjs — （待注释）
 │   ├── test-auditignore.mjs — （待注释）
 │   ├── test-auto-push.mjs — 任务完成自动推送测试（检测纯函数 + registerAutoPush 门控监听注册）
 │   ├── test-build-artifact-skip.mjs — 构建/混淆产物跳过专项测试（Pawchive 样本 fixture）
@@ -439,6 +441,7 @@ dsh-git-push/
 │   ├── FILE-TREE.md — （待注释）
 │   ├── FUNCTIONS.md — 函数列表宿主（doc-func apply 写 dshgp-functions 标记块）
 │   ├── PERF-BASELINE.md — （待注释）
+│   ├── PLAN-2026-11-01-auditignore-scoped.md — （待注释）
 │   ├── SPEC.md — （待注释）
 │   ├── releases.json — （待注释）
 │   ├── 功能-仓库索引与账号状态.md — （待注释）

@@ -85,7 +85,19 @@ settings-get  settings-set
 | `scan-live.json` | 扫描进度 | 扫描进行中 |
 | `mirror-state.json` | 镜像健康度学习结果（每个镜像 failures/disabled/lastOkAt/lastError） | 下载数据校验失败/成功时；可用 `DSH_GIT_MIRROR_STATE` 覆盖位置 |
 
-**镜像选择**：`DSH_GIT_MIRROR_PREFIX` 显式值 > 出厂清单 `lib/core/mirror-candidates.json` 首个**未停用**候选 > 全部停用则直连；停用判据为**数据校验**（声明总长 / blob sha 不符），连续 3 次停用、一次成功清零。
+**豁免的四条通道（各司其职，不要混用）**：
+
+| 通道 | 语法/位置 | 力度 | 可见性 |
+|---|---|---|---|
+| `.auditignore` 整文件 | `.auditignore` 路径行 | 该文件全部规则不审 | 采集期就不收 ⇒ 报告里看不到 |
+| `.auditignore` 细粒度 | `路径 : 规则[,规则]  # 理由` | 只免指定规则（支持 `slot/*`） | **报告单列「已确认豁免 N 条」**，不扣分 |
+| `dsh-skip-*` 标记 | 文件头前 3 行 / 行尾 | 按标记覆盖的 kind/规则 | 静默丢弃（历史语义） |
+| 规则声明降级 | 规则 yml 的 `scope_rules: … → downgrade` | 仍报、不扣分 | 可见 |
+
+细粒度规则段必须形如 `slot/rule`，否则整行按文件模式处理（防 `C:\`、`https://`、`a:b` 误判）。
+命中后 finding 标记 `exempted: true / exemptBy: 'auditignore' / exemptReason`，**标记而非丢弃**。
+
+**镜像选择**：镜像选择**：`DSH_GIT_MIRROR_PREFIX` 显式值 > 出厂清单 `lib/core/mirror-candidates.json` 首个**未停用**候选 > 全部停用则直连；停用判据为**数据校验**（声明总长 / blob sha 不符），连续 3 次停用、一次成功清零。
 
 **不变量**：写只走收口函数（账号状态 `writeAccountStatusFromResult` / `updateAccountStatusQuota`；索引走索引维护模块）；落盘走**原子写**；「是否已配置凭据」一律查凭据真源，不看快照。
 

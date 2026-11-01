@@ -256,8 +256,11 @@ test('checkRegexRules：子模式（subPatterns）命中输出专属 message（�
   const hit2 = checkRegexRules({ file: 'a.js', text: 'arr.push(1);', rules });
   assert.equal(hit2[0].message, 'per-b 无界 push');
   // 无 subPatterns 的旧结构仍走规则级 message（向后兼容）
+  // 注意：这里必须用**代码行**而不是注释行——2026-11-01 起「注释内命中」统一不算命中
+  //   （注释里的示例文字是最常见的纯误报来源），本用例测的是「旧结构仍走规则级 message」，
+  //   用注释行会被新语义拒掉，测的就不是这条了。
   const legacy = [{ id: 'r9', kind: 'regex', severity: 'warning', patterns: [/TODO/], message: '旧结构', dimensions: ['可读性'] }];
-  const lHit = checkRegexRules({ file: 'a.js', text: '// TODO fix', rules: legacy });
+  const lHit = checkRegexRules({ file: 'a.js', text: 'const TODO_MARK = 1;', rules: legacy });
   assert.equal(lHit[0].message, '旧结构');
 });
 
