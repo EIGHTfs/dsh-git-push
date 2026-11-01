@@ -13,6 +13,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { auditWithScope } from '../lib/audit/orchestrate.js';
+import { hasMkdirInSameFunction } from '../lib/audit/file-context.js';
 import { summarize, isBlockerFinding } from '../lib/audit/index.js';
 import { hasForeignWriteTarget } from '../lib/audit/index.js';
 import { runAuditApi } from '../lib/app/audit-api.js';
@@ -82,4 +83,51 @@ test('拦截级口径统一：summary.blocker == 各处枚举数（error 也属�
   const api = await runAuditApi(root, { scope: 'full' }, {});
   assert.equal(api.summary.blocker, (api.blocked || []).length,
     `上报面枚举数必须等于 summary.blocker（曾出现 10 vs 7：差的正是 error 级）`);
+});
+
+/* ───────── mkdir-before-write：封装命名 + 一层间接 + 远距离 mkdir（2026-11-01 外部样本） ───────── */
+
+test('mkdir-before-write：ensureDir 封装（同模块导出的 helper）视为已建目录', () => {
+  // 样本结构取自外部会话的逐行实证（atomic-json.mjs）：写语句上一行就是 ensureDir(...)，
+  //   而 ensureDir 的函数体里有 mkdirSync ⇒ 一层间接，应豁免。
+  const lines = [
+    'export function ensureDir(dir) { return fs.mkdirSync(dir, { recursive: true, mode: 0o755 }); }',
+    '',
+    'export function writeJsonAtomic(file, data) {',
+    '  ensureDir(path.dirname(file));',
+    '  fs.writeFileSync(file, JSON.stringify(data));',
+    '}',
+  ];
+  assert.equal(hasMkdirInSameFunction(lines, 4), true, 'ensureDir 调用应视为已建目录');
+});
+
+test('mkdir-before-write：mkdir 在函数更早处（相距 70+ 行）仍视为已建目录', () => {
+  const lines = ['function big(dir, file) {', '  fs.mkdirSync(dir, { recursive: true });'];
+  for (let i = 0; i < 70; i++) lines.push(`  const v${i} = ${i};`);
+  lines.push('  fs.writeFileSync(file, "x");');
+  lines.push('}');
+  const idx = lines.length - 2;
+  assert.equal(hasMkdirInSameFunction(lines, idx), true, '远距离 mkdir 不应因为窗口小而被忽略');
+});
+
+test('mkdir-before-write：真的没有 mkdir ⇒ 仍要报（不能靠放宽判据把真问题洗掉）', () => {
+  const lines = [
+    'export function save(file, data) {',
+    '  const text = JSON.stringify(data);',
+    '  fs.writeFileSync(file, text);',
+    '}',
+  ];
+  assert.equal(hasMkdirInSameFunction(lines, 2), false, '无任何建目录迹象时必须继续报');
+});
+
+test('mkdir-before-write：别的函数里有 mkdir 不算（作用域必须是本函数体）', () => {
+  const lines = [
+    'function other(dir) {',
+    '  fs.mkdirSync(dir, { recursive: true });',
+    '}',
+    'export function save(file, data) {',
+    '  fs.writeFileSync(file, data);',
+    '}',
+  ];
+  assert.equal(hasMkdirInSameFunction(lines, 4), false, '不得跨函数借用 mkdir');
 });

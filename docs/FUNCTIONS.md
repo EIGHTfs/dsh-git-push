@@ -666,19 +666,21 @@
 | `loadAuditExt` | 28-51 | 24 | `export async function loadAuditExt(dir = DEFAULT_EXT_DIR) {` |
 | `runAuditExt` | 59-80 | 22 | `export async function runAuditExt(repo, opts = {}) {` |
 
-### lib/audit/file-context.js（228 行 · 9 个函数）
+### lib/audit/file-context.js（296 行 · 11 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `hasMkdirInSameFunction` | 19-165 | 147 | `export function hasMkdirInSameFunction(lines, lineIdx) {` |
-| `hasForeignWriteTarget` | 58-83 | 26 | `export function hasForeignWriteTarget(lines, lineIdx) {` |
-| `enclosingParams` | 93-98 | 6 | `function enclosingParams(lines, lineIdx) {` |
-| `hasTimeoutInRange` | 151-156 | 6 | `function hasTimeoutInRange(lines, start, end) {` |
-| `isCallClosed` | 159-160 | 2 | `function isCallClosed(s, depth) {` |
-| `hasTimeoutAfterCall` | 173-183 | 11 | `function hasTimeoutAfterCall(line, lines, lineIdx) {` |
-| `hasExternalCallTimeout` | 185-190 | 6 | `export function hasExternalCallTimeout(line, lines, lineIdx) {` |
-| `detectRepoJsYamlImport` | 199-208 | 10 | `export function detectRepoJsYamlImport(files) {` |
-| `isVersionInPathContext` | 221-227 | 7 | `export function isVersionInPathContext(line) {` |
+| `hasMkdirInSameFunction` | 19-43 | 25 | `export function hasMkdirInSameFunction(lines, lineIdx) {` |
+| `functionScope` | 46-296 | 251 | `function functionScope(lines, lineIdx) {` |
+| `mkdirHelperNames` | 80-102 | 23 | `function mkdirHelperNames(lines) {` |
+| `hasForeignWriteTarget` | 126-151 | 26 | `export function hasForeignWriteTarget(lines, lineIdx) {` |
+| `enclosingParams` | 161-166 | 6 | `function enclosingParams(lines, lineIdx) {` |
+| `hasTimeoutInRange` | 219-224 | 6 | `function hasTimeoutInRange(lines, start, end) {` |
+| `isCallClosed` | 227-228 | 2 | `function isCallClosed(s, depth) {` |
+| `hasTimeoutAfterCall` | 241-251 | 11 | `function hasTimeoutAfterCall(line, lines, lineIdx) {` |
+| `hasExternalCallTimeout` | 253-258 | 6 | `export function hasExternalCallTimeout(line, lines, lineIdx) {` |
+| `detectRepoJsYamlImport` | 267-276 | 10 | `export function detectRepoJsYamlImport(files) {` |
+| `isVersionInPathContext` | 289-295 | 7 | `export function isVersionInPathContext(line) {` |
 
 ### lib/audit/finding.js（102 行 · 5 个函数）
 
@@ -2295,11 +2297,11 @@
 | `makeRepo` | 20-29 | 10 | `function makeRepo(t) {` |
 | `writeBlocker` | 32-39 | 8 | `function writeBlocker(dir, name = 'bad.js') {` |
 
-### test/test-audit-false-positive-guards.mjs（86 行 · 1 个函数）
+### test/test-audit-false-positive-guards.mjs（134 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `repo` | 22-30 | 9 | `function repo(files) {` |
+| `repo` | 23-31 | 9 | `function repo(files) {` |
 
 ### test/test-audit-git-boundary.mjs（94 行 · 4 个函数）
 

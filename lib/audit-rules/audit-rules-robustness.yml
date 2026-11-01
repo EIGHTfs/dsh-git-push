@@ -13,7 +13,11 @@ rules:
     name: "写文件前必须确保目录存在"
     category: "robustness"
     severity: "warning"
-    description: "直接 writeFile 而不 mkdir 父目录，会导致 ENOENT 错误"
+    description: "本函数体内未见 mkdir/ensureDir 类建目录调用就往目标路径写文件——若目录由自定义辅助函数或调用方准备，请确认后忽略"
+      # 措辞刻意**不断言「代码有 bug」**：判定是静态的，认不出的形态（跨文件 helper、动态目录、
+      #   由调用方保证的目录）都会落在这里。写成断言式会让人以为代码真错了（外部会话反馈第 3 点）。
+      #   同函数体的 mkdir / ensure*Dir / mkdirp / mkdtemp，以及**本文件内**「函数体含 mkdir」的
+      #   helper 调用，都会被判为已建目录（见 lib/audit/file-context.js 的 hasMkdirInSameFunction）。
       # 正则初筛 → token 级精筛（makeCodeLineFilter）：剔除注释与字符串里的调用示例。
       #   本规则是纯 regex，此前会把**说明本规则自身的文档**也命中——实测
       #   lib/checks/common.js 的 JSDoc（「会把注释/字符串里的 `fs.writeFile(...)`
