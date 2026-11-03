@@ -15,6 +15,13 @@
 
 | 版本 | 内容 |
 |------|------|
+| 2.18.0 | 新增 **`npm_unpublish`**（撤包，独立工具）。撤包**不可逆**：同一 `包@版本` 撤掉后永久不能再发，撤掉 `latest` 会让 `npm i <包>` 拿不到东西——所以工具**默认 dryRun**，只做预检并说明后果。
+
+预检项（只查 registry 元数据）：版本是否存在、是否被 dist-tag 指向（撤掉会悬空）、发布距今是否在官方 **72h 窗口**内、是否该包**唯一版本**（撤光会让包名冷却 24h），并按官方政策给出 `policyHint`——超 72h 只有「无依赖者 + 近一周下载<300 + 单一维护者」三者同时满足才允许撤，否则只能 `npm deprecate`。预检**不能**判「有没有别的包依赖它」（公共 registry 无 reverse-deps 接口），这一条由服务端判定，失败时把 npm 的原始报错回传。
+
+真撤需同时传 `dryRun:false` 与 `confirm:true`（与发布同一套双门禁）；整包撤要显式 `wholePackage:true`（加 `--force`）。公开面 19 → 20 个工具（契约测试 / 宿主注册断言 / README 工具表 / SPEC 计数同步）。
+
+新增 `test/test-npm-unpublish.mjs`（7 例：入参校验 / 72h 窗口内外 / dist-tag 警告 / 唯一版本冷却 / 版本不存在 / 包不存在）。 |
 | 2.17.0 | 推送后可以**等 CI 结果**（`git_commit_push` 新增 `waitCi` / `ciTimeoutSec`，默认不等）。背景：推送成功只代表代码到了远端；实测一次提交推送成功、CI 在**同一个 SHA** 上挂了（新增的一个测试假设了 CIFS 特性，在 ext4 runner 上必然失败），只看推送回执完全发现不了。
 
 实现（`lib/git/ci.js`）：按 **head_sha** 查 `GET /actions/runs`（不查「最新一次」——并发提交会拿错结果），多 workflow 时**任一失败即 failure**，`neutral`/`skipped` 不算红；刚推上去 run 可能还没创建，给 grace 期（默认 60s）再判定「该提交未触发 CI」；超时单独给 `timeout`（既不判失败也不判通过）。回执带 `ci: {conclusion, runs, failing, url}`，失败时附 `ciFailed: true`、步骤里记 `ci-failure`。

@@ -22,16 +22,16 @@
 | `aggregateFindings` | 82-103 | 22 | `export function aggregateFindings(findings = [], opts = {}) {` |
 | `runAuditApi` | 111-173 | 63 | `export async function runAuditApi(repo, params = {}, cfg = {}) {` |
 
-### lib/app/command-registry.js（288 行 · 6 个函数）
+### lib/app/command-registry.js（298 行 · 6 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `applyFlagToken` | 226-242 | 17 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
-| `validateParamConstraints` | 245-251 | 7 | `function validateParamConstraints(args, params) {` |
-| `parseRegistryArgs` | 253-273 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
-| `registryByName` | 276-278 | 3 | `export function registryByName(name) {` |
-| `registryByCli` | 281-283 | 3 | `export function registryByCli(cli) {` |
-| `buildToolsListText` | 286-288 | 3 | `export function buildToolsListText() {` |
+| `applyFlagToken` | 236-252 | 17 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
+| `validateParamConstraints` | 255-261 | 7 | `function validateParamConstraints(args, params) {` |
+| `parseRegistryArgs` | 263-283 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
+| `registryByName` | 286-288 | 3 | `export function registryByName(name) {` |
+| `registryByCli` | 291-293 | 3 | `export function registryByCli(cli) {` |
+| `buildToolsListText` | 296-298 | 3 | `export function buildToolsListText() {` |
 
 ### lib/app/handlers/account.js（166 行 · 10 个函数）
 
@@ -231,7 +231,7 @@
 | `getLastSlotHitStats` | 28-30 | 3 | `export function getLastSlotHitStats() {` |
 | `getLastSlotHitMeta` | 33-35 | 3 | `export function getLastSlotHitMeta() {` |
 
-### lib/app/tool-call.js（769 行 · 23 个函数）
+### lib/app/tool-call.js（783 行 · 23 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -255,9 +255,9 @@
 | `doHistory` | 477-480 | 4 | `const doHistory = async () => {` |
 | `callCodeAudit` | 499-511 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
 | `runStandardAuditTool` | 514-555 | 42 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
-| `callTool` | 557-740 | 184 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null, fsCtx = null) {` |
-| `shellSplit` | 743-761 | 19 | `function shellSplit(input) {` |
-| `readTextSafe` | 764-768 | 5 | `function readTextSafe(path = '') {` |
+| `callTool` | 557-754 | 198 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null, fsCtx = null) {` |
+| `shellSplit` | 757-775 | 19 | `function shellSplit(input) {` |
+| `readTextSafe` | 778-782 | 5 | `function readTextSafe(path = '') {` |
 
 ### lib/app/tools.js（34 行 · 2 个函数）
 
@@ -1856,6 +1856,14 @@
 | `entrySpecsOf` | 71-87 | 17 | `export function entrySpecsOf(pkg) {` |
 | `smokeTestPackage` | 90-213 | 124 | `export async function smokeTestPackage({ dir = '', workspaceRoot = '', registry = '', timeoutMs = SMOKE_TIMEOUT_MS } = {}) {` |
 
+### lib/npm/unpublish.js（132 行 · 3 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `parseTarget` | 27-35 | 9 | `export function parseTarget({ name = '', version = '', wholePackage = false } = {}) {` |
+| `preflightUnpublish` | 42-88 | 47 | `export async function preflightUnpublish({ name = '', version = '', wholePackage = false, registry = DEFAULT_REGISTRY, timeoutMs = NPM_TIMEOUT_MS, fetchImpl = globalThis.fetch } = {}) {` |
+| `unpublishPackage` | 95-131 | 37 | `export async function unpublishPackage({` |
+
 ### lib/plugin/auto-detect.js（92 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2825,6 +2833,14 @@
 |------|------|------|------|
 | `makeFixture` | 33-42 | 10 | `function makeFixture() {` |
 
+### test/test-npm-unpublish.mjs（81 行 · 3 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `fakeFetch` | 15-17 | 3 | `function fakeFetch(doc) {` |
+| `hoursAgo` | 20-20 | 1 | `const hoursAgo = (h) => new Date(now - h * 3600 * 1000).toISOString();` |
+| `doc` | 22-31 | 10 | `function doc({ versions = ['1.0.0'], tags = { latest: '1.0.0' }, ageHours = 10 } = {}) {` |
+
 ### test/test-persist-credentials.mjs（93 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2843,13 +2859,13 @@
 |------|------|------|------|
 | `makeProject` | 20-46 | 27 | `function makeProject() {` |
 
-### test/test-plugin.mjs（656 行 · 3 个函数）
+### test/test-plugin.mjs（657 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `makeExemptRepo` | 487-493 | 7 | `function makeExemptRepo() {` |
-| `addSecretFile` | 494-497 | 4 | `function addSecretFile(root, path) {` |
-| `fsStatMode` | 651-653 | 3 | `function fsStatMode(file) {` |
+| `makeExemptRepo` | 488-494 | 7 | `function makeExemptRepo() {` |
+| `addSecretFile` | 495-498 | 4 | `function addSecretFile(root, path) {` |
+| `fsStatMode` | 652-654 | 3 | `function fsStatMode(file) {` |
 
 ### test/test-privacy-ownership.mjs（87 行 · 1 个函数）
 

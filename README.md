@@ -17,7 +17,8 @@ DSH 的 git 提交推送与代码审计插件：提交前自动过审计门禁�
 | 改名 | 给远程仓库改名（dryRun 默认开，列出旧名出现位置） | `git_remote_rename` / `rename` |
 | 凭据与账号 | 校验 GitHub token 与 SSH 公钥、生成密钥对 | `git_account_check` / `git_gen_ssh_key` |
 | 身份改写 | 把历史提交身份统一成登录账号 | `git_identity_rewrite` / `identity-rewrite` |
-| npm 发包 | 发布前体检，默认 dry-run，真发需二次确认 | `npm_publish` / `npm-publish` |
+| 发布 | 发布 npm 包（dryRun 默认只体检；含发布前冒烟） | `npm_publish` / — |
+| 撤包 | 从 registry 撤版本（默认 dryRun 预检，不可逆） | `npm_unpublish` / `unpublish` |
 | 豁免标记 | 给文件加/删豁免注释并校验是否真生效 | `exempt` |
 | I/O 风险扫描 | 扫描读写操作的风险分级 | `io_scan` / `file-io` |
 | 链接检查 | 检查文档里的 URL 是否有效 | `link_check` / `link-check` |

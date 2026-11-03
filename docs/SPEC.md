@@ -14,7 +14,7 @@
 | 装载声明 | `package.json` 的 `dsh.bundle.patch` → `./cordis.patch.yml`；`dsh.client` 声明 web 端注入；`dsh.skills` 列出随包发布的 skill |
 | 配置目录 | `<DSH_HOME>/git-push/`（凭据与状态文件都落在这里） |
 
-## 二、工具（19 个，宿主可见公开面）
+## 二、工具（20 个，宿主可见公开面）
 
 | 工具 | CLI 名 | 用途 |
 |---|---|---|
@@ -107,6 +107,8 @@ settings-get  settings-set
 **本地 registry 彩排**：`node scripts/local-registry.mjs --selftest` 在本机起一个零依赖 registry，跑 publish → install → 加载公开面，结束即清理（不写公共 registry）。未知包透传公有 registry 当镜像。
 
 **推送后等 CI**：`commitAndPush({ waitCi: true, ciTimeoutSec })` 按**推到远端的那个 sha** 查 GitHub Actions，全绿=通过；任一 workflow 失败= `ci.conclusion:'failure'` + `ciFailed:true`；grace 期内没有 run 判「未触发 CI」（不算失败）；超时给 `timeout`（不算失败）。默认不等。
+
+**npm 撤包**：`npm_unpublish` 默认 dryRun 预检（版本存在/ dist-tag 指向 / 72h 窗口 / 唯一版本冷却），真撤需 `dryRun:false` + `confirm:true`；整包撤需 `wholePackage:true`。超 72h 只能满足三条件或改用 `deprecate`。
 
 **npm 发布门禁**：dryRun 与真发前都会跑发布前冒烟——`npm pack` → 干净目录 `npm i <tgz>` → 按 `exports` 公开面逐个 import → 校验 dependencies 已装入；失败即拦（`blocked: smoke-failed`）。浏览器端入口（`./client`）不参与 Node import 校验。
 

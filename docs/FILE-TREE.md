@@ -216,6 +216,7 @@ dsh-git-push/
 │   │   ├── publish.js — （待注释）
 │   │   ├── registry.js — （待注释）
 │   │   ├── smoke.js — （待注释）
+│   │   ├── unpublish.js — （待注释）
 │   ├── plugin/ — Host 侧接线层（插件注册到 DSH：工具/HTTP/配置 schema）
 │   │   ├── auto-detect.js — 任务完成自动推送·检测层（纯函数：✅任务完成 触发/❌⚠ 阻断/自定义正则/许可合成判断）
 │   │   ├── auto-push.js — 任务完成自动推送·核心（turn/end 监听→检测→autoPushEnabled 开关→调 commitWithAudit 完整门禁，不裸提交）
@@ -389,6 +390,7 @@ dsh-git-push/
 │   ├── test-npm-registry.mjs — （待注释）
 │   ├── test-npm-smoke.mjs — （待注释）
 │   ├── test-npm-token-credential.mjs — （待注释）
+│   ├── test-npm-unpublish.mjs — （待注释）
 │   ├── test-perf-loop-collection.mjs — （待注释）
 │   ├── test-perf-repeat-call.mjs — （待注释）
 │   ├── test-persist-credentials.mjs — 凭据持久化测试
