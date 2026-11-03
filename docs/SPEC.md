@@ -100,11 +100,17 @@ settings-get  settings-set
 **采集来源**：git 仓库里用 `git ls-files --cached --others --exclude-standard` 枚举（挂载盘上比 FS 遍历快三个数量级），
 非 git 目录仍走目录遍历；两条路径共用同一套过滤，`DSH_AUDIT_NO_GIT_FASTPATH=1` 可强制回退。
 
+**按包形态验证**：发布前冒烟与彩排都先 `classifyPackageForm` 判形态——有库入口（`main`/`exports`）验 import；只有 `bin` 验「真跑 bin --version（比对版本）+ --help（退出码 0）」；两者皆无则明确报「没有可验证入口」。
+
 **本地 registry 彩排（可选选项）**：`npm_publish({ localPreview: true })` 会在发布前真实 publish 到本机 registry、再从它安装并加载公开面，失败即拦（`blocked: local-preview-failed`）；不写公共 registry。
 
 **本地 registry 彩排**：`node scripts/local-registry.mjs --selftest` 在本机起一个零依赖 registry，跑 publish → install → 加载公开面，结束即清理（不写公共 registry）。未知包透传公有 registry 当镜像。
 
+**推送后等 CI**：`commitAndPush({ waitCi: true, ciTimeoutSec })` 按**推到远端的那个 sha** 查 GitHub Actions，全绿=通过；任一 workflow 失败= `ci.conclusion:'failure'` + `ciFailed:true`；grace 期内没有 run 判「未触发 CI」（不算失败）；超时给 `timeout`（不算失败）。默认不等。
+
 **npm 发布门禁**：dryRun 与真发前都会跑发布前冒烟——`npm pack` → 干净目录 `npm i <tgz>` → 按 `exports` 公开面逐个 import → 校验 dependencies 已装入；失败即拦（`blocked: smoke-failed`）。浏览器端入口（`./client`）不参与 Node import 校验。
+
+**CIFS 挂载**：本地 git 仓库一律经 `init-compat.ensureUsableLocalRepo` 初始化/修复（`git init` 在 smb2 上会因 `chmod config.lock` 半途失败）。建仓（`git_remote_create`）因此可在挂载盘上工作；`pushInitial:true` 会先本地提交（身份用 `-c` 传入、不写 config）再走 Git Data API 上传，全程不依赖 `git remote add/config`。
 
 **远程仓库改名**：`git_remote_rename`（PATCH name）。dryRun 默认开，报告当前名→新名、本地 remote 改动、以及旧名在仓库内的出现位置（`git grep`，URL 形态与文字分开统计、URL 优先展示）；真改后同步 remote。
 

@@ -15,6 +15,23 @@
 
 | 版本 | 内容 |
 |------|------|
+| 2.17.0 | 推送后可以**等 CI 结果**（`git_commit_push` 新增 `waitCi` / `ciTimeoutSec`，默认不等）。背景：推送成功只代表代码到了远端；实测一次提交推送成功、CI 在**同一个 SHA** 上挂了（新增的一个测试假设了 CIFS 特性，在 ext4 runner 上必然失败），只看推送回执完全发现不了。
+
+实现（`lib/git/ci.js`）：按 **head_sha** 查 `GET /actions/runs`（不查「最新一次」——并发提交会拿错结果），多 workflow 时**任一失败即 failure**，`neutral`/`skipped` 不算红；刚推上去 run 可能还没创建，给 grace 期（默认 60s）再判定「该提交未触发 CI」；超时单独给 `timeout`（既不判失败也不判通过）。回执带 `ci: {conclusion, runs, failing, url}`，失败时附 `ciFailed: true`、步骤里记 `ci-failure`。
+
+同时修掉 2.16.0 引入的 CI 红：`test-cifs-init` 里断言「降级路径会把 origin 写进 config」，而该路径只在**不支持 chmod** 的文件系统上走（本机 CIFS 成立、GitHub runner 的 ext4 不成立）——已改为与文件系统无关的断言，origin 由 `prepareLocalRepoForRemote` 统一保证。
+
+新增 `test/test-ci-wait.mjs`（8 例：汇总语义 / 按 sha 查询 / pending→success 轮询 / 失败带 URL / 无 CI 不算失败 / 超时 / 缺 owner-repo 不发请求）。 |
+| 2.16.1 | 发布前彩排/冒烟改为**按包形态验证**，修掉「纯 CLI 包被误判成坏包」。问题：历史实现一律 `import('<包名>')` 探测公开面，而只有 `bin`、没有 `main`/`exports` 的 CLI 包必然报 `Cannot find package .../index.js`，彩排失败并输出「安装后加载失败」——包本身完全正常（真实用法是 `npx <命令>`），报错还会让调用方以为包坏了。
+
+改法：新增 `classifyPackageForm` 判形态——有库入口（`main`/`exports`）→ 逐个子路径 import；只有 `bin` → **真跑** `node <安装位>/<bin> --version`（断言输出含 package.json 版本）与 `--help`（断言退出码 0）；两者皆无 → 明确报「没有任何可验证入口」，不再含糊地说「加载失败」。`entrySpecsOf` 对无库入口的包返回空数组（此前无条件返回包名）。真跑 bin 还补上了 import 永远测不到的一类故障：bin 判据用字面路径、而 npm 安装的是符号链接，导致执行静默 exit 0、零输出、服务不起。
+
+实测：对真实包 `zipcalm`（bin-only）跑彩排 → 判为 `cli`，publish → install → `bin --version`/`--help` 全通过；新增 `test/test-npm-cli-package.mjs`（5 例：形态判定 / 纯 CLI 彩排通过 / 版本不符被拦 / 无入口报准确错 / entrySpecsOf 语义）。 |
+| 2.16.0 | 修复「CIFS/SMB 挂载上建仓后本地不可用」。根因（实测）：smb2 上 `git init` 在写 `.git/config` 时 `chmod config.lock` 失败而**半途退出**，留下没有 HEAD/objects 的残缺 `.git`；老实现只判 `existsSync('.git')` 就去 `git remote add`，于是报「not a git repository」却仍返回成功——用户看到「建仓成功」但本地根本不能用。
+
+改动：①`init-compat` 抽公共入口 `ensureUsableLocalRepo`（已可用=keep / 残缺=repair / 没有=create）与 `isUsableRepo`（用 `rev-parse --show-toplevel` 校验**仓库根就是这个目录**，避免把父仓库误判成自己的，并把 CIFS 降级路径「手写 .git 绕开 chmod」复用到建仓侧——这是 clone 早已在用的同一套）；②`ensureRemoteRepo` 改用该入口，`origin` 设置失败时在回执里给出 `originOk:false` 与 `warning`，不再谎报；③`git_remote_create` 新增 `pushInitial`：本地没有提交时先做一次本地提交（提交身份用 `-c` 传入，**不写 config**，因为写 config 在 CIFS 上必然失败），再走已有的 Git Data API 上传通道（`transport.pushInitialContent` → `pushViaApi`），整条链在 CIFS 上不依赖 `git remote add` / `git config`。
+
+新增 `test/test-cifs-init.mjs`（5 例，临时目录建在**工作区根**即真实 CIFS 挂载上：全新目录可初始化 / 残缺 .git 被修复 / 已可用保持 keep / origin 指向正确 / 本地提交可行）。 |
 | 2.15.3 | 本地 registry 接成 `npm_publish` 的选项 `localPreview`（默认关）。开启后发布前会：真实 `npm publish` 到本机 registry → 校验 packument（dist-tags/versions）→ 从该 registry `npm install` → 加载公开面，任一步失败即拦（`blocked: local-preview-failed`），**不写公共 registry**。registry 实现从 `scripts/local-registry.mjs` 提到 `lib/npm/local-registry.js`（脚本退化为 CLI 壳，单一实现），运行期随机生成认证令牌（不在仓库里留任何像凭据的字面量）。与发布前冒烟的分工：冒烟验「包内容」（pack→本地装→import，秒级）；本地彩排验「真实发布/安装语义」（版本冲突 403、dist-tags、exports、依赖解析，分钟级）。新增 `test/test-npm-local-registry.mjs`（6 例协议测试：PUT 201 / 同版本 403 / 多版本叠加与 dist-tags / tarball 字节一致 / 404 / ping）。 |
 | 2.15.2 | 新增**本地 npm registry**（`scripts/local-registry.mjs`，零依赖）：把本机当 npm 网站做发布彩排——`npm publish` 到本地（真实 201/版本冲突 403/dist-tags 语义）→ 从本地 `npm install` → 加载公开面，全程不写公共 registry，结束即删临时目录（公网零痕迹）。协议面只实现必要的三条：`PUT /:name`（收 base64 tarball）、`GET /:name`（packument）、`GET /:name/-/:file`（tarball）；未知包**透传公网**（当镜像用），否则安装依赖时会 404。
 

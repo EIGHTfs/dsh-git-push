@@ -90,11 +90,12 @@ test('零改动：job 文案必须自证「正常」，且不许出现与事实�
   assert.equal(ahead.status, 'completed');
   assert.match(ahead.detail, /本次无新提交/, '必须说清「本次无新提交」，避免被读成刚提交了一次');
   assert.ok(!/已提交并推送/.test(ahead.detail), '没有新提交就不许说「已提交并推送」');
-  // ③ 根因锁死：cleanSkipCommit 的两条返回路径都必须带上 committed 字段
-  assert.match(src, /if \(!pr\.pushed\) return \{ ok: true, steps, commitSha, committed: !cleanSkipCommit,/,
-    'cleanSkipCommit + 无可推内容 的返回必须带 committed（否则 job 兜底成「已提交，未推送」）');
-  assert.match(src, /commitSha, committed: !cleanSkipCommit, pushed: true,/,
-    'cleanSkipCommit + 推送成功 的返回也必须带 committed');
+  // ③ 根因锁死：cleanSkipCommit 的两条返回路径都必须带上 committed 字段。
+  //   断言按**语义**（该字段出现在两处）而不是源码字面形状：早先写法锁死了整行顺序，
+  //   一次正常重排（把返回对象拆成多行）就让测试变红，而字段其实还在——那种脆断言只会制造噪音。
+  const committedOccurrences = (src.match(/committed: !cleanSkipCommit/g) || []).length;
+  assert.ok(committedOccurrences >= 2,
+    `cleanSkipCommit 的两条返回路径都必须带 committed（实际出现 ${committedOccurrences} 次；缺了会让 job 兜底成「已提交，未推送」）`);
 });
 
 test('零改动文案：源码 / 注入用法 / 工具描述三处都要写明「正常，不是错误」', () => {

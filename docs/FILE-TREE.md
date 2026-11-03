@@ -168,6 +168,7 @@ dsh-git-push/
 │   │   ├── api.js — GitHub REST 调用（githubFetch 统一 token/错误识别）
 │   │   ├── atomic-json.js — 统一 JSON 原子读写（readJson/writeJsonAtomic/updateJsonAtomic/writeTextAtomic）
 │   │   ├── browse.js — 目录浏览（账号卡片路径选择器后端）
+│   │   ├── ci.js — （待注释）
 │   │   ├── clone-download.js — 并发下载 + .part 断点续传 + 体积守卫 + 进度回调
 │   │   ├── clone-history-mode.js — （待注释）
 │   │   ├── clone-history.js — （待注释）
@@ -301,6 +302,8 @@ dsh-git-push/
 │   ├── test-build-client.mjs — 分片构建门禁测试（产物一致/幂等/形态铁律/dshgp_ 前缀）
 │   ├── test-button-bind-events.mjs — （待注释）
 │   ├── test-button-bind.mjs — 按钮绑定交叉比对（jsx 工厂形态/注释过滤/行号归属）
+│   ├── test-ci-wait.mjs — （待注释）
+│   ├── test-cifs-init.mjs — （待注释）
 │   ├── test-cli-audit-parity.mjs — CLI 与源码全量审计一致性测试（audit --full --json vs 直接 auditFull，含忽略排除）
 │   ├── test-cli-help-registry-sync.mjs — （待注释）
 │   ├── test-client-fragment-scope.mjs — 客户端分片作用域推导测试（dsh-client-fragment）
@@ -378,6 +381,7 @@ dsh-git-push/
 │   ├── test-module-splitter.mjs — module_splitter 工具 + CLI 接入测试（契约 + 行为 + 脚本随插件发布）
 │   ├── test-multi-remote.mjs — （待注释）
 │   ├── test-name-length-scope.mjs — （待注释）
+│   ├── test-npm-cli-package.mjs — （待注释）
 │   ├── test-npm-enobufs.mjs — （待注释）
 │   ├── test-npm-install.mjs — （待注释）
 │   ├── test-npm-local-registry.mjs — （待注释）
