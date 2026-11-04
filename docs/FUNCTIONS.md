@@ -1858,13 +1858,13 @@
 | `entrySpecsOf` | 137-153 | 17 | `export function entrySpecsOf(pkg) {` |
 | `smokeTestPackage` | 156-272 | 117 | `export async function smokeTestPackage({ dir = '', workspaceRoot = '', registry = '', timeoutMs = SMOKE_TIMEOUT_MS } = {}) {` |
 
-### lib/npm/unpublish.js（132 行 · 3 个函数）
+### lib/npm/unpublish.js（156 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `parseTarget` | 27-35 | 9 | `export function parseTarget({ name = '', version = '', wholePackage = false } = {}) {` |
 | `preflightUnpublish` | 42-88 | 47 | `export async function preflightUnpublish({ name = '', version = '', wholePackage = false, registry = DEFAULT_REGISTRY, timeoutMs = NPM_TIMEOUT_MS, fetchImpl = globalThis.fetch } = {}) {` |
-| `unpublishPackage` | 95-131 | 37 | `export async function unpublishPackage({` |
+| `unpublishPackage` | 95-155 | 61 | `export async function unpublishPackage({` |
 
 ### lib/plugin/auto-detect.js（92 行 · 4 个函数）
 
@@ -2847,7 +2847,7 @@
 |------|------|------|------|
 | `makeFixture` | 33-42 | 10 | `function makeFixture() {` |
 
-### test/test-npm-unpublish.mjs（81 行 · 3 个函数）
+### test/test-npm-unpublish.mjs（105 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|

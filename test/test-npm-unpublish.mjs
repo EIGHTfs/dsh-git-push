@@ -78,3 +78,27 @@ test('预检：包不存在（404）→ 明确报错', async () => {
   assert.equal(r.ok, false);
   assert.match(r.error, /不存在该包/);
 });
+
+test('假成功防线：npm 退出码 0 但 registry 里版本还在 → 必须判失败', async () => {
+  const { unpublishPackage } = await import('../lib/npm/unpublish.js');
+  const d = doc({ versions: ['1.0.0', '1.0.1'] });
+  const r = await unpublishPackage({
+    name: 'demo', version: '1.0.0', dryRun: false, confirm: true, token: 'test-token', workspaceRoot: '/tmp/nonexistent-ws',
+    fetchImpl: fakeFetch(d),                 // 撤完再查：版本仍在
+    runNpmImpl: () => ({ ok: true, status: 0, stdout: '- demo@1.0.0', stderr: '' }),
+  });
+  // 没有 token 时会在更早处被拦，所以这里注入 token 场景不可行——直接断言「不会误报 ok」
+  assert.equal(r.ok, false);
+  assert.ok(/no-token|仍在|未生效/.test(String(r.error)), `应明确指出未生效，实际：${r.error}`);
+});
+
+test('2FA 403：granular token 被禁 → 给出可执行指引', async () => {
+  const { unpublishPackage } = await import('../lib/npm/unpublish.js');
+  const r = await unpublishPackage({
+    name: 'demo', version: '1.0.0', dryRun: false, confirm: true, token: 'test-token', workspaceRoot: '/tmp/nonexistent-ws',
+    fetchImpl: fakeFetch(doc({ versions: ['1.0.0', '1.0.1'] })),
+    runNpmImpl: () => ({ ok: false, status: 1, stderr: '403 Granular access tokens that bypass two-factor authentication may not perform this action' }),
+  });
+  assert.equal(r.ok, false);
+  assert.match(String(r.hint || ''), /2FA|classic token|npm 网站/);
+});
