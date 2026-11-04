@@ -268,6 +268,7 @@ dsh-git-push/
 │   ├── version-source.mjs — （待注释）
 │   ├── audit-ext/ — （待注释）
 │   │   ├── _example-readme-present.mjs — 审计扩展契约示例（_ 前缀：演示不参与实际审计）
+│   │   ├── dsh-inject-declarations.mjs — （待注释）
 │   │   ├── variable-min-length.mjs — 审计扩展：variable-min-length（内置规则抽出试点——统一动态入口）
 ├── assets/ — 预览页与配图（preview.html 交互模拟页 + 面板截图）
 │   ├── start.sh — 预览服务器启停脚本（start/stop/restart/status + --port + PID/日志/健康检查 /preview-ping）
@@ -422,6 +423,7 @@ dsh-git-push/
 │   ├── test-sidebar-interaction.mjs — 侧边栏规则包列表交互自检
 │   ├── test-slash-commands.mjs — 用户输入框 /git-audit 斜杠命令（解析/接线/对本仓库跑 quick）
 │   ├── test-smart-hint.mjs — 扫描智能提示 + 评分对数衰减测试
+│   ├── test-smoke-import-specs.mjs — （待注释）
 │   ├── test-status-secret.mjs — token 明文不下发安全回归
 │   ├── test-symbol-index.mjs — （待注释）
 │   ├── test-symlink-resolution.mjs — 软链安装依赖解析回归测试（默认失败/--preserve-symlinks/NODE_PATH/真实副本四种场景）

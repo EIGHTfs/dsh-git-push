@@ -15,6 +15,8 @@
 
 | 版本 | 内容 |
 |------|------|
+| 2.18.2 | 审计扩展新增两条 DSH 插件 blocker 规则（`scripts/audit-ext/dsh-inject-declarations.mjs`）：`dsh/ctx-service-not-injected`（访问 `ctx.<服务>` 但 `inject` 未声明 —— cordis 直接抛 cannot get property，插件整条不激活，用假 ctx 的单测测不出来）与 `dsh/plugin-default-export-hides-inject`（入口同时有 `export default` 与命名 `inject`/`apply` —— DSH 装载取 `module.default || module`，命名导出全失效）。两条都要跨行读 `export const inject`，纯逐行正则做不到，故用扩展脚本承载；判定口径与 dsh-useful-tools 的 `verify_plugin` 一致（契约 C-114 要求两边同源维护）。规则带两条保守边界：只查插件入口文件（含 `export function apply` 或 `export const inject`）、只报已知 cordis 服务名 —— `ctx` 在真实代码里常是 HTTP 请求对象 / 工具上下文 / 遍历累加器，不收窄会每仓库误报 20 条。实测：违规样例命中 2 处，真实仓库（dsh-useful-tools / dsh-session-conductor）零误报。 |
+| 2.18.1 | 修发布前冒烟的选择逻辑（新增 `selectImportSpecs`：按目标扩展名与条件导出挑出真正能被 Node 加载的入口）。实测两次误判：① 包 exports 里登记了 `./cordis.patch.yml`，冒烟对它 import 得到 ERR_UNKNOWN_FILE_EXTENSION，把正常包拦在发布前；② 点出口 `.` 被 continue 跳过，主入口从未被测、门禁形同虚设。现按扩展名与条件导出过滤：非 JS 资源（.yml/.json/.css/图片）不进 import 列表，点出口不再跳过，无 exports 时回退主入口，纯 CLI 包无库入口时跳过不报错；配 6 项断言（资源与浏览器入口过滤 / 无 exports 回退 / 纯 CLI 无库入口 / 条件导出取 import|default / 缺 name 不抛）。 |
 | 2.18.0 | 新增 **`npm_unpublish`**（撤包，独立工具）。撤包**不可逆**：同一 `包@版本` 撤掉后永久不能再发，撤掉 `latest` 会让 `npm i <包>` 拿不到东西——所以工具**默认 dryRun**，只做预检并说明后果。
 
 预检项（只查 registry 元数据）：版本是否存在、是否被 dist-tag 指向（撤掉会悬空）、发布距今是否在官方 **72h 窗口**内、是否该包**唯一版本**（撤光会让包名冷却 24h），并按官方政策给出 `policyHint`——超 72h 只有「无依赖者 + 近一周下载<300 + 单一维护者」三者同时满足才允许撤，否则只能 `npm deprecate`。预检**不能**判「有没有别的包依赖它」（公共 registry 无 reverse-deps 接口），这一条由服务端判定，失败时把 npm 的原始报错回传。

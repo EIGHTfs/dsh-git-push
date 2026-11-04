@@ -16,10 +16,12 @@ import { fileURLToPath } from 'node:url';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (p) => readFileSync(join(ROOT, p), 'utf8');
 
-test('分片：23-npm.js 存在且登记进 PART_ORDER（未登记=不会进产物）', () => {
-  assert.equal(existsSync(join(ROOT, 'lib/client-parts/23-npm.js')), true);
+test('分片：npm.js 存在且登记进 PART_ORDER（未登记=不会进产物）', () => {
+  // 分片命名不带数字前缀（account.js / actions.js / npm.js …），PART_ORDER 负责顺序；
+  //   此前测试写的是 `23-npm.js`，与实现不符——HEAD 上一直红。
+  assert.equal(existsSync(join(ROOT, 'lib/client-parts/npm.js')), true);
   const build = read('scripts/build-client.mjs');
-  assert.match(build, /'23-npm\.js'/, 'PART_ORDER 必须登记 23-npm.js');
+  assert.match(build, /'npm\.js'/, 'PART_ORDER 必须登记 npm.js');
 });
 
 test('产物：含 NPM 面板组件与「本地/GitHub/NPM」三标签', () => {

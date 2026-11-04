@@ -1846,15 +1846,17 @@
 | `listOwnedPackages` | 129-142 | 14 | `export async function listOwnedPackages(user, { registry = DEFAULT_REGISTRY, timeoutMs = NPM_TIMEOUT_MS, size = 50 } = {}) {` |
 | `searchPackages` | 143-171 | 29 | `export async function searchPackages(q, { registry = DEFAULT_REGISTRY, timeoutMs = NPM_TIMEOUT_MS, size = 20 } = {}) {` |
 
-### lib/npm/smoke.js（214 行 · 5 个函数）
+### lib/npm/smoke.js（273 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `isBrowserEntry` | 34-37 | 4 | `export function isBrowserEntry(key) {` |
-| `binEntriesOf` | 40-51 | 12 | `export function binEntriesOf(pkg, packageName = '') {` |
-| `classifyPackageForm` | 62-69 | 8 | `export function classifyPackageForm(pkg) {` |
-| `entrySpecsOf` | 71-87 | 17 | `export function entrySpecsOf(pkg) {` |
-| `smokeTestPackage` | 90-213 | 124 | `export async function smokeTestPackage({ dir = '', workspaceRoot = '', registry = '', timeoutMs = SMOKE_TIMEOUT_MS } = {}) {` |
+| `selectImportSpecs` | 50-70 | 21 | `export function selectImportSpecs(pkg) {` |
+| `isModuleTarget` | 82-98 | 17 | `function isModuleTarget(value) {` |
+| `isBrowserEntry` | 100-103 | 4 | `export function isBrowserEntry(key) {` |
+| `binEntriesOf` | 106-117 | 12 | `export function binEntriesOf(pkg, packageName = '') {` |
+| `classifyPackageForm` | 128-135 | 8 | `export function classifyPackageForm(pkg) {` |
+| `entrySpecsOf` | 137-153 | 17 | `export function entrySpecsOf(pkg) {` |
+| `smokeTestPackage` | 156-272 | 117 | `export async function smokeTestPackage({ dir = '', workspaceRoot = '', registry = '', timeoutMs = SMOKE_TIMEOUT_MS } = {}) {` |
 
 ### lib/npm/unpublish.js（132 行 · 3 个函数）
 
@@ -1986,6 +1988,18 @@
 | `auditRulesDir` | 28-30 | 3 | `export function auditRulesDir() {` |
 | `loadYamlBlacklistDirs` | 38-57 | 20 | `export function loadYamlBlacklistDirs() {` |
 | `getSkipSet` | 63-67 | 5 | `export function getSkipSet() {` |
+
+### scripts/audit-ext/dsh-inject-declarations.mjs（210 行 · 7 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `isPluginEntry` | 55-58 | 4 | `function isPluginEntry(text) {` |
+| `collectFiles` | 61-79 | 19 | `function collectFiles(repo) {` |
+| `walk` | 63-76 | 14 | `const walk = (dir) => {` |
+| `declaredInjectNames` | 85-103 | 19 | `function declaredInjectNames(text) {` |
+| `stripTrailingComment` | 106-129 | 24 | `function stripTrailingComment(line) {` |
+| `ctxServiceNotInjectedHits` | 132-155 | 24 | `function ctxServiceNotInjectedHits(text) {` |
+| `defaultExportConflictLine` | 158-169 | 12 | `function defaultExportConflictLine(text) {` |
 
 ### scripts/audit-ext/variable-min-length.mjs（102 行 · 2 个函数）
 
@@ -2285,7 +2299,7 @@
 | `readReleases` | 126-133 | 8 | `export function readReleases(repoPath) {` |
 | `buildReadmeVersionTable` | 151-171 | 21 | `export function buildReadmeVersionTable(repoPath) {` |
 
-### test/e2e-npm-tab-render.mjs（91 行 · 1 个函数）
+### test/e2e-npm-tab-render.mjs（93 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
