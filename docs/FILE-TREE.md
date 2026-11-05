@@ -424,6 +424,7 @@ dsh-git-push/
 │   ├── test-scan-hardcoded-paths.mjs — （待注释）
 │   ├── test-scope-collisions.mjs — 作用域撞名测试（帧判定/for 头部/项目契约/审计接入/CLI 退出码）
 │   ├── test-scope.mjs — 作用域最小实验测试（分类器/机制/magic 接入）
+│   ├── test-score-zero-rule-dims.mjs — （待注释）
 │   ├── test-scrub-conv-wording.mjs — （待注释）
 │   ├── test-self.mjs — 自身总入口测试（VERSION/CLI/help 比对）
 │   ├── test-settings-persistence.mjs — 设置侧边栏持久化专项测试（L1 提交/L2 白名单/L3 回读/L4 消费四层断言）
@@ -512,7 +513,6 @@ dsh-git-push/
 ├── LICENSE — （待注释）
 ├── README.md — 插件 README（功能总览/用法/版本记录）
 ├── SECURITY.md — （待注释）
-├── _tmp_18220_ff573fea50a53cdb09da94c7977bfe1b — （待注释）
 ├── cli.mjs — 独立 CLI（git-sluice，不依赖宿主可独立运行）
 ├── cordis.patch.yml — DSH 插件组合 patch（loader 注入定义）
 ├── package-lock.json — 依赖锁文件（npm install --no-bin-links 生成，保证依赖版本与 tree-sitter ABI 配对）

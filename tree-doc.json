@@ -402,79 +402,84 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
+      "_tmp_18220_ff573fea50a53cdb09da94c7977bfe1b": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
       "docs/2026-11-06-审计插件本体审视与优化方向讨论.案例d3dx.md": {
         "status": "M",
-        "mtime": "2026-11-05T19:21:23.878Z",
+        "mtime": "2026-11-05T19:46:03.839Z",
         "note": "注释可能需更新"
       },
       "docs/CHANGELOG.md": {
         "status": "M",
-        "mtime": "2026-11-05T19:21:24.360Z",
+        "mtime": "2026-11-05T19:45:48.608Z",
         "note": "注释可能需更新"
       },
       "docs/FILE-TREE.md": {
         "status": "M",
-        "mtime": "2026-11-05T19:05:07.298Z",
+        "mtime": "2026-11-05T19:55:04.252Z",
         "note": "注释可能需更新"
       },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-11-05T19:21:31.044Z",
+        "mtime": "2026-11-05T19:45:50.149Z",
         "note": "注释可能需更新"
       },
       "docs/releases.json": {
         "status": "M",
-        "mtime": "2026-11-05T19:21:23.849Z",
+        "mtime": "2026-11-05T19:45:48.188Z",
         "note": "注释可能需更新"
       },
-      "lib/ast/credential.js": {
+      "lib/app/audit-api.js": {
         "status": "M",
-        "mtime": "2026-11-05T18:52:28.351Z",
+        "mtime": "2026-11-05T19:43:50.577Z",
         "note": "注释可能需更新"
       },
-      "lib/ast/treesitter.js": {
+      "lib/app/tool-call.js": {
         "status": "M",
-        "mtime": "2026-11-05T18:50:39.823Z",
+        "mtime": "2026-11-05T19:43:50.593Z",
         "note": "注释可能需更新"
       },
-      "lib/audit-rules/audit-rules-nodejs.yml": {
+      "lib/audit/history.js": {
         "status": "M",
-        "mtime": "2026-11-05T18:22:55.530Z",
+        "mtime": "2026-11-05T19:43:50.620Z",
         "note": "注释可能需更新"
       },
       "lib/audit/orchestrate.js": {
         "status": "M",
-        "mtime": "2026-11-05T19:21:23.843Z",
+        "mtime": "2026-11-05T19:43:38.200Z",
         "note": "注释可能需更新"
       },
-      "lib/checks/common.js": {
+      "lib/cli/commands-audit.mjs": {
         "status": "M",
-        "mtime": "2026-11-05T18:20:14.736Z",
+        "mtime": "2026-11-05T19:43:50.611Z",
         "note": "注释可能需更新"
       },
-      "lib/checks/regex.js": {
+      "lib/commit-push.js": {
         "status": "M",
-        "mtime": "2026-11-05T18:21:14.612Z",
+        "mtime": "2026-11-05T19:43:50.631Z",
+        "note": "注释可能需更新"
+      },
+      "lib/score/index.js": {
+        "status": "M",
+        "mtime": "2026-11-05T19:43:16.124Z",
         "note": "注释可能需更新"
       },
       "lib/self/index.js": {
         "status": "M",
-        "mtime": "2026-11-05T19:06:27.619Z",
+        "mtime": "2026-11-05T19:45:48.174Z",
         "note": "注释可能需更新"
       },
       "package.json": {
         "status": "M",
-        "mtime": "2026-11-05T19:06:27.633Z",
+        "mtime": "2026-11-05T19:45:48.180Z",
         "note": "注释可能需更新"
       },
-      "test/test-audit-bad-file.mjs": {
-        "status": "M",
-        "mtime": "2026-11-05T19:05:48.151Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-tree-first-credential.mjs": {
+      "test/test-score-zero-rule-dims.mjs": {
         "status": "A",
-        "mtime": "2026-11-05T19:09:48.102Z",
+        "mtime": "2026-11-05T19:44:25.429Z",
         "note": "注释可能需更新"
       }
     }
@@ -596,7 +601,6 @@
   "docs/PLAN-2026-11-01-auditignore-scoped.md": "（待注释）",
   "lib/audit/auditignore-rules.js": "（待注释）",
   "test/test-auditignore-rules.mjs": "（待注释）",
-  "_tmp_18220_ff573fea50a53cdb09da94c7977bfe1b": "（待注释）",
   "lib/git/ci.js": "（待注释）",
   "lib/git/hooks.js": "（待注释）",
   "lib/git/rename.js": "（待注释）",
@@ -618,5 +622,6 @@
   "test/test-npm-unpublish.mjs": "（待注释）",
   "test/test-smoke-import-specs.mjs": "（待注释）",
   "test/test-tree-first-credential.mjs": "（待注释）",
-  "docs/2026-11-06-审计插件本体审视与优化方向讨论.案例d3dx.md": "（待注释）"
+  "docs/2026-11-06-审计插件本体审视与优化方向讨论.案例d3dx.md": "（待注释）",
+  "test/test-score-zero-rule-dims.mjs": "（待注释）"
 }

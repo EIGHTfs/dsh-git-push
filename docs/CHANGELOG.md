@@ -15,6 +15,13 @@
 
 | 版本 | 内容 |
 |------|------|
+| 2.20.0 | 评分诚实度（方向 B）：**零规则维度权重记 0**。此前评分对「无命中维度」一律给满分 10 并按设定权重计入总分，于是「本次生效规则集里一条规则都没绑定该维度」（= 对本仓库没有检测能力）也被算成质量高——实测外部 PySide6 仓库：测试覆盖/可观测性/开发者体验三维 0 条规则绑定却齐贡献满分，把分抬到 85/A，而人工核实存在 6 个真问题（含压缩包路径穿越与凭据双向失灵）。
+
+口径：编排层按**生效规则集**（已按仓库语言/槽位/豁免过滤的 grouped，不是全量规则表）统计每维度绑定规则数 computeDimRuleCounts，绑定数=0 的维度实际权重记 0（等价于剔出分母），并回传 uncoveredDimensions 供报告显式标注。判据用生效规则集是为了不误伤：纯 Python 仓库没有 C# 专属规则属正常，不该因此把可维护性记 0。
+
+两道护栏：①**全塌保护**——十维绑定数全为 0（自定义规则集不声明 dimensions）或传 {} 时整条口径不启用、退回旧行为，避免把满分仓库算成 0 分；②**向后兼容**——不传 dimRuleCounts（旧调用方/独立调用）逐位等价于改造前，全维度有绑定时分数也与旧口径完全一致。五个评分消费点（audit-api / tool-call / CLI commands-audit / history / commit-push 门禁）统一接线，commit-push 此前连 dimFileCounts 都没传，一并补齐同口径。
+
+实测效果（d3dx 同一份 findings）：84.199 → 76.929，uncoveredDimensions=[测试覆盖, 可观测性, 开发者体验]——分数的下降不是代码变差，是**假满分被剥离**。新增 test/test-score-zero-rule-dims.mjs（5 例：记 0 与标注 / 诚实性抬降方向 / 全绑定逐位一致 / 全塌保护 / 旧调用方兼容）。 |
 | 2.19.0 | 审计「有树走树」（方向 E1-E3 落地）：凭据精筛 credential-value 改以 tree-sitter 语法树为主路径，无语法/解析失败回退 token 级（D5 口径不变）。
 
 误报消除三类（外部 PySide6 仓库实测 10 条 blocker 全误报 → 0）：函数参数默认值（def _icon(name, token="text.secondary")）、拼接复合右值（token="前缀:"+uuid）、三元分支——语法树上分别不是赋值语句/右值是 binary_operator 非纯字面量，一眼排除；同时凭据名改**强弱分级**：strong（password/secret/cookie…）右侧有效字面量即报，weak（token/key 这类常用普通词）要求值有凭据置信度（ghp_/sk-/AKIA 等 scheme 前缀，或 ≥20 位大小写数字混合高熵串）——token_pattern/cookieChars 这类「凭据词只是普通变量名一部分」不再命中，APP_UPDATE_TOKEN_SECRET 仍命中。树与 token 两条路径共用同一份组合判据（credential.js isHardcodedCredentialValue，唯一真源）。
