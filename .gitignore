@@ -37,3 +37,7 @@ lib/client.js
 #   缺失时 scripts/gen-preview.mjs 与 test-rule-slots-render 会自动生成一次，保证新克隆可用。
 assets/preview.html
 
+# 外部 linter 委托层的工具副本（用户 2026-11-06 决定 git 忽略）：
+#   tools/ruff 等二进制属本机/部署侧资产，不入库、不进 npm 发布包；部署副本由 sync_plugin 侧或手动放置。
+/tools/
+/tool/
