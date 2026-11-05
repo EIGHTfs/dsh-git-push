@@ -20,6 +20,9 @@ metadata:
 
 rules:
   - id: documentation/comment-suspicious-detection
+    # 归档/笔记类目录整规则跳过：这些文件**本来就是**在记录会话与决策（会话 ID、用户确认、讨论过程），
+    #   按「公开文档只写做了什么」去拦是纯误伤（实测某归档库命中 138 条全集中在此类目录）。
+    exclude_paths: ["开发者文档/", "sessions/", "worklogs/", "会话/"]
     exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx", "html", "htm"]
     name: "检测 AI 用户交流可疑注释"
     category: "documentation"
@@ -89,8 +92,13 @@ rules:
       - pattern: "用户服务"
       - pattern: "用户模块"
       - pattern: "用户旅程"
+      # 功能描述而非协作残留：工具作用就是「按用户原话」裁断日志（该措辞实测被误拦）
+      - pattern: "按用户原话"
 
   - id: conv-session-ref
+    # 归档/笔记类目录整规则跳过：这些文件**本来就是**在记录会话与决策（会话 ID、用户确认、讨论过程），
+    #   按「公开文档只写做了什么」去拦是纯误伤（实测某归档库命中 138 条全集中在此类目录）。
+    exclude_paths: ["开发者文档/", "sessions/", "worklogs/", "会话/"]
     exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx", "html", "htm", "md", "markdown", "txt"]
     name: "文档引用会话"
     category: "documentation"
@@ -103,6 +111,9 @@ rules:
     #   负责（它带 blacklist + AST 精筛，能区分注释与字符串字面量）。
     #   此前本规则 exts 里含代码扩展名 ⇒ 与前者报同一批位置：实测 archify 上两条各报 7 条、
     #   (file:line) 交集 5 条，同一条注释被两个 blocker 各拦一次。
+    # 归档/笔记类目录整规则跳过：这些文件**本来就是**在记录会话与决策（会话 ID、用户确认、讨论过程），
+    #   按「公开文档只写做了什么」去拦是纯误伤（实测某归档库命中 138 条全集中在此类目录）。
+    exclude_paths: ["开发者文档/", "sessions/", "worklogs/", "会话/"]
     exts: ["md", "markdown", "txt"]
     name: "文档引用用户决策"
     category: "documentation"
@@ -111,6 +122,9 @@ rules:
     pattern: "用户(同意|许可|确认|约定|指定|已定调|拍板|让我|要求我|跟我说)"
     fixable: false
   - id: conv-ai-permit
+    # 归档/笔记类目录整规则跳过：这些文件**本来就是**在记录会话与决策（会话 ID、用户确认、讨论过程），
+    #   按「公开文档只写做了什么」去拦是纯误伤（实测某归档库命中 138 条全集中在此类目录）。
+    exclude_paths: ["开发者文档/", "sessions/", "worklogs/", "会话/"]
     exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx", "html", "htm", "md", "markdown", "txt"]
     name: "文档 AI 承诺措辞"
     category: "documentation"
@@ -119,6 +133,9 @@ rules:
     pattern: "我(同意|许可|确认|答应|承诺|已按你)"
     fixable: false
   - id: conv-negotiate
+    # 归档/笔记类目录整规则跳过：这些文件**本来就是**在记录会话与决策（会话 ID、用户确认、讨论过程），
+    #   按「公开文档只写做了什么」去拦是纯误伤（实测某归档库命中 138 条全集中在此类目录）。
+    exclude_paths: ["开发者文档/", "sessions/", "worklogs/", "会话/"]
     exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx", "html", "htm", "md", "markdown", "txt"]
     name: "文档协商措辞"
     category: "documentation"
@@ -127,6 +144,9 @@ rules:
     pattern: "我们(商量|讨论|约定|沟通|说好|议定)"
     fixable: false
   - id: conv-log
+    # 归档/笔记类目录整规则跳过：这些文件**本来就是**在记录会话与决策（会话 ID、用户确认、讨论过程），
+    #   按「公开文档只写做了什么」去拦是纯误伤（实测某归档库命中 138 条全集中在此类目录）。
+    exclude_paths: ["开发者文档/", "sessions/", "worklogs/", "会话/"]
     exts: ["js", "mjs", "cjs", "ts", "tsx", "jsx", "html", "htm", "md", "markdown", "txt"]
     name: "文档对话记录引用"
     category: "documentation"

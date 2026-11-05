@@ -283,6 +283,7 @@ dsh-git-push/
 │   ├── test-ast-confirm-span.mjs — （待注释）
 │   ├── test-audit-api-http.mjs — （待注释）
 │   ├── test-audit-api.mjs — （待注释）
+│   ├── test-audit-archive-exempt.mjs — （待注释）
 │   ├── test-audit-bad-file.mjs — 审计拦截门禁测试（硬编码密码/API key/.env 凭据文件）
 │   ├── test-audit-defaults.mjs — （待注释）
 │   ├── test-audit-empty.mjs — （待注释）

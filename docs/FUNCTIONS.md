@@ -2355,6 +2355,12 @@
 |------|------|------|------|
 | `col` | 27-27 | 1 | `const col = (n, needle) => lines[n - 1].indexOf(needle) + 1;` |
 
+### test/test-audit-archive-exempt.mjs（64 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `withRepo` | 23-27 | 5 | `async function withRepo(fn) {` |
+
 ### test/test-audit-bad-file.mjs（107 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |

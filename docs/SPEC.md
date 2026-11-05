@@ -108,6 +108,8 @@ settings-get  settings-set
 
 **推送后等 CI**：`commitAndPush({ waitCi: true, ciTimeoutSec })` 按**推到远端的那个 sha** 查 GitHub Actions，全绿=通过；任一 workflow 失败= `ci.conclusion:'failure'` + `ciFailed:true`；grace 期内没有 run 判「未触发 CI」（不算失败）；超时给 `timeout`（不算失败）。默认不等。
 
+**npm 凭据**：由插件托管（配置目录 `config.json` 的 `npmToken`），发布/撤包时自动注入 npmrc；**无需 `npm login`，也无需向用户索要 token**。缺凭据时工具直接报错（不静默降级到匿名）。
+
 **npm 撤包**：`npm_unpublish` 默认 dryRun 预检（版本存在/ dist-tag 指向 / 72h 窗口 / 唯一版本冷却），真撤需 `dryRun:false` + `confirm:true`；整包撤需 `wholePackage:true`。超 72h 只能满足三条件或改用 `deprecate`。
 
 **npm 发布门禁**：dryRun 与真发前都会跑发布前冒烟——`npm pack` → 干净目录 `npm i <tgz>` → 按 `exports` 公开面逐个 import → 校验 dependencies 已装入；失败即拦（`blocked: smoke-failed`）。浏览器端入口（`./client`）不参与 Node import 校验。
