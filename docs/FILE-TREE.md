@@ -442,6 +442,7 @@ dsh-git-push/
 │   ├── test-tool-probes.mjs — （待注释）
 │   ├── test-tools-e2e.mjs — （待注释）
 │   ├── test-tree-doc.mjs — README 目录树脚本测试（gen/check/apply 闭环）
+│   ├── test-tree-first-credential.mjs — （待注释）
 │   ├── test-treesitter-grammars.mjs — 多语言 AST 接通自检：语法映射与 wasms 包实存核对、每语言 0 ERROR 解析、注释与带引号原始字符串的精筛、以及无语法资产时的回退契约（D5）
 │   ├── test-treesitter.mjs — （待注释）
 │   ├── test-version-metrics.mjs — （待注释）
@@ -462,7 +463,7 @@ dsh-git-push/
 │   ├── 2026-10-13-UI账号信息-NPM账号卡片与三标签页.MD — （待注释）
 │   ├── 2026-10-28-弃零依赖引入npm与AST优先规则方案.MD — 弃零依赖引入 npm 与 AST 优先规则：决策清单、实测证据、里程碑与新增语言/规则的长期流程
 │   ├── 2026-10-29-多语言AST接通实测记录.MD — M2 多语言 AST 接通的改前/改后命中实测：C# 进管道的文件与命中变化、六槽位三档计数（正则初筛/token 级/语法树）与 M3 取舍输入
-│   ├── 2026-11-06-审计插件本体审视与优化方向讨论.案例d3dx.md — 借外部 PySide6 仓库全量审计案例审视引擎本体：误报-补丁循环量化（14327 行/9% 提交/121 处特例）、零规则维度满分致评分虚高、「有树走树」承诺仅 5 条规则兑现→专项功能 E（树为主精筛+防再哑门禁）与外部 linter 委托层共五个方向候选（方向讨论，未动代码）
+│   ├── 2026-11-06-审计插件本体审视与优化方向讨论.案例d3dx.md — （待注释）
 │   ├── CHANGELOG.md — 版本列表宿主（doc-version apply 写 dshgp-version 标记块）
 │   ├── DETAILS-EXEMPT-AND-RULES.md — 细节补充：豁免注释与规则 yml 用法全录
 │   ├── FILE-TREE.md — （待注释）

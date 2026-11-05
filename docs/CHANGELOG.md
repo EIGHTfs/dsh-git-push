@@ -15,6 +15,15 @@
 
 | 版本 | 内容 |
 |------|------|
+| 2.19.0 | 审计「有树走树」（方向 E1-E3 落地）：凭据精筛 credential-value 改以 tree-sitter 语法树为主路径，无语法/解析失败回退 token 级（D5 口径不变）。
+
+误报消除三类（外部 PySide6 仓库实测 10 条 blocker 全误报 → 0）：函数参数默认值（def _icon(name, token="text.secondary")）、拼接复合右值（token="前缀:"+uuid）、三元分支——语法树上分别不是赋值语句/右值是 binary_operator 非纯字面量，一眼排除；同时凭据名改**强弱分级**：strong（password/secret/cookie…）右侧有效字面量即报，weak（token/key 这类常用普通词）要求值有凭据置信度（ghp_/sk-/AKIA 等 scheme 前缀，或 ≥20 位大小写数字混合高熵串）——token_pattern/cookieChars 这类「凭据词只是普通变量名一部分」不再命中，APP_UPDATE_TOKEN_SECRET 仍命中。树与 token 两条路径共用同一份组合判据（credential.js isHardcodedCredentialValue，唯一真源）。
+
+漏报修复：Python bytes/raw 前缀真凭据（SECRET_KEY = b"…"）此前初筛正则（= 与引号间隔 b 断链）与精筛（b 被切成 ident）两处都到不了报告路径，现初筛允许 ≤2 字符字符串前缀、精筛按字面量邻接/树节点识别；下划线复合凭据名（SECRET_KEY/API_KEY_ID 词尾段）初筛加 (?![A-Za-z])\w* 进候选（tokenizer 类「凭据词只是单词前缀」仍排除）。f-string 插值串不判硬编码（值来自变量）。
+
+建树触发与 astConfirmSpan 解耦（E2）：编排层按 TREE_FIRST_KINDS（credential-value 起步）判定「规则要吃树就预解析建树」，此前 .py 因槽位无 astConfirmSpan 规则而从不建树、凭精筛永远吃 token 级。treeUsage 状态进审计结果（E3 防再哑）：needTree/hasGrammar/parsed/noGrammar/parseFailed/coverage 计数随每次审计返回——「声明吃树却没吃到树」不再静默（语法资产完好时 coverage 应恒为 1，测试直接断言），实测 d3dx 全仓 981 文件 894 建树。
+
+新增 test/test-tree-first-credential.mjs 三向样本回归：有树主路径（报必报含 bytes、不报必不报）/ treeUsage 断言 / 无树对照（语法资产缺失时拼接右值误报形态重现，证明干净结果来自树而非规则变哑）。test-audit-bad-file.mjs 同步改造为独立临时 git 仓库执行（零污染纪律：旧写法进程被杀会留 .tmp-test-*.js 于真实仓库 index，并被 doc-tree sync 收进映射键，制造 stale/orphan 假漂移）。 |
 | 2.18.3 | 新增 **`scope_check` 工具 + `kind: scope-collision` 审计规则**（拼接产物作用域撞名）。多段 JS 拼进同一作用域（插件分片拼 factory / 多个 `<script>` 引入 / `cat a.js b.js > bundle.js`）时，同帧内 `function`/`const`/`let`/`class` 同名会让后者顶掉前者、或让整份产物在加载时 SyntaxError；纯 `var` 重复按 warning 报（同一声明重复写入，运行时无害），其余按规则严重度走（`severity: error` ⇒ blocker 拦提交）。
 
 判定按**真实作用域帧**而不是缩进/深度：`var`/`function` 绑最近的函数帧，`const`/`let`/`class` 绑当前块帧，`for (…)` 与 `for await (…)` 头部绑该语句的专属帧——兄弟循环里同名合法，不误报（自审计实测：不这样处理会在本仓刷 16 条假 blocker）。

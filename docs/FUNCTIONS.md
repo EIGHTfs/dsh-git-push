@@ -323,16 +323,20 @@
 | `indentOf` | 419-421 | 3 | `function indentOf(line) {` |
 | `checkJavaKtComplexity` | 435-468 | 34 | `function checkJavaKtComplexity(tokens, ranges, { warn, block }) {` |
 
-### lib/ast/credential.js（200 行 · 6 个函数）
+### lib/ast/credential.js（316 行 · 10 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `isPlaceholderText` | 40-42 | 3 | `function isPlaceholderText(text) {` |
-| `stripQuotes` | 70-72 | 3 | `function stripQuotes(raw) {` |
-| `isMeaningfulCredentialValue` | 80-87 | 8 | `export function isMeaningfulCredentialValue(raw) {` |
-| `checkPlaceholderCredentialAst` | 111-135 | 25 | `export function checkPlaceholderCredentialAst(text = '', file = '') {` |
-| `scanCredentialTokens` | 147-181 | 35 | `function scanCredentialTokens(tokens, out, lineOffset = 0) {` |
-| `checkCredentialRefAst` | 183-199 | 17 | `export function checkCredentialRefAst(text = '') {` |
+| `isPlaceholderText` | 48-50 | 3 | `function isPlaceholderText(text) {` |
+| `stripQuotes` | 78-82 | 5 | `function stripQuotes(raw) {` |
+| `isMeaningfulCredentialValue` | 101-112 | 12 | `export function isMeaningfulCredentialValue(raw) {` |
+| `checkPlaceholderCredentialAst` | 136-160 | 25 | `export function checkPlaceholderCredentialAst(text = '', file = '') {` |
+| `credentialNameTier` | 195-200 | 6 | `export function credentialNameTier(name) {` |
+| `isHardcodedCredentialValue` | 206-215 | 10 | `export function isHardcodedCredentialValue(name, raw) {` |
+| `isCredentialIdent` | 218-220 | 3 | `export function isCredentialIdent(name) {` |
+| `scanCredentialTokens` | 229-269 | 41 | `function scanCredentialTokens(tokens, out, lineOffset = 0) {` |
+| `literalAfterPrefix` | 282-291 | 10 | `function literalAfterPrefix(tokens, next, opIdx) {` |
+| `checkCredentialRefAst` | 293-315 | 23 | `export function checkCredentialRefAst(text = '', tree = null) {` |
 
 ### lib/ast/dataflow.js（274 行 · 12 个函数）
 
@@ -593,7 +597,7 @@
 | `consumeTemplate` | 377-388 | 12 | `function consumeTemplate(src, i, n, push) {` |
 | `consumeRegex` | 391-396 | 6 | `function consumeRegex(src, i, n, tokens, push) { // dsh-skip-complexity: 正则状态机（转义/字符组/闭包三态，天然多分支）` |
 
-### lib/ast/treesitter.js（273 行 · 13 个函数）
+### lib/ast/treesitter.js（364 行 · 17 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -608,8 +612,12 @@
 | `parseText` | 182-198 | 17 | `export async function parseText(text, grammar) {` |
 | `isOpaqueNode` | 201-208 | 8 | `export function isOpaqueNode(node) {` |
 | `confirmHits` | 218-237 | 20 | `export async function confirmHits({ text, ext = '', grammar = '', hits = [] } = {}) {` |
-| `makeSyncConfirmer` | 249-264 | 16 | `export function makeSyncConfirmer(tree) {` |
-| `resetTreeSitterCache` | 267-272 | 6 | `export function resetTreeSitterCache() {  modPromise = null;` |
+| `makeSyncConfirmer` | 249-268 | 20 | `export function makeSyncConfirmer(tree) {` |
+| `fn` | 251-263 | 13 | `const fn = (line, col) => {` |
+| `credentialLinesFromTree` | 288-355 | 68 | `export function credentialLinesFromTree(tree, credHit) {` |
+| `isPlainLiteral` | 299-305 | 7 | `const isPlainLiteral = (node) => {` |
+| `walk` | 307-348 | 42 | `const walk = (node) => {` |
+| `resetTreeSitterCache` | 358-363 | 6 | `export function resetTreeSitterCache() {  modPromise = null;` |
 
 ### lib/audit/analysis-coverage.js（99 行 · 5 个函数）
 
@@ -751,7 +759,7 @@
 | `excludePathOf` | 39-48 | 10 | `function excludePathOf(root) {` |
 | `detectIgnoreBlindSpot` | 55-102 | 48 | `export function detectIgnoreBlindSpot(root) {` |
 
-### lib/audit/orchestrate.js（586 行 · 19 个函数）
+### lib/audit/orchestrate.js（625 行 · 19 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -761,19 +769,19 @@
 | `checkFuncDrift` | 39-39 | 1 | `const checkFuncDrift = (...args) => (injected \|\| EMPTY_DOC_CHECKS).checkFuncDrift(...args);` |
 | `capScanFiles` | 60-70 | 11 | `export function capScanFiles(files, root, maxFiles) {` |
 | `appendIgnoreBlindSpot` | 83-99 | 17 | `function appendIgnoreBlindSpot(findings, repoPath, scanned) {` |
-| `buildTreeConfirmer` | 122-142 | 21 | `async function buildTreeConfirmer(relPath, text, grouped) {` |
-| `computeDimFileCounts` | 163-197 | 35 | `export function computeDimFileCounts(grouped, normFiles) {` |
-| `auditFiles` | 199-377 | 179 | `async function auditFiles(repoPath, files, opts = {}) {` |
-| `isDshPlugin` | 224-230 | 7 | `const isDshPlugin = (() => {` |
-| `auditFull` | 379-401 | 23 | `export async function auditFull(repoPath, opts = {}) {` |
-| `appendTreeDocDrift` | 406-448 | 43 | `function appendTreeDocDrift(findings, repoPath) {` |
-| `by` | 439-439 | 1 | `const by = (code) => wt.filter(([, v]) => v?.status === code).length;` |
-| `appendFuncDocDrift` | 457-473 | 17 | `function appendFuncDocDrift(findings, repoPath) {` |
-| `appendSplitDocsCheck` | 481-535 | 55 | `function appendSplitDocsCheck(findings, repoPath) {` |
-| `hasMarkBlock` | 538-540 | 3 | `function hasMarkBlock(text, marker) {` |
-| `auditChanged` | 545-580 | 36 | `export async function auditChanged(repoPath, opts = {}) {` |
-| `isAuditIgnored` | 561-574 | 14 | `const isAuditIgnored = (rel) => {` |
-| `auditWithScope` | 583-585 | 3 | `export async function auditWithScope(repoPath, { scope = 'diff', ...opts } = {}) {` |
+| `buildTreeConfirmer` | 131-157 | 27 | `async function buildTreeConfirmer(relPath, text, grouped) {` |
+| `computeDimFileCounts` | 178-212 | 35 | `export function computeDimFileCounts(grouped, normFiles) {` |
+| `auditFiles` | 214-416 | 203 | `async function auditFiles(repoPath, files, opts = {}) {` |
+| `isDshPlugin` | 239-245 | 7 | `const isDshPlugin = (() => {` |
+| `auditFull` | 418-440 | 23 | `export async function auditFull(repoPath, opts = {}) {` |
+| `appendTreeDocDrift` | 445-487 | 43 | `function appendTreeDocDrift(findings, repoPath) {` |
+| `by` | 478-478 | 1 | `const by = (code) => wt.filter(([, v]) => v?.status === code).length;` |
+| `appendFuncDocDrift` | 496-512 | 17 | `function appendFuncDocDrift(findings, repoPath) {` |
+| `appendSplitDocsCheck` | 520-574 | 55 | `function appendSplitDocsCheck(findings, repoPath) {` |
+| `hasMarkBlock` | 577-579 | 3 | `function hasMarkBlock(text, marker) {` |
+| `auditChanged` | 584-619 | 36 | `export async function auditChanged(repoPath, opts = {}) {` |
+| `isAuditIgnored` | 600-613 | 14 | `const isAuditIgnored = (rel) => {` |
+| `auditWithScope` | 622-624 | 3 | `export async function auditWithScope(repoPath, { scope = 'diff', ...opts } = {}) {` |
 
 ### lib/audit/ownership.js（47 行 · 3 个函数）
 
@@ -834,7 +842,7 @@
 | `consoleLogJsonLines` | 95-97 | 3 | `export function consoleLogJsonLines(text) {` |
 | `shortFuncNameLines` | 105-107 | 3 | `export function shortFuncNameLines(text) {` |
 | `placeholderCredentialLines` | 118-120 | 3 | `export function placeholderCredentialLines(text, file) {` |
-| `credentialValueLines` | 122-124 | 3 | `export function credentialValueLines(text) {` |
+| `credentialValueLines` | 122-124 | 3 | `export function credentialValueLines(text, tree) {` |
 | `ioRiskLines` | 138-140 | 3 | `export function ioRiskLines(text) {` |
 | `ioRiskDetail` | 148-156 | 9 | `export function ioRiskDetail(text) {` |
 | `shellCdDynamicLines` | 158-160 | 3 | `export function shellCdDynamicLines(text) {` |
@@ -2395,12 +2403,12 @@
 |------|------|------|------|
 | `withRepo` | 23-27 | 5 | `async function withRepo(fn) {` |
 
-### test/test-audit-bad-file.mjs（107 行 · 2 个函数）
+### test/test-audit-bad-file.mjs（129 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `setupBadFile` | 18-23 | 6 | `function setupBadFile(relPath, content) {` |
-| `cleanup` | 24-28 | 5 | `function cleanup(relPath) {` |
+| `setupBadFile` | 40-45 | 6 | `function setupBadFile(relPath, content) {` |
+| `cleanup` | 46-50 | 5 | `function cleanup(relPath) {` |
 
 ### test/test-audit-defaults.mjs（34 行 · 1 个函数）
 
@@ -3056,6 +3064,13 @@
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `makeReadme` | 41-43 | 3 | `function makeReadme(tree) {` |
+
+### test/test-tree-first-credential.mjs（123 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `makeFixture` | 51-55 | 5 | `async function makeFixture() {` |
+| `hardLines` | 57-62 | 6 | `function hardLines(res) {` |
 
 ### test/test-treesitter-grammars.mjs（241 行 · 5 个函数）
 

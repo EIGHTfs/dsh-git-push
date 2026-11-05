@@ -402,164 +402,79 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "README.md": {
+      "docs/2026-11-06-审计插件本体审视与优化方向讨论.案例d3dx.md": {
         "status": "M",
-        "mtime": "2026-11-05T13:35:49.186Z",
-        "note": "注释可能需更新"
-      },
-      "cli.mjs": {
-        "status": "M",
-        "mtime": "2026-11-05T13:27:29.862Z",
+        "mtime": "2026-11-05T19:21:23.878Z",
         "note": "注释可能需更新"
       },
       "docs/CHANGELOG.md": {
         "status": "M",
-        "mtime": "2026-11-05T14:01:46.708Z",
-        "note": "注释可能需更新"
-      },
-      "docs/DETAILS-EXEMPT-AND-RULES.md": {
-        "status": "M",
-        "mtime": "2026-11-05T13:38:34.233Z",
+        "mtime": "2026-11-05T19:21:24.360Z",
         "note": "注释可能需更新"
       },
       "docs/FILE-TREE.md": {
         "status": "M",
-        "mtime": "2026-11-05T14:01:51.729Z",
+        "mtime": "2026-11-05T19:05:07.298Z",
         "note": "注释可能需更新"
       },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-11-05T14:04:18.407Z",
-        "note": "注释可能需更新"
-      },
-      "docs/SPEC.md": {
-        "status": "M",
-        "mtime": "2026-11-05T13:36:56.938Z",
+        "mtime": "2026-11-05T19:21:31.044Z",
         "note": "注释可能需更新"
       },
       "docs/releases.json": {
         "status": "M",
-        "mtime": "2026-11-05T14:01:45.861Z",
+        "mtime": "2026-11-05T19:21:23.849Z",
         "note": "注释可能需更新"
       },
-      "docs/功能-审计规则体系.md": {
+      "lib/ast/credential.js": {
         "status": "M",
-        "mtime": "2026-11-05T13:41:53.608Z",
+        "mtime": "2026-11-05T18:52:28.351Z",
         "note": "注释可能需更新"
       },
-      "lib/ARCHITECTURE.md": {
+      "lib/ast/treesitter.js": {
         "status": "M",
-        "mtime": "2026-11-05T13:42:12.246Z",
+        "mtime": "2026-11-05T18:50:39.823Z",
         "note": "注释可能需更新"
       },
-      "lib/app/command-registry.js": {
+      "lib/audit-rules/audit-rules-nodejs.yml": {
         "status": "M",
-        "mtime": "2026-11-05T13:37:48.224Z",
+        "mtime": "2026-11-05T18:22:55.530Z",
         "note": "注释可能需更新"
       },
-      "lib/app/inject-text.js": {
+      "lib/audit/orchestrate.js": {
         "status": "M",
-        "mtime": "2026-11-05T13:26:11.033Z",
+        "mtime": "2026-11-05T19:21:23.843Z",
         "note": "注释可能需更新"
       },
-      "lib/app/tool-call.js": {
+      "lib/checks/common.js": {
         "status": "M",
-        "mtime": "2026-11-05T13:25:13.729Z",
+        "mtime": "2026-11-05T18:20:14.736Z",
         "note": "注释可能需更新"
       },
-      "lib/ast/index.js": {
+      "lib/checks/regex.js": {
         "status": "M",
-        "mtime": "2026-11-05T13:23:26.005Z",
-        "note": "注释可能需更新"
-      },
-      "lib/audit-rules/audit-rules-dsh.yml": {
-        "status": "M",
-        "mtime": "2026-11-05T13:24:43.295Z",
-        "note": "注释可能需更新"
-      },
-      "lib/checks/dispatch.js": {
-        "status": "M",
-        "mtime": "2026-11-05T13:23:50.562Z",
-        "note": "注释可能需更新"
-      },
-      "lib/checks/index.js": {
-        "status": "M",
-        "mtime": "2026-11-05T13:23:39.443Z",
-        "note": "注释可能需更新"
-      },
-      "lib/exempt/index.js": {
-        "status": "M",
-        "mtime": "2026-11-05T13:38:16.118Z",
-        "note": "注释可能需更新"
-      },
-      "lib/rule/compilers/structure.js": {
-        "status": "M",
-        "mtime": "2026-11-05T13:24:01.015Z",
+        "mtime": "2026-11-05T18:21:14.612Z",
         "note": "注释可能需更新"
       },
       "lib/self/index.js": {
         "status": "M",
-        "mtime": "2026-11-05T14:03:45.500Z",
+        "mtime": "2026-11-05T19:06:27.619Z",
         "note": "注释可能需更新"
       },
       "package.json": {
         "status": "M",
-        "mtime": "2026-11-05T14:01:45.837Z",
+        "mtime": "2026-11-05T19:06:27.633Z",
         "note": "注释可能需更新"
       },
-      "scripts/bump-version.mjs": {
+      "test/test-audit-bad-file.mjs": {
         "status": "M",
-        "mtime": "2026-11-05T14:04:07.794Z",
+        "mtime": "2026-11-05T19:05:48.151Z",
         "note": "注释可能需更新"
       },
-      "scripts/check.mjs": {
-        "status": "M",
-        "mtime": "2026-11-05T12:39:46.673Z",
-        "note": "注释可能需更新"
-      },
-      "skills/dev/dsh-git-push.md": {
-        "status": "M",
-        "mtime": "2026-11-05T13:37:56.882Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-plugin.mjs": {
-        "status": "M",
-        "mtime": "2026-11-05T13:36:43.341Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-tool-contract.mjs": {
-        "status": "M",
-        "mtime": "2026-11-05T13:36:25.501Z",
-        "note": "注释可能需更新"
-      },
-      "lib/app/scope-check.js": {
+      "test/test-tree-first-credential.mjs": {
         "status": "A",
-        "mtime": "2026-11-05T13:23:09.405Z",
-        "note": "注释可能需更新"
-      },
-      "lib/ast/scope-collisions.js": {
-        "status": "A",
-        "mtime": "2026-11-05T13:31:31.048Z",
-        "note": "注释可能需更新"
-      },
-      "lib/audit/scope-policy.js": {
-        "status": "A",
-        "mtime": "2026-11-05T13:33:41.665Z",
-        "note": "注释可能需更新"
-      },
-      "lib/checks/scope-collision.js": {
-        "status": "A",
-        "mtime": "2026-11-05T13:24:38.361Z",
-        "note": "注释可能需更新"
-      },
-      "scripts/check-js-scope.mjs": {
-        "status": "A",
-        "mtime": "2026-11-05T13:42:43.494Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-scope-collisions.mjs": {
-        "status": "A",
-        "mtime": "2026-11-05T13:39:00.765Z",
+        "mtime": "2026-11-05T19:09:48.102Z",
         "note": "注释可能需更新"
       }
     }
@@ -701,5 +616,7 @@
   "test/test-npm-pack-parse.mjs": "（待注释）",
   "test/test-npm-smoke.mjs": "（待注释）",
   "test/test-npm-unpublish.mjs": "（待注释）",
-  "test/test-smoke-import-specs.mjs": "（待注释）"
+  "test/test-smoke-import-specs.mjs": "（待注释）",
+  "test/test-tree-first-credential.mjs": "（待注释）",
+  "docs/2026-11-06-审计插件本体审视与优化方向讨论.案例d3dx.md": "（待注释）"
 }
