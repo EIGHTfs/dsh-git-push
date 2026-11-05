@@ -1821,7 +1821,7 @@
 | `writeNpmrc` | 40-48 | 9 | `export function writeNpmrc({ workspaceRoot = '', registry = 'https://registry.npmjs.org/', token = '' } = {}) {` |
 | `npmArgs` | 51-56 | 6 | `export function npmArgs({ npmrcFile = '', registry = 'https://registry.npmjs.org/' } = {}) {` |
 
-### lib/npm/publish.js（250 行 · 7 个函数）
+### lib/npm/publish.js（300 行 · 8 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1829,9 +1829,10 @@
 | `publishingKeys` | 34-36 | 3 | `export function publishingKeys() {` |
 | `readPackageInfo` | 39-54 | 16 | `export function readPackageInfo(dir = '') {` |
 | `fetchPublishedVersions` | 57-77 | 21 | `export async function fetchPublishedVersions({ name, registry = DEFAULT_REGISTRY, timeoutMs = NPM_TIMEOUT_MS } = {}) {` |
-| `packDryRun` | 80-250 | 171 | `export function packDryRun({ dir, registry = DEFAULT_REGISTRY, workspaceRoot = '', token = '', timeoutMs = PUBLISH_TIMEOUT_MS } = {}) {` |
-| `appendPublishLog` | 104-112 | 9 | `function appendPublishLog(line, { workspaceRoot = '' } = {}) {` |
-| `publishPackage` | 119-249 | 131 | `export async function publishPackage({` |
+| `parsePackOutput` | 92-300 | 209 | `export function parsePackOutput(text = '', { maxCandidates = 200 } = {}) {` |
+| `packDryRun` | 109-140 | 32 | `export function packDryRun({ dir, registry = DEFAULT_REGISTRY, workspaceRoot = '', token = '', timeoutMs = PUBLISH_TIMEOUT_MS } = {}) {` |
+| `appendPublishLog` | 143-151 | 9 | `function appendPublishLog(line, { workspaceRoot = '' } = {}) {` |
+| `publishPackage` | 158-299 | 142 | `export async function publishPackage({` |
 
 ### lib/npm/registry.js（172 行 · 8 个函数）
 

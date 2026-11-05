@@ -387,6 +387,7 @@ dsh-git-push/
 │   ├── test-npm-enobufs.mjs — （待注释）
 │   ├── test-npm-install.mjs — （待注释）
 │   ├── test-npm-local-registry.mjs — （待注释）
+│   ├── test-npm-pack-parse.mjs — （待注释）
 │   ├── test-npm-publish.mjs — （待注释）
 │   ├── test-npm-registry.mjs — （待注释）
 │   ├── test-npm-smoke.mjs — （待注释）
