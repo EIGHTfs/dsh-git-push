@@ -83,6 +83,42 @@ try {
   console.error(`✗ 分片构建校验失败：${e.message}`);
 }
 
+// ── 拼接产物作用域门禁（2026-11-05）───────────────────────────────────
+// 背景：lib/client-parts/*.js 是**平铺拼接**的片段，14 个分片最终落在**同一个 factory
+//   函数作用域**里。JS 的 var/function 提升规则是「同名后者覆盖前者且不报错」——
+//   一处重名就让某分片功能在运行时静默失效，且没有任何报错可查。
+//   构建脚本头部早写了「顶层零声明 + dshgp_ 前缀」两条铁律，但此前**只是注释**：
+//   新鲜度门禁只保证「产物 == 分片拼接」，保证不了「拼出来的不撞名」。
+// 检查项（通用实现在 lib/ast/scope-collisions.js，项目差异走 package.json 的 dshScopeCheck）：
+//   ① 同作用域重名（var/function 静默覆盖的触发条件，始终检查）；
+//   ② 文件顶层零声明；③ 共享作用域命名前缀。
+try {
+  const { analyzeScopeCollisions } = await import('../lib/ast/scope-collisions.js');
+  const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
+  const cfg = pkg?.dshScopeCheck;
+  const files = Array.isArray(cfg?.files) && cfg.files.length ? cfg.files : [];
+  if (!files.length) {
+    console.log('✔ 拼接产物作用域：未配置 dshScopeCheck.files，跳过');
+  }
+  for (const rel of files) {
+    const abs = join(ROOT, rel);
+    const scope = analyzeScopeCollisions(readFileSync(abs, 'utf8'), {
+      prefix: String(cfg.prefix || ''),
+      allowlist: Array.isArray(cfg.allowlist) ? cfg.allowlist.map(String) : [],
+      topLevelMustBeEmpty: cfg.topLevelMustBeEmpty !== false,
+    });
+    if (scope.ok) {
+      console.log(`✔ ${rel} 作用域契约（顶层零声明 · 共享作用域 ${scope.declarations.filter((d) => d.frameId === scope.sharedFrameId).length} 个声明均合规 · 无同帧重名）`);
+    } else {
+      fail += 1;
+      for (const v of scope.violations) console.error(`✗ ${rel} 作用域：${v}`);
+    }
+  }
+} catch (e) {
+  fail += 1;
+  console.error(`✗ 拼接产物作用域检查失败：${e.message}`);
+}
+
 // ── 层边界门禁（2026-10-24）────────────────────────────────────────────
 // 背景：审计引擎与提交推送**决定不拆成两个 npm 包**（拆包的持续成本——双包版本同步、
 //   固定发布顺序、依赖范围——换不到真实收益：外部使用者要的是「提交前拦截」这个整体，

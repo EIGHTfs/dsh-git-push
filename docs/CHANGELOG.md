@@ -15,6 +15,15 @@
 
 | 版本 | 内容 |
 |------|------|
+| 2.18.3 | 新增 **`scope_check` 工具 + `kind: scope-collision` 审计规则**（拼接产物作用域撞名）。多段 JS 拼进同一作用域（插件分片拼 factory / 多个 `<script>` 引入 / `cat a.js b.js > bundle.js`）时，同帧内 `function`/`const`/`let`/`class` 同名会让后者顶掉前者、或让整份产物在加载时 SyntaxError；纯 `var` 重复按 warning 报（同一声明重复写入，运行时无害），其余按规则严重度走（`severity: error` ⇒ blocker 拦提交）。
+
+判定按**真实作用域帧**而不是缩进/深度：`var`/`function` 绑最近的函数帧，`const`/`let`/`class` 绑当前块帧，`for (…)` 与 `for await (…)` 头部绑该语句的专属帧——兄弟循环里同名合法，不误报（自审计实测：不这样处理会在本仓刷 16 条假 blocker）。
+
+契约与规则分层：命名前缀、顶层零声明、产物文件清单一律从**被审项目自己**的 `package.json` → `dshScopeCheck` 读（`lib/audit/scope-policy.js`），规则 yml 只声明「查不查」。规则包跨仓库共享，把 `dshgp_` 写进 yml 会给所有被审项目刷「缺少 dshgp_ 前缀」；项目没声明时只查同帧重名（通用项）。
+
+入口由注册表单源派生（一条注册表 = 宿主工具 + CLI 同时生效，不碰 HELP/KNOWN_FLAGS/COMMANDS）：`scope_check` 工具 / `git-sluice scope-check`——无参数时读项目 `dshScopeCheck.files`，有违规退出码 1（可直接当门禁）；`scripts/check-js-scope.mjs` 与 `scripts/check.mjs` 的构建期门禁共用同一份判定。审计侧经 `kind → 编译器 → 检查器 → 调度` 常规管线接入，作用域（exts/exclude_paths/file_patterns）由统一补齐继承。
+
+新增 `test/test-scope-collisions.mjs`（23 例：帧判定 / 兄弟 for 循环 / for await / 项目契约三态 / 审计端到端 / 豁免标记生效 / 注册表 / CLI 退出码）。 |
 | 2.18.2 | 审计扩展新增两条 DSH 插件 blocker 规则（`scripts/audit-ext/dsh-inject-declarations.mjs`）：`dsh/ctx-service-not-injected`（访问 `ctx.<服务>` 但 `inject` 未声明 —— cordis 直接抛 cannot get property，插件整条不激活，用假 ctx 的单测测不出来）与 `dsh/plugin-default-export-hides-inject`（入口同时有 `export default` 与命名 `inject`/`apply` —— DSH 装载取 `module.default || module`，命名导出全失效）。两条都要跨行读 `export const inject`，纯逐行正则做不到，故用扩展脚本承载；判定口径与 dsh-useful-tools 的 `verify_plugin` 一致（契约 C-114 要求两边同源维护）。规则带两条保守边界：只查插件入口文件（含 `export function apply` 或 `export const inject`）、只报已知 cordis 服务名 —— `ctx` 在真实代码里常是 HTTP 请求对象 / 工具上下文 / 遍历累加器，不收窄会每仓库误报 20 条。实测：违规样例命中 2 处，真实仓库（dsh-useful-tools / dsh-session-conductor）零误报。 |
 | 2.18.1 | 修发布前冒烟的选择逻辑（新增 `selectImportSpecs`：按目标扩展名与条件导出挑出真正能被 Node 加载的入口）。实测两次误判：① 包 exports 里登记了 `./cordis.patch.yml`，冒烟对它 import 得到 ERR_UNKNOWN_FILE_EXTENSION，把正常包拦在发布前；② 点出口 `.` 被 continue 跳过，主入口从未被测、门禁形同虚设。现按扩展名与条件导出过滤：非 JS 资源（.yml/.json/.css/图片）不进 import 列表，点出口不再跳过，无 exports 时回退主入口，纯 CLI 包无库入口时跳过不报错；配 6 项断言（资源与浏览器入口过滤 / 无 exports 回退 / 纯 CLI 无库入口 / 条件导出取 import|default / 缺 name 不抛）。 |
 | 2.18.0 | 新增 **`npm_unpublish`**（撤包，独立工具）。撤包**不可逆**：同一 `包@版本` 撤掉后永久不能再发，撤掉 `latest` 会让 `npm i <包>` 拿不到东西——所以工具**默认 dryRun**，只做预检并说明后果。

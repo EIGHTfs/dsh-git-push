@@ -22,6 +22,7 @@ DSH 的 git 提交推送与代码审计插件：提交前自动过审计门禁�
 | 豁免标记 | 给文件加/删豁免注释并校验是否真生效 | `exempt` |
 | I/O 风险扫描 | 扫描读写操作的风险分级 | `io_scan` / `file-io` |
 | 链接检查 | 检查文档里的 URL 是否有效 | `link_check` / `link-check` |
+| 拼接产物作用域 | 查分片拼成单文件后同一作用域内的重名（后者静默顶掉前者） | `scope_check` / `scope-check` |
 | 巨型文件拆分 | 按顶层块拆分单文件并校验导出一致 | `module_splitter` / `module-splitter` |
 | git 透传 | 执行任意 git 命令，凭据自动注入 | `git_sluice` / `git` |
 | HTTP 接口直调 | 调用本插件的全部 HTTP 接口 | `git_api` / `api` |
@@ -68,6 +69,7 @@ npm_publish({ dir, dryRun, confirm, tag, otp })      // dryRun 默认 true（只
 exempt({ action, rule, path, scope, line, reason })  // action 与 rule 必填；path 可数组；scope=header（文件头）或 line
 io_scan({ repo, writeOnly })                         // 两者都可空：writeOnly 空=读写都看
 link_check({ path })                                 // path 可空：空=整个工作区
+scope_check({ files, repo, prefix, allowlist, topLevelMustBeEmpty })  // 全可空：files 空=读项目 dshScopeCheck.files；prefix 空=按项目契约
 module_splitter({ command, file, plan, dryRun })     // command 必填（analyze/split/verify）；dryRun 可空
 ```
 
@@ -78,6 +80,7 @@ git-sluice account-check              # 校验本机 GitHub 凭据
 git-sluice scan <目录>                 # 列出该目录下的 git 仓库
 git-sluice audit <仓库> --full         # 全量审计（加 --json 拿明细）
 git-sluice commit <仓库> -m "msg"      # 提交并推送（自动过审计门禁）
+git-sluice scope-check [文件]           # 查拼接产物同帧重名（无参数时读项目 dshScopeCheck.files）
 git-sluice help                        # 全部命令
 ```
 

@@ -27,6 +27,7 @@ dsh-git-push/
 │   │   ├── repo-ownership.js — （待注释）
 │   │   ├── scan-root.js — 默认扫描根解析（配置优先→DSH 家根自动识别）
 │   │   ├── schema.js — 配置 schema（宿主导出缺失时兜底）
+│   │   ├── scope-check.js — 作用域检查执行器（工具/独立脚本共用：找契约→逐文件分析→汇总）
 │   │   ├── settings-bridge.js — 设置读写桥（host scope 共享；绕开 client isLoopback=memory 落盘陷阱）
 │   │   ├── slash-commands.js — 用户输入框斜杠命令（目前只注册 /git-audit）
 │   │   ├── slot-stats.js — 规则槽位命中统计（模块级状态）
@@ -53,6 +54,7 @@ dsh-git-push/
 │   │   ├── magic-number.js — 硬编码魔数识别（豁免版本号/日期/状态码）
 │   │   ├── naming.js — 命名检查（标识符长度/函数名过短/受控小文件读取）
 │   │   ├── perf.js — （待注释）
+│   │   ├── scope-collisions.js — 拼接产物作用域撞名判定（按真实作用域帧；for 头部独立帧）
 │   │   ├── scope.js — 变量作用域分类器（module/function/loop 行号区间 + 模块常量赋值判定）
 │   │   ├── shell.js — shell 精筛（cd 动态路径/写操作命中 .gitignore）
 │   │   ├── size.js — 规模检查（函数长度/文件长度/重复字符串）
@@ -80,6 +82,7 @@ dsh-git-push/
 │   │   ├── public.js — （待注释）
 │   │   ├── repo-level.js — 仓库级语义规则
 │   │   ├── report-yaml.js — （待注释）
+│   │   ├── scope-policy.js — 作用域契约读取（按项目 package.json 的 dshScopeCheck 取前缀/顶层/产物清单）
 │   │   ├── slot.js — 按规则包聚合审计命中（拦截/警告/通过）
 │   ├── audit-rules/ — 规则包 yml（nodejs/npm/frontend/comment/dsh/private/structure 等动态槽位）
 │   │   ├── audit-rules-comment.yml — 注释类规则（黑名单措辞/对话残留）（规则包 comment）
@@ -124,6 +127,7 @@ dsh-git-push/
 │   │   ├── npm-json.js — package.json 检查（依赖版本/私有包豁免）
 │   │   ├── private.js — 私密文件检查（私有仓可见性核对）
 │   │   ├── regex.js — 正则类规则执行（regex/path-regex/blacklist）
+│   │   ├── scope-collision.js — 作用域撞名规则包装（同帧重名→finding；契约类封顶 warning）
 │   │   ├── semantic.js — 语义类规则执行（patch insert/仓库级语义）
 │   │   ├── structural.js — 结构类规则（函数长度/复杂度/嵌套/同步 fs）
 │   ├── cli/ — （待注释）
@@ -239,6 +243,7 @@ dsh-git-push/
 │   ├── browser-page-probe.mjs — （待注释）
 │   ├── build-client.mjs — 客户端分片拼接（PART_ORDER + --check 门禁 + 形态铁律自检）
 │   ├── bump-version.mjs — （待注释）
+│   ├── check-js-scope.mjs — 作用域撞名独立脚本（与 git-sluice scope-check 同一份判定）
 │   ├── check.mjs — 语法检查脚本（npm run check）
 │   ├── clean-date-comments.py — （待注释）
 │   ├── cpu-sample.mjs — （待注释）
@@ -417,6 +422,7 @@ dsh-git-push/
 │   ├── test-rule-include-paths.mjs — （待注释）
 │   ├── test-rule-packs.mjs — 规则总入口测试（编译注册/字段指派）
 │   ├── test-scan-hardcoded-paths.mjs — （待注释）
+│   ├── test-scope-collisions.mjs — 作用域撞名测试（帧判定/for 头部/项目契约/审计接入/CLI 退出码）
 │   ├── test-scope.mjs — 作用域最小实验测试（分类器/机制/magic 接入）
 │   ├── test-scrub-conv-wording.mjs — （待注释）
 │   ├── test-self.mjs — 自身总入口测试（VERSION/CLI/help 比对）

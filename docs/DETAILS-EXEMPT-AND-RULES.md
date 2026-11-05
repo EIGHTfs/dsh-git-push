@@ -463,6 +463,7 @@ cd ../dsh-git-push && node cli.mjs audit ../dsh-git-push-v2 --json
 | button-bind / magic-number-smart | 可维护性 |
 | patch-insert | 健壮性 + 可部署性 |
 | dataflow | 健壮性 |
+| scope-collision | 健壮性 + 可维护性 |
 | file-health | 可维护性 + 可读性 |
 
 > yml 示例：`regex` 规则想记为「安全性」而非默认「可读性」：

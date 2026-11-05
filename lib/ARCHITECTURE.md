@@ -24,6 +24,9 @@
    注册各行精筛函数；新 kind 在此接线。
 4. **编排调度** `lib/audit/*`：`collector.js` 收文件 → `audit-file.js` 按 kind 调度到各检查器 →
    `orchestrate.js` 汇总、按规则包聚合命中数。`lib/audit/` 不驻留具体判定实现。
+   例外（中立读取层）：`client-entry.js` / `scope-policy.js` 只做「从仓库推导事实」
+   （客户端入口与分片目录、项目自己的作用域契约），供 `lib/checks/` 与 `lib/app/` 双向复用——
+   放 `lib/app/` 会让 `checks → app` 反向依赖成环。
 
 ## 原则
 

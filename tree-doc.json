@@ -18,6 +18,7 @@
   "lib/app/inject-text.js": "注入文本（工具用法提示 FUNCTION_USAGE_HINT）",
   "lib/app/scan-root.js": "默认扫描根解析（配置优先→DSH 家根自动识别）",
   "lib/app/schema.js": "配置 schema（宿主导出缺失时兜底）",
+  "lib/app/scope-check.js": "作用域检查执行器（工具/独立脚本共用：找契约→逐文件分析→汇总）",
   "lib/app/settings-bridge.js": "设置读写桥（host scope 共享；绕开 client isLoopback=memory 落盘陷阱）",
   "lib/app/slash-commands.js": "用户输入框斜杠命令（目前只注册 /git-audit）",
   "lib/app/slot-stats.js": "规则槽位命中统计（模块级状态）",
@@ -36,6 +37,7 @@
   "lib/ast/io-risk.js": "IO 风险分级（四级）判定与评分：scanIoRiskAst 判定上下文/类别 → summarizeIoRisk 统计 → rankIoFixList 优先级清单；并再导出下列三个从属模块的公共符号",
   "lib/ast/magic-number.js": "硬编码魔数识别（豁免版本号/日期/状态码）",
   "lib/ast/naming.js": "命名检查（标识符长度/函数名过短/受控小文件读取）",
+  "lib/ast/scope-collisions.js": "拼接产物作用域撞名判定（按真实作用域帧；for 头部独立帧）",
   "lib/ast/shell.js": "shell 精筛（cd 动态路径/写操作命中 .gitignore）",
   "lib/ast/size.js": "规模检查（函数长度/文件长度/重复字符串）",
   "lib/ast/tokenizer.js": "分词器（token 流 + LRU 缓存）",
@@ -67,12 +69,14 @@
   "lib/audit/orchestrate.js": "审计编排（收集→检查→汇总）",
   "lib/audit/repo-level.js": "仓库级语义规则",
   "lib/audit/report-yaml.js": "（待注释）",
+  "lib/audit/scope-policy.js": "作用域契约读取（按项目 package.json 的 dshScopeCheck 取前缀/顶层/产物清单）",
   "lib/audit/slot.js": "按规则包聚合审计命中（拦截/警告/通过）",
   "lib/checks": "检查层（按 kind 调用检查器：正则/语义/结构/文件健康/按钮绑定/私密文件）",
   "lib/checks/button-bind.js": "按钮事件绑定交叉比对（声明了但没绑定）",
   "lib/checks/common.js": "检查器公共设施（豁免提示/severity 封顶/分组）",
   "lib/checks/credential-file.js": "凭据文件检查（.env/密钥文件）",
   "lib/checks/dataflow.js": "数据流规则包装（L2 token 级→finding）",
+  "lib/checks/scope-collision.js": "作用域撞名规则包装（同帧重名→finding；契约类封顶 warning）",
   "lib/checks/dispatch.js": "调度（runChecks 按 kind 分发汇总）",
   "lib/checks/file-health.js": "文件健康度（行数/字节/行长三维打分）",
   "lib/checks/filter.js": "规则作用域过滤（exts/exclude_paths）",
@@ -150,6 +154,7 @@
   "package.json": "包声明（dependencies 精确锁版、files 白名单、scripts）",
   "scripts": "开发工具脚本（版本校验/双副本同步/预览服务/README 目录树维护）",
   "scripts/audit-runtime-check.mjs": "三层审计 L3 运行时检测脚本",
+  "scripts/check-js-scope.mjs": "作用域撞名独立脚本（与 git-sluice scope-check 同一份判定）",
   "scripts/check.mjs": "语法检查脚本（npm run check）",
   "scripts/probe-recheck.mjs": "探针：「重新检测」按钮链路实测（在线校验 token/SSH）",
   "scripts/rule-switch.mjs": "规则槽位手动启停 CLI",
@@ -190,6 +195,7 @@
   "test/test-quality.mjs": "评分总入口测试（AST 质量检查器）",
   "test/test-repo-list.mjs": "仓库列表测试（本地扫描/索引读写/HTTP 端点/远端状态）",
   "test/test-rule-packs.mjs": "规则总入口测试（编译注册/字段指派）",
+  "test/test-scope-collisions.mjs": "作用域撞名测试（帧判定/for 头部/项目契约/审计接入/CLI 退出码）",
   "test/test-self.mjs": "自身总入口测试（VERSION/CLI/help 比对）",
   "test/test-settings-persistence.mjs": "设置侧边栏持久化专项测试（L1 提交/L2 白名单/L3 回读/L4 消费四层断言）",
   "test/test-sidebar-interaction.mjs": "侧边栏规则包列表交互自检",
@@ -396,104 +402,164 @@
   "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      ".auditignore": {
+      "README.md": {
         "status": "M",
-        "mtime": "2026-11-01T04:42:47.581Z",
+        "mtime": "2026-11-05T13:35:49.186Z",
+        "note": "注释可能需更新"
+      },
+      "cli.mjs": {
+        "status": "M",
+        "mtime": "2026-11-05T13:27:29.862Z",
         "note": "注释可能需更新"
       },
       "docs/CHANGELOG.md": {
         "status": "M",
-        "mtime": "2026-11-01T04:43:07.361Z",
+        "mtime": "2026-11-05T14:01:46.708Z",
+        "note": "注释可能需更新"
+      },
+      "docs/DETAILS-EXEMPT-AND-RULES.md": {
+        "status": "M",
+        "mtime": "2026-11-05T13:38:34.233Z",
+        "note": "注释可能需更新"
+      },
+      "docs/FILE-TREE.md": {
+        "status": "M",
+        "mtime": "2026-11-05T14:01:51.729Z",
         "note": "注释可能需更新"
       },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-11-01T04:43:07.821Z",
+        "mtime": "2026-11-05T14:04:18.407Z",
         "note": "注释可能需更新"
       },
       "docs/SPEC.md": {
         "status": "M",
-        "mtime": "2026-11-01T04:43:07.138Z",
+        "mtime": "2026-11-05T13:36:56.938Z",
         "note": "注释可能需更新"
       },
       "docs/releases.json": {
         "status": "M",
-        "mtime": "2026-11-01T04:43:07.183Z",
+        "mtime": "2026-11-05T14:01:45.861Z",
         "note": "注释可能需更新"
       },
-      "lib/app/audit-api.js": {
+      "docs/功能-审计规则体系.md": {
         "status": "M",
-        "mtime": "2026-11-01T04:35:10.029Z",
+        "mtime": "2026-11-05T13:41:53.608Z",
+        "note": "注释可能需更新"
+      },
+      "lib/ARCHITECTURE.md": {
+        "status": "M",
+        "mtime": "2026-11-05T13:42:12.246Z",
+        "note": "注释可能需更新"
+      },
+      "lib/app/command-registry.js": {
+        "status": "M",
+        "mtime": "2026-11-05T13:37:48.224Z",
         "note": "注释可能需更新"
       },
       "lib/app/inject-text.js": {
         "status": "M",
-        "mtime": "2026-11-01T04:35:10.031Z",
+        "mtime": "2026-11-05T13:26:11.033Z",
         "note": "注释可能需更新"
       },
-      "lib/ast/code-lines.js": {
+      "lib/app/tool-call.js": {
         "status": "M",
-        "mtime": "2026-11-01T04:35:38.747Z",
+        "mtime": "2026-11-05T13:25:13.729Z",
         "note": "注释可能需更新"
       },
-      "lib/audit/collector.js": {
+      "lib/ast/index.js": {
         "status": "M",
-        "mtime": "2026-11-01T04:34:40.053Z",
+        "mtime": "2026-11-05T13:23:26.005Z",
         "note": "注释可能需更新"
       },
-      "lib/audit/finding.js": {
+      "lib/audit-rules/audit-rules-dsh.yml": {
         "status": "M",
-        "mtime": "2026-11-01T04:34:54.384Z",
+        "mtime": "2026-11-05T13:24:43.295Z",
         "note": "注释可能需更新"
       },
-      "lib/audit/orchestrate.js": {
+      "lib/checks/dispatch.js": {
         "status": "M",
-        "mtime": "2026-11-01T04:34:54.389Z",
+        "mtime": "2026-11-05T13:23:50.562Z",
         "note": "注释可能需更新"
       },
-      "lib/audit/slot.js": {
+      "lib/checks/index.js": {
         "status": "M",
-        "mtime": "2026-11-01T04:34:54.386Z",
+        "mtime": "2026-11-05T13:23:39.443Z",
         "note": "注释可能需更新"
       },
-      "lib/checks/regex.js": {
+      "lib/exempt/index.js": {
         "status": "M",
-        "mtime": "2026-11-01T04:39:31.443Z",
+        "mtime": "2026-11-05T13:38:16.118Z",
         "note": "注释可能需更新"
       },
-      "lib/score/index.js": {
+      "lib/rule/compilers/structure.js": {
         "status": "M",
-        "mtime": "2026-11-01T04:34:54.382Z",
+        "mtime": "2026-11-05T13:24:01.015Z",
         "note": "注释可能需更新"
       },
       "lib/self/index.js": {
         "status": "M",
-        "mtime": "2026-11-01T04:43:07.151Z",
+        "mtime": "2026-11-05T14:03:45.500Z",
         "note": "注释可能需更新"
       },
       "package.json": {
         "status": "M",
-        "mtime": "2026-11-01T04:43:07.145Z",
+        "mtime": "2026-11-05T14:01:45.837Z",
         "note": "注释可能需更新"
       },
-      "test/test-audit.mjs": {
+      "scripts/bump-version.mjs": {
         "status": "M",
-        "mtime": "2026-11-01T04:41:16.006Z",
+        "mtime": "2026-11-05T14:04:07.794Z",
         "note": "注释可能需更新"
       },
-      "docs/PLAN-2026-11-01-auditignore-scoped.md": {
-        "status": "A",
-        "mtime": "2026-11-01T04:43:07.142Z",
+      "scripts/check.mjs": {
+        "status": "M",
+        "mtime": "2026-11-05T12:39:46.673Z",
         "note": "注释可能需更新"
       },
-      "lib/audit/auditignore-rules.js": {
-        "status": "A",
-        "mtime": "2026-11-01T04:34:54.378Z",
+      "skills/dev/dsh-git-push.md": {
+        "status": "M",
+        "mtime": "2026-11-05T13:37:56.882Z",
         "note": "注释可能需更新"
       },
-      "test/test-auditignore-rules.mjs": {
+      "test/test-plugin.mjs": {
+        "status": "M",
+        "mtime": "2026-11-05T13:36:43.341Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-tool-contract.mjs": {
+        "status": "M",
+        "mtime": "2026-11-05T13:36:25.501Z",
+        "note": "注释可能需更新"
+      },
+      "lib/app/scope-check.js": {
         "status": "A",
-        "mtime": "2026-11-01T04:36:24.164Z",
+        "mtime": "2026-11-05T13:23:09.405Z",
+        "note": "注释可能需更新"
+      },
+      "lib/ast/scope-collisions.js": {
+        "status": "A",
+        "mtime": "2026-11-05T13:31:31.048Z",
+        "note": "注释可能需更新"
+      },
+      "lib/audit/scope-policy.js": {
+        "status": "A",
+        "mtime": "2026-11-05T13:33:41.665Z",
+        "note": "注释可能需更新"
+      },
+      "lib/checks/scope-collision.js": {
+        "status": "A",
+        "mtime": "2026-11-05T13:24:38.361Z",
+        "note": "注释可能需更新"
+      },
+      "scripts/check-js-scope.mjs": {
+        "status": "A",
+        "mtime": "2026-11-05T13:42:43.494Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-scope-collisions.mjs": {
+        "status": "A",
+        "mtime": "2026-11-05T13:39:00.765Z",
         "note": "注释可能需更新"
       }
     }
@@ -614,5 +680,26 @@
   "test/test-mirror-store.mjs": "（待注释）",
   "docs/PLAN-2026-11-01-auditignore-scoped.md": "（待注释）",
   "lib/audit/auditignore-rules.js": "（待注释）",
-  "test/test-auditignore-rules.mjs": "（待注释）"
+  "test/test-auditignore-rules.mjs": "（待注释）",
+  "_tmp_18220_ff573fea50a53cdb09da94c7977bfe1b": "（待注释）",
+  "lib/git/ci.js": "（待注释）",
+  "lib/git/hooks.js": "（待注释）",
+  "lib/git/rename.js": "（待注释）",
+  "lib/npm/local-registry.js": "（待注释）",
+  "lib/npm/smoke.js": "（待注释）",
+  "lib/npm/unpublish.js": "（待注释）",
+  "scripts/audit-ext/dsh-inject-declarations.mjs": "（待注释）",
+  "scripts/local-registry.mjs": "（待注释）",
+  "test/test-audit-archive-exempt.mjs": "（待注释）",
+  "test/test-audit-fastpath.mjs": "（待注释）",
+  "test/test-ci-wait.mjs": "（待注释）",
+  "test/test-cifs-init.mjs": "（待注释）",
+  "test/test-git-hooks.mjs": "（待注释）",
+  "test/test-git-rename.mjs": "（待注释）",
+  "test/test-npm-cli-package.mjs": "（待注释）",
+  "test/test-npm-local-registry.mjs": "（待注释）",
+  "test/test-npm-pack-parse.mjs": "（待注释）",
+  "test/test-npm-smoke.mjs": "（待注释）",
+  "test/test-npm-unpublish.mjs": "（待注释）",
+  "test/test-smoke-import-specs.mjs": "（待注释）"
 }

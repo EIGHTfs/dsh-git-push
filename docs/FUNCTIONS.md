@@ -22,16 +22,16 @@
 | `aggregateFindings` | 82-103 | 22 | `export function aggregateFindings(findings = [], opts = {}) {` |
 | `runAuditApi` | 111-173 | 63 | `export async function runAuditApi(repo, params = {}, cfg = {}) {` |
 
-### lib/app/command-registry.js（298 行 · 6 个函数）
+### lib/app/command-registry.js（310 行 · 6 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `applyFlagToken` | 236-252 | 17 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
-| `validateParamConstraints` | 255-261 | 7 | `function validateParamConstraints(args, params) {` |
-| `parseRegistryArgs` | 263-283 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
-| `registryByName` | 286-288 | 3 | `export function registryByName(name) {` |
-| `registryByCli` | 291-293 | 3 | `export function registryByCli(cli) {` |
-| `buildToolsListText` | 296-298 | 3 | `export function buildToolsListText() {` |
+| `applyFlagToken` | 248-264 | 17 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
+| `validateParamConstraints` | 267-273 | 7 | `function validateParamConstraints(args, params) {` |
+| `parseRegistryArgs` | 275-295 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
+| `registryByName` | 298-300 | 3 | `export function registryByName(name) {` |
+| `registryByCli` | 303-305 | 3 | `export function registryByCli(cli) {` |
+| `buildToolsListText` | 308-310 | 3 | `export function buildToolsListText() {` |
 
 ### lib/app/handlers/account.js（166 行 · 10 个函数）
 
@@ -152,15 +152,15 @@
 | `buildCtx` | 80-82 | 3 | `function buildCtx(req, method, env, cfg, query, body, path) {` |
 | `handleHttp` | 92-150 | 59 | `export async function handleHttp(req = {}, env = {}, cfg = defaultConfig()) {` |
 
-### lib/app/inject-text.js（198 行 · 5 个函数）
+### lib/app/inject-text.js（199 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `buildIdentityInjectionText` | 73-83 | 11 | `export function buildIdentityInjectionText() {` |
-| `buildRequirementsInjectionText` | 85-97 | 13 | `export function buildRequirementsInjectionText() {` |
-| `detectHostIp` | 118-129 | 12 | `function detectHostIp() {` |
-| `buildAuditApiGuide` | 135-168 | 34 | `export function buildAuditApiGuide(repo = '', opts = {}) {` |
-| `formatAuditBlock` | 170-197 | 28 | `export function formatAuditBlock(r = {}) {` |
+| `buildIdentityInjectionText` | 74-84 | 11 | `export function buildIdentityInjectionText() {` |
+| `buildRequirementsInjectionText` | 86-98 | 13 | `export function buildRequirementsInjectionText() {` |
+| `detectHostIp` | 119-130 | 12 | `function detectHostIp() {` |
+| `buildAuditApiGuide` | 136-169 | 34 | `export function buildAuditApiGuide(repo = '', opts = {}) {` |
+| `formatAuditBlock` | 171-198 | 28 | `export function formatAuditBlock(r = {}) {` |
 
 ### lib/app/repo-ownership.js（66 行 · 4 个函数）
 
@@ -184,6 +184,13 @@
 | `makeFallbackSchema` | 31-72 | 42 | `function makeFallbackSchema() {` |
 | `fn` | 33-33 | 1 | `const fn = (v) => (v === undefined ? meta.default : v);` |
 | `redactConfig` | 142-150 | 9 | `export function redactConfig(cfg = {}) {` |
+
+### lib/app/scope-check.js（70 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `policyForFile` | 28-30 | 3 | `export function policyForFile(file) {` |
+| `runScopeCheck` | 38-69 | 32 | `export function runScopeCheck({ files = [], prefix = '', allowlist = [], topLevelMustBeEmpty } = {}) {` |
 
 ### lib/app/settings-bridge.js（167 行 · 9 个函数）
 
@@ -231,7 +238,7 @@
 | `getLastSlotHitStats` | 28-30 | 3 | `export function getLastSlotHitStats() {` |
 | `getLastSlotHitMeta` | 33-35 | 3 | `export function getLastSlotHitMeta() {` |
 
-### lib/app/tool-call.js（783 行 · 23 个函数）
+### lib/app/tool-call.js（828 行 · 23 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -255,9 +262,9 @@
 | `doHistory` | 477-480 | 4 | `const doHistory = async () => {` |
 | `callCodeAudit` | 499-511 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
 | `runStandardAuditTool` | 514-555 | 42 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
-| `callTool` | 557-754 | 198 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null, fsCtx = null) {` |
-| `shellSplit` | 757-775 | 19 | `function shellSplit(input) {` |
-| `readTextSafe` | 778-782 | 5 | `function readTextSafe(path = '') {` |
+| `callTool` | 557-799 | 243 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null, fsCtx = null) {` |
+| `shellSplit` | 802-820 | 19 | `function shellSplit(input) {` |
+| `readTextSafe` | 823-827 | 5 | `function readTextSafe(path = '') {` |
 
 ### lib/app/tools.js（34 行 · 2 个函数）
 
@@ -488,6 +495,13 @@
 | `loopFullRewriteCallLines` | 405-431 | 27 | `export function loopFullRewriteCallLines(text = '') {` |
 | `nestedLinearScanLines` | 444-462 | 19 | `export function nestedLinearScanLines(text = '') {` |
 | `longSyncLoopLines` | 474-488 | 15 | `export function longSyncLoopLines(text = '') {` |
+
+### lib/ast/scope-collisions.js（229 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `analyzeScopeCollisions` | 49-229 | 181 | `export function analyzeScopeCollisions(text = '', {` |
+| `nearestFunctionFrame` | 85-88 | 4 | `const nearestFunctionFrame = () => {` |
 
 ### lib/ast/scope.js（242 行 · 11 个函数）
 
@@ -783,6 +797,14 @@
 | `findingsToYaml` | 32-81 | 50 | `export function findingsToYaml(findings = [], { includeMessage = true, maxMessageLen = 200 } = {}) {` |
 | `countSeverity` | 84-90 | 7 | `function countSeverity(dirMap) {` |
 
+### lib/audit/scope-policy.js（111 行 · 3 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `normRelPath` | 28-30 | 3 | `function normRelPath(value) {` |
+| `findConfigPath` | 44-58 | 15 | `function findConfigPath(startDir, now) {` |
+| `readProjectScopePolicy` | 74-110 | 37 | `export function readProjectScopePolicy(file = '') {` |
+
 ### lib/audit/slot.js（67 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -830,12 +852,12 @@
 |------|------|------|------|
 | `checkDataflow` | 25-40 | 16 | `export function checkDataflow({ file, text, rules }) {` |
 
-### lib/checks/dispatch.js（113 行 · 2 个函数）
+### lib/checks/dispatch.js（118 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `resolveFileScope` | 47-55 | 9 | `function resolveFileScope({ repoPath, relPath }) {` |
-| `runChecks` | 57-112 | 56 | `export function runChecks({ file, relPath, text, grouped }, opts = {}) {` |
+| `resolveFileScope` | 48-56 | 9 | `function resolveFileScope({ repoPath, relPath }) {` |
+| `runChecks` | 58-117 | 60 | `export function runChecks({ file, relPath, text, grouped }, opts = {}) {` |
 
 ### lib/checks/dup-code.js（70 行 · 1 个函数）
 
@@ -932,6 +954,12 @@
 | `inComment` | 94-101 | 8 | `const inComment = (line, col) => {` |
 | `checkPathRegexRules` | 219-235 | 17 | `export function checkPathRegexRules({ file, relPath, rules }) {` |
 | `checkBlacklist` | 245-293 | 49 | `export function checkBlacklist({ file, text, rules }) {` |
+
+### lib/checks/scope-collision.js（69 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `checkScopeCollision` | 32-68 | 37 | `export function checkScopeCollision({ file, text, rules }) {` |
 
 ### lib/checks/semantic.js（135 行 · 3 个函数）
 
@@ -1287,24 +1315,24 @@
 | `saveWorkspacePaths` | 55-81 | 27 | `export function saveWorkspacePaths(paths, { by = 'ai' } = {}) {` |
 | `workspacePathsInjectionText` | 94-108 | 15 | `export function workspacePathsInjectionText(sep = '\n') {` |
 
-### lib/exempt/index.js（344 行 · 14 个函数）
+### lib/exempt/index.js（347 行 · 14 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `hasHeaderExempt` | 123-127 | 5 | `export function hasHeaderExempt(text, marker) {` |
-| `hasLineExempt` | 130-132 | 3 | `export function hasLineExempt(line, marker) {` |
-| `isCategoryExempt` | 150-158 | 9 | `export function isCategoryExempt(finding = {}) {` |
-| `markerCovers` | 167-186 | 20 | `function markerCovers(meta, kind, rule) {` |
-| `has` | 170-170 | 1 | `const has = (a) => Array.isArray(a) && a.length > 0;` |
-| `exemptMarkerCovers` | 189-191 | 3 | `export function exemptMarkerCovers(marker, finding = {}) {` |
-| `exemptHintForFinding` | 199-209 | 11 | `export function exemptHintForFinding(finding = {}) {` |
-| `exemptForFinding` | 220-237 | 18 | `export function exemptForFinding(finding, text = '') { // dsh-skip-complexity: 豁免判定器本体（9 标记 × blocked/细分规则多条件链，职责单一）` |
-| `exemptHintFor` | 240-245 | 6 | `export function exemptHintFor(ruleOrKind) {` |
-| `cacheGet` | 261-262 | 2 | `function cacheGet(cache, dir) { return cache.has(dir) ? cache.get(dir) : undefined; }` |
-| `dirHasEmptyMarker` | 264-276 | 13 | `function dirHasEmptyMarker(dir, name, cache) {` |
-| `clearExemptMarkerCache` | 279-282 | 4 | `export function clearExemptMarkerCache() {` |
-| `isSampleExemptDir` | 293-313 | 21 | `export function isSampleExemptDir(repoPath, relPath = '') {` |
-| `isTestExemptDir` | 323-343 | 21 | `export function isTestExemptDir(repoPath, relPath = '') {` |
+| `hasHeaderExempt` | 126-130 | 5 | `export function hasHeaderExempt(text, marker) {` |
+| `hasLineExempt` | 133-135 | 3 | `export function hasLineExempt(line, marker) {` |
+| `isCategoryExempt` | 153-161 | 9 | `export function isCategoryExempt(finding = {}) {` |
+| `markerCovers` | 170-189 | 20 | `function markerCovers(meta, kind, rule) {` |
+| `has` | 173-173 | 1 | `const has = (a) => Array.isArray(a) && a.length > 0;` |
+| `exemptMarkerCovers` | 192-194 | 3 | `export function exemptMarkerCovers(marker, finding = {}) {` |
+| `exemptHintForFinding` | 202-212 | 11 | `export function exemptHintForFinding(finding = {}) {` |
+| `exemptForFinding` | 223-240 | 18 | `export function exemptForFinding(finding, text = '') { // dsh-skip-complexity: 豁免判定器本体（9 标记 × blocked/细分规则多条件链，职责单一）` |
+| `exemptHintFor` | 243-248 | 6 | `export function exemptHintFor(ruleOrKind) {` |
+| `cacheGet` | 264-265 | 2 | `function cacheGet(cache, dir) { return cache.has(dir) ? cache.get(dir) : undefined; }` |
+| `dirHasEmptyMarker` | 267-279 | 13 | `function dirHasEmptyMarker(dir, name, cache) {` |
+| `clearExemptMarkerCache` | 282-285 | 4 | `export function clearExemptMarkerCache() {` |
+| `isSampleExemptDir` | 296-316 | 21 | `export function isSampleExemptDir(repoPath, relPath = '') {` |
+| `isTestExemptDir` | 326-346 | 21 | `export function isTestExemptDir(repoPath, relPath = '') {` |
 
 ### lib/exempt/tool.js（199 行 · 11 个函数）
 
@@ -2045,23 +2073,29 @@
 | `checkShape` | 76-85 | 10 | `export function checkShape(code) {` |
 | `main` | 89-120 | 32 | `function main(argv = process.argv.slice(2)) {` |
 
-### scripts/bump-version.mjs（164 行 · 5 个函数）
+### scripts/bump-version.mjs（179 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `parseArgs` | 38-48 | 11 | `function parseArgs(argv) {` |
-| `cmpVer` | 53-58 | 6 | `function cmpVer(a, b) {` |
-| `bumpPatch` | 61-64 | 4 | `function bumpPatch(v) {` |
-| `readJson` | 66-68 | 3 | `function readJson(p) {` |
-| `buildVersionLine` | 75-88 | 14 | `function buildVersionLine(oldLine, newVer, oldVer, message) {` |
+| `parseArgs` | 39-50 | 12 | `function parseArgs(argv) {` |
+| `cmpVer` | 55-60 | 6 | `function cmpVer(a, b) {` |
+| `bumpPatch` | 63-66 | 4 | `function bumpPatch(v) {` |
+| `readJson` | 68-70 | 3 | `function readJson(p) {` |
+| `buildVersionLine` | 83-100 | 18 | `function buildVersionLine(oldLine, newVer, oldVer, message, commentOverride = '') {` |
 
-### scripts/check.mjs（157 行 · 3 个函数）
+### scripts/check-js-scope.mjs（88 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `filesFromConfig` | 46-53 | 8 | `function filesFromConfig(path) {` |
+
+### scripts/check.mjs（193 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `collectJs` | 22-31 | 10 | `function collectJs(dir, acc = []) {` |
 | `collectJson` | 34-42 | 9 | `function collectJson(dir, acc = []) {` |
-| `layerOf` | 102-109 | 8 | `const layerOf = (rel) => {` |
+| `layerOf` | 138-145 | 8 | `const layerOf = (rel) => {` |
 
 ### scripts/cpu-sample.mjs（189 行 · 11 个函数）
 
@@ -2940,6 +2974,13 @@
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `block` | 349-352 | 4 | `const block = (text) => {` |
+
+### test/test-scope-collisions.mjs（253 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `makeForeignProject` | 109-117 | 9 | `function makeForeignProject({ withContract = false } = {}) {` |
+| `makeAuditProject` | 146-152 | 7 | `function makeAuditProject({ name = 'app', contract = null } = {}) {` |
 
 ### test/test-scope.mjs（177 行 · 2 个函数）
 

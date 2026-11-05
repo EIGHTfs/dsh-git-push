@@ -14,7 +14,7 @@
 | 装载声明 | `package.json` 的 `dsh.bundle.patch` → `./cordis.patch.yml`；`dsh.client` 声明 web 端注入；`dsh.skills` 列出随包发布的 skill |
 | 配置目录 | `<DSH_HOME>/git-push/`（凭据与状态文件都落在这里） |
 
-## 二、工具（20 个，宿主可见公开面）
+## 二、工具（21 个，宿主可见公开面）
 
 | 工具 | CLI 名 | 用途 |
 |---|---|---|
@@ -27,6 +27,7 @@
 | `io_scan` | `file-io` | I/O 风险扫描（四级分级） |
 | `git_clone_preview` | `clone-preview` | 克隆预演（不落盘，报告将拉什么） |
 | `link_check` | `link-check` | 文档链接有效性检查 |
+| `scope_check` | `scope-check` | 拼接产物作用域撞名（按真实作用域帧；同帧重名 → 后者静默顶掉前者）。`files` 空 = 读项目 `dshScopeCheck.files`；`prefix`/`topLevelMustBeEmpty` 空 = 按项目契约；被审项目没声明 ⇒ 只查同帧重名 |
 | `module_splitter` | `module-splitter` | 巨型单文件按顶层块拆分 |
 | `git_account_check` | `account-check` | 账号与凭据在线校验 |
 | `git_cred_env` | `cred-env` | 输出凭据环境变量前缀（不含明文） |
@@ -127,8 +128,9 @@ settings-get  settings-set
 
 ## 六、审计规则体系
 
-- **23 个槽位 / 168 条规则**（默认实际加载 164 条：`i18n` 槽位顶层 `disabled: true` 默认关闭占 3 条，`template` 槽位需显式开启占 1 条），声明在 `lib/audit-rules/audit-rules-<槽位>.yml`；判定在 `lib/ast/*`；产出 finding 在 `lib/checks/*`；调度汇总在 `lib/audit/*`。
+- **23 个槽位 / 169 条规则**（默认实际加载 165 条：`i18n` 槽位顶层 `disabled: true` 默认关闭占 3 条，`template` 槽位需显式开启占 1 条），声明在 `lib/audit-rules/audit-rules-<槽位>.yml`；判定在 `lib/ast/*`；产出 finding 在 `lib/checks/*`；调度汇总在 `lib/audit/*`。
 - 作用域字段：`exts` / `include_paths`（路径白名单，按文件名或路径前后缀）/ `exclude_paths` / `file_patterns`（**内容**初筛）。
+- **规则不自带项目契约**：`kind: scope-collision`（拼接产物作用域撞名）只声明「查不查」；命名前缀、顶层零声明、产物文件清单一律从被审项目自己的 `package.json` → `dshScopeCheck` 读（`lib/audit/scope-policy.js`）。规则包跨仓库共享，把 `dshgp_` 写进 yml 会让所有被审项目收到「缺少 dshgp_ 前缀」。
 - 分级：`blocker` / `warning` / `info`；评分 10 维度加权得 0-100 + 等级。**动态权重**：`维度得分 = max(0.1, 10 − k × ln(1 + 命中次数))`、`动态权重 = 命中文件数 ÷ 该维度可作用文件数`（按文件去重；分母由编排层 `computeDimFileCounts` 按规则 `exts` 声明统计——未声明 `exts` 的规则按代码文件 CODE_EXTS 计，缺统计时回退扫描文件总数）、`实际权重 = 设定权重 × 动态权重`、`总分 = Σ(维度得分 × 实际权重) ÷ Σ实际权重 × 10`；口径：无命中的维度不缩放（用设定权重）、分母用 Σ实际权重、文档维度的命中文件数取 `docsScore.files ÷ 总文件数`（无文档文件信息时回退不缩放）、不设下限；`files` 未提供时全部不缩放（静态口径）。
 - 豁免标记 9 个（`dsh-skip-*`），判定入口 `lib/exempt/index.js`；finding 的 `exemptHint` 必须与实际生效的标记一致。
 - 详细用法见 `docs/功能-审计规则体系.md`；豁免与规则字段全录见 `docs/DETAILS-EXEMPT-AND-RULES.md`。

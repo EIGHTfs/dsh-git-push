@@ -160,3 +160,18 @@ rules:
       - "\\b(addRoute|addHandler|registerRoute|useRoute)\\s*\\|\\|"
     fixable: true
     mitigation: "按官方真实 API 写（webServer.register({ kind:'prefix', path, handler })）；接线失败必须 return false 并告警，不得静默吞掉"
+  # ── ⑦ 分片拼接作用域（多段 JS 拼成单文件产物时 var/function 同名静默覆盖）──
+  # 为什么不用 patterns：这是**跨声明**的语义判定（同名次数 + 真实作用域帧），
+  #   单行正则做不到；由 kind=scope-collision 的编译器 + lib/ast/scope-collisions.js 执行。
+  # 契约来源：前缀 / 顶层零声明 / 产物文件清单一律取自**被审项目自己**的 package.json
+  #   （dshScopeCheck，读在 lib/audit/scope-policy.js）——规则包跨仓库共享，
+  #   把 dshgp_ 写在这里会让所有被审项目都收到「缺少 dshgp_ 前缀」这类无关告警。
+  - id: dsh/scope-collision
+    kind: "scope-collision"
+    name: "分片拼接作用域撞名（var/function 静默覆盖）"
+    category: "structure"
+    severity: "error"
+    description: "多段 JS 拼进同一作用域（分片拼 factory / 多个 <script> 引入 / cat a.js b.js > bundle.js）时，同一函数帧内 function/const/let/class 同名会让后者顶掉前者或让整份产物 SyntaxError，且运行期可能毫无报错线索；判定按真实作用域帧，两个不同函数里的同名局部变量不算撞名。顶层声明与裸名在拼接场景还会与其它脚本撞名（该两项只有项目自己在 package.json 声明 dshScopeCheck 时才查）。"
+    exts: ["js", "mjs", "cjs"]
+    fixable: false
+    mitigation: "① 同帧重名必须改名（function/const/let/class 是真缺陷，纯 var 重复至少应合并）；② 拼接产物保持文件顶层零声明；③ 共享作用域内的声明加项目约定的前缀，并把该约定写进项目 package.json 的 dshScopeCheck（files/prefix/allowlist/topLevelMustBeEmpty）"

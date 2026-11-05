@@ -11,7 +11,7 @@ generatedBy: deepseek-official/deepseek-v4-flash · EIGHTfs 2026-10-02
 > 定位：把「扫描仓库 → 审计门禁 → 一键 commit+push」固化为代码管道（零 token、确定性）。
 > 本手册是使用说明；正常情况优先直接调用插件工具。
 
-## 一、17 个工具
+## 一、21 个工具
 
 | 工具 | 参数 | 说明 |
 |---|---|---|
@@ -30,7 +30,12 @@ generatedBy: deepseek-official/deepseek-v4-flash · EIGHTfs 2026-10-02
 | `git_cred_env` | — | 输出凭据环境变量前缀（SSH `GIT_SSH_COMMAND` / HTTPS `GIT_ASKPASS`，不含明文） |
 | `git_gen_ssh_key` | `email`(必填), `force?` | 生成 SSH 密钥对（写入插件配置目录；私钥不出本机，公钥整行回传） |
 | `git_sluice` | `args`(必填) | git 命令透传（凭据自动注入；返回 status + stdout/stderr 原文） |
-| `git_api` | `path?`, `method?`, `query?`, `body?` | **直接调用本插件 35 条 HTTP API**（内部走 `handleHttp` 同一条代码路径，不另写实现）；不传 `path` 则列出全部接口 |
+| `git_api` | `path?`, `method?`, `query?`, `body?` | **直接调用本插件 36 条 HTTP API**（内部走 `handleHttp` 同一条代码路径，不另写实现）；不传 `path` 则列出全部接口 |
+| `npm_publish` | `dir?`, `dryRun?`(默认 true), `tag?`, `otp?`, `confirm?`, `skipSmoke?`, `localPreview?` | npm 发包（后台 job）：默认只体检 + `npm publish --dry-run`；真发必须 `confirm=true` 且 `dryRun=false`；凭据由插件托管（无需 npm login） |
+| `npm_unpublish` | `name`(必填), `version?`, `wholePackage?`, `dryRun?`(默认 true), `confirm?` | 撤包（不可逆）：默认只预检（72h 窗口 / dist-tag 悬空 / 唯一版本冷却），真撤需 `dryRun=false` + `confirm=true` |
+| `git_remote_rename` | `repo`(必填), `newName`(必填), `dryRun?`(默认 true), `updateRemotes?` | 远程仓库改名：默认只报告旧名出现位置，确认后 `dryRun=false` 才真改并同步本地 remote |
+| `exempt` | `action`(必填), `repo?`, `path?`, `line?`, `scope?`, `rule?`, `marker?`, `reason?` | 注释豁免：按 `rule` 推导正确标记、写前校验真生效、`check` 识别死标记 |
+| `scope_check` | `files?`, `repo?`, `prefix?`, `allowlist?`, `topLevelMustBeEmpty?` | 拼接产物作用域撞名（按真实作用域帧）：同帧重名会**后者静默顶掉前者**；`files` 空=读项目 `dshScopeCheck.files`，前缀/顶层零声明按项目契约（没声明就只查同帧重名，不拿 `dshgp_` 要求别人） |
 
 典型流程：`git_scan` 看改动 → `code_audit` 自查 → `git_commit_push`（审计通过才推）。
 
@@ -265,6 +270,7 @@ pnpm add github:EIGHTfs/dsh-git-push#<commit>
 | `git_remote_create` | **`repo`**、`visibility?`(默认 private)、`dryRun?` | 同名存在则复用，否则创建并把 origin 指向 API 地址；`ensureRemoteRepo` |
 | `git_set_visibility` | **`repo`**、**`visibility`** | `PATCH /repos/{owner}/{repo}` 的 private 字段；改 public 前须确认无凭据暴露；`setVisibility` |
 | `link_check` | `path?`（缺省 workspaceRoot） | 分级扣分（404/403 −3、DNS −2、超时/5xx −1，flaky 域名 ×0.2）；**只 warning 永不 blocker**；并发 10；`checkLinks`/`probeLinks` |
+| `scope_check` | `files?`（逗号分隔，空=项目 `dshScopeCheck.files`）、`repo?`、`prefix?`、`allowlist?`、`topLevelMustBeEmpty?` | 按真实作用域帧查同帧重名；判定 `analyzeScopeCollisions`（`lib/ast/scope-collisions.js`）、契约 `readProjectScopePolicy`（`lib/audit/scope-policy.js`）、执行 `runScopeCheck`（`lib/app/scope-check.js`）；违规时 CLI 退出码 1 |
 
 **接线层**（`lib/plugin/index.js`，Host 侧四段真实 API）：工具 `ctx.inject(['tools'])` → `register(defineTool(spec))`（`output.render` **必须返回块数组**）；提示词注入 `inject(['systemPrompt'])` → `section({name, order, text})`；HTTP `inject(['webServer'])` → `register({kind:'prefix', path, handler})`；客户端**不在此注册**（由 package.json `dsh.client` + `exports["./client"]` 自动发现）。
 

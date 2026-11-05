@@ -15,6 +15,7 @@
  *   node scripts/bump-version.mjs --message "…" --apply             # 真写盘
  *   node scripts/bump-version.mjs --to 2.11.0 --message "…" --apply # 指定版本（默认 patch +1）
  *   node scripts/bump-version.mjs --message-file /tmp/msg.txt --apply
+ *   node scripts/bump-version.mjs --message "…" --comment "VERSION 行用的短摘要（可选）" --apply
  *
  * 约定：
  *   · **默认 dry-run**——只打印将要改动的三处（旧值 → 新值），不落盘；确认无误再加 --apply。
@@ -36,13 +37,14 @@ const RELEASES = join(ROOT, 'docs', 'releases.json');
 
 /** 解析命令行参数（只认 --flag value 与布尔 --apply）。 */
 function parseArgs(argv) {
-  const out = { apply: false, to: '', message: '', messageFile: '' };
+  const out = { apply: false, to: '', message: '', messageFile: '', comment: '' };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--apply') { out.apply = true; continue; }
     if (a === '--message' || a === '-m') { out.message = argv[++i] || ''; continue; }
     if (a === '--message-file') { out.messageFile = argv[++i] || ''; continue; }
     if (a === '--to') { out.to = argv[++i] || ''; continue; }
+    if (a === '--comment') { out.comment = argv[++i] || ''; continue; }
   }
   return out;
 }
@@ -71,8 +73,14 @@ function readJson(p) {
  * 拼新的 VERSION 行。
  * 旧注释形如：`2.10.4：本次说明。历史：2.10.3：更早说明。` → 把「本次说明」降级进历史链，
  *   只保留最近 2 条，避免每版都把整串历史再抄一遍（实测 2.9.x 之后该行已接近不可读）。
+ *
+ * ⚠️ **行注释必须单行**：`--message-file` 常带多段落，若原样写进 `//` 后面的注释，
+ *   换行会把文件撕成多行 → 整个 lib/self/index.js 语法错误（ESM 加载期就炸，
+ *   `node cli.mjs` 直接 TypeError）。故此处按「首段首句」压成一行摘要，
+ *   正文完整内容仍原样进 docs/releases.json（那边是 JSON 字符串，换行合法）。
+ *   需要更长摘要时用 `--comment` 显式给。
  */
-function buildVersionLine(oldLine, newVer, oldVer, message) {
+function buildVersionLine(oldLine, newVer, oldVer, message, commentOverride = '') {
   const m = /export const VERSION = '([^']+)';\s*\/\/(.*)$/.exec(oldLine);
   const oldComment = m ? m[2].trim() : '';
   // 旧版本的「本次说明」= 历史链之前的那一段
@@ -82,8 +90,12 @@ function buildVersionLine(oldLine, newVer, oldVer, message) {
   // 历史链：新压入的旧版摘要 + 原有最近 1 条
   const prev = oldMain ? [`${oldVer}：${oldMain}`] : [];
   const kept = oldHist ? oldHist.split(/。\s*(?=[\d.]+：)/).slice(0, 1).map((s) => s.replace(/。$/, '')) : [];
-  const chain = [...prev, ...kept].join('。');
-  const comment = `${newVer}：${message}。` + (chain ? `历史：${chain}。` : '');
+  const chain = prev.length || kept.length ? [...prev, ...kept].join('。').replace(/。+/g, '。') : '';
+  // 本轮摘要：显式覆盖优先；否则取首段首句，超长截断
+  const oneLine = String(commentOverride || message).replace(/\s+/g, ' ').trim();
+  const firstSentence = oneLine.split(/。/)[0].trim();
+  const summary = firstSentence.length > 160 ? `${firstSentence.slice(0, 160)}…` : firstSentence;
+  const comment = `${newVer}：${summary}。` + (chain ? `历史：${chain}。` : '');
   return `export const VERSION = '${newVer}'; // ${comment}`;
 }
 
@@ -107,7 +119,10 @@ const selfLines = selfSrc.split('\n');
 const vi = selfLines.findIndex((l) => /^export const VERSION = '/.test(l));
 if (vi < 0) fail('lib/self/index.js 未找到 VERSION 行');
 const oldLine = selfLines[vi];
-const newLine = buildVersionLine(oldLine, target, cur, message);
+const newLine = buildVersionLine(oldLine, target, cur, message, args.comment);
+// 硬门禁：行注释一旦带换行就把整个 lib/self/index.js 撕成多行（ESM 加载期直接抛
+// "Invalid or unexpected token"，cli.mjs / 插件入口全部起不来）。宁可在写盘前失败。
+if (/[\r\n]/.test(newLine)) fail('VERSION 行必须是单行（注释里的换行会破坏整个模块语法）');
 
 // ── 预览（默认 dry-run）
 console.log(`升版：${cur} → ${target}${args.apply ? '（--apply 真写盘）' : '（dry-run，未写盘）'}`);

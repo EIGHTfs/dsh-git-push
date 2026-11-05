@@ -35,7 +35,10 @@ import {
 export { cmdFileIo, cmdTreeDoc, cmdFunctions, cmdModuleSplitter };
 
 /** parseArgv 认识的选项白名单（cli-help-sync 机器比对基准，必须与 HELP 文本一致。
- * 注：-m 是单横线别名（helpSync 只比对 -- 双横线），不列入本表。 */
+ * 注：-m 是单横线别名（helpSync 只比对 -- 双横线），不列入本表。
+ * 注：**注册表驱动**的命令（scan/commit/clone/npm-publish/scope-check…）参数由
+ *   lib/app/command-registry.js 的 params 校验，与本表无关；但 HELP 里写了的 flag
+ *   都必须在本表出现，否则 cli-help-sync 会报「HELP 写了但 parseArgv 不认」。 */
 export const KNOWN_FLAGS = ['--depth', '--full', '--ruleset', '--weights', '--include-ignored', '--push', '--no-push', '--dry-run', '--force', '--message', '--audit', '--ignore-patterns', '--requirements-confirmed', '--push-confirmed', '--json', '--max', '--owner', '--offline', '--paths', '--history', '--since', '--until', '--out', '--skip-empty',
   // npm 相关（与 command-registry 的 npm_publish 参数对齐：dir / dryRun / tag / otp / confirm）
   '--dir', '--tag', '--otp', '--confirm', '--global', '--ignore-scripts', '--async', '--no-dry-run',
@@ -43,6 +46,8 @@ export const KNOWN_FLAGS = ['--depth', '--full', '--ruleset', '--weights', '--in
   '--summary', '--write', '--type', '--kind', '--risk', '--op', '--root', '--readme',
   // identity-rewrite：额外要统一的邮箱
   '--extra-emails',
+  // scope-check（与 command-registry 的 scope_check 参数对齐）
+  '--files', '--repo', '--prefix', '--allowlist', '--top-level-must-be-empty',
   // 补齐的 5 个命令（clone / account-check / remote-create / set-visibility / gen-ssh-key）
   '--dest', '--branch', '--preview', '--max-file-mb', '--concurrency', '--visibility', '--email', '--no-check-ssh', '--token'];
 
@@ -71,6 +76,10 @@ const HELP = `git-sluice v${VERSION} — dsh-git-push 引擎独立 CLI（脱离 
   git-sluice file-io [路径...] [--summary] [--write] [--type sync|async] [--kind read|write|delete|rename] [--risk high|medium|low] [--op <操作名>] [--json]
                                   文件读写调用扫描（三标签：类型/操作/上下文）——同步 I/O 在异步路径会阻塞；写/删/改名涉及数据安全
   git-sluice link-check <路径>    检查 md/文本中的链接有效性（只 warning，flaky 域名打折）
+  git-sluice scope-check [文件...] [--repo <目录>] [--prefix <前缀>] [--allowlist <名,名>] [--top-level-must-be-empty] [--files <文件,文件>] [--json]
+                                  拼接产物作用域撞名（多段 JS 拼进同一作用域）：同一函数帧内 var/function/const/let/class 重名会让后者静默顶掉前者，运行期毫无线索；
+                                  判定按真实作用域帧（两个不同函数里的同名局部变量不算撞名）；顶层声明与命名前缀按**被查项目自己**的 package.json（dshScopeCheck）判定，
+                                  没声明就只查同帧重名（不拿本项目的 dshgp_ 去要求别人）；不给文件时取该项目 dshScopeCheck.files
   git-sluice npm-publish [目录] [--dry-run|--no-dry-run] [--tag <tag>] [--otp <码>] [--confirm] [--json]
                                    npm 发包（注册为后台 job）：默认 dry-run，只体检 + npm publish --dry-run（**不写 registry**）；
                                    真发必须同时给 --no-dry-run 与 --confirm（不可撤销）；体检项：private:true / 同名版本占用 / npm pack 清单
@@ -285,7 +294,7 @@ function readPkgJson() {
  * 每个条目 [命令名, handler(rest)]；统一 parse 模式用 parseVia 包装。 */
 
 
-/** 注册表工具返回输出（默认文本化 summary/apiGuide；--json 直出完整返回）。 */
+/** 注册表工具返回输出（默认文本化 summary/apiGuide/lines；--json 直出完整返回）。 */
 function printRegistryResult(r, json) {
   if (json) { console.log(JSON.stringify(r, null, 2)); return; }
   if (!r) return;
@@ -295,6 +304,8 @@ function printRegistryResult(r, json) {
   if (r.summary) L.push(`summary: ${JSON.stringify(r.summary)}`);
   if (r.quality) L.push(`quality: ${r.quality.score ?? '?'}/${r.quality.level ?? '?'}`);
   if (r.count != null) L.push(`count: ${r.count}`);
+  // lines：工具自备的可读文本行（逐文件结论、命中明细等）——避免为此另造输出通道
+  if (Array.isArray(r.lines) && r.lines.length) L.push(...r.lines);
   console.log(L.length ? L.join('\n') : JSON.stringify(r));
 }
 
@@ -332,7 +343,9 @@ export async function main(argv = process.argv.slice(2)) {
     try {
       const r = await callTool(reg.name, args, { workspaceRoot: process.cwd() }, cliPluginConfig(), console, null, null);
       printRegistryResult(r, args.json === true);
-      return 0;
+      // 退出码如实反映结果：ok:false = 命令失败（门禁/脚本据此判失败）。
+      //   ok:true 但 committed:false / pushed:false 这类「零改动正常路径」仍是 0。
+      return r && r.ok === false ? 1 : 0;
     } catch (e) { console.error(String((e && e.message) || e)); process.exitCode = 1; return 1; }
   }
   const handler = COMMANDS.get(cmd);
