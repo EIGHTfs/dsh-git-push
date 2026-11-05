@@ -212,6 +212,10 @@ dsh-git-push/
 │   │   ├── index.js — HTTP 总入口（Origin/CSRF/写确认/413/路由分发）
 │   ├── link-check/ — 链接判断（文档链接有效性，只 warning 永不 blocker）
 │   │   ├── index.js — 链接判断总入口（分级扣分，断网不拦）
+│   ├── lint-adapter/ — 外部 linter 委托层（探测项目自带官方 linter → 调用 JSON → 适配；只评分报告不拦截）
+│   │   ├── detect.js — 委托层探测：项目配置指纹 + 工具可执行自探测（env→tools→PATH→常见路径，校验 X_OK）
+│   │   ├── index.js — 委托层聚合入口 runLintAdapters：返回 findings 与 linted 委托状态（防静默空转）
+│   │   ├── runner.js — 委托层调用与适配：ruff JSON→finding（severity 封顶 warning；崩溃/超时/坏输出一律降级空）
 │   ├── npm/ — （待注释）
 │   │   ├── account.js — （待注释）
 │   │   ├── install.js — （待注释）
@@ -379,6 +383,7 @@ dsh-git-push/
 │   ├── test-java-rules.mjs — Java/Kotlin 语言路由与专项规则测试（javaKtFuncRanges/短名/复杂度/规则联动/聚合型降级）
 │   ├── test-line-count.mjs — （待注释）
 │   ├── test-link-check.mjs — 链接判断测试（分级扣分/断网不拦）
+│   ├── test-lint-adapter.mjs — 委托层桩测（假 ruff 二进制）：探测三态/适配映射/不拦截/四路降级/端到端 blocker 不增
 │   ├── test-loop-no-fallback-return.mjs — （待注释）
 │   ├── test-magic-number.mjs — 硬编码魔数检测测试
 │   ├── test-max-lines-scope.mjs — （待注释）

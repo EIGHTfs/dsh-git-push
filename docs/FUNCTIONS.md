@@ -759,30 +759,30 @@
 | `excludePathOf` | 39-48 | 10 | `function excludePathOf(root) {` |
 | `detectIgnoreBlindSpot` | 55-102 | 48 | `export function detectIgnoreBlindSpot(root) {` |
 
-### lib/audit/orchestrate.js（653 行 · 20 个函数）
+### lib/audit/orchestrate.js（673 行 · 20 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `setHostDocChecks` | 31-33 | 3 | `export function setHostDocChecks(checks) {` |
-| `findMarkedHostMd` | 37-37 | 1 | `const findMarkedHostMd = (...args) => (injected \|\| EMPTY_DOC_CHECKS).findMarkedHostMd(...args);` |
-| `checkDrift` | 38-38 | 1 | `const checkDrift = (...args) => (injected \|\| EMPTY_DOC_CHECKS).checkDrift(...args);` |
-| `checkFuncDrift` | 39-39 | 1 | `const checkFuncDrift = (...args) => (injected \|\| EMPTY_DOC_CHECKS).checkFuncDrift(...args);` |
-| `capScanFiles` | 60-70 | 11 | `export function capScanFiles(files, root, maxFiles) {` |
-| `appendIgnoreBlindSpot` | 83-99 | 17 | `function appendIgnoreBlindSpot(findings, repoPath, scanned) {` |
-| `buildTreeConfirmer` | 131-157 | 27 | `async function buildTreeConfirmer(relPath, text, grouped) {` |
-| `computeDimFileCounts` | 178-212 | 35 | `export function computeDimFileCounts(grouped, normFiles) {` |
-| `computeDimRuleCounts` | 225-237 | 13 | `export function computeDimRuleCounts(grouped) {` |
-| `auditFiles` | 239-444 | 206 | `async function auditFiles(repoPath, files, opts = {}) {` |
-| `isDshPlugin` | 264-270 | 7 | `const isDshPlugin = (() => {` |
-| `auditFull` | 446-468 | 23 | `export async function auditFull(repoPath, opts = {}) {` |
-| `appendTreeDocDrift` | 473-515 | 43 | `function appendTreeDocDrift(findings, repoPath) {` |
-| `by` | 506-506 | 1 | `const by = (code) => wt.filter(([, v]) => v?.status === code).length;` |
-| `appendFuncDocDrift` | 524-540 | 17 | `function appendFuncDocDrift(findings, repoPath) {` |
-| `appendSplitDocsCheck` | 548-602 | 55 | `function appendSplitDocsCheck(findings, repoPath) {` |
-| `hasMarkBlock` | 605-607 | 3 | `function hasMarkBlock(text, marker) {` |
-| `auditChanged` | 612-647 | 36 | `export async function auditChanged(repoPath, opts = {}) {` |
-| `isAuditIgnored` | 628-641 | 14 | `const isAuditIgnored = (rel) => {` |
-| `auditWithScope` | 650-652 | 3 | `export async function auditWithScope(repoPath, { scope = 'diff', ...opts } = {}) {` |
+| `setHostDocChecks` | 32-34 | 3 | `export function setHostDocChecks(checks) {` |
+| `findMarkedHostMd` | 38-38 | 1 | `const findMarkedHostMd = (...args) => (injected \|\| EMPTY_DOC_CHECKS).findMarkedHostMd(...args);` |
+| `checkDrift` | 39-39 | 1 | `const checkDrift = (...args) => (injected \|\| EMPTY_DOC_CHECKS).checkDrift(...args);` |
+| `checkFuncDrift` | 40-40 | 1 | `const checkFuncDrift = (...args) => (injected \|\| EMPTY_DOC_CHECKS).checkFuncDrift(...args);` |
+| `capScanFiles` | 61-71 | 11 | `export function capScanFiles(files, root, maxFiles) {` |
+| `appendIgnoreBlindSpot` | 84-100 | 17 | `function appendIgnoreBlindSpot(findings, repoPath, scanned) {` |
+| `buildTreeConfirmer` | 132-158 | 27 | `async function buildTreeConfirmer(relPath, text, grouped) {` |
+| `computeDimFileCounts` | 179-213 | 35 | `export function computeDimFileCounts(grouped, normFiles) {` |
+| `computeDimRuleCounts` | 226-238 | 13 | `export function computeDimRuleCounts(grouped) {` |
+| `auditFiles` | 240-464 | 225 | `async function auditFiles(repoPath, files, opts = {}) {` |
+| `isDshPlugin` | 265-271 | 7 | `const isDshPlugin = (() => {` |
+| `auditFull` | 466-488 | 23 | `export async function auditFull(repoPath, opts = {}) {` |
+| `appendTreeDocDrift` | 493-535 | 43 | `function appendTreeDocDrift(findings, repoPath) {` |
+| `by` | 526-526 | 1 | `const by = (code) => wt.filter(([, v]) => v?.status === code).length;` |
+| `appendFuncDocDrift` | 544-560 | 17 | `function appendFuncDocDrift(findings, repoPath) {` |
+| `appendSplitDocsCheck` | 568-622 | 55 | `function appendSplitDocsCheck(findings, repoPath) {` |
+| `hasMarkBlock` | 625-627 | 3 | `function hasMarkBlock(text, marker) {` |
+| `auditChanged` | 632-667 | 36 | `export async function auditChanged(repoPath, opts = {}) {` |
+| `isAuditIgnored` | 648-661 | 14 | `const isAuditIgnored = (rel) => {` |
+| `auditWithScope` | 670-672 | 3 | `export async function auditWithScope(repoPath, { scope = 'diff', ...opts } = {}) {` |
 
 ### lib/audit/ownership.js（47 行 · 3 个函数）
 
@@ -1815,6 +1815,33 @@
 | `checkLinks` | 158-182 | 25 | `export async function checkLinks({ file = '', text = '', fetcher, concurrency, timeoutMs, maxLinks = DEFAULT_OPTS.maxLinks } = {}) {` |
 | `sumLinkPenalty` | 185-187 | 3 | `export function sumLinkPenalty(findings = []) {` |
 
+### lib/lint-adapter/detect.js（132 行 · 6 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `isExecutable` | 37-47 | 11 | `function isExecutable(p) {` |
+| `hasConfig` | 50-63 | 14 | `function hasConfig(repoRoot, linter) {` |
+| `resolveBin` | 69-92 | 24 | `export function resolveBin(repoRoot, linter) {` |
+| `tryWhich` | 95-106 | 12 | `function tryWhich(bin) {` |
+| `detectLinters` | 112-121 | 10 | `export function detectLinters(repoRoot) {` |
+| `tryVersion` | 124-131 | 8 | `function tryVersion(bin) {` |
+
+### lib/lint-adapter/index.js（37 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `runLintAdapters` | 19-34 | 16 | `export async function runLintAdapters(repoRoot, opts = {}) {` |
+
+### lib/lint-adapter/runner.js（134 行 · 5 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `ruffDims` | 39-43 | 5 | `function ruffDims(code) {` |
+| `ruffItemToFinding` | 49-66 | 18 | `export function ruffItemToFinding(item, repoRoot) {` |
+| `relFile` | 69-78 | 10 | `function relFile(abs, repoRoot) {` |
+| `parseRuffJson` | 81-90 | 10 | `function parseRuffJson(stdout) {` |
+| `runLinter` | 98-133 | 36 | `export async function runLinter(linter, repoRoot) {` |
+
 ### lib/npm/account.js（65 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2099,13 +2126,13 @@
 |------|------|------|------|
 | `filesFromConfig` | 46-53 | 8 | `function filesFromConfig(path) {` |
 
-### scripts/check.mjs（193 行 · 3 个函数）
+### scripts/check.mjs（195 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `collectJs` | 22-31 | 10 | `function collectJs(dir, acc = []) {` |
 | `collectJson` | 34-42 | 9 | `function collectJson(dir, acc = []) {` |
-| `layerOf` | 138-145 | 8 | `const layerOf = (rel) => {` |
+| `layerOf` | 140-147 | 8 | `const layerOf = (rel) => {` |
 
 ### scripts/cpu-sample.mjs（189 行 · 11 个函数）
 
@@ -2830,6 +2857,13 @@
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `fakeFetch` | 14-21 | 8 | `function fakeFetch(map = {}) {` |
+
+### test/test-lint-adapter.mjs（165 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `makeProject` | 26-38 | 13 | `function makeProject({ withRuff = false, script = '' } = {}) {` |
+| `mk` | 75-75 | 1 | `const mk = (code, msg, file, row) => ruffItemToFinding(` |
 
 ### test/test-loop-no-fallback-return.mjs（115 行 · 1 个函数）
 

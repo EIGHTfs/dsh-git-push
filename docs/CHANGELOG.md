@@ -15,6 +15,19 @@
 
 | 版本 | 内容 |
 |------|------|
+| 2.20.1 | 外部 linter 委托层（方向 A 骨架，新增 `lib/lint-adapter/`：detect.js 探测 / runner.js 调用+适配 / index.js 聚合）。目标：被审项目自带官方 linter 时用它当判定源，把风格类精度交给工具链、切断自研规则的误报-补丁增量源头。
+
+探测三段（tool-self-detection 四律）：① 项目配置指纹（pyproject 的 [tool.ruff] 段或 ruff.toml）② 工具可执行自探测——env 覆盖 → 插件 tools/ 副本 → 项目 tools/ → PATH 扫段 → 常见绝对路径，每条候选校验 X_OK 而非仅存在（CIFS/noexec 上会存在但跑不了）；③ 有配置但跑不起来 ⇒ 该 linter 不委托、降级回自研（不报错）。PLUGIN_ROOT 统一从 core/config.js 导入（不在委托层自己 resolve，避免 ext-runner 修过的 duplicate-constant 复发）。
+
+两条硬约束：**① 只进评分与报告、绝不进拦截门禁**——所有外部 finding 的 severity 恒封顶 warning，即便 ruff 判 error 级规则（E902 语法错误）也一样，isBlockerFinding 恒 false，别人的规则集不裁决本仓能否提交；**② 任何失败一律降级空**——可执行缺失/超时（60s 上限）/输出非 JSON/退出码≥2 全部返回 {findings:[], note:降级原因}。其中退出码语义单独处理：ruff 的 1=有 lint 问题（stdout 合法 JSON，必须采纳），≥2 才是真错误；**关键防的是假阴性**：若把「ruff 崩了 + stdout 空」当成「外部权威源判定无问题」，是最隐蔽的失败，故崩溃路径绝不产出空判定结果冒充健康。
+
+适配映射：ruff 规则码前缀 → 本引擎维度（E/W/I→可读性、F→健壮性+可维护性、B/SIM/UP/RUF→可维护性、C4→性能、S→安全性，未知兜底可维护性）；filename 转相对仓库根正斜杠（root 外的绝对路径取文件名兜底，不外泄他人机器路径）；rule id 带 `ruff/` 前缀、source 标 `linter:ruff`。noqa/per-file-ignores 由 ruff 自身遵守（被抑制项不输出），委托层不重复实现第二套豁免。仅 full 范围委托：外部 linter 是全仓扫描器，diff 语义不符且会拖慢提交门禁（与 analysisCoverage 同口径）。
+
+防静默空转：`linted`（委托了哪些 linter/版本/各产出条数/降级原因）随审计结果返回，口径同 2.19.0 的 treeUsage——项目自带 ruff 却长期 linted=[] 在报告里看得见。`lint-adapter` 已纳入层边界门禁 AUDIT_DIRS（编排层直接依赖它 ⇒ 属审计子图，同样不得伸手 git 层），实测审计层对 git 层仍 0 依赖、反向接缝 7/7 未膨胀。
+
+`opts.linters` 是测试注入口，已在代码里写明**不得接进 API/CLI**（buildAuditOpts 是字段白名单，外部 args 到不了编排层），否则等于开「让审计引擎执行调用方指定二进制」的后门。
+
+本轮按「先写骨架」口径**未下载 ruff 本体**（本机 PATH/常见路径/tools 均无，PyPI 通道已探测可用）；测试全部用假 ruff 二进制驱动真实 spawn/execFile 路径。新增 `test/test-lint-adapter.mjs`（5 例：探测三态 / 适配映射 / error 级也封顶 warning / 四类降级含崩溃不当无问题 / 端到端并入且 blocker 不增 + linted 可见）。 |
 | 2.20.0 | 评分诚实度（方向 B）：**零规则维度权重记 0**。此前评分对「无命中维度」一律给满分 10 并按设定权重计入总分，于是「本次生效规则集里一条规则都没绑定该维度」（= 对本仓库没有检测能力）也被算成质量高——实测外部 PySide6 仓库：测试覆盖/可观测性/开发者体验三维 0 条规则绑定却齐贡献满分，把分抬到 85/A，而人工核实存在 6 个真问题（含压缩包路径穿越与凭据双向失灵）。
 
 口径：编排层按**生效规则集**（已按仓库语言/槽位/豁免过滤的 grouped，不是全量规则表）统计每维度绑定规则数 computeDimRuleCounts，绑定数=0 的维度实际权重记 0（等价于剔出分母），并回传 uncoveredDimensions 供报告显式标注。判据用生效规则集是为了不误伤：纯 Python 仓库没有 C# 专属规则属正常，不该因此把可维护性记 0。

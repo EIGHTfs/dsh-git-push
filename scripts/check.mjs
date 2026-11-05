@@ -128,7 +128,9 @@ try {
 // 不变量：
 //   ① 审计层任何文件都不得 import git/npm/commit-push 层（方向唯一：git → audit）；
 //   ② 反向接缝数量有预算上限——允许存在（提交门禁必须调审计），但要能看见它在膨胀。
-const AUDIT_DIRS = new Set(['ast', 'audit', 'audit-rules', 'checks', 'exempt', 'rule', 'score']);
+// lint-adapter（外部 linter 委托层）纳入审计层口径：编排层（audit）直接依赖它 ⇒ 它属于审计子图，
+//   同样不得伸手 git 层（委托层只读项目文件 + 跑外部二进制，不需要凭据/git）。
+const AUDIT_DIRS = new Set(['ast', 'audit', 'audit-rules', 'checks', 'exempt', 'rule', 'score', 'lint-adapter']);
 const GIT_DIRS = new Set(['git', 'npm']);
 const GIT_TOP = new Set(['commit-push.js']);
 const AUDIT_TOP = new Set(['audit-defaults.js', 'skip-dirs.js']);
