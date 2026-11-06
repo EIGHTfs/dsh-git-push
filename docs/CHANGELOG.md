@@ -15,6 +15,142 @@
 
 | 版本 | 内容 |
 |------|------|
+| 2.20.14 | 按用户明确口径收口：
+
+1. **硬编码路径规则禁止任何场景豁免**：删除 2.20.12 引入的 `isReasonableAbsolutePath` 整段（曾排除 `/tmp`、`/usr/bin`、`/var/packages/`、Windows 程序目录等）。规则保持 `blocker`，**只保留文档类降级 warning**（`.md/.txt/.rst` 及 `docs/` 下文件）。个别误报由代码侧用行级临时豁免注释逐处标注，不在规则里开白名单。
+
+2. **删掉写坏/无用的测试**：移除 `test/test-hardcoded-path-blocker.mjs`（我新增、多轮环境耦合）、`test/test-scan-hardcoded-paths.mjs` 与其唯一实现脚本 `scripts/scan-hardcoded-paths.mjs`。这批测试连续造成 CI 红（run 67/68），根因是夹具依赖 `os.tmpdir` 的本机形态，两地结论相反。
+
+3. **清理死文件**：`assets/` 整个目录（预览页/启停脚本整套已废弃，生成脚本早已移入 `.trash`）从仓库移除；同步清理 `skills/guide/guide-inject-ui.md` 的 2.6 预览节、`docs/FILE-TREE.md`、`tree-doc.json`（含 `_meta.worktree`）中的悬空引用。
+
+4. **教训固化**：`ai-work-archive/skills/ops-self-bootstrap-运维自举/tool-self-detection.md` 新增第七节——「自探测 ≠ 硬编码一堆绝对路径候选清单」：候选应由 PATH 分段与平台根常量**派生**，不把 `/usr/bin/x`、`C:\\Program Files\\x` 这类具体路径写进源码；不因「合法写法」给规则加豁免，规则改 severity 前先跑该规则全部相关测试。 |
+| 2.20.13 | 两项修复。
+
+**① 精确化「硬编码路径」的排除面**（修 2.20.12 引入的过宽排除）。2.20.12 为不误伤工具探测候选，把 `/var/packages/` **整目录**排除，但套件的数据/配置路径写死同样是「换机即失效」，属真问题；实测副作用：`test-scan-hardcoded-paths.mjs` 用 `/var/packages/<pkg>/tmp/…/exists.txt`（真实存在的临时文件）验证「相对路径换算基准 = 文件所在目录」，被整体排除后该用例丢失可访问样本，5 项断言失败。
+现改为只排除**含 `bin`/`sbin`/`lib` 段**的路径（可执行与库目录），数据/配置路径照常报 blocker。
+
+**② npm registry 空串防护**（并发改动，一并收录）。未配置 registry 时传 `undefined` 而非空串；`npmrcText` 新增 `effectiveRegistry` 归一化（空串/纯空白/undefined → 默认 registry）。原因：`registry=` 写进 npmrc 后，npm 构建 nerf-dart 时 `new URL('')` 直接抛 `ERR_INVALID_URL`，**所有 npm 子命令全部不可用**，而报错信息完全看不出根因（实测撤包工具因此跑不起来）。
+
+验收：`test-scan-hardcoded-paths`（含相对路径换算/--write/dry-run）**全部通过**；hardcoded-path-blocker 4 例、tree-doc 13 例、audit-api 相关、npm 发布门禁 8 例 —— 合计 **38 例全绿**。 |
+| 2.20.12 | 两项变更。
+
+**① `paths/hardcoded-absolute-path` 提升为 blocker**。动机：代码里写死**本机数据/资源目录**（`/volume1/xxx`、`/home/<user>`、`C:\\Users\\…`、UNC 共享）换机或换挂载点必然失效，属真实故障形态。
+
+但**不能简单提级**——实测本仓 35 条命中**全是合理写法**（CI 的 `/tmp/test-run.log`、启动脚本的 node 多候选探测、工具路径清单），一提就会产生 35 条误报，把正确做法判成缺陷。因此判据分两层：
+· 精筛排除「合理绝对路径」（`isReasonableAbsolutePath`）：临时目录 `/tmp` `/var/tmp` `/dev/shm`、伪文件系统 `/proc` `/sys` `/dev`、系统工具目录 `/usr/bin` `/usr/local/bin` `/bin` `/sbin` `/opt/<任意>/bin` `/var/packages/…`、Windows `C:/Windows` `C:/Program Files` `C:/ProgramData`、macOS `/System` `/Library` —— 前两类跨机语义一致，系统工具目录出现在**多候选探测清单**里是 `tool-self-detection` 要求的正确做法。
+· 文档/数据文档降级为 warning：`.md/.txt/.rst` 及 `docs/` 下任意文件（示例路径属说明内容）。
+
+实测效果：本仓从 **35 条（含 5 blocker 误报）→ 8 条全 warning、0 blocker**；而真·数据路径（`/volume1/MyData`、`C:\\Users\\bob`、UNC）仍正确报 blocker。
+新增 `test/test-hardcoded-path-blocker.mjs` 4 例（真数据路径 blocker / Windows·UNC blocker / 合理写法不报 / 文档降级）。
+
+**② 审计输出默认反转：默认带详细**。此前 `code_audit` 默认只给评分+摘要+API 指引，要看明细得传 `includeFindings=true`；现改为**默认返回 findings + yaml**，需要精简时传 `includeFindings=false` 或 `summaryOnly=true`。理由：调用方拿到的就该是能直接读的问题明细，多一跳就多一次漏看的可能。
+
+测试同步更新（`test-audit-api.mjs`：原断言「默认不返回 findings」改为「默认返回、传 false 才精简」）。 |
+| 2.20.11 | 修 **CI 真因**（run 57~65 连续失败，本地一直绿）。
+
+失败项：`not ok 237 - 登记后外部裸 git 可用；注销后恢复；重复登记幂等`。
+
+根因（典型「测试隐含依赖本机既有状态」）：测试直接
+`execFileSync('git', ['config','--global','--get-all','safe.directory'])`。
+而 **`git config --get-all` 在键不存在时退出码为 1**，`execFileSync` 会直接抛异常。
+CI runner 是全新 HOME（从未配过 safe.directory）⇒ 必抛；本地开发机往往早已有该键（CIFS 仓库登记过）⇒ 一直绿。
+这解释了「本地全绿、CI 必红」的全部现象，也与 2.20.3 引入该测试的时间点吻合。
+
+修法：新增 `readGlobalSafeDirs`（try/catch 包裹，无键即返回空列表），两处读取统一走它。
+
+**验证方式改为复刻 CI 条件**，而不是只跑本地：
+`HOME=$(mktemp -d) node --test test/test-cifs-init.mjs` ⇒ **7 例全通过**（全新 HOME、无 safe.directory 键）。
+
+过程记录（方法教训）：前几版我靠本地盘模拟猜失败项，因为拿不到 CI 日志（logs 下载需 token）。本版给 workflow 加了 `::error::` annotation，才通过 
+`/repos/{owner}/{repo}/check-runs/{id}/annotations` 匿名读到真实失败测试名 —— **远程排障要先让 CI 自己说话，不要靠本地推断**。 |
+| 2.20.10 | 敏感文件扫描**不再享有「强制全仓」特权**，改为与所有审计规则**同一地位**。
+
+此前的状态是特权式的：`commitAndPush` 只要有改动就**无条件**调 `ensureGitignore` → `scanSensitiveFiles` 递归全仓扫（与 `audit` 开关无关、与 `auditScanScope` 无关），这正是 2.20.9 那个「卡 15 分钟」的结构前提。2.20.9 已把它收窄到「本次将提交的文件」，本版补齐剩下的那一半——**开关归属**。
+
+改法（贯通三层）：
+· `tool-call.js` → 按 `cfg.auditEnabled !== false` 传 `scanSensitive`；
+· `commitAndPush` 接收并传给 `ensureGitignore` / private 豁免分支；
+· `ensureGitignore` 透传给 `scanSensitiveFiles`（false ⇒ 直接返回空，不读任何文件）。
+
+语义即用户口径：「审计关 ⇒ 不扫」「审计开 ⇒ 只扫将要入库的内容（diff 语义）」，与其他规则完全一致，不再有绕过审计开关独自全仓扫描的特权路径。
+缺省 `scanSensitive = true` 仅为兼容直接调用方（CLI/测试），工具路径一律显式传入。
+
+验收：push/ignore/auditignore/transport 相关 12 个测试文件 **86 例全绿**。 |
+| 2.20.9 | 修 **「有改动的提交卡分钟级」**（CIFS/SMB 上可卡满 15 分钟仍未返回）。
+
+**根因（代码级，非网络/git/锁/钩子）**：`commitAndPush` 在「工作区有改动」分支里会调 `ensureGitignore` → `scanSensitiveFiles(repoPath)`，而后者**递归遍历全仓并逐个 readFile 读内容**。在 CIFS/SMB 挂载上每个文件都是一次网络往返，实测约 1 秒/文件 ⇒ 724 个文件的仓库 ≈ 12 分钟以上。这也解释了此前所有观测：**0 改动秒回**（`cleanSkipCommit` 把整段跳过，根本不扫）、**与改动文件数无关**（扫的是全仓，单文件改动一样慢）、git 自身很快（status 2 秒有 index 缓存，不读内容）。
+
+**实测对照**（同一仓库、724 文件、CIFS）：
+· 修复前全仓扫描：限时 60 秒**跑不完**；
+· 修复后只扫变更集：**26 毫秒**（2000 倍以上差距）。
+
+**修法**：`scanSensitiveFiles(repoPath, { onlyPaths })` 新增只扫指定路径的分支；`ensureGitignore` 透传 `onlyPaths`；`commitAndPush` 传入「本次将提交的文件」——`paths` 精确模式直接用 pathList，否则解析 `git status --porcelain` 的变更集（含重命名 `old -> new` 取新名、目录项跳过）。语义上也更准：提交只关心**将要入库的内容**，无关文件本就不该扫。
+缺省不传 `onlyPaths` 时保持原全仓行为，其它调用方（如独立的敏感文件巡检）不受影响。
+
+验收：push/ignore/auditignore/transport 相关 **12 个测试文件 86 例全绿**；实测同一仓库 26ms vs 原 60s+ 跑不完。 |
+| 2.20.8 | 修 **CI 假红**（run 57~61 连续失败，而本地一直绿）。
+
+根因：`test/test-cifs-init.mjs` 的幂等断言把跳过原因**写死**成 `'已登记'`——那是 CIFS 卷的行为（目录属主是挂载用户、与进程 uid 不一致，所以需要登记过才有该文案）。CI 跑在本地盘、属主与进程 uid 一致，走的是另一条分支（「属主与当前进程一致，git 不会判 dubious」），于是 `assert.equal(r2.skipped, '已登记')` 在 CI 上**恒失败**。讽刺的是原注释里已经写明「若本机本就同 uid 则报『一致』」，但断言只写了前一种——想到了没写进去，属测试断言的环境耦合。
+
+修法：断言改为按环境分支匹配 `/已登记|一致/`，并在两处都写明为什么不能写死。
+
+验证（这次刻意把 CI 条件搬回本地跑，而不是只靠本地 CIFS 绿就推）：
+① 本地 CIFS：test-cifs-init **7 例全绿**；
+② **完整复刻 CI 条件**（/tmp 本地盘 + 属主与进程同 uid）逐条断言：建仓 ok、裸 git 可用、重复登记 registered=false、skipped 匹配、global 最多一条、注销 removed=true、注销后无残留 —— **7/7 全通过**。
+
+教训：**环境分支的断言必须按分支写，不能把某一个环境的返回值当唯一真值**；本地绿不等于 CI 绿，涉及文件系统属性的测试尤其如此。 |
+| 2.20.7 | 修 `dataflow/clear-then-access` 的**第六类**系统性误报：**`reset` 被当作清空方法**。
+
+与 `.empty` 同类：`reset` 在业务代码里绝大多数是「**恢复默认值 / 重置状态**」而不是「清空容器」——重置后对象**仍有内容**，之后读取完全安全。实测证据（外部 Python 仓库）：配置类 `reset -> bool`，测试断言 `cfg.reset` 之后 `cfg.get("general.theme") == "dark"`（拿到的是有效默认值，不是空）；该语料 13 条命中里 **12 条**都源于把 `reset` 当清空。
+
+处置：从 `CLEAR_METHODS` 移除 `reset`（保留 `clear`/`flush`/`purge`）。真正的容器清空在各语言里用 `clear`；若某库确把 `reset` 用作清空，宁可漏报（本规则宁漏不误）。
+
+验收：`test-dataflow-clear-fp.mjs` 新增 A2 用例（`reset` 后读取不报 + `clear` 仍必须报），与 dataflow 三套测试合计 **25 例全绿**。真实语料同口径复测：clear-then-access **13 → 5**，剩余 5 条全部位于 `tests/` 且形态是 `results = []` → 循环 `append` → 读 `results[0]`（测试惯用的局部变量初始化），属**另一类**（写回识别）问题，已记录待后续处理，不在本版范围。
+
+补充：本版曾尝试用「首次绑定判定」一并解决那 5 条，但实测会压制真缺陷（`def f(c): c = []` 里参数 c 已绑定，被误判成首次绑定），**已完整回退**——宁可留 5 条待处理，也不接受把真问题一起修掉。 |
+| 2.20.6 | 修 `dataflow/clear-then-access` 的**第五类**系统性误报：**Python 缩进式函数体从未被识别**。
+
+根因（结构性）：函数体区间收集只有两段，且都只认 JS 风格——`collectDeclaredFnBodies` 找 `function` 关键字、`collectArrowMethodBodies` 找 `) {`。Python 用 `def f:` + 缩进，两段都不命中 ⇒ `fnRanges` 为空 ⇒ `mergeFnRanges` 第 3 步退化成「整个文件一个 token 区间」⇒ 同文件内**任意位置**的清空与访问都会被配成一对数据流。实测证据：clear 在 `invalidate`(L126)、访问在 `build_index`(L303)，相距 177 行仍被报为「清空后访问」；另两例同样是跨方法误连。这不是「宁漏不误」能辩护的，是把不相关代码当数据流。
+
+修法：新增 `collectPythonDefBodies(text, tokens)`，按**缩进**解析 `def`/`async def` 块范围（从 def 行起，到首个非空非注释且缩进 ≤ def 缩进的行为止），把行号换算成 token 区间，与花括号语言并存。两个刻意的边界：① `def` 必须落在真 token 上（避免三引号字符串/注释里的假 def）；② **闭包不拆**——嵌套 def 捕获外层变量属同一份数据流，仍合并为一个体（`def outer: buf=[]; def inner: return buf[0]` 确实会 IndexError，报它是对的）。
+
+验收：新增 `test/test-dataflow-py-bodies.mjs` 4 例（跨方法不连 / 同方法内仍连 / 闭包必须连 / 花括号语言回归），与既有 `test-dataflow.mjs`、`test-dataflow-clear-fp.mjs` 合计 **24 例全绿**。真实语料同口径复测：**13 → 1 条**，剩余 1 条经人工核对源码属 D3 设计边界内的合理提示（`_config.reset` 之后另有 `self._load_settings` 重新填充，但「某个调用会重填」需跨方法推断，规则明定不做），不是系统性误报。 |
+| 2.20.5 | 修 `dataflow/clear-then-access` 的四类**系统性**误报。真实语料实测（外部 Python 仓库约 1300 文件）：同批 8 个文件 11 条命中里 **8 条是误报**，四类根因互不相同，且都不是「规则思路错」而是判据缺口：
+
+**A. `.empty` 被当作清空方法** —— `CLEAR_METHODS` 含 `empty`，但 `empty` 在各语言都是**查询**（Python `Queue.empty` / C++ `vector.empty` 返回 bool）。实测 `while not q.empty:` 之后的 `q.get` 被误报成「清空后访问」。已从常量表移除，并注明「若某库确把 empty 用作清空，宁可漏报」。
+
+**B. 写目标被当读访问** —— `self._status[mid] = X` 里 `[mid]` 是**写入下标**，而 `applyAccessAfterClear` 只看 `obj[` 就报，从不检查配对 `]` 后面是否跟 `=`。现在按「配对 `]` 后是 `=`/复合赋值 ⇒ 视为重新填充（与 push/set 同口径）撤销清空标记」，不是简单跳过。
+
+**C. 类型注解位参与判定** —— PEP 526 `self._x: list = []` 让注解里的 `list` 被当作对象名记入清空表，随后 `-> list[str]` 返回注解里的 `list[str]` 被当作读访问。修法：赋值目标前若是注解冒号则跳过；**并且 `:` 前必须是标识符**——Python 函数定义的 `def f(c):` 也用冒号，但其前是 `)`，不加这条会压制真缺陷（`def f(c): c = []` 后 `c[0]` 本该报却不报，实测踩到）。
+
+**D. 多目标解包错位** —— `result, last = [], {}` 中 `last` 后面紧跟 `=`，规则把 `[]` 算到 last 头上（实际 last 拿到 `{}`），后续 `last.get` 误报。判据：obj 前是 `,` ⇒ 属解包目标之一，rhs 不归它。
+
+**验收**：新增 `test/test-dataflow-clear-fp.mjs` 6 例（四类 FP 各一 + 两条正样本），与既有 `test-dataflow.mjs` 14 例合计 20 例全绿。同批真实文件命中 11 → **3**，剩余 3 条经人工核对源码均为真命中（`clear` 后无重新填充即读取，正是规则该提示的形态），**真缺陷未被压制**。 |
+| 2.20.4 | 树化迁移第二条（方向 E，A 档）：**short-func-name 精筛改吃语法树**。实测缺口是**漏报不是误报**——token 级只认「function 关键字后的标识符」，于是 `class A { gh {} }`、`const o = { ef {} }` 这类方法短名完全查不到（同样是「名字猜不出含义」的缺陷，却静默放行）。
+
+实现同 credential 那条：`treesitter.js::shortFunctionNamesFromTree(tree, isShort)` 以谓词注入接收判定语汇（长度阈值 + 公认缩写白名单仍只在 naming.js 一份定义），function_declaration / generator_function_declaration / function_expression / method_definition / method_signature 五类节点取 name 字段；arrow_function、if_statement 无 name ⇒ 天然不误伤；naming.js 有树走树、无树回退（D5）。
+
+两条踩坑记录（都是结构性坑，不是笔误）：① **初筛 pattern 不放宽则树化完全无效**——allow 语义下 pattern 必须先把候选行捞进来，而方法行不含 function 关键字，实测 `  gh {` 对原 pattern 恒 false；补 `^\s*[a-zA-Z_$][a-zA-Z0-9_$]{0,1}\s*\(` 做**粗筛**，是否真是定义交给树精筛，故 `ab(1)` 调用、`label: "x"` 属性、`return 1` 进不了候选（实测逐一核验）；② **get/set 访问器必须显式排除**——其 name 是属性名而非函数名，且 `get x/set x(v)` 是框架存取器极常见惯例；第一版靠初筛侥幸挡住，放宽 pattern 后立刻变成误报源，现按 children[0] 的 get/set 节点类型显式跳过，并钉进测试。
+
+TREE_FIRST_KINDS 增登记 short-func-name（否则 .js 文件按 astConfirmSpan 门槛不建树，改了也白改）。回归验证：本仓全量 funcname 命中 0（新粗 pattern 未刷 FP）；d3dx 命中 0 属预期（该规则 exts 限 JS，样本是纯 Python 仓库）。新增 `test-tree-first-funcname.mjs` 4 例：红基线记录（token 级只报 L1）/ 树化后 [1,11,17]（函数+类方法+对象方法）/ 无树对照（语法资产缺失时 L11、L17 漏报重现 + L1 仍报，证明干净结果来自树而非规则变哑）/ 访问器与 async·生成器方法边界。与既有 `test-tree-first-credential.mjs` 三条合计 7 例全绿。权威文档「三层结构」节同步改为「语法树优先、token 级回退」并列出已迁移 kind 清单与迁移门槛六条。 |
+| 2.20.3 | 修 CIFS/SMB 挂载上「建仓成功、仓库却对外不可用」。**根因实测**（git 2.55.0，本机 CIFS forceuid 卷）：目录属主被映射成挂载用户（`杜渊`/uid 1026），而进程 uid 是套件用户（284371），git 2.35+ 的所有权检查对**任何**命令报 `detected dubious ownership`。插件内部走 runGit（GIT_GLOBAL_ARGS 带 `-c safe.directory=*`）完全感觉不到，于是 `ensureUsableLocalRepo` 报告 create/keep 成功、`isUsableRepo` 也判可用，但仓库交出去后用户一敲 git 就挂——与历史事故「remote add 失败却返回成功」同型的假成功。
+
+**三条决定性实测**（决定方案形态，不是猜的）：① 仓库级 `[safe] directory` **不生效**——所有权检查发生在读取该仓库 config 之前，被检查的目录无法自证可信（写了该段的仓库，裸 git status 仍 fatal）；② `-c safe.directory=<绝对路径>` 生效，global 写同一条同样生效；③ 同 uid 的本地盘本来就可信，不需要登记（否则会污染用户配置）。因此第一版实现（往降级 config 里写 `[safe] directory`）被实测证伪后重写为 global 路线。
+
+新增 `registerTrustedRepo(dir)` / `unregisterTrustedRepo(dir)` 成对能力：只登记**这一个具体路径**（不是 `*`，不改用户对所有仓库的信任策略）；读现有列表判幂等（`safe.directory` 是可重复键，重复调用不堆条目）；先用 `statSync` 比属主 uid，一致直接 skipped 不写任何东西；无 getuid 的平台（Windows）跳过。注销按正则需要转义路径里的特殊字符，且不动别人的条目。`ensureUsableLocalRepo` 三条路径（keep / create / repair）统一调用并把结果放进返回值 `trusted`——keep 也要登记，因为历史建仓和标准 git init 都没写过这条目。
+
+测试零污染：临时目录会被删除，若只登记不注销就会在**用户真实 gitconfig** 里留死路径（实测跑一轮堆了 5 条，已手工清理并把这条列为测试纪律）。`withDir` 收尾改成「先 unregister 再 rm」（注销需要目录还在才能算出同一绝对路径）。新增 2 例：登记后裸 git 必须可用 + 幂等 + 注销后不残留；同 uid 目录不登记。init-compat / cifs-init / clone-concurrency 三文件 32 例全绿，跑完 `git config --global --get-all safe.directory` 与跑前逐字节一致。 |
+| 2.20.2 | 修委托层自身的「灯下黑」：`tools/ruff` 缺可执行位时，`detectLinters` 旧行为静默返回 `[]`，报告里与「项目压根没配 ruff」**完全无法区分**——而委托层宣称要防的正是静默空转（linted/treeUsage 那套）。
+
+触发实测：宿主 0.2.1→0.2.2 升级后，部署副本 `tools/ruff` 权限从 755 变成 600（同步/拷贝不保 mode），委托层当场失效且毫无提示；`chmod 755` 恢复后 `ruff --version` 正常。这类问题在 CIFS 挂载 + 部署副本迁移的组合下会反复出现。
+
+修复：① 新增 `detectLinterStatus(repo)` 返回 `{ok, unavailable}`，`unavailable` 项带具体成因与修复动作（分两档：**文件存在但不可执行** ⇒ 指向该路径并提示 `chmod 755`；**一个候选都没有** ⇒ 提示放 tools/ 或 `export DSH_GIT_PUSH_RUFF=路径`）；② `runLintAdapters` 把 unavailable 也记进 `linted`（count=0、unavailable:true、note 以「未委托」开头，与「委托成功但判定无问题」在文案上分开）；③ `detectLinters` 保留为 `detectLinterStatus(...).ok`，旧调用方无感。
+
+顺带消除双份真相：四律候选清单原先在 `resolveBin` 与 `resolveBinDetailed` 各写一份（改一处漏一处会出现「详版找得到、简版找不到」的自相矛盾），现合并为 `binCandidates` 单一来源，两处共用。
+
+另修一处运行期缺陷：`runLintAdapters` 里 `const linters` 被后续重新赋值（`node --check` 抓不到，实际调用即抛 TypeError），改 `let` 并注释原因。
+
+测试：`test-lint-adapter` 新增第 6 例——剥夺 tools/ruff 的 x 位后断言 ok=[]、unavailable 长度 1 且 reason 指向 chmod、linted 记 unavailable、并以「项目没配 ruff ⇒ unavailable 为空」作对照（两种沉默必须可区分）。6 例全绿。 |
 | 2.20.1 | 外部 linter 委托层（方向 A 骨架，新增 `lib/lint-adapter/`：detect.js 探测 / runner.js 调用+适配 / index.js 聚合）。目标：被审项目自带官方 linter 时用它当判定源，把风格类精度交给工具链、切断自研规则的误报-补丁增量源头。
 
 探测三段（tool-self-detection 四律）：① 项目配置指纹（pyproject 的 [tool.ruff] 段或 ruff.toml）② 工具可执行自探测——env 覆盖 → 插件 tools/ 副本 → 项目 tools/ → PATH 扫段 → 常见绝对路径，每条候选校验 X_OK 而非仅存在（CIFS/noexec 上会存在但跑不了）；③ 有配置但跑不起来 ⇒ 该 linter 不委托、降级回自研（不报错）。PLUGIN_ROOT 统一从 core/config.js 导入（不在委托层自己 resolve，避免 ext-runner 修过的 duplicate-constant 复发）。

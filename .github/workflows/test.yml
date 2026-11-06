@@ -38,4 +38,27 @@ jobs:
       - name: 回归测试（--all 忽略缓存）
         env:
           DSH_HOME: ${{ runner.temp }}/dsh-home
-        run: node test/run-tests.mjs --all --concurrency=1
+        # 失败时把 not ok 列表写进 job summary —— 否则远程无法定位（日志下载需 token，
+        #   API 的 check-runs 不带日志；摘要能随 check-run 一起被读到）。
+        run: |
+          set -o pipefail
+          if node test/run-tests.mjs --all --concurrency=1 2>&1 | tee /tmp/test-run.log; then
+            echo "✅ 全量测试通过" >> "$GITHUB_STEP_SUMMARY"
+          else
+            {
+              echo "## ❌ 失败项（not ok）"
+              echo '```'
+              grep -E "^not ok" /tmp/test-run.log | head -40 || echo "(未捕获到 not ok，见日志尾部)"
+              echo '```'
+              echo "## 日志尾部"
+              echo '```'
+              tail -60 /tmp/test-run.log
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            # 失败项同时发成 annotation（::error::）—— job summary 只能人在 UI 看，
+            #   annotation 可通过 check-runs/{id}/annotations API 读到，远程排障才拿得到具体测试名。
+            grep -E "^not ok" /tmp/test-run.log | head -20 | sed 's/%/%25/g' | while IFS= read -r line; do
+              echo "::error::${line}"
+            done
+            exit 1
+          fi

@@ -2,7 +2,6 @@
   ".auditignore": "审计豁免清单（不影响 git 入库，仅跳过审计扫描）——排除内置第三方代码",
   ".gitignore": "忽略规则（node_modules/产物/备份/回收站等）",
   "README.md": "插件 README（功能总览/用法/版本记录）",
-  "assets": "预览页与配图（preview.html 交互模拟页 + 面板截图）",
   "cli.mjs": "独立 CLI（git-sluice，不依赖宿主可独立运行）",
   "cordis.patch.yml": "DSH 插件组合 patch（loader 注入定义）",
   "docs": "开发文档",
@@ -209,7 +208,6 @@
   "scripts/verify-prestep.mjs": "上下文注入自检脚本（真实触发 agent/pre-step 验证注入）",
   "scripts/module-splitter.py": "巨型单文件按顶层块拆分脚本（analyze/split/verify 三命令，python3 零依赖；module_splitter 工具与 CLI 的底层实现）",
   "test/test-module-splitter.mjs": "module_splitter 工具 + CLI 接入测试（契约 + 行为 + 脚本随插件发布）",
-  "assets/start.sh": "预览服务器启停脚本（start/stop/restart/status + --port + PID/日志/健康检查 /preview-ping）",
   "lib/audit/history-report.js": "（待注释）",
   "lib/audit/history.js": "（待注释）",
   "test/test-history-audit.mjs": "（待注释）",
@@ -397,64 +395,67 @@
   "lib/audit-rules/audit-rules-paths.yml": "（待注释）",
   "lib/checks/hardcoded-path.js": "（待注释）",
   "scripts/doc-drift.mjs": "（待注释）",
-  "scripts/scan-hardcoded-paths.mjs": "（待注释）",
   "test/test-git-api-tool.mjs": "（待注释）",
-  "test/test-scan-hardcoded-paths.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "docs/2026-11-06-审计插件本体审视与优化方向讨论.案例d3dx.md": {
-        "status": "M",
-        "mtime": "2026-11-05T20:33:10.383Z",
+      "assets/start.sh": {
+        "status": "D",
+        "mtime": "",
         "note": "注释可能需更新"
       },
       "docs/CHANGELOG.md": {
         "status": "M",
-        "mtime": "2026-11-05T20:31:01.764Z",
+        "mtime": "2026-11-06T14:18:47.998Z",
+        "note": "注释可能需更新"
+      },
+      "docs/FILE-TREE.md": {
+        "status": "M",
+        "mtime": "2026-11-06T14:15:52.255Z",
         "note": "注释可能需更新"
       },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-11-05T20:33:14.061Z",
+        "mtime": "2026-11-06T14:18:51.070Z",
         "note": "注释可能需更新"
       },
       "docs/releases.json": {
         "status": "M",
-        "mtime": "2026-11-05T20:31:01.291Z",
+        "mtime": "2026-11-06T14:18:47.396Z",
         "note": "注释可能需更新"
       },
-      "docs/功能-审计规则体系.md": {
+      "lib/checks/hardcoded-path.js": {
         "status": "M",
-        "mtime": "2026-11-05T20:32:58.854Z",
-        "note": "注释可能需更新"
-      },
-      "lib/audit/orchestrate.js": {
-        "status": "M",
-        "mtime": "2026-11-05T20:29:59.358Z",
+        "mtime": "2026-11-06T13:56:36.287Z",
         "note": "注释可能需更新"
       },
       "lib/self/index.js": {
         "status": "M",
-        "mtime": "2026-11-05T20:31:01.229Z",
+        "mtime": "2026-11-06T14:18:47.371Z",
         "note": "注释可能需更新"
       },
       "package.json": {
         "status": "M",
-        "mtime": "2026-11-05T20:31:01.248Z",
+        "mtime": "2026-11-06T14:18:47.383Z",
         "note": "注释可能需更新"
       },
-      "scripts/check.mjs": {
+      "scripts/scan-hardcoded-paths.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "skills/guide/guide-inject-ui.md": {
         "status": "M",
-        "mtime": "2026-11-05T20:26:18.335Z",
+        "mtime": "2026-11-06T14:15:50.599Z",
         "note": "注释可能需更新"
       },
-      "lib/lint-adapter/": {
-        "status": "A",
-        "mtime": "2026-11-05T20:28:24.738Z",
+      "test/test-hardcoded-path-blocker.mjs": {
+        "status": "D",
+        "mtime": "",
         "note": "注释可能需更新"
       },
-      "test/test-lint-adapter.mjs": {
-        "status": "A",
-        "mtime": "2026-11-05T20:30:22.378Z",
+      "test/test-scan-hardcoded-paths.mjs": {
+        "status": "D",
+        "mtime": "",
         "note": "注释可能需更新"
       }
     }
@@ -603,5 +604,8 @@
   "lib/lint-adapter/detect.js": "委托层探测：项目配置指纹 + 工具可执行自探测（env→tools→PATH→常见路径，校验 X_OK）",
   "lib/lint-adapter/index.js": "委托层聚合入口 runLintAdapters：返回 findings 与 linted 委托状态（防静默空转）",
   "lib/lint-adapter/runner.js": "委托层调用与适配：ruff JSON→finding（severity 封顶 warning；崩溃/超时/坏输出一律降级空）",
-  "test/test-lint-adapter.mjs": "委托层桩测（假 ruff 二进制）：探测三态/适配映射/不拦截/四路降级/端到端 blocker 不增"
+  "test/test-lint-adapter.mjs": "委托层桩测（假 ruff 二进制）：探测三态/适配映射/不拦截/四路降级/端到端 blocker 不增",
+  "test/test-tree-first-funcname.mjs": "short-func-name 树化双向样本：红基线/树化后类与对象方法照报/无树对照重现漏报/访问器边界",
+  "test/test-dataflow-clear-fp.mjs": "clear-then-access 四类系统性误报回归（.empty()/写目标/注解位/多目标解包）+ 两条正样本",
+  "test/test-dataflow-py-bodies.mjs": "Python 缩进式函数体区间回归（跨方法不连/同方法连/闭包必须连/花括号语言回归）"
 }

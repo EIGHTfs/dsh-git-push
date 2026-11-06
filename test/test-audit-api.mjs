@@ -126,15 +126,22 @@ test('exemptStatsOf：按豁免类型分组计数，无 exemptHint 不计数', a
   assert.equal(es.types.sensitive, 1);
   assert.equal(GROUP_BY_KEYS.join('|'), 'rule|file|severity|slot');
 });
-// ---------- 2026-10-05：code_audit includeFindings 参数（true 才输出全量审计结果） ----------
+// ---------- code_audit 输出详细度（2026-11-06 反转默认：**默认带详细**） ----------
+//   理由：调用方（AI/脚本）拿到的就该是能直接读的问题明细，而不是只有分数再自己去查聚合 API
+//   —— 多一跳就多一次漏看的可能。需要精简时显式 opt-out。
 
-test('code_audit：includeFindings=true 返回 findings+yaml；默认不返回', async () => {
+test('code_audit：默认返回 findings+yaml（详细）；includeFindings=false / summaryOnly=true 才精简', async () => {
   const { callTool } = await import('../lib/app/tool-call.js');
   const base = { repo: process.cwd() };
-  const full = await callTool('code_audit', { ...base, includeFindings: true }, {}, { defaultScanRoot: '' }, null, null, null);
-  assert.ok(Array.isArray(full.findings), 'includeFindings=true 应返回 findings 数组');
-  assert.ok(full.apiGuide, '仍带 apiGuide');
-  const slim = await callTool('code_audit', base, {}, { defaultScanRoot: '' }, null, null, null);
-  assert.equal(slim.findings, undefined, '默认不返回 findings（精简）');
-  assert.ok(slim.exemptStats && slim.groupByTypes, '默认仍带豁免统计/聚合类型');
+  const full = await callTool('code_audit', base, {}, { defaultScanRoot: '' }, null, null, null);
+  assert.ok(Array.isArray(full.findings), '默认必须返回 findings 数组（详细）');
+  assert.ok(full.apiGuide, '仍带 apiGuide 供全量查询');
+  assert.ok(full.exemptStats && full.groupByTypes, '摘要字段同时保留');
+
+  const slim = await callTool('code_audit', { ...base, includeFindings: false }, {}, { defaultScanRoot: '' }, null, null, null);
+  assert.equal(slim.findings, undefined, 'includeFindings=false 时不返回 findings（精简）');
+  assert.ok(slim.summary && slim.quality, '精简态仍带评分与摘要');
+
+  const slim2 = await callTool('code_audit', { ...base, summaryOnly: true }, {}, { defaultScanRoot: '' }, null, null, null);
+  assert.equal(slim2.findings, undefined, 'summaryOnly=true 等价精简');
 });

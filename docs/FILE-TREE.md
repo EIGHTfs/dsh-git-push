@@ -269,7 +269,6 @@ dsh-git-push/
 │   ├── rules-solo-audit.mjs — 规则单启控制变量扫描（基准全关+逐规则单启+全量对照，报告供 AI/人工审规则有效性与局限，按需运行非常驻）
 │   ├── scan-file-io.mjs — 文件读写扫描器（列出所有 fs 读写调用位置 + 路径参数）
 │   ├── scan-fs-hotspots.mjs — （待注释）
-│   ├── scan-hardcoded-paths.mjs — （待注释）
 │   ├── scan-repos.mjs — （待注释）
 │   ├── scan-version.mjs — 版本一致性校验脚本
 │   ├── symbol-index.mjs — （待注释）
@@ -279,8 +278,6 @@ dsh-git-push/
 │   │   ├── _example-readme-present.mjs — 审计扩展契约示例（_ 前缀：演示不参与实际审计）
 │   │   ├── dsh-inject-declarations.mjs — （待注释）
 │   │   ├── variable-min-length.mjs — 审计扩展：variable-min-length（内置规则抽出试点——统一动态入口）
-├── assets/ — 预览页与配图（preview.html 交互模拟页 + 面板截图）
-│   ├── start.sh — 预览服务器启停脚本（start/stop/restart/status + --port + PID/日志/健康检查 /preview-ping）
 ├── test/ — node:test 全量单元测试（541+ 条，覆盖审计/推送/账号/HTTP/后台任务）
 │   ├── .test — 空文件豁免标记（目录级豁免 .test 目录）
 │   ├── e2e-npm-tab-render.mjs — （待注释）
@@ -337,6 +334,8 @@ dsh-git-push/
 │   ├── test-context.mjs — 上下文注入测试
 │   ├── test-conv-rule-scope.mjs — （待注释）
 │   ├── test-cred-env.mjs — git_cred_env 凭据传递测试（双通道/无明文/askpass 调用/无凭据兜底）
+│   ├── test-dataflow-clear-fp.mjs — clear-then-access 四类系统性误报回归（.empty()/写目标/注解位/多目标解包）+ 两条正样本
+│   ├── test-dataflow-py-bodies.mjs — Python 缩进式函数体区间回归（跨方法不连/同方法连/闭包必须连/花括号语言回归）
 │   ├── test-dataflow.mjs — 三层审计 L2 数据流测试
 │   ├── test-dim-denominator.mjs — （待注释）
 │   ├── test-doc-func.mjs — （待注释）
@@ -426,7 +425,6 @@ dsh-git-push/
 │   ├── test-repos-live-budget.mjs — （待注释）
 │   ├── test-rule-include-paths.mjs — （待注释）
 │   ├── test-rule-packs.mjs — 规则总入口测试（编译注册/字段指派）
-│   ├── test-scan-hardcoded-paths.mjs — （待注释）
 │   ├── test-scope-collisions.mjs — 作用域撞名测试（帧判定/for 头部/项目契约/审计接入/CLI 退出码）
 │   ├── test-scope.mjs — 作用域最小实验测试（分类器/机制/magic 接入）
 │   ├── test-score-zero-rule-dims.mjs — （待注释）
@@ -449,6 +447,7 @@ dsh-git-push/
 │   ├── test-tools-e2e.mjs — （待注释）
 │   ├── test-tree-doc.mjs — README 目录树脚本测试（gen/check/apply 闭环）
 │   ├── test-tree-first-credential.mjs — （待注释）
+│   ├── test-tree-first-funcname.mjs — short-func-name 树化双向样本：红基线/树化后类与对象方法照报/无树对照重现漏报/访问器边界
 │   ├── test-treesitter-grammars.mjs — 多语言 AST 接通自检：语法映射与 wasms 包实存核对、每语言 0 ERROR 解析、注释与带引号原始字符串的精筛、以及无语法资产时的回退契约（D5）
 │   ├── test-treesitter.mjs — （待注释）
 │   ├── test-version-metrics.mjs — （待注释）

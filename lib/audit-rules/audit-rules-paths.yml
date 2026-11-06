@@ -22,7 +22,13 @@ rules:
   - id: paths/hardcoded-absolute-path
     name: "硬编码绝对路径（换机即失效）"
     category: "paths"
-    severity: "warning"
+    # blocker：写死本机数据/资源目录会直接导致换机、换挂载点后功能失效（真实故障形态）。
+    #   为不误伤正确写法，精筛排除了两类（见 lib/checks/hardcoded-path.js::isReasonableAbsolutePath）：
+    #   ① 临时目录 /tmp /var/tmp /dev/shm（跨机语义一致）
+    #   ② 系统工具目录 /usr/bin /usr/local/bin /var/packages…（多候选探测是 tool-self-detection
+    #      要求的正确做法，把它当硬编码拦等于逼项目只能依赖 PATH）
+    #   文档类文件仍降级为 warning（示例路径属说明内容，见 lib/checks/regex.js 的文档降级）。
+    severity: "blocker"
     description: "字符串里写死本机绝对路径（/volume1、/home、/Users、C:\\、\\\\server\\share、file://），换机/迁移/换挂载点后失效；应改为相对路径（基准 = 文件所在目录）、path.join 或配置项传入"
     patterns:
       - "/(volume[0-9]+|home|Users|var|usr|opt|tmp|mnt|srv|etc|root|Applications|Volumes)/[^\\s\"'`),;]+"

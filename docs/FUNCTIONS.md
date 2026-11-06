@@ -22,16 +22,16 @@
 | `aggregateFindings` | 82-103 | 22 | `export function aggregateFindings(findings = [], opts = {}) {` |
 | `runAuditApi` | 111-173 | 63 | `export async function runAuditApi(repo, params = {}, cfg = {}) {` |
 
-### lib/app/command-registry.js（310 行 · 6 个函数）
+### lib/app/command-registry.js（311 行 · 6 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `applyFlagToken` | 248-264 | 17 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
-| `validateParamConstraints` | 267-273 | 7 | `function validateParamConstraints(args, params) {` |
-| `parseRegistryArgs` | 275-295 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
-| `registryByName` | 298-300 | 3 | `export function registryByName(name) {` |
-| `registryByCli` | 303-305 | 3 | `export function registryByCli(cli) {` |
-| `buildToolsListText` | 308-310 | 3 | `export function buildToolsListText() {` |
+| `applyFlagToken` | 249-265 | 17 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
+| `validateParamConstraints` | 268-274 | 7 | `function validateParamConstraints(args, params) {` |
+| `parseRegistryArgs` | 276-296 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
+| `registryByName` | 299-301 | 3 | `export function registryByName(name) {` |
+| `registryByCli` | 304-306 | 3 | `export function registryByCli(cli) {` |
+| `buildToolsListText` | 309-311 | 3 | `export function buildToolsListText() {` |
 
 ### lib/app/handlers/account.js（166 行 · 10 个函数）
 
@@ -86,7 +86,7 @@
 | `handleToggleRule` | 168-176 | 9 | `export function handleToggleRule(ctx) {` |
 | `handleExemptHint` | 188-213 | 26 | `export function handleExemptHint(ctx) {` |
 
-### lib/app/handlers/npm.js（170 行 · 7 个函数）
+### lib/app/handlers/npm.js（172 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -95,8 +95,8 @@
 | `handleNpmCheck` | 53-73 | 21 | `export function handleNpmCheck(ctx) {` |
 | `handleNpmOwned` | 76-86 | 11 | `export async function handleNpmOwned(ctx) {` |
 | `handleNpmPackages` | 92-116 | 25 | `export function handleNpmPackages(ctx) {` |
-| `handleNpmInstall` | 122-144 | 23 | `export function handleNpmInstall(ctx) {` |
-| `handleNpmPublish` | 150-169 | 20 | `export async function handleNpmPublish(ctx) {` |
+| `handleNpmInstall` | 122-146 | 25 | `export function handleNpmInstall(ctx) {` |
+| `handleNpmPublish` | 152-171 | 20 | `export async function handleNpmPublish(ctx) {` |
 
 ### lib/app/handlers/repo-actions.js（145 行 · 5 个函数）
 
@@ -238,33 +238,33 @@
 | `getLastSlotHitStats` | 28-30 | 3 | `export function getLastSlotHitStats() {` |
 | `getLastSlotHitMeta` | 33-35 | 3 | `export function getLastSlotHitMeta() {` |
 
-### lib/app/tool-call.js（828 行 · 23 个函数）
+### lib/app/tool-call.js（832 行 · 23 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `pushWithPostSteps` | 58-124 | 67 | `async function pushWithPostSteps(args, env, cfg) {` |
-| `pushJobOutcome` | 145-177 | 33 | `export function pushJobOutcome(r = {}) {` |
-| `short` | 147-147 | 1 | `const short = (sha) => String(sha \|\| '').slice(0, 8);` |
-| `cloneJobOutcome` | 185-190 | 6 | `export function cloneJobOutcome(r = {}) {` |
-| `buildCommitPushJobSpec` | 193-210 | 18 | `function buildCommitPushJobSpec(repo, doPush) {` |
-| `done` | 198-206 | 9 | `const done = (async () => {` |
-| `startHostJob` | 223-230 | 8 | `function startHostJob(jobs, spec, owner) {` |
-| `callCloneJob` | 244-276 | 33 | `async function callCloneJob(args, jobs, exec, log, env = {}, cfg = {}) {` |
-| `callNpmPublishJob` | 284-367 | 84 | `async function callNpmPublishJob(args = {}, jobs, exec, log, env = {}, cfg = {}) {` |
-| `outcome` | 318-342 | 25 | `const outcome = (r) => {` |
-| `done` | 351-353 | 3 | `const done = (async () => {` |
-| `buildCloneJobSpec` | 370-387 | 18 | `function buildCloneJobSpec(target, dest, doClone) {` |
-| `done` | 375-383 | 9 | `const done = (async () => {` |
-| `callCommitPush` | 394-440 | 47 | `async function callCommitPush(args, env, cfg, log, jobs, exec) {` |
-| `doPush` | 413-413 | 1 | `const doPush = () => pushWithPostSteps(args, env, cfg);` |
-| `buildAuditOpts` | 451-465 | 15 | `function buildAuditOpts(args, cfg, scope) {` |
-| `runHistoryAuditTool` | 471-497 | 27 | `async function runHistoryAuditTool(args, env, cfg, jobs, exec, weights) {` |
-| `doHistory` | 477-480 | 4 | `const doHistory = async () => {` |
-| `callCodeAudit` | 499-511 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
-| `runStandardAuditTool` | 514-555 | 42 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
-| `callTool` | 557-799 | 243 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null, fsCtx = null) {` |
-| `shellSplit` | 802-820 | 19 | `function shellSplit(input) {` |
-| `readTextSafe` | 823-827 | 5 | `function readTextSafe(path = '') {` |
+| `pushWithPostSteps` | 58-126 | 69 | `async function pushWithPostSteps(args, env, cfg) {` |
+| `pushJobOutcome` | 147-179 | 33 | `export function pushJobOutcome(r = {}) {` |
+| `short` | 149-149 | 1 | `const short = (sha) => String(sha \|\| '').slice(0, 8);` |
+| `cloneJobOutcome` | 187-192 | 6 | `export function cloneJobOutcome(r = {}) {` |
+| `buildCommitPushJobSpec` | 195-212 | 18 | `function buildCommitPushJobSpec(repo, doPush) {` |
+| `done` | 200-208 | 9 | `const done = (async () => {` |
+| `startHostJob` | 225-232 | 8 | `function startHostJob(jobs, spec, owner) {` |
+| `callCloneJob` | 246-278 | 33 | `async function callCloneJob(args, jobs, exec, log, env = {}, cfg = {}) {` |
+| `callNpmPublishJob` | 286-369 | 84 | `async function callNpmPublishJob(args = {}, jobs, exec, log, env = {}, cfg = {}) {` |
+| `outcome` | 320-344 | 25 | `const outcome = (r) => {` |
+| `done` | 353-355 | 3 | `const done = (async () => {` |
+| `buildCloneJobSpec` | 372-389 | 18 | `function buildCloneJobSpec(target, dest, doClone) {` |
+| `done` | 377-385 | 9 | `const done = (async () => {` |
+| `callCommitPush` | 396-442 | 47 | `async function callCommitPush(args, env, cfg, log, jobs, exec) {` |
+| `doPush` | 415-415 | 1 | `const doPush = () => pushWithPostSteps(args, env, cfg);` |
+| `buildAuditOpts` | 453-467 | 15 | `function buildAuditOpts(args, cfg, scope) {` |
+| `runHistoryAuditTool` | 473-499 | 27 | `async function runHistoryAuditTool(args, env, cfg, jobs, exec, weights) {` |
+| `doHistory` | 479-482 | 4 | `const doHistory = async () => {` |
+| `callCodeAudit` | 501-513 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
+| `runStandardAuditTool` | 516-558 | 43 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
+| `callTool` | 560-803 | 244 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null, fsCtx = null) {` |
+| `shellSplit` | 806-824 | 19 | `function shellSplit(input) {` |
+| `readTextSafe` | 827-831 | 5 | `function readTextSafe(path = '') {` |
 
 ### lib/app/tools.js（34 行 · 2 个函数）
 
@@ -338,22 +338,26 @@
 | `literalAfterPrefix` | 282-291 | 10 | `function literalAfterPrefix(tokens, next, opIdx) {` |
 | `checkCredentialRefAst` | 293-315 | 23 | `export function checkCredentialRefAst(text = '', tree = null) {` |
 
-### lib/ast/dataflow.js（274 行 · 12 个函数）
+### lib/ast/dataflow.js（391 行 · 16 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `collectDeclaredFnBodies` | 52-274 | 223 | `function collectDeclaredFnBodies(tokens) {` |
-| `collectArrowMethodBodies` | 69-274 | 206 | `function collectArrowMethodBodies(tokens) {` |
-| `mergeFnRanges` | 94-115 | 22 | `function mergeFnRanges(fnRanges, tokens) {` |
-| `collectFnBodies` | 118-121 | 4 | `function collectFnBodies(tokens) {` |
-| `prevNonWs` | 124-130 | 7 | `function prevNonWs(tokens, i) {` |
-| `nextNonWs` | 133-140 | 8 | `function nextNonWs(tokens, i, to) {` |
-| `applyArgWriteback` | 143-150 | 8 | `function applyArgWriteback(tokens, i, nxt, obj, clearMap) {` |
-| `applyAssignClearOrWriteback` | 156-173 | 18 | `function applyAssignClearOrWriteback(tokens, i, to, t, nxt, obj, clearMap) {` |
-| `applyClearMethods` | 179-197 | 19 | `function applyClearMethods(t, member, memberIdx, callOpen, tokens, obj, clearMap, i) {` |
-| `applyAccessAfterClear` | 203-219 | 17 | `function applyAccessAfterClear(t, nxt, member, memberIdx, callOpen, tokens, i, obj, clearMap, out) {` |
-| `scanClearThenAccess` | 229-252 | 24 | `function scanClearThenAccess(tokens, from, to) {` |
-| `checkClearAccessAst` | 260-274 | 15 | `export function checkClearAccessAst(text = '') {` |
+| `collectDeclaredFnBodies` | 60-391 | 332 | `function collectDeclaredFnBodies(tokens) {` |
+| `collectArrowMethodBodies` | 77-391 | 315 | `function collectArrowMethodBodies(tokens) {` |
+| `collectPythonDefBodies` | 117-163 | 47 | `function collectPythonDefBodies(text, tokens) {` |
+| `indentOf` | 122-125 | 4 | `const indentOf = (s) => {` |
+| `isBlankOrComment` | 126-126 | 1 | `const isBlankOrComment = (s) => !s.trim() \|\| /^\s*#/.test(s);` |
+| `mergeFnRanges` | 166-187 | 22 | `function mergeFnRanges(fnRanges, tokens) {` |
+| `collectFnBodies` | 194-201 | 8 | `function collectFnBodies(tokens, text = '') {` |
+| `prevNonWs` | 204-210 | 7 | `function prevNonWs(tokens, i) {` |
+| `nextNonWs` | 213-220 | 8 | `function nextNonWs(tokens, i, to) {` |
+| `applyArgWriteback` | 223-230 | 8 | `function applyArgWriteback(tokens, i, nxt, obj, clearMap) {` |
+| `applyAssignClearOrWriteback` | 236-265 | 30 | `function applyAssignClearOrWriteback(tokens, i, to, t, nxt, obj, clearMap) {` |
+| `applyClearMethods` | 271-289 | 19 | `function applyClearMethods(t, member, memberIdx, callOpen, tokens, obj, clearMap, i) {` |
+| `applyAccessAfterClear` | 295-316 | 22 | `function applyAccessAfterClear(t, nxt, member, memberIdx, callOpen, tokens, i, obj, clearMap, out, to) {` |
+| `isWriteSubscript` | 319-336 | 18 | `function isWriteSubscript(tokens, objIdx, to) {` |
+| `scanClearThenAccess` | 346-369 | 24 | `function scanClearThenAccess(tokens, from, to) {` |
+| `checkClearAccessAst` | 377-391 | 15 | `export function checkClearAccessAst(text = '') {` |
 
 ### lib/ast/dup-code.js（166 行 · 4 个函数）
 
@@ -467,14 +471,15 @@
 | `isNamedConstantValue` | 217-224 | 8 | `function isNamedConstantValue(tokens, numIdx) {` |
 | `collectPythonEnumAssignLines` | 246-272 | 27 | `function collectPythonEnumAssignLines(text) {` |
 
-### lib/ast/naming.js（285 行 · 4 个函数）
+### lib/ast/naming.js（293 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `checkNameLengthAst` | 26-191 | 166 | `export function checkNameLengthAst(text = '', { min = 2, allow = [] } = {}) {` |
-| `checkShortFunctionNameAst` | 205-220 | 16 | `export function checkShortFunctionNameAst(text = '', { max = 2, allow = [] } = {}) {` |
-| `checkSmallFileReadAst` | 236-259 | 24 | `export function checkSmallFileReadAst(text = '') {` |
-| `checkConsoleLogJsonAst` | 268-284 | 17 | `export function checkConsoleLogJsonAst(text = '') {` |
+| `checkNameLengthAst` | 27-192 | 166 | `export function checkNameLengthAst(text = '', { min = 2, allow = [] } = {}) {` |
+| `checkShortFunctionNameAst` | 206-228 | 23 | `export function checkShortFunctionNameAst(text = '', { max = 2, allow = [], tree = null } = {}) {` |
+| `isShortName` | 213-213 | 1 | `const isShortName = (name) => String(name).length <= max && !ALLOW.has(name);` |
+| `checkSmallFileReadAst` | 244-267 | 24 | `export function checkSmallFileReadAst(text = '') {` |
+| `checkConsoleLogJsonAst` | 276-292 | 17 | `export function checkConsoleLogJsonAst(text = '') {` |
 
 ### lib/ast/perf.js（489 行 · 19 个函数）
 
@@ -597,7 +602,7 @@
 | `consumeTemplate` | 377-388 | 12 | `function consumeTemplate(src, i, n, push) {` |
 | `consumeRegex` | 391-396 | 6 | `function consumeRegex(src, i, n, tokens, push) { // dsh-skip-complexity: 正则状态机（转义/字符组/闭包三态，天然多分支）` |
 
-### lib/ast/treesitter.js（364 行 · 17 个函数）
+### lib/ast/treesitter.js（414 行 · 19 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -617,7 +622,9 @@
 | `credentialLinesFromTree` | 288-355 | 68 | `export function credentialLinesFromTree(tree, credHit) {` |
 | `isPlainLiteral` | 299-305 | 7 | `const isPlainLiteral = (node) => {` |
 | `walk` | 307-348 | 42 | `const walk = (node) => {` |
-| `resetTreeSitterCache` | 358-363 | 6 | `export function resetTreeSitterCache() {  modPromise = null;` |
+| `shortFunctionNamesFromTree` | 373-405 | 33 | `export function shortFunctionNamesFromTree(tree, isShort) {` |
+| `walk` | 380-398 | 19 | `const walk = (node) => {` |
+| `resetTreeSitterCache` | 408-413 | 6 | `export function resetTreeSitterCache() {  modPromise = null;` |
 
 ### lib/audit/analysis-coverage.js（99 行 · 5 个函数）
 
@@ -841,7 +848,7 @@
 | `smartHitLines` | 70-73 | 4 | `export function smartHitLines(text) {` |
 | `smallFileReadLines` | 83-87 | 5 | `export function smallFileReadLines(text) {` |
 | `consoleLogJsonLines` | 95-97 | 3 | `export function consoleLogJsonLines(text) {` |
-| `shortFuncNameLines` | 105-107 | 3 | `export function shortFuncNameLines(text) {` |
+| `shortFuncNameLines` | 105-107 | 3 | `export function shortFuncNameLines(text, tree) {` |
 | `placeholderCredentialLines` | 118-120 | 3 | `export function placeholderCredentialLines(text, file) {` |
 | `credentialValueLines` | 122-124 | 3 | `export function credentialValueLines(text, tree) {` |
 | `ioRiskLines` | 138-140 | 3 | `export function ioRiskLines(text) {` |
@@ -953,16 +960,16 @@
 |------|------|------|------|
 | `checkPrivateFiles` | 25-64 | 40 | `export function checkPrivateFiles({ root, visibility = 'unknown', privateFiles = [] }) {` |
 
-### lib/checks/regex.js（294 行 · 6 个函数）
+### lib/checks/regex.js（299 行 · 6 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `pickExemptHint` | 28-47 | 20 | `export function pickExemptHint(rule) {` |
 | `hit` | 31-31 | 1 | `const hit = (words) => (Array.isArray(words) ? words : []).some((w) => id.includes(w));` |
-| `checkRegexRules` | 58-216 | 159 | `export function checkRegexRules({ file, text, rules, source = '新增行', repoPath = '', treeConfirm = null }) {` |
+| `checkRegexRules` | 58-221 | 164 | `export function checkRegexRules({ file, text, rules, source = '新增行', repoPath = '', treeConfirm = null }) {` |
 | `inComment` | 94-101 | 8 | `const inComment = (line, col) => {` |
-| `checkPathRegexRules` | 219-235 | 17 | `export function checkPathRegexRules({ file, relPath, rules }) {` |
-| `checkBlacklist` | 245-293 | 49 | `export function checkBlacklist({ file, text, rules }) {` |
+| `checkPathRegexRules` | 224-240 | 17 | `export function checkPathRegexRules({ file, relPath, rules }) {` |
+| `checkBlacklist` | 250-298 | 49 | `export function checkBlacklist({ file, text, rules }) {` |
 
 ### lib/checks/scope-collision.js（69 行 · 1 个函数）
 
@@ -1584,11 +1591,11 @@
 | `readCfg` | 126-129 | 4 | `const readCfg = (key) => {` |
 | `stillMissing` | 147-147 | 1 | `const stillMissing = (id.missing.name && !written.some((w) => w.startsWith('user.name=')))` |
 
-### lib/git/ignore.js（70 行 · 1 个函数）
+### lib/git/ignore.js（72 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `ensureGitignore` | 29-69 | 41 | `export async function ensureGitignore(repoPath, { customIgnorePatterns = '' } = {}) {` |
+| `ensureGitignore` | 29-71 | 43 | `export async function ensureGitignore(repoPath, { customIgnorePatterns = '', onlyPaths = null, scanSensitive = true } = {}) {` |
 
 ### lib/git/index-format.js（183 行 · 9 个函数）
 
@@ -1604,16 +1611,18 @@
 | `listIndexFiles` | 173-177 | 5 | `export function listIndexFiles(dir) {` |
 | `indexDirOf` | 180-182 | 3 | `export function indexDirOf(filePath) {` |
 
-### lib/git/init-compat.js（163 行 · 6 个函数）
+### lib/git/init-compat.js（242 行 · 8 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `fsSupportsChmod` | 37-51 | 15 | `export function fsSupportsChmod(dir) {` |
-| `writeMinimalGitDir` | 64-83 | 20 | `export function writeMinimalGitDir(dir, { branch = 'master', remoteName = 'origin', remoteUrl = '' } = {}) {` |
-| `initRepoCompat` | 97-113 | 17 | `export function initRepoCompat(dir, { branch = 'master', remoteUrl = '', chmodOk, gitInit } = {}) {` |
-| `isUsableRepo` | 123-133 | 11 | `export function isUsableRepo(dir) {` |
-| `ensureUsableLocalRepo` | 150-157 | 8 | `export function ensureUsableLocalRepo(dir, { branch = 'master', remoteUrl = '', remoteName = 'origin', chmodOk, gitInit } = {}) {` |
-| `hasGitDir` | 160-162 | 3 | `export function hasGitDir(dir) {` |
+| `fsSupportsChmod` | 38-52 | 15 | `export function fsSupportsChmod(dir) {` |
+| `writeMinimalGitDir` | 65-87 | 23 | `export function writeMinimalGitDir(dir, { branch = 'master', remoteName = 'origin', remoteUrl = '' } = {}) {` |
+| `registerTrustedRepo` | 107-128 | 22 | `export function registerTrustedRepo(dir, exec) {` |
+| `initRepoCompat` | 142-158 | 17 | `export function initRepoCompat(dir, { branch = 'master', remoteUrl = '', chmodOk, gitInit } = {}) {` |
+| `unregisterTrustedRepo` | 169-184 | 16 | `export function unregisterTrustedRepo(dir, exec) {` |
+| `isUsableRepo` | 194-204 | 11 | `export function isUsableRepo(dir) {` |
+| `ensureUsableLocalRepo` | 221-236 | 16 | `export function ensureUsableLocalRepo(dir, { branch = 'master', remoteUrl = '', remoteName = 'origin', chmodOk, gitInit } = {}) {` |
+| `hasGitDir` | 239-241 | 3 | `export function hasGitDir(dir) {` |
 
 ### lib/git/module-splitter.js（48 行 · 1 个函数）
 
@@ -1638,20 +1647,20 @@
 | `classifyPushFailure` | 109-129 | 21 | `export function classifyPushFailure(text = '', opts = {}) {` |
 | `describePushDiagnosis` | 137-142 | 6 | `export function describePushDiagnosis(dg = {}) {` |
 
-### lib/git/push.js（535 行 · 10 个函数）
+### lib/git/push.js（558 行 · 10 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `resolveRepoIdentity` | 39-45 | 7 | `function resolveRepoIdentity(repoPath) {` |
-| `commitAndPush` | 59-279 | 221 | `export async function commitAndPush({` |
-| `legacyIdentity` | 172-181 | 10 | `const legacyIdentity = (() => {` |
-| `collectCi` | 225-232 | 8 | `const collectCi = async () => {` |
-| `fetchRemoteBranchRef` | 292-305 | 14 | `async function fetchRemoteBranchRef(repoPath, branch, owner, repo) {` |
-| `enhanceAfterPushSuccess` | 313-463 | 151 | `async function enhanceAfterPushSuccess({ repoPath, pr, token, steps, commitSha, remote = '' }) {` |
-| `lsRemoteProbe` | 372-393 | 22 | `const lsRemoteProbe = () => {` |
-| `lsRemoteSha` | 395-395 | 1 | `const lsRemoteSha = () => lsRemoteProbe().sha;` |
-| `readmeCheckHint` | 468-473 | 6 | `export function readmeCheckHint(repoPath) {` |
-| `pushCurrentBranch` | 482-534 | 53 | `export async function pushCurrentBranch({ repoPath = '', pushMethod = 'ssh', remote = '' } = {}) {` |
+| `commitAndPush` | 59-302 | 244 | `export async function commitAndPush({` |
+| `legacyIdentity` | 195-204 | 10 | `const legacyIdentity = (() => {` |
+| `collectCi` | 248-255 | 8 | `const collectCi = async () => {` |
+| `fetchRemoteBranchRef` | 315-328 | 14 | `async function fetchRemoteBranchRef(repoPath, branch, owner, repo) {` |
+| `enhanceAfterPushSuccess` | 336-486 | 151 | `async function enhanceAfterPushSuccess({ repoPath, pr, token, steps, commitSha, remote = '' }) {` |
+| `lsRemoteProbe` | 395-416 | 22 | `const lsRemoteProbe = () => {` |
+| `lsRemoteSha` | 418-418 | 1 | `const lsRemoteSha = () => lsRemoteProbe().sha;` |
+| `readmeCheckHint` | 491-496 | 6 | `export function readmeCheckHint(repoPath) {` |
+| `pushCurrentBranch` | 505-557 | 53 | `export async function pushCurrentBranch({ repoPath = '', pushMethod = 'ssh', remote = '' } = {}) {` |
 
 ### lib/git/remote-resolve.js（147 行 · 6 个函数）
 
@@ -1736,15 +1745,15 @@
 | `collect` | 130-139 | 10 | `const collect = () => {` |
 | `stopScanWatch` | 156-159 | 4 | `export function stopScanWatch({ workspaceRoot = '' } = {}) {` |
 
-### lib/git/sensitive.js（135 行 · 5 个函数）
+### lib/git/sensitive.js（164 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `escapeRegExp` | 43-45 | 3 | `function escapeRegExp(s) {` |
 | `sensitiveLineMatch` | 48-67 | 20 | `function sensitiveLineMatch(line) {` |
 | `scanOneSensitiveFile` | 84-110 | 27 | `async function scanOneSensitiveFile(dir, it, relPath) {` |
-| `scanSensitiveFiles` | 112-134 | 23 | `export async function scanSensitiveFiles(repoPath) {` |
-| `walk` | 116-131 | 16 | `const walk = async (dir, rel) => {` |
+| `scanSensitiveFiles` | 122-163 | 42 | `export async function scanSensitiveFiles(repoPath, { onlyPaths = null } = {}) {` |
+| `walk` | 145-160 | 16 | `const walk = async (dir, rel) => {` |
 
 ### lib/git/transport.js（499 行 · 18 个函数）
 
@@ -1815,22 +1824,25 @@
 | `checkLinks` | 158-182 | 25 | `export async function checkLinks({ file = '', text = '', fetcher, concurrency, timeoutMs, maxLinks = DEFAULT_OPTS.maxLinks } = {}) {` |
 | `sumLinkPenalty` | 185-187 | 3 | `export function sumLinkPenalty(findings = []) {` |
 
-### lib/lint-adapter/detect.js（132 行 · 6 个函数）
+### lib/lint-adapter/detect.js（162 行 · 9 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `isExecutable` | 37-47 | 11 | `function isExecutable(p) {` |
 | `hasConfig` | 50-63 | 14 | `function hasConfig(repoRoot, linter) {` |
-| `resolveBin` | 69-92 | 24 | `export function resolveBin(repoRoot, linter) {` |
-| `tryWhich` | 95-106 | 12 | `function tryWhich(bin) {` |
-| `detectLinters` | 112-121 | 10 | `export function detectLinters(repoRoot) {` |
-| `tryVersion` | 124-131 | 8 | `function tryVersion(bin) {` |
+| `resolveBin` | 71-76 | 6 | `export function resolveBin(repoRoot, linter) {` |
+| `tryWhich` | 79-90 | 12 | `function tryWhich(bin) {` |
+| `detectLinters` | 96-98 | 3 | `export function detectLinters(repoRoot) {` |
+| `detectLinterStatus` | 110-120 | 11 | `export function detectLinterStatus(repoRoot) {` |
+| `binCandidates` | 123-135 | 13 | `function binCandidates(repoRoot, linter) {` |
+| `resolveBinDetailed` | 138-151 | 14 | `function resolveBinDetailed(repoRoot, linter) {` |
+| `tryVersion` | 154-161 | 8 | `function tryVersion(bin) {` |
 
-### lib/lint-adapter/index.js（37 行 · 1 个函数）
+### lib/lint-adapter/index.js（51 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `runLintAdapters` | 19-34 | 16 | `export async function runLintAdapters(repoRoot, opts = {}) {` |
+| `runLintAdapters` | 19-48 | 30 | `export async function runLintAdapters(repoRoot, opts = {}) {` |
 
 ### lib/lint-adapter/runner.js（134 行 · 5 个函数）
 
@@ -1876,14 +1888,15 @@
 | `proxyToUpstream` | 75-92 | 18 | `async function proxyToUpstream(req, res) {` |
 | `runLocalPreview` | 174-242 | 69 | `export async function runLocalPreview({` |
 
-### lib/npm/npmrc.js（57 行 · 4 个函数）
+### lib/npm/npmrc.js（74 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `registryAuthPrefix` | 16-23 | 8 | `export function registryAuthPrefix(registry = '') {` |
-| `npmrcText` | 26-34 | 9 | `export function npmrcText({ registry = 'https://registry.npmjs.org/', token = '' } = {}) {` |
-| `writeNpmrc` | 40-48 | 9 | `export function writeNpmrc({ workspaceRoot = '', registry = 'https://registry.npmjs.org/', token = '' } = {}) {` |
-| `npmArgs` | 51-56 | 6 | `export function npmArgs({ npmrcFile = '', registry = 'https://registry.npmjs.org/' } = {}) {` |
+| `effectiveRegistry` | 25-28 | 4 | `function effectiveRegistry(registry) {` |
+| `registryAuthPrefix` | 31-38 | 8 | `export function registryAuthPrefix(registry = '') {` |
+| `npmrcText` | 41-50 | 10 | `export function npmrcText({ registry = DEFAULT_REGISTRY, token = '' } = {}) {` |
+| `writeNpmrc` | 56-64 | 9 | `export function writeNpmrc({ workspaceRoot = '', registry = 'https://registry.npmjs.org/', token = '' } = {}) {` |
+| `npmArgs` | 67-73 | 7 | `export function npmArgs({ npmrcFile = '', registry = DEFAULT_REGISTRY } = {}) {` |
 
 ### lib/npm/publish.js（300 行 · 8 个函数）
 
@@ -2312,16 +2325,6 @@
 | `parseArgs` | 31-43 | 13 | `function parseArgs(argv) {` |
 | `collectFiles` | 46-67 | 22 | `function collectFiles(dir, o, out = []) {` |
 
-### scripts/scan-hardcoded-paths.mjs（126 行 · 5 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `has` | 27-27 | 1 | `const has = (f) => argv.includes(f);` |
-| `engineFindings` | 34-50 | 17 | `export async function engineFindings(root) {` |
-| `walk` | 38-47 | 10 | `const walk = (x) => {` |
-| `scanHardcodedPaths` | 56-80 | 25 | `export async function scanHardcodedPaths(root) {` |
-| `main` | 83-121 | 39 | `async function main() {` |
-
 ### scripts/scan-repos.mjs（167 行 · 9 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2523,12 +2526,13 @@
 | `noSleep` | 50-51 | 2 | `const noSleep = async () => {};` |
 | `fakeNow` | 52-52 | 1 | `const fakeNow = () => clock;` |
 
-### test/test-cifs-init.mjs（86 行 · 2 个函数）
+### test/test-cifs-init.mjs（158 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `withDir` | 27-30 | 4 | `function withDir(fn) {` |
-| `gitOk` | 32-34 | 3 | `const gitOk = (dir, args) => {` |
+| `withDir` | 34-40 | 7 | `function withDir(fn) {` |
+| `readGlobalSafeDirs` | 49-55 | 7 | `const readGlobalSafeDirs = () => {` |
+| `gitOk` | 57-59 | 3 | `const gitOk = (dir, args) => {` |
 
 ### test/test-cli-audit-parity.mjs（68 行 · 1 个函数）
 
@@ -2636,6 +2640,18 @@
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `extsOf` | 17-27 | 11 | `function extsOf(id) {` |
+
+### test/test-dataflow-clear-fp.mjs（92 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `n` | 23-23 | 1 | `const n = (src) => checkClearAccessAst(src).length;` |
+
+### test/test-dataflow-py-bodies.mjs（71 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `n` | 21-21 | 1 | `const n = (src) => checkClearAccessAst(src).length;` |
 
 ### test/test-dataflow.mjs（116 行 · 1 个函数）
 
@@ -2858,7 +2874,7 @@
 |------|------|------|------|
 | `fakeFetch` | 14-21 | 8 | `function fakeFetch(map = {}) {` |
 
-### test/test-lint-adapter.mjs（165 行 · 2 个函数）
+### test/test-lint-adapter.mjs（193 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -3113,6 +3129,14 @@
 |------|------|------|------|
 | `makeFixture` | 51-55 | 5 | `async function makeFixture() {` |
 | `hardLines` | 57-62 | 6 | `function hardLines(res) {` |
+
+### test/test-tree-first-funcname.mjs（131 行 · 3 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `makeFixture` | 59-63 | 5 | `async function makeFixture() {` |
+| `hitLines` | 65-65 | 1 | `const hitLines = (res) => res.findings` |
+| `isShort` | 116-116 | 1 | `const isShort = (n) => String(n).length <= 2 && !['tr', 't'].includes(n);` |
 
 ### test/test-treesitter-grammars.mjs（241 行 · 5 个函数）
 

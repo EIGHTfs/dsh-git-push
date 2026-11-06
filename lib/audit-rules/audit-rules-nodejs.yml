@@ -63,7 +63,14 @@ rules:
     category: "readability"
     severity: "warning"
     description: "函数名 ≤2 字符是缩写（如 gU），无法从名字猜出含义"
-    pattern: "\\bfunction\\s+[a-zA-Z_$][a-zA-Z0-9_$]{0,1}\\s*\\("
+    patterns:
+      - "\\bfunction\\s+[a-zA-Z_$][a-zA-Z0-9_$]{0,1}\\s*\\("
+      # 方法定义行（class A { gh() {} } / const o = { ef() {} }）不含 function 关键字，
+      #   第一条 pattern 结构上不可能命中它们 ⇒ 候选行都进不来，树化后照样漏报（实测踩过：
+      #   allow 精筛前必须先过初筛）。这里只做**粗筛**（行首短标识符 + 左括号），
+      #   是否真是「定义」由 short-func-name 精筛（语法树 method_definition 节点）判定——
+      #   因此 `  ab(1);` 这类调用行虽进候选，也不会被报。
+      - "^\\s*[a-zA-Z_$][a-zA-Z0-9_$]{0,1}\\s*\\("
     # 2026-09-13 误报修复（正则初筛 → AST 精筛）：i18n 领域标准缩写（tr/t/L 等翻译、
     #   字典函数名）长度 ≤2 但含义公认，纯正则命中即报会把它们当「无法猜出含义」报掉。
     #   astConfirmKind: short-func-name → token 级判定（checkShortFunctionNameAst）：

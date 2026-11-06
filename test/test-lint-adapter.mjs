@@ -16,7 +16,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
 import '../lib/rule/compilers.js';
-import { detectLinters } from '../lib/lint-adapter/detect.js';
+import { detectLinters, detectLinterStatus } from '../lib/lint-adapter/detect.js';
 import { runLinter, ruffItemToFinding } from '../lib/lint-adapter/runner.js';
 import { runLintAdapters } from '../lib/lint-adapter/index.js';
 import { isBlockerFinding, summarize } from '../lib/audit/finding.js';
@@ -160,5 +160,33 @@ test('端到端：auditFull 并入外部 finding 后计入评分与报告，但 
     assert.equal(bAfter, bBefore, `blocker 数不得因委托增加（before=${bBefore} after=${bAfter}）`);
     // 外部计入评分维度：after 的可维护性/健壮性计数应 ≥ before
     assert.ok(after.findings.length > before.findings.length, '外部 finding 应并入 findings');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+// ───────────── ⑤ 可观测性 bugfix：工具不可用必须与「没配置」区分 ─────────────
+test('⑤ 有配置但工具缺可执行位 → linted 记 unavailable 且给出修复动作（不再静默为空）', async () => {
+  // 复现真实事故：部署副本迁移用 cp/同步不保 mode，tools/ruff 变成 0600/0644。
+  const dir = makeProject({ withRuff: true, script: 'echo "ruff 0.17.4"' });
+  const bin = join(dir, 'tools', 'ruff');
+  try {
+    if (process.platform !== 'win32') chmodSync(bin, 0o600); // 剥夺 x 位，保留文件存在
+    const st = detectLinterStatus(dir);
+    assert.deepEqual(st.ok, [], '缺可执行位不得判为可委托');
+    assert.equal(st.unavailable.length, 1, '必须产出 unavailable 一条（区别于「没配置」的空）');
+    assert.match(st.unavailable[0].reason, /不可执行|chmod/, '原因要指向「存在但缺 +x」并给出修复动作');
+
+    const la = await runLintAdapters(dir);
+    assert.deepEqual(la.findings, [], '不可用时不产出');
+    assert.equal(la.linted.length, 1, '不可用也要进 linted（否则报告里看不见）');
+    assert.equal(la.linted[0].unavailable, true);
+    assert.equal(la.linted[0].count, 0);
+    assert.match(la.linted[0].note, /未委托/, 'note 明示未委托而非「判定无问题」');
+
+    // 对照：项目压根没配 ruff → unavailable 必须为空（两种沉默要能区分）
+    const noCfg = mkdtempSync(join(tmpdir(), 'dshgp-lint-nocfg-'));
+    writeFileSync(join(noCfg, 'README.md'), '# no linter config\n');
+    const st2 = detectLinterStatus(noCfg);
+    assert.deepEqual(st2.unavailable, [], '没配置时不该报 unavailable（不是缺陷）');
+    rmSync(noCfg, { recursive: true, force: true });
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
