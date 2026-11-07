@@ -187,6 +187,12 @@ pnpm add github:EIGHTfs/dsh-git-push#<commit>
 
 ### 7.3 客户端 UI 三选项卡重写（2026-09-12）
 
+> ⚠️ **现状变更（2026-11-08）**：UI 与审计解耦后，**审计 Tab 已移出构建**，页面现为**两选项卡**
+> （账号信息 / 设置）。审计侧分片归档在 `lib/client-parts/audit/`（不参与构建），
+> git 侧分片在 `lib/client-parts/git/`（13 片，参与构建）。**后端审计能力完全不变**
+> （提交门禁、code_audit 等 5 个工具、4 个 HTTP 接口、审计设置键全部保留）。
+> 下文的「三选项卡」描述的是当时形态，保留作历史记录。
+
 **用户决策**：删设置配置卡（`settings.plugin.item`），只保留侧边栏独立页（`settings.section`），页面重写为**三个大选项卡**（对齐插件市场 .tabs/.tab/.on，参考 skill 记分板）：
 
 1. **账号信息**（纯展示）：`GET /api/git-push/account-check` → GitHub 登录态/用户名/公钥指纹/套餐，`block` 文本直接展示。

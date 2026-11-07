@@ -24,9 +24,12 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-// 分片文件名不带数字序号（顺序唯一权威 = scripts/build-client.mjs 的 PART_ORDER）
-const cssSrc = readFileSync(join(ROOT, 'lib/client-parts/const.js'), 'utf8');
-const pickerSrc = readFileSync(join(ROOT, 'lib/client-parts/browser.js'), 'utf8');
+// 分片文件名不带数字序号（顺序唯一权威 = scripts/build-client.mjs 的 PART_ORDER）；
+// 目录同样以 PARTS_DIR 为唯一来源——分片按侧分目录（git/ 与 audit/）后，
+// 测试若继续硬编码 'lib/client-parts/xxx.js' 会指向不存在的路径。
+const { PARTS_DIR } = await import('../scripts/build-client.mjs');
+const cssSrc = readFileSync(join(PARTS_DIR, 'const.js'), 'utf8');
+const pickerSrc = readFileSync(join(PARTS_DIR, 'browser.js'), 'utf8');
 
 /** 从 CSS 源码里取某条规则的声明体（.{cls}{...} → {...} 内容）。 */
 function ruleBody(cls) {

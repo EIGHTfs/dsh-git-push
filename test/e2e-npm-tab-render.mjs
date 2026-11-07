@@ -14,12 +14,14 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+// 分片目录以 build-client.mjs 的 PARTS_DIR 为唯一来源（分片按侧分目录后不再硬编码路径）
+const { PARTS_DIR } = await import('../scripts/build-client.mjs');
 const read = (p) => readFileSync(join(ROOT, p), 'utf8');
 
 test('分片：npm.js 存在且登记进 PART_ORDER（未登记=不会进产物）', () => {
   // 分片命名不带数字前缀（account.js / actions.js / npm.js …），PART_ORDER 负责顺序；
   //   此前测试写的是 `23-npm.js`，与实现不符——HEAD 上一直红。
-  assert.equal(existsSync(join(ROOT, 'lib/client-parts/npm.js')), true);
+  assert.equal(existsSync(join(PARTS_DIR, 'npm.js')), true);
   const build = read('scripts/build-client.mjs');
   assert.match(build, /'npm\.js'/, 'PART_ORDER 必须登记 npm.js');
 });

@@ -25,7 +25,15 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-export const PARTS_DIR = join(ROOT, 'lib', 'client-parts');
+// 分片按侧分目录（2026-11-08 UI 与审计解耦）：
+//   · lib/client-parts/git/**   —— git / 发布 / 工具链侧，**参与构建**（本文件的 PARTS_DIR）
+//   · lib/client-parts/audit/** —— 审计侧，**不参与构建**（UI 上不再有审计 Tab）
+// 审计侧分片留在源码里可查可改（将来拆成独立项目时整体搬走），但不进产物 ⇒ 不进 UI。
+// 不参与构建的方式：不在 PARTS_DIR 下 ⇒ readParts 的「未登记分片」检查天然扫不到它，
+//   也不会因「缺片」报错（缺片检查只针对 PART_ORDER 里列出的片）。
+export const PARTS_DIR = join(ROOT, 'lib', 'client-parts', 'git');
+/** 不参与构建的分片目录（只做归档，构建脚本不读、不校验）。 */
+export const ARCHIVE_PARTS_DIR = join(ROOT, 'lib', 'client-parts', 'audit');
 export const OUT_FILE = join(ROOT, 'lib', 'client.js');
 
 /**
@@ -36,7 +44,7 @@ export const OUT_FILE = join(ROOT, 'lib', 'client.js');
  * 命名约定：分片文件名**不带数字序号**（顺序只由本表这一处权威声明）。
  *   序号前缀看似方便，实则会漂移——重排/插片时新旧序号并存，扫目录看到的顺序
  *   与真实拼接顺序不一致，比没有序号更坏。顺序信息集中在 PART_ORDER +
- *   每个分片头注释的「第 N/14 片」锚点，改序只改这两处。
+ *   每个分片头注释的「第 N/M 片」锚点，改序只改这两处。
  */
 export const PART_ORDER = [
   'loader.js',     // [1] loader + factory 头 + require + NS（必须首片）
@@ -47,12 +55,11 @@ export const PART_ORDER = [
   'browser.js',    // [6] 目录选择器
   'repo.js',       // [7] 仓库管理卡
   'npm.js',        // [7续] NPM 面板（账号卡 + 装包表单 + npm 凭据字段）
-  'audit.js',      // [8] 审计 Tab
-  'settings.js',   // [9] 设置 Tab
-  'page.js',       // [10] 页面装配（GitPushPage）
-  'controller.js', // [11] Controller：状态机 + 数据加载
-  'actions.js',    // [11续] Controller：动作注入
-  'apply.js',      // [12] 收尾：注册 settings.section + factory 返回（必须末片）
+  'settings.js',   // [8] 设置 Tab（原第 9 片；审计 Tab 已移出构建）
+  'page.js',       // [9] 页面装配（GitPushPage，两选项卡）
+  'controller.js', // [10] Controller：状态机 + 数据加载
+  'actions.js',    // [10续] Controller：动作注入
+  'apply.js',      // [11] 收尾：注册 settings.section + factory 返回（必须末片）
 ];
 
 /** 读出全部分片内容（缺片直接报错，避免拼出半份产物当成功）。 */

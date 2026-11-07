@@ -177,13 +177,19 @@
 |------|------|------|------|
 | `getDefaultScanRoot` | 13-23 | 11 | `export function getDefaultScanRoot(env = {}, cfg = {}) {` |
 
-### lib/app/schema.js（151 行 · 3 个函数）
+### lib/app/schema-audit.js（43 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `auditConfigShape` | 23-42 | 20 | `export function auditConfigShape(Schema) {` |
+
+### lib/app/schema.js（137 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `makeFallbackSchema` | 31-72 | 42 | `function makeFallbackSchema() {` |
 | `fn` | 33-33 | 1 | `const fn = (v) => (v === undefined ? meta.default : v);` |
-| `redactConfig` | 142-150 | 9 | `export function redactConfig(cfg = {}) {` |
+| `redactConfig` | 128-136 | 9 | `export function redactConfig(cfg = {}) {` |
 
 ### lib/app/scope-check.js（70 行 · 2 个函数）
 
@@ -1050,23 +1056,7 @@
 | `printCloneResult` | 153-165 | 13 | `function printCloneResult(r, flags, target, dest) {` |
 | `cmdClone` | 168-175 | 8 | `export async function cmdClone(flags, positional) {` |
 
-### lib/client-parts/account.js（84 行 · 3 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `dshgp_AcctHead` | 3-17 | 15 | `function dshgp_AcctHead(props) {` |
-| `dshgp_AccountCard` | 20-64 | 45 | `function dshgp_AccountCard(props) {` |
-| `dshgp_AccountTab` | 67-82 | 16 | `function dshgp_AccountTab(props) {` |
-
-### lib/client-parts/apply.js（73 行 · 3 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `apply` | 2-66 | 65 | `function apply(ctx) {` |
-| `useCardState` | 42-45 | 4 | `const useCardState = (selector) => {` |
-| `SectionPage` | 48-53 | 6 | `function SectionPage() {` |
-
-### lib/client-parts/audit.js（302 行 · 10 个函数）
+### lib/client-parts/audit/audit.js（302 行 · 10 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1081,7 +1071,23 @@
 | `dshgp_RuleListBlock` | 241-272 | 32 | `function dshgp_RuleListBlock(props) {` |
 | `dshgp_AuditTab` | 279-299 | 21 | `function dshgp_AuditTab(props) {` |
 
-### lib/client-parts/browser.js（107 行 · 7 个函数）
+### lib/client-parts/git/account.js（84 行 · 3 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `dshgp_AcctHead` | 3-17 | 15 | `function dshgp_AcctHead(props) {` |
+| `dshgp_AccountCard` | 20-64 | 45 | `function dshgp_AccountCard(props) {` |
+| `dshgp_AccountTab` | 67-82 | 16 | `function dshgp_AccountTab(props) {` |
+
+### lib/client-parts/git/apply.js（73 行 · 3 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `apply` | 2-66 | 65 | `function apply(ctx) {` |
+| `useCardState` | 42-45 | 4 | `const useCardState = (selector) => {` |
+| `SectionPage` | 48-53 | 6 | `function SectionPage() {` |
+
+### lib/client-parts/git/browser.js（107 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1093,7 +1099,7 @@
 | `dshgp_browseClose` | 87-93 | 7 | `function dshgp_browseClose() {` |
 | `dshgp_browseAttach` | 94-104 | 11 | `function dshgp_browseAttach(inputEl) {` |
 
-### lib/client-parts/controller.js（1093 行 · 3 个函数）
+### lib/client-parts/git/controller.js（1093 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1101,7 +1107,7 @@
 | `renderResult` | 991-1004 | 14 | `const renderResult = (res) => {` |
 | `poll` | 1007-1032 | 26 | `const poll = async () => {` |
 
-### lib/client-parts/npm.js（385 行 · 7 个函数）
+### lib/client-parts/git/npm.js（385 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1113,13 +1119,13 @@
 | `dshgp_NpmCredFields` | 334-383 | 50 | `function dshgp_NpmCredFields() {` |
 | `save` | 346-362 | 17 | `const save = async () => {` |
 
-### lib/client-parts/page.js（57 行 · 1 个函数）
+### lib/client-parts/git/page.js（47 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `dshgp_GitPushPage` | 2-55 | 54 | `function dshgp_GitPushPage(props) {` |
+| `dshgp_GitPushPage` | 2-45 | 44 | `function dshgp_GitPushPage(props) {` |
 
-### lib/client-parts/repo.js（375 行 · 10 个函数）
+### lib/client-parts/git/repo.js（375 行 · 10 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1134,7 +1140,7 @@
 | `dshgp_ClonePreview` | 330-373 | 44 | `function dshgp_ClonePreview(props) {` |
 | `mb` | 332-332 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
 
-### lib/client-parts/settings.js（147 行 · 3 个函数）
+### lib/client-parts/git/settings.js（147 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1142,7 +1148,7 @@
 | `dshgp_PushDefaultsBlock` | 72-134 | 63 | `function dshgp_PushDefaultsBlock(props) {` |
 | `dshgp_SettingsTab` | 136-145 | 10 | `function dshgp_SettingsTab(props) {` |
 
-### lib/client-parts/utils.js（63 行 · 7 个函数）
+### lib/client-parts/git/utils.js（63 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1154,7 +1160,7 @@
 | `dshgp_localSet` | 51-53 | 3 | `function dshgp_localSet(key, value) {` |
 | `dshgp_copyText` | 56-61 | 6 | `function dshgp_copyText(text) {` |
 
-### lib/client.js（3216 行 · 54 个函数）
+### lib/client.js（2905 行 · 44 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1192,26 +1198,16 @@
 | `dshgp_AccountSwitcher` | 1177-1215 | 39 | `function dshgp_AccountSwitcher(props) {` |
 | `dshgp_NpmCredFields` | 1218-1267 | 50 | `function dshgp_NpmCredFields() {` |
 | `save` | 1230-1246 | 17 | `const save = async () => {` |
-| `dshgp_WeightRows` | 1271-1294 | 24 | `function dshgp_WeightRows(props) {` |
-| `dshgp_RuleRow` | 1305-1367 | 63 | `function dshgp_RuleRow(props, slot, idx, len) {` |
-| `countTitle` | 1314-1317 | 4 | `const countTitle = (kind) => {` |
-| `move` | 1322-1322 | 1 | `const move = (dir) => props.moveSlot(slot, dir);` |
-| `dshgp_AuditSwitchBlock` | 1370-1434 | 65 | `function dshgp_AuditSwitchBlock(props) {` |
-| `dshgp_InjectPromptSwitchBlock` | 1437-1459 | 23 | `function dshgp_InjectPromptSwitchBlock(props) {` |
-| `dshgp_CommentWordingBlock` | 1462-1477 | 16 | `function dshgp_CommentWordingBlock(props) {` |
-| `dshgp_AuditAdvancedBlock` | 1480-1506 | 27 | `function dshgp_AuditAdvancedBlock(props) {` |
-| `dshgp_RuleListBlock` | 1509-1540 | 32 | `function dshgp_RuleListBlock(props) {` |
-| `dshgp_AuditTab` | 1547-1567 | 21 | `function dshgp_AuditTab(props) {` |
-| `dshgp_CredentialBlock` | 1571-1638 | 68 | `function dshgp_CredentialBlock(props) {` |
-| `dshgp_PushDefaultsBlock` | 1641-1703 | 63 | `function dshgp_PushDefaultsBlock(props) {` |
-| `dshgp_SettingsTab` | 1705-1714 | 10 | `function dshgp_SettingsTab(props) {` |
-| `dshgp_GitPushPage` | 1717-1770 | 54 | `function dshgp_GitPushPage(props) {` |
-| `tick` | 2263-2281 | 19 | `const tick = async () => {` |
-| `renderResult` | 2762-2775 | 14 | `const renderResult = (res) => {` |
-| `poll` | 2778-2803 | 26 | `const poll = async () => {` |
-| `apply` | 3145-3209 | 65 | `function apply(ctx) {` |
-| `useCardState` | 3185-3188 | 4 | `const useCardState = (selector) => {` |
-| `SectionPage` | 3191-3196 | 6 | `function SectionPage() {` |
+| `dshgp_CredentialBlock` | 1270-1337 | 68 | `function dshgp_CredentialBlock(props) {` |
+| `dshgp_PushDefaultsBlock` | 1340-1402 | 63 | `function dshgp_PushDefaultsBlock(props) {` |
+| `dshgp_SettingsTab` | 1404-1413 | 10 | `function dshgp_SettingsTab(props) {` |
+| `dshgp_GitPushPage` | 1416-1459 | 44 | `function dshgp_GitPushPage(props) {` |
+| `tick` | 1952-1970 | 19 | `const tick = async () => {` |
+| `renderResult` | 2451-2464 | 14 | `const renderResult = (res) => {` |
+| `poll` | 2467-2492 | 26 | `const poll = async () => {` |
+| `apply` | 2834-2898 | 65 | `function apply(ctx) {` |
+| `useCardState` | 2874-2877 | 4 | `const useCardState = (selector) => {` |
+| `SectionPage` | 2880-2885 | 6 | `function SectionPage() {` |
 
 ### lib/client/index.js（162 行 · 5 个函数）
 
@@ -2114,14 +2110,14 @@
 | `loadPlaywright` | 191-199 | 9 | `function loadPlaywright(pwroot) {` |
 | `stripHtml` | 202-208 | 7 | `function stripHtml(html) {` |
 
-### scripts/build-client.mjs（125 行 · 4 个函数）
+### scripts/build-client.mjs（132 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `readParts` | 59-65 | 7 | `export function readParts(order = PART_ORDER, dir = PARTS_DIR) {` |
-| `buildClient` | 70-73 | 4 | `export function buildClient(order = PART_ORDER, dir = PARTS_DIR) {` |
-| `checkShape` | 76-85 | 10 | `export function checkShape(code) {` |
-| `main` | 89-120 | 32 | `function main(argv = process.argv.slice(2)) {` |
+| `readParts` | 66-72 | 7 | `export function readParts(order = PART_ORDER, dir = PARTS_DIR) {` |
+| `buildClient` | 77-80 | 4 | `export function buildClient(order = PART_ORDER, dir = PARTS_DIR) {` |
+| `checkShape` | 83-92 | 10 | `export function checkShape(code) {` |
+| `main` | 96-127 | 32 | `function main(argv = process.argv.slice(2)) {` |
 
 ### scripts/bump-version.mjs（179 行 · 5 个函数）
 
@@ -2374,11 +2370,39 @@
 | `readReleases` | 126-133 | 8 | `export function readReleases(repoPath) {` |
 | `buildReadmeVersionTable` | 151-171 | 21 | `export function buildReadmeVersionTable(repoPath) {` |
 
-### test/e2e-npm-tab-render.mjs（93 行 · 1 个函数）
+### test/audit/test-inject-switch.mjs（141 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `read` | 17-17 | 1 | `const read = (p) => readFileSync(join(ROOT, p), 'utf8');` |
+| `renderAuditInputs` | 28-98 | 71 | `function renderAuditInputs(value) {` |
+| `req` | 43-56 | 14 | `const req = (name) => {` |
+| `findChild` | 100-100 | 1 | `const findChild = (inputs) => inputs.find((p) => p['aria-label'] === LABEL);` |
+
+### test/audit/test-inject-system-prompt.mjs（374 行 · 3 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `renderAuditInputs` | 25-90 | 66 | `function renderAuditInputs(value) {` |
+| `req` | 39-50 | 12 | `const req = (name) => {` |
+| `findSwitch` | 92-92 | 1 | `const findSwitch = (inputs) => inputs.find((p) => p['aria-label'] === LABEL);` |
+
+### test/audit/test-sidebar-interaction.mjs（192 行 · 7 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `makeJsx` | 26-34 | 9 | `function makeJsx() {` |
+| `createElement` | 27-32 | 6 | `const createElement = (type, props) => {` |
+| `extractFunction` | 37-192 | 156 | `function extractFunction(src, signature) {` |
+| `renderRow` | 54-192 | 139 | `function renderRow({ disabled = false, slot = 'frontend', stats, locked = false } = {}) {` |
+| `walk` | 80-86 | 7 | `function walk(node, out = []) {` |
+| `clsOf` | 88-88 | 1 | `const clsOf = (n) => String((n.props && n.props.className) \|\| '');` |
+| `findClass` | 89-89 | 1 | `const findClass = (tree, cls) => walk(tree).find((n) => clsOf(n).includes(cls));` |
+
+### test/e2e-npm-tab-render.mjs（95 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `read` | 19-19 | 1 | `const read = (p) => readFileSync(join(ROOT, p), 'utf8');` |
 
 ### test/helpers/test-cache.mjs（208 行 · 8 个函数）
 
@@ -2552,14 +2576,14 @@
 |------|------|------|------|
 | `fakeRepo` | 16-20 | 5 | `function fakeRepo(pkg) {` |
 
-### test/test-client.mjs（519 行 · 4 个函数）
+### test/test-client.mjs（523 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `mockReact` | 20-26 | 7 | `function mockReact() {` |
-| `req` | 324-341 | 18 | `const req = (name) => {` |
-| `req` | 402-421 | 20 | `const req = (name) => {` |
-| `req` | 470-488 | 19 | `const req = (name) => {` |
+| `req` | 328-345 | 18 | `const req = (name) => {` |
+| `req` | 406-425 | 20 | `const req = (name) => {` |
+| `req` | 474-492 | 19 | `const req = (name) => {` |
 
 ### test/test-clone-concurrency.mjs（459 行 · 3 个函数）
 
@@ -2852,22 +2876,6 @@
 | `tmpRepo` | 31-35 | 5 | `function tmpRepo() {` |
 | `git` | 38-40 | 3 | `function git(dir, args) {` |
 
-### test/test-inject-switch.mjs（141 行 · 3 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `renderAuditInputs` | 28-98 | 71 | `function renderAuditInputs(value) {` |
-| `req` | 43-56 | 14 | `const req = (name) => {` |
-| `findChild` | 100-100 | 1 | `const findChild = (inputs) => inputs.find((p) => p['aria-label'] === LABEL);` |
-
-### test/test-inject-system-prompt.mjs（374 行 · 3 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `renderAuditInputs` | 25-90 | 66 | `function renderAuditInputs(value) {` |
-| `req` | 39-50 | 12 | `const req = (name) => {` |
-| `findSwitch` | 92-92 | 1 | `const findSwitch = (inputs) => inputs.find((p) => p['aria-label'] === LABEL);` |
-
 ### test/test-link-check.mjs（229 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2962,11 +2970,11 @@
 |------|------|------|------|
 | `withIsolatedDshHome` | 19-30 | 12 | `function withIsolatedDshHome(fn) {` |
 
-### test/test-picker-layout.mjs（108 行 · 1 个函数）
+### test/test-picker-layout.mjs（111 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `ruleBody` | 32-33 | 2 | `function ruleBody(cls) {` |
+| `ruleBody` | 35-36 | 2 | `function ruleBody(cls) {` |
 
 ### test/test-platform-scan.mjs（98 行 · 1 个函数）
 
@@ -3063,18 +3071,6 @@
 | `allowlistKeys` | 47-52 | 6 | `function allowlistKeys() {` |
 | `cfgMappingKeys` | 55-252 | 198 | `function cfgMappingKeys() {` |
 | `isolatedEnv` | 72-79 | 8 | `function isolatedEnv() {` |
-
-### test/test-sidebar-interaction.mjs（192 行 · 7 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `makeJsx` | 26-34 | 9 | `function makeJsx() {` |
-| `createElement` | 27-32 | 6 | `const createElement = (type, props) => {` |
-| `extractFunction` | 37-192 | 156 | `function extractFunction(src, signature) {` |
-| `renderRow` | 54-192 | 139 | `function renderRow({ disabled = false, slot = 'frontend', stats, locked = false } = {}) {` |
-| `walk` | 80-86 | 7 | `function walk(node, out = []) {` |
-| `clsOf` | 88-88 | 1 | `const clsOf = (n) => String((n.props && n.props.className) \|\| '');` |
-| `findClass` | 89-89 | 1 | `const findClass = (tree, cls) => walk(tree).find((n) => clsOf(n).includes(cls));` |
 
 ### test/test-slash-commands.mjs（287 行 · 1 个函数）
 

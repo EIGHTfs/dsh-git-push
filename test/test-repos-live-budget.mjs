@@ -24,6 +24,8 @@ import { isProbeOverBudget } from '../lib/app/handlers/repos.js';
 import { LIST_LIVE_BUDGET_MS } from '../lib/app/handlers/http-constants.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+// 分片目录以 build-client.mjs 的 PARTS_DIR 为唯一来源（按侧分目录后不再硬编码路径）
+import { PARTS_DIR } from '../scripts/build-client.mjs';
 
 test('isProbeOverBudget：绝对时间戳语义（未到点为 false，过了为 true）', () => {
   const now = 1_000_000;
@@ -51,7 +53,7 @@ test('回归：代码里不得再出现「起点 + 绝对 deadline」的错误�
 });
 
 test('预算必须小于前端 fetch 超时（否则服务端再准也会被前端先掐断）', () => {
-  const constSrc = readFileSync(join(ROOT, 'lib/client-parts/const.js'), 'utf8');
+  const constSrc = readFileSync(join(PARTS_DIR, 'const.js'), 'utf8');
   // 源码里数字用下划线分组（30_000），取值时要去掉分隔符
   const m = constSrc.match(/dshgp_FETCH_TIMEOUT_MS\s*=\s*([\d_]+)/);
   assert.ok(m, '应能读到前端 fetch 超时常量');

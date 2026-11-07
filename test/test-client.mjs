@@ -221,9 +221,11 @@ test('client.js：select 选项必须经 props.children 渲染（防 jsx 第三�
   // 坏写法（已发生两次）：jsx('select', { …props… }, […].map(…)) —— 第三参数被当作 key
   assert.ok(!/jsx\.jsx\('select',\s*\{[\s\S]*?\}\s*,\s*\[/.test(rootClientSrc),
     '不得把选项数组作为 jsx.jsx 第三参数传给 select（第三参数是 key，children 会丢失、下拉渲染为空）');
-  // 好写法：children: 数组 放进 props（pushMethod / 审计进阶 sel / 自动推送范围三处）
+  // 好写法：children: 数组 放进 props（pushMethod / 自动推送范围两处）
+  // 原为三处，其中「审计进阶 sel」随审计 Tab 移出构建（2026-11-08 UI 与审计解耦）——
+  //   审计侧分片归档在 lib/client-parts/audit/，不进产物，故阈值同步降为 2。
   const good = rootClientSrc.match(/jsx\.jsx\('select',\s*\{[\s\S]*?children:\s*\[/g) || [];
-  assert.ok(good.length >= 3, `应有 ≥3 个 select 用 props.children 渲染选项，实际 ${good.length}`);
+  assert.ok(good.length >= 2, `应有 ≥2 个 select 用 props.children 渲染选项，实际 ${good.length}`);
 });
 
 test('源码：不含 JSX 语法（无 <Tag> 形式）', () => {
@@ -295,7 +297,9 @@ test('client.js：设置项键（2026-09-12 三选项卡：客户端写回键须
   // 与 Host Config 一致：客户端能写的键 Host 必须也有。
   // 1.1.4 起 Config 定义在 lib/app/schema.js（入口 lib/index.js 只做再导出），
   // 故两处都读——免得下次再挪位置又把测试改一遍。
-  const hostSrc = ['lib/app/schema.js', 'lib/index.js']
+  // 审计键已单独成文件（lib/app/schema-audit.js，文件隔离阶段）——读取列表跟着加，
+  //   与上面「免得下次再挪位置又把测试改一遍」的意图一致。
+  const hostSrc = ['lib/app/schema.js', 'lib/app/schema-audit.js', 'lib/index.js']
     .map((f) => readFileSync(join(ROOT, f), 'utf8')).join('\n');
   for (const k of clientKeys) {
     assert.ok(hostSrc.includes(`${k}:`), `Host Config 缺 ${k}`);

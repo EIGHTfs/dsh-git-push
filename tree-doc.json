@@ -183,8 +183,6 @@
   "test/test-git.mjs": "git 总入口测试（runGit/commitAndPush/凭据/克隆）",
   "test/test-gitignore-match.mjs": "gitignore 兜底匹配（与真 git 对拍 + 非 git 端到端）",
   "test/test-http.mjs": "HTTP 总入口测试（Origin/CSRF/413/路由）",
-  "test/test-inject-switch.mjs": "注入开发者要求清单子开关回归",
-  "test/test-inject-system-prompt.mjs": "注入系统提示词回归",
   "test/test-io-risk.mjs": "IO 风险分级测试（四级判定/字段完整性/汇总/排序/finding 转换）",
   "test/test-link-check.mjs": "链接判断测试（分级扣分/断网不拦）",
   "test/test-magic-number.mjs": "硬编码魔数检测测试",
@@ -197,7 +195,6 @@
   "test/test-scope-collisions.mjs": "作用域撞名测试（帧判定/for 头部/项目契约/审计接入/CLI 退出码）",
   "test/test-self.mjs": "自身总入口测试（VERSION/CLI/help 比对）",
   "test/test-settings-persistence.mjs": "设置侧边栏持久化专项测试（L1 提交/L2 白名单/L3 回读/L4 消费四层断言）",
-  "test/test-sidebar-interaction.mjs": "侧边栏规则包列表交互自检",
   "test/test-slash-commands.mjs": "用户输入框 /git-audit 斜杠命令（解析/接线/对本仓库跑 quick）",
   "test/test-smart-hint.mjs": "扫描智能提示 + 评分对数衰减测试",
   "test/test-status-secret.mjs": "token 明文不下发安全回归",
@@ -382,7 +379,7 @@
   "test/test-platform-scan.mjs": "（待注释）",
   "test/test-symbol-index.mjs": "（待注释）",
   "test/test-test-cache.mjs": "（待注释）",
-  "lib/client-parts": "客户端分片源码（13 片，拼接成 lib/client.js；产物不入库）",
+  "lib/client-parts": "客户端分片源码（按侧分目录：git/ 参与构建，audit/ 只归档不进产物）",
   "scripts/build-client.mjs": "客户端分片拼接（PART_ORDER + --check 门禁 + 形态铁律自检）",
   "test/test-build-client.mjs": "分片构建门禁测试（产物一致/幂等/形态铁律/dshgp_ 前缀）",
   "test/test-client-fragment-scope.mjs": "客户端分片作用域推导测试（dsh-client-fragment）",
@@ -395,39 +392,84 @@
   "test/test-git-api-tool.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "README.md": {
+      "docs/CHANGELOG.md": {
         "status": "M",
-        "mtime": "2026-11-07T08:35:28.702Z",
+        "mtime": "2026-11-07T22:59:00.245Z",
         "note": "注释可能需更新"
       },
-      "docs/SPEC.md": {
+      "docs/FILE-TREE.md": {
         "status": "M",
-        "mtime": "2026-11-07T08:35:28.679Z",
+        "mtime": "2026-11-07T22:37:04.986Z",
         "note": "注释可能需更新"
       },
-      "docs/功能-仓库索引与账号状态.md": {
-        "status": "D",
-        "mtime": "",
+      "docs/FUNCTIONS.md": {
+        "status": "M",
+        "mtime": "2026-11-07T22:37:12.947Z",
         "note": "注释可能需更新"
       },
-      "docs/功能-历史提交审计.md": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "docs/功能-文档与结构追踪.md": {
-        "status": "D",
-        "mtime": "",
-        "note": "注释可能需更新"
-      },
-      "docs/功能-发布与工具链.md": {
-        "status": "A",
-        "mtime": "2026-11-07T08:33:42.725Z",
+      "docs/releases.json": {
+        "status": "M",
+        "mtime": "2026-11-07T22:58:59.116Z",
         "note": "注释可能需更新"
       },
       "docs/功能-审计引擎.md": {
+        "status": "M",
+        "mtime": "2026-11-07T22:25:42.204Z",
+        "note": "注释可能需更新"
+      },
+      "lib/app/schema.js": {
+        "status": "M",
+        "mtime": "2026-11-07T22:12:57.572Z",
+        "note": "注释可能需更新"
+      },
+      "lib/self/index.js": {
+        "status": "M",
+        "mtime": "2026-11-07T22:58:59.047Z",
+        "note": "注释可能需更新"
+      },
+      "package.json": {
+        "status": "M",
+        "mtime": "2026-11-07T22:58:59.088Z",
+        "note": "注释可能需更新"
+      },
+      "scripts/build-client.mjs": {
+        "status": "M",
+        "mtime": "2026-11-07T22:10:10.822Z",
+        "note": "注释可能需更新"
+      },
+      "skills/dev/dsh-git-push.md": {
+        "status": "M",
+        "mtime": "2026-11-07T22:15:34.572Z",
+        "note": "注释可能需更新"
+      },
+      "test/e2e-npm-tab-render.mjs": {
+        "status": "M",
+        "mtime": "2026-11-07T22:12:11.928Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-client.mjs": {
+        "status": "M",
+        "mtime": "2026-11-07T22:24:47.006Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-picker-layout.mjs": {
+        "status": "M",
+        "mtime": "2026-11-07T22:12:11.916Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-repos-live-budget.mjs": {
+        "status": "M",
+        "mtime": "2026-11-07T22:25:11.528Z",
+        "note": "注释可能需更新"
+      },
+      "lib/app/schema-audit.js": {
         "status": "A",
-        "mtime": "2026-11-07T08:32:52.365Z",
+        "mtime": "2026-11-07T22:12:57.555Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/README.md": {
+        "status": "A",
+        "mtime": "2026-11-07T22:25:27.017Z",
         "note": "注释可能需更新"
       }
     }
@@ -498,20 +540,6 @@
   "test/test-multi-remote.mjs": "（待注释）",
   "test/test-git-path-args.mjs": "（待注释）",
   "test/test-picker-layout.mjs": "（待注释）",
-  "lib/client-parts/account.js": "（待注释）",
-  "lib/client-parts/actions.js": "（待注释）",
-  "lib/client-parts/apply.js": "（待注释）",
-  "lib/client-parts/audit.js": "（待注释）",
-  "lib/client-parts/browser.js": "（待注释）",
-  "lib/client-parts/const.js": "（待注释）",
-  "lib/client-parts/controller.js": "（待注释）",
-  "lib/client-parts/icons.js": "（待注释）",
-  "lib/client-parts/loader.js": "（待注释）",
-  "lib/client-parts/npm.js": "（待注释）",
-  "lib/client-parts/page.js": "（待注释）",
-  "lib/client-parts/repo.js": "（待注释）",
-  "lib/client-parts/settings.js": "（待注释）",
-  "lib/client-parts/utils.js": "（待注释）",
   "scripts/picker-repro.mjs": "（待注释）",
   "lib/git/index-format.js": "（待注释）",
   "test/test-index-jsonl.mjs": "（待注释）",
@@ -581,5 +609,27 @@
   "test/test-dataflow-clear-fp.mjs": "clear-then-access 四类系统性误报回归（.empty()/写目标/注解位/多目标解包）+ 两条正样本",
   "test/test-dataflow-py-bodies.mjs": "Python 缩进式函数体区间回归（跨方法不连/同方法连/闭包必须连/花括号语言回归）",
   "docs/功能-审计引擎.md": "审计引擎功能介绍：规则体系、树化判定、评分、外部 linter 委托、豁免通道",
-  "docs/功能-发布与工具链.md": "提交推送、克隆、npm 发布、仓库索引与账号状态、文档生成脚本的功能介绍"
+  "docs/功能-发布与工具链.md": "提交推送、克隆、npm 发布、仓库索引与账号状态、文档生成脚本的功能介绍",
+  "lib/client-parts/git": "git / 发布 / 工具链侧分片（13 片，按 PART_ORDER 拼接成 lib/client.js）",
+  "lib/client-parts/audit": "审计侧分片（只归档，不参与构建——UI 上不出现审计 Tab）",
+  "lib/client-parts/git/account.js": "（待注释）",
+  "lib/client-parts/git/actions.js": "（待注释）",
+  "lib/client-parts/git/apply.js": "（待注释）",
+  "lib/client-parts/audit/audit.js": "（待注释）",
+  "lib/client-parts/git/browser.js": "（待注释）",
+  "lib/client-parts/git/const.js": "（待注释）",
+  "lib/client-parts/git/controller.js": "（待注释）",
+  "lib/client-parts/git/icons.js": "（待注释）",
+  "lib/client-parts/git/loader.js": "（待注释）",
+  "lib/client-parts/git/npm.js": "（待注释）",
+  "lib/client-parts/git/page.js": "（待注释）",
+  "lib/client-parts/git/repo.js": "（待注释）",
+  "lib/client-parts/git/settings.js": "（待注释）",
+  "lib/client-parts/git/utils.js": "（待注释）",
+  "lib/app/schema-audit.js": "（待注释）",
+  "test/audit": "审计侧 UI 测试归档（不参与常规回归——run-tests 只扫 test/ 顶层）",
+  "test/audit/README.md": "归档说明：为什么移出常规测试、怎么手动跑、与后端审计的关系",
+  "test/audit/test-inject-switch.mjs": "（待注释）",
+  "test/audit/test-inject-system-prompt.mjs": "（待注释）",
+  "test/audit/test-sidebar-interaction.mjs": "（待注释）"
 }

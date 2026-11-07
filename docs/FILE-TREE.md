@@ -26,6 +26,7 @@ dsh-git-push/
 │   │   ├── inject-text.js — 注入文本（工具用法提示 FUNCTION_USAGE_HINT）
 │   │   ├── repo-ownership.js — （待注释）
 │   │   ├── scan-root.js — 默认扫描根解析（配置优先→DSH 家根自动识别）
+│   │   ├── schema-audit.js — （待注释）
 │   │   ├── schema.js — 配置 schema（宿主导出缺失时兜底）
 │   │   ├── scope-check.js — 作用域检查执行器（工具/独立脚本共用：找契约→逐文件分析→汇总）
 │   │   ├── settings-bridge.js — 设置读写桥（host scope 共享；绕开 client isLoopback=memory 落盘陷阱）
@@ -137,21 +138,8 @@ dsh-git-push/
 │   │   ├── commands-vcs.mjs — （待注释）
 │   ├── client/ — 客户端配置（DEFAULT_CONFIG + SETTINGS_SCHEMA 侧边栏设置项定义）
 │   │   ├── index.js — 侧边栏设置 UI 总入口（DEFAULT_CONFIG + SETTINGS_SCHEMA）
-│   ├── client-parts/ — 客户端分片源码（13 片，拼接成 lib/client.js；产物不入库）
-│   │   ├── account.js — （待注释）
-│   │   ├── actions.js — （待注释）
-│   │   ├── apply.js — （待注释）
-│   │   ├── audit.js — （待注释）
-│   │   ├── browser.js — （待注释）
-│   │   ├── const.js — （待注释）
-│   │   ├── controller.js — （待注释）
-│   │   ├── icons.js — （待注释）
-│   │   ├── loader.js — （待注释）
-│   │   ├── npm.js — （待注释）
-│   │   ├── page.js — （待注释）
-│   │   ├── repo.js — （待注释）
-│   │   ├── settings.js — （待注释）
-│   │   ├── utils.js — （待注释）
+│   ├── client-parts/ — 客户端分片源码（按侧分目录：git/ 参与构建，audit/ 只归档不进产物）
+│   │   └── …（14 个更深文件）
 │   ├── context/ — 上下文注入（给 AI 会话注入环境：目录映射/工具路径/skill 入口）
 │   │   ├── index.js — 上下文注入入口（环境注入文本）
 │   ├── core/ — （待注释）
@@ -376,8 +364,6 @@ dsh-git-push/
 │   ├── test-ignore-e2e.mjs — （待注释）
 │   ├── test-index-jsonl.mjs — （待注释）
 │   ├── test-init-compat.mjs — （待注释）
-│   ├── test-inject-switch.mjs — 注入开发者要求清单子开关回归
-│   ├── test-inject-system-prompt.mjs — 注入系统提示词回归
 │   ├── test-io-risk.mjs — IO 风险分级测试（四级判定/字段完整性/汇总/排序/finding 转换）
 │   ├── test-java-rules.mjs — Java/Kotlin 语言路由与专项规则测试（javaKtFuncRanges/短名/复杂度/规则联动/聚合型降级）
 │   ├── test-line-count.mjs — （待注释）
@@ -432,7 +418,6 @@ dsh-git-push/
 │   ├── test-self.mjs — 自身总入口测试（VERSION/CLI/help 比对）
 │   ├── test-settings-persistence.mjs — 设置侧边栏持久化专项测试（L1 提交/L2 白名单/L3 回读/L4 消费四层断言）
 │   ├── test-settings-roundtrip.mjs — （待注释）
-│   ├── test-sidebar-interaction.mjs — 侧边栏规则包列表交互自检
 │   ├── test-slash-commands.mjs — 用户输入框 /git-audit 斜杠命令（解析/接线/对本仓库跑 quick）
 │   ├── test-smart-hint.mjs — 扫描智能提示 + 评分对数衰减测试
 │   ├── test-smoke-import-specs.mjs — （待注释）
@@ -453,6 +438,11 @@ dsh-git-push/
 │   ├── test-version-metrics.mjs — （待注释）
 │   ├── test-visibility-unified.mjs — （待注释）
 │   ├── test-workspace-paths.mjs — （待注释）
+│   ├── audit/ — 审计侧 UI 测试归档（不参与常规回归——run-tests 只扫 test/ 顶层）
+│   │   ├── README.md — 归档说明：为什么移出常规测试、怎么手动跑、与后端审计的关系
+│   │   ├── test-inject-switch.mjs — （待注释）
+│   │   ├── test-inject-system-prompt.mjs — （待注释）
+│   │   ├── test-sidebar-interaction.mjs — （待注释）
 │   ├── fixtures/ — （待注释）
 │   │   ├── TimeZoneComboBox-CRnoCikG.js — Pawchive 混淆产物样本（hash 文件名——跳过判定 fixture）
 │   │   └── …（5 个更深文件）

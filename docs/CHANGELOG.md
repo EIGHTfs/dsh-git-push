@@ -15,6 +15,24 @@
 
 | 版本 | 内容 |
 |------|------|
+| 2.20.15 | UI 与审计解耦（**文件隔离阶段**）。目标是把审计与 git 侧的文件边界划清，为将来拆成两个独立项目做准备；**行为不变**——后端审计能力完全保留。
+
+**① 客户端分片按侧分目录**
+· `lib/client-parts/git/` —— git / 发布 / 工具链侧，**13 片，参与构建**（`PARTS_DIR` 指向它）；
+· `lib/client-parts/audit/` —— 审计侧（`audit.js`），**不参与构建**，构建脚本不读也不校验。
+不参与构建的实现方式：不在 `PARTS_DIR` 下 ⇒ `readParts` 的「未登记分片」与「缺片」两项检查天然扫不到它，无需为它加任何特例分支（这是「不报错」的最省做法）。
+
+**② 审计 Tab 移出产物**：`page.js` 的 tabs 从三项减为两项（账号信息 / 设置），并删掉 `dshgp_AuditTab` 的 panel 分支。产物 `lib/client.js` 从 3215 行 / 198569 字节降到 **2904 行 / 179164 字节**，`dshgp_AuditTab` / `dshgp_RuleListBlock` / `dshgp_WeightRows` 等审计 UI 符号全部为 0。
+
+**③ 审计设置键单独成文件**：`lib/app/schema-audit.js` 的 `auditConfigShape(Schema)` 承载 14 个审计键（`auditEnabled` / `maxScanFiles` / `injectRequirements` / `auditScanScope` / `auditRuleOrder` / `auditDisabledSlots` / `weightOverrides` / `linkCheckEnabled` / `commentWording*` ×4 / `auditRuleWeights` / `qualityWeights`），`schema.js` 用 `...auditConfigShape(Schema)` 展开合并。**33 个字段与默认值逐一核对一致**（不是「看起来没变」，是逐键比对）。
+
+**④ 审计 UI 测试归档**：`test/test-inject-switch.mjs` / `test-inject-system-prompt.mjs` / `test-sidebar-interaction.mjs` 移入 `test/audit/`（`run-tests.mjs` 只扫 `test/` 顶层的 `test-*.mjs`，故不进常规回归），附 README 说明「为什么归档、怎么手动跑、现在跑会失败属预期」。这些断言的是审计 Tab 的渲染，Tab 已不存在 ⇒ 归档而非删除，将来拆项目时随分片一起搬走。
+
+**⑤ 测试适配**：`test-client` 的 select 阈值 3→2（审计进阶 sel 已移出）、Host Config 读取列表补 `schema-audit.js`；`test-picker-layout` / `e2e-npm-tab-render` / `test-repos-live-budget` 改为从 `build-client.mjs` 导入 `PARTS_DIR`，不再硬编码 `lib/client-parts/xxx.js`（分片再挪目录测试自动跟随）。
+
+**验证**：全量回归 **1496 tests / pass 1490 / fail 0 / skipped 6**；`checkDrift` 0 issues；`scan-version` 三处一致；diff 审计 0 blocker。
+
+**未发 npm**：本项目已定为不发包（计划重构成两个新项目），本次仅 git 提交推送。 |
 | 2.20.14 | 按用户明确口径收口：
 
 1. **硬编码路径规则禁止任何场景豁免**：删除 2.20.12 引入的 `isReasonableAbsolutePath` 整段（曾排除 `/tmp`、`/usr/bin`、`/var/packages/`、Windows 程序目录等）。规则保持 `blocker`，**只保留文档类降级 warning**（`.md/.txt/.rst` 及 `docs/` 下文件）。个别误报由代码侧用行级临时豁免注释逐处标注，不在规则里开白名单。
