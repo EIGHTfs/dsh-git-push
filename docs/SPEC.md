@@ -104,9 +104,7 @@ settings-get  settings-set
 
 **按包形态验证**：发布前冒烟与彩排都先 `classifyPackageForm` 判形态——有库入口（`main`/`exports`）验 import；只有 `bin` 验「真跑 bin --version（比对版本）+ --help（退出码 0）」；两者皆无则明确报「没有可验证入口」。
 
-**本地 registry 彩排（可选选项）**：`npm_publish({ localPreview: true })` 会在发布前真实 publish 到本机 registry、再从它安装并加载公开面，失败即拦（`blocked: local-preview-failed`）；不写公共 registry。
-
-**本地 registry 彩排**：`node scripts/local-registry.mjs --selftest` 在本机起一个零依赖 registry，跑 publish → install → 加载公开面，结束即清理（不写公共 registry）。未知包透传公有 registry 当镜像。
+**本地 registry 彩排**：`npm_publish({ localPreview: true })` 会在发布前真实 publish 到本机 registry、再从它安装并加载公开面，失败即拦（`blocked: local-preview-failed`）；独立自检脚本 `node scripts/local-registry.mjs --selftest` 起一个零依赖 registry 跑同样的 publish → install → 加载公开面，结束即清理，未知包透传公有 registry 当镜像。两者都不写公共 registry。
 
 **推送后等 CI**：`commitAndPush({ waitCi: true, ciTimeoutSec })` 按**推到远端的那个 sha** 查 GitHub Actions，全绿=通过；任一 workflow 失败= `ci.conclusion:'failure'` + `ciFailed:true`；grace 期内没有 run 判「未触发 CI」（不算失败）；超时给 `timeout`（不算失败）。默认不等。
 
@@ -123,7 +121,7 @@ settings-get  settings-set
 **git 钩子**：提交/预演回执列出本次会触发的钩子；只有「可证明坏掉」（解释器不存在 / 引用不存在的机器路径）才注入
 `LEFTHOOK=0`，正常钩子照跑。不依赖 `core.hooksPath` 绕行——挂载盘上写 `.git/config` 会 EPERM。
 
-**镜像选择**：镜像选择**：`DSH_GIT_MIRROR_PREFIX` 显式值 > 出厂清单 `lib/core/mirror-candidates.json` 首个**未停用**候选 > 全部停用则直连；停用判据为**数据校验**（声明总长 / blob sha 不符），连续 3 次停用、一次成功清零。
+**镜像选择**：`DSH_GIT_MIRROR_PREFIX` 显式值 > 出厂清单 `lib/core/mirror-candidates.json` 首个**未停用**候选 > 全部停用则直连；停用判据为**数据校验**（声明总长 / blob sha 不符），连续 3 次停用、一次成功清零。
 
 **不变量**：写只走收口函数（账号状态 `writeAccountStatusFromResult` / `updateAccountStatusQuota`；索引走索引维护模块）；落盘走**原子写**；「是否已配置凭据」一律查凭据真源，不看快照。
 
