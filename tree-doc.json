@@ -321,10 +321,7 @@
   "lib/ast/consts.js": "（待注释）",
   "test/test-exempt-hint-classify.mjs": "（待注释）",
   "test/test-tool-contract.mjs": "（待注释）",
-  "docs/功能-仓库索引与账号状态.md": "（待注释）",
-  "docs/功能-历史提交审计.md": "（待注释）",
   "docs/功能-审计规则体系.md": "（待注释）",
-  "docs/功能-文档与结构追踪.md": "（待注释）",
   "test/regression-2.4.1.mjs": "（待注释）",
   "test/test-tools-e2e.mjs": "（待注释）",
   "test/test-version-metrics.mjs": "（待注释）",
@@ -398,64 +395,39 @@
   "test/test-git-api-tool.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "assets/start.sh": {
+      "README.md": {
+        "status": "M",
+        "mtime": "2026-11-07T08:35:28.702Z",
+        "note": "注释可能需更新"
+      },
+      "docs/SPEC.md": {
+        "status": "M",
+        "mtime": "2026-11-07T08:35:28.679Z",
+        "note": "注释可能需更新"
+      },
+      "docs/功能-仓库索引与账号状态.md": {
         "status": "D",
         "mtime": "",
         "note": "注释可能需更新"
       },
-      "docs/CHANGELOG.md": {
-        "status": "M",
-        "mtime": "2026-11-06T14:18:47.998Z",
-        "note": "注释可能需更新"
-      },
-      "docs/FILE-TREE.md": {
-        "status": "M",
-        "mtime": "2026-11-06T14:15:52.255Z",
-        "note": "注释可能需更新"
-      },
-      "docs/FUNCTIONS.md": {
-        "status": "M",
-        "mtime": "2026-11-06T14:18:51.070Z",
-        "note": "注释可能需更新"
-      },
-      "docs/releases.json": {
-        "status": "M",
-        "mtime": "2026-11-06T14:18:47.396Z",
-        "note": "注释可能需更新"
-      },
-      "lib/checks/hardcoded-path.js": {
-        "status": "M",
-        "mtime": "2026-11-06T13:56:36.287Z",
-        "note": "注释可能需更新"
-      },
-      "lib/self/index.js": {
-        "status": "M",
-        "mtime": "2026-11-06T14:18:47.371Z",
-        "note": "注释可能需更新"
-      },
-      "package.json": {
-        "status": "M",
-        "mtime": "2026-11-06T14:18:47.383Z",
-        "note": "注释可能需更新"
-      },
-      "scripts/scan-hardcoded-paths.mjs": {
+      "docs/功能-历史提交审计.md": {
         "status": "D",
         "mtime": "",
         "note": "注释可能需更新"
       },
-      "skills/guide/guide-inject-ui.md": {
-        "status": "M",
-        "mtime": "2026-11-06T14:15:50.599Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-hardcoded-path-blocker.mjs": {
+      "docs/功能-文档与结构追踪.md": {
         "status": "D",
         "mtime": "",
         "note": "注释可能需更新"
       },
-      "test/test-scan-hardcoded-paths.mjs": {
-        "status": "D",
-        "mtime": "",
+      "docs/功能-发布与工具链.md": {
+        "status": "A",
+        "mtime": "2026-11-07T08:33:42.725Z",
+        "note": "注释可能需更新"
+      },
+      "docs/功能-审计引擎.md": {
+        "status": "A",
+        "mtime": "2026-11-07T08:32:52.365Z",
         "note": "注释可能需更新"
       }
     }
@@ -607,5 +579,7 @@
   "test/test-lint-adapter.mjs": "委托层桩测（假 ruff 二进制）：探测三态/适配映射/不拦截/四路降级/端到端 blocker 不增",
   "test/test-tree-first-funcname.mjs": "short-func-name 树化双向样本：红基线/树化后类与对象方法照报/无树对照重现漏报/访问器边界",
   "test/test-dataflow-clear-fp.mjs": "clear-then-access 四类系统性误报回归（.empty()/写目标/注解位/多目标解包）+ 两条正样本",
-  "test/test-dataflow-py-bodies.mjs": "Python 缩进式函数体区间回归（跨方法不连/同方法连/闭包必须连/花括号语言回归）"
+  "test/test-dataflow-py-bodies.mjs": "Python 缩进式函数体区间回归（跨方法不连/同方法连/闭包必须连/花括号语言回归）",
+  "docs/功能-审计引擎.md": "审计引擎功能介绍：规则体系、树化判定、评分、外部 linter 委托、豁免通道",
+  "docs/功能-发布与工具链.md": "提交推送、克隆、npm 发布、仓库索引与账号状态、文档生成脚本的功能介绍"
 }

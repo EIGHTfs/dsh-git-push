@@ -1,7 +1,8 @@
 # SPEC：当前有效规格
 
 > 本文件是插件的**契约规格唯一入口**：写清对外接口（工具 / HTTP / 设置键 / 数据文件）与不变量。
-> 设计过程的留痕（方案与诊断）已归档到技能仓库的开发者文档，不在本仓库维护。
+> 面向使用者的功能介绍在 `docs/功能-审计引擎.md`（审计侧）与 `docs/功能-发布与工具链.md`（git / 发布侧）；
+> 规则字段与豁免全录见 `docs/DETAILS-EXEMPT-AND-RULES.md`。设计过程的方案与诊断不在本仓库维护。
 > 规格以**代码为准**；本文件与代码不符时以代码为准并回来修正本文件。
 
 ## 一、身份
@@ -10,7 +11,7 @@
 |---|---|
 | 插件名 | `dsh-git-push` |
 | 入口 | `lib/index.js`（导出 `name` / `Config` / `apply` / `callTool` / `handleHttp` / `listTools` / `listRuleSlots` …） |
-| 依赖 | **零运行时依赖**（不引入 npm 包，无构建步骤） |
+| 依赖 | `js-yaml` / `web-tree-sitter` / `tree-sitter-wasms`（规则解析与语法树）；`lib/client.js` 由 `scripts/build-client.mjs` 拼接生成 |
 | 装载声明 | `package.json` 的 `dsh.bundle.patch` → `./cordis.patch.yml`；`dsh.client` 声明 web 端注入；`dsh.skills` 列出随包发布的 skill |
 | 配置目录 | `<DSH_HOME>/git-push/`（凭据与状态文件都落在这里） |
 
@@ -133,7 +134,7 @@ settings-get  settings-set
 - **规则不自带项目契约**：`kind: scope-collision`（拼接产物作用域撞名）只声明「查不查」；命名前缀、顶层零声明、产物文件清单一律从被审项目自己的 `package.json` → `dshScopeCheck` 读（`lib/audit/scope-policy.js`）。规则包跨仓库共享，把 `dshgp_` 写进 yml 会让所有被审项目收到「缺少 dshgp_ 前缀」。
 - 分级：`blocker` / `warning` / `info`；评分 10 维度加权得 0-100 + 等级。**动态权重**：`维度得分 = max(0.1, 10 − k × ln(1 + 命中次数))`、`动态权重 = 命中文件数 ÷ 该维度可作用文件数`（按文件去重；分母由编排层 `computeDimFileCounts` 按规则 `exts` 声明统计——未声明 `exts` 的规则按代码文件 CODE_EXTS 计，缺统计时回退扫描文件总数）、`实际权重 = 设定权重 × 动态权重`、`总分 = Σ(维度得分 × 实际权重) ÷ Σ实际权重 × 10`；口径：无命中的维度不缩放（用设定权重）、分母用 Σ实际权重、文档维度的命中文件数取 `docsScore.files ÷ 总文件数`（无文档文件信息时回退不缩放）、不设下限；`files` 未提供时全部不缩放（静态口径）。
 - 豁免标记 9 个（`dsh-skip-*`），判定入口 `lib/exempt/index.js`；finding 的 `exemptHint` 必须与实际生效的标记一致。
-- 详细用法见 `docs/功能-审计规则体系.md`；豁免与规则字段全录见 `docs/DETAILS-EXEMPT-AND-RULES.md`。
+- 面向使用者的总览见 `docs/功能-审计引擎.md`；规则字段速查见 `docs/功能-审计规则体系.md`；豁免与规则字段全录见 `docs/DETAILS-EXEMPT-AND-RULES.md`。
 
 ## 七、文档产物（生成物，勿手改）
 

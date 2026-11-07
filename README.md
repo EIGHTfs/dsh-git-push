@@ -109,6 +109,8 @@ curl "http://<本机IP>:<端口>/api/git-push/api"
 ## 文档索引
 
 - [docs/SPEC.md](docs/SPEC.md) — 规格唯一入口（工具、接口、设置键、数据文件、规则体系）
+- [docs/功能-审计引擎.md](docs/功能-审计引擎.md) — 审计引擎（规则体系、判定、评分、委托层、豁免）
+- [docs/功能-发布与工具链.md](docs/功能-发布与工具链.md) — 提交推送、克隆、npm 发布、仓库索引、文档生成
 - [docs/FILE-TREE.md](docs/FILE-TREE.md) — 目录结构（自动生成）
 - [docs/CHANGELOG.md](docs/CHANGELOG.md) — 版本列表（自动生成）
 - [docs/FUNCTIONS.md](docs/FUNCTIONS.md) — 函数列表（自动生成）
