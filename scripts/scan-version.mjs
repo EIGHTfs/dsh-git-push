@@ -74,13 +74,16 @@ function main() {
   const vi = versionInfo(pkgJson);
   if (!vi.ok) errors.push(vi.error);
   // 3) cli.mjs HELP 文本（源码里是 v${VERSION} 模板，运行时渲染为 v<版本>）
-  const cliPath = join(ROOT, 'cli.mjs');
-  let cliText = '';
-  if (existsSync(cliPath)) {
-    try { cliText = readFileSync(cliPath, 'utf8'); } catch { /* 忽略 */ }
-  }
-  if (!cliText.includes('v${VERSION}')) {
-    errors.push('cli.mjs HELP 未引用 v${VERSION} 模板（应在 HELP 首行 git-sluice v${VERSION}）');
+  // 三个 CLI 入口都必须在 HELP 首行引用 v${VERSION} 模板（入口拆成三个后，只查 cli.mjs 会漏掉另外两个）
+  for (const entryFile of ['cli.mjs', 'cli-audit.mjs', 'cli-tool.mjs']) {
+    const entryPath = join(ROOT, entryFile);
+    let entryText = '';
+    if (existsSync(entryPath)) {
+      try { entryText = readFileSync(entryPath, 'utf8'); } catch { /* 忽略 */ }
+    }
+    if (!entryText.includes('v${VERSION}')) {
+      errors.push(`${entryFile} HELP 未引用 v${VERSION} 模板（应在 HELP 首行 <CLI名> v${VERSION}）`);
+    }
   }
   // 4) 版本列表宿主（适配分体式：优先 docs/CHANGELOG.md 的 dshgp-version
   //    标记块——README 不再内嵌版本表，只有链接引用；无标记块回退 README 章节）

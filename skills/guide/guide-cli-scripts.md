@@ -41,11 +41,11 @@ CLI 是同一引擎的独立入口，**不另写一份逻辑**：
 
 ```bash
 git-sluice version
-git-sluice audit . --full --json
+audit-sluice audit . --full --json
 git-sluice repos /path/to/workspace --max 50 --json
 git-sluice index /path/to/workspace --owner EIGHTfs --offline
-git-sluice commit /path/to/repo -m "fix: 修正 xx" --no-push
-git-sluice self-check
+git-sluice commit /path/to/repo --message "fix: 修正 xx" --no-push
+tool-sluice self-check
 ```
 
 ## 二、随插件发布的独立脚本

@@ -76,12 +76,14 @@ module_splitter({ command, file, plan, dryRun })     // command 必填（analyze
 ### 独立 CLI（git-sluice）
 
 ```
-git-sluice account-check              # 校验本机 GitHub 凭据
-git-sluice scan <目录>                 # 列出该目录下的 git 仓库
-git-sluice audit <仓库> --full         # 全量审计（加 --json 拿明细）
-git-sluice commit <仓库> -m "msg"      # 提交并推送（自动过审计门禁）
-git-sluice scope-check [文件]           # 查拼接产物同帧重名（无参数时读项目 dshScopeCheck.files）
-git-sluice help                        # 全部命令
+git-sluice account-check                  # 校验本机 GitHub 凭据
+git-sluice scan <目录>                     # 列出该目录下的 git 仓库
+git-sluice commit <仓库> --message "msg"   # 提交并推送（自动过审计门禁）
+git-sluice help                          # git 侧全部命令
+
+audit-sluice audit <仓库> --full           # 全量审计（加 --json 拿明细）
+audit-sluice scope-check [文件]             # 查拼接产物同帧重名（无参数时读项目 dshScopeCheck.files）
+tool-sluice self-check                    # 三入口 HELP/参数/命令集一致性自检
 ```
 
 ## API

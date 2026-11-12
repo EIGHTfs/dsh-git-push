@@ -234,3 +234,29 @@ lib/audit-ui-sdk/
 **三条硬约束**：① 实现只能从 `lib/audit-ui-sdk` 唯一入口 import；② 校验只覆盖构建期一定能判的部分（形状与版本），
 不猜作者意图；③ 契约破坏性改动 `contractVersion +1`，构建期拒绝按旧契约写的实现。
 
+## 十二、命令行入口（三侧拆分）
+
+> 与「审计引擎解耦」同构：审计侧不再与 git 侧共用入口。三个 bin，各自只注册本侧命令。
+
+| CLI | bin | 入口 | 命令 |
+|---|---|---|---|
+| git 侧 | `git-sluice` | `cli.mjs` | `scan` `commit` `clone` `clone-preview` `remote-create` `rename` `set-visibility` `identity-rewrite` `account-check` `cred-env` `gen-ssh-key` `git` `api` `repos` `index` `npm-publish` `unpublish` |
+| 审计侧 | `audit-sluice` | `cli-audit.mjs` | `audit` `ruleset` `file-io` `link-check` `scope-check` `functions` `tree-doc` |
+| 工具链 | `tool-sluice` | `cli-tool.mjs` | `module-splitter` `yaml-template` `readme-template` `self-check` |
+
+三个入口都有 `version` / `help`；`package.json` 的 `bin` 有三条，`files` 含两个新入口（否则包内缺文件）。
+
+**跨侧命令（重要）**：在某一侧敲别侧的命令 → **明确报错并给出可照抄的替代命令**，`exit 1`，**不做静默转发**：
+
+```
+$ git-sluice audit .
+✗ "audit" 属于 audit-sluice，不在 git-sluice 里。
+  请改用：audit-sluice audit .
+  三入口：git-sluice / audit-sluice / tool-sluice；各自 help 看本侧全部命令
+```
+
+**不变量**：
+- 公共层 `lib/cli/shared.mjs` 是三个入口的唯一实现来源（参数解析、结果打印、HELP 渲染、版本、跨侧指引），**不得复制成三份**；
+- 每个 HELP 只列本侧命令，并附「其它 CLI」小节；`HELP ↔ KNOWN_FLAGS ↔ 命令集`三者一致由 `test/test-cli-split.mjs` 与 `tool-sluice self-check` 双门禁；
+- **副作用型 import 按侧归属**：`lib/app/host-doc-checks.js`（文档漂移检查器）与 `lib/rule/compilers.js`（规则编译）只在 `cli-audit.mjs` 顶部——它们删了不报错、只会让功能**静默失效**，故有行为级测试兜底（漂移 fixture 必须报 finding、`ruleset` 编译数必须 > 50）。
+

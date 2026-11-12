@@ -1,373 +1,152 @@
 #!/usr/bin/env node
 // dsh-skip-i18n: CLI 输出硬编码中文为产品行为（无 i18n 需求）
 /**
- * dsh-git-push 独立 CLI（git-sluice）
+ * dsh-git-push 独立 CLI · **git 侧**（bin: git-sluice）
  * 不依赖 DSH 运行时，可独立运行。命名/参数与 lib 函数完全一致（外部 API 与函数名一致）。
+ *
+ * 三个入口的分工（切割线单处定义在 lib/cli/shared.mjs 的 CLI_ENTRIES）：
+ *   git-sluice    提交/推送/克隆/账号/仓库扫描/发布（本文件）
+ *   audit-sluice  审计/规则/评分/静态检查（cli-audit.mjs）
+ *   tool-sluice   拆分/模板/自检（cli-tool.mjs）
+ * 跨侧命令**明确报错并给出可照抄的替代命令**，不静默转发——静默转发会让「三个 CLI」名不副实。
+ *
+ * 本文件只保留：命令表 + HELP 文本 + 薄壳。解析/打印/分发/跨侧提示都在 lib/cli/shared.mjs。
  */
-import './lib/app/host-doc-checks.js'; // 审计包边界：文档漂移检查器由宿主（独立 CLI）注入
-import { VERSION, readmeTemplate, yamlTemplate, helpSync } from './lib/self/index.js';
-import { loadRuleFiles, discoverRuleSlots } from './lib/rule/loader.js';
-import { compileAllRules } from './lib/rule/registry.js';
+import { VERSION } from './lib/self/index.js';
 import { runWrappedGit } from './lib/git/wrapped-git.js';
-import { registryByCli, parseRegistryArgs } from './lib/app/command-registry.js';
-import { callTool } from './lib/app/tool-call.js';
-import { readFileSync, realpathSync } from 'node:fs';
 
-// 结构化：命令实现按域抽到 lib/cli/commands-*.mjs（audit/account/vcs/doc），
-//   本文件保留入口编排（HELP/parseArgv/命令分发表/运行入口）。
-//   具名 import 而非 `export ... from`：COMMANDS 表直接引用 cmdXxx 变量名，
+// 具名 import 而非 `export ... from`：COMMANDS 表直接引用 cmdXxx 变量名，
 //   re-export 不建立本模块作用域绑定，会 ReferenceError。
-import {
-  cmdAudit, cmdScan, cliPluginConfig, pluginEqualAuditOpts, pluginEqualWeights,
-} from './lib/cli/commands-audit.mjs';
-export { cmdAudit, cmdScan, cliPluginConfig, pluginEqualAuditOpts, pluginEqualWeights };
 import {
   cmdAccountCheck, cmdCredEnv, cmdRemoteCreate, cmdSetVisibility, cmdGenSshKey,
 } from './lib/cli/commands-account.mjs';
-export { cmdAccountCheck, cmdCredEnv, cmdRemoteCreate, cmdSetVisibility, cmdGenSshKey };
+import { cmdRepos, cmdIndex, cmdCommit, cmdClone } from './lib/cli/commands-vcs.mjs';
 import {
-  cmdRepos, cmdIndex, cmdGit, cmdCommit, cmdLinkCheck, cmdClone,
-} from './lib/cli/commands-vcs.mjs';
-export { cmdRepos, cmdIndex, cmdGit, cmdCommit, cmdLinkCheck, cmdClone };
-import {
-  cmdFileIo, cmdTreeDoc, cmdFunctions, cmdModuleSplitter,
-} from './lib/cli/commands-doc.mjs';
-export { cmdFileIo, cmdTreeDoc, cmdFunctions, cmdModuleSplitter };
+  CLI_GIT, CLI_ENTRIES, cliPluginConfig, parseArgv, parseVia, printToolResult, runAsEntry, runCli,
+} from './lib/cli/shared.mjs';
 
-/** parseArgv 认识的选项白名单（cli-help-sync 机器比对基准，必须与 HELP 文本一致。
+export const CLI_NAME = CLI_GIT;
+
+/** parseArgv 认识的选项白名单（本侧 HELP 写着的那批；self-check 机器比对本表与 HELP 文本）。
  * 注：-m 是单横线别名（helpSync 只比对 -- 双横线），不列入本表。
- * 注：**注册表驱动**的命令（scan/commit/clone/npm-publish/scope-check…）参数由
- *   lib/app/command-registry.js 的 params 校验，与本表无关；但 HELP 里写了的 flag
- *   都必须在本表出现，否则 cli-help-sync 会报「HELP 写了但 parseArgv 不认」。 */
-export const KNOWN_FLAGS = ['--depth', '--full', '--ruleset', '--weights', '--include-ignored', '--push', '--no-push', '--dry-run', '--force', '--message', '--audit', '--ignore-patterns', '--requirements-confirmed', '--push-confirmed', '--json', '--max', '--owner', '--offline', '--paths', '--history', '--since', '--until', '--out', '--skip-empty',
-  // npm 相关（与 command-registry 的 npm_publish 参数对齐：dir / dryRun / tag / otp / confirm）
-  '--dir', '--tag', '--otp', '--confirm', '--global', '--ignore-scripts', '--async', '--no-dry-run',
-  // file-io 三标签过滤
-  '--summary', '--write', '--type', '--kind', '--risk', '--op', '--root', '--readme',
-  // identity-rewrite：额外要统一的邮箱
-  '--extra-emails',
-  // scope-check（与 command-registry 的 scope_check 参数对齐）
-  '--files', '--repo', '--prefix', '--allowlist', '--top-level-must-be-empty',
-  // 补齐的 5 个命令（clone / account-check / remote-create / set-visibility / gen-ssh-key）
-  '--dest', '--branch', '--preview', '--max-file-mb', '--concurrency', '--visibility', '--email', '--no-check-ssh', '--token'];
+ * 注：**注册表驱动**命令（scan/commit/clone/npm-publish…）的参数由 lib/app/command-registry.js
+ *   的 params 校验，与本表无关；但本侧 HELP 里写了的 flag 都必须在本表出现，
+ *   否则 self-check 会报「HELP 写了但 parseArgv 不认」。 */
+export const KNOWN_FLAGS = [
+  '--audit', '--audit-exempt-paths', '--audit-exempt-reason', '--body', '--branch', '--ci-timeout-sec',
+  '--confirm', '--depth', '--dest', '--dry-run', '--extra-emails', '--extra-repos-file', '--force', '--history',
+  '--history-depth', '--ignore-patterns', '--json', '--local-preview', '--max', '--message', '--message-items',
+  '--method', '--no-dry-run', '--no-push', '--offline', '--otp', '--owner', '--paths', '--push',
+  '--push-confirmed', '--push-initial', '--query', '--remote', '--requirements-confirmed', '--root',
+  '--skip-smoke', '--ssh-pub', '--tag', '--token', '--update-remotes', '--visibility', '--wait-ci',
+  '--wait-visible', '--whole-package', '--write',
+];
 
-const HELP = `git-sluice v${VERSION} — dsh-git-push 引擎独立 CLI（脱离 DSH 运行）
+const HELP = `git-sluice v${VERSION} — ${CLI_ENTRIES[CLI_GIT].intro}
 
 快速开始（第一次用——不用查源码）:
   git-sluice account-check            ① 先校验 GitHub 凭据（token/SSH 是否可用）
   git-sluice scan <目录>              ② 看有哪些 git 仓库（分支/未提交/未推送）
-  git-sluice audit <仓库> --full      ③ 全量审计一个仓库（评分/问题/API 指引）
-  git-sluice commit <仓库> --message "msg"   ④ 提交推送（自动过审计门禁）
+  git-sluice commit <仓库> --message "msg"   ③ 提交推送（自动过审计门禁）
   git-sluice help                     全部命令与参数
 
-用法:
+其它 CLI（本入口不含，敲错会给出替代命令）:
+  audit-sluice  审计/规则/静态检查: audit ruleset file-io link-check scope-check functions tree-doc
+  tool-sluice   工具链: module-splitter yaml-template readme-template self-check
+
+用法（每行写的参数就是该命令真实接受的写法，照抄即可）:
   git-sluice version              查看版本
-  git-sluice ruleset [槽位...]    编译规则包并输出统计（默认全部槽位）
-  git-sluice scan <root> [--depth N]   全量扫描目录（非 git 目录可查）
+  git-sluice scan <root> [--paths <路径,路径>] [--extra-repos-file <文件>]
+                                   扫描本地 git 仓库（分支/remote/未提交/未推送；尊重 .gitignore：被忽略目录整棵跳过）
   git-sluice repos <root> [--depth N] [--max N] [--json]
-                                  扫描本地 git 仓库（尊重 .gitignore：被忽略目录整棵跳过）
+                                   同上，可读文本通道（scan 是它的注册表通道，输出更精简）
   git-sluice index <root> [--owner <账号>] [--depth N] [--max N] [--offline] [--json]
-                                  重建仓库索引 dsh-repo-index.json（--offline=纯离线不查 GitHub API）
-  git-sluice audit <root> [--full] [--ruleset <目录>] [--weights <JSON>] [--include-ignored] [--history [--since <提交>] [--until <提交>] [--out <目录>]]
-                                  审计目录（默认 diff 范围；--full=全量；--ruleset=自定规则目录；--weights=权重覆盖 JSON；--include-ignored=连 .gitignore 忽略的文件也扫；--history=历史提交审计——逐提交快照全量审计并落盘报告，--since/--until 起始~结束提交（皆缺省=全部历史、含两端），--out 报告保存目录（缺省=git 根 audit-history/））
-  git-sluice commit <repo> --message <msg> [--push|--no-push] [--dry-run] [--force] [--audit] [--ignore-patterns <模式>] [--requirements-confirmed] [--push-confirmed] [--paths <路径1,路径2>] [--json]
-                                  审计门禁 → 提交（默认只 commit 不 push；--push 推远端；--force 强推覆盖远端历史；--requirements-confirmed 显式核对开发者要求；--push-confirmed 显式放行推送门禁；--paths 精确 add 指定文件替代 add -A）
-  git-sluice clone-preview <owner/repo> [--branch <名>] [--json]
-  git-sluice file-io [路径...] [--summary] [--write] [--type sync|async] [--kind read|write|delete|rename] [--risk high|medium|low] [--op <操作名>] [--json]
-                                  文件读写调用扫描（三标签：类型/操作/上下文）——同步 I/O 在异步路径会阻塞；写/删/改名涉及数据安全
-  git-sluice link-check <路径>    检查 md/文本中的链接有效性（只 warning，flaky 域名打折）
-  git-sluice scope-check [文件...] [--repo <目录>] [--prefix <前缀>] [--allowlist <名,名>] [--top-level-must-be-empty] [--files <文件,文件>] [--json]
-                                  拼接产物作用域撞名（多段 JS 拼进同一作用域）：同一函数帧内 var/function/const/let/class 重名会让后者静默顶掉前者，运行期毫无线索；
-                                  判定按真实作用域帧（两个不同函数里的同名局部变量不算撞名）；顶层声明与命名前缀按**被查项目自己**的 package.json（dshScopeCheck）判定，
-                                  没声明就只查同帧重名（不拿本项目的 dshgp_ 去要求别人）；不给文件时取该项目 dshScopeCheck.files
-  git-sluice npm-publish [目录] [--dry-run|--no-dry-run] [--tag <tag>] [--otp <码>] [--confirm] [--json]
-                                   npm 发包（注册为后台 job）：默认 dry-run，只体检 + npm publish --dry-run（**不写 registry**）；
-                                   真发必须同时给 --no-dry-run 与 --confirm（不可撤销）；体检项：private:true / 同名版本占用 / npm pack 清单
-  git-sluice api npm-account [--json]      npm 账号（离线快照）
-  git-sluice api npm-check                 npm 账号在线校验（npm whoami，写快照）
-  git-sluice api npm-owned                登录账号名下的公开包列表
-  git-sluice api npm-packages --dir <目录> 该目录的依赖清单
-  git-sluice api npm-install --dir <目录> --confirm [--global] [--async] [--ignore-scripts]
-                                   安装包（--global=全局；--async=异步 + 用 npm-install-progress 轮询进度；默认不执行安装脚本）
-  git-sluice api npm-install-progress     安装进度/终态（consume:true 取走后复位）
-  git-sluice api npm-publish --dry-run    npm 发包（等价写法：走 api 通道，默认 dry-run）
-  git-sluice identity-rewrite [仓库路径...] [--root <目录>] [--write] [--push] [--extra-emails <邮箱...>] [--json]
-                                   提交身份历史改写：把非规范身份（工具/AI 产生的 agent@dsh.local 等 + 账号 noreply 旧变体）
-                                   统一成登录账号规范身份；默认 dry-run 只报告，--write 才改（先建备份引用，自检通过才改写），
-                                   --push 再用 force-with-lease 强推；只处理 origin 属于登录账号的仓库
-  git-sluice module-splitter <analyze|split|verify> <file|plan> [--dry-run] [--json]
-  git-sluice functions <analyze|apply> [目录] [--skip-empty] [--json]
-  git-sluice tree-doc <sync|gen|check|apply> [--root <目录>] [--readme <路径>] [--write]
-                                  README 目录结构维护：sync 索引同步（新增自动加键/删除自动删键）；gen 生成树；check 检查漂移；apply 覆盖 README 标记块（封装 scripts/tree-doc.mjs）
-                                  函数索引与函数文档：analyze 生成 functions-index.json（复用 scripts/func-index.js，含签名/注释槽位）；apply 读 JSON（人工补 comment 后）生成 docs/函数/*.md（文件删除归档 _archived，注释不丢）
-                                  巨型单文件按顶层块拆分（python3 零依赖；analyze 先出块/依赖图 → AI 写 plan.json → split 切分 → verify 校验导出面；--dry-run=split 只预演）
+                                   重建仓库索引 dsh-repo-index.json（--offline=纯离线不查 GitHub API）
+  git-sluice commit <repo> --message <msg> [--push|--no-push] [--audit] [--dry-run] [--force] [--ignore-patterns <模式>] [--requirements-confirmed] [--push-confirmed] [--paths <路径1,路径2>] [--message-items <JSON>] [--audit-exempt-paths <文件,...>] [--audit-exempt-reason <理由>] [--remote <名>] [--wait-ci] [--ci-timeout-sec N]
+                                   审计门禁 → 提交（默认只 commit 不 push；--push 推远端；--force 强推覆盖远端历史；
+                                   --requirements-confirmed 显式核对开发者要求；--push-confirmed 显式放行推送门禁；
+                                   --paths 精确 add 指定文件替代 add -A；--audit-exempt-paths 本次提交按文件临时豁免审计）
+  git-sluice clone <owner/repo> [dest] [--dest <目录>] [--branch <名>] [--history] [--history-depth N]
+                                   从 GitHub 克隆仓库（Git Data API 通道，不直连 github.com；--history=重建真实提交历史）
+  git-sluice clone-preview <owner/repo> [--branch <名>]
+                                   clone 预演：只报告将拉取什么，不落盘
+  git-sluice remote-create <repo> [--visibility public|private] [--push-initial] [--dry-run]
+                                   按项目文件夹在 GitHub 建远端仓库（已存在则复用），并指向 origin；--push-initial=建完首次推送
+  git-sluice rename <repo> <新名> [--dry-run] [--update-remotes]
+                                   给 GitHub 远程仓库改名（--dry-run 只报告；--update-remotes 同步本地 remote）
+  git-sluice set-visibility <repo> --visibility public|private
+                                   切换仓库公开/私有（改成公开有敏感信息暴露风险）
+  git-sluice identity-rewrite [仓库路径...] [--root <目录>] [--dry-run] [--write] [--push] [--extra-emails <邮箱...>] [--json]
+                                   提交身份历史改写：把非规范身份（工具/AI 产生的 agent@dsh.local 等）统一成登录账号规范身份；
+                                   默认 dry-run 只报告，--write 才改（先建备份引用，自检通过才改写），--push 再 force-with-lease 强推
+  git-sluice account-check [--token <t>] [--ssh-pub <公钥整行>]
+                                   校验 GitHub 账号与凭据（token 在线校验 + SSH 公钥指纹）
+  git-sluice cred-env
+                                   输出插件保管凭据的环境变量前缀（SSH: GIT_SSH_COMMAND 私钥路径 / HTTPS: GIT_ASKPASS 脚本）——AI 执行任意外部 git 命令时粘贴使用，全程无 token/私钥明文
+  git-sluice gen-ssh-key <x@y.z> [--force]
+                                   生成 SSH 密钥对（公钥回传，私钥不出本机；--force=先备份再覆盖）
   git-sluice git <git 参数...>  浅包装 git：参数与 git 完全一致，凭据自动注入（SSH 私钥 / config.json token），无需传 token/私钥参数
-                                  例：git-sluice git pull | git clone owner/repo | git fetch origin（stdio 直连，退出码透传）
-  git-sluice clone <owner/repo> [dest] [--branch <名>] [--dest <目录>] [--max-file-mb N] [--concurrency N] [--preview] [--json]
-                                  从 GitHub 克隆仓库（Git Data API 通道，不直连 github.com；--preview=只探测不写盘）
-  git-sluice account-check [--token <t>] [--no-check-ssh] [--json]
-                                  校验 GitHub 账号与凭据（token 在线校验 + SSH 公钥指纹）
-  git-sluice cred-env [--json]
-                                  输出插件保管凭据的环境变量前缀（SSH: GIT_SSH_COMMAND 私钥路径 / HTTPS: GIT_ASKPASS 脚本）——AI 执行任意外部 git 命令时粘贴使用，全程无 token/私钥明文
-  git-sluice remote-create <repo> [--owner <账号>] [--visibility public|private] [--dry-run] [--json]
-                                  按项目文件夹在 GitHub 建远端仓库（已存在则复用），并指向 origin
-  git-sluice set-visibility <repo> --visibility public|private [--json]
-                                  切换仓库公开/私有（public 有敏感信息暴露风险）
-  git-sluice gen-ssh-key --email <x@y.z> [--force] [--json]
-                                  生成 SSH 密钥对（公钥回传，私钥不出本机；--force=先备份再覆盖）
-  git-sluice yaml-template        输出规则 yml 模板（含 kind + dimensions 示范）
-  git-sluice readme-template      输出 README 模板（{{name}} {{version}} 占位符）
-  git-sluice self-check           版本一致性 + HELP↔parseArgv 机器比对（自检）
+                                   例：git-sluice git pull | git clone owner/repo | git fetch origin（stdio 直连，退出码透传）
+  git-sluice api <接口名> [--method GET|POST] [--query <JSON>] [--body <JSON>]
+                                   直接调用本插件 HTTP API（与浏览器同源实现）；不带接口名则列出全部可用接口
+  git-sluice npm-publish [目录] [--dry-run|--no-dry-run] [--tag <tag>] [--otp <码>] [--confirm] [--json] [--wait-visible] [--skip-smoke] [--local-preview]
+                                   npm 发包（注册为后台 job）：默认 dry-run，只体检 + npm publish --dry-run（不写 registry）；
+                                   真发必须同时给 --no-dry-run 与 --confirm（不可撤销）
+  git-sluice unpublish <包名> [版本] [--whole-package] [--dry-run] [--confirm]
+                                   从 npm registry 撤包（不可逆）：默认 dry-run 只预检，真撤需关掉 --dry-run 并给 --confirm
   git-sluice help                 显示本帮助
 `;
 
-// 导入 compilers 触发注册（副作用：注册 13 种编译函数到 RULE_COMPILERS）
-import './lib/rule/compilers.js';
-
-/**
- * 参数解析：白名单必须与 HELP 文本完全一致（cli-help-sync 自检）。
- *
- * 实现用**表驱动**而非 if-else 长链：每加一个 flag 只加一行表项，
- *   函数长度不随 flag 数增长（if-else 版加到第 21 个 flag 时func-lines 即 101 行、
- *   触发自己的 readability/max-function-length blocker）。
- *
- * 自检约束：helpSync 用正则 /--[\w-]+/g 扫本文件全文提取 flag 字面量，
- *   故下表必须**写成 `'--xxx'` 字面量**（拼字符串会让自检扫不到而误报）。
- */
-
-/** 布尔开关 flag → flags 字段名（出现即为 true）。 */
-const BOOL_FLAGS = {
-  '--full': 'full',
-  '--history': 'history',
-  '--include-ignored': 'includeIgnored',
-  '--dry-run': 'dryRun',
-  '--force': 'force',
-  '--req-confirm': 'reqConfirm',
-  '--push-gate-confirmed': 'pushGateConfirmed',
-  '--json': 'json',
-  '--offline': 'offline',
-  '--summary': 'summary',
-  '--write': 'write',
-  '--preview': 'preview',
-  '--skip-empty': 'skipEmpty',
-  '--no-check-ssh': null, // 特殊：置 false 而非 true（见下 applyBool）
-};
-
-/** 取值 flag → [flags 字段名, 缺值提示, 转换函数?]。 */
-const VALUE_FLAGS = {
-  '--depth': ['depth', '--depth 缺值（用法: --depth N）', Number],
-  '--max': ['max', '--max 缺值（用法: --max N）', Number],
-  '--owner': ['owner', '--owner 缺值（用法: --owner <账号>）'],
-  '--ruleset': ['ruleset', '--ruleset 缺值'],
-  '--weights': ['weights', '--weights 缺值'],
-  '-m': ['message', '-m 缺值（用法: -m <提交信息>）'],
-  '--root': ['root', '--root 缺值（用法: --root <目录>）'],
-  '--readme': ['readme', '--readme 缺值（用法: --readme <README路径>）'],
-  '--type': ['type', '--type 缺值（用法: --type sync|async）'],
-  '--kind': ['kind', '--kind 缺值（用法: --kind read|write|delete|rename）'],
-  '--risk': ['risk', '--risk 缺值（用法: --risk high|medium|low）'],
-  '--op': ['op', '--op 缺值（用法: --op writeFileSync）'],
-  '--dest': ['dest', '--dest 缺值（用法: --dest <目录>）'],
-  '--branch': ['branch', '--branch 缺值（用法: --branch <分支名>）'],
-  '--max-file-mb': ['maxFileMB', '--max-file-mb 缺值（用法: --max-file-mb N）', Number],
-  '--concurrency': ['concurrency', '--concurrency 缺值（用法: --concurrency N）', Number],
-  '--visibility': ['visibility', '--visibility 缺值（用法: --visibility public|private）'],
-  '--email': ['email', '--email 缺值（用法: --email x@y.z）'],
-  '--token': ['token', '--token 缺值（用法: --token <ghp_...>）'],
-  '--since': ['since', '--since 缺值（用法: --since <起始提交 sha/ref>）'],
-  '--until': ['until', '--until 缺值（用法: --until <结束提交 sha/ref>）'],
-  '--out': ['out', '--out 缺值（用法: --out <报告保存目录>）'],
-};
-
-/** 默认值（函数内每次调用新建，避免跨调用串状态）。 */
-function defaultFlags() {
-  return {
-    depth: undefined, full: false, ruleset: undefined, weights: undefined, includeIgnored: false,
-    push: undefined, dryRun: false, force: false, reqConfirm: false, pushGateConfirmed: false,
-    message: undefined, json: false, max: undefined, owner: undefined, offline: false,
-    summary: false, write: false, type: undefined, kind: undefined, risk: undefined, op: undefined,
-    dest: undefined, branch: undefined, preview: false, maxFileMB: undefined, concurrency: undefined,
-    visibility: undefined, email: undefined, checkSsh: true, token: undefined,
-  };
-}
-
-/** 布尔开关落值：--no-check-ssh 语义是「关掉」而非「开启」，单独处理。 */
-function applyBoolFlag(flags, a) {
-  if (a === '--no-check-ssh') { flags.checkSsh = false; return; }
-  // --push / --no-push 是同一字段的两态，不能混进 BOOL_FLAGS 的「出现即 true」
-  if (a === '--push') { flags.push = true; return; }
-  if (a === '--no-push') { flags.push = false; return; }
-  flags[BOOL_FLAGS[a]] = true;
-}
-
-/** 取值 flag 落值。 */
-function applyValueFlag(flags, a, v) {
-  const [field, , conv] = VALUE_FLAGS[a];
-  flags[field] = conv ? conv(v) : v;
-}
-
-export function parseArgv(argv) {
-  const flags = defaultFlags();
-  const positional = [];
-  for (let i = 0; i < argv.length; i++) {
-    const a = argv[i];
-    if (a === '--push' || a === '--no-push' || a === '--no-check-ssh' || a in BOOL_FLAGS) {
-      applyBoolFlag(flags, a);
-    } else if (a in VALUE_FLAGS) {
-      const v = argv[++i];
-      if (v === undefined || v.startsWith('--')) return { error: VALUE_FLAGS[a][1] };
-      applyValueFlag(flags, a, v);
-    } else if (a.startsWith('--')) {
-      return { error: `未知参数: ${a}` };
-    } else {
-      positional.push(a);
-    }
-  }
-  return { flags, positional };
-}
-
-/** 子命令：version */
-export function cmdVersion() {
-  console.log(`git-sluice v${VERSION} — dsh-git-push（统一函数入口架构）`);
-}
-
-/** 子命令：ruleset — 编译规则包输出统计。 */
-export function cmdRuleset(slots) {
-  const order = slots.length ? slots : null; // null=动态发现全部槽位
-  const { ok, merged, errors, files, order: effective } = loadRuleFiles(order);
-  const ctx = { errors: [] };
-  const compiled = compileAllRules(merged.rules, ctx);
-  if (!ok || ctx.errors.length) {
-    console.error('规则编译失败:');
-    for (const e of [...errors, ...ctx.errors]) console.error('  ✗ ' + e);
-    process.exitCode = 1;
-    return;
-  }
-  console.log(`规则包编译 OK（${effective.join('+')}）`);
-  console.log(`  文件: ${files.length} 个槽位, 规则条目 ${merged.rules.length}, 编译成功 ${compiled.length}`);
-  const byKind = {};
-  for (const r of compiled) byKind[r.kind || r.type || 'other'] = (byKind[r.kind || r.type || 'other'] || 0) + 1;
-  for (const [k, v] of Object.entries(byKind)) console.log(`  ${k}: ${v}`);
-}
-
-export function cmdYamlTemplate() {
-  console.log(yamlTemplate());
-}
-
-/** 子命令：readme-template — 输出 README 模板。 */
-export function cmdReadmeTemplate() {
-  console.log(readmeTemplate().template);
-}
-
-/** 子命令：self-check — 版本一致性 + HELP↔parseArgv 机器比对。 */
-export function cmdSelfCheck() {
-  const helpRes = helpSync(HELP, KNOWN_FLAGS);
-  let fail = 0;
-  console.log('自身自检:');
-  console.log(`  version: v${VERSION}`);
-  if (!helpRes.ok) {
-    fail++;
-    console.error(`  ✗ cli-help-sync: HELP 与 parseArgv 不一致`);
-    for (const f of helpRes.missingInHelp) console.error(`    parseArgv 认但 HELP 没写: ${f}`);
-    for (const f of helpRes.missingInParse) console.error(`    HELP 写了但 parseArgv 不认: ${f}`);
-  } else {
-    console.log(`  ✓ cli-help-sync: HELP 与 parseArgv 一致（${helpRes.helpFlags.join(' ')}）`);
-  }
-  const pkgRes = readPkgJson();
-  if (pkgRes && pkgRes.version && pkgRes.version !== VERSION) {
-    fail++;
-    console.error(`  ✗ version: lib/self=${VERSION} vs package.json=${pkgRes.version}`);
-  } else {
-    console.log(`  ✓ version: lib/self = package.json = ${VERSION}`);
-  }
-  process.exitCode = fail > 0 ? 1 : 0;
-}
-
-/** 读 package.json（失败返回 null）。 */
-function readPkgJson() {
-  try {
-    return JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
-  } catch { return null; }
-}
-
-/** 命令分发表（重构：main 54 圈复杂度 → 表驱动分发）。
- * 每个条目 [命令名, handler(rest)]；统一 parse 模式用 parseVia 包装。 */
-
-
-/** 注册表工具返回输出（默认文本化 summary/apiGuide/lines；--json 直出完整返回）。 */
-function printRegistryResult(r, json) {
-  if (json) { console.log(JSON.stringify(r, null, 2)); return; }
-  if (!r) return;
-  if (r.error) { console.error(r.error); return; }
-  if (r.apiGuide) { console.log(r.apiGuide); return; }
-  const L = [];
-  if (r.summary) L.push(`summary: ${JSON.stringify(r.summary)}`);
-  if (r.quality) L.push(`quality: ${r.quality.score ?? '?'}/${r.quality.level ?? '?'}`);
-  if (r.count != null) L.push(`count: ${r.count}`);
-  // lines：工具自备的可读文本行（逐文件结论、命中明细等）——避免为此另造输出通道
-  if (Array.isArray(r.lines) && r.lines.length) L.push(...r.lines);
-  console.log(L.length ? L.join('\n') : JSON.stringify(r));
-}
-
-const parseVia = (run) => (rest) => {
-  const { flags, positional, error } = parseArgv(rest);
-  if (error) return console.error(error);
-  return run(flags, positional);
-};
-const COMMANDS = new Map([
-  ['ruleset', (rest) => cmdRuleset(rest)],
-  ['audit', parseVia((f, p) => cmdAudit(p[0] || '.', f))], // audit 不走注册表——CLI 独立审计需完整 findings（不依赖宿主 API）；工具 code_audit 输出 API 指引
-  ['repos', parseVia((f, p) => cmdRepos(p[0] || '.', f))],
-  ['index', parseVia((f, p) => cmdIndex(p[0] || '.', f))],
-  ['functions', parseVia((f, p) => cmdFunctions(p[0] || '', p[1] || '', f))],
-  ['tree-doc', parseVia((f, p) => cmdTreeDoc(p[0] || '', f))],
-  ['git', (rest) => cmdGit(rest)], // 1.9.0：浅包装 git（自动凭据透传）
-  ['yaml-template', () => cmdYamlTemplate()],
-  ['readme-template', () => cmdReadmeTemplate()],
-  ['self-check', () => cmdSelfCheck()],
+/** 命令表（本侧独有的 COMMANDS；注册表驱动的命令由 shared 的 resolveDispatch 处理）。
+ * 注：`git` 不用登记——注册表（git_sluice）已覆盖它，旧 cli.mjs 里那条 COMMANDS['git'] 是死代码。 */
+export const COMMANDS = new Map([
+  ['repos', parseVia((flags, positional) => cmdRepos(positional[0] || '.', flags))],
+  ['index', parseVia((flags, positional) => cmdIndex(positional[0] || '.', flags))],
+  // `git` 必须走这里而不是注册表：注册表只认声明过的参数，会把 git 自己的 flag
+  //   （如 `log --oneline`）当「未知参数」拒掉，与「参数与 git 完全一致」的承诺相反。
+  ['git', (rest) => cmdGit(rest)],
 ]);
 
-export async function main(argv = process.argv.slice(2)) {
-  const [cmd, ...rest] = argv;
-  if (!cmd || cmd === 'help' || cmd === '--help' || cmd === '-h') {
-    console.log(HELP);
-    return;
-  }
-  if (cmd === 'version' || cmd === '-v' || cmd === '--version') return await cmdVersion();
-  // 方案 B：注册表驱动命令优先（工具有对应 → 通用 parseArgs → callTool——
-  //   CLI 与插件工具同实现，自动对齐；CLI 独立于 DSH 运行：env 自备 + 本地配置）
-  const reg = registryByCli(cmd);
-  if (reg) {
-    const { args, error } = parseRegistryArgs(rest, reg.params);
-    if (error) { console.error(error); process.exitCode = 1; return 1; }
-    try {
-      const r = await callTool(reg.name, args, { workspaceRoot: process.cwd() }, cliPluginConfig(), console, null, null);
-      printRegistryResult(r, args.json === true);
-      // 退出码如实反映结果：ok:false = 命令失败（门禁/脚本据此判失败）。
-      //   ok:true 但 committed:false / pushed:false 这类「零改动正常路径」仍是 0。
-      return r && r.ok === false ? 1 : 0;
-    } catch (e) { console.error(String((e && e.message) || e)); process.exitCode = 1; return 1; }
-  }
-  const handler = COMMANDS.get(cmd);
-  if (handler) return await handler(rest);
-  // 1.9.0：未知命令透传为浅包装 git（自动凭据）——`git-sluice pull` = `git pull`
-  //   （git-sluice 是 git 的超集：已知子命令走插件，其余全部交给 git + 插件凭据）
-  const wrapped = runWrappedGit([cmd, ...rest]);
-  if (wrapped.ok) return 0;
-  process.exitCode = typeof wrapped.status === 'number' ? wrapped.status : 1;
+/** 子命令：git —— 浅包装 git（参数原样透传，凭据自动注入）。
+ *  无参数时只让 git 打印自己的用法并返回 0（`git` 裸跑本身 exit 1，但「看用法」不是错误场景）。 */
+export async function cmdGit(rest = []) {
+  const wrapped = await runWrappedGit(rest);
+  if (Array.isArray(rest) && rest.length === 0) return 0;
+  if (wrapped && wrapped.ok) return 0;
+  process.exitCode = typeof wrapped?.status === 'number' ? wrapped.status : 1;
   return process.exitCode;
 }
 
-// 直接运行时入口（被 import 时不执行）
-// 修：符号链接场景（PATH 里 git-sluice → cli.mjs）下 process.argv[1] 是链接路径、
-//   import.meta.url 是真实文件路径，两者字符串不相等 → 入口静默不执行（exit 0 无输出）。
-//   用 realpath 归一化：链接/相对/绝对路径都解析到同一真实路径再比。
-if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith('cli.mjs')
-  || import.meta.url === `file://${realpathSync(process.argv[1])}`) {
-  // 顶层 await：main 已异步，未 await 时 rejection 会变成 unhandled rejection
-  //   （进程静默退出、退出码不对），故显式 await 并回传退出码。
-  // 命令函数（cmdFileIo/cmdModuleSplitter 等）返回业务对象/数组，
-  //   只有 number 才赋 exitCode——否则 `process.exitCode = 对象` 抛 ERR_INVALID_ARG_TYPE。
-  const mainResult = await main();
-  if (typeof mainResult === 'number' && Number.isInteger(mainResult)) process.exitCode = mainResult;
+/** 未知命令的 git 透传（`git-sluice status` = `git status`；git-sluice 是 git 的超集）。 */
+async function passthroughGit(argv) {
+  return await runWrappedGit(argv);
+}
+
+/**
+ * 入口 main。
+ * @param {string[]} argv
+ * @returns {Promise<number|undefined>} 退出码
+ */
+export async function main(argv = process.argv.slice(2)) {
+  return await runCli({
+    cliName: CLI_GIT,
+    argv,
+    commands: COMMANDS,
+    helpText: HELP,
+    passthroughGit,
+    getConfig: cliPluginConfig,
+  });
+}
+
+runAsEntry(import.meta.url, main);
+
+// 兼容导出（外部/测试按老路径 import 这些名字；实现已按域迁到 lib/cli/commands-*.mjs）
+export { parseArgv, printToolResult, cliPluginConfig };
+export {
+  cmdAccountCheck, cmdCredEnv, cmdRemoteCreate, cmdSetVisibility, cmdGenSshKey,
+  cmdRepos, cmdIndex, cmdCommit, cmdClone,
+};
+/** 子命令：version（三入口同一实现，只有名字不同）。 */
+export function cmdVersion() {
+  console.log(`git-sluice v${VERSION} — dsh-git-push（统一函数入口架构）`);
 }

@@ -1,6 +1,6 @@
 /**
  * CLI 与源码直接调用全量审计结果一致性测试：
- *   git-sluice audit <repo> --full --json 的输出必须与直接 import auditFull 调用完全一致
+ *   audit-sluice audit <repo> --full --json 的输出必须与直接 import auditFull 调用完全一致
  *   （files / findings / summary）——防止 CLI 通道丢字段、stdout 被进度噪音污染导致 JSON 不可解析。
  * 测试仓库：临时 git 仓库（含 .gitignore 忽略文件 + 中文文件名 + 普通文件），小规模跑得快。
  */
@@ -14,7 +14,8 @@ import { fileURLToPath } from 'node:url';
 
 import { auditFull } from '../lib/audit/index.js';
 
-const cliPath = fileURLToPath(new URL('../cli.mjs', import.meta.url));
+// 审计命令 2026-11-13 起迁到独立入口 audit-sluice（bin），不再是 git-sluice 的子命令
+const cliPath = fileURLToPath(new URL('../cli-audit.mjs', import.meta.url));
 
 function makeAuditRepo() {
   const repo = mkdtempSync(join(tmpdir(), 'dshgp-parity-'));

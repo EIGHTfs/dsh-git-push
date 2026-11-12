@@ -1018,19 +1018,18 @@
 | `cmdGenSshKey` | 85-96 | 12 | `export async function cmdGenSshKey(flags) {` |
 | `resolveRepoOwnerName` | 99-107 | 9 | `async function resolveRepoOwnerName(repoPath) {` |
 
-### lib/cli/commands-audit.mjs（148 行 · 9 个函数）
+### lib/cli/commands-audit.mjs（135 行 · 8 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `cliPluginConfig` | 28-37 | 10 | `export function cliPluginConfig() {` |
-| `pluginEqualAuditOpts` | 44-56 | 13 | `export function pluginEqualAuditOpts(cfg, flags, { scope = 'diff' } = {}) {` |
-| `pluginEqualWeights` | 59-63 | 5 | `export function pluginEqualWeights(cfg, flags) {` |
-| `pathExists` | 66-68 | 3 | `async function pathExists(p) {` |
-| `cmdAudit` | 71-75 | 5 | `export async function cmdAudit(root, flags) {` |
-| `runHistoryAuditCmd` | 78-94 | 17 | `async function runHistoryAuditCmd(root, flags) {` |
-| `runStandardAudit` | 97-110 | 14 | `async function runStandardAudit(root, flags) {` |
-| `printAuditResult` | 113-131 | 19 | `function printAuditResult(root, auditResult, opts, weights, quality) {` |
-| `cmdScan` | 139-147 | 9 | `export async function cmdScan(root, flags) {` |
+| `pluginEqualAuditOpts` | 31-43 | 13 | `export function pluginEqualAuditOpts(cfg, flags, { scope = 'diff' } = {}) {` |
+| `pluginEqualWeights` | 46-50 | 5 | `export function pluginEqualWeights(cfg, flags) {` |
+| `pathExists` | 53-55 | 3 | `async function pathExists(p) {` |
+| `cmdAudit` | 58-62 | 5 | `export async function cmdAudit(root, flags) {` |
+| `runHistoryAuditCmd` | 65-81 | 17 | `async function runHistoryAuditCmd(root, flags) {` |
+| `runStandardAudit` | 84-97 | 14 | `async function runStandardAudit(root, flags) {` |
+| `printAuditResult` | 100-118 | 19 | `function printAuditResult(root, auditResult, opts, weights, quality) {` |
+| `cmdScan` | 126-134 | 9 | `export async function cmdScan(root, flags) {` |
 
 ### lib/cli/commands-doc.mjs（128 行 · 7 个函数）
 
@@ -1044,19 +1043,54 @@
 | `cmdFunctions` | 84-106 | 23 | `export async function cmdFunctions(op, target, flags) {` |
 | `cmdModuleSplitter` | 109-127 | 19 | `export async function cmdModuleSplitter(positional = [], flags = {}) {` |
 
-### lib/cli/commands-vcs.mjs（176 行 · 9 个函数）
+### lib/cli/commands-tool.mjs（94 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `pathExists` | 33-35 | 3 | `async function pathExists(p) {` |
-| `cmdRepos` | 38-55 | 18 | `export function cmdRepos(root, flags) {` |
-| `cmdIndex` | 58-76 | 19 | `export async function cmdIndex(root, flags) {` |
-| `cmdGit` | 79-87 | 9 | `export async function cmdGit(args = []) {` |
-| `cmdCommit` | 90-121 | 32 | `export async function cmdCommit(root, flags) {` |
-| `cmdLinkCheck` | 124-134 | 11 | `export async function cmdLinkCheck(root = '.') {` |
-| `runClonePreview` | 137-150 | 14 | `async function runClonePreview(target, flags) {` |
-| `printCloneResult` | 153-165 | 13 | `function printCloneResult(r, flags, target, dest) {` |
-| `cmdClone` | 168-175 | 8 | `export async function cmdClone(flags, positional) {` |
+| `readPkgJson` | 23-27 | 5 | `export function readPkgJson() {` |
+| `cmdYamlTemplate` | 30-32 | 3 | `export function cmdYamlTemplate() {` |
+| `cmdReadmeTemplate` | 35-37 | 3 | `export function cmdReadmeTemplate() {` |
+| `checkEntries` | 43-71 | 29 | `export function checkEntries() {` |
+| `cmdSelfCheck` | 74-93 | 20 | `export function cmdSelfCheck() {` |
+
+### lib/cli/commands-vcs.mjs（177 行 · 9 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `pathExists` | 34-36 | 3 | `async function pathExists(p) {` |
+| `cmdRepos` | 39-56 | 18 | `export function cmdRepos(root, flags) {` |
+| `cmdIndex` | 59-77 | 19 | `export async function cmdIndex(root, flags) {` |
+| `cmdGit` | 80-88 | 9 | `export async function cmdGit(args = []) {` |
+| `cmdCommit` | 91-122 | 32 | `export async function cmdCommit(root, flags) {` |
+| `cmdLinkCheck` | 125-135 | 11 | `export async function cmdLinkCheck(root = '.') {` |
+| `runClonePreview` | 138-151 | 14 | `async function runClonePreview(target, flags) {` |
+| `printCloneResult` | 154-166 | 13 | `function printCloneResult(r, flags, target, dest) {` |
+| `cmdClone` | 169-176 | 8 | `export async function cmdClone(flags, positional) {` |
+
+### lib/cli/shared.mjs（440 行 · 20 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `commandOwner` | 57-63 | 7 | `export function commandOwner(command) {` |
+| `allCommands` | 66-68 | 3 | `export function allCommands() {` |
+| `cliPluginConfig` | 81-90 | 10 | `export function cliPluginConfig() {` |
+| `versionLine` | 93-95 | 3 | `export function versionLine(cliName) {` |
+| `buildCrossCliHint` | 102-112 | 11 | `export function buildCrossCliHint({ command = '', argvRest = [], fromCli = '' } = {}) {` |
+| `defaultFlags` | 161-170 | 10 | `function defaultFlags() {` |
+| `applyBoolFlag` | 173-178 | 6 | `function applyBoolFlag(flags, token) {` |
+| `applyValueFlag` | 181-184 | 4 | `function applyValueFlag(flags, token, rawValue) {` |
+| `parseArgv` | 193-211 | 19 | `export function parseArgv(argv = []) {` |
+| `parseVia` | 214-220 | 7 | `export function parseVia(run) {` |
+| `printToolResult` | 228-235 | 8 | `export function printToolResult(result, asJson) {` |
+| `readableResultLines` | 243-251 | 9 | `function readableResultLines(result) {` |
+| `printVersion` | 254-256 | 3 | `export function printVersion(cliName) {` |
+| `resolveDispatch` | 266-297 | 32 | `export function resolveDispatch({ cliName = CLI_GIT, argv = [], commands = new Map() } = {}) {` |
+| `normalizeRegistryArgv` | 311-325 | 15 | `export function normalizeRegistryArgv(rest = [], params = []) {` |
+| `runCli` | 338-379 | 42 | `export async function runCli({` |
+| `isDirectRun` | 389-397 | 9 | `export function isDirectRun(moduleUrl) {` |
+| `runAsEntry` | 404-415 | 12 | `export function runAsEntry(moduleUrl, main) {` |
+| `readEntrySource` | 424-426 | 3 | `export function readEntrySource(relPath) {` |
+| `parseEntrySourceMeta` | 433-439 | 7 | `export function parseEntrySourceMeta(sourceText = '') {` |
 
 ### lib/client-parts/audit/audit.js（302 行 · 10 个函数）
 
@@ -2177,13 +2211,13 @@
 |------|------|------|------|
 | `filesFromConfig` | 46-53 | 8 | `function filesFromConfig(path) {` |
 
-### scripts/check.mjs（201 行 · 3 个函数）
+### scripts/check.mjs（204 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `collectJs` | 22-31 | 10 | `function collectJs(dir, acc = []) {` |
 | `collectJson` | 34-42 | 9 | `function collectJson(dir, acc = []) {` |
-| `layerOf` | 146-153 | 8 | `const layerOf = (rel) => {` |
+| `layerOf` | 149-156 | 8 | `const layerOf = (rel) => {` |
 
 ### scripts/cpu-sample.mjs（189 行 · 11 个函数）
 
@@ -2324,7 +2358,7 @@
 | `auditWithRuleset` | 64-69 | 6 | `async function auditWithRuleset(repo, rulesetDir) {` |
 | `runRulesSoloAudit` | 76-150 | 75 | `export async function runRulesSoloAudit(repo, opts = {}) {` |
 
-### scripts/scan-file-io.mjs（714 行 · 27 个函数）
+### scripts/scan-file-io.mjs（718 行 · 27 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -2349,12 +2383,12 @@
 | `riskMark` | 483-485 | 3 | `function riskMark(risk) {` |
 | `printText` | 492-517 | 26 | `function printText(hits, { writeOnly = false, riskOnly = '', summary = false } = {}) {` |
 | `printJson` | 520-522 | 3 | `function printJson(hits) {` |
-| `main` | 530-577 | 48 | `export function main(argv = process.argv.slice(2)) {` |
+| `main` | 530-580 | 51 | `export function main(argv = process.argv.slice(2)) {` |
 | `splitMulti` | 541-541 | 1 | `const splitMulti = (v) => String(v \|\| '').split(',').map((x) => x.trim()).filter(Boolean);` |
-| `scanFileIo` | 580-600 | 21 | `export function scanFileIo(opts = {}) {` |
-| `summarize` | 603-620 | 18 | `export function summarize(hits) {` |
-| `count` | 604-608 | 5 | `const count = (key) => {` |
-| `printReport` | 632-708 | 77 | `function printReport(hits, opts = {}) {` |
+| `scanFileIo` | 583-604 | 22 | `export function scanFileIo(opts = {}) {` |
+| `summarize` | 607-624 | 18 | `export function summarize(hits) {` |
+| `count` | 608-612 | 5 | `const count = (key) => {` |
+| `printReport` | 636-712 | 77 | `function printReport(hits, opts = {}) {` |
 
 ### scripts/scan-fs-hotspots.mjs（108 行 · 2 个函数）
 
@@ -2377,13 +2411,13 @@
 | `pushLive` | 134-145 | 12 | `function pushLive({ workspaceRoot, found, done }) {` |
 | `appendIndexEntry` | 148-162 | 15 | `function appendIndexEntry({ workspaceRoot, entry, owner }) {` |
 
-### scripts/scan-version.mjs（123 行 · 3 个函数）
+### scripts/scan-version.mjs（126 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `readmeVersion` | 36-66 | 31 | `export function readmeVersion(text = '') {` |
 | `cmp` | 56-63 | 8 | `const cmp = (a, b) => {` |
-| `main` | 68-120 | 53 | `function main() {` |
+| `main` | 68-123 | 56 | `function main() {` |
 
 ### scripts/symbol-index.mjs（86 行 · 2 个函数）
 
@@ -2600,17 +2634,25 @@
 | `readGlobalSafeDirs` | 49-55 | 7 | `const readGlobalSafeDirs = () => {` |
 | `gitOk` | 57-59 | 3 | `const gitOk = (dir, args) => {` |
 
-### test/test-cli-audit-parity.mjs（68 行 · 1 个函数）
+### test/test-cli-audit-parity.mjs（69 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `makeAuditRepo` | 19-39 | 21 | `function makeAuditRepo() {` |
+| `makeAuditRepo` | 20-40 | 21 | `function makeAuditRepo() {` |
 
-### test/test-cli-help-registry-sync.mjs（75 行 · 1 个函数）
+### test/test-cli-help-registry-sync.mjs（100 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `usageLines` | 32-42 | 11 | `function usageLines(cmd) {` |
+| `usageLines` | 36-46 | 11 | `function usageLines(helpText, cliName, command) {` |
+| `helpOf` | 49-53 | 5 | `function helpOf(cliName) {` |
+
+### test/test-cli-split.mjs（285 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `runCliFile` | 41-50 | 10 | `async function runCliFile(cliName, argv, opts = {}) {` |
+| `runInWaves` | 53-59 | 7 | `async function runInWaves(tasks, waveSize = 4) {` |
 
 ### test/test-client-fragment-scope.mjs（69 行 · 1 个函数）
 
@@ -2918,7 +2960,7 @@
 | `tmpRepo` | 31-35 | 5 | `function tmpRepo() {` |
 | `git` | 38-40 | 3 | `function git(dir, args) {` |
 
-### test/test-link-check.mjs（229 行 · 1 个函数）
+### test/test-link-check.mjs（230 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -3100,7 +3142,7 @@
 |------|------|------|------|
 | `block` | 349-352 | 4 | `const block = (text) => {` |
 
-### test/test-scope-collisions.mjs（253 行 · 2 个函数）
+### test/test-scope-collisions.mjs（254 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|

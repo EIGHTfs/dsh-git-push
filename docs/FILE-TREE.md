@@ -135,7 +135,9 @@ dsh-git-push/
 │   │   ├── commands-account.mjs — （待注释）
 │   │   ├── commands-audit.mjs — （待注释）
 │   │   ├── commands-doc.mjs — （待注释）
+│   │   ├── commands-tool.mjs — 工具链命令实现（模板生成与 self-check）
 │   │   ├── commands-vcs.mjs — （待注释）
+│   │   ├── shared.mjs — 三个 CLI 共用的公共层（参数解析/结果打印/HELP 渲染/版本/跨侧指引）
 │   ├── client/ — 客户端配置（DEFAULT_CONFIG + SETTINGS_SCHEMA 侧边栏设置项定义）
 │   │   ├── index.js — 侧边栏设置 UI 总入口（DEFAULT_CONFIG + SETTINGS_SCHEMA）
 │   ├── client-parts/ — 客户端分片源码（按侧分目录：git/ 参与构建，audit/ 只归档不进产物）
@@ -306,6 +308,7 @@ dsh-git-push/
 │   ├── test-cifs-init.mjs — （待注释）
 │   ├── test-cli-audit-parity.mjs — CLI 与源码全量审计一致性测试（audit --full --json vs 直接 auditFull，含忽略排除）
 │   ├── test-cli-help-registry-sync.mjs — （待注释）
+│   ├── test-cli-split.mjs — 三入口拆分回归：命令归属、跨侧提示、HELP 一致性、28 命令逐个可达
 │   ├── test-client-fragment-scope.mjs — 客户端分片作用域推导测试（dsh-client-fragment）
 │   ├── test-client.mjs — 侧边栏测试（手写 DOM/零外部资源/开关默认）
 │   ├── test-clone-concurrency.mjs — clone 并发互斥/可中止/失败保留文件（14 项，CIFS 对照用例可跳）
@@ -512,6 +515,8 @@ dsh-git-push/
 ├── LICENSE — （待注释）
 ├── README.md — 插件 README（功能总览/用法/版本记录）
 ├── SECURITY.md — （待注释）
+├── cli-audit.mjs — 审计侧 CLI 入口（bin audit-sluice：audit/ruleset/file-io/link-check/scope-check/functions/tree-doc）
+├── cli-tool.mjs — 工具链 CLI 入口（bin tool-sluice：module-splitter/yaml-template/readme-template/self-check）
 ├── cli.mjs — 独立 CLI（git-sluice，不依赖宿主可独立运行）
 ├── cordis.patch.yml — DSH 插件组合 patch（loader 注入定义）
 ├── package-lock.json — 依赖锁文件（npm install --no-bin-links 生成，保证依赖版本与 tree-sitter ABI 配对）

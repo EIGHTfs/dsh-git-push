@@ -181,9 +181,9 @@ git_commit_push({ repo: "<仓库路径>", message: "chore: 重写历史后同步
 2. 需要 **why / verify 溯源**（评审时要能看出「为什么改」与「怎么验证的」✓）
 
 **不该硬用** ✗：一句话就能说清时用字符串即可 ✓（强行结构化只增加噪音）。
-CLI（`git-sluice commit <仓库> -m "msg"`）只支持字符串 ✓；`messageItems` 走工具/HTTP API ✓。
+CLI（`git-sluice commit <仓库> --message "msg"`）只支持字符串 ✓；`messageItems` 走工具/HTTP API ✓。
 
 **该用却没用会怎样**：不会失败 ✓；但当单串信息偏长（>150 字符或含换行）时，工具结果会带
 `usageHint` 提醒改用 `messageItems` ✓；采用率留痕在 `<DSH_HOME>/git-push/commit-usage.log`
 （每行一条 JSON：`structured` / `items` / `msgLen` / `repo` ✓，可据此统计实际采用率）。
-| CLI | `git-sluice commit <仓库> -m "msg"` 与工具同源（审计门禁一致）；CLI 默认只提交，加 `--push` 才推 |
+| CLI | `git-sluice commit <仓库> --message "msg"` 与工具同源（审计门禁一致）；CLI 默认只提交，加 `--push` 才推 |

@@ -392,34 +392,89 @@
   "test/test-git-api-tool.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "lib/app/constants.js": {
+      "cli.mjs": {
         "status": "M",
-        "mtime": "2026-11-12T22:34:57.648Z",
+        "mtime": "2026-11-12T23:36:27.481Z",
         "note": "注释可能需更新"
       },
-      "lib/app/schema.js": {
+      "lib/cli/commands-audit.mjs": {
         "status": "M",
-        "mtime": "2026-11-12T22:35:03.629Z",
+        "mtime": "2026-11-12T23:12:06.833Z",
         "note": "注释可能需更新"
       },
-      "lib/commit-push.js": {
+      "lib/cli/commands-vcs.mjs": {
         "status": "M",
-        "mtime": "2026-11-12T22:26:40.903Z",
+        "mtime": "2026-11-12T23:12:11.807Z",
         "note": "注释可能需更新"
       },
-      "lib/commit-push/": {
-        "status": "A",
-        "mtime": "2026-11-12T22:32:50.511Z",
+      "package.json": {
+        "status": "M",
+        "mtime": "2026-11-12T23:13:10.865Z",
         "note": "注释可能需更新"
       },
-      "scripts/audit-gate.mjs": {
-        "status": "A",
-        "mtime": "2026-11-12T22:35:03.661Z",
+      "scripts/check.mjs": {
+        "status": "M",
+        "mtime": "2026-11-12T23:21:57.084Z",
         "note": "注释可能需更新"
       },
-      "test/test-pre-commit-engine.mjs": {
+      "scripts/scan-file-io.mjs": {
+        "status": "M",
+        "mtime": "2026-11-12T23:21:57.124Z",
+        "note": "注释可能需更新"
+      },
+      "scripts/scan-version.mjs": {
+        "status": "M",
+        "mtime": "2026-11-12T23:21:57.089Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-cli-audit-parity.mjs": {
+        "status": "M",
+        "mtime": "2026-11-12T23:16:05.392Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-cli-help-registry-sync.mjs": {
+        "status": "M",
+        "mtime": "2026-11-12T23:23:33.891Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-link-check.mjs": {
+        "status": "M",
+        "mtime": "2026-11-12T23:16:05.425Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-module-splitter.mjs": {
+        "status": "M",
+        "mtime": "2026-11-12T23:16:05.430Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-scope-collisions.mjs": {
+        "status": "M",
+        "mtime": "2026-11-12T23:16:05.396Z",
+        "note": "注释可能需更新"
+      },
+      "cli-audit.mjs": {
         "status": "A",
-        "mtime": "2026-11-12T22:34:06.691Z",
+        "mtime": "2026-11-12T23:20:03.197Z",
+        "note": "注释可能需更新"
+      },
+      "cli-tool.mjs": {
+        "status": "A",
+        "mtime": "2026-11-12T23:20:03.211Z",
+        "note": "注释可能需更新"
+      },
+      "lib/cli/commands-tool.mjs": {
+        "status": "A",
+        "mtime": "2026-11-12T23:25:56.712Z",
+        "note": "注释可能需更新"
+      },
+      "lib/cli/shared.mjs": {
+        "status": "A",
+        "mtime": "2026-11-12T23:28:33.398Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-cli-split.mjs": {
+        "status": "A",
+        "mtime": "2026-11-12T23:28:44.725Z",
         "note": "注释可能需更新"
       }
     }
@@ -587,5 +642,10 @@
   "scripts/audit-gate.mjs": "提交前预处理的轻量审计引擎入口（只加载 audit+score，按契约输出 JSON 与退出码 0/1/2）",
   "lib/commit-push/pre-commit-engine.js": "提交前预处理引擎适配层：spawn 引擎、拼参数、退出码映射、超时与 fail-closed",
   "lib/commit-push": "提交推送编排（runAudit 门禁 + commitWithAudit/commitMany）",
-  "test/test-pre-commit-engine.mjs": "提交前预处理引擎契约回归：退出码 0/1/2、超时/命令缺失 fail-closed、与进程内结果一致"
+  "test/test-pre-commit-engine.mjs": "提交前预处理引擎契约回归：退出码 0/1/2、超时/命令缺失 fail-closed、与进程内结果一致",
+  "cli-audit.mjs": "审计侧 CLI 入口（bin audit-sluice：audit/ruleset/file-io/link-check/scope-check/functions/tree-doc）",
+  "cli-tool.mjs": "工具链 CLI 入口（bin tool-sluice：module-splitter/yaml-template/readme-template/self-check）",
+  "lib/cli/shared.mjs": "三个 CLI 共用的公共层（参数解析/结果打印/HELP 渲染/版本/跨侧指引）",
+  "lib/cli/commands-tool.mjs": "工具链命令实现（模板生成与 self-check）",
+  "test/test-cli-split.mjs": "三入口拆分回归：命令归属、跨侧提示、HELP 一致性、28 命令逐个可达"
 }

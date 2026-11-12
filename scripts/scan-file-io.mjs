@@ -556,7 +556,10 @@ export function main(argv = process.argv.slice(2)) {
   const defaults = targets.length ? targets : [
     join(root, '..', 'lib'),
     join(root, '..', 'scripts'),
+    // 三个 CLI 入口都在默认扫描集里：入口按侧拆分后，漏掉新入口 = file-io 默认静默漏扫
     join(root, '..', 'cli.mjs'),
+    join(root, '..', 'cli-audit.mjs'),
+    join(root, '..', 'cli-tool.mjs'),
     join(root, '..', 'lib', 'client.js'),
   ];
   const files = collectFiles(defaults);
@@ -582,7 +585,8 @@ export function scanFileIo(opts = {}) {
   const root = dirname(fileURLToPath(import.meta.url));
   const dirs = targets.length ? targets : [
     join(root, '..', 'lib'), join(root, '..', 'scripts'),
-    join(root, '..', 'cli.mjs'), join(root, '..', 'lib', 'client.js'),
+    join(root, '..', 'cli.mjs'), join(root, '..', 'cli-audit.mjs'), join(root, '..', 'cli-tool.mjs'),
+    join(root, '..', 'lib', 'client.js'),
   ];
   const files = collectFiles(dirs);
   let hits = [];

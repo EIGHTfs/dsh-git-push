@@ -11,7 +11,8 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
 import { listTools } from '../lib/app/tools.js';
-import { cmdModuleSplitter } from '../cli.mjs';
+// module-splitter 属工具链侧命令 → 入口是 tool-sluice
+import { cmdModuleSplitter } from '../cli-tool.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 import { dirname } from 'node:path';
@@ -39,13 +40,13 @@ test('module_splitter：tool-call 分发 case 存在', () => {
 });
 
 test('module_splitter：CLI 命令 + HELP + parseArgv 兼容', () => {
-  const cli = readFileSync(join(rootDir, 'cli.mjs'), 'utf8');
+  const cli = readFileSync(join(rootDir, 'cli-tool.mjs'), 'utf8');
   // 方案 B：module-splitter 走注册表驱动（registryByCli('module-splitter') 命中）
   const reg = readFileSync(join(rootDir, 'lib/app/command-registry.js'), 'utf8');
-  assert.ok(/\['module-splitter',/.test(cli) || /cli: 'module-splitter'/.test(reg), 'module-splitter 分派缺失（COMMANDS 或注册表 cli 声明）');
-  assert.match(cli, /git-sluice module-splitter <analyze\|split\|verify>/, 'HELP 缺用法行');
-  // 结构化：实现迁到 lib/cli/commands-doc.mjs，cli.mjs re-export 保持导出面
-  assert.match(cli, /cmdModuleSplitter/, 'cli.mjs 缺 cmdModuleSplitter 导出（re-export）');
+  assert.ok(/cli: 'module-splitter'/.test(reg), 'module-splitter 分派缺失（注册表 cli 声明）');
+  assert.match(cli, /tool-sluice module-splitter <analyze\|split\|verify>/, '工具链侧 HELP 缺用法行');
+  // 结构化：实现迁到 lib/cli/commands-doc.mjs，tool-sluice 入口 re-export 保持导出面
+  assert.match(cli, /cmdModuleSplitter/, 'cli-tool.mjs 缺 cmdModuleSplitter 导出（re-export）');
   const doc = readFileSync(join(rootDir, 'lib/cli/commands-doc.mjs'), 'utf8');
   assert.match(doc, /export async function cmdModuleSplitter/, 'lib/cli/commands-doc.mjs 缺 cmdModuleSplitter 实现');
 });

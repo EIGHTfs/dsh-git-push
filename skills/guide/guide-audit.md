@@ -14,7 +14,7 @@ generatedBy: deepseek-official/deepseek-v4-flash · EIGHTfs 2026-10-02
 
 | 场景 | 必须做的 |
 |---|---|
-| 要审计一个仓库 | 会话内用工具 `code_audit`；只看聚合明细用 HTTP `/api/git-push/audit`；脱离 DSH 用 `git-sluice audit` |
+| 要审计一个仓库 | 会话内用工具 `code_audit`；只看聚合明细用 HTTP `/api/git-push/audit`；脱离 DSH 用 `audit-sluice audit` |
 | 判断能否提交 | 门禁只认 `blocker`，命中即拦；`warning` / `notice` 只提示不拦 |
 | 遇到误报 | 先按判定类型选已有豁免机制；结构性误报优先修审计判定，不靠注释掩盖 |
 | 新增 / 停用规则 | 只改规则 yml（放文件即生效、删文件即移除），不改代码 |
@@ -28,7 +28,7 @@ generatedBy: deepseek-official/deepseek-v4-flash · EIGHTfs 2026-10-02
 |---|---|---|
 | 工具 | `code_audit` | 默认精简输出（评分 / 各级数量 / 豁免统计 / API 指引）；`includeFindings=true` 出全量 |
 | HTTP | `GET/POST /api/git-push/audit` | 请求时聚合：分组 / 严重级过滤 / 条数截断；默认全量范围 |
-| CLI | `git-sluice audit <目录>` | 独立运行（零第三方依赖，Node ≥18 + 本机 git），`--json` 出全量 |
+| CLI | `audit-sluice audit <目录>` | 独立运行（零第三方依赖，Node ≥18 + 本机 git），`--json` 出全量 |
 
 ### 2. 工具 `code_audit` 参数
 
@@ -61,16 +61,16 @@ generatedBy: deepseek-official/deepseek-v4-flash · EIGHTfs 2026-10-02
 
 返回：`ok`、`repo`、`scope`、`files`、`summary`、`quality{score,level}`、`groups[]`（按条数降序，每组含一条 `sample`）、`total`、`filtered`、`exemptStats`、`groupByTypes`、`blocked[]`。
 
-### 4. CLI（`git-sluice audit`）
+### 4. CLI（`audit-sluice audit`）
 
 ```bash
-git-sluice audit .                            # 变动范围（非 git 目录自动全量）
-git-sluice audit . --full                     # 全量
-git-sluice audit . --ruleset <规则目录>        # 自定规则目录
-git-sluice audit . --weights '{"安全性":25}'   # 权重覆盖 JSON
-git-sluice audit . --include-ignored          # 连 .gitignore 忽略的文件也扫
-git-sluice audit . --json                     # 全量 findings + yaml
-git-sluice audit . --history --since <提交> --until <提交> --out <目录>
+audit-sluice audit .                            # 变动范围（非 git 目录自动全量）
+audit-sluice audit . --full                     # 全量
+audit-sluice audit . --ruleset <规则目录>        # 自定规则目录
+audit-sluice audit . --weights '{"安全性":25}'   # 权重覆盖 JSON
+audit-sluice audit . --include-ignored          # 连 .gitignore 忽略的文件也扫
+audit-sluice audit . --json                     # 全量 findings + yaml
+audit-sluice audit . --history --since <提交> --until <提交> --out <目录>
 ```
 
 CLI 读与插件同一份配置（`$DSH_HOME/git-push/config.json`）；权重优先级：显式 `--weights` > 配置 `weightOverrides` > 默认权重表。CLI 与插件用同一实现、同一配置，同一仓库同一参数结果一致。
@@ -133,7 +133,7 @@ console.log(x); // dsh-skip-residue: 本行为刻意保留的调试输出样本
 
 ### 10. 链接检查（link_check）
 
-工具 `link_check`（`path` = 文件或目录，默认工作区）、CLI `git-sluice link-check <路径>`、斜杠命令 `/link-check [文件或目录]`。扫描 md / 文本内 URL 并访问验证：404 / 403 / 410 / 451 → 扣 3，DNS 失败 → 扣 2，超时 / 连接失败 / 5xx → 扣 1；只 warning，永不 blocker。配置 `linkCheckEnabled` 默认关（需要网络）。
+工具 `link_check`（`path` = 文件或目录，默认工作区）、CLI `audit-sluice link-check <路径>`、斜杠命令 `/link-check [文件或目录]`。扫描 md / 文本内 URL 并访问验证：404 / 403 / 410 / 451 → 扣 3，DNS 失败 → 扣 2，超时 / 连接失败 / 5xx → 扣 1；只 warning，永不 blocker。配置 `linkCheckEnabled` 默认关（需要网络）。
 
 ### 11. 文档漂移检查（函数列表 / 目录树 / 版本表）
 

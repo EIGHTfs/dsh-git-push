@@ -16,6 +16,8 @@
     "scripts",
     "assets",
     "cli.mjs",
+    "cli-audit.mjs",
+    "cli-tool.mjs",
     "cordis.patch.yml",
     "README.md",
     "LICENSE",
@@ -23,7 +25,9 @@
     ".gitignore"
   ],
   "bin": {
-    "git-sluice": "./cli.mjs"
+    "git-sluice": "./cli.mjs",
+    "audit-sluice": "./cli-audit.mjs",
+    "tool-sluice": "./cli-tool.mjs"
   },
   "dsh": {
     "bundle": {

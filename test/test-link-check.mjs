@@ -212,7 +212,8 @@ test('常量：分级表与 flaky 清单非空且语义正确', () => {
 });
 // ---------- CLI 集成（cmdLinkCheck） ----------
 test('CLI：cmdLinkCheck 在无链接目录不报错', async () => {
-  const { cmdLinkCheck } = await import('../cli.mjs');
+  // link-check 属审计侧命令 → 实现与导出都挂在 audit-sluice 入口
+  const { cmdLinkCheck } = await import('../cli-audit.mjs');
   const prev = console.log;
   let out = '';
   console.log = (s) => { out += String(s) + '\n'; };
@@ -223,6 +224,6 @@ test('CLI：cmdLinkCheck 在无链接目录不报错', async () => {
 
 test('CLI：HELP 含 link-check 子命令', async () => {
   const fs = await import('node:fs');
-  const src = fs.readFileSync(new URL('../cli.mjs', import.meta.url), 'utf8');
-  assert.ok(src.includes('git-sluice link-check'));
+  const src = fs.readFileSync(new URL('../cli-audit.mjs', import.meta.url), 'utf8');
+  assert.ok(src.includes('audit-sluice link-check'), 'link-check 的用法行应在审计侧入口');
 });

@@ -41,7 +41,10 @@ function collectJson(dir, acc = []) {
   return acc;
 }
 
-const files = [...collectJs(join(ROOT, 'lib')), join(ROOT, 'cli.mjs')];
+// 三个 CLI 入口都要做语法检查：它们不是 lib/ 下的文件，靠 collectJs 收不到——
+//   漏检的后果是「新入口语法错，但门禁全绿」（与被拆出来的入口一起构成盲区）。
+const CLI_ENTRIES = ['cli.mjs', 'cli-audit.mjs', 'cli-tool.mjs'].map((name) => join(ROOT, name));
+const files = [...collectJs(join(ROOT, 'lib')), ...CLI_ENTRIES];
 // docs/*.json 也必须能解析：版本表与发版说明直接依赖 docs/releases.json，
 //   而它曾在 2.8.4 因一个尾随逗号变成非法 JSON 却**四项门禁全绿**（缺口）——这类错误必须在门禁里变红 ✗
 const jsonFiles = [...collectJson(join(ROOT, 'lib')), ...collectJson(join(ROOT, 'docs'))];

@@ -231,20 +231,21 @@ test('规则包：scope-collision 规则只声明 kind/严重度，**不得**写
   assert.doesNotMatch(rule, /^\s+(top_level_must_be_empty|topLevelMustBeEmpty)\s*:/m, 'yml 不得写死顶层零声明');
 });
 
-test('CLI：git-sluice scope-check 有违规时退出码非 0（脚本/门禁可判失败）', () => {
+test('CLI：audit-sluice scope-check 有违规时退出码非 0（脚本/门禁可判失败）', () => {
   const dir = makeAuditProject();
   try {
-    const cli = join(ROOT, 'cli.mjs');
+    // scope-check 属审计侧命令 → 走 audit-sluice 入口
+    const cli = join(ROOT, 'cli-audit.mjs');
     const bad = spawnSync(process.execPath, [cli, 'scope-check', join(dir, 'lib', 'bundle.js')], { encoding: 'utf8' });
     assert.equal(bad.status, 1, `撞名文件应 exit 1；输出：${bad.stdout || bad.stderr}`);
     assert.match(bad.stdout || '', /被声明 2 次以上/);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-test('CLI：git-sluice scope-check 无参数时读项目 dshScopeCheck.files', () => {
+test('CLI：audit-sluice scope-check 无参数时读项目 dshScopeCheck.files', () => {
   const dir = makeAuditProject({ contract: { files: ['lib/bundle.js'], prefix: 'ext_', topLevelMustBeEmpty: true } });
   try {
-    const cli = join(ROOT, 'cli.mjs');
+    const cli = join(ROOT, 'cli-audit.mjs');
     const r = spawnSync(process.execPath, [cli, 'scope-check'], { encoding: 'utf8', cwd: dir });
     assert.match(r.stdout || '', /策略来源：项目 package.json/, `应按项目契约：${r.stdout}`);
     assert.equal(r.status, 1, '该文件有撞名 → exit 1');
