@@ -134,8 +134,14 @@ const AUDIT_DIRS = new Set(['ast', 'audit', 'audit-rules', 'checks', 'exempt', '
 const GIT_DIRS = new Set(['git', 'npm']);
 const GIT_TOP = new Set(['commit-push.js']);
 const AUDIT_TOP = new Set(['audit-defaults.js', 'skip-dirs.js']);
-/** 反向接缝预算：实测 7 处（commit-push 3 + git/{ignore,repos,sensitive} 4）；上调需写明理由。 */
-const SEAM_BUDGET = 7;
+/**
+ * 反向接缝预算：实测 **5 处**；上调需写明理由。
+ *
+ * 2026-11-13 从 7 降到 5：提交前预处理解耦后，`lib/commit-push.js` 不再 import `audit/index.js` 与
+ * `score/index.js`（改调外部引擎子进程），只剩 `exempt/index.js` 这一条（示例目录豁免要用）。
+ * 预算跟着实收紧，是为了让这个成果**被门禁钉住**——以后谁再往 git 侧加审计 import，5→6 就会红。
+ */
+const SEAM_BUDGET = 5;
 
 const layerOf = (rel) => {
   const top = rel.split('/')[0];

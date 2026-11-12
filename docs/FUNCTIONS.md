@@ -183,13 +183,13 @@
 |------|------|------|------|
 | `auditConfigShape` | 23-42 | 20 | `export function auditConfigShape(Schema) {` |
 
-### lib/app/schema.js（137 行 · 3 个函数）
+### lib/app/schema.js（151 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `makeFallbackSchema` | 31-72 | 42 | `function makeFallbackSchema() {` |
-| `fn` | 33-33 | 1 | `const fn = (v) => (v === undefined ? meta.default : v);` |
-| `redactConfig` | 128-136 | 9 | `export function redactConfig(cfg = {}) {` |
+| `makeFallbackSchema` | 33-78 | 46 | `function makeFallbackSchema() {` |
+| `fn` | 35-35 | 1 | `const fn = (v) => (v === undefined ? meta.default : v);` |
+| `redactConfig` | 142-150 | 9 | `export function redactConfig(cfg = {}) {` |
 
 ### lib/app/scope-check.js（70 行 · 2 个函数）
 
@@ -1221,14 +1221,36 @@
 | `collectExternalRefs` | 136-141 | 6 | `export function collectExternalRefs(css = '') {` |
 | `clientModuleInfo` | 151-162 | 12 | `export function clientModuleInfo() {` |
 
-### lib/commit-push.js（171 行 · 4 个函数）
+### lib/commit-push.js（195 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `runAudit` | 33-125 | 93 | `export async function runAudit({ repoPath = '', audit, rulesetDir, slots, cfg: extCfg, visibility: extVisibility, exemptPaths = [], exemptReason = '' } = {}) {` |
-| `isExemptFile` | 72-72 | 1 | `const isExemptFile = (f) => exemptSet.size > 0 && exemptSet.has(String(f.file \|\| '').replace(/\\/g, '/').replace(/^\.\//, ''));` |
-| `commitWithAudit` | 135-157 | 23 | `export async function commitWithAudit({` |
-| `commitMany` | 165-171 | 7 | `export async function commitMany({ repos = [], message = '', push = true, dryRun = false, requirementsConfirmed = false, customIgnorePatterns = '' } = {}) {` |
+| `runAudit` | 36-146 | 111 | `export async function runAudit({ repoPath = '', audit, rulesetDir, slots, cfg: extCfg, visibility: extVisibility, exemptPaths = [], exemptReason = '' } = {}) {` |
+| `isExemptFile` | 93-93 | 1 | `const isExemptFile = (f) => exemptSet.size > 0 && exemptSet.has(String(f.file \|\| '').replace(/\\/g, '/').replace(/^\.\//, ''));` |
+| `commitWithAudit` | 156-181 | 26 | `export async function commitWithAudit({` |
+| `commitMany` | 189-195 | 7 | `export async function commitMany({ repos = [], message = '', push = true, dryRun = false, requirementsConfirmed = false, customIgnorePatterns = '' } = {}) {` |
+
+### lib/commit-push/pre-commit-engine.js（389 行 · 17 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `pluginRootDir` | 46-48 | 3 | `export function pluginRootDir() {` |
+| `stderrTail` | 55-58 | 4 | `export function stderrTail(text) {` |
+| `resolvePreCommitConfig` | 71-89 | 19 | `export function resolvePreCommitConfig(cfg = {}) {` |
+| `readPreCommitBlock` | 96-109 | 14 | `function readPreCommitBlock(cfg = {}) {` |
+| `isExecutableFile` | 116-125 | 10 | `function isExecutableFile(absPath) {` |
+| `searchCommandOnPath` | 132-148 | 17 | `function searchCommandOnPath(commandName) {` |
+| `resolvePathLikeCommand` | 155-159 | 5 | `function resolvePathLikeCommand(pathLike) {` |
+| `resolveEngineCommand` | 169-175 | 7 | `export function resolveEngineCommand(command) {` |
+| `resolveEngineArgs` | 186-194 | 9 | `export function resolveEngineArgs(args = []) {` |
+| `toSlotCsv` | 201-206 | 6 | `function toSlotCsv(slots) {` |
+| `buildEngineArgs` | 214-232 | 19 | `export function buildEngineArgs({` |
+| `formatCommandLine` | 240-242 | 3 | `export function formatCommandLine(command, args = []) {` |
+| `failClosed` | 251-253 | 3 | `function failClosed(message) {` |
+| `parseEngineStdout` | 262-280 | 19 | `export function parseEngineStdout(stdout) {` |
+| `runEngineProcess` | 290-337 | 48 | `function runEngineProcess({ command, args, timeoutMs }) {` |
+| `finish` | 300-305 | 6 | `const finish = (result) => {` |
+| `runPreCommitEngine` | 353-388 | 36 | `export async function runPreCommitEngine({` |
 
 ### lib/context/index.js（364 行 · 10 个函数）
 
@@ -2088,6 +2110,21 @@
 | `isExcludedPath` | 29-36 | 8 | `const isExcludedPath = (rel) => {` |
 | `walk` | 60-98 | 39 | `const walk = (dir) => {` |
 
+### scripts/audit-gate.mjs（236 行 · 10 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `parseScopeValue` | 68-71 | 4 | `function parseScopeValue(rawValue) {` |
+| `parseWeightsValue` | 73-81 | 9 | `function parseWeightsValue(rawValue) {` |
+| `parseMaxScanFilesValue` | 83-88 | 6 | `function parseMaxScanFilesValue(rawValue) {` |
+| `parseSlotListValue` | 90-92 | 3 | `function parseSlotListValue(rawValue) {` |
+| `parseGateArgs` | 116-140 | 25 | `export function parseGateArgs(argv = []) {` |
+| `runGateAudit` | 152-177 | 26 | `export async function runGateAudit(opts) {` |
+| `muteStdout` | 184-188 | 5 | `export function muteStdout() {` |
+| `emitAndExit` | 191-194 | 4 | `function emitAndExit(result, exitCode) {` |
+| `main` | 197-218 | 22 | `async function main(argv) {` |
+| `invokedDirectly` | 221-225 | 5 | `function invokedDirectly() {` |
+
 ### scripts/audit-runner.mjs（35 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2140,13 +2177,13 @@
 |------|------|------|------|
 | `filesFromConfig` | 46-53 | 8 | `function filesFromConfig(path) {` |
 
-### scripts/check.mjs（195 行 · 3 个函数）
+### scripts/check.mjs（201 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `collectJs` | 22-31 | 10 | `function collectJs(dir, acc = []) {` |
 | `collectJson` | 34-42 | 9 | `function collectJson(dir, acc = []) {` |
-| `layerOf` | 140-147 | 8 | `const layerOf = (rel) => {` |
+| `layerOf` | 146-153 | 8 | `const layerOf = (rel) => {` |
 
 ### scripts/cpu-sample.mjs（189 行 · 11 个函数）
 
@@ -2994,6 +3031,15 @@
 | `makeExemptRepo` | 488-494 | 7 | `function makeExemptRepo() {` |
 | `addSecretFile` | 495-498 | 4 | `function addSecretFile(root, path) {` |
 | `fsStatMode` | 652-654 | 3 | `function fsStatMode(file) {` |
+
+### test/test-pre-commit-engine.mjs（420 行 · 4 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `fakeEngineSource` | 46-75 | 30 | `function fakeEngineSource(mode) {` |
+| `makeFakeEngines` | 78-87 | 10 | `function makeFakeEngines(dir) {` |
+| `runWithFake` | 90-97 | 8 | `function runWithFake(engines, mode, extra = {}) {` |
+| `makeBlockerRepo` | 100-112 | 13 | `function makeBlockerRepo() {` |
 
 ### test/test-privacy-ownership.mjs（87 行 · 1 个函数）
 

@@ -88,6 +88,10 @@ settings-get  settings-set
 
 **不变量**：只有白名单内的键可写（其余拒绝）；设置持久化走宿主 HTTP（反代访问下 client 侧 scope 快照恒为 memory，不能用它判可用/可写）。
 
+**例外：`preCommit` 不在上述白名单里**，而是 `config.json` 直读（键名 `preCommit`）。
+原因：它属于「换引擎的部署级开关」，不是 UI 可编辑项。解析顺序 **`cfg.preCommit` → `config.json` → 内置默认**——
+将来若把它加进 UI 的设置白名单，第一档会自动接管，引擎侧代码不用改。
+
 ## 五、数据文件（配置目录内）
 
 | 文件 | 内容 | 写入时机 |
@@ -168,3 +172,65 @@ settings-get  settings-set
 - 执行器 `test/run-tests.mjs` **分批**跑（默认 40 文件/批，每批独立 `node --test` 进程 + 1GB 堆上限）：单进程跑完全部文件时堆只涨不还，8GB 机器（宿主常驻 5GB+）上会挤爆内存；`--batch-size` / `DSH_TEST_HEAP_MB` 可调，`--only=<子串>` 只跑命中文件；
 - 公开面由 `test/test-tool-contract.mjs` 门禁；版本行为基线由 `test/regression-<版本>.mjs` 汇总；
 - 工具层端到端见 `test/test-tools-e2e.mjs`（最小 env/cfg 直接驱动 `callTool`）。
+
+## 十、提交前预处理引擎契约
+
+> 提交前的检查不再由插件代码直接调审计函数，而是**调用可配置的引擎子进程**。
+> 换引擎（含换语言重写）只改配置，git 侧代码零改动。设计全文见
+> `docs/2026-11-13-提交前预处理与审计引擎解耦方案.MD`。
+
+**配置**（`config.json`，缺省不写 = 内置）：
+
+```jsonc
+{ "preCommit": { "command": "", "args": [], "timeoutMs": 600000 } }
+```
+
+`command` 空 + `args` 空 → 内置 `node scripts/audit-gate.mjs`；
+`command` 有值 + `args` 空 → 视作独立二进制（Go/Rust 单文件形态）；
+`args` 里的相对路径相对**插件根**解析。
+
+**调用形态**（`--repo/--scope/--json` 等由插件统一追加，引擎只负责解析）：
+
+```
+<command> <args...> --repo <绝对路径> --scope diff|full
+  [--ruleset <dir>] [--weights <json>] [--max-scan-files <n>]
+  [--slots a,b] [--disabled-slots a,b] [--blockers-only] --json
+```
+
+**输出与退出码**：
+
+```
+stdout 单行 JSON : { ok, scope, summary:{blocker,warning,notice,total}, quality:{score,level,...}, findings:[...], files }
+exit 0           : 无 blocker
+exit 1           : 存在 blocker（**事实**，不等于判拦截——示例目录/临时豁免/私有库豁免由 git 侧最终判）
+exit 2           : 执行失败
+```
+
+**失败语义（fail-closed）**：命令不存在 / 超时 / stdout 不合契约 / 退出码 2 → **拒绝提交且不执行任何 git 操作**，
+错误信息含「命令、退出码、stderr 尾部」。引擎没跑起来不算「审计通过」。
+
+**不变量**：
+- 拦截判定始终在 git 侧（引擎只报事实）；因此 exit 1 不得直接映射成「已拦截」；
+- 可选参数**缺省不传**等价于「引擎用自己的默认值」，不得退化成 `0`（0 = 不限，语义相反）；
+- 引擎失败时 `blocked:false`（工具侧显示「未完成：<原因>」而不是「被推送门禁拦截」），但 `ok:false` 保证不提交。
+
+## 十一、审计 UI 契约
+
+> 审计 Tab 已于 2.20.15 移出构建（分片归档在 `lib/client-parts/audit/`）。本契约用于**将来接回时**按可插拔方式实现，
+> 使 UI 不绑定任何一个引擎的实现细节。本阶段**只定义契约，不实施 UI**。
+
+```
+lib/audit-ui-sdk/
+├── contract.js   AUDIT_UI_CONTRACT_VERSION + defineAuditPanel() 校验（构建期用）
+└── index.js      唯一导出面（实现只能从这里 import）
+```
+
+**契约形状**：`meta:{id,name,contractVersion}`（`id` 形如 `/^[a-z][a-z0-9-]{1,31}$/`）+
+`Panel:(props)=>vnode` + 可选 `styles?:string`、`setup?:(ctx)=>void|(()=>void)`。
+
+**props**：`data:{summary,quality,findings,ruleSlots}`、`actions:{reload,toggleRule,editWeight,toggleDisabled}`、
+`state:{loading,error,auditEnabled,auditScanScope}`。
+
+**三条硬约束**：① 实现只能从 `lib/audit-ui-sdk` 唯一入口 import；② 校验只覆盖构建期一定能判的部分（形状与版本），
+不猜作者意图；③ 契约破坏性改动 `contractVersion +1`，构建期拒绝按旧契约写的实现。
+

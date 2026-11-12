@@ -140,6 +140,8 @@ dsh-git-push/
 │   │   ├── index.js — 侧边栏设置 UI 总入口（DEFAULT_CONFIG + SETTINGS_SCHEMA）
 │   ├── client-parts/ — 客户端分片源码（按侧分目录：git/ 参与构建，audit/ 只归档不进产物）
 │   │   └── …（14 个更深文件）
+│   ├── commit-push/ — 提交推送编排（runAudit 门禁 + commitWithAudit/commitMany）
+│   │   ├── pre-commit-engine.js — 提交前预处理引擎适配层：spawn 引擎、拼参数、退出码映射、超时与 fail-closed
 │   ├── context/ — 上下文注入（给 AI 会话注入环境：目录映射/工具路径/skill 入口）
 │   │   ├── index.js — 上下文注入入口（环境注入文本）
 │   ├── core/ — （待注释）
@@ -230,6 +232,7 @@ dsh-git-push/
 │   ├── self/ — 插件自身总入口（VERSION/versionInfo/CLI 帮助）
 │   │   ├── index.js — 自身总入口（VERSION 一致性/versionInfo）
 ├── scripts/ — 开发工具脚本（版本校验/双副本同步/预览服务/README 目录树维护）
+│   ├── audit-gate.mjs — 提交前预处理的轻量审计引擎入口（只加载 audit+score，按契约输出 JSON 与退出码 0/1/2）
 │   ├── audit-runner.mjs — 审计扩展 CLI 统一入口（独立跑 scripts/audit-ext/ 全部扩展）
 │   ├── audit-runtime-check.mjs — 三层审计 L3 运行时检测脚本
 │   ├── browser-page-probe.mjs — （待注释）
@@ -396,6 +399,7 @@ dsh-git-push/
 │   ├── test-picker-layout.mjs — （待注释）
 │   ├── test-platform-scan.mjs — （待注释）
 │   ├── test-plugin.mjs — 插件接线测试（入口导出/工具清单/双副本同步）
+│   ├── test-pre-commit-engine.mjs — 提交前预处理引擎契约回归：退出码 0/1/2、超时/命令缺失 fail-closed、与进程内结果一致
 │   ├── test-privacy-ownership.mjs — （待注释）
 │   ├── test-private-gate.mjs — （待注释）
 │   ├── test-project-type-filter.mjs — 项目类型规则适配测试（非 dsh 项目不加载 dsh 槽位/0.x 版本规则、timeout 限 js 系、folder 尊重 gitignore——Pawchive 误报消除驱动）

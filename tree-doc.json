@@ -392,9 +392,34 @@
   "test/test-git-api-tool.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "docs/2026-11-13-提交前预处理与审计引擎解耦方案.MD": {
+      "lib/app/constants.js": {
+        "status": "M",
+        "mtime": "2026-11-12T22:34:57.648Z",
+        "note": "注释可能需更新"
+      },
+      "lib/app/schema.js": {
+        "status": "M",
+        "mtime": "2026-11-12T22:35:03.629Z",
+        "note": "注释可能需更新"
+      },
+      "lib/commit-push.js": {
+        "status": "M",
+        "mtime": "2026-11-12T22:26:40.903Z",
+        "note": "注释可能需更新"
+      },
+      "lib/commit-push/": {
         "status": "A",
-        "mtime": "2026-11-12T22:04:19.634Z",
+        "mtime": "2026-11-12T22:32:50.511Z",
+        "note": "注释可能需更新"
+      },
+      "scripts/audit-gate.mjs": {
+        "status": "A",
+        "mtime": "2026-11-12T22:35:03.661Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-pre-commit-engine.mjs": {
+        "status": "A",
+        "mtime": "2026-11-12T22:34:06.691Z",
         "note": "注释可能需更新"
       }
     }
@@ -558,5 +583,9 @@
   "test/audit/test-inject-system-prompt.mjs": "（待注释）",
   "test/audit/test-sidebar-interaction.mjs": "（待注释）",
   "test/test-origin-desktop.mjs": "桌面端（dsh-app://）写请求 403 修复回归：放行判据与 CSRF 防护矩阵",
-  "docs/2026-11-13-提交前预处理与审计引擎解耦方案.MD": "提交前预处理与审计引擎解耦方案：引擎契约（配置化入口/退出码）、UI 注入契约、职责切分与分阶段落地"
+  "docs/2026-11-13-提交前预处理与审计引擎解耦方案.MD": "提交前预处理与审计引擎解耦方案：引擎契约（配置化入口/退出码）、UI 注入契约、职责切分与分阶段落地",
+  "scripts/audit-gate.mjs": "提交前预处理的轻量审计引擎入口（只加载 audit+score，按契约输出 JSON 与退出码 0/1/2）",
+  "lib/commit-push/pre-commit-engine.js": "提交前预处理引擎适配层：spawn 引擎、拼参数、退出码映射、超时与 fail-closed",
+  "lib/commit-push": "提交推送编排（runAudit 门禁 + commitWithAudit/commitMany）",
+  "test/test-pre-commit-engine.mjs": "提交前预处理引擎契约回归：退出码 0/1/2、超时/命令缺失 fail-closed、与进程内结果一致"
 }
