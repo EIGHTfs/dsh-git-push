@@ -15,6 +15,57 @@
 
 | 版本 | 内容 |
 |------|------|
+| 2.20.17 | 修**「DSH 启动后第一次打开「本地」页报 `读取失败: signal timed out`」**。
+
+**现象**：不用点扫描，每次 DSH 启动后首开设置页「本地」标签就失败（前端 `fetch` 被 30s 超时 abort）。
+
+**根因（两层）**：
+1. **整表预算拦不住单次调用**：本地列表的 SSH 远端探测有 `LIST_LIVE_BUDGET_MS = 15_000` 整表预算，但它只在**每次探测前**检查一次；`liveRemoteHeadAsync` 内部前两步 `git remote get-url` 与 `git branch --show-current` **没有传 timeoutMs**（只有后面的 `ls-remote` 带了 8s）。冷启动首次 SSH 建连、CIFS 大目录 stat 时这两步可能挂很久 ⇒ 单次探测直接穿透预算 ⇒ 整个请求超 30s。
+2. **长轮询挂得比客户端超时还久**：扫描长轮询单次挂起 `SCAN_WAIT_TIMEOUT_MS = 60_000`，而前端 `dshgp_FETCH_TIMEOUT_MS = 30_000` ⇒ 客户端必然先 abort，长轮询变成假失败。既有 `test-repos-live-budget.mjs` 只守住了 `LIST_LIVE_BUDGET_MS`，**漏了这一个**。
+
+**修法（事件驱动，不是加大超时）**：
+· **预算传播**：`liveRemoteHeadAsync({ budgetMs })` 把总预算摊到每一步——`stepTimeout(cap) = min(cap, 剩余预算)`，预算耗尽时后续步骤返回 1ms 并**不再发起新的 SSH 尝试**。总时长因此被预算界定，而不是靠「希望某一步不会慢」。
+· `applyLiveRemote` 把当前剩余预算作为 `budgetMs` 传入单次探测。
+· `SCAN_WAIT_TIMEOUT_MS` 60s → **20s**（≤ 前端超时 80% 余量），长轮询到点返回 `{timeout:true, running:true}` 继续下一轮，推进由 `done` 事件驱动。
+· 前端长轮询请求显式给 `dshgp_SCAN_WAIT_FETCH_MS = 25_000`（> 服务端 20s、≤ 默认 30s）。
+· **轮次耗尽不再算完成**：`startScan` 只在真的收到 `done` 或独立进程退出时才报「✅ 扫描完成」，否则如实报「⚠️ 未收到结束事件」——旧实现无论是否结束都报完成，等于把「事件永远不来」藏起来。
+
+**验证**：新增 4 例回归（三层超时关系、预算传播行为、源码契约「每处 git 调用必须带 timeoutMs」、既有预算断言），并**反向自证**：把 `SCAN_WAIT_TIMEOUT_MS` 改回 60s 后新用例立刻变红。
+
+注：外部 I/O 的超时属于**产品语义**（对端不可控），保留是对的；本次修的是「超时预算没传播下去」与「长轮询超时大于客户端超时」这两个真缺口，不是简单调大超时。
+
+---
+
+**放行判据加固**（复查时发现的安全弱点，与上面同一次发布）。
+
+**问题**：2.20.17 的放行判据是「无 Origin + JSON CT + **Host 回环**」。但 **Host 头是客户端可控的**——攻击者从局域网发 `POST`，只要带 `Host: 127.0.0.1` 与 `Content-Type: application/json`，就能命中放行分支，等于绕过 CSRF 防护。（实测佐证：宿主转发链路里 Host 有时为空、有时可被改写，把安全性建立在它上面不成立。）
+
+**修法**：本机判定改为**以 TCP 对端地址为准**（`req.socket.remoteAddress`，由内核给出、不可伪造），Host 只在拿不到 socket 地址时兜底（进程内调用/测试）。
+· `checkOrigin` 新增第 6 参 `remoteAddress`；`fromLoopback = remoteAddress ? isLoopbackHost(remoteAddress) : isLoopbackHost(host)`；
+· `handleHttp` 的 req 契约新增 `remoteAddress`，`adaptHttpHandler` 从 `req.socket.remoteAddress` 取真实值；
+· `isLoopbackHost` 补**裸 IPv6**（`::1`）与 **IPv4-mapped**（`::ffff:127.0.0.1`）两个形态——`socket.remoteAddress` 在双栈监听时正是这两种裸形态，`hostNameOf` 的 `^([^/:]+)` 对以 `:` 开头的值会解析成空串，不特判会把本机请求误拒（首版就这么红了）。
+
+**顺带收益**：覆盖「转发链路丢 Host」的场景（实测宿主转发后 host 可能为空）——原判据下这种请求会被误拒，现在凭 socket 地址照常放行。
+
+**验证**：新增 3 例攻击面测试——① 伪造 `Host: 127.0.0.1` + 远端 socket ⇒ **仍拒**；② 本机 socket（`127.0.0.1` / `::1` / `::ffff:127.0.0.1`）+ Host 为空 ⇒ 放行；③ socket 与 Host 冲突时以 socket 为准（双向各一例）。`test-origin-desktop.mjs` 共 17 例全绿。 |
+| 2.20.16 | 修**桌面端所有写接口 403 NO_ORIGIN**（外部报告的 issue，桌面版设置页保存全部失效）。
+
+**根因**：DSH 桌面版经自定义协议 `dsh-app://app` 加载 GUI，桌面壳 `forwardWebRequest` 把 `/api/*` 转发到后端时**显式剥离 Origin**（`headers.delete('origin')`，只补 cookie 与 host）。而 `checkOrigin` 对「无 Origin 的写请求」一律 403，且拒绝发生在任何 handler 之前 —— 所以表现为「设置页能读、所有保存/开关/按钮全失效、回显旧值、日志里一条记录都没有」，用户与排查者都无从下手（报告方完整复现并定位到桌面壳源码，附运行中宿主实测补丁）。
+
+**修复判据**（无 Origin 时三条同时成立才放行，CSRF 防护不降级）：
+1. **`Content-Type: application/json`** —— 浏览器跨站表单（text/plain / urlencoded / multipart）设不出这个 CT；fetch/XHR 设 JSON CT 属非简单请求 → 触发 CORS 预检，而本 API 从不回 CORS 许可头 ⇒ 预检失败，真实请求发不出去。
+2. **Host 是回环地址**（127.0.0.1 / localhost / ::1）—— 桌面壳转发目标恒为 `127.0.0.1:<port>`。**这一条是在报告方建议之上额外收紧的**：若只按「无 Origin + JSON CT」放行，服务监听 `0.0.0.0` 时局域网内任何机器都能发无 Origin 的 JSON 写请求，等于给局域网开 CSRF 口子。
+3. 浏览器发起的写请求**必带 Origin** ⇒ 走既有同源/跨源判定，不受本改动影响。
+
+**实现**：`checkOrigin` 新增第 5 参 `contentType`；三处调用点（`handleHttp` / `authPipeline` / 端点骨架路由）补齐 host 与 content-type 透传；配套 helper `hostNameOf`（顺带修好 IPv6 方括号解析，原实现在 `http://[::1]:3080` 上会把主机名读成空）、`isLoopbackHost`、`isJsonContentType`。
+
+**同时修复三个附带问题**：
+· **恢复 403 拒绝日志**：新增 `http-rejects.log`（与 `settings-ui.log` 同级、0600），记 method / url / origin / host / code；query 里键名疑似凭据的一律替换为 `(已省略)`，不让日志本身成为泄漏通道。此前 403 完全静默，是本问题卡住两周的直接原因之一。
+· **`settings-set` 凭据不再明文回显**：`githubToken` / `sshPub` / `npmToken` 写成功后回 `(已保存)`，口径与 schema 的 `role('secret')` + `redactConfig`（远端读一律打码）保持一致；前端只看 `ok`，不依赖回显值回填。
+· **前端保存先确认再提示**：`persistSetting` 改为返回 promise，`save` 先 `await` 两次写入结果再决定提示文案——旧实现不 await 就 `flashSaved('✅ 凭据已保存')`，写失败时用户先看到成功再看到失败，正是「已保存但没生效」这一误解的来源。失败提示改为「❌ 保存失败：请求未写入（详情见 http-rejects.log）。
+· **`clone-progress` 改 GET 轮询**：读端点免 Origin 校验，不会再因鉴权静默失败（进度条不刷新会被误判成「克隆卡住」）；后端 `consume` 同时接受 body（POST 旧写法）与 `?consume=1`（GET），两者等价。
+
+**验证**：新增 `test/test-origin-desktop.mjs` 14 例——桌面端形态放行、JSON CT 带 charset、四种写方法全覆盖、localhost/::1 都算回环；以及拒绝侧（非 JSON CT、非回环 Host、跨站 Origin 全仍拒）、既有放行路径不回归、三个 helper 边界、端到端 settings-set 能真正写入 config.json、凭据回显脱敏。相关测试面 77 例全绿。 |
 | 2.20.15 | UI 与审计解耦（**文件隔离阶段**）。目标是把审计与 git 侧的文件边界划清，为将来拆成两个独立项目做准备；**行为不变**——后端审计能力完全保留。
 
 **① 客户端分片按侧分目录**

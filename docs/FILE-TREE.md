@@ -389,6 +389,7 @@ dsh-git-push/
 │   ├── test-npm-smoke.mjs — （待注释）
 │   ├── test-npm-token-credential.mjs — （待注释）
 │   ├── test-npm-unpublish.mjs — （待注释）
+│   ├── test-origin-desktop.mjs — 桌面端（dsh-app://）写请求 403 修复回归：放行判据与 CSRF 防护矩阵
 │   ├── test-perf-loop-collection.mjs — （待注释）
 │   ├── test-perf-repeat-call.mjs — （待注释）
 │   ├── test-persist-credentials.mjs — 凭据持久化测试

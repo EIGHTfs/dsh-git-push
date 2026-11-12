@@ -394,82 +394,102 @@
     "worktree": {
       "docs/CHANGELOG.md": {
         "status": "M",
-        "mtime": "2026-11-07T22:59:00.245Z",
+        "mtime": "2026-11-12T20:37:05.405Z",
         "note": "注释可能需更新"
       },
       "docs/FILE-TREE.md": {
         "status": "M",
-        "mtime": "2026-11-07T22:37:04.986Z",
+        "mtime": "2026-11-12T20:27:03.518Z",
         "note": "注释可能需更新"
       },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-11-07T22:37:12.947Z",
+        "mtime": "2026-11-12T20:26:13.290Z",
+        "note": "注释可能需更新"
+      },
+      "docs/SPEC.md": {
+        "status": "M",
+        "mtime": "2026-11-12T20:27:02.007Z",
         "note": "注释可能需更新"
       },
       "docs/releases.json": {
         "status": "M",
-        "mtime": "2026-11-07T22:58:59.116Z",
+        "mtime": "2026-11-12T20:37:05.150Z",
         "note": "注释可能需更新"
       },
-      "docs/功能-审计引擎.md": {
+      "lib/app/handlers/clone.js": {
         "status": "M",
-        "mtime": "2026-11-07T22:25:42.204Z",
+        "mtime": "2026-11-12T20:24:49.429Z",
         "note": "注释可能需更新"
       },
-      "lib/app/schema.js": {
+      "lib/app/handlers/http-constants.js": {
         "status": "M",
-        "mtime": "2026-11-07T22:12:57.572Z",
+        "mtime": "2026-11-12T20:36:13.698Z",
+        "note": "注释可能需更新"
+      },
+      "lib/app/handlers/repos.js": {
+        "status": "M",
+        "mtime": "2026-11-12T20:33:51.792Z",
+        "note": "注释可能需更新"
+      },
+      "lib/app/handlers/settings.js": {
+        "status": "M",
+        "mtime": "2026-11-12T20:23:32.836Z",
+        "note": "注释可能需更新"
+      },
+      "lib/app/http-handlers.js": {
+        "status": "M",
+        "mtime": "2026-11-12T20:22:24.056Z",
+        "note": "注释可能需更新"
+      },
+      "lib/app/settings-bridge.js": {
+        "status": "M",
+        "mtime": "2026-11-12T20:22:24.053Z",
+        "note": "注释可能需更新"
+      },
+      "lib/client-parts/git/actions.js": {
+        "status": "M",
+        "mtime": "2026-11-12T20:23:32.841Z",
+        "note": "注释可能需更新"
+      },
+      "lib/client-parts/git/const.js": {
+        "status": "M",
+        "mtime": "2026-11-12T20:34:12.038Z",
+        "note": "注释可能需更新"
+      },
+      "lib/client-parts/git/controller.js": {
+        "status": "M",
+        "mtime": "2026-11-12T20:34:12.044Z",
+        "note": "注释可能需更新"
+      },
+      "lib/git/transport.js": {
+        "status": "M",
+        "mtime": "2026-11-12T20:33:32.874Z",
+        "note": "注释可能需更新"
+      },
+      "lib/http/index.js": {
+        "status": "M",
+        "mtime": "2026-11-12T20:21:47.062Z",
         "note": "注释可能需更新"
       },
       "lib/self/index.js": {
         "status": "M",
-        "mtime": "2026-11-07T22:58:59.047Z",
+        "mtime": "2026-11-12T20:37:05.143Z",
         "note": "注释可能需更新"
       },
       "package.json": {
         "status": "M",
-        "mtime": "2026-11-07T22:58:59.088Z",
-        "note": "注释可能需更新"
-      },
-      "scripts/build-client.mjs": {
-        "status": "M",
-        "mtime": "2026-11-07T22:10:10.822Z",
-        "note": "注释可能需更新"
-      },
-      "skills/dev/dsh-git-push.md": {
-        "status": "M",
-        "mtime": "2026-11-07T22:15:34.572Z",
-        "note": "注释可能需更新"
-      },
-      "test/e2e-npm-tab-render.mjs": {
-        "status": "M",
-        "mtime": "2026-11-07T22:12:11.928Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-client.mjs": {
-        "status": "M",
-        "mtime": "2026-11-07T22:24:47.006Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-picker-layout.mjs": {
-        "status": "M",
-        "mtime": "2026-11-07T22:12:11.916Z",
+        "mtime": "2026-11-12T20:37:05.146Z",
         "note": "注释可能需更新"
       },
       "test/test-repos-live-budget.mjs": {
         "status": "M",
-        "mtime": "2026-11-07T22:25:11.528Z",
+        "mtime": "2026-11-12T20:36:30.238Z",
         "note": "注释可能需更新"
       },
-      "lib/app/schema-audit.js": {
+      "test/test-origin-desktop.mjs": {
         "status": "A",
-        "mtime": "2026-11-07T22:12:57.555Z",
-        "note": "注释可能需更新"
-      },
-      "test/audit/README.md": {
-        "status": "A",
-        "mtime": "2026-11-07T22:25:27.017Z",
+        "mtime": "2026-11-12T20:25:19.651Z",
         "note": "注释可能需更新"
       }
     }
@@ -631,5 +651,6 @@
   "test/audit/README.md": "归档说明：为什么移出常规测试、怎么手动跑、与后端审计的关系",
   "test/audit/test-inject-switch.mjs": "（待注释）",
   "test/audit/test-inject-system-prompt.mjs": "（待注释）",
-  "test/audit/test-sidebar-interaction.mjs": "（待注释）"
+  "test/audit/test-sidebar-interaction.mjs": "（待注释）",
+  "test/test-origin-desktop.mjs": "桌面端（dsh-app://）写请求 403 修复回归：放行判据与 CSRF 防护矩阵"
 }

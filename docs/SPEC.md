@@ -59,7 +59,18 @@ settings-get  settings-set
 
 **不变量**：
 
-- 写类方法必须带**同源 Origin**（缺了返回 403 `NO_ORIGIN`，防 CSRF）；
+- 写类方法必须带**同源 Origin**（缺了返回 403 `NO_ORIGIN`，防 CSRF）。唯一的例外通道：**无 Origin 时**，
+  若 `Content-Type` 是 `application/json` **且** 请求来自本机则放行。**「本机」以 TCP 对端地址
+  （`req.socket.remoteAddress`）为准，Host 头只在拿不到 socket 地址时兜底**——Host 可被客户端伪造
+  （`Host: 127.0.0.1` 即可伪造本机），socket 地址由内核给出、不可伪造
+  —— 桌面端（`dsh-app://app`）的壳转发会显式剥离 Origin，不放行则桌面版所有保存失效。
+  安全性依据：浏览器跨站写请求必带 Origin（走既有跨源拒绝）；跨站表单设不出 JSON CT；
+  fetch/XHR 设 JSON CT 触发 CORS 预检而本 API 不回 CORS 头；非回环 Host（局域网直连）不放行。
+- **每次 403 拒绝都写 `http-rejects.log`**（与 `settings-ui.log` 同级、0600），
+  记 method / url / origin / host / code，query 里键名疑似凭据的值替换为 `(已省略)`
+  —— 拒绝发生在 handler 之前，不留痕则用户与排查者都无从下手；
+- **凭据类设置键不回显明文**：`settings-set` 写 `githubToken` / `sshPub` / `npmToken` 成功后
+  回显 `(已保存)`（与 schema `role('secret')` + `redactConfig` 同一口径）；
 - 破坏性操作（`repo-clone` / `repo-push` / `repo-commit` / `repo-visibility` / `rebuild` / `rollback`）需 body 显式 `confirm: true`，否则 400 `NEED_CONFIRM`；
 - 请求体大小有上限（超限拒绝）；
 - 返回统一为 `{ ok, … }` 形状；错误带 `code` 与 `message`。
