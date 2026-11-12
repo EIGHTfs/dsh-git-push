@@ -327,6 +327,60 @@ pnpm add github:EIGHTfs/dsh-git-push#<commit>
 | **补丁改了不生效，误判「补丁无效」** | DSH 宿主的 HMR `profileRoots` 只收集**符号链接**形式的插件包；**复制安装（真实目录）** 的插件在插件页开关切换只重启 fiber，**ESM 缓存仍是旧代码**。⇒ 验证服务端补丁必须**完全退出应用重开**，否则会把「缓存没刷新」误判成「改错了」（外部报告实测踩到，2026-11-13 记入） |
 | 建了远端但推送报「远端查不到分支 master（API 404 / ls-remote 无该分支）」 | `git_remote_create` 旧版把 origin 写成 **REST API 端点**（`https://api.github.com/repos/<o>/<r>` ✗ 那不是 git remote）⇒ `git push/fetch origin` 必然失败。2026-10-09 已修（`lib/git/remote.js`）：origin 统一写 `https://github.com/<o>/<r>`，并**自愈**——仓库已存在但 origin 仍是 API 形态时 `set-url` 改回；返回体新增 `originAction`（`add`/`repair`/`keep`）。旧仓库手工修：`git remote set-url origin ssh://git@ssh.github.com:443/<o>/<r>.git` 再 `git push -u origin master`（凭据用插件 `id_rsa` + `-p 443`）。⚠️ `lib/git/clone.js` 仍写 API 形态 origin（设计如此，插件自身推送不受影响，但 `git push origin` 会失败） |
 
+## 附录 F、在测试环境真机验证插件改动（可复用步骤）
+
+> 2026-11-13 实测走通（验证 2.20.17 的桌面端鉴权修复）。用途：改完插件要拿真实 HTTP 验证时，
+> 不必影响主实例。**三个坑不处理就永远 404 / 加载失败**，按下面顺序做。
+
+### 步骤
+
+```
+① 起环境：test_env({ action:'start', plugin:'<插件根>' })
+   ⚠️ 坑 1：`plugin` 参数**不会真的安装插件**，local-plugins/ 仍为空 ⇒ API 全 404。
+② 显式安装 + 注册：
+   sync_plugin({ dshHome:'<测试环境目录>', pluginName:'<插件名>',
+                  source:'<插件根>', write:true, register:true })
+③ 补运行时依赖（插件有静态 import 时必需）：
+   cp -r <插件根>/node_modules <测试环境>/profiles/web/local-plugins/<插件名>/node_modules
+   ⚠️ 坑 2：不复制会在加载期缺 js-yaml / web-tree-sitter / tree-sitter-wasms。
+   （不要用软链把外部 node_modules 挂进项目——那是 no-symlink 禁止的形态）
+④ 建 bundle 解析路径：
+   mkdir -p <测试环境>/profiles/web/node_modules
+   ln -s ../local-plugins/<插件名> <测试环境>/profiles/web/node_modules/<插件名>
+   ⚠️ 坑 3：DSH 从 profiles/web/node_modules 解析 profile bundle，
+   缺这条会报 `cannot resolve profile bundle "<插件名>"`。这是**部署安装形态**
+   （与主实例一致：dependencies 用 link:local-plugins/<插件名>），不是项目内软链。
+⑤ 重启环境：test_env({ action:'stop' }) → test_env({ action:'start' })
+⑥ 取访问令牌：`grep -oE 'token=[A-Za-z0-9._-]+' <测试环境>/dsh-env.log | tail -1`
+   （**不要把它打印到会话里**）
+⑦ 换 cookie：`curl -c /tmp/tc.txt "http://127.0.0.1:<port>/?token=<token>"`
+   —— 不带 cookie 直接打 API 会得到 401 unauthorized。
+⑧ 验证完停环境：test_env({ action:'stop' })
+```
+
+### 验证鉴权类改动时的请求形态对照
+
+```bash
+# 桌面端转发形态（无 Origin + JSON）—— 期望 200
+curl -b /tmp/tc.txt -X POST -H 'Content-Type: application/json' \
+  -d '{"key":"npmRegistry","value":"https://registry.npmjs.org/"}' \
+  http://127.0.0.1:<port>/api/git-push/settings-set
+
+# 跨站表单形态（无 Origin + text/plain）—— 期望 403 NO_ORIGIN
+curl -b /tmp/tc.txt -X POST -H 'Content-Type: text/plain' \
+  -d '{"key":"npmRegistry","value":"x"}' \
+  http://127.0.0.1:<port>/api/git-push/settings-set
+```
+
+### 判据与副作用
+
+- **拒绝日志**：每次 403 都会写 `<测试环境>/git-push/http-rejects.log`（method/url/origin/host/code），
+  `cat` 它就能确认「拒绝确实发生、原因是什么」——这是验证可诊断性的唯一直接证据。
+- **远端 socket 造不出来**：真机只能证明「本机 socket 放行」；
+  「远端 socket + 伪造 Host ⇒ 拒」必须靠单测传 `remoteAddress` 断言（本仓库 `test-origin-desktop.mjs` 第 15 例）。
+- **副作用**：测试环境是隔离 DSH_HOME，往里写假凭据无害；但它会占端口（3083–3182）与磁盘
+  （node_modules 副本约 50MB+），验证完按低负载纪律停掉。
+
 ## 端点：AI 自设工作区路径（workspace-paths）
 
 环境注入里的「当前工作目录 cwd」原先取自**会话文件**（`agent.session.header.cwd`），实测可能是**陈旧路径**
