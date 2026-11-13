@@ -22,14 +22,14 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { tokenize, clearTokenCache } from '../lib/ast/tokenizer.js';
-import { checkDuplicateConst } from '../lib/checks/dup-const.js';
-import { pickExemptHint } from '../lib/checks/regex.js';
-import { exemptForFinding } from '../lib/exempt/index.js';
-import { FUNC_LINES_DEFAULT, DEFAULT_SCAN_DEPTH, HEALTH_BASE_SCORE } from '../lib/audit-defaults.js';
-import { FN_BODY_LOOKAHEAD } from '../lib/ast/consts.js';
+import { tokenize, clearTokenCache } from '../../lib/ast/tokenizer.js';
+import { checkDuplicateConst } from '../../lib/checks/dup-const.js';
+import { pickExemptHint } from '../../lib/checks/regex.js';
+import { exemptForFinding } from '../../lib/exempt/index.js';
+import { FUNC_LINES_DEFAULT, DEFAULT_SCAN_DEPTH, HEALTH_BASE_SCORE } from '../../lib/audit-defaults.js';
+import { FN_BODY_LOOKAHEAD } from '../../lib/ast/consts.js';
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 test('2.4.1① 多行模板正文不再产出 ident（帮助文本占位符不被当变量名）', () => {
   clearTokenCache();

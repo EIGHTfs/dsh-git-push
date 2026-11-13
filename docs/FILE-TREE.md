@@ -276,8 +276,6 @@ dsh-git-push/
 │   │   ├── variable-min-length.mjs — 审计扩展：variable-min-length（内置规则抽出试点——统一动态入口）
 ├── test/ — node:test 全量单元测试（541+ 条，覆盖审计/推送/账号/HTTP/后台任务）
 │   ├── .test — 空文件豁免标记（目录级豁免 .test 目录）
-│   ├── e2e-npm-tab-render.mjs — （待注释）
-│   ├── regression-2.4.1.mjs — （待注释）
 │   ├── run-tests.mjs — （待注释）
 │   ├── app/ — （待注释）
 │   │   ├── test-auto-push.mjs — （待注释）
@@ -370,6 +368,7 @@ dsh-git-push/
 │   │   ├── test-tokenizer-multiline-template.mjs — （待注释）
 │   │   ├── test-treesitter-grammars.mjs — （待注释）
 │   │   ├── test-treesitter.mjs — （待注释）
+│   │   ├── test-version-regression-2-4-1.mjs — （待注释）
 │   │   └── …（3 个更深文件）
 │   ├── fixtures/ — （待注释）
 │   │   ├── TimeZoneComboBox-CRnoCikG.js — Pawchive 混淆产物样本（hash 文件名——跳过判定 fixture）
@@ -450,6 +449,7 @@ dsh-git-push/
 │   │   ├── test-func-doc-drift.mjs — （待注释）
 │   │   ├── test-module-splitter-multiline.mjs — （待注释）
 │   │   ├── test-module-splitter.mjs — （待注释）
+│   │   ├── test-npm-tab-render.mjs — （待注释）
 │   │   ├── test-picker-layout.mjs — （待注释）
 │   │   ├── test-platform-scan.mjs — （待注释）
 │   │   ├── test-rename-locator.mjs — （待注释）

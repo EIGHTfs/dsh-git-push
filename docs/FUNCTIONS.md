@@ -2848,12 +2848,6 @@
 | `auditHits` | 34-57 | 24 | `function auditHits(repo, extraEnv = {}) {` |
 | `col` | 80-80 | 1 | `const col = (n, needle) => lines[n - 1].indexOf(needle) + 1;` |
 
-### test/e2e-npm-tab-render.mjs（95 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `read` | 19-19 | 1 | `const read = (p) => readFileSync(join(ROOT, p), 'utf8');` |
-
 ### test/git/test-account-ssh.mjs（149 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -3233,6 +3227,12 @@
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `makeFixture` | 25-43 | 19 | `function makeFixture(dir) {` |
+
+### test/tool/test-npm-tab-render.mjs（95 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `read` | 19-19 | 1 | `const read = (p) => readFileSync(join(ROOT, p), 'utf8');` |
 
 ### test/tool/test-picker-layout.mjs（111 行 · 1 个函数）
 

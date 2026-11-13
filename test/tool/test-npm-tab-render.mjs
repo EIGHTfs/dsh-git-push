@@ -13,9 +13,9 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 // 分片目录以 build-client.mjs 的 PARTS_DIR 为唯一来源（分片按侧分目录后不再硬编码路径）
-const { PARTS_DIR } = await import('../scripts/build-client.mjs');
+const { PARTS_DIR } = await import('../../scripts/build-client.mjs');
 const read = (p) => readFileSync(join(ROOT, p), 'utf8');
 
 test('分片：npm.js 存在且登记进 PART_ORDER（未登记=不会进产物）', () => {
@@ -47,7 +47,7 @@ test('产物：npm 凭据字段 id 与安全默认开关都在', () => {
 });
 
 test('产物与分片一致（等价于 build-client --check）', async () => {
-  const { buildClient } = await import('../scripts/build-client.mjs');
+  const { buildClient } = await import('../../scripts/build-client.mjs');
   const built = buildClient();
   const current = read('lib/client.js');
   assert.equal(current, built, '产物与分片不一致：请运行 node scripts/build-client.mjs');
