@@ -22,18 +22,17 @@
 | `aggregateFindings` | 82-103 | 22 | `export function aggregateFindings(findings = [], opts = {}) {` |
 | `runAuditApi` | 111-173 | 63 | `export async function runAuditApi(repo, params = {}, cfg = {}) {` |
 
-### lib/app/command-registry.js（354 行 · 8 个函数）
+### lib/app/command-registry.js（330 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `auditPreprocessAvailable` | 15-22 | 8 | `export function auditPreprocessAvailable(cfg = {}, hasBuiltinEngine) {` |
-| `resolveEntryParams` | 38-42 | 5 | `export function resolveEntryParams(entry, cfg, hasBuiltinEngine) {` |
-| `applyFlagToken` | 292-308 | 17 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
-| `validateParamConstraints` | 311-317 | 7 | `function validateParamConstraints(args, params) {` |
-| `parseRegistryArgs` | 319-339 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
-| `registryByName` | 342-344 | 3 | `export function registryByName(name) {` |
-| `registryByCli` | 347-349 | 3 | `export function registryByCli(cli) {` |
-| `buildToolsListText` | 352-354 | 3 | `export function buildToolsListText() {` |
+| `resolveEntryParams` | 14-18 | 5 | `export function resolveEntryParams(entry, cfg, hasBuiltinEngine) {` |
+| `applyFlagToken` | 268-284 | 17 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
+| `validateParamConstraints` | 287-293 | 7 | `function validateParamConstraints(args, params) {` |
+| `parseRegistryArgs` | 295-315 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
+| `registryByName` | 318-320 | 3 | `export function registryByName(name) {` |
+| `registryByCli` | 323-325 | 3 | `export function registryByCli(cli) {` |
+| `buildToolsListText` | 328-330 | 3 | `export function buildToolsListText() {` |
 
 ### lib/app/handlers/account.js（166 行 · 10 个函数）
 
@@ -1273,14 +1272,15 @@
 | `collectExternalRefs` | 136-141 | 6 | `export function collectExternalRefs(css = '') {` |
 | `clientModuleInfo` | 151-162 | 12 | `export function clientModuleInfo() {` |
 
-### lib/commit-push.js（193 行 · 4 个函数）
+### lib/commit-push.js（238 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `runAudit` | 34-144 | 111 | `export async function runAudit({ repoPath = '', audit, rulesetDir, slots, cfg: extCfg, visibility: extVisibility, exemptPaths = [], exemptReason = '' } = {}) {` |
-| `isExemptFile` | 91-91 | 1 | `const isExemptFile = (f) => exemptSet.size > 0 && exemptSet.has(String(f.file \|\| '').replace(/\\/g, '/').replace(/^\.\//, ''));` |
-| `commitWithAudit` | 154-179 | 26 | `export async function commitWithAudit({` |
-| `commitMany` | 187-193 | 7 | `export async function commitMany({ repos = [], message = '', push = true, dryRun = false, requirementsConfirmed = false, customIgnorePatterns = '' } = {}) {` |
+| `defaultPreprocessRender` | 38-53 | 16 | `export function defaultPreprocessRender(ctx = {}) {` |
+| `runAudit` | 64-189 | 126 | `export async function runAudit({ repoPath = '', audit, rulesetDir, slots, cfg: extCfg, visibility: extVisibility, exemptPaths = [], exemptReason = '' } = {}) {` |
+| `isExemptFile` | 118-118 | 1 | `const isExemptFile = (f) => exemptSet.size > 0 && exemptSet.has(String(f.file \|\| '').replace(/\\/g, '/').replace(/^\.\//, ''));` |
+| `commitWithAudit` | 199-224 | 26 | `export async function commitWithAudit({` |
+| `commitMany` | 232-238 | 7 | `export async function commitMany({ repos = [], message = '', push = true, dryRun = false, requirementsConfirmed = false, customIgnorePatterns = '' } = {}) {` |
 
 ### lib/commit-push/pre-commit-engine.js（389 行 · 17 个函数）
 
@@ -2054,6 +2054,21 @@
 | `setDefineToolOverride` | 240-250 | 11 | `export function setDefineToolOverride(fn) { defineToolOverride = fn; }` |
 | `loadDefineTool` | 241-250 | 10 | `export async function loadDefineTool(log) {` |
 
+### lib/preprocess/audit.js（99 行 · 3 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `auditPreprocessAvailable` | 39-45 | 7 | `export function auditPreprocessAvailable(cfg = {}, hasBuiltinEngine) {` |
+| `formatBlocked` | 60-66 | 7 | `function formatBlocked(blocked = []) {` |
+| `auditRenderResult` | 77-90 | 14 | `export function auditRenderResult(ctx = {}) {` |
+
+### lib/preprocess/index.js（79 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `preprocessParams` | 36-44 | 9 | `export function preprocessParams(cfg = {}, hasBuiltinEngine, preprocessors = PREPROCESSORS) {` |
+| `renderPreprocessResult` | 59-78 | 20 | `export function renderPreprocessResult(ctx = {}, cfg = {}, preprocessors = PREPROCESSORS) {` |
+
 ### lib/rule/compilers/helpers.js（72 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2773,6 +2788,12 @@
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `withScope` | 24-26 | 3 | `function withScope(action) {` |
+
+### test/audit/test-preprocess-render.mjs（121 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `makeBlockerRepo` | 25-37 | 13 | `function makeBlockerRepo() {` |
 
 ### test/audit/test-privacy-ownership.mjs（87 行 · 1 个函数）
 

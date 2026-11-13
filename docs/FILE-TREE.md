@@ -224,6 +224,9 @@ dsh-git-push/
 │   │   ├── auto-detect.js — 任务完成自动推送·检测层（纯函数：✅任务完成 触发/❌⚠ 阻断/自定义正则/许可合成判断）
 │   │   ├── auto-push.js — 任务完成自动推送·核心（turn/end 监听→检测→autoPushEnabled 开关→调 commitWithAudit 完整门禁，不裸提交）
 │   │   ├── index.js — Host 侧接线（插件注册：工具/HTTP/配置注入宿主）
+│   ├── preprocess/ — 
+│   │   ├── audit.js — （待注释）
+│   │   ├── index.js — （待注释）
 │   ├── rule/ — 规则引擎（yml 装载/编译注册表/同形字符检测/槽位启停）
 │   │   ├── compilers.js — 规则编译器注册表（纯引用文件）
 │   │   ├── homoglyph.js — 同形字符检测（yml kind/id 防 ASCII 混淆）
@@ -341,6 +344,7 @@ dsh-git-push/
 │   │   ├── test-name-length-scope.mjs — （待注释）
 │   │   ├── test-perf-loop-collection.mjs — （待注释）
 │   │   ├── test-perf-repeat-call.mjs — （待注释）
+│   │   ├── test-preprocess-render.mjs — （待注释）
 │   │   ├── test-privacy-ownership.mjs — （待注释）
 │   │   ├── test-project-type-filter.mjs — （待注释）
 │   │   ├── test-quality.mjs — （待注释）

@@ -498,3 +498,54 @@ git 与共享端点（25 + 6 条）继续在 `/api/git-push/*`。
 **共享端点（有意留 `/api/git-push/*`）**：`status`、`settings-get/set`、`workspace-paths`、`tools`、`tool-probes`。
 理由：它们要么是「插件整体状态」、要么被多侧共用，强行二分会造成两次请求或语义混淆。
 
+### 14.7 预处理第三项能力：`renderResult`（结果文案由审计方渲染）
+
+> 与「参数动态注册」（14.1–14.6）同一体系：预处理贡献**参数**、**可用性**，以及**结果文案**。
+> git 侧只认契约、不认实现 —— 换引擎/换语言/把审计拆成独立项目时，git 侧的文案代码零改动。
+
+**契约**
+
+```js
+// lib/preprocess/audit.js（审计预处理）
+{
+  id: 'audit',
+  params: [...],                          // 14.1：给工具签名贡献参数
+  enabled: (cfg, hasBuiltinEngine) => …,  // 14.2：可用性判据（≠ auditEnabled）
+  renderResult: (ctx) => ({               // 本小节：结果文案
+    error:     string | undefined,        // 拦截原因（放行时必须为 undefined）
+    apiGuide:  string | undefined,        // 结果查询指引（可空）
+    notes:     { exempt?, privateExempt? } // 回显型 note（可缺项）
+  }),
+}
+```
+
+**`ctx`（数据契约，由 git 侧组装，预处理只读）**
+
+| 字段 | 内容 |
+|---|---|
+| `repoPath` | 仓库路径（文案里要显示，如 apiGuide 的 URL 参数） |
+| `audit` | `{ summary, quality, findings, scope, files }` —— 引擎返回的结果快照 |
+| `blocked` | 拦截明细数组（**已按示例目录/临时豁免过滤过**，即 git 侧最终认定的 blocker） |
+| `exempt` | 可选。本次临时豁免回显：`{ files, count, rules, reason? }`（不含 `note`——note 就是本能力产出的） |
+
+**合并与兜底**（`lib/preprocess/index.js`）
+
+- `renderPreprocessResult(ctx, cfg, preprocessors?)`：按注册顺序取**可用且实现 renderResult**的预处理，
+  逐字段合并（`error` / `apiGuide` / `notes` 各自独立；`notes` 浅合并）。
+- 预处理**抛错被吞掉**：文案渲染失败绝不能把提交门禁带崩（判定已经做完，这里只是措辞）。
+- 返回 `undefined` 时由 git 侧兜底 `defaultRenderResult(ctx)`：**中性措辞**
+  （`提交前检查拦截：N 项 → 位置（规则）`、空 apiGuide），不写死任何预处理的专名。
+
+**三样刻意留在 git 侧（不要交出去）**
+
+| 留在 git 侧 | 位置 | 为什么不能交给预处理 |
+|---|---|---|
+| `blocked` **布尔** | `lib/app/tool-call.js` 的 `pushJobOutcome` | 它决定 job 状态分叉：「未推送（被拦截）」vs「未完成：<原因>」。这是**状态机语义**（被拦截 ≠ 执行失败），不是审计判定 |
+| 引擎 spawn 失败文案 | `lib/commit-push/pre-commit-engine.js` | 引擎**没被找到时根本不会执行**，它无法生成「我没被找到」这句话；只有拉起它的 git 侧知道 |
+| 兜底默认文案 | `lib/preprocess/index.js` 的 `defaultRenderResult` | 预处理可能不可用/未实现/抛错，git 侧必须有兜底才能「不崩、不静默丢信息」 |
+
+**`buildAuditApiGuide` 为什么不搬**：它是**纯本地文案工具**（拼 URL + 计数），不含任何审计判定语义，
+且被两条路径共用：① 预处理 `renderResult` 里调它生成 apiGuide；② `lib/app/tool-call.js` 的 `code_audit`
+工具**直接**调它（那条路径不经过 `renderResult`，因为工具返回的是「API 查询指引」而非门禁文案）。
+搬进预处理模块会让 `code_audit` 反向依赖预处理器（依赖方向倒置），或被迫维护两份实现。
+**结论：留在 `lib/app/inject-text.js`，预处理 import 它使用。**
