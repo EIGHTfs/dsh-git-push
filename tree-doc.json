@@ -392,89 +392,24 @@
   "test/test-git-api-tool.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "cli.mjs": {
+      "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-11-12T23:36:27.481Z",
+        "mtime": "2026-11-13T00:42:51.762Z",
         "note": "注释可能需更新"
       },
-      "lib/cli/commands-audit.mjs": {
+      "lib/commit-push.js": {
         "status": "M",
-        "mtime": "2026-11-12T23:12:06.833Z",
+        "mtime": "2026-11-13T00:42:14.186Z",
         "note": "注释可能需更新"
       },
-      "lib/cli/commands-vcs.mjs": {
-        "status": "M",
-        "mtime": "2026-11-12T23:12:11.807Z",
-        "note": "注释可能需更新"
-      },
-      "package.json": {
-        "status": "M",
-        "mtime": "2026-11-12T23:13:10.865Z",
-        "note": "注释可能需更新"
-      },
-      "scripts/check.mjs": {
-        "status": "M",
-        "mtime": "2026-11-12T23:21:57.084Z",
-        "note": "注释可能需更新"
-      },
-      "scripts/scan-file-io.mjs": {
-        "status": "M",
-        "mtime": "2026-11-12T23:21:57.124Z",
-        "note": "注释可能需更新"
-      },
-      "scripts/scan-version.mjs": {
-        "status": "M",
-        "mtime": "2026-11-12T23:21:57.089Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-cli-audit-parity.mjs": {
-        "status": "M",
-        "mtime": "2026-11-12T23:16:05.392Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-cli-help-registry-sync.mjs": {
-        "status": "M",
-        "mtime": "2026-11-12T23:23:33.891Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-link-check.mjs": {
-        "status": "M",
-        "mtime": "2026-11-12T23:16:05.425Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-module-splitter.mjs": {
-        "status": "M",
-        "mtime": "2026-11-12T23:16:05.430Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-scope-collisions.mjs": {
-        "status": "M",
-        "mtime": "2026-11-12T23:16:05.396Z",
-        "note": "注释可能需更新"
-      },
-      "cli-audit.mjs": {
+      "lib/audit-ui-sdk/": {
         "status": "A",
-        "mtime": "2026-11-12T23:20:03.197Z",
+        "mtime": "2026-11-13T00:42:17.613Z",
         "note": "注释可能需更新"
       },
-      "cli-tool.mjs": {
+      "test/test-audit-ui-contract.mjs": {
         "status": "A",
-        "mtime": "2026-11-12T23:20:03.211Z",
-        "note": "注释可能需更新"
-      },
-      "lib/cli/commands-tool.mjs": {
-        "status": "A",
-        "mtime": "2026-11-12T23:25:56.712Z",
-        "note": "注释可能需更新"
-      },
-      "lib/cli/shared.mjs": {
-        "status": "A",
-        "mtime": "2026-11-12T23:28:33.398Z",
-        "note": "注释可能需更新"
-      },
-      "test/test-cli-split.mjs": {
-        "status": "A",
-        "mtime": "2026-11-12T23:28:44.725Z",
+        "mtime": "2026-11-13T00:42:44.746Z",
         "note": "注释可能需更新"
       }
     }
@@ -647,5 +582,9 @@
   "cli-tool.mjs": "工具链 CLI 入口（bin tool-sluice：module-splitter/yaml-template/readme-template/self-check）",
   "lib/cli/shared.mjs": "三个 CLI 共用的公共层（参数解析/结果打印/HELP 渲染/版本/跨侧指引）",
   "lib/cli/commands-tool.mjs": "工具链命令实现（模板生成与 self-check）",
-  "test/test-cli-split.mjs": "三入口拆分回归：命令归属、跨侧提示、HELP 一致性、28 命令逐个可达"
+  "test/test-cli-split.mjs": "三入口拆分回归：命令归属、跨侧提示、HELP 一致性、28 命令逐个可达",
+  "lib/audit-ui-sdk": "审计 UI 注入契约（可插拔面板；本阶段只定义契约不实施 UI）",
+  "lib/audit-ui-sdk/contract.js": "审计面板契约：版本号 + defineAuditPanel 校验（构建期，只判形状与版本）+ 深冻结",
+  "lib/audit-ui-sdk/index.js": "审计面板 SDK 唯一导出面（纯 re-export，实现只能从这里 import）",
+  "test/test-audit-ui-contract.mjs": "审计 UI 契约回归：17 例（导出面/零依赖/深冻结/未登记键丢弃/与 SPEC 漂移门禁）"
 }

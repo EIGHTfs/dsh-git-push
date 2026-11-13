@@ -634,6 +634,15 @@
 | `walk` | 380-398 | 19 | `const walk = (node) => {` |
 | `resetTreeSitterCache` | 408-413 | 6 | `export function resetTreeSitterCache() {  modPromise = null;` |
 
+### lib/audit-ui-sdk/contract.js（118 行 · 4 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `assertMetaShape` | 52-65 | 14 | `function assertMetaShape(meta) {` |
+| `assertRequiredParts` | 72-76 | 5 | `function assertRequiredParts(definition) {` |
+| `assertOptionalParts` | 82-89 | 8 | `function assertOptionalParts(definition) {` |
+| `defineAuditPanel` | 101-117 | 17 | `export function defineAuditPanel(definition) {` |
+
 ### lib/audit/analysis-coverage.js（99 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -1255,14 +1264,14 @@
 | `collectExternalRefs` | 136-141 | 6 | `export function collectExternalRefs(css = '') {` |
 | `clientModuleInfo` | 151-162 | 12 | `export function clientModuleInfo() {` |
 
-### lib/commit-push.js（195 行 · 4 个函数）
+### lib/commit-push.js（193 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `runAudit` | 36-146 | 111 | `export async function runAudit({ repoPath = '', audit, rulesetDir, slots, cfg: extCfg, visibility: extVisibility, exemptPaths = [], exemptReason = '' } = {}) {` |
-| `isExemptFile` | 93-93 | 1 | `const isExemptFile = (f) => exemptSet.size > 0 && exemptSet.has(String(f.file \|\| '').replace(/\\/g, '/').replace(/^\.\//, ''));` |
-| `commitWithAudit` | 156-181 | 26 | `export async function commitWithAudit({` |
-| `commitMany` | 189-195 | 7 | `export async function commitMany({ repos = [], message = '', push = true, dryRun = false, requirementsConfirmed = false, customIgnorePatterns = '' } = {}) {` |
+| `runAudit` | 34-144 | 111 | `export async function runAudit({ repoPath = '', audit, rulesetDir, slots, cfg: extCfg, visibility: extVisibility, exemptPaths = [], exemptReason = '' } = {}) {` |
+| `isExemptFile` | 91-91 | 1 | `const isExemptFile = (f) => exemptSet.size > 0 && exemptSet.has(String(f.file \|\| '').replace(/\\/g, '/').replace(/^\.\//, ''));` |
+| `commitWithAudit` | 154-179 | 26 | `export async function commitWithAudit({` |
+| `commitMany` | 187-193 | 7 | `export async function commitMany({ repos = [], message = '', push = true, dryRun = false, requirementsConfirmed = false, customIgnorePatterns = '' } = {}) {` |
 
 ### lib/commit-push/pre-commit-engine.js（389 行 · 17 个函数）
 
@@ -2604,6 +2613,13 @@
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `read` | 23-23 | 1 | `const read = (p) => readFileSync(join(ROOT, p), 'utf8');` |
+
+### test/test-audit-ui-contract.mjs（192 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `makePanel` | 23-29 | 7 | `function makePanel(patch = {}) {` |
+| `assertThrowsWith` | 32-41 | 10 | `function assertThrowsWith(fn, keywords, label) {` |
 
 ### test/test-auditignore.mjs（145 行 · 1 个函数）
 

@@ -109,6 +109,9 @@ dsh-git-push/
 │   │   ├── audit-rules-structure.yml — 结构规则（命名/规模/复杂度）（规则包 structure）
 │   │   ├── audit-rules-swift.yml — Swift 规则包（占位：规则待补，槽位就绪）（规则包 swift）
 │   │   ├── audit-rules-template.yml — 规则模板（新规则包起点）（规则包 template）
+│   ├── audit-ui-sdk/ — 审计 UI 注入契约（可插拔面板；本阶段只定义契约不实施 UI）
+│   │   ├── contract.js — 审计面板契约：版本号 + defineAuditPanel 校验（构建期，只判形状与版本）+ 深冻结
+│   │   ├── index.js — 审计面板 SDK 唯一导出面（纯 re-export，实现只能从这里 import）
 │   ├── checks/ — 检查层（按 kind 调用检查器：正则/语义/结构/文件健康/按钮绑定/私密文件）
 │   │   ├── button-bind.js — 按钮事件绑定交叉比对（声明了但没绑定）
 │   │   ├── common.js — 检查器公共设施（豁免提示/severity 封顶/分组）
@@ -296,6 +299,7 @@ dsh-git-push/
 │   ├── test-audit-rules-csharp.mjs — （待注释）
 │   ├── test-audit-scope.mjs — 审计作用域/凭据占位符回归测试
 │   ├── test-audit-slot-order.mjs — （待注释）
+│   ├── test-audit-ui-contract.mjs — 审计 UI 契约回归：17 例（导出面/零依赖/深冻结/未登记键丢弃/与 SPEC 漂移门禁）
 │   ├── test-audit.mjs — 审计总入口测试（auditFull/changed/豁免/gitignore）
 │   ├── test-auditignore-rules.mjs — （待注释）
 │   ├── test-auditignore.mjs — （待注释）

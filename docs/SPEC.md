@@ -231,6 +231,8 @@ lib/audit-ui-sdk/
 **props**：`data:{summary,quality,findings,ruleSlots}`、`actions:{reload,toggleRule,editWeight,toggleDisabled}`、
 `state:{loading,error,auditEnabled,auditScanScope}`。
 
+**字段语义**：`data` 里的字段与**引擎返回同名同构，不做二次改名或裁剪**（如 `quality` 是引擎返回的整个对象，不是只留 `{score,level}`）——契约负责说清结构，不替引擎裁剪；否则引擎加字段就要动契约版本。
+
 **三条硬约束**：① 实现只能从 `lib/audit-ui-sdk` 唯一入口 import；② 校验只覆盖构建期一定能判的部分（形状与版本），
 不猜作者意图；③ 契约破坏性改动 `contractVersion +1`，构建期拒绝按旧契约写的实现。
 
