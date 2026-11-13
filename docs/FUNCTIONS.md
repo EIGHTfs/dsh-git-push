@@ -1076,7 +1076,7 @@
 | `printCloneResult` | 154-166 | 13 | `function printCloneResult(r, flags, target, dest) {` |
 | `cmdClone` | 169-176 | 8 | `export async function cmdClone(flags, positional) {` |
 
-### lib/cli/shared.mjs（447 行 · 20 个函数）
+### lib/cli/shared.mjs（449 行 · 20 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1095,11 +1095,11 @@
 | `printVersion` | 261-263 | 3 | `export function printVersion(cliName) {` |
 | `resolveDispatch` | 273-304 | 32 | `export function resolveDispatch({ cliName = CLI_GIT, argv = [], commands = new Map() } = {}) {` |
 | `normalizeRegistryArgv` | 318-332 | 15 | `export function normalizeRegistryArgv(rest = [], params = []) {` |
-| `runCli` | 345-386 | 42 | `export async function runCli({` |
-| `isDirectRun` | 396-404 | 9 | `export function isDirectRun(moduleUrl) {` |
-| `runAsEntry` | 411-422 | 12 | `export function runAsEntry(moduleUrl, main) {` |
-| `readEntrySource` | 431-433 | 3 | `export function readEntrySource(relPath) {` |
-| `parseEntrySourceMeta` | 440-446 | 7 | `export function parseEntrySourceMeta(sourceText = '') {` |
+| `runCli` | 345-388 | 44 | `export async function runCli({` |
+| `isDirectRun` | 398-406 | 9 | `export function isDirectRun(moduleUrl) {` |
+| `runAsEntry` | 413-424 | 12 | `export function runAsEntry(moduleUrl, main) {` |
+| `readEntrySource` | 433-435 | 3 | `export function readEntrySource(relPath) {` |
+| `parseEntrySourceMeta` | 442-448 | 7 | `export function parseEntrySourceMeta(sourceText = '') {` |
 
 ### lib/client-parts/audit/audit.js（302 行 · 10 个函数）
 

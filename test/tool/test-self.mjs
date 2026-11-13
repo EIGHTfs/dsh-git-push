@@ -265,7 +265,7 @@ test('CLI 新命令：缺必填参数时退出码非 0（脚本可判失败）',
     console.error = () => {};
     let code;
     try { code = await main([cmd, ...args]); } finally { console.error = prevErr; process.exitCode = prevCode ?? 0; }
-    assert.equal(code, 1, `${cmd} 缺参数必须返回 1（实际 ${code}）`);
+    assert.equal(code, 2, `${cmd} 缺参数必须返回 2（用法错误码，实际 ${code}）`);
   }
 });
 
@@ -275,7 +275,7 @@ test('CLI 新命令：--visibility 只接受 public|private', async () => {
   console.error = () => {};
   let code;
   try { code = await main(['set-visibility', '/tmp', '--visibility', 'weird']); } finally { console.error = prevErr; process.exitCode = prevCode ?? 0; }
-  assert.equal(code, 1, '非法 visibility 必须拒绝（防误改可见性）');
+  assert.equal(code, 2, '非法 visibility 必须拒绝（用法错误码 2，防误改可见性）');
 });
 
 // ---------- 1.9.0：浅包装 git（未知命令透传 + git 子命令 + 自动凭据） ----------
