@@ -2455,7 +2455,59 @@
 | `readReleases` | 126-133 | 8 | `export function readReleases(repoPath) {` |
 | `buildReadmeVersionTable` | 151-171 | 21 | `export function buildReadmeVersionTable(repoPath) {` |
 
-### test/audit/test-inject-switch.mjs（141 行 · 3 个函数）
+### test/app/test-plugin.mjs（657 行 · 3 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `makeExemptRepo` | 488-494 | 7 | `function makeExemptRepo() {` |
+| `addSecretFile` | 495-498 | 4 | `function addSecretFile(root, path) {` |
+| `fsStatMode` | 652-654 | 3 | `function fsStatMode(file) {` |
+
+### test/app/test-settings-persistence.mjs（252 行 · 4 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `clientSubmitKeys` | 28-38 | 11 | `function clientSubmitKeys() {` |
+| `allowlistKeys` | 47-52 | 6 | `function allowlistKeys() {` |
+| `cfgMappingKeys` | 55-252 | 198 | `function cfgMappingKeys() {` |
+| `isolatedEnv` | 72-79 | 8 | `function isolatedEnv() {` |
+
+### test/app/test-slash-commands.mjs（287 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `inv` | 15-17 | 3 | `function inv(cwd) {` |
+
+### test/app/test-symlink-resolution.mjs（104 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `buildFixture` | 25-41 | 17 | `function buildFixture() {` |
+| `runNode` | 43-45 | 3 | `function runNode(args, env) {` |
+
+### test/app/test-task-queue.mjs（232 行 · 4 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `mkRepo` | 16-23 | 8 | `function mkRepo() {` |
+| `mkDirtyRepo` | 31-35 | 5 | `function mkDirtyRepo() {` |
+| `wait` | 36-37 | 2 | `function wait(ms) { return new Promise((r) => setTimeout(r, ms)); }` |
+| `mockJobs` | 39-57 | 19 | `function mockJobs() {` |
+
+### test/app/test-tools-e2e.mjs（86 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `makeRepo` | 26-32 | 7 | `function makeRepo(name) {` |
+
+### test/app/test-workspace-paths.mjs（139 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `mod` | 28-28 | 1 | `const mod = () => import('../../lib/core/workspace-paths.js');` |
+| `h` | 29-29 | 1 | `const h = () => import('../../lib/app/handlers/workspace-paths.js');` |
+
+### test/audit/_archived/test-inject-switch.mjs（141 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -2463,7 +2515,7 @@
 | `req` | 43-56 | 14 | `const req = (name) => {` |
 | `findChild` | 100-100 | 1 | `const findChild = (inputs) => inputs.find((p) => p['aria-label'] === LABEL);` |
 
-### test/audit/test-inject-system-prompt.mjs（374 行 · 3 个函数）
+### test/audit/_archived/test-inject-system-prompt.mjs（374 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -2471,7 +2523,7 @@
 | `req` | 39-50 | 12 | `const req = (name) => {` |
 | `findSwitch` | 92-92 | 1 | `const findSwitch = (inputs) => inputs.find((p) => p['aria-label'] === LABEL);` |
 
-### test/audit/test-sidebar-interaction.mjs（192 行 · 7 个函数）
+### test/audit/_archived/test-sidebar-interaction.mjs（192 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -2483,101 +2535,44 @@
 | `clsOf` | 88-88 | 1 | `const clsOf = (n) => String((n.props && n.props.className) \|\| '');` |
 | `findClass` | 89-89 | 1 | `const findClass = (tree, cls) => walk(tree).find((n) => clsOf(n).includes(cls));` |
 
-### test/e2e-npm-tab-render.mjs（95 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `read` | 19-19 | 1 | `const read = (p) => readFileSync(join(ROOT, p), 'utf8');` |
-
-### test/helpers/test-cache.mjs（208 行 · 8 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `stripCommentsAndStrings` | 54-79 | 26 | `export function stripCommentsAndStrings(text) {` |
-| `isCacheableTest` | 87-91 | 5 | `export function isCacheableTest(sourceText, fileName = '') {` |
-| `relativeSpecifiers` | 94-107 | 14 | `export function relativeSpecifiers(sourceText) {` |
-| `importClosure` | 115-134 | 20 | `export function importClosure(entryAbs, exists = existsSync) {` |
-| `cacheKeyFor` | 142-153 | 12 | `export function cacheKeyFor(absFiles, nodeVersion = process.version) {` |
-| `loadTestCache` | 156-163 | 8 | `export function loadTestCache(root) {` |
-| `saveTestCache` | 166-179 | 14 | `export function saveTestCache(root, cache) {` |
-| `planTestRun` | 188-207 | 20 | `export function planTestRun(files, cache, exists = existsSync) {` |
-
-### test/helpers/tmp-dir.mjs（117 行 · 6 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `installExitHook` | 25-33 | 9 | `function installExitHook() {` |
-| `removeTempDir` | 36-39 | 4 | `export function removeTempDir(dir) {` |
-| `mkdtempTracked` | 51-57 | 7 | `export function mkdtempTracked(prefixPath) {` |
-| `tempDir` | 65-71 | 7 | `export function tempDir(label = 'tmp', { t = null } = {}) {` |
-| `tempRepo` | 79-85 | 7 | `export function tempRepo(label = 'repo', { t = null, name = '', email = '' } = {}) {` |
-| `sweepStaleTempDirs` | 93-116 | 24 | `export function sweepStaleTempDirs({ maxAgeMs = 60 * 60 * 1000, log = null } = {}) {` |
-
-### test/run-tests.mjs（175 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `runBatch` | 92-124 | 33 | `function runBatch(files) {` |
-| `emit` | 108-119 | 12 | `const emit = (chunk) => {` |
-
-### test/test-account-ssh.mjs（149 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `isolatedEnv` | 17-24 | 8 | `function isolatedEnv() {` |
-
-### test/test-analysis-coverage.mjs（77 行 · 1 个函数）
+### test/audit/test-analysis-coverage.mjs（77 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `makeProject` | 20-27 | 8 | `function makeProject() {` |
 
-### test/test-ast-confirm-span.mjs（61 行 · 1 个函数）
+### test/audit/test-ast-confirm-span.mjs（61 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `col` | 27-27 | 1 | `const col = (n, needle) => lines[n - 1].indexOf(needle) + 1;` |
 
-### test/test-audit-archive-exempt.mjs（64 行 · 1 个函数）
+### test/audit/test-audit-archive-exempt.mjs（64 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `withRepo` | 23-27 | 5 | `async function withRepo(fn) {` |
 
-### test/test-audit-bad-file.mjs（129 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `setupBadFile` | 40-45 | 6 | `function setupBadFile(relPath, content) {` |
-| `cleanup` | 46-50 | 5 | `function cleanup(relPath) {` |
-
-### test/test-audit-defaults.mjs（34 行 · 1 个函数）
+### test/audit/test-audit-defaults.mjs（34 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `read` | 15-15 | 1 | `const read = (p) => readFileSync(join(ROOT, p), 'utf8');` |
 
-### test/test-audit-exempt-paths.mjs（78 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `makeRepo` | 20-29 | 10 | `function makeRepo(t) {` |
-| `writeBlocker` | 32-39 | 8 | `function writeBlocker(dir, name = 'bad.js') {` |
-
-### test/test-audit-false-positive-guards.mjs（196 行 · 1 个函数）
+### test/audit/test-audit-false-positive-guards.mjs（196 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `repo` | 23-31 | 9 | `function repo(files) {` |
 
-### test/test-audit-fastpath.mjs（89 行 · 2 个函数）
+### test/audit/test-audit-fastpath.mjs（89 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `withGitRepo` | 23-28 | 6 | `async function withGitRepo(fn) {` |
 | `pathsOf` | 30-30 | 1 | `const pathsOf = (files) => files.map((f) => f.path).sort();` |
 
-### test/test-audit-git-boundary.mjs（94 行 · 4 个函数）
+### test/audit/test-audit-git-boundary.mjs（94 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -2586,7 +2581,7 @@
 | `specifiersOf` | 36-40 | 5 | `export function specifiersOf(text) {` |
 | `findViolations` | 43-54 | 12 | `export function findViolations(files, rules) {` |
 
-### test/test-audit-npm-publish-rules.mjs（82 行 · 3 个函数）
+### test/audit/test-audit-npm-publish-rules.mjs（82 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -2594,222 +2589,82 @@
 | `has` | 26-26 | 1 | `const has = (text, rule) => hits(text, rule).length > 0;` |
 | `msg` | 27-27 | 1 | `const msg = (text, rule) => hits(text, rule)[0]?.message \|\| '';` |
 
-### test/test-audit-push-boundary.mjs（189 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `makeRepo` | 31-41 | 11 | `function makeRepo() {` |
-| `stageBlocker` | 47-54 | 8 | `function stageBlocker(dir) {` |
-
-### test/test-audit-rules-csharp.mjs（125 行 · 2 个函数）
+### test/audit/test-audit-rules-csharp.mjs（125 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `makeRepo` | 21-28 | 8 | `function makeRepo(files) {` |
 | `auditCsharp` | 31-39 | 9 | `async function auditCsharp(repo) {` |
 
-### test/test-audit-slot-order.mjs（56 行 · 1 个函数）
+### test/audit/test-audit-slot-order.mjs（56 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `read` | 23-23 | 1 | `const read = (p) => readFileSync(join(ROOT, p), 'utf8');` |
 
-### test/test-audit-ui-contract.mjs（192 行 · 2 个函数）
+### test/audit/test-audit-ui-contract.mjs（192 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `makePanel` | 23-29 | 7 | `function makePanel(patch = {}) {` |
 | `assertThrowsWith` | 32-41 | 10 | `function assertThrowsWith(fn, keywords, label) {` |
 
-### test/test-auditignore.mjs（145 行 · 1 个函数）
+### test/audit/test-auditignore.mjs（145 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `setupRepo` | 11-32 | 22 | `function setupRepo() {` |
 
-### test/test-button-bind-events.mjs（136 行 · 1 个函数）
+### test/audit/test-button-bind-events.mjs（136 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `auditFiles` | 33-41 | 9 | `async function auditFiles(files) {` |
 
-### test/test-ci-wait.mjs（99 行 · 4 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `fakeFetch` | 38-48 | 11 | `function fakeFetch(sequence) {` |
-| `impl` | 41-46 | 6 | `const impl = async (path) => {` |
-| `noSleep` | 50-51 | 2 | `const noSleep = async () => {};` |
-| `fakeNow` | 52-52 | 1 | `const fakeNow = () => clock;` |
-
-### test/test-cifs-init.mjs（158 行 · 3 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `withDir` | 34-40 | 7 | `function withDir(fn) {` |
-| `readGlobalSafeDirs` | 49-55 | 7 | `const readGlobalSafeDirs = () => {` |
-| `gitOk` | 57-59 | 3 | `const gitOk = (dir, args) => {` |
-
-### test/test-cli-audit-parity.mjs（69 行 · 1 个函数）
+### test/audit/test-cli-audit-parity.mjs（69 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `makeAuditRepo` | 20-40 | 21 | `function makeAuditRepo() {` |
 
-### test/test-cli-help-registry-sync.mjs（100 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `usageLines` | 36-46 | 11 | `function usageLines(helpText, cliName, command) {` |
-| `helpOf` | 49-53 | 5 | `function helpOf(cliName) {` |
-
-### test/test-cli-split.mjs（304 行 · 3 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `runCliFile` | 41-50 | 10 | `async function runCliFile(cliName, argv, opts = {}) {` |
-| `runInWaves` | 53-59 | 7 | `async function runInWaves(tasks, waveSize = 4) {` |
-| `run` | 290-295 | 6 | `const run = (file, args) => {` |
-
-### test/test-client-fragment-scope.mjs（69 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `fakeRepo` | 16-20 | 5 | `function fakeRepo(pkg) {` |
-
-### test/test-client.mjs（523 行 · 4 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `mockReact` | 20-26 | 7 | `function mockReact() {` |
-| `req` | 328-345 | 18 | `const req = (name) => {` |
-| `req` | 406-425 | 20 | `const req = (name) => {` |
-| `req` | 474-492 | 19 | `const req = (name) => {` |
-
-### test/test-clone-concurrency.mjs（459 行 · 3 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `probe` | 130-154 | 25 | `const probe = async (useNew) => {` |
-| `writer` | 135-141 | 7 | `const writer = (async () => {` |
-| `call` | 436-436 | 1 | `const call = async (body) => (await handleHttp(` |
-
-### test/test-clone-history-defaults.mjs（49 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `read` | 16-16 | 1 | `const read = (rel) => readFileSync(join(ROOT, rel), 'utf8');` |
-
-### test/test-clone-history-mode.mjs（132 行 · 3 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `fakeApi` | 20-30 | 11 | `function fakeApi({ headSha = 'c', trees = {}, commits = {}, refStatus = 200 } = {}) {` |
-| `fakeGit` | 33-44 | 12 | `function fakeGit() {` |
-| `runGit` | 36-42 | 7 | `const runGit = (args) => {` |
-
-### test/test-clone-history.mjs（136 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `stubApi` | 28-38 | 11 | `function stubApi(chain) {` |
-
-### test/test-clone-mirror-truncation.mjs（138 行 · 4 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `stubChannels` | 25-52 | 28 | `function stubChannels({ rawBroken = true, apiBroken = false } = {}) {` |
-| `blobSha` | 56-58 | 3 | `function blobSha(content, size) {` |
-| `newDir` | 63-64 | 2 | `function newDir() { return mkdtempSync(join(tmpdir(), 'dshgp-trunc-')); }` |
-| `partOf` | 64-65 | 2 | `function partOf(dir) { return join(dir, PARTS_DIR, `${blob.sha}.part`); }` |
-
-### test/test-clone-parts-keep.mjs（76 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `stubFetch` | 19-29 | 11 | `function stubFetch() {` |
-| `blobSha` | 32-37 | 6 | `function blobSha(content, size) {` |
-
-### test/test-clone-preview-buttons.mjs（134 行 · 5 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `makeJsx` | 25-33 | 9 | `function makeJsx() {` |
-| `createElement` | 26-31 | 6 | `const createElement = (type, props) => {` |
-| `extractFunction` | 36-134 | 99 | `function extractFunction(src, signature) {` |
-| `walk` | 50-55 | 6 | `function walk(node, out = []) {` |
-| `renderPreview` | 58-134 | 77 | `function renderPreview(handlers = {}) {` |
-
-### test/test-clone-replay-io.mjs（159 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `fakeGit` | 17-159 | 143 | `function fakeGit({ hasOrigin = false, failAt = '' } = {}) {` |
-| `runGit` | 19-29 | 11 | `const runGit = (args) => {` |
-
-### test/test-clone-replay.mjs（233 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `fakeIo` | 115-133 | 19 | `function fakeIo({ trees = {}, failDownloadAt = -1, marker = null } = {}) {` |
-
-### test/test-collector-ignore.mjs（68 行 · 2 个函数）
+### test/audit/test-collector-ignore.mjs（68 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `makeRepo` | 21-31 | 11 | `function makeRepo() {` |
 | `paths` | 33-33 | 1 | `const paths = (list) => list.map((f) => String(f.path).replace(/\\/g, '/'));` |
 
-### test/test-conv-rule-scope.mjs（46 行 · 1 个函数）
+### test/audit/test-conv-rule-scope.mjs（46 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `extsOf` | 17-27 | 11 | `function extsOf(id) {` |
 
-### test/test-dataflow-clear-fp.mjs（92 行 · 1 个函数）
+### test/audit/test-dataflow-clear-fp.mjs（92 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `n` | 23-23 | 1 | `const n = (src) => checkClearAccessAst(src).length;` |
 
-### test/test-dataflow-py-bodies.mjs（71 行 · 1 个函数）
+### test/audit/test-dataflow-py-bodies.mjs（71 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `n` | 21-21 | 1 | `const n = (src) => checkClearAccessAst(src).length;` |
 
-### test/test-dataflow.mjs（116 行 · 1 个函数）
+### test/audit/test-dataflow.mjs（116 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `hits` | 20-22 | 3 | `function hits(text) {` |
 
-### test/test-doc-func.mjs（110 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `mkTmp` | 22-22 | 1 | `const mkTmp = () => mkdtempSync(join(tmpdir(), 'dshgp-docfunc-'));` |
-
-### test/test-doc-version-release-source.mjs（61 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `fixture` | 18-29 | 12 | `function fixture(version, releases) {` |
-
-### test/test-doc-version.mjs（84 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `mkTmp` | 20-20 | 1 | `const mkTmp = () => mkdtempSync(join(tmpdir(), 'dshgp-docver-'));` |
-| `gitRepoWithVersions` | 33-41 | 9 | `function gitRepoWithVersions(dir) {` |
-
-### test/test-docs-score.mjs（187 行 · 1 个函数）
+### test/audit/test-docs-score.mjs（187 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `makeProject` | 19-27 | 9 | `function makeProject(files) {` |
 
-### test/test-dup-code.mjs（177 行 · 15 个函数）
+### test/audit/test-dup-code.mjs（177 行 · 15 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -2829,32 +2684,32 @@
 | `mk` | 142-142 | 1 | `const mk = (fnName) => `` |
 | `mk` | 160-160 | 1 | `const mk = (fnName, params) => `` |
 
-### test/test-empty-catch-single-source.mjs（29 行 · 1 个函数）
+### test/audit/test-empty-catch-single-source.mjs（29 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `read` | 14-14 | 1 | `const read = (p) => readFileSync(join(ROOT, p), 'utf8');` |
 
-### test/test-exempt-hint-effective.mjs（115 行 · 1 个函数）
+### test/audit/test-exempt-hint-effective.mjs（115 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `withHeader` | 29-29 | 1 | `const withHeader = (text, marker) => `// ${marker}\n${text}`;` |
 
-### test/test-exempt-tool.mjs（80 行 · 1 个函数）
+### test/audit/test-exempt-tool.mjs（80 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `makeRepo` | 10-12 | 3 | `function makeRepo() {` |
 
-### test/test-exempt.mjs（407 行 · 2 个函数）
+### test/audit/test-exempt.mjs（408 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `f` | 21-23 | 3 | `function f(kind, rule, line = 3) {` |
 | `compileGrouped` | 230-238 | 9 | `async function compileGrouped() {` |
 
-### test/test-false-positive-fixes.mjs（549 行 · 8 个函数）
+### test/audit/test-false-positive-fixes.mjs（549 行 · 8 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -2867,76 +2722,19 @@
 | `checkRegexRulesSafe` | 148-159 | 12 | `function checkRegexRulesSafe() {` |
 | `hasPatchYml` | 214-214 | 1 | `const hasPatchYml = (gg) => Object.values(gg).flat().some((r) => r.id === 'dsh/patch-insert-unique-id');` |
 
-### test/test-file-health.mjs（124 行 · 1 个函数）
+### test/audit/test-file-health.mjs（124 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `rule` | 10-22 | 13 | `function rule(over = {}) {` |
 
-### test/test-folder-scope.mjs（106 行 · 1 个函数）
+### test/audit/test-folder-scope.mjs（106 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `countSourceDirs` | 28-47 | 20 | `function countSourceDirs(tree, { threshold = 1, excludeDirs = [] } = {}) {` |
 
-### test/test-func-doc-drift.mjs（71 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `fixture` | 19-71 | 53 | `function fixture(block) {` |
-| `driftFindings` | 37-40 | 4 | `async function driftFindings(dir) {` |
-
-### test/test-git-hooks.mjs（93 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `withRepo` | 20-24 | 5 | `function withRepo(fn) {` |
-| `writeHook` | 26-31 | 6 | `function writeHook(root, name, body, mode = 0o755) {` |
-
-### test/test-git-identity-rewrite.mjs（191 行 · 4 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `makeRepo` | 28-35 | 8 | `function makeRepo() {` |
-| `commit` | 38-42 | 5 | `function commit(dir, msg, { author = null, committer = { name: 'DSH Agent', email: 'agent@dsh.local' } } = {}) {` |
-| `identities` | 45-47 | 3 | `function identities(dir) {` |
-| `repoWrongEmails` | 49-51 | 3 | `function repoWrongEmails() {` |
-
-### test/test-git-identity.mjs（123 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `makeRepo` | 31-35 | 5 | `function makeRepo() {` |
-| `repoConfig` | 38-40 | 3 | `function repoConfig(dir, key) {` |
-
-### test/test-git-path-args.mjs（117 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `setupRepo` | 28-44 | 17 | `function setupRepo() {` |
-| `commitAll` | 47-50 | 4 | `function commitAll(dir, msg = 'init') {` |
-
-### test/test-git-rename.mjs（75 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `withRepo` | 20-24 | 5 | `function withRepo(fn) {` |
-
-### test/test-git-stream.mjs（117 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `runFetchCase` | 67-82 | 16 | `async function runFetchCase(streamResult) {` |
-
-### test/test-git.mjs（879 行 · 3 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `mockFetch` | 63-80 | 18 | `function mockFetch(routes) {` |
-| `gitBlobSha` | 87-90 | 4 | `function gitBlobSha(content) {` |
-| `mockRawRoutes` | 97-107 | 11 | `function mockRawRoutes(files) {` |
-
-### test/test-gitignore-match.mjs（141 行 · 4 个函数）
+### test/audit/test-gitignore-match.mjs（141 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -2945,119 +2743,335 @@
 | `ig` | 41-41 | 1 | `const ig = (text, f) => isIgnored(text, f);` |
 | `hits` | 135-135 | 1 | `const hits = (rel) => isIgnoredByRules(rules, rel);` |
 
-### test/test-gitignore-nongit-dir.mjs（40 行 · 1 个函数）
+### test/audit/test-gitignore-nongit-dir.mjs（40 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `rel` | 17-17 | 1 | `const rel = (list) => list.map((f) => String(f?.path ?? f).replace(SANDBOX + '/', '')).sort();` |
 
-### test/test-history-audit.mjs（111 行 · 1 个函数）
+### test/audit/test-history-audit.mjs（111 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `makeRepo` | 17-29 | 13 | `function makeRepo() {` |
 
-### test/test-ignore-e2e.mjs（93 行 · 2 个函数）
+### test/audit/test-ignore-e2e.mjs（93 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `setupRepo` | 38-51 | 14 | `function setupRepo({ git = true } = {}) {` |
 | `hitNames` | 54-54 | 1 | `const hitNames = (findings) => [...new Set((findings \|\| []).map((f) => String(f.file \|\| '').replace(/^.*\//, '')))].sort();` |
 
-### test/test-index-jsonl.mjs（135 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `sampleIndex` | 26-135 | 110 | `function sampleIndex() {` |
-
-### test/test-init-compat.mjs（118 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `tmpRepo` | 31-35 | 5 | `function tmpRepo() {` |
-| `git` | 38-40 | 3 | `function git(dir, args) {` |
-
-### test/test-link-check.mjs（230 行 · 1 个函数）
+### test/audit/test-link-check.mjs（230 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `fakeFetch` | 14-21 | 8 | `function fakeFetch(map = {}) {` |
 
-### test/test-lint-adapter.mjs（193 行 · 2 个函数）
+### test/audit/test-lint-adapter.mjs（193 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `makeProject` | 26-38 | 13 | `function makeProject({ withRuff = false, script = '' } = {}) {` |
 | `mk` | 75-75 | 1 | `const mk = (code, msg, file, row) => ruffItemToFinding(` |
 
-### test/test-loop-no-fallback-return.mjs（115 行 · 1 个函数）
+### test/audit/test-loop-no-fallback-return.mjs（115 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `hits` | 19-19 | 1 | `const hits = (src) => [...loopNoFallbackReturnLines(src)].sort((a, b) => a - b);` |
 
-### test/test-magic-number.mjs（130 行 · 1 个函数）
+### test/audit/test-magic-number.mjs（130 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `hits` | 16-18 | 3 | `function hits(text) {` |
 
-### test/test-max-lines-scope.mjs（66 行 · 1 个函数）
+### test/audit/test-max-lines-scope.mjs（66 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `withScope` | 24-26 | 3 | `function withScope(action) {` |
 
-### test/test-mirror-fallback.mjs（49 行 · 1 个函数）
+### test/audit/test-privacy-ownership.mjs（87 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `hits` | 56-59 | 4 | `const hits = async (ownership) => {` |
+
+### test/audit/test-project-type-filter.mjs（91 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `mkRepo` | 17-21 | 5 | `function mkRepo({ name = null } = {}) {` |
+
+### test/audit/test-repeated-strings-cs.mjs（53 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `kinds` | 18-18 | 1 | `const kinds = (src) => tokenize(src).filter((t) => t.type === 'str' \|\| t.type === 'tmpl').map((t) => t.type);` |
+
+### test/audit/test-rule-packs.mjs（596 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `block` | 349-352 | 4 | `const block = (text) => {` |
+
+### test/audit/test-scope.mjs（177 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `loadCheckFuncLines` | 132-133 | 2 | `function loadCheckFuncLines() { return { checkFuncLines, checkComplexity }; }` |
+| `loadNaming` | 133-134 | 2 | `function loadNaming() { return { checkNameLengthAst }; }` |
+
+### test/audit/test-score-zero-rule-dims.mjs（80 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `countsExcept` | 22-22 | 1 | `const countsExcept = (...listed) => Object.fromEntries(` |
+
+### test/audit/test-treesitter-grammars.mjs（248 行 · 5 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `countBrokenNodes` | 124-133 | 10 | `function countBrokenNodes(tree) {` |
+| `walk` | 126-130 | 5 | `const walk = (node) => {` |
+| `textOf` | 135-135 | 1 | `const textOf = (c) => c.lines.join('\n');` |
+| `makeRepo` | 200-207 | 8 | `function makeRepo(files) {` |
+| `auditRuleHits` | 210-230 | 21 | `function auditRuleHits(repo, rule) {` |
+
+### test/audit/test-treesitter.mjs（108 行 · 3 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `makeRepo` | 24-31 | 8 | `function makeRepo(files) {` |
+| `auditHits` | 34-57 | 24 | `function auditHits(repo, extraEnv = {}) {` |
+| `col` | 80-80 | 1 | `const col = (n, needle) => lines[n - 1].indexOf(needle) + 1;` |
+
+### test/e2e-npm-tab-render.mjs（95 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `read` | 19-19 | 1 | `const read = (p) => readFileSync(join(ROOT, p), 'utf8');` |
+
+### test/git/test-account-ssh.mjs（149 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `isolatedEnv` | 17-24 | 8 | `function isolatedEnv() {` |
+
+### test/git/test-audit-bad-file.mjs（129 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `setupBadFile` | 40-45 | 6 | `function setupBadFile(relPath, content) {` |
+| `cleanup` | 46-50 | 5 | `function cleanup(relPath) {` |
+
+### test/git/test-audit-exempt-paths.mjs（78 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `makeRepo` | 20-29 | 10 | `function makeRepo(t) {` |
+| `writeBlocker` | 32-39 | 8 | `function writeBlocker(dir, name = 'bad.js') {` |
+
+### test/git/test-audit-push-boundary.mjs（189 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `makeRepo` | 31-41 | 11 | `function makeRepo() {` |
+| `stageBlocker` | 47-54 | 8 | `function stageBlocker(dir) {` |
+
+### test/git/test-ci-wait.mjs（99 行 · 4 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `fakeFetch` | 38-48 | 11 | `function fakeFetch(sequence) {` |
+| `impl` | 41-46 | 6 | `const impl = async (path) => {` |
+| `noSleep` | 50-51 | 2 | `const noSleep = async () => {};` |
+| `fakeNow` | 52-52 | 1 | `const fakeNow = () => clock;` |
+
+### test/git/test-cifs-init.mjs（158 行 · 3 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `withDir` | 34-40 | 7 | `function withDir(fn) {` |
+| `readGlobalSafeDirs` | 49-55 | 7 | `const readGlobalSafeDirs = () => {` |
+| `gitOk` | 57-59 | 3 | `const gitOk = (dir, args) => {` |
+
+### test/git/test-clone-concurrency.mjs（459 行 · 3 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `probe` | 130-154 | 25 | `const probe = async (useNew) => {` |
+| `writer` | 135-141 | 7 | `const writer = (async () => {` |
+| `call` | 436-436 | 1 | `const call = async (body) => (await handleHttp(` |
+
+### test/git/test-clone-history-defaults.mjs（49 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `read` | 16-16 | 1 | `const read = (rel) => readFileSync(join(ROOT, rel), 'utf8');` |
+
+### test/git/test-clone-history-mode.mjs（132 行 · 3 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `fakeApi` | 20-30 | 11 | `function fakeApi({ headSha = 'c', trees = {}, commits = {}, refStatus = 200 } = {}) {` |
+| `fakeGit` | 33-44 | 12 | `function fakeGit() {` |
+| `runGit` | 36-42 | 7 | `const runGit = (args) => {` |
+
+### test/git/test-clone-history.mjs（136 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `stubApi` | 28-38 | 11 | `function stubApi(chain) {` |
+
+### test/git/test-clone-mirror-truncation.mjs（138 行 · 4 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `stubChannels` | 25-52 | 28 | `function stubChannels({ rawBroken = true, apiBroken = false } = {}) {` |
+| `blobSha` | 56-58 | 3 | `function blobSha(content, size) {` |
+| `newDir` | 63-64 | 2 | `function newDir() { return mkdtempSync(join(tmpdir(), 'dshgp-trunc-')); }` |
+| `partOf` | 64-65 | 2 | `function partOf(dir) { return join(dir, PARTS_DIR, `${blob.sha}.part`); }` |
+
+### test/git/test-clone-parts-keep.mjs（76 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `stubFetch` | 19-29 | 11 | `function stubFetch() {` |
+| `blobSha` | 32-37 | 6 | `function blobSha(content, size) {` |
+
+### test/git/test-clone-preview-buttons.mjs（134 行 · 5 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `makeJsx` | 25-33 | 9 | `function makeJsx() {` |
+| `createElement` | 26-31 | 6 | `const createElement = (type, props) => {` |
+| `extractFunction` | 36-134 | 99 | `function extractFunction(src, signature) {` |
+| `walk` | 50-55 | 6 | `function walk(node, out = []) {` |
+| `renderPreview` | 58-134 | 77 | `function renderPreview(handlers = {}) {` |
+
+### test/git/test-clone-replay-io.mjs（159 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `fakeGit` | 17-159 | 143 | `function fakeGit({ hasOrigin = false, failAt = '' } = {}) {` |
+| `runGit` | 19-29 | 11 | `const runGit = (args) => {` |
+
+### test/git/test-clone-replay.mjs（233 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `fakeIo` | 115-133 | 19 | `function fakeIo({ trees = {}, failDownloadAt = -1, marker = null } = {}) {` |
+
+### test/git/test-git-hooks.mjs（93 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `withRepo` | 20-24 | 5 | `function withRepo(fn) {` |
+| `writeHook` | 26-31 | 6 | `function writeHook(root, name, body, mode = 0o755) {` |
+
+### test/git/test-git-identity-rewrite.mjs（191 行 · 4 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `makeRepo` | 28-35 | 8 | `function makeRepo() {` |
+| `commit` | 38-42 | 5 | `function commit(dir, msg, { author = null, committer = { name: 'DSH Agent', email: 'agent@dsh.local' } } = {}) {` |
+| `identities` | 45-47 | 3 | `function identities(dir) {` |
+| `repoWrongEmails` | 49-51 | 3 | `function repoWrongEmails() {` |
+
+### test/git/test-git-identity.mjs（123 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `makeRepo` | 31-35 | 5 | `function makeRepo() {` |
+| `repoConfig` | 38-40 | 3 | `function repoConfig(dir, key) {` |
+
+### test/git/test-git-path-args.mjs（117 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `setupRepo` | 28-44 | 17 | `function setupRepo() {` |
+| `commitAll` | 47-50 | 4 | `function commitAll(dir, msg = 'init') {` |
+
+### test/git/test-git-rename.mjs（75 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `withRepo` | 20-24 | 5 | `function withRepo(fn) {` |
+
+### test/git/test-git-stream.mjs（117 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `runFetchCase` | 67-82 | 16 | `async function runFetchCase(streamResult) {` |
+
+### test/git/test-git.mjs（879 行 · 3 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `mockFetch` | 63-80 | 18 | `function mockFetch(routes) {` |
+| `gitBlobSha` | 87-90 | 4 | `function gitBlobSha(content) {` |
+| `mockRawRoutes` | 97-107 | 11 | `function mockRawRoutes(files) {` |
+
+### test/git/test-index-jsonl.mjs（135 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `sampleIndex` | 26-135 | 110 | `function sampleIndex() {` |
+
+### test/git/test-init-compat.mjs（118 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `tmpRepo` | 31-35 | 5 | `function tmpRepo() {` |
+| `git` | 38-40 | 3 | `function git(dir, args) {` |
+
+### test/git/test-mirror-fallback.mjs（49 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `withMirror` | 18-26 | 9 | `const withMirror = async (value, fn) => {` |
 
-### test/test-mirror-gates.mjs（83 行 · 1 个函数）
+### test/git/test-mirror-gates.mjs（83 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `withEnv` | 15-23 | 9 | `const withEnv = (v, fn) => {` |
 
-### test/test-mirror-store.mjs（157 行 · 1 个函数）
+### test/git/test-mirror-store.mjs（157 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `withStateFile` | 28-42 | 15 | `function withStateFile(fn) {` |
 
-### test/test-module-splitter-multiline.mjs（80 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `makeFixture` | 25-43 | 19 | `function makeFixture(dir) {` |
-
-### test/test-multi-remote.mjs（47 行 · 1 个函数）
+### test/git/test-multi-remote.mjs（47 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `makeRepo` | 12-21 | 10 | `function makeRepo() {` |
 
-### test/test-npm-cli-package.mjs（91 行 · 1 个函数）
+### test/git/test-npm-cli-package.mjs（91 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `makePackage` | 40-58 | 19 | `function makePackage({ name, version = '1.0.0', main, bin, binBody }) {` |
 
-### test/test-npm-local-registry.mjs（82 行 · 2 个函数）
+### test/git/test-npm-local-registry.mjs（82 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `publishBody` | 19-28 | 10 | `function publishBody({ name = 'demo-pkg', version = '1.2.3', tag = 'beta', bytes = 'FAKE-TARBALL' } = {}) {` |
 | `withRegistry` | 30-33 | 4 | `async function withRegistry(fn) {` |
 
-### test/test-npm-publish.mjs（140 行 · 1 个函数）
+### test/git/test-npm-publish.mjs（140 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `makeFixture` | 33-42 | 10 | `function makeFixture() {` |
 
-### test/test-npm-unpublish.mjs（105 行 · 3 个函数）
+### test/git/test-npm-unpublish.mjs（105 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -3065,33 +3079,13 @@
 | `hoursAgo` | 20-20 | 1 | `const hoursAgo = (h) => new Date(now - h * 3600 * 1000).toISOString();` |
 | `doc` | 22-31 | 10 | `function doc({ versions = ['1.0.0'], tags = { latest: '1.0.0' }, ageHours = 10 } = {}) {` |
 
-### test/test-persist-credentials.mjs（93 行 · 1 个函数）
+### test/git/test-persist-credentials.mjs（93 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `withIsolatedDshHome` | 19-30 | 12 | `function withIsolatedDshHome(fn) {` |
 
-### test/test-picker-layout.mjs（111 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `ruleBody` | 35-36 | 2 | `function ruleBody(cls) {` |
-
-### test/test-platform-scan.mjs（98 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `makeProject` | 20-46 | 27 | `function makeProject() {` |
-
-### test/test-plugin.mjs（657 行 · 3 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `makeExemptRepo` | 488-494 | 7 | `function makeExemptRepo() {` |
-| `addSecretFile` | 495-498 | 4 | `function addSecretFile(root, path) {` |
-| `fsStatMode` | 652-654 | 3 | `function fsStatMode(file) {` |
-
-### test/test-pre-commit-engine.mjs（420 行 · 4 个函数）
+### test/git/test-pre-commit-engine.mjs（420 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -3100,31 +3094,19 @@
 | `runWithFake` | 90-97 | 8 | `function runWithFake(engines, mode, extra = {}) {` |
 | `makeBlockerRepo` | 100-112 | 13 | `function makeBlockerRepo() {` |
 
-### test/test-privacy-ownership.mjs（87 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `hits` | 56-59 | 4 | `const hits = async (ownership) => {` |
-
-### test/test-private-gate.mjs（72 行 · 1 个函数）
+### test/git/test-private-gate.mjs（72 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `fixture` | 27-33 | 7 | `function fixture() {` |
 
-### test/test-project-type-filter.mjs（91 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `mkRepo` | 17-21 | 5 | `function mkRepo({ name = null } = {}) {` |
-
-### test/test-push-transport.mjs（199 行 · 1 个函数）
+### test/git/test-push-transport.mjs（199 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `tempRepo` | 31-41 | 11 | `function tempRepo() {` |
 
-### test/test-remote-resolve.mjs（128 行 · 3 个函数）
+### test/git/test-remote-resolve.mjs（128 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -3132,13 +3114,7 @@
 | `addRemote` | 30-32 | 3 | `function addRemote(dir, name, url) {` |
 | `getUrl` | 33-39 | 7 | `function getUrl(dir, name) {` |
 
-### test/test-repeated-strings-cs.mjs（53 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `kinds` | 18-18 | 1 | `const kinds = (src) => tokenize(src).filter((t) => t.type === 'str' \|\| t.type === 'tmpl').map((t) => t.type);` |
-
-### test/test-repo-list.mjs（549 行 · 4 个函数）
+### test/git/test-repo-list.mjs（549 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -3147,132 +3123,177 @@
 | `pick` | 461-461 | 1 | `const pick = (push) => String(push?.commitSha \|\| '').slice(0, 40) \|\| localHead;` |
 | `sandboxAsync` | 491-503 | 13 | `async function sandboxAsync(fn) {` |
 
-### test/test-repos-live-budget.mjs（116 行 · 1 个函数）
+### test/git/test-repos-live-budget.mjs（116 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `readMs` | 61-65 | 5 | `const readMs = (name) => {` |
 
-### test/test-rule-packs.mjs（596 行 · 1 个函数）
+### test/helpers/test-cache.mjs（231 行 · 9 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `block` | 349-352 | 4 | `const block = (text) => {` |
+| `stripCommentsAndStrings` | 55-80 | 26 | `export function stripCommentsAndStrings(text) {` |
+| `isCacheableTest` | 88-92 | 5 | `export function isCacheableTest(sourceText, fileName = '') {` |
+| `relativeSpecifiers` | 95-108 | 14 | `export function relativeSpecifiers(sourceText) {` |
+| `importClosure` | 116-135 | 20 | `export function importClosure(entryAbs, exists = existsSync) {` |
+| `cacheKeyFor` | 143-154 | 12 | `export function cacheKeyFor(absFiles, nodeVersion = process.version) {` |
+| `selfHashOf` | 166-173 | 8 | `export function selfHashOf(absPath, nodeVersion = process.version) {` |
+| `loadTestCache` | 176-183 | 8 | `export function loadTestCache(root) {` |
+| `saveTestCache` | 186-199 | 14 | `export function saveTestCache(root, cache) {` |
+| `planTestRun` | 208-230 | 23 | `export function planTestRun(files, cache, exists = existsSync) {` |
 
-### test/test-scope-collisions.mjs（254 行 · 2 个函数）
+### test/helpers/test-scan.mjs（112 行 · 6 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `scanTestTree` | 40-86 | 47 | `export function scanTestTree(testDir) {` |
+| `noteSide` | 46-49 | 4 | `const noteSide = (side, kind, absPath) => {` |
+| `walk` | 52-80 | 29 | `const walk = (dirAbs, depth, insideArchived) => {` |
+| `structureViolations` | 93-95 | 3 | `export function structureViolations(scan) {` |
+| `sideOf` | 103-106 | 4 | `export function sideOf(testDir, absPath) {` |
+| `isDirectory` | 109-111 | 3 | `export function isDirectory(dirPath) {` |
+
+### test/helpers/tmp-dir.mjs（117 行 · 6 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `installExitHook` | 25-33 | 9 | `function installExitHook() {` |
+| `removeTempDir` | 36-39 | 4 | `export function removeTempDir(dir) {` |
+| `mkdtempTracked` | 51-57 | 7 | `export function mkdtempTracked(prefixPath) {` |
+| `tempDir` | 65-71 | 7 | `export function tempDir(label = 'tmp', { t = null } = {}) {` |
+| `tempRepo` | 79-85 | 7 | `export function tempRepo(label = 'repo', { t = null, name = '', email = '' } = {}) {` |
+| `sweepStaleTempDirs` | 93-116 | 24 | `export function sweepStaleTempDirs({ maxAgeMs = 60 * 60 * 1000, log = null } = {}) {` |
+
+### test/run-tests.mjs（201 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `runBatch` | 118-150 | 33 | `function runBatch(files) {` |
+| `emit` | 134-145 | 12 | `const emit = (chunk) => {` |
+
+### test/tool/test-cli-help-registry-sync.mjs（100 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `usageLines` | 36-46 | 11 | `function usageLines(helpText, cliName, command) {` |
+| `helpOf` | 49-53 | 5 | `function helpOf(cliName) {` |
+
+### test/tool/test-cli-split.mjs（304 行 · 3 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `runCliFile` | 41-50 | 10 | `async function runCliFile(cliName, argv, opts = {}) {` |
+| `runInWaves` | 53-59 | 7 | `async function runInWaves(tasks, waveSize = 4) {` |
+| `run` | 290-295 | 6 | `const run = (file, args) => {` |
+
+### test/tool/test-client-fragment-scope.mjs（69 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `fakeRepo` | 16-20 | 5 | `function fakeRepo(pkg) {` |
+
+### test/tool/test-client.mjs（523 行 · 4 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `mockReact` | 20-26 | 7 | `function mockReact() {` |
+| `req` | 328-345 | 18 | `const req = (name) => {` |
+| `req` | 406-425 | 20 | `const req = (name) => {` |
+| `req` | 474-492 | 19 | `const req = (name) => {` |
+
+### test/tool/test-doc-func.mjs（110 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `mkTmp` | 22-22 | 1 | `const mkTmp = () => mkdtempSync(join(tmpdir(), 'dshgp-docfunc-'));` |
+
+### test/tool/test-doc-version-release-source.mjs（61 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `fixture` | 18-29 | 12 | `function fixture(version, releases) {` |
+
+### test/tool/test-doc-version.mjs（84 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `mkTmp` | 20-20 | 1 | `const mkTmp = () => mkdtempSync(join(tmpdir(), 'dshgp-docver-'));` |
+| `gitRepoWithVersions` | 33-41 | 9 | `function gitRepoWithVersions(dir) {` |
+
+### test/tool/test-func-doc-drift.mjs（71 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `fixture` | 19-71 | 53 | `function fixture(block) {` |
+| `driftFindings` | 37-40 | 4 | `async function driftFindings(dir) {` |
+
+### test/tool/test-module-splitter-multiline.mjs（80 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `makeFixture` | 25-43 | 19 | `function makeFixture(dir) {` |
+
+### test/tool/test-picker-layout.mjs（111 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `ruleBody` | 35-36 | 2 | `function ruleBody(cls) {` |
+
+### test/tool/test-platform-scan.mjs（98 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `makeProject` | 20-46 | 27 | `function makeProject() {` |
+
+### test/tool/test-run-tests-scan.mjs（204 行 · 4 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `makeFakeTree` | 30-52 | 23 | `function makeFakeTree() {` |
+| `write` | 32-37 | 6 | `const write = (rel) => {` |
+| `dryRunStats` | 128-135 | 8 | `function dryRunStats() {` |
+| `keyOf` | 172-172 | 1 | `const keyOf = (abs) => cacheKeyFor(importClosure(abs));` |
+
+### test/tool/test-scope-collisions.mjs（254 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `makeForeignProject` | 109-117 | 9 | `function makeForeignProject({ withContract = false } = {}) {` |
 | `makeAuditProject` | 146-152 | 7 | `function makeAuditProject({ name = 'app', contract = null } = {}) {` |
 
-### test/test-scope.mjs（177 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `loadCheckFuncLines` | 132-133 | 2 | `function loadCheckFuncLines() { return { checkFuncLines, checkComplexity }; }` |
-| `loadNaming` | 133-134 | 2 | `function loadNaming() { return { checkNameLengthAst }; }` |
-
-### test/test-score-zero-rule-dims.mjs（80 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `countsExcept` | 22-22 | 1 | `const countsExcept = (...listed) => Object.fromEntries(` |
-
-### test/test-settings-persistence.mjs（252 行 · 4 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `clientSubmitKeys` | 28-38 | 11 | `function clientSubmitKeys() {` |
-| `allowlistKeys` | 47-52 | 6 | `function allowlistKeys() {` |
-| `cfgMappingKeys` | 55-252 | 198 | `function cfgMappingKeys() {` |
-| `isolatedEnv` | 72-79 | 8 | `function isolatedEnv() {` |
-
-### test/test-slash-commands.mjs（287 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `inv` | 15-17 | 3 | `function inv(cwd) {` |
-
-### test/test-symbol-index.mjs（120 行 · 2 个函数）
+### test/tool/test-symbol-index.mjs（120 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `build` | 31-34 | 4 | `function build(extra = {}) {` |
 | `hasEdge` | 36-36 | 1 | `const hasEdge = (idx, from, to, via) => idx.edges.some((e) => e.from === from && e.to === to && e.via === via);` |
 
-### test/test-symlink-resolution.mjs（104 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `buildFixture` | 25-41 | 17 | `function buildFixture() {` |
-| `runNode` | 43-45 | 3 | `function runNode(args, env) {` |
-
-### test/test-task-queue.mjs（232 行 · 4 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `mkRepo` | 16-23 | 8 | `function mkRepo() {` |
-| `mkDirtyRepo` | 31-35 | 5 | `function mkDirtyRepo() {` |
-| `wait` | 36-37 | 2 | `function wait(ms) { return new Promise((r) => setTimeout(r, ms)); }` |
-| `mockJobs` | 39-57 | 19 | `function mockJobs() {` |
-
-### test/test-test-cache.mjs（120 行 · 1 个函数）
+### test/tool/test-test-cache.mjs（120 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `makeProject` | 22-29 | 8 | `function makeProject() {` |
 
-### test/test-tools-e2e.mjs（86 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `makeRepo` | 26-32 | 7 | `function makeRepo(name) {` |
-
-### test/test-tree-doc.mjs（221 行 · 1 个函数）
+### test/tool/test-tree-doc.mjs（221 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `makeReadme` | 41-43 | 3 | `function makeReadme(tree) {` |
 
-### test/test-tree-first-credential.mjs（123 行 · 2 个函数）
+### test/tool/test-tree-first-credential.mjs（125 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `makeFixture` | 51-55 | 5 | `async function makeFixture() {` |
 | `hardLines` | 57-62 | 6 | `function hardLines(res) {` |
 
-### test/test-tree-first-funcname.mjs（131 行 · 3 个函数）
+### test/tool/test-tree-first-funcname.mjs（132 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `makeFixture` | 59-63 | 5 | `async function makeFixture() {` |
 | `hitLines` | 65-65 | 1 | `const hitLines = (res) => res.findings` |
-| `isShort` | 116-116 | 1 | `const isShort = (n) => String(n).length <= 2 && !['tr', 't'].includes(n);` |
-
-### test/test-treesitter-grammars.mjs（241 行 · 5 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `countBrokenNodes` | 124-133 | 10 | `function countBrokenNodes(tree) {` |
-| `walk` | 126-130 | 5 | `const walk = (node) => {` |
-| `textOf` | 135-135 | 1 | `const textOf = (c) => c.lines.join('\n');` |
-| `makeRepo` | 200-207 | 8 | `function makeRepo(files) {` |
-| `auditRuleHits` | 210-223 | 14 | `function auditRuleHits(repo, rule) {` |
-
-### test/test-treesitter.mjs（100 行 · 3 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `makeRepo` | 24-31 | 8 | `function makeRepo(files) {` |
-| `auditHits` | 34-49 | 16 | `function auditHits(repo, extraEnv = {}) {` |
-| `col` | 72-72 | 1 | `const col = (n, needle) => lines[n - 1].indexOf(needle) + 1;` |
-
-### test/test-workspace-paths.mjs（139 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `mod` | 28-28 | 1 | `const mod = () => import('../lib/core/workspace-paths.js');` |
-| `h` | 29-29 | 1 | `const h = () => import('../lib/app/handlers/workspace-paths.js');` |
+| `isShort` | 117-117 | 1 | `const isShort = (n) => String(n).length <= 2 && !['tr', 't'].includes(n);` |
 
 <!-- dshgp-functions:end -->

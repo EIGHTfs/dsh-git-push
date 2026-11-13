@@ -18,14 +18,15 @@
  *   · 兜底：若整轮失败但**无法从 TAP 归属到具体文件**，则清空整份缓存（宁可全重跑，不可漏跑）。
  */
 import { spawn } from 'node:child_process';
-import { readdirSync, rmSync } from 'node:fs';
+import { rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { sweepStaleTempDirs } from './helpers/tmp-dir.mjs';
+import { ARCHIVED_DIR, scanTestTree, sideOf, structureViolations } from './helpers/test-scan.mjs';
 import {
-  CACHE_DIR, CACHE_FILE, cacheKeyFor, importClosure, loadTestCache, planTestRun, saveTestCache,
+  CACHE_DIR, CACHE_FILE, cacheKeyFor, importClosure, loadTestCache, planTestRun, saveTestCache, selfHashOf,
 } from './helpers/test-cache.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -36,10 +37,18 @@ const writeCache = !argv.includes('--no-cache');
 const wantStats = argv.includes('--stats');
 const log = (m) => console.log(`[test] ${m}`);
 
-let allFiles = readdirSync(here)
-  .filter((f) => f.startsWith('test-') && f.endsWith('.mjs'))
-  .sort()
-  .map((f) => join(here, f));
+// 递归收集（历史上这里只扫顶层：把测试移进子目录就会静默漏跑——test/audit/ 那 3 个
+//   归档测试正是这样从 2.20.15 起再没被常规回归跑到。扫描逻辑见 helpers/test-scan.mjs）
+const scan = scanTestTree(here);
+// 结构门禁：顶层不得再有 test-*.mjs。新旧结构并存会让同一测试跑两遍、缓存键互相覆盖，
+//   比「漏跑」更隐蔽（两次都绿，但统计与耗时不真实）。
+const structuralProblems = structureViolations(scan);
+if (structuralProblems.length) {
+  log(`✗ 测试目录结构违规：顶层不得再出现 test-*.mjs（应放进 git/ audit/ tool/ app/ 子目录）`);
+  for (const rel of structuralProblems) log(`    ${rel}`);
+  process.exit(1);
+}
+let allFiles = scan.regular;
 // --only=<子串>：只跑文件名含该子串的测试（调试单组用例不必全跑；仍走同一分批/缓存逻辑）
 const onlyArg = argv.find((a) => a.startsWith('--only='));
 if (onlyArg) {
@@ -57,7 +66,24 @@ if (useCache) {
   log(`缓存命中 ${plan.skipped.length}/${allFiles.length} 个测试文件 → 跳过；其余 ${plan.run.length} 个真跑（全量请用 --all）`);
 }
 if (wantStats) {
-  for (const abs of allFiles) log(`  ${plan.reasons[abs] || '—'}  ${abs.slice(root.length + 1)}`);
+  // 逐文件：先标所属侧，再标跑/跳过原因（归档单独列在下面，永不进回归）
+  for (const abs of allFiles) {
+    log(`  [${sideOf(here, abs) || '顶层'}] ${plan.reasons[abs] || '—'}  ${abs.slice(root.length + 1)}`);
+  }
+  // 按侧汇总：常规回归（跑/跳过）+ 归档（不跑）各自计数；任何一项为 0 也打出来，
+  //   避免「某个目录整体没被扫到」看起来像「没有测试」。
+  for (const side of Object.keys(scan.bySide).sort()) {
+    const files = scan.bySide[side].regular.map((rel) => join(here, rel));
+    const skipped = files.filter((abs) => plan.skipped.includes(abs)).length;
+    const archivedCount = scan.bySide[side].archived.length;
+    log(`  ── ${side}/ ：常规 ${files.length} 个（跑 ${files.length - skipped} / 缓存跳过 ${skipped}）· 归档 ${archivedCount} 个（不参与回归）`);
+  }
+  if (scan.archived.length) {
+    log(`  ── ${ARCHIVED_DIR}/ ：${scan.archived.length} 个归档测试**不参与回归**，需要时手动跑：`);
+    for (const abs of scan.archived) log(`       node --test ${abs.slice(root.length + 1)}`);
+  } else {
+    log(`  ── ${ARCHIVED_DIR}/ ：0 个（无归档测试）`);
+  }
 }
 // --dry-run：只报告计划，不跑测试、不动缓存（用于确认「会跳过什么」，避免黑盒）
 if (argv.includes('--dry-run')) {
@@ -152,7 +178,7 @@ const elapsed = ((Date.now() - started) / 1000).toFixed(1);
 if (writeCache) {
   const results = { ...(useCache ? cache.results : {}) };
   if (status === 0) {
-    for (const abs of plan.run) results[abs] = { key: cacheKeyFor(importClosure(abs)), passed: true, at: new Date().toISOString() };
+    for (const abs of plan.run) results[abs] = { key: cacheKeyFor(importClosure(abs)), selfHash: selfHashOf(abs), passed: true, at: new Date().toISOString() };
     for (const abs of plan.skipped) if (results[abs]) results[abs].passed = true;
     saveTestCache(root, { results });
     log(`缓存已更新：本轮通过 ${plan.run.length} 个文件（跳过 ${plan.skipped.length} 个保持不变）`);
@@ -162,7 +188,7 @@ if (writeCache) {
     const drop = failedBatchFiles.length ? new Set(failedBatchFiles) : new Set(plan.run);
     for (const abs of plan.run) {
       if (drop.has(abs)) delete results[abs];
-      else results[abs] = { key: cacheKeyFor(importClosure(abs)), passed: true, at: new Date().toISOString() };
+      else results[abs] = { key: cacheKeyFor(importClosure(abs)), selfHash: selfHashOf(abs), passed: true, at: new Date().toISOString() };
     }
     saveTestCache(root, { results });
     log(`本轮有失败 → 剔除失败批次 ${drop.size} 个文件缓存，其余 ${plan.run.length - drop.size} 个照常记通过`);

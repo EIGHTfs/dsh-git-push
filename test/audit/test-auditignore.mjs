@@ -1,0 +1,144 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { execFileSync, execSync } from 'node:child_process';
+
+import { collectTextFiles } from '../../lib/audit/collector.js';
+
+/** 搭一个带 .auditignore 的临时 git 仓库（git 必需，跳过则测试环境不可用）。 */
+function setupRepo() {
+  const dir = mkdtempSync(join(tmpdir(), 'auditignore-'));
+  mkdirSync(join(dir, 'src'), { recursive: true });
+  mkdirSync(join(dir, 'generated'), { recursive: true });
+  mkdirSync(join(dir, 'node_modules'), { recursive: true });
+  writeFileSync(join(dir, 'src', 'app.js'), '// app\n');
+  writeFileSync(join(dir, 'src', 'vendor.js'), '// vendor\n');
+  writeFileSync(join(dir, 'generated', 'out.js'), '// gen\n');
+  writeFileSync(join(dir, 'node_modules', 'dep.js'), '// dep\n');
+  writeFileSync(join(dir, 'yarn.lock'), '// lock\n');
+  writeFileSync(join(dir, '.gitignore'), 'node_modules/\n');
+  writeFileSync(join(dir, '.auditignore'), [
+    '# auditignore 测试：目录整棵豁免 + 文件级豁免 + glob 豁免',
+    'generated/',
+    'src/vendor.js',
+    '*.lock',
+  ].join('\n') + '\n');
+  try {
+    execFileSync('git', ['init', '-q'], { cwd: dir, stdio: ['ignore', 'ignore', 'ignore'] });
+  } catch { /* git 不可用：目录级豁免仍可测（非 git 时 auditignore 不生效，见用例说明） */ }
+  return dir;
+}
+
+test('.auditignore：目录规则（generated/）整棵豁免审计', async () => {
+  const dir = setupRepo();
+  try {
+    const files = await collectTextFiles(dir, { depth: 10, gitIgnoreRoot: dir });
+    const arr = Array.isArray(files) ? files : (files.files || []);
+    assert.ok(!arr.some((f) => f.path.includes('generated')), 'generated/ 应整棵豁免');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('.auditignore：文件级规则（src/vendor.js / *.lock）豁免审计', async () => {
+  const dir = setupRepo();
+  try {
+    const files = await collectTextFiles(dir, { depth: 10, gitIgnoreRoot: dir });
+    const arr = Array.isArray(files) ? files : (files.files || []);
+    assert.ok(!arr.some((f) => f.path.endsWith('src/vendor.js')), 'src/vendor.js 应豁免');
+    assert.ok(!arr.some((f) => f.path.endsWith('yarn.lock')), '*.lock 匹配 yarn.lock 应豁免');
+    assert.ok(arr.some((f) => f.path.endsWith('src/app.js')), '未豁免文件应保留');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('.auditignore：与 .gitignore 叠加（node_modules 仍被 gitignore 挡）', async () => {
+  const dir = setupRepo();
+  try {
+    const files = await collectTextFiles(dir, { depth: 10, gitIgnoreRoot: dir });
+    const arr = Array.isArray(files) ? files : (files.files || []);
+    assert.ok(!arr.some((f) => f.path.includes('node_modules')), 'node_modules 应仍被 .gitignore 挡');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('.auditignore：豁免文件照常可入库（git add 可跟踪，不写 git 配置）', () => {
+  const dir = setupRepo();
+  try {
+    execFileSync('git', ['add', '-A'], { cwd: dir, stdio: ['ignore', 'ignore', 'ignore'] });
+    const tracked = execFileSync('git', ['ls-files'], { cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).split('\n').filter(Boolean);
+    assert.ok(tracked.includes('generated/out.js'), 'generated/out.js 应照常入库（审计豁免≠不入库）');
+    assert.ok(tracked.includes('src/vendor.js'), 'src/vendor.js 应照常入库');
+    assert.ok(tracked.includes('yarn.lock'), 'yarn.lock 应照常入库');
+    assert.ok(tracked.includes('.auditignore'), '.auditignore 自身也应可入库');
+    assert.ok(tracked.includes('.gitignore'), '.gitignore 仍正常');
+  } catch { /* git 不可用环境跳过（语义由实现保证） */ }
+  finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('.auditignore：不写进任何 git 配置（不污染 .git/info/exclude）', () => {
+  const dir = setupRepo();
+  try {
+    const infoExclude = join(dir, '.git', 'info', 'exclude');
+    if (existsSync(infoExclude)) {
+      const content = readFileSync(infoExclude, 'utf8');
+      assert.ok(!content.includes('auditignore'), '.git/info/exclude 不应被写入 .auditignore 内容');
+    }
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+// ---------- 2026-09-22：文件级 gitignore（含中文路径）修复回归 ----------
+//   现象：全量审计不按 .gitignore 排除 lib/client.js / 任务.md / *.log 等**文件级**规则
+//   （目录级 node_modules/ 生效但文件规则漏进）。根因：collectTextFiles 的文件分支无 gitignore
+//   判定（原文件级补判仅在有 .auditignore 时触发）；且 check-ignore 输出中文路径带引号字节转义
+//   （core.quotepath 默认 true），ignored 集合比对失效。修复：git 仓库下无条件文件级批量
+//   check-ignore + 全部 git spawnSync 加 -c core.quotepath=false。
+test('collectTextFiles：文件级 .gitignore 规则生效（含中文文件名）', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-gi-file-'));
+  try {
+    execSync('git init -q', { cwd: dir });
+    writeFileSync(join(dir, '.gitignore'), 'lib/client.js\n任务.md\n*.log\nnode_modules/\n');
+    writeFileSync(join(dir, 'README.md'), '# x\n');
+    writeFileSync(join(dir, 'keep.js'), 'const k = 1;\n');
+    mkdirSync(join(dir, 'lib'), { recursive: true });
+    mkdirSync(join(dir, 'node_modules'), { recursive: true });
+    writeFileSync(join(dir, 'lib/client.js'), '/* 构建产物，应被忽略 */\n');
+    writeFileSync(join(dir, '任务.md'), '待办\n');
+    writeFileSync(join(dir, 'app.log'), 'log\n');
+    writeFileSync(join(dir, 'node_modules/x.js'), 'x\n');
+    const f = await collectTextFiles(dir, { gitIgnoreRoot: dir });
+    const rels = f.map((x) => x.rel || x.path.replace(dir + '/', ''));
+    assert.ok(rels.includes('README.md') && rels.includes('keep.js'), '未忽略文件应保留');
+    assert.ok(!rels.includes('lib/client.js'), '文件级规则 lib/client.js 应忽略');
+    assert.ok(!rels.some((r) => r === '任务.md' || r.endsWith('/任务.md')), '中文文件名任务.md 应忽略（quotepath 转义修复）');
+    assert.ok(!rels.some((r) => r.endsWith('.log')), '*.log 应忽略');
+    assert.ok(!rels.some((r) => r.includes('node_modules')), 'node_modules/ 应忽略');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+// ---------- 2026-09-28：提交审计 .auditignore 对已跟踪文件生效（缺 --no-index 修复回归） ----------
+//   现象：提交前审计（auditChanged/diff 模式）中 .auditignore 目录豁免对 git 已跟踪文件全落空——
+//   git check-ignore 默认只对未跟踪文件生效，已跟踪文件即使命中规则也退出码 1（不忽略）。
+//   全量审计带 --no-index（强制按路径匹配），提交审计漏了 → 已跟踪的豁免文件在提交审计被误扫。
+//   修复：orchestrate.js isAuditIgnored 的 check-ignore 补 --no-index，与 collector.js 对齐。
+test('auditChanged：已跟踪文件命中 .auditignore（--no-index 修复）', async () => {
+  const { auditWithScope } = await import('../../lib/audit/orchestrate.js');
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-audit-chg-'));
+  try {
+    execSync('git init -q', { cwd: dir });
+    execSync('git config user.email t@t && git config user.name t', { cwd: dir });
+    // 已跟踪但 .auditignore 豁免的目录（模拟 bench-template 场景）
+    mkdirSync(join(dir, 'templates', 'js', 'core'), { recursive: true });
+    mkdirSync(join(dir, 'src'), { recursive: true });
+    writeFileSync(join(dir, 'templates', 'js', 'core', 'app.js'), 'require("fs");\n');
+    writeFileSync(join(dir, 'src', 'normal.js'), 'const a = 1;\n');
+    execSync('git add -A && git commit -qm init', { cwd: dir });
+    // 提交后再声明 .auditignore（已跟踪文件 + 豁免规则 = 本次修复目标场景）
+    writeFileSync(join(dir, '.auditignore'), 'templates/js/\n');
+    // 改动 src/normal.js 触发 changed 扫描（被审计）；templates/js/ 已跟踪应被豁免
+    writeFileSync(join(dir, 'src', 'normal.js'), 'const a = 2;\n');
+    const r = await auditWithScope(dir, { scope: 'diff' });
+    const rels = (r.findings || []).map((f) => (f.file || '').replace(dir + '/', ''));
+    assert.ok(rels.some((x) => x === 'src/normal.js'), '未豁免的改动文件应进审计');
+    assert.ok(!rels.some((x) => x.includes('templates/js')), '已跟踪文件 templates/js/ 应被 .auditignore 豁免（--no-index 修复）');
+    assert.equal(r.files, 1, `改动文件应只有 1 个被审计（实际 ${r.files}）`);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});

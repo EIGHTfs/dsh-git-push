@@ -279,188 +279,191 @@ dsh-git-push/
 │   ├── e2e-npm-tab-render.mjs — （待注释）
 │   ├── regression-2.4.1.mjs — （待注释）
 │   ├── run-tests.mjs — （待注释）
-│   ├── test-account-refresh-on-push.mjs — （待注释）
-│   ├── test-account-ssh.mjs — 账号检查 + SSH 密钥测试
-│   ├── test-analysis-coverage.mjs — （待注释）
-│   ├── test-ast-confirm-span.mjs — （待注释）
-│   ├── test-audit-api-http.mjs — （待注释）
-│   ├── test-audit-api.mjs — （待注释）
-│   ├── test-audit-archive-exempt.mjs — （待注释）
-│   ├── test-audit-bad-file.mjs — 审计拦截门禁测试（硬编码密码/API key/.env 凭据文件）
-│   ├── test-audit-defaults.mjs — （待注释）
-│   ├── test-audit-empty.mjs — （待注释）
-│   ├── test-audit-exempt-paths.mjs — 提交时按文件临时豁免审计（auditExemptPaths）回归
-│   ├── test-audit-ext.mjs — 审计扩展自动接入测试（契约加载/降级/match/auditFull 并入）
-│   ├── test-audit-false-positive-guards.mjs — （待注释）
-│   ├── test-audit-fastpath.mjs — （待注释）
-│   ├── test-audit-git-boundary.mjs — （待注释）
-│   ├── test-audit-npm-publish-rules.mjs — （待注释）
-│   ├── test-audit-push-boundary.mjs — （待注释）
-│   ├── test-audit-rules-csharp.mjs — （待注释）
-│   ├── test-audit-scope.mjs — 审计作用域/凭据占位符回归测试
-│   ├── test-audit-slot-order.mjs — （待注释）
-│   ├── test-audit-ui-contract.mjs — 审计 UI 契约回归：17 例（导出面/零依赖/深冻结/未登记键丢弃/与 SPEC 漂移门禁）
-│   ├── test-audit.mjs — 审计总入口测试（auditFull/changed/豁免/gitignore）
-│   ├── test-auditignore-rules.mjs — （待注释）
-│   ├── test-auditignore.mjs — （待注释）
-│   ├── test-auto-push.mjs — 任务完成自动推送测试（检测纯函数 + registerAutoPush 门控监听注册）
-│   ├── test-build-artifact-skip.mjs — 构建/混淆产物跳过专项测试（Pawchive 样本 fixture）
-│   ├── test-build-client.mjs — 分片构建门禁测试（产物一致/幂等/形态铁律/dshgp_ 前缀）
-│   ├── test-button-bind-events.mjs — （待注释）
-│   ├── test-button-bind.mjs — 按钮绑定交叉比对（jsx 工厂形态/注释过滤/行号归属）
-│   ├── test-ci-wait.mjs — （待注释）
-│   ├── test-cifs-init.mjs — （待注释）
-│   ├── test-cli-audit-parity.mjs — CLI 与源码全量审计一致性测试（audit --full --json vs 直接 auditFull，含忽略排除）
-│   ├── test-cli-help-registry-sync.mjs — （待注释）
-│   ├── test-cli-split.mjs — 三入口拆分回归：命令归属、跨侧提示、HELP 一致性、28 命令逐个可达
-│   ├── test-client-fragment-scope.mjs — 客户端分片作用域推导测试（dsh-client-fragment）
-│   ├── test-client.mjs — 侧边栏测试（手写 DOM/零外部资源/开关默认）
-│   ├── test-clone-concurrency.mjs — clone 并发互斥/可中止/失败保留文件（14 项，CIFS 对照用例可跳）
-│   ├── test-clone-history-defaults.mjs — （待注释）
-│   ├── test-clone-history-mode.mjs — （待注释）
-│   ├── test-clone-history.mjs — （待注释）
-│   ├── test-clone-maxfilemb.mjs — （待注释）
-│   ├── test-clone-mirror-truncation.mjs — （待注释）
-│   ├── test-clone-parts-keep.mjs — （待注释）
-│   ├── test-clone-preview-buttons.mjs — clone 预览确认框按钮可点（真渲染+真点击）
-│   ├── test-clone-replay-io.mjs — （待注释）
-│   ├── test-clone-replay.mjs — （待注释）
-│   ├── test-clone-token.mjs — （待注释）
-│   ├── test-collector-ignore.mjs — （待注释）
-│   ├── test-command-registry.mjs — 命令注册表测试（工具入表/查找/parseRegistryArgs/清单生成）
-│   ├── test-commit-message.mjs — （待注释）
-│   ├── test-context.mjs — 上下文注入测试
-│   ├── test-conv-rule-scope.mjs — （待注释）
-│   ├── test-cred-env.mjs — git_cred_env 凭据传递测试（双通道/无明文/askpass 调用/无凭据兜底）
-│   ├── test-dataflow-clear-fp.mjs — clear-then-access 四类系统性误报回归（.empty()/写目标/注解位/多目标解包）+ 两条正样本
-│   ├── test-dataflow-py-bodies.mjs — Python 缩进式函数体区间回归（跨方法不连/同方法连/闭包必须连/花括号语言回归）
-│   ├── test-dataflow.mjs — 三层审计 L2 数据流测试
-│   ├── test-dim-denominator.mjs — （待注释）
-│   ├── test-doc-func.mjs — （待注释）
-│   ├── test-doc-version-release-source.mjs — （待注释）
-│   ├── test-doc-version.mjs — （待注释）
-│   ├── test-docs-score.mjs — 文档加分制测试（文档集圈法/四检查/公式/不一致 review/不冲突）
-│   ├── test-dup-code.mjs — （待注释）
-│   ├── test-dup-const-idiom.mjs — （待注释）
-│   ├── test-dup-const.mjs — duplicate-const 规则测试（多语言提取 JS/Kotlin/Java/Go/Rust/Python、模块级过滤、跨文件聚合、test 目录排除、同值不同名不报）
-│   ├── test-dynamic-weight.mjs — （待注释）
-│   ├── test-empty-catch-promise.mjs — （待注释）
-│   ├── test-empty-catch-single-source.mjs — （待注释）
-│   ├── test-exempt-hint-classify.mjs — （待注释）
-│   ├── test-exempt-hint-effective.mjs — （待注释）
-│   ├── test-exempt-tool.mjs — （待注释）
-│   ├── test-exempt.mjs — 豁免总入口测试（7 标记 + 位置语义）
-│   ├── test-ext-variable-min-length.mjs — （待注释）
-│   ├── test-false-positive-fixes.mjs — 误报修复回归测试
-│   ├── test-file-health.mjs — 文件健康度矩阵评分测试
-│   ├── test-filter-ext.mjs — （待注释）
-│   ├── test-folder-scope.mjs — 目录级审计作用域回归测试
-│   ├── test-fs-hotspots.mjs — （待注释）
-│   ├── test-func-doc-drift.mjs — （待注释）
-│   ├── test-generated-html-artifact.mjs — （待注释）
-│   ├── test-git-api-tool.mjs — （待注释）
-│   ├── test-git-bin-plan.mjs — （待注释）
-│   ├── test-git-hooks.mjs — （待注释）
-│   ├── test-git-identity-rewrite.mjs — （待注释）
-│   ├── test-git-identity.mjs — （待注释）
-│   ├── test-git-path-args.mjs — （待注释）
-│   ├── test-git-rename.mjs — （待注释）
-│   ├── test-git-stream.mjs — （待注释）
-│   ├── test-git.mjs — git 总入口测试（runGit/commitAndPush/凭据/克隆）
-│   ├── test-gitignore-match.mjs — gitignore 兜底匹配（与真 git 对拍 + 非 git 端到端）
-│   ├── test-gitignore-nongit-dir.mjs — （待注释）
-│   ├── test-history-audit.mjs — （待注释）
-│   ├── test-http.mjs — HTTP 总入口测试（Origin/CSRF/413/路由）
-│   ├── test-ignore-e2e.mjs — （待注释）
-│   ├── test-index-jsonl.mjs — （待注释）
-│   ├── test-init-compat.mjs — （待注释）
-│   ├── test-io-risk.mjs — IO 风险分级测试（四级判定/字段完整性/汇总/排序/finding 转换）
-│   ├── test-java-rules.mjs — Java/Kotlin 语言路由与专项规则测试（javaKtFuncRanges/短名/复杂度/规则联动/聚合型降级）
-│   ├── test-line-count.mjs — （待注释）
-│   ├── test-link-check.mjs — 链接判断测试（分级扣分/断网不拦）
-│   ├── test-lint-adapter.mjs — 委托层桩测（假 ruff 二进制）：探测三态/适配映射/不拦截/四路降级/端到端 blocker 不增
-│   ├── test-loop-no-fallback-return.mjs — （待注释）
-│   ├── test-magic-number.mjs — 硬编码魔数检测测试
-│   ├── test-max-lines-scope.mjs — （待注释）
-│   ├── test-mirror-fallback.mjs — （待注释）
-│   ├── test-mirror-gates.mjs — （待注释）
-│   ├── test-mirror-store.mjs — （待注释）
-│   ├── test-module-splitter-multiline.mjs — （待注释）
-│   ├── test-module-splitter.mjs — module_splitter 工具 + CLI 接入测试（契约 + 行为 + 脚本随插件发布）
-│   ├── test-multi-remote.mjs — （待注释）
-│   ├── test-name-length-scope.mjs — （待注释）
-│   ├── test-npm-cli-package.mjs — （待注释）
-│   ├── test-npm-enobufs.mjs — （待注释）
-│   ├── test-npm-install.mjs — （待注释）
-│   ├── test-npm-local-registry.mjs — （待注释）
-│   ├── test-npm-pack-parse.mjs — （待注释）
-│   ├── test-npm-publish.mjs — （待注释）
-│   ├── test-npm-registry.mjs — （待注释）
-│   ├── test-npm-smoke.mjs — （待注释）
-│   ├── test-npm-token-credential.mjs — （待注释）
-│   ├── test-npm-unpublish.mjs — （待注释）
-│   ├── test-origin-desktop.mjs — 桌面端（dsh-app://）写请求 403 修复回归：放行判据与 CSRF 防护矩阵
-│   ├── test-perf-loop-collection.mjs — （待注释）
-│   ├── test-perf-repeat-call.mjs — （待注释）
-│   ├── test-persist-credentials.mjs — 凭据持久化测试
-│   ├── test-picker-layout.mjs — （待注释）
-│   ├── test-platform-scan.mjs — （待注释）
-│   ├── test-plugin.mjs — 插件接线测试（入口导出/工具清单/双副本同步）
-│   ├── test-pre-commit-engine.mjs — 提交前预处理引擎契约回归：退出码 0/1/2、超时/命令缺失 fail-closed、与进程内结果一致
-│   ├── test-privacy-ownership.mjs — （待注释）
-│   ├── test-private-gate.mjs — （待注释）
-│   ├── test-project-type-filter.mjs — 项目类型规则适配测试（非 dsh 项目不加载 dsh 槽位/0.x 版本规则、timeout 限 js 系、folder 尊重 gitignore——Pawchive 误报消除驱动）
-│   ├── test-push-diagnose.mjs — （待注释）
-│   ├── test-push-false-success.mjs — （待注释）
-│   ├── test-push-transport.mjs — 推送通道回归（SSH 优先/一致性语义）
-│   ├── test-quality.mjs — 评分总入口测试（AST 质量检查器）
-│   ├── test-quota-write.mjs — （待注释）
-│   ├── test-remote-name-ascii.mjs — （待注释）
-│   ├── test-remote-resolve.mjs — （待注释）
-│   ├── test-rename-locator.mjs — rename-locator 测试（同名不同作用域分组/模块级/过滤）
-│   ├── test-repeated-strings-cs.mjs — （待注释）
-│   ├── test-repo-list.mjs — 仓库列表测试（本地扫描/索引读写/HTTP 端点/远端状态）
-│   ├── test-repos-live-budget.mjs — （待注释）
-│   ├── test-rule-include-paths.mjs — （待注释）
-│   ├── test-rule-packs.mjs — 规则总入口测试（编译注册/字段指派）
-│   ├── test-scope-collisions.mjs — 作用域撞名测试（帧判定/for 头部/项目契约/审计接入/CLI 退出码）
-│   ├── test-scope.mjs — 作用域最小实验测试（分类器/机制/magic 接入）
-│   ├── test-score-zero-rule-dims.mjs — （待注释）
-│   ├── test-scrub-conv-wording.mjs — （待注释）
-│   ├── test-self.mjs — 自身总入口测试（VERSION/CLI/help 比对）
-│   ├── test-settings-persistence.mjs — 设置侧边栏持久化专项测试（L1 提交/L2 白名单/L3 回读/L4 消费四层断言）
-│   ├── test-settings-roundtrip.mjs — （待注释）
-│   ├── test-slash-commands.mjs — 用户输入框 /git-audit 斜杠命令（解析/接线/对本仓库跑 quick）
-│   ├── test-smart-hint.mjs — 扫描智能提示 + 评分对数衰减测试
-│   ├── test-smoke-import-specs.mjs — （待注释）
-│   ├── test-status-secret.mjs — token 明文不下发安全回归
-│   ├── test-symbol-index.mjs — （待注释）
-│   ├── test-symlink-resolution.mjs — 软链安装依赖解析回归测试（默认失败/--preserve-symlinks/NODE_PATH/真实副本四种场景）
-│   ├── test-task-queue.mjs — 后台化回归测试（官方 job 注册 / 无 jobs 同步保底 / blocker 拦截）
-│   ├── test-test-cache.mjs — （待注释）
-│   ├── test-tokenizer-multiline-template.mjs — （待注释）
-│   ├── test-tool-contract.mjs — （待注释）
-│   ├── test-tool-probes.mjs — （待注释）
-│   ├── test-tools-e2e.mjs — （待注释）
-│   ├── test-tree-doc.mjs — README 目录树脚本测试（gen/check/apply 闭环）
-│   ├── test-tree-first-credential.mjs — （待注释）
-│   ├── test-tree-first-funcname.mjs — short-func-name 树化双向样本：红基线/树化后类与对象方法照报/无树对照重现漏报/访问器边界
-│   ├── test-treesitter-grammars.mjs — 多语言 AST 接通自检：语法映射与 wasms 包实存核对、每语言 0 ERROR 解析、注释与带引号原始字符串的精筛、以及无语法资产时的回退契约（D5）
-│   ├── test-treesitter.mjs — （待注释）
-│   ├── test-version-metrics.mjs — （待注释）
-│   ├── test-visibility-unified.mjs — （待注释）
-│   ├── test-workspace-paths.mjs — （待注释）
+│   ├── app/ — （待注释）
+│   │   ├── test-auto-push.mjs — （待注释）
+│   │   ├── test-context.mjs — （待注释）
+│   │   ├── test-http.mjs — （待注释）
+│   │   ├── test-plugin.mjs — （待注释）
+│   │   ├── test-settings-persistence.mjs — （待注释）
+│   │   ├── test-settings-roundtrip.mjs — （待注释）
+│   │   ├── test-slash-commands.mjs — （待注释）
+│   │   ├── test-status-secret.mjs — （待注释）
+│   │   ├── test-symlink-resolution.mjs — （待注释）
+│   │   ├── test-task-queue.mjs — （待注释）
+│   │   ├── test-tool-contract.mjs — （待注释）
+│   │   ├── test-tool-probes.mjs — （待注释）
+│   │   ├── test-tools-e2e.mjs — （待注释）
+│   │   ├── test-workspace-paths.mjs — （待注释）
 │   ├── audit/ — 审计侧 UI 测试归档（不参与常规回归——run-tests 只扫 test/ 顶层）
 │   │   ├── README.md — 归档说明：为什么移出常规测试、怎么手动跑、与后端审计的关系
-│   │   ├── test-inject-switch.mjs — （待注释）
-│   │   ├── test-inject-system-prompt.mjs — （待注释）
-│   │   ├── test-sidebar-interaction.mjs — （待注释）
+│   │   ├── test-analysis-coverage.mjs — （待注释）
+│   │   ├── test-ast-confirm-span.mjs — （待注释）
+│   │   ├── test-audit-api-http.mjs — （待注释）
+│   │   ├── test-audit-api.mjs — （待注释）
+│   │   ├── test-audit-archive-exempt.mjs — （待注释）
+│   │   ├── test-audit-defaults.mjs — （待注释）
+│   │   ├── test-audit-empty.mjs — （待注释）
+│   │   ├── test-audit-ext.mjs — （待注释）
+│   │   ├── test-audit-false-positive-guards.mjs — （待注释）
+│   │   ├── test-audit-fastpath.mjs — （待注释）
+│   │   ├── test-audit-git-boundary.mjs — （待注释）
+│   │   ├── test-audit-npm-publish-rules.mjs — （待注释）
+│   │   ├── test-audit-rules-csharp.mjs — （待注释）
+│   │   ├── test-audit-scope.mjs — （待注释）
+│   │   ├── test-audit-slot-order.mjs — （待注释）
+│   │   ├── test-audit-ui-contract.mjs — （待注释）
+│   │   ├── test-audit.mjs — （待注释）
+│   │   ├── test-auditignore-rules.mjs — （待注释）
+│   │   ├── test-auditignore.mjs — （待注释）
+│   │   ├── test-build-artifact-skip.mjs — （待注释）
+│   │   ├── test-button-bind-events.mjs — （待注释）
+│   │   ├── test-button-bind.mjs — （待注释）
+│   │   ├── test-cli-audit-parity.mjs — （待注释）
+│   │   ├── test-collector-ignore.mjs — （待注释）
+│   │   ├── test-conv-rule-scope.mjs — （待注释）
+│   │   ├── test-dataflow-clear-fp.mjs — （待注释）
+│   │   ├── test-dataflow-py-bodies.mjs — （待注释）
+│   │   ├── test-dataflow.mjs — （待注释）
+│   │   ├── test-dim-denominator.mjs — （待注释）
+│   │   ├── test-docs-score.mjs — （待注释）
+│   │   ├── test-dup-code.mjs — （待注释）
+│   │   ├── test-dup-const-idiom.mjs — （待注释）
+│   │   ├── test-dup-const.mjs — （待注释）
+│   │   ├── test-dynamic-weight.mjs — （待注释）
+│   │   ├── test-empty-catch-promise.mjs — （待注释）
+│   │   ├── test-empty-catch-single-source.mjs — （待注释）
+│   │   ├── test-exempt-hint-classify.mjs — （待注释）
+│   │   ├── test-exempt-hint-effective.mjs — （待注释）
+│   │   ├── test-exempt-tool.mjs — （待注释）
+│   │   ├── test-exempt.mjs — （待注释）
+│   │   ├── test-ext-variable-min-length.mjs — （待注释）
+│   │   ├── test-false-positive-fixes.mjs — （待注释）
+│   │   ├── test-file-health.mjs — （待注释）
+│   │   ├── test-filter-ext.mjs — （待注释）
+│   │   ├── test-folder-scope.mjs — （待注释）
+│   │   ├── test-fs-hotspots.mjs — （待注释）
+│   │   ├── test-generated-html-artifact.mjs — （待注释）
+│   │   ├── test-gitignore-match.mjs — （待注释）
+│   │   ├── test-gitignore-nongit-dir.mjs — （待注释）
+│   │   ├── test-history-audit.mjs — （待注释）
+│   │   ├── test-ignore-e2e.mjs — （待注释）
+│   │   ├── test-io-risk.mjs — （待注释）
+│   │   ├── test-java-rules.mjs — （待注释）
+│   │   ├── test-line-count.mjs — （待注释）
+│   │   ├── test-link-check.mjs — （待注释）
+│   │   ├── test-lint-adapter.mjs — （待注释）
+│   │   ├── test-loop-no-fallback-return.mjs — （待注释）
+│   │   ├── test-magic-number.mjs — （待注释）
+│   │   ├── test-max-lines-scope.mjs — （待注释）
+│   │   ├── test-name-length-scope.mjs — （待注释）
+│   │   ├── test-perf-loop-collection.mjs — （待注释）
+│   │   ├── test-perf-repeat-call.mjs — （待注释）
+│   │   ├── test-privacy-ownership.mjs — （待注释）
+│   │   ├── test-project-type-filter.mjs — （待注释）
+│   │   ├── test-quality.mjs — （待注释）
+│   │   ├── test-repeated-strings-cs.mjs — （待注释）
+│   │   ├── test-rule-include-paths.mjs — （待注释）
+│   │   ├── test-rule-packs.mjs — （待注释）
+│   │   ├── test-scope.mjs — （待注释）
+│   │   ├── test-score-zero-rule-dims.mjs — （待注释）
+│   │   ├── test-smart-hint.mjs — （待注释）
+│   │   ├── test-tokenizer-multiline-template.mjs — （待注释）
+│   │   ├── test-treesitter-grammars.mjs — （待注释）
+│   │   ├── test-treesitter.mjs — （待注释）
+│   │   └── …（3 个更深文件）
 │   ├── fixtures/ — （待注释）
 │   │   ├── TimeZoneComboBox-CRnoCikG.js — Pawchive 混淆产物样本（hash 文件名——跳过判定 fixture）
 │   │   └── …（5 个更深文件）
+│   ├── git/ — （待注释）
+│   │   ├── test-account-refresh-on-push.mjs — （待注释）
+│   │   ├── test-account-ssh.mjs — （待注释）
+│   │   ├── test-audit-bad-file.mjs — （待注释）
+│   │   ├── test-audit-exempt-paths.mjs — （待注释）
+│   │   ├── test-audit-push-boundary.mjs — （待注释）
+│   │   ├── test-ci-wait.mjs — （待注释）
+│   │   ├── test-cifs-init.mjs — （待注释）
+│   │   ├── test-clone-concurrency.mjs — （待注释）
+│   │   ├── test-clone-history-defaults.mjs — （待注释）
+│   │   ├── test-clone-history-mode.mjs — （待注释）
+│   │   ├── test-clone-history.mjs — （待注释）
+│   │   ├── test-clone-maxfilemb.mjs — （待注释）
+│   │   ├── test-clone-mirror-truncation.mjs — （待注释）
+│   │   ├── test-clone-parts-keep.mjs — （待注释）
+│   │   ├── test-clone-preview-buttons.mjs — （待注释）
+│   │   ├── test-clone-replay-io.mjs — （待注释）
+│   │   ├── test-clone-replay.mjs — （待注释）
+│   │   ├── test-clone-token.mjs — （待注释）
+│   │   ├── test-commit-message.mjs — （待注释）
+│   │   ├── test-cred-env.mjs — （待注释）
+│   │   ├── test-git-api-tool.mjs — （待注释）
+│   │   ├── test-git-bin-plan.mjs — （待注释）
+│   │   ├── test-git-hooks.mjs — （待注释）
+│   │   ├── test-git-identity-rewrite.mjs — （待注释）
+│   │   ├── test-git-identity.mjs — （待注释）
+│   │   ├── test-git-path-args.mjs — （待注释）
+│   │   ├── test-git-rename.mjs — （待注释）
+│   │   ├── test-git-stream.mjs — （待注释）
+│   │   ├── test-git.mjs — （待注释）
+│   │   ├── test-index-jsonl.mjs — （待注释）
+│   │   ├── test-init-compat.mjs — （待注释）
+│   │   ├── test-mirror-fallback.mjs — （待注释）
+│   │   ├── test-mirror-gates.mjs — （待注释）
+│   │   ├── test-mirror-store.mjs — （待注释）
+│   │   ├── test-multi-remote.mjs — （待注释）
+│   │   ├── test-npm-cli-package.mjs — （待注释）
+│   │   ├── test-npm-enobufs.mjs — （待注释）
+│   │   ├── test-npm-install.mjs — （待注释）
+│   │   ├── test-npm-local-registry.mjs — （待注释）
+│   │   ├── test-npm-pack-parse.mjs — （待注释）
+│   │   ├── test-npm-publish.mjs — （待注释）
+│   │   ├── test-npm-registry.mjs — （待注释）
+│   │   ├── test-npm-smoke.mjs — （待注释）
+│   │   ├── test-npm-token-credential.mjs — （待注释）
+│   │   ├── test-npm-unpublish.mjs — （待注释）
+│   │   ├── test-origin-desktop.mjs — （待注释）
+│   │   ├── test-persist-credentials.mjs — （待注释）
+│   │   ├── test-pre-commit-engine.mjs — （待注释）
+│   │   ├── test-private-gate.mjs — （待注释）
+│   │   ├── test-push-diagnose.mjs — （待注释）
+│   │   ├── test-push-false-success.mjs — （待注释）
+│   │   ├── test-push-transport.mjs — （待注释）
+│   │   ├── test-quota-write.mjs — （待注释）
+│   │   ├── test-remote-name-ascii.mjs — （待注释）
+│   │   ├── test-remote-resolve.mjs — （待注释）
+│   │   ├── test-repo-list.mjs — （待注释）
+│   │   ├── test-repos-live-budget.mjs — （待注释）
+│   │   ├── test-visibility-unified.mjs — （待注释）
 │   ├── helpers/ — （待注释）
 │   │   ├── test-cache.mjs — （待注释）
+│   │   ├── test-scan.mjs — （待注释）
 │   │   ├── tmp-dir.mjs — （待注释）
+│   ├── tool/ — （待注释）
+│   │   ├── test-build-client.mjs — （待注释）
+│   │   ├── test-cli-help-registry-sync.mjs — （待注释）
+│   │   ├── test-cli-split.mjs — （待注释）
+│   │   ├── test-client-fragment-scope.mjs — （待注释）
+│   │   ├── test-client.mjs — （待注释）
+│   │   ├── test-command-registry.mjs — （待注释）
+│   │   ├── test-doc-func.mjs — （待注释）
+│   │   ├── test-doc-version-release-source.mjs — （待注释）
+│   │   ├── test-doc-version.mjs — （待注释）
+│   │   ├── test-func-doc-drift.mjs — （待注释）
+│   │   ├── test-module-splitter-multiline.mjs — （待注释）
+│   │   ├── test-module-splitter.mjs — （待注释）
+│   │   ├── test-picker-layout.mjs — （待注释）
+│   │   ├── test-platform-scan.mjs — （待注释）
+│   │   ├── test-rename-locator.mjs — （待注释）
+│   │   ├── test-run-tests-scan.mjs — （待注释）
+│   │   ├── test-scope-collisions.mjs — （待注释）
+│   │   ├── test-scrub-conv-wording.mjs — （待注释）
+│   │   ├── test-self.mjs — （待注释）
+│   │   ├── test-smoke-import-specs.mjs — （待注释）
+│   │   ├── test-symbol-index.mjs — （待注释）
+│   │   ├── test-test-cache.mjs — （待注释）
+│   │   ├── test-tree-doc.mjs — （待注释）
+│   │   ├── test-tree-first-credential.mjs — （待注释）
+│   │   ├── test-tree-first-funcname.mjs — （待注释）
+│   │   ├── test-version-metrics.mjs — （待注释）
 ├── docs/ — 开发文档
 │   ├── 2.9.0-design.md — （待注释）
 │   ├── 2026-10-09-审计插件性能优化.MD — （待注释）

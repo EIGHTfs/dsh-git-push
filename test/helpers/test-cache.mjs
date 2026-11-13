@@ -19,8 +19,9 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 
-/** 缓存格式版本：改了键的组成方式就 +1，旧缓存自动失效。 */
-export const CACHE_FORMAT_VERSION = 1;
+/** 缓存格式版本：改了键的组成方式（或条目结构）就 +1，旧缓存自动失效。
+ *  v2：条目新增 selfHash（测试文件自身内容哈希），用于把「内容变」与「依赖变」两类失效原因分开。 */
+export const CACHE_FORMAT_VERSION = 2;
 /** 缓存目录/文件名（仓库内，gitignore）。 */
 export const CACHE_DIR = '.test-cache';
 export const CACHE_FILE = 'results.json';
@@ -152,6 +153,25 @@ export function cacheKeyFor(absFiles, nodeVersion = process.version) {
   return h.digest('hex');
 }
 
+/**
+ * 测试文件**自身**内容哈希（只算该文件，不含依赖）。
+ *
+ * 用途：缓存键是「闭包」哈希，键一变只知道「变了」，分不清是测试自己改了还是它依赖的模块改了。
+ *   --stats 需要区分这两类（改测试 vs 改实现），所以额外存一份自身哈希做判据。
+ * 注意：它**不参与**缓存键计算（键仍由 cacheKeyFor 的闭包哈希决定），机制不变。
+ * @param {string} absPath 测试文件绝对路径
+ * @param {string} nodeVersion 参与哈希的运行时版本（与 key 口径保持一致）
+ * @returns {string}
+ */
+export function selfHashOf(absPath, nodeVersion = process.version) {
+  let content = '';
+  try { content = readFileSync(absPath, 'utf8'); } catch { content = '<missing>'; }
+  const h = createHash('sha256');
+  h.update(`format:${CACHE_FORMAT_VERSION}\nnode:${nodeVersion}\n`);
+  h.update(`${relative(process.cwd(), absPath)}\n${content}\n`);
+  return h.digest('hex');
+}
+
 /** 读取缓存（文件缺失/损坏都按空缓存处理，绝不因缓存本身报错）。 */
 export function loadTestCache(root) {
   const file = join(root, CACHE_DIR, CACHE_FILE);
@@ -201,7 +221,10 @@ export function planTestRun(files, cache, exists = existsSync) {
     const hit = cache.results[abs];
     if (hit && hit.key === key && hit.passed === true) { skipped.push(abs); reasons[abs] = '缓存命中（内容与依赖均未变）'; continue; }
     run.push(abs);
-    reasons[abs] = hit ? '内容或依赖已变' : '首次运行';
+    if (!hit) { reasons[abs] = '首次运行（无缓存条目）'; continue; }
+    // 键变了但条目还在：用自身哈希把「测试自己改了」与「它依赖的模块改了」分开
+    const selfChanged = hit.selfHash === undefined || hit.selfHash !== selfHashOf(abs);
+    reasons[abs] = selfChanged ? '内容变（测试文件自身被改）' : '依赖变（import 闭包里有文件被改）';
   }
   return { run, skipped, reasons };
 }

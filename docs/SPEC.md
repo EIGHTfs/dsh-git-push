@@ -273,3 +273,38 @@ $ git-sluice audit .
 - 每个 HELP 只列本侧命令，并附「其它 CLI」小节；`HELP ↔ KNOWN_FLAGS ↔ 命令集`三者一致由 `test/test-cli-split.mjs` 与 `tool-sluice self-check` 双门禁；
 - **副作用型 import 按侧归属**：`lib/app/host-doc-checks.js`（文档漂移检查器）与 `lib/rule/compilers.js`（规则编译）只在 `cli-audit.mjs` 顶部——它们删了不报错、只会让功能**静默失效**，故有行为级测试兜底（漂移 fixture 必须报 finding、`ruleset` 编译数必须 > 50）。
 
+## 十三、测试结构
+
+> 测试按「被测代码所在的层」分区，与 CLI 三入口 + 装配层对齐；回归入口递归扫描，不再只扫顶层。
+
+```
+test/
+├── git/      git / 推送 / 克隆 / 发布 / 账户 / 仓库索引
+├── audit/    规则 / 判定 / 检查器 / 评分 / 豁免 / 审计 CLI / 审计结果 API
+│   └── _archived/   归档：不参与回归，可手动跑（断言当前不成立，例：已移出构建的审计 UI）
+├── tool/     工具链：module-splitter / 文档与目录树工具 / 模板 / self-check / CLI 三分
+├── app/      插件本体：HTTP 路由 / 设置读写 / 上下文注入 / 斜杠命令 / 工具契约 / 工作区路径
+├── fixtures/ 共享夹具（永不当测试）
+├── helpers/  共享辅助（test-scan.mjs 扫描器、test-cache.mjs 缓存，永不当测试）
+└── run-tests.mjs  回归入口（不属于测试）
+```
+
+**硬规则**：
+1. 顶层**不得**出现 `test-*.mjs`——新旧结构并存会让同一测试跑两遍、缓存键互相覆盖；`run-tests.mjs` 检测到即 `exit 1`。
+2. `_archived/` 下任意层级的测试**一律不参与回归**；`--stats` 必须列出它们与手动跑命令（不允许静默排除）。
+3. `helpers/`、`fixtures/` 里的 `*.mjs` 永不被当测试。
+
+**回归入口参数**：`--all`（忽略缓存全跑）、`--stats`（逐文件「所属侧 + 跑/跳过原因」、按侧汇总）、`--dry-run`、`--only=<子串>`、`--batch-size=N`、`--no-cache`。
+
+**缓存语义**（`test/helpers/test-cache.mjs`）：
+- key = `sha256(测试文件自身 + 其 import 传递闭包 + node 版本 + 缓存格式版本)` —— **不是 mtime**；
+- 命中条件 = key 相同 **且** 上次 `passed === true`（失败过的必重跑）；
+- `--stats` 的四类原因：`缓存命中` / `内容变（测试文件自身被改）` / `依赖变（import 闭包里有文件被改）` / `不缓存（含网络·服务调用或整仓不变式测试）`；
+- 条目另存 `selfHash`（仅用于区分后两类原因，**不参与 key**）。
+
+**基线**：`node test/run-tests.mjs --all` 必须 `# fail 0`；`# tests` 基准值随测试增删同步维护。
+
+**整仓不变式测试**（`test-cache.mjs` 的 `ALWAYS_RUN_TESTS`，按文件名登记、每次必跑）：
+改名或合并这些文件时**必须同步改登记清单**，否则它们会从「每次必跑」退化成「可缓存」，
+让「新增文件未登记 README / FUNCTIONS」这类漂移变成假通过。
+

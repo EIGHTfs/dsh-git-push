@@ -164,68 +164,22 @@
   "skills/dsh-repo-index.md": "dsh-repo-index skill（源码索引权威说明）",
   "test": "node:test 全量单元测试（541+ 条，覆盖审计/推送/账号/HTTP/后台任务）",
   "test/.test": "空文件豁免标记（目录级豁免 .test 目录）",
-  "test/test-account-ssh.mjs": "账号检查 + SSH 密钥测试",
-  "test/test-audit-bad-file.mjs": "审计拦截门禁测试（硬编码密码/API key/.env 凭据文件）",
-  "test/test-audit-empty.mjs": "（待注释）",
-  "test/test-audit-scope.mjs": "审计作用域/凭据占位符回归测试",
-  "test/test-audit.mjs": "审计总入口测试（auditFull/changed/豁免/gitignore）",
-  "test/test-auditignore.mjs": "（待注释）",
-  "test/test-button-bind.mjs": "按钮绑定交叉比对（jsx 工厂形态/注释过滤/行号归属）",
-  "test/test-client.mjs": "侧边栏测试（手写 DOM/零外部资源/开关默认）",
-  "test/test-clone-concurrency.mjs": "clone 并发互斥/可中止/失败保留文件（14 项，CIFS 对照用例可跳）",
-  "test/test-clone-preview-buttons.mjs": "clone 预览确认框按钮可点（真渲染+真点击）",
-  "test/test-context.mjs": "上下文注入测试",
-  "test/test-dataflow.mjs": "三层审计 L2 数据流测试",
-  "test/test-exempt.mjs": "豁免总入口测试（7 标记 + 位置语义）",
-  "test/test-false-positive-fixes.mjs": "误报修复回归测试",
-  "test/test-file-health.mjs": "文件健康度矩阵评分测试",
-  "test/test-folder-scope.mjs": "目录级审计作用域回归测试",
-  "test/test-git.mjs": "git 总入口测试（runGit/commitAndPush/凭据/克隆）",
-  "test/test-gitignore-match.mjs": "gitignore 兜底匹配（与真 git 对拍 + 非 git 端到端）",
-  "test/test-http.mjs": "HTTP 总入口测试（Origin/CSRF/413/路由）",
-  "test/test-io-risk.mjs": "IO 风险分级测试（四级判定/字段完整性/汇总/排序/finding 转换）",
-  "test/test-link-check.mjs": "链接判断测试（分级扣分/断网不拦）",
-  "test/test-magic-number.mjs": "硬编码魔数检测测试",
-  "test/test-persist-credentials.mjs": "凭据持久化测试",
-  "test/test-plugin.mjs": "插件接线测试（入口导出/工具清单/双副本同步）",
-  "test/test-push-transport.mjs": "推送通道回归（SSH 优先/一致性语义）",
-  "test/test-quality.mjs": "评分总入口测试（AST 质量检查器）",
-  "test/test-repo-list.mjs": "仓库列表测试（本地扫描/索引读写/HTTP 端点/远端状态）",
-  "test/test-rule-packs.mjs": "规则总入口测试（编译注册/字段指派）",
-  "test/test-scope-collisions.mjs": "作用域撞名测试（帧判定/for 头部/项目契约/审计接入/CLI 退出码）",
-  "test/test-self.mjs": "自身总入口测试（VERSION/CLI/help 比对）",
-  "test/test-settings-persistence.mjs": "设置侧边栏持久化专项测试（L1 提交/L2 白名单/L3 回读/L4 消费四层断言）",
-  "test/test-slash-commands.mjs": "用户输入框 /git-audit 斜杠命令（解析/接线/对本仓库跑 quick）",
-  "test/test-smart-hint.mjs": "扫描智能提示 + 评分对数衰减测试",
-  "test/test-status-secret.mjs": "token 明文不下发安全回归",
-  "test/test-task-queue.mjs": "后台化回归测试（官方 job 注册 / 无 jobs 同步保底 / blocker 拦截）",
-  "test/test-tree-doc.mjs": "README 目录树脚本测试（gen/check/apply 闭环）",
   "tree-doc.json": "目录结构注释映射（路径→一句话介绍，AI 维护）",
   "lib/tool-probes.json": "工具探测清单模板（工具为 key、值为空；运行时实测生成运行目录 tools.json）",
   "scripts/verify-prestep.mjs": "上下文注入自检脚本（真实触发 agent/pre-step 验证注入）",
   "scripts/module-splitter.py": "巨型单文件按顶层块拆分脚本（analyze/split/verify 三命令，python3 零依赖；module_splitter 工具与 CLI 的底层实现）",
-  "test/test-module-splitter.mjs": "module_splitter 工具 + CLI 接入测试（契约 + 行为 + 脚本随插件发布）",
   "lib/audit/history-report.js": "（待注释）",
   "lib/audit/history.js": "（待注释）",
-  "test/test-history-audit.mjs": "（待注释）",
   "lib/score/docs-score.js": "文档加分制检查器（文档集结构信号 + 版本一致性交叉验证，0 分起上限 10；不进 findings）",
-  "test/test-docs-score.mjs": "文档加分制测试（文档集圈法/四检查/公式/不一致 review/不冲突）",
   "lib/git/cred-env.js": "凭据传递工具（SSH 私钥路径 GIT_SSH_COMMAND / HTTPS askpass 脚本，AI 执行外部 git 不接触明文）",
-  "test/test-cred-env.mjs": "git_cred_env 凭据传递测试（双通道/无明文/askpass 调用/无凭据兜底）",
-  "test/test-cli-audit-parity.mjs": "CLI 与源码全量审计一致性测试（audit --full --json vs 直接 auditFull，含忽略排除）",
   "scripts/rules-solo-audit.mjs": "规则单启控制变量扫描（基准全关+逐规则单启+全量对照，报告供 AI/人工审规则有效性与局限，按需运行非常驻）",
   "lib/ast/scope.js": "变量作用域分类器（module/function/loop 行号区间 + 模块常量赋值判定）",
   "lib/rule/scope.js": "审计作用域机制层（scope_rules 规范化 + resolveScopeAction）",
-  "test/test-scope.mjs": "作用域最小实验测试（分类器/机制/magic 接入）",
   "lib/ast/callgraph.js": "调用链追踪（单文件调用图 + isInRequestPath，io-risk 请求路径判定升级）",
   "lib/git/wrapped-git.js": "浅包装 git（自动凭据透传：SSH 私钥/HTTPS token，git-sluice git <args> 与未知命令透传）",
   "lib/plugin/auto-detect.js": "任务完成自动推送·检测层（纯函数：✅任务完成 触发/❌⚠ 阻断/自定义正则/许可合成判断）",
   "lib/plugin/auto-push.js": "任务完成自动推送·核心（turn/end 监听→检测→autoPushEnabled 开关→调 commitWithAudit 完整门禁，不裸提交）",
-  "test/test-auto-push.mjs": "任务完成自动推送测试（检测纯函数 + registerAutoPush 门控监听注册）",
   "lib/app/audit-api.js": "审计结果 API 聚合层（/api/git-push/audit：按规则/文件/严重级/规则包分组 + severity 过滤 + top 截断）",
-  "test/test-audit-api-http.mjs": "（待注释）",
-  "test/test-audit-api.mjs": "（待注释）",
-  "test/test-tool-probes.mjs": "（待注释）",
   "lib/app/handlers/account.js": "HTTP 处理·账号端点（account-status/account-check/gen-ssh-key）",
   "lib/app/handlers/clone.js": "HTTP 处理·克隆端点（repo-clone/clone-logs/abort/preview/progress）",
   "lib/app/handlers/http-constants.js": "HTTP 处理·共享常量（list live 预算/探测并发/扫描等待）",
@@ -237,11 +191,8 @@
   "scripts/doc-tree.mjs": "（待注释）",
   "scripts/doc-func.mjs": "（待注释）",
   "scripts/doc-version.mjs": "（待注释）",
-  "test/test-doc-func.mjs": "（待注释）",
-  "test/test-doc-version.mjs": "（待注释）",
   "docs/CHANGELOG.md": "版本列表宿主（doc-version apply 写 dshgp-version 标记块）",
   "docs/FUNCTIONS.md": "函数列表宿主（doc-func apply 写 dshgp-functions 标记块）",
-  "test/test-symlink-resolution.mjs": "软链安装依赖解析回归测试（默认失败/--preserve-symlinks/NODE_PATH/真实副本四种场景）",
   "lib/cli": "（待注释）",
   "lib/ast/dup-code.js": "（待注释）",
   "lib/audit-rules/audit-rules-python.yml": "（待注释）",
@@ -252,20 +203,15 @@
   "lib/cli/commands-vcs.mjs": "（待注释）",
   "lib/git/module-splitter.js": "（待注释）",
   "scripts/clean-date-comments.py": "（待注释）",
-  "test/test-dup-code.mjs": "（待注释）",
   "scripts/audit-ext": "（待注释）",
   "lib/audit/ext-runner.js": "审计扩展运行器（audit-ext 统一入口动态加载/契约执行/失败降级）",
   "scripts/audit-ext/_example-readme-present.mjs": "审计扩展契约示例（_ 前缀：演示不参与实际审计）",
   "scripts/audit-runner.mjs": "审计扩展 CLI 统一入口（独立跑 scripts/audit-ext/ 全部扩展）",
-  "test/test-audit-ext.mjs": "审计扩展自动接入测试（契约加载/降级/match/auditFull 并入）",
   "scripts/rename-locator.mjs": "变量重命名位置定位工具（按作用域聚合引用——单字母变量人工重命名辅助）",
-  "test/test-rename-locator.mjs": "rename-locator 测试（同名不同作用域分组/模块级/过滤）",
   "scripts/audit-ext/variable-min-length.mjs": "审计扩展：variable-min-length（内置规则抽出试点——统一动态入口）",
   "lib/app/command-registry.js": "工具命令注册表（方案 B——CLI/宿主工具/帮助同源，免维护）",
-  "test/test-command-registry.mjs": "命令注册表测试（工具入表/查找/parseRegistryArgs/清单生成）",
   "test/fixtures": "（待注释）",
   "test/fixtures/TimeZoneComboBox-CRnoCikG.js": "Pawchive 混淆产物样本（hash 文件名——跳过判定 fixture）",
-  "test/test-build-artifact-skip.mjs": "构建/混淆产物跳过专项测试（Pawchive 样本 fixture）",
   "lib/ast/lang.js": "语言路由（2026-10-06）：detectLang 内容启发式检测 + javaKtFuncRanges（Java/Kotlin 方法签名+括号配对函数范围）+ LANG_FUNC_RANGES 主流语言占位",
   "lib/audit-rules/audit-rules-cpp.yml": "C/C++ 规则包（占位：规则待补，槽位就绪）（规则包 cpp）",
   "lib/audit-rules/audit-rules-go.yml": "Go 规则包（占位：规则待补，槽位就绪）（规则包 go）",
@@ -273,10 +219,7 @@
   "lib/audit-rules/audit-rules-php.yml": "PHP 规则包（占位：规则待补，槽位就绪）（规则包 php）",
   "lib/audit-rules/audit-rules-rust.yml": "Rust 规则包（占位：规则待补，槽位就绪）（规则包 rust）",
   "lib/audit-rules/audit-rules-swift.yml": "Swift 规则包（占位：规则待补，槽位就绪）（规则包 swift）",
-  "test/test-java-rules.mjs": "Java/Kotlin 语言路由与专项规则测试（javaKtFuncRanges/短名/复杂度/规则联动/聚合型降级）",
-  "test/test-project-type-filter.mjs": "项目类型规则适配测试（非 dsh 项目不加载 dsh 槽位/0.x 版本规则、timeout 限 js 系、folder 尊重 gitignore——Pawchive 误报消除驱动）",
   "lib/checks/dup-const.js": "同名常量跨文件重复定义检查（DRY：findConstDefs 多语言常量提取 + 模块级过滤 + checkDuplicateConst 跨文件聚合——2026-10-02 新规则）",
-  "test/test-dup-const.mjs": "duplicate-const 规则测试（多语言提取 JS/Kotlin/Java/Go/Rust/Python、模块级过滤、跨文件聚合、test 目录排除、同值不同名不报）",
   "skills/guide": "（待注释）",
   "skills/workflow": "（待注释）",
   "skills/dev": "（待注释）",
@@ -299,48 +242,18 @@
   "scripts/browser-page-probe.mjs": "（待注释）",
   "skills/dev/dsh-git-push.md": "（待注释）",
   "skills/dev/git-push-live-fix.md": "（待注释）",
-  "test/test-clone-parts-keep.mjs": "（待注释）",
-  "test/test-func-doc-drift.mjs": "（待注释）",
-  "test/test-private-gate.mjs": "（待注释）",
-  "test/test-quota-write.mjs": "（待注释）",
-  "test/test-visibility-unified.mjs": "（待注释）",
-  "test/test-clone-maxfilemb.mjs": "（待注释）",
-  "test/test-rule-include-paths.mjs": "（待注释）",
-  "test/test-ext-variable-min-length.mjs": "（待注释）",
-  "test/test-dup-const-idiom.mjs": "（待注释）",
   "lib/git/endpoints.js": "（待注释）",
-  "test/test-account-refresh-on-push.mjs": "（待注释）",
-  "test/test-clone-token.mjs": "（待注释）",
-  "test/test-settings-roundtrip.mjs": "（待注释）",
-  "test/test-tokenizer-multiline-template.mjs": "（待注释）",
   "lib/audit-defaults.js": "（待注释）",
-  "test/test-audit-defaults.mjs": "（待注释）",
   "lib/ast/consts.js": "（待注释）",
-  "test/test-exempt-hint-classify.mjs": "（待注释）",
-  "test/test-tool-contract.mjs": "（待注释）",
   "docs/功能-审计规则体系.md": "（待注释）",
   "test/regression-2.4.1.mjs": "（待注释）",
-  "test/test-tools-e2e.mjs": "（待注释）",
-  "test/test-version-metrics.mjs": "（待注释）",
   "version-metrics.json": "（待注释）",
   "CONTRIBUTING.md": "（待注释）",
   "SECURITY.md": "（待注释）",
   "docs/SPEC.md": "（待注释）",
-  "test/test-collector-ignore.mjs": "（待注释）",
-  "test/test-empty-catch-single-source.mjs": "（待注释）",
-  "test/test-conv-rule-scope.mjs": "（待注释）",
-  "test/test-generated-html-artifact.mjs": "（待注释）",
-  "test/test-push-false-success.mjs": "（待注释）",
-  "test/test-gitignore-nongit-dir.mjs": "（待注释）",
-  "test/test-remote-name-ascii.mjs": "（待注释）",
-  "test/test-empty-catch-promise.mjs": "（待注释）",
-  "test/test-name-length-scope.mjs": "（待注释）",
-  "test/test-module-splitter-multiline.mjs": "（待注释）",
   "lib/app/handlers/identity-rewrite.js": "（待注释）",
   "lib/git/identity-rewrite.js": "（待注释）",
-  "test/test-git-identity-rewrite.mjs": "（待注释）",
   "lib/git/identity.js": "（待注释）",
-  "test/test-git-identity.mjs": "（待注释）",
   "test/helpers": "（待注释）",
   "docs/2026-10-09-审计插件性能优化.MD": "（待注释）",
   "docs/PERF-BASELINE.md": "（待注释）",
@@ -363,59 +276,1307 @@
   "test/helpers/test-cache.mjs": "（待注释）",
   "test/helpers/tmp-dir.mjs": "（待注释）",
   "test/run-tests.mjs": "（待注释）",
-  "test/test-analysis-coverage.mjs": "（待注释）",
-  "test/test-clone-history-defaults.mjs": "（待注释）",
-  "test/test-clone-history-mode.mjs": "（待注释）",
-  "test/test-clone-history.mjs": "（待注释）",
-  "test/test-clone-replay-io.mjs": "（待注释）",
-  "test/test-clone-replay.mjs": "（待注释）",
-  "test/test-git-bin-plan.mjs": "（待注释）",
-  "test/test-line-count.mjs": "（待注释）",
-  "test/test-max-lines-scope.mjs": "（待注释）",
-  "test/test-mirror-fallback.mjs": "（待注释）",
-  "test/test-mirror-gates.mjs": "（待注释）",
-  "test/test-perf-loop-collection.mjs": "（待注释）",
-  "test/test-perf-repeat-call.mjs": "（待注释）",
-  "test/test-platform-scan.mjs": "（待注释）",
-  "test/test-symbol-index.mjs": "（待注释）",
-  "test/test-test-cache.mjs": "（待注释）",
   "lib/client-parts": "客户端分片源码（按侧分目录：git/ 参与构建，audit/ 只归档不进产物）",
   "scripts/build-client.mjs": "客户端分片拼接（PART_ORDER + --check 门禁 + 形态铁律自检）",
-  "test/test-build-client.mjs": "分片构建门禁测试（产物一致/幂等/形态铁律/dshgp_ 前缀）",
-  "test/test-client-fragment-scope.mjs": "客户端分片作用域推导测试（dsh-client-fragment）",
-  "test/test-scrub-conv-wording.mjs": "（待注释）",
   "docs/2026-10-11-单一真源与文档漂移治理方案.MD": "（待注释）",
   "docs/2026-10-11-硬编码路径改造为审计引擎方案.MD": "（待注释）",
   "lib/audit-rules/audit-rules-paths.yml": "（待注释）",
   "lib/checks/hardcoded-path.js": "（待注释）",
   "scripts/doc-drift.mjs": "（待注释）",
-  "test/test-git-api-tool.mjs": "（待注释）",
   "_meta": {
     "worktree": {
+      "docs/2026-11-13-提交前预处理与审计引擎解耦方案.MD": {
+        "status": "M",
+        "mtime": "2026-11-13T02:16:18.943Z",
+        "note": "注释可能需更新"
+      },
+      "docs/FILE-TREE.md": {
+        "status": "M",
+        "mtime": "2026-11-13T02:15:59.309Z",
+        "note": "注释可能需更新"
+      },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-11-13T00:42:51.762Z",
+        "mtime": "2026-11-13T02:17:00.351Z",
         "note": "注释可能需更新"
       },
-      "lib/commit-push.js": {
+      "test/audit/test-inject-switch.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-inject-system-prompt.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-sidebar-interaction.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/helpers/test-cache.mjs": {
         "status": "M",
-        "mtime": "2026-11-13T00:42:14.186Z",
+        "mtime": "2026-11-13T01:39:50.713Z",
         "note": "注释可能需更新"
       },
-      "lib/audit-ui-sdk/": {
-        "status": "A",
-        "mtime": "2026-11-13T00:42:17.613Z",
+      "test/run-tests.mjs": {
+        "status": "M",
+        "mtime": "2026-11-13T01:39:50.707Z",
+        "note": "注释可能需更新"
+      },
+      "test/test-account-refresh-on-push.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-account-ssh.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-analysis-coverage.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-ast-confirm-span.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-audit-api-http.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-audit-api.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-audit-archive-exempt.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-audit-bad-file.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-audit-defaults.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-audit-empty.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-audit-exempt-paths.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-audit-ext.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-audit-false-positive-guards.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-audit-fastpath.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-audit-git-boundary.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-audit-npm-publish-rules.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-audit-push-boundary.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-audit-rules-csharp.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-audit-scope.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-audit-slot-order.mjs": {
+        "status": "D",
+        "mtime": "",
         "note": "注释可能需更新"
       },
       "test/test-audit-ui-contract.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-audit.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-auditignore-rules.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-auditignore.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-auto-push.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-build-artifact-skip.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-build-client.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-button-bind-events.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-button-bind.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-ci-wait.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-cifs-init.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-cli-audit-parity.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-cli-help-registry-sync.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-cli-split.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-client-fragment-scope.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-client.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-clone-concurrency.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-clone-history-defaults.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-clone-history-mode.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-clone-history.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-clone-maxfilemb.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-clone-mirror-truncation.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-clone-parts-keep.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-clone-preview-buttons.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-clone-replay-io.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-clone-replay.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-clone-token.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-collector-ignore.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-command-registry.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-commit-message.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-context.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-conv-rule-scope.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-cred-env.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-dataflow-clear-fp.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-dataflow-py-bodies.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-dataflow.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-dim-denominator.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-doc-func.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-doc-version-release-source.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-doc-version.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-docs-score.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-dup-code.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-dup-const-idiom.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-dup-const.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-dynamic-weight.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-empty-catch-promise.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-empty-catch-single-source.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-exempt-hint-classify.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-exempt-hint-effective.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-exempt-tool.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-exempt.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-ext-variable-min-length.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-false-positive-fixes.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-file-health.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-filter-ext.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-folder-scope.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-fs-hotspots.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-func-doc-drift.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-generated-html-artifact.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-git-api-tool.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-git-bin-plan.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-git-hooks.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-git-identity-rewrite.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-git-identity.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-git-path-args.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-git-rename.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-git-stream.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-git.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-gitignore-match.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-gitignore-nongit-dir.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-history-audit.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-http.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-ignore-e2e.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-index-jsonl.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-init-compat.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-io-risk.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-java-rules.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-line-count.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-link-check.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-lint-adapter.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-loop-no-fallback-return.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-magic-number.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-max-lines-scope.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-mirror-fallback.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-mirror-gates.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-mirror-store.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-module-splitter-multiline.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-module-splitter.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-multi-remote.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-name-length-scope.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-npm-cli-package.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-npm-enobufs.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-npm-install.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-npm-local-registry.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-npm-pack-parse.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-npm-publish.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-npm-registry.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-npm-smoke.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-npm-token-credential.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-npm-unpublish.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-origin-desktop.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-perf-loop-collection.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-perf-repeat-call.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-persist-credentials.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-picker-layout.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-platform-scan.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-plugin.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-pre-commit-engine.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-privacy-ownership.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-private-gate.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-project-type-filter.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-push-diagnose.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-push-false-success.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-push-transport.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-quality.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-quota-write.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-remote-name-ascii.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-remote-resolve.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-rename-locator.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-repeated-strings-cs.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-repo-list.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-repos-live-budget.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-rule-include-paths.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-rule-packs.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-scope-collisions.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-scope.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-score-zero-rule-dims.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-scrub-conv-wording.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-self.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-settings-persistence.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-settings-roundtrip.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-slash-commands.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-smart-hint.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-smoke-import-specs.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-status-secret.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-symbol-index.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-symlink-resolution.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-task-queue.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-test-cache.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-tokenizer-multiline-template.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-tool-contract.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-tool-probes.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-tools-e2e.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-tree-doc.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-tree-first-credential.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-tree-first-funcname.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-treesitter-grammars.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-treesitter.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-version-metrics.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-visibility-unified.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/test-workspace-paths.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/app/": {
         "status": "A",
-        "mtime": "2026-11-13T00:42:44.746Z",
+        "mtime": "2026-11-13T01:39:52.531Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/_archived/": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:52.914Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-analysis-coverage.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.591Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-ast-confirm-span.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.599Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-audit-api-http.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T02:01:12.687Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-audit-api.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.620Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-audit-archive-exempt.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.627Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-audit-defaults.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.633Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-audit-empty.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.659Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-audit-ext.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.669Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-audit-false-positive-guards.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.679Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-audit-fastpath.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.690Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-audit-git-boundary.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:52.885Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-audit-npm-publish-rules.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.710Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-audit-rules-csharp.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.719Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-audit-scope.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.728Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-audit-slot-order.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.740Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-audit-ui-contract.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.748Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-audit.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.757Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-auditignore-rules.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.766Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-auditignore.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.778Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-build-artifact-skip.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.789Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-button-bind-events.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.799Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-button-bind.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.807Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-cli-audit-parity.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.814Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-collector-ignore.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.825Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-conv-rule-scope.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.834Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-dataflow-clear-fp.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.847Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-dataflow-py-bodies.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.859Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-dataflow.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.868Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-dim-denominator.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.879Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-docs-score.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.888Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-dup-code.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.900Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-dup-const-idiom.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.911Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-dup-const.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.919Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-dynamic-weight.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.923Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-empty-catch-promise.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.933Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-empty-catch-single-source.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.942Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-exempt-hint-classify.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.952Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-exempt-hint-effective.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.960Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-exempt-tool.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.969Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-exempt.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.979Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-ext-variable-min-length.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.989Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-false-positive-fixes.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.999Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-file-health.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:52.012Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-filter-ext.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:52.021Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-folder-scope.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:52.030Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-fs-hotspots.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:52.043Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-generated-html-artifact.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:52.052Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-gitignore-match.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:52.065Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-gitignore-nongit-dir.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:52.073Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-history-audit.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:52.084Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-ignore-e2e.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:52.095Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-io-risk.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:52.103Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-java-rules.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:52.114Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-line-count.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:52.120Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-link-check.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:52.128Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-lint-adapter.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T02:07:14.380Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-loop-no-fallback-return.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:52.152Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-magic-number.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:52.160Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-max-lines-scope.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:52.170Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-name-length-scope.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:52.181Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-perf-loop-collection.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:52.200Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-perf-repeat-call.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:52.210Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-privacy-ownership.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:52.224Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-project-type-filter.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:52.236Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-quality.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:52.247Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-repeated-strings-cs.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:52.260Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-rule-include-paths.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:52.270Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-rule-packs.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:52.280Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-scope.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:59:35.567Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-score-zero-rule-dims.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:52.308Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-smart-hint.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:52.319Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-tokenizer-multiline-template.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:52.341Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-treesitter-grammars.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T02:13:56.418Z",
+        "note": "注释可能需更新"
+      },
+      "test/audit/test-treesitter.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T02:13:05.122Z",
+        "note": "注释可能需更新"
+      },
+      "test/git/": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:51.582Z",
+        "note": "注释可能需更新"
+      },
+      "test/helpers/test-scan.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:50.718Z",
+        "note": "注释可能需更新"
+      },
+      "test/tool/": {
+        "status": "A",
+        "mtime": "2026-11-13T01:39:52.822Z",
         "note": "注释可能需更新"
       }
     }
   },
-  "test/test-loop-no-fallback-return.mjs": "（待注释）",
-  "test/test-cli-help-registry-sync.mjs": "（待注释）",
   "lib/core": "（待注释）",
   "LICENSE": "（待注释）",
   "lib/core/atomic-json.js": "（待注释）",
@@ -423,51 +1584,30 @@
   "lib/core/credentials.js": "（待注释）",
   "lib/core/endpoints.js": "（待注释）",
   "lib/core/exec.js": "（待注释）",
-  "test/test-audit-git-boundary.mjs": "（待注释）",
   "lib/app/host-doc-checks.js": "（待注释）",
   "lib/audit/public.js": "（待注释）",
-  "test/test-audit-npm-publish-rules.mjs": "（待注释）",
   "docs/releases.json": "（待注释）",
-  "test/test-doc-version-release-source.mjs": "（待注释）",
   "docs/2026-10-13-UI账号信息-NPM账号卡片与三标签页.MD": "（待注释）",
-  "test/test-npm-token-credential.mjs": "（待注释）",
   "lib/npm": "（待注释）",
   "lib/app/handlers/npm.js": "（待注释）",
   "lib/npm/npmrc.js": "（待注释）",
   "lib/npm/registry.js": "（待注释）",
-  "test/test-npm-registry.mjs": "（待注释）",
   "lib/npm/install.js": "（待注释）",
-  "test/test-npm-install.mjs": "（待注释）",
   "test/e2e-npm-tab-render.mjs": "（待注释）",
   "lib/npm/account.js": "（待注释）",
   "docs/2026-10-13-UI账号信息-NPM对齐GitHub方案.MD": "（待注释）",
   "lib/npm/publish.js": "（待注释）",
-  "test/test-npm-publish.mjs": "（待注释）",
   "lib/git/remote-resolve.js": "（待注释）",
-  "test/test-remote-resolve.mjs": "（待注释）",
-  "test/test-audit-push-boundary.mjs": "（待注释）",
   "lib/git/push-diagnose.js": "（待注释）",
-  "test/test-push-diagnose.mjs": "（待注释）",
   "lib/git/commit-message.js": "（待注释）",
-  "test/test-commit-message.mjs": "（待注释）",
-  "test/test-audit-slot-order.mjs": "（待注释）",
-  "test/test-filter-ext.mjs": "（待注释）",
-  "test/test-npm-enobufs.mjs": "（待注释）",
   "scripts/cpu-sample.mjs": "（待注释）",
-  "test/test-ast-confirm-span.mjs": "（待注释）",
   "lib/ast/treesitter.js": "（待注释）",
   "docs/2.9.0-design.md": "（待注释）",
-  "test/test-treesitter.mjs": "（待注释）",
   "lib/app/handlers/workspace-paths.js": "（待注释）",
   "lib/core/workspace-paths.js": "（待注释）",
-  "test/test-workspace-paths.mjs": "（待注释）",
   "lib/ast/fs-hotspots.js": "（待注释）",
   "lib/checks/fs-scanner.js": "（待注释）",
   "scripts/scan-fs-hotspots.mjs": "（待注释）",
-  "test/test-fs-hotspots.mjs": "（待注释）",
-  "test/test-exempt-hint-effective.mjs": "（待注释）",
-  "test/test-audit-false-positive-guards.mjs": "（待注释）",
-  "test/test-audit-exempt-paths.mjs": "提交时按文件临时豁免审计（auditExemptPaths）回归",
   "audit-samples": "（待注释）",
   "audit-samples/.samples": "（待注释）",
   "audit-samples/js-bad.js": "（待注释）",
@@ -476,47 +1616,28 @@
   ".github": "（待注释）",
   ".github/workflows/test.yml": "（待注释）",
   "lib/exempt/tool.js": "（待注释）",
-  "test/test-exempt-tool.mjs": "（待注释）",
-  "test/test-multi-remote.mjs": "（待注释）",
-  "test/test-git-path-args.mjs": "（待注释）",
-  "test/test-picker-layout.mjs": "（待注释）",
   "scripts/picker-repro.mjs": "（待注释）",
   "lib/git/index-format.js": "（待注释）",
-  "test/test-index-jsonl.mjs": "（待注释）",
-  "test/test-repos-live-budget.mjs": "（待注释）",
-  "test/test-button-bind-events.mjs": "（待注释）",
   "test/fixtures/ignore-e2e": "（待注释）",
   "test/fixtures/ignore-e2e/aud.js.fixture": "（待注释）",
   "test/fixtures/ignore-e2e/auditignore.rules": "（待注释）",
   "test/fixtures/ignore-e2e/gib.js.fixture": "（待注释）",
   "test/fixtures/ignore-e2e/gitignore.rules": "（待注释）",
   "test/fixtures/ignore-e2e/keep.js.fixture": "（待注释）",
-  "test/test-ignore-e2e.mjs": "（待注释）",
   "lib/git/init-compat.js": "（待注释）",
-  "test/test-init-compat.mjs": "（待注释）",
   "lib/audit/ownership.js": "（待注释）",
   "scripts/bump-version.mjs": "（待注释）",
-  "test/test-privacy-ownership.mjs": "（待注释）",
   "lib/app/repo-ownership.js": "（待注释）",
   "docs/FILE-TREE.md": "（待注释）",
   "docs/2026-10-28-弃零依赖引入npm与AST优先规则方案.MD": "弃零依赖引入 npm 与 AST 优先规则：决策清单、实测证据、里程碑与新增语言/规则的长期流程",
   "package-lock.json": "依赖锁文件（npm install --no-bin-links 生成，保证依赖版本与 tree-sitter ABI 配对）",
   "scripts/version-source.mjs": "（待注释）",
   "docs/2026-10-29-多语言AST接通实测记录.MD": "M2 多语言 AST 接通的改前/改后命中实测：C# 进管道的文件与命中变化、六槽位三档计数（正则初筛/token 级/语法树）与 M3 取舍输入",
-  "test/test-treesitter-grammars.mjs": "多语言 AST 接通自检：语法映射与 wasms 包实存核对、每语言 0 ERROR 解析、注释与带引号原始字符串的精筛、以及无语法资产时的回退契约（D5）",
-  "test/test-repeated-strings-cs.mjs": "（待注释）",
   "lib/audit-rules/audit-rules-csharp.yml": "（待注释）",
-  "test/test-audit-rules-csharp.mjs": "（待注释）",
-  "test/test-dynamic-weight.mjs": "（待注释）",
-  "test/test-git-stream.mjs": "（待注释）",
-  "test/test-dim-denominator.mjs": "（待注释）",
-  "test/test-clone-mirror-truncation.mjs": "（待注释）",
   "lib/core/mirror-candidates.json": "（待注释）",
   "lib/core/mirror-store.js": "（待注释）",
-  "test/test-mirror-store.mjs": "（待注释）",
   "docs/PLAN-2026-11-01-auditignore-scoped.md": "（待注释）",
   "lib/audit/auditignore-rules.js": "（待注释）",
-  "test/test-auditignore-rules.mjs": "（待注释）",
   "lib/git/ci.js": "（待注释）",
   "lib/git/hooks.js": "（待注释）",
   "lib/git/rename.js": "（待注释）",
@@ -525,29 +1646,11 @@
   "lib/npm/unpublish.js": "（待注释）",
   "scripts/audit-ext/dsh-inject-declarations.mjs": "（待注释）",
   "scripts/local-registry.mjs": "（待注释）",
-  "test/test-audit-archive-exempt.mjs": "（待注释）",
-  "test/test-audit-fastpath.mjs": "（待注释）",
-  "test/test-ci-wait.mjs": "（待注释）",
-  "test/test-cifs-init.mjs": "（待注释）",
-  "test/test-git-hooks.mjs": "（待注释）",
-  "test/test-git-rename.mjs": "（待注释）",
-  "test/test-npm-cli-package.mjs": "（待注释）",
-  "test/test-npm-local-registry.mjs": "（待注释）",
-  "test/test-npm-pack-parse.mjs": "（待注释）",
-  "test/test-npm-smoke.mjs": "（待注释）",
-  "test/test-npm-unpublish.mjs": "（待注释）",
-  "test/test-smoke-import-specs.mjs": "（待注释）",
-  "test/test-tree-first-credential.mjs": "（待注释）",
   "docs/2026-11-06-审计插件本体审视与优化方向讨论.案例d3dx.md": "（待注释）",
-  "test/test-score-zero-rule-dims.mjs": "（待注释）",
   "lib/lint-adapter": "外部 linter 委托层（探测项目自带官方 linter → 调用 JSON → 适配；只评分报告不拦截）",
   "lib/lint-adapter/detect.js": "委托层探测：项目配置指纹 + 工具可执行自探测（env→tools→PATH→常见路径，校验 X_OK）",
   "lib/lint-adapter/index.js": "委托层聚合入口 runLintAdapters：返回 findings 与 linted 委托状态（防静默空转）",
   "lib/lint-adapter/runner.js": "委托层调用与适配：ruff JSON→finding（severity 封顶 warning；崩溃/超时/坏输出一律降级空）",
-  "test/test-lint-adapter.mjs": "委托层桩测（假 ruff 二进制）：探测三态/适配映射/不拦截/四路降级/端到端 blocker 不增",
-  "test/test-tree-first-funcname.mjs": "short-func-name 树化双向样本：红基线/树化后类与对象方法照报/无树对照重现漏报/访问器边界",
-  "test/test-dataflow-clear-fp.mjs": "clear-then-access 四类系统性误报回归（.empty()/写目标/注解位/多目标解包）+ 两条正样本",
-  "test/test-dataflow-py-bodies.mjs": "Python 缩进式函数体区间回归（跨方法不连/同方法连/闭包必须连/花括号语言回归）",
   "docs/功能-审计引擎.md": "审计引擎功能介绍：规则体系、树化判定、评分、外部 linter 委托、豁免通道",
   "docs/功能-发布与工具链.md": "提交推送、克隆、npm 发布、仓库索引与账号状态、文档生成脚本的功能介绍",
   "lib/client-parts/git": "git / 发布 / 工具链侧分片（13 片，按 PART_ORDER 拼接成 lib/client.js）",
@@ -569,22 +1672,195 @@
   "lib/app/schema-audit.js": "（待注释）",
   "test/audit": "审计侧 UI 测试归档（不参与常规回归——run-tests 只扫 test/ 顶层）",
   "test/audit/README.md": "归档说明：为什么移出常规测试、怎么手动跑、与后端审计的关系",
-  "test/audit/test-inject-switch.mjs": "（待注释）",
-  "test/audit/test-inject-system-prompt.mjs": "（待注释）",
-  "test/audit/test-sidebar-interaction.mjs": "（待注释）",
-  "test/test-origin-desktop.mjs": "桌面端（dsh-app://）写请求 403 修复回归：放行判据与 CSRF 防护矩阵",
   "docs/2026-11-13-提交前预处理与审计引擎解耦方案.MD": "提交前预处理与审计引擎解耦方案：引擎契约（配置化入口/退出码）、UI 注入契约、职责切分与分阶段落地",
   "scripts/audit-gate.mjs": "提交前预处理的轻量审计引擎入口（只加载 audit+score，按契约输出 JSON 与退出码 0/1/2）",
   "lib/commit-push/pre-commit-engine.js": "提交前预处理引擎适配层：spawn 引擎、拼参数、退出码映射、超时与 fail-closed",
   "lib/commit-push": "提交推送编排（runAudit 门禁 + commitWithAudit/commitMany）",
-  "test/test-pre-commit-engine.mjs": "提交前预处理引擎契约回归：退出码 0/1/2、超时/命令缺失 fail-closed、与进程内结果一致",
   "cli-audit.mjs": "审计侧 CLI 入口（bin audit-sluice：audit/ruleset/file-io/link-check/scope-check/functions/tree-doc）",
   "cli-tool.mjs": "工具链 CLI 入口（bin tool-sluice：module-splitter/yaml-template/readme-template/self-check）",
   "lib/cli/shared.mjs": "三个 CLI 共用的公共层（参数解析/结果打印/HELP 渲染/版本/跨侧指引）",
   "lib/cli/commands-tool.mjs": "工具链命令实现（模板生成与 self-check）",
-  "test/test-cli-split.mjs": "三入口拆分回归：命令归属、跨侧提示、HELP 一致性、28 命令逐个可达",
   "lib/audit-ui-sdk": "审计 UI 注入契约（可插拔面板；本阶段只定义契约不实施 UI）",
   "lib/audit-ui-sdk/contract.js": "审计面板契约：版本号 + defineAuditPanel 校验（构建期，只判形状与版本）+ 深冻结",
   "lib/audit-ui-sdk/index.js": "审计面板 SDK 唯一导出面（纯 re-export，实现只能从这里 import）",
-  "test/test-audit-ui-contract.mjs": "审计 UI 契约回归：17 例（导出面/零依赖/深冻结/未登记键丢弃/与 SPEC 漂移门禁）"
+  "test/app": "（待注释）",
+  "test/audit/_archived": "（待注释）",
+  "test/git": "（待注释）",
+  "test/tool": "（待注释）",
+  "test/app/test-auto-push.mjs": "（待注释）",
+  "test/app/test-context.mjs": "（待注释）",
+  "test/app/test-http.mjs": "（待注释）",
+  "test/app/test-plugin.mjs": "（待注释）",
+  "test/app/test-settings-persistence.mjs": "（待注释）",
+  "test/app/test-settings-roundtrip.mjs": "（待注释）",
+  "test/app/test-slash-commands.mjs": "（待注释）",
+  "test/app/test-status-secret.mjs": "（待注释）",
+  "test/app/test-symlink-resolution.mjs": "（待注释）",
+  "test/app/test-task-queue.mjs": "（待注释）",
+  "test/app/test-tool-contract.mjs": "（待注释）",
+  "test/app/test-tool-probes.mjs": "（待注释）",
+  "test/app/test-tools-e2e.mjs": "（待注释）",
+  "test/app/test-workspace-paths.mjs": "（待注释）",
+  "test/audit/_archived/test-inject-switch.mjs": "（待注释）",
+  "test/audit/_archived/test-inject-system-prompt.mjs": "（待注释）",
+  "test/audit/_archived/test-sidebar-interaction.mjs": "（待注释）",
+  "test/audit/test-analysis-coverage.mjs": "（待注释）",
+  "test/audit/test-ast-confirm-span.mjs": "（待注释）",
+  "test/audit/test-audit-api-http.mjs": "（待注释）",
+  "test/audit/test-audit-api.mjs": "（待注释）",
+  "test/audit/test-audit-archive-exempt.mjs": "（待注释）",
+  "test/audit/test-audit-defaults.mjs": "（待注释）",
+  "test/audit/test-audit-empty.mjs": "（待注释）",
+  "test/audit/test-audit-ext.mjs": "（待注释）",
+  "test/audit/test-audit-false-positive-guards.mjs": "（待注释）",
+  "test/audit/test-audit-fastpath.mjs": "（待注释）",
+  "test/audit/test-audit-git-boundary.mjs": "（待注释）",
+  "test/audit/test-audit-npm-publish-rules.mjs": "（待注释）",
+  "test/audit/test-audit-rules-csharp.mjs": "（待注释）",
+  "test/audit/test-audit-scope.mjs": "（待注释）",
+  "test/audit/test-audit-slot-order.mjs": "（待注释）",
+  "test/audit/test-audit-ui-contract.mjs": "（待注释）",
+  "test/audit/test-audit.mjs": "（待注释）",
+  "test/audit/test-auditignore-rules.mjs": "（待注释）",
+  "test/audit/test-auditignore.mjs": "（待注释）",
+  "test/audit/test-build-artifact-skip.mjs": "（待注释）",
+  "test/audit/test-button-bind-events.mjs": "（待注释）",
+  "test/audit/test-button-bind.mjs": "（待注释）",
+  "test/audit/test-cli-audit-parity.mjs": "（待注释）",
+  "test/audit/test-collector-ignore.mjs": "（待注释）",
+  "test/audit/test-conv-rule-scope.mjs": "（待注释）",
+  "test/audit/test-dataflow-clear-fp.mjs": "（待注释）",
+  "test/audit/test-dataflow-py-bodies.mjs": "（待注释）",
+  "test/audit/test-dataflow.mjs": "（待注释）",
+  "test/audit/test-dim-denominator.mjs": "（待注释）",
+  "test/audit/test-docs-score.mjs": "（待注释）",
+  "test/audit/test-dup-code.mjs": "（待注释）",
+  "test/audit/test-dup-const-idiom.mjs": "（待注释）",
+  "test/audit/test-dup-const.mjs": "（待注释）",
+  "test/audit/test-dynamic-weight.mjs": "（待注释）",
+  "test/audit/test-empty-catch-promise.mjs": "（待注释）",
+  "test/audit/test-empty-catch-single-source.mjs": "（待注释）",
+  "test/audit/test-exempt-hint-classify.mjs": "（待注释）",
+  "test/audit/test-exempt-hint-effective.mjs": "（待注释）",
+  "test/audit/test-exempt-tool.mjs": "（待注释）",
+  "test/audit/test-exempt.mjs": "（待注释）",
+  "test/audit/test-ext-variable-min-length.mjs": "（待注释）",
+  "test/audit/test-false-positive-fixes.mjs": "（待注释）",
+  "test/audit/test-file-health.mjs": "（待注释）",
+  "test/audit/test-filter-ext.mjs": "（待注释）",
+  "test/audit/test-folder-scope.mjs": "（待注释）",
+  "test/audit/test-fs-hotspots.mjs": "（待注释）",
+  "test/audit/test-generated-html-artifact.mjs": "（待注释）",
+  "test/audit/test-gitignore-match.mjs": "（待注释）",
+  "test/audit/test-gitignore-nongit-dir.mjs": "（待注释）",
+  "test/audit/test-history-audit.mjs": "（待注释）",
+  "test/audit/test-ignore-e2e.mjs": "（待注释）",
+  "test/audit/test-io-risk.mjs": "（待注释）",
+  "test/audit/test-java-rules.mjs": "（待注释）",
+  "test/audit/test-line-count.mjs": "（待注释）",
+  "test/audit/test-link-check.mjs": "（待注释）",
+  "test/audit/test-lint-adapter.mjs": "（待注释）",
+  "test/audit/test-loop-no-fallback-return.mjs": "（待注释）",
+  "test/audit/test-magic-number.mjs": "（待注释）",
+  "test/audit/test-max-lines-scope.mjs": "（待注释）",
+  "test/audit/test-name-length-scope.mjs": "（待注释）",
+  "test/audit/test-perf-loop-collection.mjs": "（待注释）",
+  "test/audit/test-perf-repeat-call.mjs": "（待注释）",
+  "test/audit/test-privacy-ownership.mjs": "（待注释）",
+  "test/audit/test-project-type-filter.mjs": "（待注释）",
+  "test/audit/test-quality.mjs": "（待注释）",
+  "test/audit/test-repeated-strings-cs.mjs": "（待注释）",
+  "test/audit/test-rule-include-paths.mjs": "（待注释）",
+  "test/audit/test-rule-packs.mjs": "（待注释）",
+  "test/audit/test-scope.mjs": "（待注释）",
+  "test/audit/test-score-zero-rule-dims.mjs": "（待注释）",
+  "test/audit/test-smart-hint.mjs": "（待注释）",
+  "test/audit/test-tokenizer-multiline-template.mjs": "（待注释）",
+  "test/audit/test-treesitter-grammars.mjs": "（待注释）",
+  "test/audit/test-treesitter.mjs": "（待注释）",
+  "test/git/test-account-refresh-on-push.mjs": "（待注释）",
+  "test/git/test-account-ssh.mjs": "（待注释）",
+  "test/git/test-audit-bad-file.mjs": "（待注释）",
+  "test/git/test-audit-exempt-paths.mjs": "（待注释）",
+  "test/git/test-audit-push-boundary.mjs": "（待注释）",
+  "test/git/test-ci-wait.mjs": "（待注释）",
+  "test/git/test-cifs-init.mjs": "（待注释）",
+  "test/git/test-clone-concurrency.mjs": "（待注释）",
+  "test/git/test-clone-history-defaults.mjs": "（待注释）",
+  "test/git/test-clone-history-mode.mjs": "（待注释）",
+  "test/git/test-clone-history.mjs": "（待注释）",
+  "test/git/test-clone-maxfilemb.mjs": "（待注释）",
+  "test/git/test-clone-mirror-truncation.mjs": "（待注释）",
+  "test/git/test-clone-parts-keep.mjs": "（待注释）",
+  "test/git/test-clone-preview-buttons.mjs": "（待注释）",
+  "test/git/test-clone-replay-io.mjs": "（待注释）",
+  "test/git/test-clone-replay.mjs": "（待注释）",
+  "test/git/test-clone-token.mjs": "（待注释）",
+  "test/git/test-commit-message.mjs": "（待注释）",
+  "test/git/test-cred-env.mjs": "（待注释）",
+  "test/git/test-git-api-tool.mjs": "（待注释）",
+  "test/git/test-git-bin-plan.mjs": "（待注释）",
+  "test/git/test-git-hooks.mjs": "（待注释）",
+  "test/git/test-git-identity-rewrite.mjs": "（待注释）",
+  "test/git/test-git-identity.mjs": "（待注释）",
+  "test/git/test-git-path-args.mjs": "（待注释）",
+  "test/git/test-git-rename.mjs": "（待注释）",
+  "test/git/test-git-stream.mjs": "（待注释）",
+  "test/git/test-git.mjs": "（待注释）",
+  "test/git/test-index-jsonl.mjs": "（待注释）",
+  "test/git/test-init-compat.mjs": "（待注释）",
+  "test/git/test-mirror-fallback.mjs": "（待注释）",
+  "test/git/test-mirror-gates.mjs": "（待注释）",
+  "test/git/test-mirror-store.mjs": "（待注释）",
+  "test/git/test-multi-remote.mjs": "（待注释）",
+  "test/git/test-npm-cli-package.mjs": "（待注释）",
+  "test/git/test-npm-enobufs.mjs": "（待注释）",
+  "test/git/test-npm-install.mjs": "（待注释）",
+  "test/git/test-npm-local-registry.mjs": "（待注释）",
+  "test/git/test-npm-pack-parse.mjs": "（待注释）",
+  "test/git/test-npm-publish.mjs": "（待注释）",
+  "test/git/test-npm-registry.mjs": "（待注释）",
+  "test/git/test-npm-smoke.mjs": "（待注释）",
+  "test/git/test-npm-token-credential.mjs": "（待注释）",
+  "test/git/test-npm-unpublish.mjs": "（待注释）",
+  "test/git/test-origin-desktop.mjs": "（待注释）",
+  "test/git/test-persist-credentials.mjs": "（待注释）",
+  "test/git/test-pre-commit-engine.mjs": "（待注释）",
+  "test/git/test-private-gate.mjs": "（待注释）",
+  "test/git/test-push-diagnose.mjs": "（待注释）",
+  "test/git/test-push-false-success.mjs": "（待注释）",
+  "test/git/test-push-transport.mjs": "（待注释）",
+  "test/git/test-quota-write.mjs": "（待注释）",
+  "test/git/test-remote-name-ascii.mjs": "（待注释）",
+  "test/git/test-remote-resolve.mjs": "（待注释）",
+  "test/git/test-repo-list.mjs": "（待注释）",
+  "test/git/test-repos-live-budget.mjs": "（待注释）",
+  "test/git/test-visibility-unified.mjs": "（待注释）",
+  "test/helpers/test-scan.mjs": "（待注释）",
+  "test/tool/test-build-client.mjs": "（待注释）",
+  "test/tool/test-cli-help-registry-sync.mjs": "（待注释）",
+  "test/tool/test-cli-split.mjs": "（待注释）",
+  "test/tool/test-client-fragment-scope.mjs": "（待注释）",
+  "test/tool/test-client.mjs": "（待注释）",
+  "test/tool/test-command-registry.mjs": "（待注释）",
+  "test/tool/test-doc-func.mjs": "（待注释）",
+  "test/tool/test-doc-version-release-source.mjs": "（待注释）",
+  "test/tool/test-doc-version.mjs": "（待注释）",
+  "test/tool/test-func-doc-drift.mjs": "（待注释）",
+  "test/tool/test-module-splitter-multiline.mjs": "（待注释）",
+  "test/tool/test-module-splitter.mjs": "（待注释）",
+  "test/tool/test-picker-layout.mjs": "（待注释）",
+  "test/tool/test-platform-scan.mjs": "（待注释）",
+  "test/tool/test-rename-locator.mjs": "（待注释）",
+  "test/tool/test-run-tests-scan.mjs": "（待注释）",
+  "test/tool/test-scope-collisions.mjs": "（待注释）",
+  "test/tool/test-scrub-conv-wording.mjs": "（待注释）",
+  "test/tool/test-self.mjs": "（待注释）",
+  "test/tool/test-smoke-import-specs.mjs": "（待注释）",
+  "test/tool/test-symbol-index.mjs": "（待注释）",
+  "test/tool/test-test-cache.mjs": "（待注释）",
+  "test/tool/test-tree-doc.mjs": "（待注释）",
+  "test/tool/test-tree-first-credential.mjs": "（待注释）",
+  "test/tool/test-tree-first-funcname.mjs": "（待注释）",
+  "test/tool/test-version-metrics.mjs": "（待注释）"
 }

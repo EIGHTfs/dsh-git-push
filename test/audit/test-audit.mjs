@@ -1,0 +1,567 @@
+// dsh-skip-sensitive: 测试 fixture 含 mock 凭据字面量（AKIA… 非真实凭据）
+// dsh-skip-func-length: 测试 fixture 含超长函数样本（200 语句，故意触发 func-lines）
+/**
+ * 审计总入口测试：auditFull / auditChanged / 豁免 / gitignore 感知。
+ */
+import { test, before, after } from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtempSync, writeFileSync, mkdirSync, rmSync, readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+
+import '../../lib/rule/compilers.js';
+import { auditFull, auditWithScope, makeFinding, summarize } from '../../lib/audit/index.js';
+import { collectTextFiles, collectChangedFiles, isGitRepo, readText } from '../../lib/audit/collector.js';
+import { checkFileLines, checkFuncLinesAst } from '../../lib/ast/size.js';
+import {
+  checkEmptyCatch, checkRegexRules, checkPathRegexRules, checkFuncLines, checkIoRisk,
+  checkCredentialFiles, checkMinLength, checkComplexity, checkDepth, checkMaxLines,
+  checkRepeated, checkSemantic, groupByKind, runChecks, capSeverity, checkPrivateFiles,
+} from '../../lib/audit/checks.js';
+import { globToRegex, globMatch } from '../../lib/audit/glob.js';
+import { loadRuleFiles } from '../../lib/rule/loader.js';
+import { CODE_EXTS } from '../../lib/audit/index.js';
+
+let fixture = '';
+let gitRepo = '';
+
+before(() => {
+  fixture = mkdtempSync(join(tmpdir(), 'v2-audit-'));
+  // ① 非 git 目录 + 普通文本
+  writeFileSync(join(fixture, 'a.js'), 'const x = "AKIA1234567890ABCDEF"; // should hit secret\n');
+  writeFileSync(join(fixture, 'b.md'), '# doc\n');
+  mkdirSync(join(fixture, 'sub'));
+  writeFileSync(join(fixture, 'sub', 'c.js'), 'function tooLong() {\nlet i = 0; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; i++; return i;\n}\n');
+  // ② gitignore 感知目录
+  mkdirSync(join(fixture, 'repo'));
+  writeFileSync(join(fixture, 'repo', '.gitignore'), 'secret.log\n');
+  writeFileSync(join(fixture, 'repo', 'keep.js'), 'const ok = 1;\n');
+  writeFileSync(join(fixture, 'repo', 'secret.log'), 'AKIA1234567890ABCDEF\n');
+  // ③ 豁免文件：文件头 dsh-skip-sensitive
+  writeFileSync(join(fixture, 'exempt.js'), '// dsh-skip-sensitive: fixture\nconst t = "AKIA1234567890ABCDEF";\n');
+  // ④ git 仓库（auditChanged 真 diff 用）：init + 基线 commit → 再改 2 个文件
+  gitRepo = join(fixture, 'gitrepo');
+  mkdirSync(gitRepo);
+  writeFileSync(join(gitRepo, 'clean.js'), 'const ok = 1;\n');
+  const git = (args) => execFileSync('git', ['-C', gitRepo, ...args], { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] });
+  git(['init', '-q']);
+  git(['config', 'user.email', 'v2-test@local']);
+  git(['config', 'user.name', 'v2 test']);
+  git(['add', '-A']);
+  git(['commit', '-q', '-m', 'baseline']);
+  writeFileSync(join(gitRepo, 'clean.js'), 'const ok = 2;\n'); // M
+  writeFileSync(join(gitRepo, 'new.js'), 'const key = "AKIA1234567890ABCDEF";\n'); // ??
+});
+
+after(() => {
+  try { rmSync(fixture, { recursive: true, force: true }); } catch { /* noop */ }
+});
+
+test('collector：非 git 目录全量收集（含深层）', async () => {
+  const files = await collectTextFiles(fixture);
+  assert.ok(files.some((f) => f.path === 'a.js'));
+  assert.ok(files.some((f) => f.path === 'sub/c.js'));
+  assert.ok(files.length >= 3);
+});
+
+test('collector：gitignore 感知——忽略文件不在收集列表', async () => {
+  const files = await collectTextFiles(join(fixture, 'repo'), { gitIgnoreRoot: join(fixture, 'repo') });
+  assert.ok(files.some((f) => f.path === 'keep.js'));
+  assert.ok(!files.some((f) => f.path === 'secret.log'), '.gitignore 中的 secret.log 应被排除');
+});
+
+test('collector：isGitRepo / readText', () => {
+  assert.equal(isGitRepo(join(fixture, 'repo')), false); // fixture 非 git 仓库
+  assert.equal(readText(join(fixture, 'a.js'))?.includes('AKIA'), true);
+  assert.equal(readText('/nonexistent-file'), null);
+});
+
+test('auditFull：非 git 目录出 findings（secret 命中）', async () => {
+  const res = await auditFull(fixture);
+  assert.equal(res.ok, true);
+  assert.equal(res.scope, 'full');
+  const secret = res.findings.filter((f) => f.kind === '[FUNC]');
+  assert.ok(secret.length >= 1, `应命中 secret（得 ${secret.length}）`);
+  // 每 finding 带 exemptHint
+  for (const f of res.findings) {
+    assert.ok(typeof f.exemptHint === 'string' && f.exemptHint.length > 0, `${f.rule} 缺 exemptHint`);
+  }
+});
+
+test('auditFull：exempt 文件头 dsh-skip-sensitive → 该文件无 secret 类', async () => {
+  const res = await auditFull(fixture);
+  const hits = res.findings.filter((f) => f.kind === '[FUNC]' && f.file === 'exempt.js');
+  assert.equal(hits.length, 0, '豁免文件不应报 secret');
+});
+
+test('auditFull：func-lines 检测超长函数（sub/c.js 60+ 行函数）', async () => {
+  const res = await auditFull(join(fixture, 'sub'));
+  const fl = res.findings.filter((f) => f.kind === 'func-lines');
+  assert.ok(fl.length >= 1, `应命中 func-lines（得 ${fl.length}）`);
+});
+
+test('func-lines 误报回归：函数体内正则含反斜杠花括号不得把短函数算成超长', () => {
+  // 实测踩坑：scripts/scan-file-io.mjs 的 isFnSignature（真身 8 行）里有一条判断
+  //   函数签名的正则，模式中含转义的 `\{`。旧实现按整行 match(/\{/g) 计数，把正则内部的花括号
+  //   也算进来 → depth 永不归零 → 一路吞并后面 234 行，报「单函数 242 行」blocker，提交被自身
+  //   审计拦下。本用例用最小样本锁住该行为，防止回归。
+  // 尾部放足够多的普通函数：旧实现在「正则含 \{ 导致 depth 虚高 1」之后，要吞掉后面
+  //   所有代码才可能归零（实测真实文件里吞了 234 行）。样本必须有足够长的尾部才能复现。
+  const tail = [];
+  for (let i = 0; i < 60; i++) {
+    tail.push(`function tail${i}() {`);
+    tail.push('  return ' + i + ';');
+    tail.push('}');
+  }
+  const src = [
+    'function isFnSignature(s) {',
+    '  if (/^\\s*if\\b/.test(s)) return false;',
+    '  return /^\\s*(?:async\\s+)?[\\w$]+\\s*\\([^)]*\\)\\s*\\{\\s*$/.test(s);',
+    '}',
+    ...tail,
+  ].join('\n');
+  const rule = { id: 'readability/max-function-length', severity: 'warning', threshold: 50, dimensions: ['可读性'] };
+  const hits = checkFuncLines({ file: 'x.mjs', text: src, rules: [rule] });
+  assert.equal(hits.length, 0, `短函数不应被判超长，实际命中行: ${JSON.stringify(hits.map((h) => h.line))}`);
+});
+
+test('架构收敛：函数长度/密度的判定全部来自 AST 层，checks 层不自行出结论', () => {
+  // checkFuncLines 曾是「AST 版 + 自建正则版」两套独立判定并行——正则版自己找
+  //   函数起点、自己数花括号、自己判行数，既与 AST 版重复报同一函数，又因未剥离字面量产生
+  //   严重误报。现要求判定权收归 AST（checkFuncLinesAst / checkFuncDensityAst），
+  //   checks 层只做「调 AST → 转 finding」。本用例锁住该分工，防止再长出第二套实现。
+  const src = readFileSync(new URL('../../lib/checks/structural.js', import.meta.url), 'utf8');
+  const body = src.slice(src.indexOf('export function checkFuncLines('), src.indexOf('/** 检查 sync-fs'));
+  assert.ok(/checkFuncLinesAst\(/.test(body), '行数判定必须调用 AST 实现');
+  assert.ok(/checkFuncDensityAst\(/.test(body), '密度判定必须调用 AST 实现');
+  // 不得在 checks 层自建函数边界识别：数花括号 / 正则找函数起点 / 自行 split 行
+  assert.ok(!body.includes('match(/\\{'), '不得自行数花括号（应交给 AST 的 tokenizer）');
+  assert.ok(!body.includes('match(/\\{'), '不得自行数花括号（应交给 AST 的 tokenizer）');
+  assert.ok(!body.includes('function\\s*\\w*\\s*('), '不得用正则识别函数起点');
+});
+
+test('auditWithScope：非 git 目录 full 与 diff 等价（退化）', async () => {
+  const full = await auditWithScope(fixture, { scope: 'full' });
+  const diff = await auditWithScope(fixture, { scope: 'diff' });
+  assert.equal(full.scope, 'full');
+  assert.equal(diff.scope, 'changed'); // 非 git 退化 full 但 scope 标记 changed
+  assert.equal(diff.summary.total, full.summary.total);
+});
+
+test('checkEmptyCatch：真空 catch 命中', () => {
+  const findings = checkEmptyCatch({ file: 'x.js', text: 'try { a(); } catch (e) {\n}\n' });
+  assert.equal(findings.length, 1);
+  assert.equal(findings[0].kind, 'empty-catch');
+  assert.deepEqual(findings[0].dimensions, ['健壮性', '可观测性']);
+});
+
+test('makeFinding / summarize：统一问题对象 + 统计', () => {
+  const fs = [
+    makeFinding({ file: 'a', line: 1, rule: 'r1', kind: '[FUNC]', severity: 'blocker' }),
+    makeFinding({ file: 'b', line: 2, rule: 'r2', kind: 'regex', severity: 'warning' }),
+  ];
+  const s = summarize(fs);
+  assert.equal(s.blocker, 1);
+  assert.equal(s.warning, 1);
+  assert.equal(s.total, 2);
+  assert.equal(fs[0].scoreImpact, 0);
+  assert.ok(Array.isArray(fs[0].dimensions));
+});
+
+test('auditFull：summary 结构完整 + files 计数', async () => {
+  const res = await auditFull(fixture);
+  assert.deepEqual(Object.keys(res.summary).sort(), ['blocker', 'notice', 'total', 'warning']);
+  assert.ok(res.files >= 3);
+});
+
+test('collectChangedFiles：git 仓库变动列表（M + ??）', () => {
+  const changed = collectChangedFiles(gitRepo);
+  const rels = changed.map((c) => c.rel).sort();
+  assert.deepEqual(rels, ['clean.js', 'new.js']);
+  const statuses = changed.map((c) => c.status).sort();
+  assert.deepEqual(statuses, ['??', 'M']);
+});
+
+// 两条审计路径都必须能跑完。上一版接入「静默失明」检测时，
+//   在 auditChanged 里误用了 auditFull 才有的变量名（files 而非 targets），
+//   导致 diff 审计抛 ReferenceError——而当时的测试只覆盖了 auditFull，
+//   漏网直到真实提交时才炸。此用例锁死两条路径的返回值与不抛异常。
+test('auditWithScope：full 与 diff 两条路径均可正常返回', async () => {
+  for (const scope of ['full', 'diff']) {
+    const res = await auditWithScope(gitRepo, { scope });
+    assert.ok(res && res.ok, `${scope} 应返回 ok`);
+    assert.ok(Array.isArray(res.findings), `${scope} 应带 findings 数组`);
+    assert.equal(typeof res.files, 'number', `${scope} 应带数字 files（收集/变动文件数）`);
+    assert.equal(
+      res.scope, scope === 'full' ? 'full' : 'changed',
+      `${scope} 的 scope 字段应为 ${scope === 'full' ? 'full' : 'changed'}`,
+    );
+  }
+});
+
+test('auditChanged：git 仓库只审计变动文件（真 diff）', async () => {
+  const res = await auditWithScope(gitRepo, { scope: 'diff' });
+  assert.equal(res.scope, 'changed');
+  assert.equal(res.files, 2, '只应审计 2 个变动文件');
+  const secret = res.findings.filter((f) => f.kind === '[FUNC]');
+  assert.ok(secret.length >= 1, 'new.js 中的 AKIA 应命中 secret');
+  const files = new Set(res.findings.map((f) => f.file));
+  assert.ok(!files.has('a.js'), '未变动文件 a.js 不应出现在变动审计中');
+});
+
+test('auditChanged：删除的文件跳过（status D 无可读内容）', async () => {
+  rmSync(join(gitRepo, 'clean.js'));
+  const res = await auditWithScope(gitRepo, { scope: 'diff' });
+  const cleanHits = res.findings.filter((f) => f.file === 'clean.js');
+  assert.equal(cleanHits.length, 0, '删除文件不应产出 findings');
+  assert.ok(res.files <= 1);
+});
+
+test('auditChanged：二进制文件（png）变动不进入审计（1.0.13 误报修复）', async () => {
+  // 造一个 png 改动 + 一个文本改动；PNG 不得被 UTF-8 读入触发 regex 乱码误报
+  const pngPath = join(gitRepo, 'icon.png');
+  writeFileSync(pngPath, Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x01, 0x02]));
+  const textPath = join(gitRepo, 'bin-audit.txt');
+  writeFileSync(textPath, 'const ok = 1;');
+  const res = await auditWithScope(gitRepo, { scope: 'diff' });
+  const pngHits = res.findings.filter((f) => f.file.includes('icon.png'));
+  assert.equal(pngHits.length, 0, 'PNG 变动不应产出 findings（二进制不进文本审计）');
+  assert.ok(res.findings.some((f) => f.file.includes('bin-audit.txt')) || res.files >= 1, '文本变动应仍被审计');
+});
+/* ───────────────── 检查器逐类覆盖（审计总入口全功能） ───────────────── */
+
+test('checkRegexRules：命中报 + 未命中不报 + source 标注', () => {
+  const rules = [{ id: 'r1', kind: 'regex', severity: 'warning', patterns: [/SECRET\d+/], message: '命中', dimensions: ['安全性'] }];
+  const hit = checkRegexRules({ file: 'a.js', text: 'const a = "SECRET123";', rules });
+  assert.equal(hit.length, 1);
+  assert.equal(hit[0].rule, 'r1');
+  const miss = checkRegexRules({ file: 'a.js', text: 'const a = "public";', rules });
+  assert.equal(miss.length, 0);
+});
+
+test('checkRegexRules：子模式（subPatterns）命中输出专属 message（文档 §13）', () => {
+  const rules = [{
+    id: 'performance/memory-bomb', kind: 'regex', severity: 'warning',
+    message: '规则级 message',
+    subPatterns: [
+      { regex: /fs\.readFileSync\s*\(/, message: 'per-a 全量读入' },
+      { regex: /\.push\s*\(/, message: 'per-b 无界 push' },
+    ],
+    dimensions: ['性能'],
+  }];
+  const hit = checkRegexRules({ file: 'a.js', text: 'const x = fs.readFileSync("/b");', rules });
+  assert.equal(hit.length, 1, '应命中 1 条');
+  assert.equal(hit[0].message, 'per-a 全量读入', '子模式专属 message 优先');
+  const hit2 = checkRegexRules({ file: 'a.js', text: 'arr.push(1);', rules });
+  assert.equal(hit2[0].message, 'per-b 无界 push');
+  // 无 subPatterns 的旧结构仍走规则级 message（向后兼容）
+  // 注意：这里必须用**代码行**而不是注释行——2026-11-01 起「注释内命中」统一不算命中
+  //   （注释里的示例文字是最常见的纯误报来源），本用例测的是「旧结构仍走规则级 message」，
+  //   用注释行会被新语义拒掉，测的就不是这条了。
+  const legacy = [{ id: 'r9', kind: 'regex', severity: 'warning', patterns: [/TODO/], message: '旧结构', dimensions: ['可读性'] }];
+  const lHit = checkRegexRules({ file: 'a.js', text: 'const TODO_MARK = 1;', rules: legacy });
+  assert.equal(lHit[0].message, '旧结构');
+});
+
+test('checkRegexRules：空规则数组返回空（不崩溃）', () => {
+  assert.deepEqual(checkRegexRules({ file: 'a.js', text: 'x', rules: [] }), []);
+  assert.deepEqual(checkRegexRules({ file: 'a.js', text: 'x', rules: undefined }), []);
+});
+
+test('checkPathRegexRules：文件路径命中与不命中', () => {
+  const rules = [{ id: 'p1', kind: 'path-regex', severity: 'warning', pathPattern: '\\.key$', message: '私钥路径', dimensions: ['安全性'] }];
+  assert.equal(checkPathRegexRules({ file: 'a', relPath: 'certs/a.key', rules }).length, 1);
+  assert.equal(checkPathRegexRules({ file: 'a', relPath: 'src/a.js', rules }).length, 0);
+});
+
+test('checkCredentialFiles：按文件名与路径判定凭据文件', () => {
+  const rules = [{ id: 'c1', kind: 'credential-file', severity: 'warning', patterns: [/^id_rsa$/, /\.pem$/], message: '凭据文件', dimensions: ['安全性'] }];
+  assert.equal(checkCredentialFiles({ file: 'x', relPath: '.ssh/id_rsa', rules }).length, 1);
+  assert.equal(checkCredentialFiles({ file: 'x', relPath: 'certs/server.pem', rules }).length, 1);
+  assert.equal(checkCredentialFiles({ file: 'x', relPath: 'src/index.js', rules }).length, 0);
+});
+
+test('checkFuncLines：超阈函数报、未超不报', () => {
+  const rules = [{ id: 'func-lines', kind: 'func-lines', severity: 'warning', threshold: 3, dimensions: ['可读性'] }];
+  const long = 'function f() {\n' + 'let a = 1;\n'.repeat(6) + '}\n';
+  assert.ok(checkFuncLines({ file: 'a.js', text: long, rules }).length >= 1);
+  assert.equal(checkFuncLines({ file: 'a.js', text: 'function g() { return 1; }\n', rules }).length, 0);
+});
+
+test('checkIoRisk：异步中的同步 fs 判高风险；顶层同步判低风险；循环内判高风险', () => {
+  // 旧 quality/sync-fs 场景：异步函数内的同步 fs → 高风险
+  const viaPrefix = 'export async function f() {\n  const x = fs.readFileSync("a");\n}\n';
+  const r1 = checkIoRisk({ file: 'a.mjs', text: viaPrefix });
+  assert.ok(r1.length >= 1, 'fs. 前缀应报');
+  assert.ok(r1.some((f) => f.message.includes('高风险')), '异步路径中的同步 I/O 应判高风险');
+
+  const viaImport = 'import { readFileSync } from "node:fs";\nexport async function g() {\n  const x = readFileSync("a");\n}\n';
+  assert.ok(checkIoRisk({ file: 'a.mjs', text: viaImport }).length >= 1, 'named import 后直调应报');
+
+  // 顶层同步读一次 → 低风险（启动路径），不是高风险
+  const plain = 'const x = fs.readFileSync("a");\n';
+  const r2 = checkIoRisk({ file: 'a.mjs', text: plain });
+  assert.ok(r2.some((f) => f.message.includes('低风险')), '顶层同步 I/O 应判低风险（启动路径）');
+
+  // 循环内的异步 I/O → 高风险
+  const inLoop = 'async function h() {\n  for (const f of list) { await fs.promises.readFile(f); }\n}\n';
+  const r3 = checkIoRisk({ file: 'a.mjs', text: inLoop });
+  assert.ok(r3.some((f) => f.message.includes('循环内')), '循环内 I/O 应命中循环内上下文');
+
+  // 裸调用（未 import fs）同样报：本检查只认调用名，不做来源判定
+  //   取舍：漏报（真 fs 调用没查出来）比误报代价大；与原 quality/sync-fs 行为一致
+  const bare = 'export async function k() {\n  const x = readFileSync("a");\n}\n';
+  assert.ok(checkIoRisk({ file: 'a.mjs', text: bare }).length >= 1, '裸调用按调用名识别，仍应报');
+
+  // 完全无关的函数名不报
+  const unrelated = 'export async function m() {\n  const x = myCustomReader("a");\n}\n';
+  assert.equal(checkIoRisk({ file: 'a.mjs', text: unrelated }).length, 0, '非 fs 调用名不应报');
+});
+
+test('checkMinLength：过短命名报、正常命名不报', () => {
+  const rules = [{ id: 'min-length', kind: 'min-length', severity: 'warning', threshold: 3, dimensions: ['可读性'] }];
+  const short = 'function fn(qq) {\n  const zz = 1;\n  return zz;\n}\n';
+  assert.ok(checkMinLength({ file: 'a.js', text: short, rules }).length >= 1);
+  const ok = 'function compute(length) {\n  const result = length;\n  return result;\n}\n';
+  assert.equal(checkMinLength({ file: 'a.js', text: ok, rules }).length, 0);
+});
+
+test('checkComplexity：高复杂度报、简单函数不报', () => {
+  const rules = [{ id: 'cx', kind: 'max-complexity', severity: 'warning', threshold: 2, dimensions: ['可维护性'] }];
+  const complex = 'function f(a) {\n  if (a && a.b || a.c) return 1;\n  for (;;) { if (a) break; }\n  return 0;\n}\n';
+  assert.ok(checkComplexity({ file: 'a.js', text: complex, rules }).length >= 1);
+  assert.equal(checkComplexity({ file: 'a.js', text: 'function g() { return 1; }\n', rules }).length, 0);
+});
+
+test('checkDepth：深嵌套报、浅嵌套不报', () => {
+  const rules = [{ id: 'd', kind: 'max-depth', severity: 'warning', threshold: 2, dimensions: ['可读性'] }];
+  const deep = 'function f() {\n  if (1) {\n    if (2) {\n      if (3) { return 1; }\n    }\n  }\n}\n';
+  assert.ok(checkDepth({ file: 'a.js', text: deep, rules }).length >= 1);
+  assert.equal(checkDepth({ file: 'a.js', text: 'function g() { return 1; }\n', rules }).length, 0);
+});
+
+test('checkMaxLines：超行数报、未超不报', () => {
+  const rules = [{ id: 'ml', kind: 'max-lines', severity: 'warning', threshold: 5, dimensions: ['可维护性'] }];
+  assert.equal(checkMaxLines({ file: 'a.js', text: 'x\n'.repeat(3), rules }).length, 0);
+  const big = checkMaxLines({ file: 'a.js', text: 'x\n'.repeat(20), rules });
+  assert.equal(big.length, 1);
+  assert.equal(big[0].line, 1, '文件级问题定位到第 1 行');
+});
+
+test('checkRepeated：重复硬编码串报、单次不报', () => {
+  const rules = [{ id: 'rp', kind: 'repeated-string', severity: 'warning', threshold: 3, dimensions: ['可维护性'] }];
+  const text = 'const a = "api.example.com";\nconst b = "api.example.com";\nconst c = "api.example.com";\n';
+  assert.ok(checkRepeated({ file: 'a.js', text, rules }).length >= 1);
+  assert.equal(checkRepeated({ file: 'a.js', text: 'const a = "once-only.example.com";\n', rules }).length, 0);
+});
+
+test('checkRepeated：ignoreValues 生效（忽略清单内的串不报）', () => {
+  const rules = [{ id: 'rp', kind: 'repeated-string', severity: 'warning', threshold: 3, ignoreValues: ['ignore-me'], dimensions: ['可维护性'] }];
+  const text = 'const a = "ignore-me";\nconst b = "ignore-me";\nconst c = "ignore-me";\n';
+  assert.equal(checkRepeated({ file: 'a.js', text, rules }).length, 0);
+});
+
+// 防回归：repeated-string 与 min-occurrences 合并去重（同一文本只报一条）
+test('checkRepeated：repeated-string + min-occurrences 合并传同一文本只报一条', () => {
+  const rules = [
+    { id: 'a/no-duplicate-code', kind: 'min-occurrences', severity: 'warning', threshold: 3, dimensions: ['可维护性'] },
+    { id: 'b/no-repeated', kind: 'repeated-string', severity: 'warning', threshold: 3, dimensions: ['可维护性'] },
+  ];
+  const text = 'const x = "api.example.com";\nconst y = "api.example.com";\nconst z = "api.example.com";\n';
+  const findings = checkRepeated({ file: 'a.js', text, rules });
+  assert.equal(findings.length, 1, '同一文本合并后只报一条（不再双报）');
+  assert.ok(['a/no-duplicate-code', 'b/no-repeated'].includes(findings[0].rule), '取第一条命中规则的 id');
+});
+
+test('checkRepeated：合并后阈值取最小（任一规则达到即报）', () => {
+  // min-occurrences 阈值 5（不达），repeated-string 阈值 3（达到）→ 报
+  const rules = [
+    { id: 'a/high-thresh', kind: 'min-occurrences', severity: 'warning', threshold: 5, dimensions: ['可维护性'] },
+    { id: 'b/low-thresh', kind: 'repeated-string', severity: 'warning', threshold: 3, dimensions: ['可维护性'] },
+  ];
+  const text = 'const x = "api.example.com";\nconst y = "api.example.com";\nconst z = "api.example.com";\n';
+  assert.equal(checkRepeated({ file: 'a.js', text, rules }).length, 1, '阈值取最小，3 次即报');
+});
+
+test('checkSemantic：产出 notice 级提示（不升为拦截）', () => {
+  const rules = [{ id: 'sem-1', kind: 'semantic', message: '需人工确认的语义规则', dimensions: ['健壮性'] }];
+  const out = checkSemantic({ file: 'a.js', relPath: 'a.js', rules });
+  assert.equal(out.length, 1);
+  assert.equal(out[0].severity, 'notice');
+});
+
+test('capSeverity：规则声明 warning 时内部 blocker 不得越级', () => {
+  assert.equal(capSeverity('warning', 'blocker'), 'warning');
+  assert.equal(capSeverity('warning', 'warning'), 'warning');
+  assert.equal(capSeverity('error', 'warning'), 'warning', '内部低风险按内部算');
+  assert.equal(capSeverity('error', 'blocker'), 'error');
+  assert.equal(capSeverity('info', 'blocker'), 'notice', 'info 归入 notice');
+});
+
+test('groupByKind：按 kind 分桶（同 kind 聚一组）', () => {
+  const g = groupByKind([
+    { kind: 'regex', id: 'a' }, { kind: 'regex', id: 'b' }, { kind: 'secret', id: 'c' },
+  ]);
+  assert.equal(g.regex.length, 2);
+  assert.equal(g.secret.length, 1);
+  assert.deepEqual(groupByKind([]), {});
+  assert.deepEqual(groupByKind(undefined), {});
+});
+
+test('runChecks：多 kind 齐发（regex + 空 catch + sync-fs 同文件命中）', () => {
+  const grouped = {
+    regex: [{ id: 'r', kind: 'regex', severity: 'warning', patterns: [/TRIGGER/], message: 'm', dimensions: ['安全性'] }],
+  };
+  const text = 'export async function f() {\n  try { await g(); } catch (e) {}\n  const x = readFileSync("a");\n  const t = "TRIGGER";\n}\n';
+  const out = runChecks({ file: 'a.mjs', relPath: 'a.mjs', text, grouped });
+  const kinds = out.map((f) => f.kind);
+  assert.ok(kinds.includes('regex'), '正则命中');
+  assert.ok(kinds.filter((k) => k === undefined || k === 'empty-catch' || k === 'sync-fs').length >= 1, '内置检查命中');
+});
+
+test('runChecks：空 grouped 仍跑内置检查（不依赖 yml 规则）', () => {
+  const out = runChecks({ file: 'a.mjs', relPath: 'a.mjs', text: 'export async function f() {\n  try { await g(); } catch (e) {}\n}\n', grouped: {} });
+  assert.ok(out.length >= 1, '内置空 catch 检查不依赖规则包');
+});
+
+test('CODE_EXTS：含常见代码扩展名、不含文档扩展名', () => {
+  for (const e of ['js', 'mjs', 'ts', 'py', 'go']) assert.ok(CODE_EXTS.has(e), `应含 ${e}`);
+  for (const e of ['md', 'json', 'yml', 'txt']) assert.ok(!CODE_EXTS.has(e), `不应含 ${e}`);
+});
+
+test('summarize：error 归拦截级、notice 单列、total 与实际一致', () => {
+  const s = summarize([
+    { severity: 'blocker' }, { severity: 'error' }, { severity: 'warning' }, { severity: 'notice' },
+  ]);
+  assert.equal(s.blocker, 2, 'blocker + error 都算拦截级');
+  assert.equal(s.warning, 1);
+  assert.equal(s.notice, 1);
+  assert.equal(s.total, 4, 'total 应等于问题总数（不再出现 0/0/3 矛盾）');
+});
+
+test('summarize：缺 severity 字段按 warning 计（不丢统计）', () => {
+  const s = summarize([{}, { severity: undefined }]);
+  assert.equal(s.warning, 2);
+  assert.equal(s.total, 2);
+});
+
+
+
+// ---------- 1.0.4：private 槽位（T1-T33 考古验收） ----------
+test('globToRegex：** 跨层 / * 单层 / {a,b} 分支 / 特殊字符转义', () => {
+  assert.equal(globMatch('**/id_ed25519', 'id_ed25519'), true, '**/ 应匹配根级');
+  assert.equal(globMatch('**/id_ed25519', 'a/b/id_ed25519'), true, '**/ 应匹配任意深度');
+  assert.equal(globMatch('**/*.key', 'x.key'), true);
+  assert.equal(globMatch('**/*.key', 'a/b/x.key'), true);
+  assert.equal(globMatch('**/.env.*', '.env.local'), true);
+  assert.equal(globMatch('**/*@*.{md,txt,js}', 'me@x.com.txt'), true, '{a,b} 分支应工作');
+  assert.equal(globMatch('**/id_ed25519', 'normal.js'), false, '普通文件不应误报');
+  assert.equal(globMatch('*.key', 'a/b/x.key'), false, '单星不跨层级');
+  assert.equal(globMatch('**/data/sensitive/**', 'data/sensitive/secret/k.txt'), true);
+});
+
+test('checkPrivateFiles：public→blocker / private→warning / 未跟踪不报', () => {
+  const root = mkdtempSync(join(tmpdir(), 'priv-'));
+  try {
+    execFileSync('git', ['init', '-q'], { cwd: root });
+    writeFileSync(join(root, 'id_ed25519'), 'x');
+    writeFileSync(join(root, 'normal.js'), 'y');
+    execFileSync('git', ['add', '-A'], { cwd: root });
+    execFileSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', 'init'], { cwd: root });
+    const pfs = ['**/id_ed25519'];
+    const pub = checkPrivateFiles({ root, visibility: 'public', privateFiles: pfs });
+    assert.equal(pub.length, 1, 'public 应命中私密文件');
+    assert.equal(pub[0].severity, 'blocker', 'public → blocker');
+    assert.ok(/禁止推送/.test(pub[0].message), 'blocker 文案应含禁止推送');
+    const priv = checkPrivateFiles({ root, visibility: 'private', privateFiles: pfs });
+    assert.equal(priv[0].severity, 'warning', 'private → warning');
+    assert.equal(priv[0].file, 'id_ed25519');
+    const none = checkPrivateFiles({ root, visibility: 'public', privateFiles: [] });
+    assert.equal(none.length, 0, '无清单不报');
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('loader：private_files 顶层字段跨文件合并（后覆盖前追加）', () => {
+  const loaded = loadRuleFiles();
+  const pf = loaded.merged.private_files || [];
+  assert.ok(pf.length >= 12, `private.yml 清单应合并 ≥12 条（实际 ${pf.length}）`);
+  assert.ok(pf.includes('**/id_ed25519'), '清单含 id_ed25519');
+  assert.ok(pf.includes('**/.env') && pf.includes('**/.env.*'), '清单含 .env 族');
+});
+
+
+
+// ---------- 1.0.4：G7-S4 审计强度三档（quick 跳过 AST/语义；standard/deep 全量） ----------
+test('auditLevel：quick 比 standard 少跑 AST/语义检查（findings 更少）', async () => {
+  const quick = await auditFull('.', { auditLevel: 'quick' });
+  const std = await auditFull('.', { auditLevel: 'standard' });
+  assert.ok(quick.findings.length <= std.findings.length, `quick(${quick.findings.length}) 应 ≤ standard(${std.findings.length})`);
+  // quick 仍保留正则/黑名单/凭据类（基础安全不因强度降级）
+  const quickDims = new Set(quick.findings.flatMap((f) => f.dimensions || []));
+  assert.ok(!quickDims.has('可维护性') || quick.findings.length < std.findings.length,
+    'quick 若含可维护性维度则数量应明显少于 standard');
+});
+
+test('auditLevel：deep 与 standard 全量等价（当前引擎无第三档内容，留扩展位）', async () => {
+  const std = await auditFull('.', { auditLevel: 'standard' });
+  const deep = await auditFull('.', { auditLevel: 'deep' });
+  assert.equal(deep.findings.length, std.findings.length, 'deep 与 standard 数量一致');
+  assert.equal(deep.summary.blocker, std.summary.blocker);
+});
+
+// ---------- 2026-09-20：文件/函数长度默认按非注释部分 ----------
+
+test('checkFileLines：默认按非注释行判定（注释多的文件不误报）；excludeComments:false 回退总行数', () => {
+  const text = '// 注释\n'.repeat(30) + 'const x = 1;\n'.repeat(10); // 41 行：注释 30 + 代码 10 + 末尾空行 1
+  const r1 = checkFileLines(text, { warn: 20, block: 40 });
+  // 代码行口径 = 总行 − 纯注释行 − 空行（单一来源 lib/ast/line-count.js）
+  assert.equal(r1.codeLines, 10, '代码行 = 10（末尾空行不计）');
+  assert.equal(r1.lines - r1.commentLines - r1.codeLines, 1, '差额恰为末尾空行 → 空行不再算代码行');
+  assert.ok(r1.codeLines <= 30, '非注释行数应明显小于总行数（注释占多数）');
+  assert.equal(r1.level, null, '非注释行低于阈值 20 → 不报');
+  const r2 = checkFileLines(text, { warn: 20, block: 40, excludeComments: false });
+  assert.ok(r2.level !== null, 'excludeComments:false 按总行数 40 → 报 blocker');
+});
+
+test('checkFuncLinesAst：函数长度按非注释行判定（注释行不占预算）', () => {
+  // 函数体 60 行但 55 行是注释 → 非注释 5 行，阈值 10 不报
+  const commentHeavy = 'function f() {\n' + '  // 说明\n'.repeat(30) + '  let a = 1;\n'.repeat(4) + '}\n';
+  const r1 = checkFuncLinesAst(commentHeavy, { warn: 10, block: 20 });
+  assert.equal(r1.length, 0, '注释行多的函数按非注释行数不超阈值');
+  // 同样行数但全代码 → 报
+  const codeHeavy = 'function g() {\n' + '  let a = 1;\n'.repeat(20) + '}\n';
+  const r2 = checkFuncLinesAst(codeHeavy, { warn: 10, block: 20 });
+  assert.ok(r2.length >= 1, '全代码 20 行超过阈值 10 → 报');
+  assert.ok(r2[0].codeLen >= 20, 'codeLen = 实际非注释行数');
+});
+
+// ---------- 2026-09-20：dsh/client-node-builtin-require 根目录 Node 构建脚本误报修复 ----------
+
+test('client-node-builtin-require：根目录 Node 构建脚本不误报，真 client 代码仍拦截', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'dshgp-dshrule-'));
+  try {
+    // dsh 槽位只对 dsh 插件项目加载（项目类型过滤）——测试仓库须声明
+    //   dsh- 前缀名，否则 dsh 槽位被整体过滤、本测试断言全空（Pawchive 误报修复的新行为）
+    writeFileSync(join(root, 'package.json'), JSON.stringify({ name: 'dsh-test-rules', version: '1.0.0' }) + '\n');
+    // ① 根目录 .cjs 构建脚本（build.cjs 场景）：CommonJS Node 专属格式，require('fs') 正常
+    writeFileSync(join(root, 'build.cjs'), 'const fs = require("fs");\nconst path = require("path");\nconst os = require("os");\n');
+    // ② 根目录 .mjs 构建脚本：build. 前缀排除
+    writeFileSync(join(root, 'build.mjs'), 'import { createRequire } from "node:module";\nconst require = createRequire(import.meta.url);\nconst fs = require("fs");\n');
+    // ③ 真 client 代码（crx/ 目录，浏览器半部）：require('fs') 必须仍报
+    mkdirSync(join(root, 'crx'));
+    writeFileSync(join(root, 'crx', 'content.js'), 'const fs = require("fs");\nconst path = require("path");\n');
+    const res = await auditFull(root);
+    const hits = (res.findings || []).filter((f) => String(f.rule).includes('client-node-builtin'));
+    const files = hits.map((f) => f.file.replace(/\\/g, '/'));
+    assert.equal(hits.filter((f) => files.includes('build.cjs')).length, 0, '根目录 .cjs 构建脚本的 require(fs) 不误报');
+    assert.equal(hits.filter((f) => files.includes('build.mjs')).length, 0, '根目录 build.mjs 构建脚本不误报');
+    const clientHits = hits.filter((f) => files.includes('crx/content.js'));
+    assert.ok(clientHits.length >= 2, `crx/ 真 client 代码 require(fs/path) 应仍拦截（得 ${clientHits.length}）`);
+    assert.ok(hits.every((f) => f.severity === 'blocker'), 'client-node-builtin-require 命中应为 blocker 级');
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
