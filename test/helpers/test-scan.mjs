@@ -19,6 +19,9 @@ import { readdirSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 
 /** 测试文件名形状：`test-*.mjs`（与历史约定一致，入口脚本自身 run-tests.mjs 不匹配）。 */
+/** 回归入口文件名：顶层唯一允许存在的 .mjs */
+const ENTRY_FILE_NAME = 'run-tests.mjs';
+
 const TEST_FILE_PATTERN = /^test-.+\.mjs$/;
 
 /** 归档目录名（出现在任意层级都按归档处理，且不再计入回归）。 */
@@ -61,6 +64,14 @@ export function scanTestTree(testDir) {
       if (entry.isDirectory()) {
         if (SHARED_DIRS.has(entry.name)) continue; // helpers/fixtures 永不参与
         walk(abs, depth + 1, insideArchived || entry.name === ARCHIVED_DIR);
+        continue;
+      }
+      // 顶层：除回归入口外**不允许任何 .mjs**（不只是 test-*.mjs）。
+      //  为什么必须这么严：曾有两个测试文件命名为 e2e-*.mjs / regression-*.mjs，
+      //  不匹配 TEST_FILE_PATTERN 就被 `continue` 静默跳过 —— 既不进 regression、也不报违规，
+      //  长期空转（12 个用例）无人察觉。判定必须放在 TEST_FILE_PATTERN 过滤**之前**。
+      if (depth === 0 && entry.name.endsWith('.mjs') && entry.name !== ENTRY_FILE_NAME) {
+        violations.push(relative(testDir, abs).split(sep).join('/'));
         continue;
       }
       if (!TEST_FILE_PATTERN.test(entry.name)) continue;

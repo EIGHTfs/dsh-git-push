@@ -3137,16 +3137,16 @@
 | `saveTestCache` | 186-199 | 14 | `export function saveTestCache(root, cache) {` |
 | `planTestRun` | 208-230 | 23 | `export function planTestRun(files, cache, exists = existsSync) {` |
 
-### test/helpers/test-scan.mjs（112 行 · 6 个函数）
+### test/helpers/test-scan.mjs（123 行 · 6 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `scanTestTree` | 40-86 | 47 | `export function scanTestTree(testDir) {` |
-| `noteSide` | 46-49 | 4 | `const noteSide = (side, kind, absPath) => {` |
-| `walk` | 52-80 | 29 | `const walk = (dirAbs, depth, insideArchived) => {` |
-| `structureViolations` | 93-95 | 3 | `export function structureViolations(scan) {` |
-| `sideOf` | 103-106 | 4 | `export function sideOf(testDir, absPath) {` |
-| `isDirectory` | 109-111 | 3 | `export function isDirectory(dirPath) {` |
+| `scanTestTree` | 43-97 | 55 | `export function scanTestTree(testDir) {` |
+| `noteSide` | 49-52 | 4 | `const noteSide = (side, kind, absPath) => {` |
+| `walk` | 55-91 | 37 | `const walk = (dirAbs, depth, insideArchived) => {` |
+| `structureViolations` | 104-106 | 3 | `export function structureViolations(scan) {` |
+| `sideOf` | 114-117 | 4 | `export function sideOf(testDir, absPath) {` |
+| `isDirectory` | 120-122 | 3 | `export function isDirectory(dirPath) {` |
 
 ### test/helpers/tmp-dir.mjs（117 行 · 6 个函数）
 
