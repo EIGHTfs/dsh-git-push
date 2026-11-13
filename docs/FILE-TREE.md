@@ -326,6 +326,7 @@ dsh-git-push/
 │   │   ├── test-generated-html-artifact.mjs — （待注释）
 │   │   ├── test-gitignore-match.mjs — （待注释）
 │   │   ├── test-gitignore-nongit-dir.mjs — （待注释）
+│   │   ├── test-hardcoded-path-and-loop-rewrite.mjs — （待注释）
 │   │   ├── test-history-audit.mjs — （待注释）
 │   │   ├── test-ignore-e2e.mjs — （待注释）
 │   │   ├── test-io-risk.mjs — （待注释）
