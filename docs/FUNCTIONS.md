@@ -50,6 +50,19 @@
 | `handleAccountCheck` | 149-158 | 10 | `export async function handleAccountCheck(ctx) {` |
 | `handleGenSshKey` | 161-166 | 6 | `export function handleGenSshKey(ctx) {` |
 
+### lib/app/handlers/audit.js（151 行 · 8 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `ruleSlotStats` | 25-32 | 8 | `function ruleSlotStats(r) {` |
+| `listRuleSlots` | 35-54 | 20 | `export function listRuleSlots(order, disabledSlots = [], hitStats = null) {` |
+| `handleRuleSlots` | 57-60 | 4 | `export function handleRuleSlots(ctx) {` |
+| `handleRuleDetail` | 63-86 | 24 | `export function handleRuleDetail(ctx) {` |
+| `count` | 78-78 | 1 | `const count = (sev) => detail.filter((x) => x.severity === sev).length;` |
+| `handleAudit` | 89-102 | 14 | `export async function handleAudit(ctx) {` |
+| `handleToggleRule` | 105-113 | 9 | `export function handleToggleRule(ctx) {` |
+| `handleExemptHint` | 125-150 | 26 | `export function handleExemptHint(ctx) {` |
+
 ### lib/app/handlers/clone.js（177 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -69,24 +82,16 @@
 | `bool` | 19-21 | 3 | `function bool(v) {` |
 | `callIdentityRewrite` | 28-94 | 67 | `export async function callIdentityRewrite(args = {}, env = {}, cfg = {}) {` |
 
-### lib/app/handlers/meta.js（214 行 · 14 个函数）
+### lib/app/handlers/meta.js（79 行 · 6 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `currentCommitIdentity` | 24-38 | 15 | `function currentCommitIdentity() {` |
-| `handleStatus` | 41-55 | 15 | `export function handleStatus(ctx) {` |
-| `handleScan` | 58-61 | 4 | `export function handleScan(ctx) {` |
-| `handleBrowse` | 64-68 | 5 | `export function handleBrowse(ctx) {` |
-| `handleTools` | 71-74 | 4 | `export function handleTools(ctx = {}) {` |
-| `handleToolProbes` | 77-79 | 3 | `export function handleToolProbes() {` |
-| `ruleSlotStats` | 89-96 | 8 | `function ruleSlotStats(r) {` |
-| `listRuleSlots` | 99-118 | 20 | `export function listRuleSlots(order, disabledSlots = [], hitStats = null) {` |
-| `handleRuleSlots` | 121-124 | 4 | `export function handleRuleSlots(ctx) {` |
-| `handleRuleDetail` | 127-150 | 24 | `export function handleRuleDetail(ctx) {` |
-| `count` | 142-142 | 1 | `const count = (sev) => detail.filter((x) => x.severity === sev).length;` |
-| `handleAudit` | 153-166 | 14 | `export async function handleAudit(ctx) {` |
-| `handleToggleRule` | 169-177 | 9 | `export function handleToggleRule(ctx) {` |
-| `handleExemptHint` | 189-214 | 26 | `export function handleExemptHint(ctx) {` |
+| `currentCommitIdentity` | 23-37 | 15 | `function currentCommitIdentity() {` |
+| `handleStatus` | 40-54 | 15 | `export function handleStatus(ctx) {` |
+| `handleScan` | 57-60 | 4 | `export function handleScan(ctx) {` |
+| `handleBrowse` | 63-67 | 5 | `export function handleBrowse(ctx) {` |
+| `handleTools` | 70-73 | 4 | `export function handleTools(ctx = {}) {` |
+| `handleToolProbes` | 76-78 | 3 | `export function handleToolProbes() {` |
 
 ### lib/app/handlers/npm.js（189 行 · 8 个函数）
 
@@ -146,24 +151,25 @@
 |------|------|------|------|
 | `installHostDocChecks` | 20-23 | 4 | `export function installHostDocChecks(checks = HOST_DOC_CHECKS) {` |
 
-### lib/app/http-handlers.js（172 行 · 4 个函数）
+### lib/app/http-handlers.js（214 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `adaptHttpHandler` | 42-63 | 22 | `export async function adaptHttpHandler(req, res, env, cfg) {` |
-| `readBody` | 66-80 | 15 | `function readBody(req) {` |
-| `buildCtx` | 83-85 | 3 | `function buildCtx(req, method, env, cfg, query, body, path) {` |
-| `handleHttp` | 95-171 | 77 | `export async function handleHttp(req = {}, env = {}, cfg = defaultConfig()) {` |
+| `adaptHttpHandler` | 45-67 | 23 | `export async function adaptHttpHandler(req, res, env, cfg) {` |
+| `readBody` | 70-84 | 15 | `function readBody(req) {` |
+| `buildCtx` | 87-89 | 3 | `function buildCtx(req, method, env, cfg, query, body, path) {` |
+| `withDeprecation` | 111-120 | 10 | `function withDeprecation(result, successorPath) {` |
+| `handleHttp` | 130-213 | 84 | `export async function handleHttp(req = {}, env = {}, cfg = defaultConfig()) {` |
 
-### lib/app/inject-text.js（199 行 · 5 个函数）
+### lib/app/inject-text.js（200 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `buildIdentityInjectionText` | 74-84 | 11 | `export function buildIdentityInjectionText() {` |
 | `buildRequirementsInjectionText` | 86-98 | 13 | `export function buildRequirementsInjectionText() {` |
 | `detectHostIp` | 119-130 | 12 | `function detectHostIp() {` |
-| `buildAuditApiGuide` | 136-169 | 34 | `export function buildAuditApiGuide(repo = '', opts = {}) {` |
-| `formatAuditBlock` | 171-198 | 28 | `export function formatAuditBlock(r = {}) {` |
+| `buildAuditApiGuide` | 136-170 | 35 | `export function buildAuditApiGuide(repo = '', opts = {}) {` |
+| `formatAuditBlock` | 172-199 | 28 | `export function formatAuditBlock(r = {}) {` |
 
 ### lib/app/repo-ownership.js（66 行 · 4 个函数）
 
@@ -249,7 +255,7 @@
 | `getLastSlotHitStats` | 28-30 | 3 | `export function getLastSlotHitStats() {` |
 | `getLastSlotHitMeta` | 33-35 | 3 | `export function getLastSlotHitMeta() {` |
 
-### lib/app/tool-call.js（832 行 · 23 个函数）
+### lib/app/tool-call.js（838 行 · 23 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -273,9 +279,9 @@
 | `doHistory` | 479-482 | 4 | `const doHistory = async () => {` |
 | `callCodeAudit` | 501-513 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
 | `runStandardAuditTool` | 516-558 | 43 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
-| `callTool` | 560-803 | 244 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null, fsCtx = null) {` |
-| `shellSplit` | 806-824 | 19 | `function shellSplit(input) {` |
-| `readTextSafe` | 827-831 | 5 | `function readTextSafe(path = '') {` |
+| `callTool` | 560-838 | 279 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null, fsCtx = null) {` |
+| `shellSplit` | 812-830 | 19 | `function shellSplit(input) {` |
+| `readTextSafe` | 833-837 | 5 | `function readTextSafe(path = '') {` |
 
 ### lib/app/tools.js（41 行 · 2 个函数）
 
@@ -2458,21 +2464,28 @@
 | `readReleases` | 126-133 | 8 | `export function readReleases(repoPath) {` |
 | `buildReadmeVersionTable` | 151-171 | 21 | `export function buildReadmeVersionTable(repoPath) {` |
 
-### test/app/test-plugin.mjs（670 行 · 3 个函数）
+### test/app/test-http-audit-split.mjs（140 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `makeExemptRepo` | 501-507 | 7 | `function makeExemptRepo() {` |
-| `addSecretFile` | 508-511 | 4 | `function addSecretFile(root, path) {` |
-| `fsStatMode` | 665-667 | 3 | `function fsStatMode(file) {` |
+| `http` | 26-140 | 115 | `async function http(method, url, extra = {}) {` |
+| `assertRouted` | 31-35 | 5 | `function assertRouted(result, label) {` |
 
-### test/app/test-settings-persistence.mjs（252 行 · 4 个函数）
+### test/app/test-plugin.mjs（678 行 · 3 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `makeExemptRepo` | 509-515 | 7 | `function makeExemptRepo() {` |
+| `addSecretFile` | 516-519 | 4 | `function addSecretFile(root, path) {` |
+| `fsStatMode` | 673-675 | 3 | `function fsStatMode(file) {` |
+
+### test/app/test-settings-persistence.mjs（253 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `clientSubmitKeys` | 28-38 | 11 | `function clientSubmitKeys() {` |
 | `allowlistKeys` | 47-52 | 6 | `function allowlistKeys() {` |
-| `cfgMappingKeys` | 55-252 | 198 | `function cfgMappingKeys() {` |
+| `cfgMappingKeys` | 55-253 | 199 | `function cfgMappingKeys() {` |
 | `isolatedEnv` | 72-79 | 8 | `function isolatedEnv() {` |
 
 ### test/app/test-slash-commands.mjs（287 行 · 1 个函数）

@@ -476,3 +476,25 @@ auditPreprocessAvailable(cfg = {}, hasBuiltinEngine) {
 - `[动态参数] 端到端：不可用态下 listTools 无 audit 参数、CLI 传 --audit 报未知参数`
   （含对照组：同一串参数在可用态被接受，证明差异来自参数表而非解析器）
 - `[动态参数] HELP 与参数表对齐：不可用态 help 里不再出现 --audit`（含片段表漂移防护）
+
+## 十五、HTTP 前缀分侧
+
+审计侧 5 条端点位于 **`/api/git-audit/*`**（`audit` / `rule-slots` / `rule-detail` / `toggle-rule` / `exempt-hint`），
+git 与共享端点（25 + 6 条）继续在 `/api/git-push/*`。
+
+**两条前缀由同一个 `handleHttp` 入口服务**（`apply.js` 用同一 handler 函数注册两次）⇒ 鉴权
+（Origin/CSRF、body 上限、写确认）对两条前缀完全一致。**禁止为新前缀另写 handler 入口**——
+那会是一个无门禁的裸端点；`test-http-audit-split.mjs` 用 `routes[0].handler === routes[1].handler` 钉住这条。
+
+**旧路径兼容**：`/api/git-push/{那 5 条}` 保留转发一版，响应带
+`Deprecation: true` 与 `Link: </api/git-audit/...>; rel="successor-version"`
+（据此可统计残留调用；移除时机按调用统计决定，不在本版）。
+为此 handler 返回值扩展了**可选 `headers`**，`adaptHttpHandler` 在 `writeHead` 时与 `Content-Type` 合并
+（`Content-Type` 不被覆盖，有断言）。
+
+**`git_api` 工具的 `path` 三种写法**（不加 `side` 参数，AI 面契约零变更）：
+短名（`rule-slots`，走旧前缀转发）/ 前缀相对（`git-audit/rule-slots`，推荐）/ 完整路径。
+
+**共享端点（有意留 `/api/git-push/*`）**：`status`、`settings-get/set`、`workspace-paths`、`tools`、`tool-probes`。
+理由：它们要么是「插件整体状态」、要么被多侧共用，强行二分会造成两次请求或语义混淆。
+

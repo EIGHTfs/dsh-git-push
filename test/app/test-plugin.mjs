@@ -104,10 +104,18 @@ test('apply：HTTP 走 webServer.register({kind:"prefix"})（真实 API）', asy
     log: { info: () => {}, warn: () => {} },
   };
   await apply(ctx, {});
-  assert.equal(routes.length, 1, '应注册 1 条前缀路由');
-  assert.equal(routes[0].kind, 'prefix');
-  assert.equal(routes[0].path, '/api/git-push');
-  assert.equal(typeof routes[0].handler, 'function');
+  // 分侧后应是**两条**前缀路由：git+共享（/api/git-push）与审计（/api/git-audit）。
+  //   关键不变量：两条必须指向**同一个 handler 函数**——复用一个入口才能继承
+  //   checkOrigin/checkBodySize/写门禁（另写入口 = 无门禁的裸端点）。
+  assert.equal(routes.length, 2, '应注册 2 条前缀路由（git+共享 / 审计）');
+  const byPath = new Map(routes.map((r) => [r.path, r]));
+  assert.deepEqual([...byPath.keys()].sort(), ['/api/git-audit', '/api/git-push'], `路由前缀应含 git-push 与 git-audit，实际：${[...byPath.keys()].join(',')}`);
+  for (const route of routes) {
+    assert.equal(route.kind, 'prefix', `${route.path} 应是前缀路由`);
+    assert.equal(typeof route.handler, 'function', `${route.path} handler 应是函数`);
+  }
+  assert.equal(byPath.get('/api/git-push').handler, byPath.get('/api/git-audit').handler,
+    '两条前缀必须复用同一个 handler（否则新前缀会绕过鉴权门禁）');
 });
 
 test('apply：无 ctx 不崩溃（防御性）', async () => {
@@ -280,7 +288,7 @@ test('HTTP：tools 端点列出工具', async () => {
 
 test('HTTP：rule-slots 端点动态发现全部 yml（模板不入 order）+ disabled 标记来自配置', async () => {
   const cfg = { auditRuleOrder: [], auditDisabledSlots: ['comment'] };
-  const r = await handleHttp({ method: 'GET', url: '/api/git-push/rule-slots' }, { workspaceRoot: ROOT }, cfg);
+  const r = await handleHttp({ method: 'GET', url: '/api/git-audit/rule-slots' }, { workspaceRoot: ROOT }, cfg);
   assert.equal(r.status, 200);
   const slots = r.body.slots;
   assert.ok(slots.order.length >= 14, `order 应含全部非模板槽位（${slots.order.length}）`);
@@ -320,7 +328,7 @@ test('HTTP：rule-slots 端点动态发现全部 yml（模板不入 order）+ di
     injected.meta.nodejs.stats.blocker + injected.meta.nodejs.stats.warning + injected.meta.nodejs.stats.pass,
     injected.meta.nodejs.stats.total, '注入 hitStats 后仍须自洽');
   // 并发：同时请求 rule-detail 不应再被前端依赖（仅保留端点）
-  const detail = await handleHttp({ method: 'GET', url: '/api/git-push/rule-detail?slot=nodejs' }, { workspaceRoot: ROOT }, cfg);
+  const detail = await handleHttp({ method: 'GET', url: '/api/git-audit/rule-detail?slot=nodejs' }, { workspaceRoot: ROOT }, cfg);
   assert.equal(detail.status, 200, 'rule-detail 端点保留（向后兼容）');
 });
 

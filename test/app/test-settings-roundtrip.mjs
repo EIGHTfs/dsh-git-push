@@ -39,7 +39,7 @@ test('设置项：读 → 写 → 回读（读改写闭环）', async () => {
 });
 
 test('规则槽位：读 → 改 disabled 列表 → 回读（读改写闭环）', async () => {
-  const r1 = await call('GET', '/api/git-push/rule-slots');
+  const r1 = await call('GET', '/api/git-audit/rule-slots');
   assert.equal(r1.status, 200, '读槽位应 200');
   const slots = r1.body.slots;
   // 真形状：slots 是对象 { discovered: [...], ... }（见 handlers/meta.js），不是数组

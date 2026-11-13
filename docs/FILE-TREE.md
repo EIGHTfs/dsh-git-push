@@ -34,7 +34,7 @@ dsh-git-push/
 │   │   ├── slot-stats.js — 规则槽位命中统计（模块级状态）
 │   │   ├── tool-call.js — 工具调用分发（git_scan/commit_push/audit/status 等全部工具）
 │   │   ├── tools.js — 工具定义清单（名称/描述/参数 schema）
-│   │   └── …（10 个更深文件）
+│   │   └── …（11 个更深文件）
 │   ├── ast/ — AST 实现层（token 级判定：括号/控制流/数据流/凭据/魔数/命名/规模/分词）
 │   │   ├── brace.js — 括号配对与区间包含工具
 │   │   ├── callgraph.js — 调用链追踪（单文件调用图 + isInRequestPath，io-risk 请求路径判定升级）
@@ -280,6 +280,7 @@ dsh-git-push/
 │   ├── app/ — （待注释）
 │   │   ├── test-auto-push.mjs — （待注释）
 │   │   ├── test-context.mjs — （待注释）
+│   │   ├── test-http-audit-split.mjs — （待注释）
 │   │   ├── test-http.mjs — （待注释）
 │   │   ├── test-plugin.mjs — （待注释）
 │   │   ├── test-settings-persistence.mjs — （待注释）

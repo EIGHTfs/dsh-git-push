@@ -164,7 +164,7 @@ import { test } from 'node:test';
   /**
    * 审计结果 API 端点测试
    *
-   * 覆盖 /api/git-push/audit：
+   * 覆盖 /api/git-audit/audit：
    *   · 缺 repo 时回落默认扫描根 / 400
    *   · groupBy=rule 聚合返回（key/count/sample）
    *   · severity 过滤生效（filtered 条数）
@@ -177,8 +177,8 @@ import { test } from 'node:test';
   const ROOT = join(import.meta.dirname, '..', '..');
   const ENV = { workspaceRoot: ROOT };
 
-  test('[audit-api-http] /api/git-push/audit：groupBy=rule 聚合（count 降序 + sample）', async () => {
-    const r = await handleHttp({ method: 'POST', origin: 'http://127.0.0.1', url: '/api/git-push/audit', body: { repo: ROOT, groupBy: 'rule', top: 5 } }, ENV, {});
+  test('[audit-api-http] /api/git-audit/audit：groupBy=rule 聚合（count 降序 + sample）', async () => {
+    const r = await handleHttp({ method: 'POST', origin: 'http://127.0.0.1', url: '/api/git-audit/audit', body: { repo: ROOT, groupBy: 'rule', top: 5 } }, ENV, {});
     assert.equal(r.status, 200);
     const b = r.body;
     assert.equal(b.ok, true);
@@ -190,52 +190,52 @@ import { test } from 'node:test';
     assert.ok(b.summary && typeof b.summary.total === 'number', '带 summary');
   });
 
-  test('[audit-api-http] /api/git-push/audit：severity 过滤只留指定级别', async () => {
-    const r = await handleHttp({ method: 'POST', origin: 'http://127.0.0.1', url: '/api/git-push/audit', body: { repo: ROOT, groupBy: 'severity', severity: 'warning' } }, ENV, {});
+  test('[audit-api-http] /api/git-audit/audit：severity 过滤只留指定级别', async () => {
+    const r = await handleHttp({ method: 'POST', origin: 'http://127.0.0.1', url: '/api/git-audit/audit', body: { repo: ROOT, groupBy: 'severity', severity: 'warning' } }, ENV, {});
     assert.equal(r.status, 200);
     const b = r.body;
     assert.ok(b.groups.every((g) => g.key === 'warning'), `severity 过滤后只应剩 warning 组，实际 ${b.groups.map((g) => g.key)}`);
     assert.ok(b.filtered > 0, 'filtered 应大于 0');
   });
 
-  test('[audit-api-http] /api/git-push/audit：groupBy=file 与 slot 维度可用', async () => {
-    const rf = await handleHttp({ method: 'POST', origin: 'http://127.0.0.1', url: '/api/git-push/audit', body: { repo: ROOT, groupBy: 'file', top: 3 } }, ENV, {});
+  test('[audit-api-http] /api/git-audit/audit：groupBy=file 与 slot 维度可用', async () => {
+    const rf = await handleHttp({ method: 'POST', origin: 'http://127.0.0.1', url: '/api/git-audit/audit', body: { repo: ROOT, groupBy: 'file', top: 3 } }, ENV, {});
     assert.equal(rf.status, 200);
     assert.ok(rf.body.groups.length > 0, 'file 维度应返回分组');
     assert.ok(rf.body.groups.every((g) => typeof g.key === 'string' && g.key.length > 0), 'file 维度键应为非空字符串（含 README.md 等文档）');
 
-    const rs = await handleHttp({ method: 'POST', origin: 'http://127.0.0.1', url: '/api/git-push/audit', body: { repo: ROOT, groupBy: 'slot', top: 3 } }, ENV, {});
+    const rs = await handleHttp({ method: 'POST', origin: 'http://127.0.0.1', url: '/api/git-audit/audit', body: { repo: ROOT, groupBy: 'slot', top: 3 } }, ENV, {});
     assert.equal(rs.status, 200);
     assert.ok(rs.body.groups.length > 0, 'slot 维度应返回分组');
   });
 
-  test('[audit-api-http] /api/git-push/audit：withFindings 附加明细', async () => {
-    const r = await handleHttp({ method: 'POST', origin: 'http://127.0.0.1', url: '/api/git-push/audit', body: { repo: ROOT, groupBy: 'rule', top: 1, withFindings: true } }, ENV, {});
+  test('[audit-api-http] /api/git-audit/audit：withFindings 附加明细', async () => {
+    const r = await handleHttp({ method: 'POST', origin: 'http://127.0.0.1', url: '/api/git-audit/audit', body: { repo: ROOT, groupBy: 'rule', top: 1, withFindings: true } }, ENV, {});
     assert.equal(r.status, 200);
     assert.ok(Array.isArray(r.body.findings), 'withFindings=true 应附 findings 数组');
     assert.ok(r.body.findings.length > 0, 'findings 非空');
   });
 
-  test('[audit-api-http] /api/git-push/audit：仓库不存在 → 仍返回 ok（0 文件，非崩溃）', async () => {
+  test('[audit-api-http] /api/git-audit/audit：仓库不存在 → 仍返回 ok（0 文件，非崩溃）', async () => {
     // auditFull 对不存在路径收集 0 文件、不抛错（非 git 目录可查的设计）——200 + 空组
-    const r = await handleHttp({ method: 'POST', origin: 'http://127.0.0.1', url: '/api/git-push/audit', body: { repo: '/nonexistent/definitely/not/here' } }, ENV, {});
+    const r = await handleHttp({ method: 'POST', origin: 'http://127.0.0.1', url: '/api/git-audit/audit', body: { repo: '/nonexistent/definitely/not/here' } }, ENV, {});
     assert.equal(r.status, 200);
     assert.equal(r.body.files, 0, '0 文件');
     assert.equal(r.body.total, 0, '0 findings');
   });
 
-  test('[audit-api-http] /api/git-push/audit：GET 走 query 参数聚合', async () => {
+  test('[audit-api-http] /api/git-audit/audit：GET 走 query 参数聚合', async () => {
     // 只读请求免 Origin 校验；groupBy 从 query 取
-    const r = await handleHttp({ method: 'GET', url: `/api/git-push/audit?repo=${encodeURIComponent(ROOT)}&groupBy=severity&top=3` }, ENV, {});
+    const r = await handleHttp({ method: 'GET', url: `/api/git-audit/audit?repo=${encodeURIComponent(ROOT)}&groupBy=severity&top=3` }, ENV, {});
     assert.equal(r.status, 200);
     assert.ok(r.body.groups.length > 0, 'GET query 聚合生效');
     assert.ok(r.body.groups.every((g) => ['blocker', 'warning', 'notice', 'error', 'info'].includes(g.key)), 'severity 组键为级别（含 info）');
   });
 
-  test('[audit-api-http] /api/git-push/audit：POST body 优先于 query（参数合并）', async () => {
+  test('[audit-api-http] /api/git-audit/audit：POST body 优先于 query（参数合并）', async () => {
     // query 说 groupBy=file，body 说 groupBy=rule → body 覆盖
     const r = await handleHttp(
-      { method: 'POST', origin: 'http://127.0.0.1', url: '/api/git-push/audit?groupBy=file', body: { repo: ROOT, groupBy: 'rule', top: 2 } },
+      { method: 'POST', origin: 'http://127.0.0.1', url: '/api/git-audit/audit?groupBy=file', body: { repo: ROOT, groupBy: 'rule', top: 2 } },
       ENV, {},
     );
     assert.equal(r.status, 200);
