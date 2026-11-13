@@ -282,3 +282,22 @@ test('逐命令真跑：28 个命令都能被所属入口接住（不落到跨�
   });
   assert.deepEqual(problems, [], problems.join('\n'));
 });
+
+test('参数错必须让调用方能判定失败（exit 非 0，不能静默成功）', async () => {
+  // 2026-11-13 审阅发现：parseVia 只 console.error 不设退出码 ⇒ exit 0，
+  //   门禁脚本会把 `audit --bogus` 当成「审计通过」。修后 exit 2。
+  const { execFileSync } = await import('node:child_process');
+  const run = (file, args) => {
+    try {
+      execFileSync(process.execPath, [join(ROOT, file), ...args], { encoding: 'utf8', stdio: 'pipe' });
+      return 0;
+    } catch (e) { return typeof e.status === 'number' ? e.status : -1; }
+  };
+  // parseVia 路径（audit 不走注册表）→ 必须 exit 2
+  assert.equal(run('cli-audit.mjs', ['audit', '--bogus']), 2, 'audit-sluice 参数错应 exit 2');
+  // 注册表路径 → 非 0 即可（当前实现是 1，不强制等于 2）
+  assert.notEqual(run('cli.mjs', ['scan', '--bogus']), 0, 'git-sluice 参数错应非 0');
+  // 正常命令不受影响
+  assert.equal(run('cli-audit.mjs', ['ruleset']), 0, '正常命令仍应 exit 0');
+  assert.equal(run('cli-tool.mjs', ['self-check']), 0, 'self-check 仍应 exit 0');
+});

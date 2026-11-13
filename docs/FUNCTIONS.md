@@ -1018,7 +1018,7 @@
 | `cmdGenSshKey` | 85-96 | 12 | `export async function cmdGenSshKey(flags) {` |
 | `resolveRepoOwnerName` | 99-107 | 9 | `async function resolveRepoOwnerName(repoPath) {` |
 
-### lib/cli/commands-audit.mjs（135 行 · 8 个函数）
+### lib/cli/commands-audit.mjs（143 行 · 8 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1029,7 +1029,7 @@
 | `runHistoryAuditCmd` | 65-81 | 17 | `async function runHistoryAuditCmd(root, flags) {` |
 | `runStandardAudit` | 84-97 | 14 | `async function runStandardAudit(root, flags) {` |
 | `printAuditResult` | 100-118 | 19 | `function printAuditResult(root, auditResult, opts, weights, quality) {` |
-| `cmdScan` | 126-134 | 9 | `export async function cmdScan(root, flags) {` |
+| `cmdScan` | 134-142 | 9 | `export async function cmdScan(root, flags) {` |
 
 ### lib/cli/commands-doc.mjs（128 行 · 7 个函数）
 
@@ -1067,7 +1067,7 @@
 | `printCloneResult` | 154-166 | 13 | `function printCloneResult(r, flags, target, dest) {` |
 | `cmdClone` | 169-176 | 8 | `export async function cmdClone(flags, positional) {` |
 
-### lib/cli/shared.mjs（440 行 · 20 个函数）
+### lib/cli/shared.mjs（447 行 · 20 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1080,17 +1080,17 @@
 | `applyBoolFlag` | 173-178 | 6 | `function applyBoolFlag(flags, token) {` |
 | `applyValueFlag` | 181-184 | 4 | `function applyValueFlag(flags, token, rawValue) {` |
 | `parseArgv` | 193-211 | 19 | `export function parseArgv(argv = []) {` |
-| `parseVia` | 214-220 | 7 | `export function parseVia(run) {` |
-| `printToolResult` | 228-235 | 8 | `export function printToolResult(result, asJson) {` |
-| `readableResultLines` | 243-251 | 9 | `function readableResultLines(result) {` |
-| `printVersion` | 254-256 | 3 | `export function printVersion(cliName) {` |
-| `resolveDispatch` | 266-297 | 32 | `export function resolveDispatch({ cliName = CLI_GIT, argv = [], commands = new Map() } = {}) {` |
-| `normalizeRegistryArgv` | 311-325 | 15 | `export function normalizeRegistryArgv(rest = [], params = []) {` |
-| `runCli` | 338-379 | 42 | `export async function runCli({` |
-| `isDirectRun` | 389-397 | 9 | `export function isDirectRun(moduleUrl) {` |
-| `runAsEntry` | 404-415 | 12 | `export function runAsEntry(moduleUrl, main) {` |
-| `readEntrySource` | 424-426 | 3 | `export function readEntrySource(relPath) {` |
-| `parseEntrySourceMeta` | 433-439 | 7 | `export function parseEntrySourceMeta(sourceText = '') {` |
+| `parseVia` | 214-227 | 14 | `export function parseVia(run) {` |
+| `printToolResult` | 235-242 | 8 | `export function printToolResult(result, asJson) {` |
+| `readableResultLines` | 250-258 | 9 | `function readableResultLines(result) {` |
+| `printVersion` | 261-263 | 3 | `export function printVersion(cliName) {` |
+| `resolveDispatch` | 273-304 | 32 | `export function resolveDispatch({ cliName = CLI_GIT, argv = [], commands = new Map() } = {}) {` |
+| `normalizeRegistryArgv` | 318-332 | 15 | `export function normalizeRegistryArgv(rest = [], params = []) {` |
+| `runCli` | 345-386 | 42 | `export async function runCli({` |
+| `isDirectRun` | 396-404 | 9 | `export function isDirectRun(moduleUrl) {` |
+| `runAsEntry` | 411-422 | 12 | `export function runAsEntry(moduleUrl, main) {` |
+| `readEntrySource` | 431-433 | 3 | `export function readEntrySource(relPath) {` |
+| `parseEntrySourceMeta` | 440-446 | 7 | `export function parseEntrySourceMeta(sourceText = '') {` |
 
 ### lib/client-parts/audit/audit.js（302 行 · 10 个函数）
 
@@ -2647,12 +2647,13 @@
 | `usageLines` | 36-46 | 11 | `function usageLines(helpText, cliName, command) {` |
 | `helpOf` | 49-53 | 5 | `function helpOf(cliName) {` |
 
-### test/test-cli-split.mjs（285 行 · 2 个函数）
+### test/test-cli-split.mjs（304 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `runCliFile` | 41-50 | 10 | `async function runCliFile(cliName, argv, opts = {}) {` |
 | `runInWaves` | 53-59 | 7 | `async function runInWaves(tasks, waveSize = 4) {` |
+| `run` | 290-295 | 6 | `const run = (file, args) => {` |
 
 ### test/test-client-fragment-scope.mjs（69 行 · 1 个函数）
 
