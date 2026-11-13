@@ -286,77 +286,227 @@
     "worktree": {
       "docs/FILE-TREE.md": {
         "status": "M",
-        "mtime": "2026-11-13T08:27:03.499Z",
+        "mtime": "2026-11-13T09:02:38.824Z",
         "note": "注释可能需更新"
       },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-11-13T08:26:37.001Z",
+        "mtime": "2026-11-13T09:02:51.456Z",
         "note": "注释可能需更新"
       },
-      "test/tool/test-cli-help-registry-sync.mjs": {
+      "test/app/test-tool-contract.mjs": {
         "status": "D",
         "mtime": "",
         "note": "注释可能需更新"
       },
-      "test/tool/test-cli-split.mjs": {
+      "test/app/test-tool-probes.mjs": {
         "status": "D",
         "mtime": "",
         "note": "注释可能需更新"
       },
-      "test/tool/test-client.mjs": {
+      "test/git/test-audit-exempt-paths.mjs": {
         "status": "D",
         "mtime": "",
         "note": "注释可能需更新"
       },
-      "test/tool/test-command-registry.mjs": {
+      "test/git/test-audit-push-boundary.mjs": {
         "status": "D",
         "mtime": "",
         "note": "注释可能需更新"
       },
-      "test/tool/test-module-splitter-multiline.mjs": {
+      "test/git/test-clone-history-defaults.mjs": {
         "status": "D",
         "mtime": "",
         "note": "注释可能需更新"
       },
-      "test/tool/test-module-splitter.mjs": {
+      "test/git/test-clone-history-mode.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/git/test-clone-history.mjs": {
         "status": "M",
-        "mtime": "2026-11-13T08:27:07.941Z",
+        "mtime": "2026-11-13T09:09:20.765Z",
         "note": "注释可能需更新"
       },
-      "test/tool/test-run-tests-scan.mjs": {
+      "test/git/test-clone-maxfilemb.mjs": {
         "status": "D",
         "mtime": "",
         "note": "注释可能需更新"
       },
-      "test/tool/test-test-cache.mjs": {
+      "test/git/test-clone-mirror-truncation.mjs": {
         "status": "D",
         "mtime": "",
         "note": "注释可能需更新"
       },
-      "test/tool/test-tree-first-credential.mjs": {
+      "test/git/test-clone-parts-keep.mjs": {
         "status": "D",
         "mtime": "",
         "note": "注释可能需更新"
       },
-      "test/tool/test-tree-first-funcname.mjs": {
+      "test/git/test-clone-preview-buttons.mjs": {
         "status": "D",
         "mtime": "",
         "note": "注释可能需更新"
       },
-      "test/tool/test-cli.mjs": {
-        "status": "A",
-        "mtime": "2026-11-13T08:27:07.911Z",
+      "test/git/test-clone-replay-io.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/git/test-clone-replay.mjs": {
+        "status": "M",
+        "mtime": "2026-11-13T09:09:21.298Z",
+        "note": "注释可能需更新"
+      },
+      "test/git/test-clone-token.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/git/test-git-bin-plan.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/git/test-git-hooks.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/git/test-git-identity-rewrite.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/git/test-git-path-args.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/git/test-git-rename.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/git/test-git-stream.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/git/test-mirror-fallback.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/git/test-mirror-gates.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/git/test-mirror-store.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/git/test-npm-cli-package.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/git/test-npm-enobufs.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/git/test-npm-install.mjs": {
+        "status": "M",
+        "mtime": "2026-11-13T09:09:22.324Z",
+        "note": "注释可能需更新"
+      },
+      "test/git/test-npm-local-registry.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/git/test-npm-pack-parse.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/git/test-npm-publish.mjs": {
+        "status": "M",
+        "mtime": "2026-11-13T09:09:21.908Z",
+        "note": "注释可能需更新"
+      },
+      "test/git/test-npm-registry.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/git/test-npm-smoke.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/git/test-npm-token-credential.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/git/test-npm-unpublish.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/git/test-push-diagnose.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/git/test-push-transport.mjs": {
+        "status": "D",
+        "mtime": "",
         "note": "注释可能需更新"
       },
       "test/tool/test-scan-and-cache.mjs": {
-        "status": "A",
-        "mtime": "2026-11-13T08:27:07.974Z",
+        "status": "M",
+        "mtime": "2026-11-13T09:19:31.737Z",
         "note": "注释可能需更新"
       },
-      "test/tool/test-tree-first.mjs": {
+      "test/app/test-tools.mjs": {
         "status": "A",
-        "mtime": "2026-11-13T08:27:07.952Z",
+        "mtime": "2026-11-13T08:53:11.154Z",
+        "note": "注释可能需更新"
+      },
+      "test/git/test-audit-boundary.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T09:09:22.890Z",
+        "note": "注释可能需更新"
+      },
+      "test/git/test-clone-mirror.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T09:09:21.790Z",
+        "note": "注释可能需更新"
+      },
+      "test/git/test-git-core.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T09:09:23.137Z",
+        "note": "注释可能需更新"
+      },
+      "test/git/test-mirror.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T09:09:22.630Z",
+        "note": "注释可能需更新"
+      },
+      "test/git/test-push.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T09:09:22.716Z",
+        "note": "注释可能需更新"
+      },
+      "test/helpers/merge-tests.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T09:09:12.098Z",
         "note": "注释可能需更新"
       }
     }
@@ -480,8 +630,6 @@
   "test/app/test-status-secret.mjs": "（待注释）",
   "test/app/test-symlink-resolution.mjs": "（待注释）",
   "test/app/test-task-queue.mjs": "（待注释）",
-  "test/app/test-tool-contract.mjs": "（待注释）",
-  "test/app/test-tool-probes.mjs": "（待注释）",
   "test/app/test-tools-e2e.mjs": "（待注释）",
   "test/app/test-workspace-paths.mjs": "（待注释）",
   "test/audit/_archived/test-inject-switch.mjs": "（待注释）",
@@ -564,55 +712,26 @@
   "test/git/test-account-refresh-on-push.mjs": "（待注释）",
   "test/git/test-account-ssh.mjs": "（待注释）",
   "test/git/test-audit-bad-file.mjs": "（待注释）",
-  "test/git/test-audit-exempt-paths.mjs": "（待注释）",
-  "test/git/test-audit-push-boundary.mjs": "（待注释）",
   "test/git/test-ci-wait.mjs": "（待注释）",
   "test/git/test-cifs-init.mjs": "（待注释）",
   "test/git/test-clone-concurrency.mjs": "（待注释）",
-  "test/git/test-clone-history-defaults.mjs": "（待注释）",
-  "test/git/test-clone-history-mode.mjs": "（待注释）",
   "test/git/test-clone-history.mjs": "（待注释）",
-  "test/git/test-clone-maxfilemb.mjs": "（待注释）",
-  "test/git/test-clone-mirror-truncation.mjs": "（待注释）",
-  "test/git/test-clone-parts-keep.mjs": "（待注释）",
-  "test/git/test-clone-preview-buttons.mjs": "（待注释）",
-  "test/git/test-clone-replay-io.mjs": "（待注释）",
   "test/git/test-clone-replay.mjs": "（待注释）",
-  "test/git/test-clone-token.mjs": "（待注释）",
   "test/git/test-commit-message.mjs": "（待注释）",
   "test/git/test-cred-env.mjs": "（待注释）",
   "test/git/test-git-api-tool.mjs": "（待注释）",
-  "test/git/test-git-bin-plan.mjs": "（待注释）",
-  "test/git/test-git-hooks.mjs": "（待注释）",
-  "test/git/test-git-identity-rewrite.mjs": "（待注释）",
   "test/git/test-git-identity.mjs": "（待注释）",
-  "test/git/test-git-path-args.mjs": "（待注释）",
-  "test/git/test-git-rename.mjs": "（待注释）",
-  "test/git/test-git-stream.mjs": "（待注释）",
   "test/git/test-git.mjs": "（待注释）",
   "test/git/test-index-jsonl.mjs": "（待注释）",
   "test/git/test-init-compat.mjs": "（待注释）",
-  "test/git/test-mirror-fallback.mjs": "（待注释）",
-  "test/git/test-mirror-gates.mjs": "（待注释）",
-  "test/git/test-mirror-store.mjs": "（待注释）",
   "test/git/test-multi-remote.mjs": "（待注释）",
-  "test/git/test-npm-cli-package.mjs": "（待注释）",
-  "test/git/test-npm-enobufs.mjs": "（待注释）",
   "test/git/test-npm-install.mjs": "（待注释）",
-  "test/git/test-npm-local-registry.mjs": "（待注释）",
-  "test/git/test-npm-pack-parse.mjs": "（待注释）",
   "test/git/test-npm-publish.mjs": "（待注释）",
-  "test/git/test-npm-registry.mjs": "（待注释）",
-  "test/git/test-npm-smoke.mjs": "（待注释）",
-  "test/git/test-npm-token-credential.mjs": "（待注释）",
-  "test/git/test-npm-unpublish.mjs": "（待注释）",
   "test/git/test-origin-desktop.mjs": "（待注释）",
   "test/git/test-persist-credentials.mjs": "（待注释）",
   "test/git/test-pre-commit-engine.mjs": "（待注释）",
   "test/git/test-private-gate.mjs": "（待注释）",
-  "test/git/test-push-diagnose.mjs": "（待注释）",
   "test/git/test-push-false-success.mjs": "（待注释）",
-  "test/git/test-push-transport.mjs": "（待注释）",
   "test/git/test-quota-write.mjs": "（待注释）",
   "test/git/test-remote-name-ascii.mjs": "（待注释）",
   "test/git/test-remote-resolve.mjs": "（待注释）",
@@ -641,5 +760,12 @@
   "test/tool/test-npm-tab-render.mjs": "（待注释）",
   "test/tool/test-cli.mjs": "（待注释）",
   "test/tool/test-scan-and-cache.mjs": "（待注释）",
-  "test/tool/test-tree-first.mjs": "（待注释）"
+  "test/tool/test-tree-first.mjs": "（待注释）",
+  "test/app/test-tools.mjs": "（待注释）",
+  "test/helpers/merge-tests.mjs": "（待注释）",
+  "test/git/test-audit-boundary.mjs": "（待注释）",
+  "test/git/test-clone-mirror.mjs": "（待注释）",
+  "test/git/test-git-core.mjs": "（待注释）",
+  "test/git/test-mirror.mjs": "（待注释）",
+  "test/git/test-push.mjs": "（待注释）"
 }

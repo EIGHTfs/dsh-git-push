@@ -130,7 +130,9 @@ import { fileURLToPath } from 'node:url';
     for (const side of ['git', 'audit', 'tool', 'app']) {
       assert.ok(scan.bySide[side]?.regular.length > 0, `${side}/ 下没有任何常规测试（目录漏了或扫描漏了）`);
     }
-    assert.ok(scan.regular.length >= 150, `常规回归文件数异常偏少（${scan.regular.length}）——扫描可能退化成只扫顶层`);
+    // 下限随「合并批」推进调整：它只是「扫描退化成只扫顶层」的兜底信号（那种情况会掉到个位数），
+  //   不是质量门槛。合并把 172 → 119 个文件，故下限 150 → 90（仍远高于「只扫顶层」量级）。
+  assert.ok(scan.regular.length >= 90, `常规回归文件数异常偏少（${scan.regular.length}）——扫描可能退化成只扫顶层`);
   });
 
   // 干跑输出只取一次：每次 dry-run 都要为每个文件算 import 闭包（CIFS 上每次读几十个文件），

@@ -2861,19 +2861,14 @@
 | `setupBadFile` | 40-45 | 6 | `function setupBadFile(relPath, content) {` |
 | `cleanup` | 46-50 | 5 | `function cleanup(relPath) {` |
 
-### test/git/test-audit-exempt-paths.mjs（78 行 · 2 个函数）
+### test/git/test-audit-boundary.mjs（275 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `makeRepo` | 20-29 | 10 | `function makeRepo(t) {` |
-| `writeBlocker` | 32-39 | 8 | `function writeBlocker(dir, name = 'bad.js') {` |
-
-### test/git/test-audit-push-boundary.mjs（189 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `makeRepo` | 31-41 | 11 | `function makeRepo() {` |
-| `stageBlocker` | 47-54 | 8 | `function stageBlocker(dir) {` |
+| `makeRepo` | 31-40 | 10 | `function makeRepo(t) {` |
+| `writeBlocker` | 43-50 | 8 | `function writeBlocker(dir, name = 'bad.js') {` |
+| `makeRepo` | 116-126 | 11 | `function makeRepo() {` |
+| `stageBlocker` | 132-139 | 8 | `function stageBlocker(dir) {` |
 
 ### test/git/test-ci-wait.mjs（99 行 · 4 个函数）
 
@@ -2900,80 +2895,54 @@
 | `writer` | 135-141 | 7 | `const writer = (async () => {` |
 | `call` | 436-436 | 1 | `const call = async (body) => (await handleHttp(` |
 
-### test/git/test-clone-history-defaults.mjs（49 行 · 1 个函数）
+### test/git/test-clone-history.mjs（328 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `read` | 16-16 | 1 | `const read = (rel) => readFileSync(join(ROOT, rel), 'utf8');` |
+| `stubApi` | 40-50 | 11 | `function stubApi(chain) {` |
+| `fakeApi` | 168-178 | 11 | `function fakeApi({ headSha = 'c', trees = {}, commits = {}, refStatus = 200 } = {}) {` |
+| `fakeGit` | 181-192 | 12 | `function fakeGit() {` |
+| `runGit` | 184-190 | 7 | `const runGit = (args) => {` |
+| `read` | 294-294 | 1 | `const read = (rel) => readFileSync(join(ROOT, rel), 'utf8');` |
 
-### test/git/test-clone-history-mode.mjs（132 行 · 3 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `fakeApi` | 20-30 | 11 | `function fakeApi({ headSha = 'c', trees = {}, commits = {}, refStatus = 200 } = {}) {` |
-| `fakeGit` | 33-44 | 12 | `function fakeGit() {` |
-| `runGit` | 36-42 | 7 | `const runGit = (args) => {` |
-
-### test/git/test-clone-history.mjs（136 行 · 1 个函数）
+### test/git/test-clone-mirror.mjs（316 行 · 9 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `stubApi` | 28-38 | 11 | `function stubApi(chain) {` |
+| `stubChannels` | 37-64 | 28 | `function stubChannels({ rawBroken = true, apiBroken = false } = {}) {` |
+| `blobSha` | 68-70 | 3 | `function blobSha(content, size) {` |
+| `newDir` | 75-76 | 2 | `function newDir() { return mkdtempSync(join(tmpdir(), 'dshgp-trunc-')); }` |
+| `partOf` | 76-77 | 2 | `function partOf(dir) { return join(dir, PARTS_DIR, `${blob.sha}.part`); }` |
+| `makeJsx` | 173-181 | 9 | `function makeJsx() {` |
+| `createElement` | 174-179 | 6 | `const createElement = (type, props) => {` |
+| `extractFunction` | 184-316 | 133 | `function extractFunction(src, signature) {` |
+| `walk` | 198-203 | 6 | `function walk(node, out = []) {` |
+| `renderPreview` | 206-316 | 111 | `function renderPreview(handlers = {}) {` |
 
-### test/git/test-clone-mirror-truncation.mjs（138 行 · 4 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `stubChannels` | 25-52 | 28 | `function stubChannels({ rawBroken = true, apiBroken = false } = {}) {` |
-| `blobSha` | 56-58 | 3 | `function blobSha(content, size) {` |
-| `newDir` | 63-64 | 2 | `function newDir() { return mkdtempSync(join(tmpdir(), 'dshgp-trunc-')); }` |
-| `partOf` | 64-65 | 2 | `function partOf(dir) { return join(dir, PARTS_DIR, `${blob.sha}.part`); }` |
-
-### test/git/test-clone-parts-keep.mjs（76 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `stubFetch` | 19-29 | 11 | `function stubFetch() {` |
-| `blobSha` | 32-37 | 6 | `function blobSha(content, size) {` |
-
-### test/git/test-clone-preview-buttons.mjs（134 行 · 5 个函数）
+### test/git/test-clone-replay.mjs（506 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `makeJsx` | 25-33 | 9 | `function makeJsx() {` |
-| `createElement` | 26-31 | 6 | `const createElement = (type, props) => {` |
-| `extractFunction` | 36-134 | 99 | `function extractFunction(src, signature) {` |
-| `walk` | 50-55 | 6 | `function walk(node, out = []) {` |
-| `renderPreview` | 58-134 | 77 | `function renderPreview(handlers = {}) {` |
+| `fakeIo` | 128-146 | 19 | `function fakeIo({ trees = {}, failDownloadAt = -1, marker = null } = {}) {` |
+| `fakeGit` | 260-506 | 247 | `function fakeGit({ hasOrigin = false, failAt = '' } = {}) {` |
+| `runGit` | 262-272 | 11 | `const runGit = (args) => {` |
+| `stubFetch` | 417-427 | 11 | `function stubFetch() {` |
+| `blobSha` | 430-435 | 6 | `function blobSha(content, size) {` |
 
-### test/git/test-clone-replay-io.mjs（159 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `fakeGit` | 17-159 | 143 | `function fakeGit({ hasOrigin = false, failAt = '' } = {}) {` |
-| `runGit` | 19-29 | 11 | `const runGit = (args) => {` |
-
-### test/git/test-clone-replay.mjs（233 行 · 1 个函数）
+### test/git/test-git-core.mjs（632 行 · 10 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `fakeIo` | 115-133 | 19 | `function fakeIo({ trees = {}, failDownloadAt = -1, marker = null } = {}) {` |
-
-### test/git/test-git-hooks.mjs（93 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `withRepo` | 20-24 | 5 | `function withRepo(fn) {` |
-| `writeHook` | 26-31 | 6 | `function writeHook(root, name, body, mode = 0o755) {` |
-
-### test/git/test-git-identity-rewrite.mjs（191 行 · 4 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `makeRepo` | 28-35 | 8 | `function makeRepo() {` |
-| `commit` | 38-42 | 5 | `function commit(dir, msg, { author = null, committer = { name: 'DSH Agent', email: 'agent@dsh.local' } } = {}) {` |
-| `identities` | 45-47 | 3 | `function identities(dir) {` |
-| `repoWrongEmails` | 49-51 | 3 | `function repoWrongEmails() {` |
+| `withRepo` | 79-83 | 5 | `function withRepo(fn) {` |
+| `writeHook` | 85-90 | 6 | `function writeHook(root, name, body, mode = 0o755) {` |
+| `makeRepo` | 172-179 | 8 | `function makeRepo() {` |
+| `commit` | 182-186 | 5 | `function commit(dir, msg, { author = null, committer = { name: 'DSH Agent', email: 'agent@dsh.local' } } = {}) {` |
+| `identities` | 189-191 | 3 | `function identities(dir) {` |
+| `repoWrongEmails` | 193-195 | 3 | `function repoWrongEmails() {` |
+| `setupRepo` | 358-374 | 17 | `function setupRepo() {` |
+| `commitAll` | 377-380 | 4 | `function commitAll(dir, msg = 'init') {` |
+| `withRepo` | 463-467 | 5 | `function withRepo(fn) {` |
+| `runFetchCase` | 581-596 | 16 | `async function runFetchCase(streamResult) {` |
 
 ### test/git/test-git-identity.mjs（123 行 · 2 个函数）
 
@@ -2981,25 +2950,6 @@
 |------|------|------|------|
 | `makeRepo` | 31-35 | 5 | `function makeRepo() {` |
 | `repoConfig` | 38-40 | 3 | `function repoConfig(dir, key) {` |
-
-### test/git/test-git-path-args.mjs（117 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `setupRepo` | 28-44 | 17 | `function setupRepo() {` |
-| `commitAll` | 47-50 | 4 | `function commitAll(dir, msg = 'init') {` |
-
-### test/git/test-git-rename.mjs（75 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `withRepo` | 20-24 | 5 | `function withRepo(fn) {` |
-
-### test/git/test-git-stream.mjs（117 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `runFetchCase` | 67-82 | 16 | `async function runFetchCase(streamResult) {` |
 
 ### test/git/test-git.mjs（879 行 · 3 个函数）
 
@@ -3022,23 +2972,13 @@
 | `tmpRepo` | 31-35 | 5 | `function tmpRepo() {` |
 | `git` | 38-40 | 3 | `function git(dir, args) {` |
 
-### test/git/test-mirror-fallback.mjs（49 行 · 1 个函数）
+### test/git/test-mirror.mjs（299 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `withMirror` | 18-26 | 9 | `const withMirror = async (value, fn) => {` |
-
-### test/git/test-mirror-gates.mjs（83 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `withEnv` | 15-23 | 9 | `const withEnv = (v, fn) => {` |
-
-### test/git/test-mirror-store.mjs（157 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `withStateFile` | 28-42 | 15 | `function withStateFile(fn) {` |
+| `withMirror` | 34-42 | 9 | `const withMirror = async (value, fn) => {` |
+| `withEnv` | 79-87 | 9 | `const withEnv = (v, fn) => {` |
+| `withStateFile` | 169-183 | 15 | `function withStateFile(fn) {` |
 
 ### test/git/test-multi-remote.mjs（47 行 · 1 个函数）
 
@@ -3046,32 +2986,22 @@
 |------|------|------|------|
 | `makeRepo` | 12-21 | 10 | `function makeRepo() {` |
 
-### test/git/test-npm-cli-package.mjs（91 行 · 1 个函数）
+### test/git/test-npm-install.mjs（416 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `makePackage` | 40-58 | 19 | `function makePackage({ name, version = '1.0.0', main, bin, binBody }) {` |
+| `publishBody` | 105-114 | 10 | `function publishBody({ name = 'demo-pkg', version = '1.2.3', tag = 'beta', bytes = 'FAKE-TARBALL' } = {}) {` |
+| `withRegistry` | 116-119 | 4 | `async function withRegistry(fn) {` |
+| `makePackage` | 364-382 | 19 | `function makePackage({ name, version = '1.0.0', main, bin, binBody }) {` |
 
-### test/git/test-npm-local-registry.mjs（82 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `publishBody` | 19-28 | 10 | `function publishBody({ name = 'demo-pkg', version = '1.2.3', tag = 'beta', bytes = 'FAKE-TARBALL' } = {}) {` |
-| `withRegistry` | 30-33 | 4 | `async function withRegistry(fn) {` |
-
-### test/git/test-npm-publish.mjs（140 行 · 1 个函数）
+### test/git/test-npm-publish.mjs（381 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `makeFixture` | 33-42 | 10 | `function makeFixture() {` |
-
-### test/git/test-npm-unpublish.mjs（105 行 · 3 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `fakeFetch` | 15-17 | 3 | `function fakeFetch(doc) {` |
-| `hoursAgo` | 20-20 | 1 | `const hoursAgo = (h) => new Date(now - h * 3600 * 1000).toISOString();` |
-| `doc` | 22-31 | 10 | `function doc({ versions = ['1.0.0'], tags = { latest: '1.0.0' }, ageHours = 10 } = {}) {` |
+| `makeFixture` | 48-57 | 10 | `function makeFixture() {` |
+| `fakeFetch` | 170-172 | 3 | `function fakeFetch(doc) {` |
+| `hoursAgo` | 175-175 | 1 | `const hoursAgo = (h) => new Date(now - h * 3600 * 1000).toISOString();` |
+| `doc` | 177-186 | 10 | `function doc({ versions = ['1.0.0'], tags = { latest: '1.0.0' }, ageHours = 10 } = {}) {` |
 
 ### test/git/test-persist-credentials.mjs（93 行 · 1 个函数）
 
@@ -3094,11 +3024,11 @@
 |------|------|------|------|
 | `fixture` | 27-33 | 7 | `function fixture() {` |
 
-### test/git/test-push-transport.mjs（199 行 · 1 个函数）
+### test/git/test-push.mjs（319 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `tempRepo` | 31-41 | 11 | `function tempRepo() {` |
+| `tempRepo` | 150-160 | 11 | `function tempRepo() {` |
 
 ### test/git/test-remote-resolve.mjs（128 行 · 3 个函数）
 
@@ -3122,6 +3052,18 @@
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `readMs` | 61-65 | 5 | `const readMs = (name) => {` |
+
+### test/helpers/merge-tests.mjs（259 行 · 7 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `importLineRanges` | 34-53 | 20 | `function importLineRanges(text) {` |
+| `parseImport` | 56-79 | 24 | `function parseImport(stmt) {` |
+| `inspectFile` | 89-112 | 24 | `export function inspectFile(absPath) {` |
+| `mergeability` | 115-122 | 8 | `export function mergeability(absPath) {` |
+| `prefixTestNames` | 125-140 | 16 | `function prefixTestNames(body, prefix) {` |
+| `mergeGroup` | 143-220 | 78 | `export function mergeGroup(dir, { out, members }) {` |
+| `runTestFile` | 223-232 | 10 | `export function runTestFile(absPath) {` |
 
 ### test/helpers/test-cache.mjs（231 行 · 9 个函数）
 
@@ -3236,15 +3178,15 @@
 |------|------|------|------|
 | `makeProject` | 20-46 | 27 | `function makeProject() {` |
 
-### test/tool/test-scan-and-cache.mjs（332 行 · 5 个函数）
+### test/tool/test-scan-and-cache.mjs（334 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `makeFakeTree` | 42-64 | 23 | `function makeFakeTree() {` |
 | `write` | 44-49 | 6 | `const write = (rel) => {` |
-| `dryRunStats` | 140-147 | 8 | `function dryRunStats() {` |
-| `keyOf` | 184-184 | 1 | `const keyOf = (abs) => cacheKeyFor(importClosure(abs));` |
-| `makeProject` | 233-240 | 8 | `function makeProject() {` |
+| `dryRunStats` | 142-149 | 8 | `function dryRunStats() {` |
+| `keyOf` | 186-186 | 1 | `const keyOf = (abs) => cacheKeyFor(importClosure(abs));` |
+| `makeProject` | 235-242 | 8 | `function makeProject() {` |
 
 ### test/tool/test-scope-collisions.mjs（254 行 · 2 个函数）
 
