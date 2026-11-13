@@ -3166,35 +3166,25 @@
 | `runBatch` | 118-150 | 33 | `function runBatch(files) {` |
 | `emit` | 134-145 | 12 | `const emit = (chunk) => {` |
 
-### test/tool/test-cli-help-registry-sync.mjs（100 行 · 2 个函数）
+### test/tool/test-cli.mjs（995 行 · 9 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `usageLines` | 36-46 | 11 | `function usageLines(helpText, cliName, command) {` |
-| `helpOf` | 49-53 | 5 | `function helpOf(cliName) {` |
-
-### test/tool/test-cli-split.mjs（304 行 · 3 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `runCliFile` | 41-50 | 10 | `async function runCliFile(cliName, argv, opts = {}) {` |
-| `runInWaves` | 53-59 | 7 | `async function runInWaves(tasks, waveSize = 4) {` |
-| `run` | 290-295 | 6 | `const run = (file, args) => {` |
+| `usageLines` | 55-65 | 11 | `function usageLines(helpText, cliName, command) {` |
+| `helpOf` | 68-72 | 5 | `function helpOf(cliName) {` |
+| `runCliFile` | 149-158 | 10 | `async function runCliFile(cliName, argv, opts = {}) {` |
+| `runInWaves` | 161-167 | 7 | `async function runInWaves(tasks, waveSize = 4) {` |
+| `run` | 398-403 | 6 | `const run = (file, args) => {` |
+| `mockReact` | 491-497 | 7 | `function mockReact() {` |
+| `req` | 799-816 | 18 | `const req = (name) => {` |
+| `req` | 877-896 | 20 | `const req = (name) => {` |
+| `req` | 945-963 | 19 | `const req = (name) => {` |
 
 ### test/tool/test-client-fragment-scope.mjs（69 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `fakeRepo` | 16-20 | 5 | `function fakeRepo(pkg) {` |
-
-### test/tool/test-client.mjs（523 行 · 4 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `mockReact` | 20-26 | 7 | `function mockReact() {` |
-| `req` | 328-345 | 18 | `const req = (name) => {` |
-| `req` | 406-425 | 20 | `const req = (name) => {` |
-| `req` | 474-492 | 19 | `const req = (name) => {` |
 
 ### test/tool/test-doc-func.mjs（110 行 · 1 个函数）
 
@@ -3222,11 +3212,11 @@
 | `fixture` | 19-71 | 53 | `function fixture(block) {` |
 | `driftFindings` | 37-40 | 4 | `async function driftFindings(dir) {` |
 
-### test/tool/test-module-splitter-multiline.mjs（80 行 · 1 个函数）
+### test/tool/test-module-splitter.mjs（177 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `makeFixture` | 25-43 | 19 | `function makeFixture(dir) {` |
+| `makeFixture` | 121-139 | 19 | `function makeFixture(dir) {` |
 
 ### test/tool/test-npm-tab-render.mjs（95 行 · 1 个函数）
 
@@ -3246,14 +3236,15 @@
 |------|------|------|------|
 | `makeProject` | 20-46 | 27 | `function makeProject() {` |
 
-### test/tool/test-run-tests-scan.mjs（204 行 · 4 个函数）
+### test/tool/test-scan-and-cache.mjs（332 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `makeFakeTree` | 30-52 | 23 | `function makeFakeTree() {` |
-| `write` | 32-37 | 6 | `const write = (rel) => {` |
-| `dryRunStats` | 128-135 | 8 | `function dryRunStats() {` |
-| `keyOf` | 172-172 | 1 | `const keyOf = (abs) => cacheKeyFor(importClosure(abs));` |
+| `makeFakeTree` | 42-64 | 23 | `function makeFakeTree() {` |
+| `write` | 44-49 | 6 | `const write = (rel) => {` |
+| `dryRunStats` | 140-147 | 8 | `function dryRunStats() {` |
+| `keyOf` | 184-184 | 1 | `const keyOf = (abs) => cacheKeyFor(importClosure(abs));` |
+| `makeProject` | 233-240 | 8 | `function makeProject() {` |
 
 ### test/tool/test-scope-collisions.mjs（254 行 · 2 个函数）
 
@@ -3269,31 +3260,20 @@
 | `build` | 31-34 | 4 | `function build(extra = {}) {` |
 | `hasEdge` | 36-36 | 1 | `const hasEdge = (idx, from, to, via) => idx.edges.some((e) => e.from === from && e.to === to && e.via === via);` |
 
-### test/tool/test-test-cache.mjs（120 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `makeProject` | 22-29 | 8 | `function makeProject() {` |
-
 ### test/tool/test-tree-doc.mjs（221 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `makeReadme` | 41-43 | 3 | `function makeReadme(tree) {` |
 
-### test/tool/test-tree-first-credential.mjs（125 行 · 2 个函数）
+### test/tool/test-tree-first.mjs（260 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `makeFixture` | 51-55 | 5 | `async function makeFixture() {` |
-| `hardLines` | 57-62 | 6 | `function hardLines(res) {` |
-
-### test/tool/test-tree-first-funcname.mjs（132 行 · 3 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `makeFixture` | 59-63 | 5 | `async function makeFixture() {` |
-| `hitLines` | 65-65 | 1 | `const hitLines = (res) => res.findings` |
-| `isShort` | 117-117 | 1 | `const isShort = (n) => String(n).length <= 2 && !['tr', 't'].includes(n);` |
+| `makeFixture` | 61-65 | 5 | `async function makeFixture() {` |
+| `hardLines` | 67-72 | 6 | `function hardLines(res) {` |
+| `makeFixture` | 186-190 | 5 | `async function makeFixture() {` |
+| `hitLines` | 192-192 | 1 | `const hitLines = (res) => res.findings` |
+| `isShort` | 244-244 | 1 | `const isShort = (n) => String(n).length <= 2 && !['tr', 't'].includes(n);` |
 
 <!-- dshgp-functions:end -->

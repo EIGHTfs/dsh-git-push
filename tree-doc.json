@@ -284,24 +284,79 @@
   "scripts/doc-drift.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      "test/e2e-npm-tab-render.mjs": {
+      "docs/FILE-TREE.md": {
+        "status": "M",
+        "mtime": "2026-11-13T08:27:03.499Z",
+        "note": "注释可能需更新"
+      },
+      "docs/FUNCTIONS.md": {
+        "status": "M",
+        "mtime": "2026-11-13T08:26:37.001Z",
+        "note": "注释可能需更新"
+      },
+      "test/tool/test-cli-help-registry-sync.mjs": {
         "status": "D",
         "mtime": "",
         "note": "注释可能需更新"
       },
-      "test/regression-2.4.1.mjs": {
+      "test/tool/test-cli-split.mjs": {
         "status": "D",
         "mtime": "",
         "note": "注释可能需更新"
       },
-      "test/audit/test-version-regression-2-4-1.mjs": {
-        "status": "A",
-        "mtime": "2026-11-13T02:54:06.569Z",
+      "test/tool/test-client.mjs": {
+        "status": "D",
+        "mtime": "",
         "note": "注释可能需更新"
       },
-      "test/tool/test-npm-tab-render.mjs": {
+      "test/tool/test-command-registry.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/tool/test-module-splitter-multiline.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/tool/test-module-splitter.mjs": {
+        "status": "M",
+        "mtime": "2026-11-13T08:27:07.941Z",
+        "note": "注释可能需更新"
+      },
+      "test/tool/test-run-tests-scan.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/tool/test-test-cache.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/tool/test-tree-first-credential.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/tool/test-tree-first-funcname.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "test/tool/test-cli.mjs": {
         "status": "A",
-        "mtime": "2026-11-13T02:55:24.713Z",
+        "mtime": "2026-11-13T08:27:07.911Z",
+        "note": "注释可能需更新"
+      },
+      "test/tool/test-scan-and-cache.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T08:27:07.974Z",
+        "note": "注释可能需更新"
+      },
+      "test/tool/test-tree-first.mjs": {
+        "status": "A",
+        "mtime": "2026-11-13T08:27:07.952Z",
         "note": "注释可能需更新"
       }
     }
@@ -566,31 +621,25 @@
   "test/git/test-visibility-unified.mjs": "（待注释）",
   "test/helpers/test-scan.mjs": "（待注释）",
   "test/tool/test-build-client.mjs": "（待注释）",
-  "test/tool/test-cli-help-registry-sync.mjs": "（待注释）",
-  "test/tool/test-cli-split.mjs": "（待注释）",
   "test/tool/test-client-fragment-scope.mjs": "（待注释）",
-  "test/tool/test-client.mjs": "（待注释）",
-  "test/tool/test-command-registry.mjs": "（待注释）",
   "test/tool/test-doc-func.mjs": "（待注释）",
   "test/tool/test-doc-version-release-source.mjs": "（待注释）",
   "test/tool/test-doc-version.mjs": "（待注释）",
   "test/tool/test-func-doc-drift.mjs": "（待注释）",
-  "test/tool/test-module-splitter-multiline.mjs": "（待注释）",
   "test/tool/test-module-splitter.mjs": "（待注释）",
   "test/tool/test-picker-layout.mjs": "（待注释）",
   "test/tool/test-platform-scan.mjs": "（待注释）",
   "test/tool/test-rename-locator.mjs": "（待注释）",
-  "test/tool/test-run-tests-scan.mjs": "（待注释）",
   "test/tool/test-scope-collisions.mjs": "（待注释）",
   "test/tool/test-scrub-conv-wording.mjs": "（待注释）",
   "test/tool/test-self.mjs": "（待注释）",
   "test/tool/test-smoke-import-specs.mjs": "（待注释）",
   "test/tool/test-symbol-index.mjs": "（待注释）",
-  "test/tool/test-test-cache.mjs": "（待注释）",
   "test/tool/test-tree-doc.mjs": "（待注释）",
-  "test/tool/test-tree-first-credential.mjs": "（待注释）",
-  "test/tool/test-tree-first-funcname.mjs": "（待注释）",
   "test/tool/test-version-metrics.mjs": "（待注释）",
   "test/audit/test-version-regression-2-4-1.mjs": "（待注释）",
-  "test/tool/test-npm-tab-render.mjs": "（待注释）"
+  "test/tool/test-npm-tab-render.mjs": "（待注释）",
+  "test/tool/test-cli.mjs": "（待注释）",
+  "test/tool/test-scan-and-cache.mjs": "（待注释）",
+  "test/tool/test-tree-first.mjs": "（待注释）"
 }

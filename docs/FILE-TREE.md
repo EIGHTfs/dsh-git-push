@@ -438,31 +438,25 @@ dsh-git-push/
 │   │   ├── tmp-dir.mjs — （待注释）
 │   ├── tool/ — （待注释）
 │   │   ├── test-build-client.mjs — （待注释）
-│   │   ├── test-cli-help-registry-sync.mjs — （待注释）
-│   │   ├── test-cli-split.mjs — （待注释）
+│   │   ├── test-cli.mjs — （待注释）
 │   │   ├── test-client-fragment-scope.mjs — （待注释）
-│   │   ├── test-client.mjs — （待注释）
-│   │   ├── test-command-registry.mjs — （待注释）
 │   │   ├── test-doc-func.mjs — （待注释）
 │   │   ├── test-doc-version-release-source.mjs — （待注释）
 │   │   ├── test-doc-version.mjs — （待注释）
 │   │   ├── test-func-doc-drift.mjs — （待注释）
-│   │   ├── test-module-splitter-multiline.mjs — （待注释）
 │   │   ├── test-module-splitter.mjs — （待注释）
 │   │   ├── test-npm-tab-render.mjs — （待注释）
 │   │   ├── test-picker-layout.mjs — （待注释）
 │   │   ├── test-platform-scan.mjs — （待注释）
 │   │   ├── test-rename-locator.mjs — （待注释）
-│   │   ├── test-run-tests-scan.mjs — （待注释）
+│   │   ├── test-scan-and-cache.mjs — （待注释）
 │   │   ├── test-scope-collisions.mjs — （待注释）
 │   │   ├── test-scrub-conv-wording.mjs — （待注释）
 │   │   ├── test-self.mjs — （待注释）
 │   │   ├── test-smoke-import-specs.mjs — （待注释）
 │   │   ├── test-symbol-index.mjs — （待注释）
-│   │   ├── test-test-cache.mjs — （待注释）
 │   │   ├── test-tree-doc.mjs — （待注释）
-│   │   ├── test-tree-first-credential.mjs — （待注释）
-│   │   ├── test-tree-first-funcname.mjs — （待注释）
+│   │   ├── test-tree-first.mjs — （待注释）
 │   │   ├── test-version-metrics.mjs — （待注释）
 ├── docs/ — 开发文档
 │   ├── 2.9.0-design.md — （待注释）
