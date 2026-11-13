@@ -6,7 +6,9 @@
  *     不影响 test() 的注册时机与执行顺序；每个 test 名带 `[原文件名]` 前缀便于溯源。
  * 为什么不用 describe：它的回调是 async 函数作用域，会把顶层 await/const/exitCode 挪位（上轮实测 54 失败 / 少 17 条用例）。
  */
-import { TOOL_REGISTRY, registryByName, registryByCli, parseRegistryArgs, buildToolsListText } from '../../lib/app/command-registry.js';
+import { TOOL_REGISTRY, registryByName, registryByCli, parseRegistryArgs, buildToolsListText, resolveEntryParams, auditPreprocessAvailable } from '../../lib/app/command-registry.js';
+import { listTools } from '../../lib/app/tools.js';
+import { AUDIT_HELP_SNIPPETS, renderHelp } from '../../cli.mjs';
 import { tokenize } from '../../lib/ast/tokenizer.js';
 import { commandOwner, parseEntrySourceMeta, readEntrySource, CLI_AUDIT, CLI_ENTRIES, CLI_GIT, CLI_TOOL, allCommands, resolveDispatch } from '../../lib/cli/shared.mjs';
 import { DEFAULT_CONFIG, SETTINGS_SCHEMA, defaultConfig, resolveConfig, createSettingsCard, collectExternalRefs, INLINE_CSS, clientModuleInfo } from '../../lib/client/index.js';
@@ -90,9 +92,9 @@ import { promisify } from 'node:util';
       const owner = commandOwner(tool.cli);
       const text = usageLines(helpOf(owner), owner, tool.cli);
       if (!text) continue; // 上一条测试已覆盖「缺用法行」
-      const accepted = new Set((tool.params || []).map((param) => `--${kebab(param.flag)}`));
+      const accepted = new Set(resolveEntryParams(tool, {}).map((param) => `--${kebab(param.flag)}`));
       // 布尔参数额外接受否定形式 `--no-<参数>`（CLI 层会在进解析器前翻译成 false，见 shared.normalizeRegistryArgv）
-      const negations = new Set((tool.params || [])
+      const negations = new Set(resolveEntryParams(tool, {})
         .filter((param) => param.type === 'boolean')
         .map((param) => `--no-${kebab(param.flag)}`));
       for (const flag of new Set(text.match(/--[a-z0-9-]+/g) || [])) {
@@ -439,34 +441,99 @@ import { promisify } from 'node:util';
 
   test('[command-registry] parseRegistryArgs：positional + --flag + boolean + default', () => {
     const audit = registryByName('code_audit');
-    const r1 = parseRegistryArgs(['/repo/a', '--scope', 'diff'], audit.params);
+    const r1 = parseRegistryArgs(['/repo/a', '--scope', 'diff'], resolveEntryParams(audit, {}));
     assert.equal(r1.error, undefined);
     assert.equal(r1.args.repo, '/repo/a');
     assert.equal(r1.args.scope, 'diff');
-    const r2 = parseRegistryArgs(['/repo/a', '--json'], audit.params);
+    const r2 = parseRegistryArgs(['/repo/a', '--json'], resolveEntryParams(audit, {}));
     assert.equal(r2.args.json, true);
     assert.equal(r2.args.scope, 'full', 'default 填充');
-    const r3 = parseRegistryArgs(['--scope=diff', '/repo/b'], audit.params);
+    const r3 = parseRegistryArgs(['--scope=diff', '/repo/b'], resolveEntryParams(audit, {}));
     assert.equal(r3.args.scope, 'diff');
     assert.equal(r3.args.repo, '/repo/b');
   });
 
   test('[command-registry] parseRegistryArgs：required / enum / 未知参数校验', () => {
     const audit = registryByName('code_audit');
-    assert.match(parseRegistryArgs([], audit.params).error || '', /缺少必填参数 repo/);
-    const bad = parseRegistryArgs(['/x', '--scope', 'weird'], audit.params);
+    assert.match(parseRegistryArgs([], resolveEntryParams(audit, {})).error || '', /缺少必填参数 repo/);
+    const bad = parseRegistryArgs(['/x', '--scope', 'weird'], resolveEntryParams(audit, {}));
     assert.match(bad.error || '', /scope 取值必须为 full\|diff/);
-    const unknown = parseRegistryArgs(['/x', '--nope'], audit.params);
+    const unknown = parseRegistryArgs(['/x', '--nope'], resolveEntryParams(audit, {}));
     assert.match(unknown.error || '', /未知参数 --nope/);
-    const extra = parseRegistryArgs(['/x', 'y'], audit.params);
+    const extra = parseRegistryArgs(['/x', 'y'], resolveEntryParams(audit, {}));
     assert.match(extra.error || '', /多余的位置参数/);
   });
 
   test('[command-registry] parseRegistryArgs：boolean --flag=false 支持', () => {
     const commit = registryByCli('commit');
-    const r = parseRegistryArgs(['/r', '--message', 'm', '--push=false'], commit.params);
+    const r = parseRegistryArgs(['/r', '--message', 'm', '--push=false'], resolveEntryParams(commit, {}));
     assert.equal(r.error, undefined);
     assert.equal(r.args.push, false);
+  });
+
+  test('[动态参数] 审计专属参数由预处理贡献：可用时出现、不可用时不在签名里', () => {
+    const commit = registryByCli('commit');
+    // ① 可用（当前状态：内置引擎存在）⇒ audit / auditExemptPaths / auditExemptReason 都在
+    const withAudit = resolveEntryParams(commit, {});
+    for (const flag of ['audit', 'auditExemptPaths', 'auditExemptReason']) {
+      assert.ok(withAudit.some((p) => p.flag === flag), `审计可用时应含 --${flag}`);
+    }
+    // ② 基础参数不受影响
+    for (const flag of ['repo', 'message', 'messageItems', 'push', 'dryRun']) {
+      assert.ok(withAudit.some((p) => p.flag === flag), `基础参数 --${flag} 必须仍在`);
+    }
+    // ③ 可用性判据：配了自定义引擎 ⇒ 可用；内置引擎不存在且无自定义 ⇒ 不可用
+    assert.equal(auditPreprocessAvailable({}), true, '内置引擎存在 ⇒ 可用');
+    assert.equal(auditPreprocessAvailable({ preCommit: { command: 'python3' } }), true, '自定义引擎 ⇒ 可用');
+    assert.equal(auditPreprocessAvailable({}, false), false, '内置不存在且无自定义 ⇒ 不可用');
+  });
+
+  test('[动态参数] 端到端：不可用态下 listTools 无 audit 参数、CLI 传 --audit 报未知参数', () => {
+    const commit = registryByCli('commit');
+    // ① 宿主工具 schema（listTools 出口）：不可用 ⇒ parameters 里没有 audit 系列键
+    const unavailableTools = listTools({}, false);
+    const commitSpec = unavailableTools.find((tool) => tool.name === 'git_commit_push');
+    assert.ok(commitSpec, 'listTools 应含 git_commit_push');
+    for (const key of ['audit', 'auditExemptPaths', 'auditExemptReason']) {
+      assert.ok(!(key in commitSpec.parameters), `不可用态 parameters 不应含 ${key}（实际键：${Object.keys(commitSpec.parameters).join(',')}）`);
+    }
+    // 基础键仍在（避免「整张 schema 被削掉」被误判成通过）
+    for (const key of ['repo', 'message', 'push', 'dryRun']) assert.ok(key in commitSpec.parameters, `基础参数 ${key} 必须仍在`);
+
+    // ② 可用态：三个键都在
+    const availableSpec = listTools({}, true).find((tool) => tool.name === 'git_commit_push');
+    for (const key of ['audit', 'auditExemptPaths', 'auditExemptReason']) {
+      assert.ok(key in availableSpec.parameters, `可用态 parameters 应含 ${key}`);
+    }
+
+    // ③ CLI 校验链：不可用态传 --audit ⇒ 报「未知参数」（不是静默忽略）
+    const unavailableParams = resolveEntryParams(commit, {}, false);
+    const rejected = parseRegistryArgs(['/repo/x', '--message', 'm', '--audit'], unavailableParams);
+    assert.ok(rejected.error, '不可用态传 --audit 必须报错');
+    assert.match(rejected.error, /未知参数 --audit/, `应报未知参数，实际：${rejected.error}`);
+    // 同一串参数在可用态必须被接受（对照组，证明差异来自参数表而非解析器）
+    const accepted = parseRegistryArgs(['/repo/x', '--message', 'm', '--audit'], resolveEntryParams(commit, {}, true));
+    assert.equal(accepted.error, undefined, `可用态应接受 --audit，实际：${accepted.error}`);
+    assert.equal(accepted.args.audit, true);
+  });
+
+  test('[动态参数] HELP 与参数表对齐：不可用态 help 里不再出现 --audit', () => {
+    const availableHelp = renderHelp({}, true);
+    const unavailableHelp = renderHelp({}, false);
+    // 可用态：三条审计参数都在 HELP 里
+    assert.match(availableHelp, /\[--audit\]/, '可用态 HELP 应含 [--audit]');
+    assert.match(availableHelp, /--audit-exempt-paths/, '可用态 HELP 应含 --audit-exempt-paths');
+    assert.match(availableHelp, /--audit-exempt-reason/, '可用态 HELP 应含 --audit-exempt-reason');
+    // 不可用态：整体不再出现 --audit（含描述里的那句）
+    assert.doesNotMatch(unavailableHelp, /--audit/, '不可用态 HELP 不得再出现 --audit');
+    // 其余 commit 参数不受影响（防「整行被删」）
+    for (const flag of ['--push|--no-push', '--dry-run', '--force', '--requirements-confirmed', '--message-items']) {
+      assert.ok(unavailableHelp.includes(flag), `不可用态 HELP 仍应含 ${flag}`);
+    }
+    // 漂移防护：片段表里的每一项都必须真的出现在 HELP 里（改了 HELP 忘改表 ⇒ 这里变红）
+    for (const snippet of AUDIT_HELP_SNIPPETS) {
+      assert.ok(availableHelp.includes(snippet), `AUDIT_HELP_SNIPPETS 里的片段在 HELP 中找不到（HELP 改过？）：${JSON.stringify(snippet)}`);
+    }
   });
 
   test('[command-registry] buildToolsListText：工具清单同源生成（含 name + 描述）', () => {

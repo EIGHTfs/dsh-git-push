@@ -25,12 +25,20 @@ console.log('git_api 工具回归');
 const names = listTools().map((t) => t.name);
 ok('git_api 已注册进工具清单', names.includes('git_api'), '实际: ' + names.join(','));
 const spec = listTools().find((t) => t.name === 'git_api');
-ok('git_api 的 params 含 path/method/query/body', !!spec && ['path', 'method', 'query', 'body'].every((k) => k in (spec.params || spec.parameters || {})));
+// listTools 的出口字段是 parameters（由注册表 params 经 resolveEntryParams 求值而来）；
+//   这里不再写 spec.params 兜底——那个字段在工具 schema 上根本不存在，写它会让断言失去意义。
+ok('git_api 的 parameters 含 path/method/query/body', !!spec && ['path', 'method', 'query', 'body'].every((k) => k in (spec.parameters || {})));
 
 // ── ② 不传 path ⇒ 列出全部接口（口径 = 分发器 case，即路由真相）──
 const listed = await callTool('git_api', {});
 ok('不传 path 返回接口清单', listed.ok === true && Array.isArray(listed.endpoints));
-ok('接口数与分发器一致（36 条）', listed.count === 36, '实际 ' + listed.count);
+// 不硬编码条数：从分发器源码里数真实 case 数作为期望值（增删端点时该断言自动跟上，
+//   硬编码 36 会让「新增一条路由」变成假红——2026-11-14 加 npm-install-progress 时就这样红过一次）
+const { readFileSync } = await import('node:fs');
+const handlersSrc = readFileSync(new URL('../../lib/app/http-handlers.js', import.meta.url), 'utf8');
+const realCaseCount = (handlersSrc.match(/case '\/api\/git-push\//g) || []).length;
+ok('接口数与分发器一致', listed.count === realCaseCount,
+  `清单 ${listed.count} 条 vs 分发器 ${realCaseCount} 个 case`);
 ok('清单里含 status / settings-set / repo-push', ['status', 'settings-set', 'repo-push'].every((e) => listed.endpoints.includes(e)));
 
 // ── ③ 传 path ⇒ 真调通（内部 handleHttp，读接口免 Origin）──

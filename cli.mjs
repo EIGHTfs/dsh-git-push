@@ -14,6 +14,7 @@
  */
 import { VERSION } from './lib/self/index.js';
 import { runWrappedGit } from './lib/git/wrapped-git.js';
+import { auditPreprocessAvailable } from './lib/app/command-registry.js';
 
 // 具名 import 而非 `export ... from`：COMMANDS 表直接引用 cmdXxx 变量名，
 //   re-export 不建立本模块作用域绑定，会 ReferenceError。
@@ -99,6 +100,33 @@ const HELP = `git-sluice v${VERSION} — ${CLI_ENTRIES[CLI_GIT].intro}
 
 /** 命令表（本侧独有的 COMMANDS；注册表驱动的命令由 shared 的 resolveDispatch 处理）。
  * 注：`git` 不用登记——注册表（git_sluice）已覆盖它，旧 cli.mjs 里那条 COMMANDS['git'] 是死代码。 */
+/**
+ * HELP 文本里与「提交前审计预处理」绑定的片段。
+ * 为什么要有这张表：参数表（command-registry 的 params）已经是**动态**的——
+ *   审计引擎不可用时 `--audit*` 不入签名（传了报「未知参数」）；但 HELP 是**手写快照**，
+ *   不跟着动态就会在审计剥离后仍宣传一个不存在的参数。审计不可用时按这张表把片段从渲染结果里剔掉。
+ * 漂移防护：test/tool/test-cli.mjs 断言「每个片段都真的出现在 HELP 里」——改了 HELP 忘改表会变红。
+ */
+export const AUDIT_HELP_SNIPPETS = Object.freeze([
+  ' [--audit]',
+  ' [--audit-exempt-paths <文件,...>]',
+  ' [--audit-exempt-reason <理由>]',
+  '；--audit-exempt-paths 本次提交按文件临时豁免审计',
+]);
+
+/**
+ * 渲染本侧 HELP（按当前配置决定审计参数出不出现）。
+ * @param {object} [cfg] 插件配置
+ * @param {boolean} [hasBuiltinEngine] 仅供测试注入「内置引擎是否存在」
+ * @returns {string}
+ */
+export function renderHelp(cfg = {}, hasBuiltinEngine) {
+  if (auditPreprocessAvailable(cfg, hasBuiltinEngine)) return HELP;
+  let text = HELP;
+  for (const snippet of AUDIT_HELP_SNIPPETS) text = text.split(snippet).join('');
+  return text;
+}
+
 export const COMMANDS = new Map([
   ['repos', parseVia((flags, positional) => cmdRepos(positional[0] || '.', flags))],
   ['index', parseVia((flags, positional) => cmdIndex(positional[0] || '.', flags))],
@@ -132,7 +160,7 @@ export async function main(argv = process.argv.slice(2)) {
     cliName: CLI_GIT,
     argv,
     commands: COMMANDS,
-    helpText: HELP,
+    helpText: () => renderHelp(cliPluginConfig()),
     passthroughGit,
     getConfig: cliPluginConfig,
   });

@@ -22,16 +22,18 @@
 | `aggregateFindings` | 82-103 | 22 | `export function aggregateFindings(findings = [], opts = {}) {` |
 | `runAuditApi` | 111-173 | 63 | `export async function runAuditApi(repo, params = {}, cfg = {}) {` |
 
-### lib/app/command-registry.js（311 行 · 6 个函数）
+### lib/app/command-registry.js（354 行 · 8 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `applyFlagToken` | 249-265 | 17 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
-| `validateParamConstraints` | 268-274 | 7 | `function validateParamConstraints(args, params) {` |
-| `parseRegistryArgs` | 276-296 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
-| `registryByName` | 299-301 | 3 | `export function registryByName(name) {` |
-| `registryByCli` | 304-306 | 3 | `export function registryByCli(cli) {` |
-| `buildToolsListText` | 309-311 | 3 | `export function buildToolsListText() {` |
+| `auditPreprocessAvailable` | 15-22 | 8 | `export function auditPreprocessAvailable(cfg = {}, hasBuiltinEngine) {` |
+| `resolveEntryParams` | 38-42 | 5 | `export function resolveEntryParams(entry, cfg, hasBuiltinEngine) {` |
+| `applyFlagToken` | 292-308 | 17 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
+| `validateParamConstraints` | 311-317 | 7 | `function validateParamConstraints(args, params) {` |
+| `parseRegistryArgs` | 319-339 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
+| `registryByName` | 342-344 | 3 | `export function registryByName(name) {` |
+| `registryByCli` | 347-349 | 3 | `export function registryByCli(cli) {` |
+| `buildToolsListText` | 352-354 | 3 | `export function buildToolsListText() {` |
 
 ### lib/app/handlers/account.js（166 行 · 10 个函数）
 
@@ -67,7 +69,7 @@
 | `bool` | 19-21 | 3 | `function bool(v) {` |
 | `callIdentityRewrite` | 28-94 | 67 | `export async function callIdentityRewrite(args = {}, env = {}, cfg = {}) {` |
 
-### lib/app/handlers/meta.js（213 行 · 14 个函数）
+### lib/app/handlers/meta.js（214 行 · 14 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -75,18 +77,18 @@
 | `handleStatus` | 41-55 | 15 | `export function handleStatus(ctx) {` |
 | `handleScan` | 58-61 | 4 | `export function handleScan(ctx) {` |
 | `handleBrowse` | 64-68 | 5 | `export function handleBrowse(ctx) {` |
-| `handleTools` | 71-73 | 3 | `export function handleTools() {` |
-| `handleToolProbes` | 76-78 | 3 | `export function handleToolProbes() {` |
-| `ruleSlotStats` | 88-95 | 8 | `function ruleSlotStats(r) {` |
-| `listRuleSlots` | 98-117 | 20 | `export function listRuleSlots(order, disabledSlots = [], hitStats = null) {` |
-| `handleRuleSlots` | 120-123 | 4 | `export function handleRuleSlots(ctx) {` |
-| `handleRuleDetail` | 126-149 | 24 | `export function handleRuleDetail(ctx) {` |
-| `count` | 141-141 | 1 | `const count = (sev) => detail.filter((x) => x.severity === sev).length;` |
-| `handleAudit` | 152-165 | 14 | `export async function handleAudit(ctx) {` |
-| `handleToggleRule` | 168-176 | 9 | `export function handleToggleRule(ctx) {` |
-| `handleExemptHint` | 188-213 | 26 | `export function handleExemptHint(ctx) {` |
+| `handleTools` | 71-74 | 4 | `export function handleTools(ctx = {}) {` |
+| `handleToolProbes` | 77-79 | 3 | `export function handleToolProbes() {` |
+| `ruleSlotStats` | 89-96 | 8 | `function ruleSlotStats(r) {` |
+| `listRuleSlots` | 99-118 | 20 | `export function listRuleSlots(order, disabledSlots = [], hitStats = null) {` |
+| `handleRuleSlots` | 121-124 | 4 | `export function handleRuleSlots(ctx) {` |
+| `handleRuleDetail` | 127-150 | 24 | `export function handleRuleDetail(ctx) {` |
+| `count` | 142-142 | 1 | `const count = (sev) => detail.filter((x) => x.severity === sev).length;` |
+| `handleAudit` | 153-166 | 14 | `export async function handleAudit(ctx) {` |
+| `handleToggleRule` | 169-177 | 9 | `export function handleToggleRule(ctx) {` |
+| `handleExemptHint` | 189-214 | 26 | `export function handleExemptHint(ctx) {` |
 
-### lib/app/handlers/npm.js（172 行 · 7 个函数）
+### lib/app/handlers/npm.js（189 行 · 8 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -96,7 +98,8 @@
 | `handleNpmOwned` | 76-86 | 11 | `export async function handleNpmOwned(ctx) {` |
 | `handleNpmPackages` | 92-116 | 25 | `export function handleNpmPackages(ctx) {` |
 | `handleNpmInstall` | 122-146 | 25 | `export function handleNpmInstall(ctx) {` |
-| `handleNpmPublish` | 152-171 | 20 | `export async function handleNpmPublish(ctx) {` |
+| `handleNpmInstallProgress` | 162-167 | 6 | `export function handleNpmInstallProgress(ctx) {` |
+| `handleNpmPublish` | 169-188 | 20 | `export async function handleNpmPublish(ctx) {` |
 
 ### lib/app/handlers/repo-actions.js（145 行 · 5 个函数）
 
@@ -147,10 +150,10 @@
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `adaptHttpHandler` | 44-65 | 22 | `export async function adaptHttpHandler(req, res, env, cfg) {` |
-| `readBody` | 68-82 | 15 | `function readBody(req) {` |
-| `buildCtx` | 85-87 | 3 | `function buildCtx(req, method, env, cfg, query, body, path) {` |
-| `handleHttp` | 97-171 | 75 | `export async function handleHttp(req = {}, env = {}, cfg = defaultConfig()) {` |
+| `adaptHttpHandler` | 42-63 | 22 | `export async function adaptHttpHandler(req, res, env, cfg) {` |
+| `readBody` | 66-80 | 15 | `function readBody(req) {` |
+| `buildCtx` | 83-85 | 3 | `function buildCtx(req, method, env, cfg, query, body, path) {` |
+| `handleHttp` | 95-171 | 77 | `export async function handleHttp(req = {}, env = {}, cfg = defaultConfig()) {` |
 
 ### lib/app/inject-text.js（199 行 · 5 个函数）
 
@@ -274,12 +277,12 @@
 | `shellSplit` | 806-824 | 19 | `function shellSplit(input) {` |
 | `readTextSafe` | 827-831 | 5 | `function readTextSafe(path = '') {` |
 
-### lib/app/tools.js（34 行 · 2 个函数）
+### lib/app/tools.js（41 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `paramsToParameters` | 12-25 | 14 | `function paramsToParameters(params = []) {` |
-| `listTools` | 28-34 | 7 | `export function listTools() {` |
+| `paramsToParameters` | 16-30 | 15 | `function paramsToParameters(params = [], cfg) {` |
+| `listTools` | 33-41 | 9 | `export function listTools(cfg, hasBuiltinEngine) {` |
 
 ### lib/ast/brace.js（121 行 · 6 个函数）
 
@@ -1076,7 +1079,7 @@
 | `printCloneResult` | 154-166 | 13 | `function printCloneResult(r, flags, target, dest) {` |
 | `cmdClone` | 169-176 | 8 | `export async function cmdClone(flags, positional) {` |
 
-### lib/cli/shared.mjs（449 行 · 20 个函数）
+### lib/cli/shared.mjs（452 行 · 20 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1095,11 +1098,11 @@
 | `printVersion` | 261-263 | 3 | `export function printVersion(cliName) {` |
 | `resolveDispatch` | 273-304 | 32 | `export function resolveDispatch({ cliName = CLI_GIT, argv = [], commands = new Map() } = {}) {` |
 | `normalizeRegistryArgv` | 318-332 | 15 | `export function normalizeRegistryArgv(rest = [], params = []) {` |
-| `runCli` | 345-388 | 44 | `export async function runCli({` |
-| `isDirectRun` | 398-406 | 9 | `export function isDirectRun(moduleUrl) {` |
-| `runAsEntry` | 413-424 | 12 | `export function runAsEntry(moduleUrl, main) {` |
-| `readEntrySource` | 433-435 | 3 | `export function readEntrySource(relPath) {` |
-| `parseEntrySourceMeta` | 442-448 | 7 | `export function parseEntrySourceMeta(sourceText = '') {` |
+| `runCli` | 345-391 | 47 | `export async function runCli({` |
+| `isDirectRun` | 401-409 | 9 | `export function isDirectRun(moduleUrl) {` |
+| `runAsEntry` | 416-427 | 12 | `export function runAsEntry(moduleUrl, main) {` |
+| `readEntrySource` | 436-438 | 3 | `export function readEntrySource(relPath) {` |
+| `parseEntrySourceMeta` | 445-451 | 7 | `export function parseEntrySourceMeta(sourceText = '') {` |
 
 ### lib/client-parts/audit/audit.js（302 行 · 10 个函数）
 
@@ -2455,13 +2458,13 @@
 | `readReleases` | 126-133 | 8 | `export function readReleases(repoPath) {` |
 | `buildReadmeVersionTable` | 151-171 | 21 | `export function buildReadmeVersionTable(repoPath) {` |
 
-### test/app/test-plugin.mjs（657 行 · 3 个函数）
+### test/app/test-plugin.mjs（670 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `makeExemptRepo` | 488-494 | 7 | `function makeExemptRepo() {` |
-| `addSecretFile` | 495-498 | 4 | `function addSecretFile(root, path) {` |
-| `fsStatMode` | 652-654 | 3 | `function fsStatMode(file) {` |
+| `makeExemptRepo` | 501-507 | 7 | `function makeExemptRepo() {` |
+| `addSecretFile` | 508-511 | 4 | `function addSecretFile(root, path) {` |
+| `fsStatMode` | 665-667 | 3 | `function fsStatMode(file) {` |
 
 ### test/app/test-settings-persistence.mjs（252 行 · 4 个函数）
 
@@ -3068,19 +3071,19 @@
 | `runBatch` | 118-150 | 33 | `function runBatch(files) {` |
 | `emit` | 134-145 | 12 | `const emit = (chunk) => {` |
 
-### test/tool/test-cli.mjs（995 行 · 9 个函数）
+### test/tool/test-cli.mjs（1062 行 · 9 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `usageLines` | 55-65 | 11 | `function usageLines(helpText, cliName, command) {` |
-| `helpOf` | 68-72 | 5 | `function helpOf(cliName) {` |
-| `runCliFile` | 149-158 | 10 | `async function runCliFile(cliName, argv, opts = {}) {` |
-| `runInWaves` | 161-167 | 7 | `async function runInWaves(tasks, waveSize = 4) {` |
-| `run` | 398-403 | 6 | `const run = (file, args) => {` |
-| `mockReact` | 491-497 | 7 | `function mockReact() {` |
-| `req` | 799-816 | 18 | `const req = (name) => {` |
-| `req` | 877-896 | 20 | `const req = (name) => {` |
-| `req` | 945-963 | 19 | `const req = (name) => {` |
+| `usageLines` | 57-67 | 11 | `function usageLines(helpText, cliName, command) {` |
+| `helpOf` | 70-74 | 5 | `function helpOf(cliName) {` |
+| `runCliFile` | 151-160 | 10 | `async function runCliFile(cliName, argv, opts = {}) {` |
+| `runInWaves` | 163-169 | 7 | `async function runInWaves(tasks, waveSize = 4) {` |
+| `run` | 400-405 | 6 | `const run = (file, args) => {` |
+| `mockReact` | 558-564 | 7 | `function mockReact() {` |
+| `req` | 866-883 | 18 | `const req = (name) => {` |
+| `req` | 944-963 | 20 | `const req = (name) => {` |
+| `req` | 1012-1030 | 19 | `const req = (name) => {` |
 
 ### test/tool/test-client-fragment-scope.mjs（69 行 · 1 个函数）
 
@@ -3148,7 +3151,7 @@
 | `keyOf` | 186-186 | 1 | `const keyOf = (abs) => cacheKeyFor(importClosure(abs));` |
 | `makeProject` | 235-242 | 8 | `function makeProject() {` |
 
-### test/tool/test-scope-collisions.mjs（254 行 · 2 个函数）
+### test/tool/test-scope-collisions.mjs（256 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|

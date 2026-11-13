@@ -391,3 +391,88 @@ test/
 改名或合并这些文件时**必须同步改登记清单**，否则它们会从「每次必跑」退化成「可缓存」，
 让「新增文件未登记 README / FUNCTIONS」这类漂移变成假通过。
 
+## 十四、参数动态注册
+
+> 同一个工具/命令的参数表，要能随**运行期配置**变化：某个能力不可用时，它的参数**不出现在签名里**，
+> 传了就是「未知参数」而不是被静默忽略。首个落地场景是「提交前审计预处理」——
+> 审计引擎不可用时，`git_commit_push` 不该还宣称自己有 `audit` 系列参数。
+
+### 14.1 `params` 的两种形态
+
+`lib/app/command-registry.js` 的注册表条目里，`params` 可以是：
+
+| 形态 | 写法 | 求值时机 | 适用 |
+|---|---|---|---|
+| **数组** | `params: [{ flag: 'repo', ... }]` | 静态 | 参数与配置无关（绝大多数条目） |
+| **函数** | `params: (cfg, hasBuiltinEngine) => [...]` | 每次按当前 cfg 求值 | 参数依赖运行期能力（如审计预处理是否可用） |
+
+**唯一取值入口**：`resolveEntryParams(entry, cfg, hasBuiltinEngine)` ——
+数组原样返回、函数调用求值。**任何消费方都不得直读 `entry.params`**，
+否则函数形态会被当成数组（拿到函数对象），表现为「参数全丢」或「签名错乱」。
+
+当前三个消费方都已走该入口：
+
+| 消费方 | 位置 | 用途 |
+|---|---|---|
+| 宿主工具 schema | `lib/app/tools.js` 的 `listTools(cfg, hasBuiltinEngine)` | `parameters` 下发（AI 看到的工具签名） |
+| 插件装载 | `lib/app/apply.js` | `listTools(cfg)` 注册工具 |
+| CLI 参数校验 | `lib/cli/shared.mjs` | `parseRegistryArgs(rest, resolveEntryParams(entry, cfg))` |
+
+### 14.2 可用性判据（**可用性 ≠ auditEnabled**）
+
+```js
+auditPreprocessAvailable(cfg = {}, hasBuiltinEngine) {
+  if (cfg?.preCommit?.command) return true;          // 配了自定义引擎 ⇒ 可用
+  return hasBuiltinEngine ?? existsSync(<pluginRoot>/scripts/audit-gate.mjs);  // 内置引擎文件是否存在
+}
+```
+
+两个判据刻意都不看 `auditEnabled`：后者只是「**默认跑不跑**审计」，与「**能不能**跑」是两件事。
+用户关掉 `auditEnabled` 之后仍可能想临时传 `--audit` 跑一次，此时参数必须还在。
+
+`hasBuiltinEngine` 第二参**只为测试注入**（生产不传 ⇒ 走真实文件存在性判断）；
+`resolveEntryParams` / `listTools` 都必须把它**透传下去**，否则「不可用态」根本测不出来
+（实测踩过：`listTools(cfg)` 不透传时，`listTools({}, false)` 仍返回 audit 参数）。
+
+### 14.3 未启用时的语义
+
+| 层 | 行为 |
+|---|---|
+| 工具 schema（`listTools`） | `git_commit_push.parameters` 里**没有** `audit` / `auditExemptPaths` / `auditExemptReason` |
+| CLI 参数校验 | 传 `--audit` → 报 `未知参数 --audit`（**不是**静默忽略） |
+| 基础参数 | `repo` / `message` / `messageItems` / `push` / `dryRun` / `force` … 一律不受影响 |
+
+**审计专属参数清单**（`AUDIT_COMMIT_PARAMS`）只此三条，全部由审计预处理贡献：
+`audit`（boolean）、`auditExemptPaths`（array）、`auditExemptReason`（string）。
+
+### 14.4 HELP 与动态参数的关系
+
+`params` 是动态的，但 `git-sluice help` 的文本是**手写快照**（`cli.mjs` 的 `const HELP` 模板字面量）。
+两者不联动就会在审计剥离后宣传一个不存在的参数。做法：
+
+- `cli.mjs` 导出 `AUDIT_HELP_SNIPPETS`（与审计绑定、需要条件剔除的**精确片段**）
+  与 `renderHelp(cfg, hasBuiltinEngine)`：审计不可用时把片段从渲染结果里剔掉；
+- `runCli({ helpText })` 支持 **字符串或函数**：git 侧传 `() => renderHelp(cliPluginConfig())`，
+  另两个入口仍传静态字符串；
+- **漂移防护**：`test/tool/test-cli.mjs` 断言「`AUDIT_HELP_SNIPPETS` 里每一项都真的出现在 HELP 里」——
+  改了 HELP 忘改片段表会**变红**，而不是静默失效。
+
+判定标准：审计不可用时，`git-sluice help` 的 commit 行**不再出现 `--audit`**，
+但 `--push|--no-push` / `--dry-run` / `--force` / `--message-items` 等基础参数照常显示。
+
+### 14.5 将来加第二种「可剥离的预处理」要做什么
+
+1. 在 `command-registry.js` 定义该能力的 `available` 判定（**只看能力可用性，不看开关**）；
+2. 把它的参数收进一个 `XXX_PARAMS` 常量（与 `AUDIT_COMMIT_PARAMS` 同款）；
+3. 在对应条目的 `params` 函数里条件拼接：`...(xxxAvailable(cfg, hasBuiltinEngine) ? XXX_PARAMS : [])`；
+4. 在 `cli.mjs` 的 `AUDIT_HELP_SNIPPETS` 旁边加 `XXX_HELP_SNIPPETS`，并在 `renderHelp` 里按同一判据剔除；
+5. 端到端测试三条：`listTools(cfg, false)` 无该参数 / 传该参数报未知参数 / 可用态三条齐全；
+6. 若该能力有开关（如 `auditEnabled`），**不要**用开关做可用性判据（见 14.2）。
+
+### 14.6 端到端验证（回归基线）
+
+`test/tool/test-cli.mjs` 覆盖：
+- `[动态参数] 审计专属参数由预处理贡献：可用时出现、不可用时不在签名里`
+- `[动态参数] 端到端：不可用态下 listTools 无 audit 参数、CLI 传 --audit 报未知参数`
+  （含对照组：同一串参数在可用态被接受，证明差异来自参数表而非解析器）
+- `[动态参数] HELP 与参数表对齐：不可用态 help 里不再出现 --audit`（含片段表漂移防护）

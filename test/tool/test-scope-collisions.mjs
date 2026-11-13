@@ -137,7 +137,7 @@ test('CLI：项目自己声明了前缀才检查（未带前缀 → 报）', () 
 /* ── 审计管线：kind=scope-collision 必须经「规则 yml → 编译器 → 检查器 → 调度」生效 ── */
 
 import { checkScopeCollision } from '../../lib/checks/scope-collision.js';
-import { TOOL_REGISTRY } from '../../lib/app/command-registry.js';
+import { resolveEntryParams, TOOL_REGISTRY } from '../../lib/app/command-registry.js';
 
 /** 编译后的规则对象（与 structure.js 编译器产出同形）。 */
 const RULE = { id: 'dsh/scope-collision', severity: 'error', level: 'blocker', dimensions: ['健壮性'] };
@@ -215,8 +215,10 @@ test('注册表：scope_check 工具与 CLI 命令同源声明（加一条注册
   const entry = TOOL_REGISTRY.find((t) => t.name === 'scope_check');
   assert.ok(entry, '注册表必须有 scope_check');
   assert.equal(entry.cli, 'scope-check', 'CLI 命令名由注册表 cli 字段派生');
+  // 用 resolveEntryParams 而非直读 entry.params：params 支持「函数形态」（按 cfg 求值），
+  //   直读会把函数当数组（.some 直接 TypeError 或静默 false）。
   for (const flag of ['files', 'repo', 'prefix', 'allowlist', 'topLevelMustBeEmpty']) {
-    assert.ok(entry.params.some((p) => p.flag === flag), `缺参数 ${flag}`);
+    assert.ok(resolveEntryParams(entry, {}).some((p) => p.flag === flag), `缺参数 ${flag}`);
   }
 });
 

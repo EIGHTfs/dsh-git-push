@@ -238,15 +238,28 @@ test('HTTP：GET status 免 Origin', async () => {
 });
 
 test('HTTP：POST 无 Origin → 403（鉴权前置到接线层）', async () => {
-  const r = await handleHttp({ method: 'POST', url: '/api/git-push/rebuild', origin: '' }, {}, {});
+  const r = await handleHttp({ method: 'POST', url: '/api/git-push/repo-push', origin: '' }, {}, {});
   assert.equal(r.status, 403);
   assert.equal(r.body.code, 'NO_ORIGIN');
 });
 
 test('HTTP：破坏性端点缺 confirm → 400', async () => {
-  const r = await handleHttp({ method: 'POST', url: '/api/git-push/rollback', origin: 'http://127.0.0.1:30801' }, {}, {});
+  // 用真实存在的写确认端点验证同一语义：`rollback` 路由已无（死条目 2026-11-14 清理）
+  const r = await handleHttp({ method: 'POST', url: '/api/git-push/repo-clone', origin: 'http://127.0.0.1:30801' }, {}, {});
   assert.equal(r.status, 400);
   assert.equal(r.body.code, 'NEED_CONFIRM');
+});
+
+test('HTTP 2026-11-14：npm-install-progress 路由存在（此前前端在调、路由无 case ⇒ 一直 404）', async () => {
+  // 前端 controller.js 的 pollInstallProgress 一直在 POST 这条路径。修复前 404、进度框永远拿不到进度。
+  const r = await handleHttp(
+    { method: 'POST', url: '/api/git-push/npm-install-progress', origin: 'http://127.0.0.1:30801', body: {} },
+    { workspaceRoot: ROOT }, {},
+  );
+  assert.equal(r.status, 200, '路由必须存在');
+  assert.equal(r.body.ok, true);
+  // 无任务时返回 idle（前端读 st.progress，无 progress 就 return，安全）
+  assert.equal(r.body.state, 'idle');
 });
 
 test('HTTP：超大 body → 413', async () => {
