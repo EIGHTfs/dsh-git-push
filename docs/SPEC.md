@@ -221,8 +221,19 @@ exit 2           : 执行失败
 
 ```
 lib/audit-ui-sdk/
-├── contract.js   AUDIT_UI_CONTRACT_VERSION + defineAuditPanel() 校验（构建期用）
+├── contract.js   契约实现（版本号 + 键常量 + defineAuditPanel 校验，构建期用）
 └── index.js      唯一导出面（实现只能从这里 import）
+```
+
+**唯一导出面 = 恰好 6 个符号**（多一个都会被 `test-audit-ui-contract.mjs` 判红）：
+
+```
+AUDIT_UI_CONTRACT_VERSION    契约版本（破坏性改动 +1）
+AUDIT_PANEL_ID_PATTERN       meta.id 的合法形态
+AUDIT_PANEL_DATA_KEYS        data 组键：summary / quality / findings / ruleSlots
+AUDIT_PANEL_ACTION_KEYS      actions 组键：reload / toggleRule / editWeight / toggleDisabled
+AUDIT_PANEL_STATE_KEYS       state 组键：loading / error / auditEnabled / auditScanScope
+defineAuditPanel             校验 + 深冻结
 ```
 
 **契约形状**：`meta:{id,name,contractVersion}`（`id` 形如 `/^[a-z][a-z0-9-]{1,31}$/`）+
