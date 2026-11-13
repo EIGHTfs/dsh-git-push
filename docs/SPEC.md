@@ -304,6 +304,77 @@ test/
 
 **基线**：`node test/run-tests.mjs --all` 必须 `# fail 0`；`# tests` 基准值随测试增删同步维护。
 
+### 测试合并记录（2026-11-13，四批）
+
+**成果**：174 → **125** 个测试文件（-49），`# tests` 始终 1591（零用例丢失）。
+
+**合并方式**（`test/helpers/merge-tests.mjs` 的 `check` / `merge` / `verify`）：
+1. 提取各文件 import 块（tokenizer 定位真语句行范围，不是正则）
+2. 文件体**按原顺序平铺**，`test()` 仍在模块顶层——**不用 `describe()`**
+3. 每个原文件体包一层 `{}` **块级作用域**，只为隔离同名顶层声明（不影响 test 注册时机）
+4. import 按模块路径去重、同名具名导入取并集
+5. 每个 `test()` 名加 `[原文件名]` 前缀做溯源
+
+**为什么不用 `describe()`**：实测过一次，`describe()` 回调是 async 作用域，把顶层 `test()` /
+`const` / `await` 全挪进回调后语义就变了 → **54 失败、少 17 条用例**，已整体回滚。
+
+**五项前置检查**（不满足就跳过该文件，不硬合）：顶层 `await` / 顶层 `process.env` 或
+`process.exitCode` 赋值 / `before*`·`after*` 钩子 / 顶层声明命名冲突 / **顶层 `export`**
+（`export` 只在模块顶层合法，包进 `{}` 直接 SyntaxError）。
+
+**20 个文件受阻未合并**（`check` 命令按 5 项判定；不是遗漏，是边界）：
+
+| 目录 | 文件 | 卡点 |
+|---|---|---|
+| git | test-account-refresh-on-push | await(19) + env(17) + after(23) |
+| git | test-audit-bad-file | before(25) + after(37) |
+| git | test-git-api-tool | await(31,37,42,46) |
+| git | test-git-identity | env(24) |
+| git | test-git.mjs | before(30) + after(48) |
+| git | test-persist-credentials | await(9) |
+| git | test-push-false-success | await(19) |
+| git | test-quota-write | await(15) + env(13) + after(24) |
+| app | test-plugin | env(17) |
+| app | test-settings-roundtrip | await(16,17) + env(14) + after(26) |
+| app | test-tools-e2e | after(23) |
+| app | test-workspace-paths | before(15) + after(22) |
+| audit | test-audit.mjs | before(29) + after(57) |
+| audit | test-false-positive-fixes | before(29) |
+| audit | test-gitignore-nongit-dir | after(26) |
+| audit | test-audit-git-boundary | 顶层 export(36,43) |
+| tool | test-npm-tab-render | await(18) |
+| tool | test-picker-layout | await(30) |
+| tool | test-tree-doc | after(157) |
+| tool | test-version-metrics | after(15) |
+
+**为什么这些卡点不能绕过**：`await` / `export` 在块级作用域里是**语法错误**（合并直接编译不过）；
+`process.env` 赋值与 `before`/`after` 钩子合并后**执行时机改变**（钩子从「紧跟本文件」变成「整文件末尾」），
+属明令禁止的语义变化。要把它们合进来需先重写各自内部结构（静态 import / env 移入 `before` /
+钩子改 `try-finally`），那是**独立议题**，不与结构合并混做。
+
+### 合并的真实收益（实测，2026-11-13）
+
+**结论：合并不提速。价值在「减少文件数 / 扫描与分批开销 / 结构集中」，不是速度。**
+
+| 项 | 数据 |
+|---|---|
+| 热跑（125 文件，缓存已填充） | 缓存命中 80 / 真跑 45 / **159.5s** |
+| 省下的进程启动 | ≈ 0.2s × 47 文件 ≈ **9.4s** / 次冷跑 |
+| 代价 | 大单元把多用例塞进同一进程串行跑（`node --test` 的并发单位是**文件**），并行粒度变粗 |
+| 净效应 | 冷跑基本持平或略慢；热跑无差别 |
+
+**关键判读**：热跑耗时由**不可缓存文件**决定（那 45 个装配层/HTTP 类测试每次必跑），
+与文件总数无关。所以「继续合并」不会提速——若要提速，方向是**把装配层测试改造成可缓存**。
+
+**一处超限记录**：`test/tool/test-cli.mjs` **994 行**，超过合并时定的「单文件 ≤800 行」。
+原因：4 个文件合并（466 + 522 + import 差额），块级作用域只消命名冲突、不压行数。
+判断：接受（拆开等于部分回退合并成果；且仓库本就有 878 行的 `test-git.mjs` 单例）。
+若将来要严格守 800：把 client 那 522 行拆回独立文件（125 → 126）。
+
+**合并工具**：`test/helpers/merge-tests.mjs` 是**常驻基础设施**（非测试、不以 `test-` 开头、不进缓存统计），
+三子命令：`check <dir>`（逐文件 5 项前置检查表）/ `merge <dir> '<groups-json>'`（合并前再查一次，任一成员受阻即整体拒绝）/
+`verify <dir> <file> <期望用例数>`。将来做同类整理直接复用，不必重新摸索前置条件。
+
 **整仓不变式测试**（`test-cache.mjs` 的 `ALWAYS_RUN_TESTS`，按文件名登记、每次必跑）：
 改名或合并这些文件时**必须同步改登记清单**，否则它们会从「每次必跑」退化成「可缓存」，
 让「新增文件未登记 README / FUNCTIONS」这类漂移变成假通过。

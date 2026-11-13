@@ -54,7 +54,9 @@ function importLineRanges(text) {
 
 /** 解析一条（可能多行的）import 语句 → { module, def, ns, named[[imported,local]], bare }。 */
 function parseImport(stmt) {
-  const flat = stmt.replace(/\s+/g, ' ').trim();
+  // 先剥行尾注释（`import 'x'; // 说明` 很常见，尤其副作用 import），再压平空白
+  const withoutComment = String(stmt).replace(/\/\/[^\n]*$/gm, ' ').replace(/\/\*[\s\S]*?\*\//g, ' ');
+  const flat = withoutComment.replace(/\s+/g, ' ').trim();
   const sideEffect = flat.match(/^import\s+['"]([^'"]+)['"]\s*;?$/);
   if (sideEffect) return { module: sideEffect[1], bare: true, def: null, ns: null, named: [] };
   const matched = flat.match(/^import\s+([\s\S]*?)\s+from\s+['"]([^'"]+)['"]\s*;?$/);
@@ -90,7 +92,7 @@ export function inspectFile(absPath) {
   const text = readFileSync(absPath, 'utf8');
   const tokens = tokenize(text);
   let depth = 0;
-  const result = { topLevelAwait: [], envOrExitCodeAssign: [], hooks: [], decls: new Set() };
+  const result = { topLevelAwait: [], envOrExitCodeAssign: [], hooks: [], exports: [], decls: new Set() };
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i];
     if (['{', '(', '['].includes(token.value)) { depth++; continue; }
@@ -101,6 +103,7 @@ export function inspectFile(absPath) {
       result.decls.add(tokens[i + 1].value);
     }
     if (HOOKS.has(token.value) && tokens[i + 1]?.value === '(') result.hooks.push(`${token.value}@${token.line}`);
+    if (token.value === 'export') result.exports.push(token.line);
     // process.env.X = … / process.exitCode = … （含 .env.DSH_HOME 这种「先取子属性再赋值」的写法）
     if (token.value === 'process' && tokens[i + 1]?.value === '.' && ['env', 'exitCode'].includes(tokens[i + 2]?.value)) {
       let j = i + 3;
@@ -118,6 +121,7 @@ export function mergeability(absPath) {
   if (info.topLevelAwait.length) blockers.push(`顶层 await（行 ${info.topLevelAwait.join(',')}）→ 平铺进块会语法错误`);
   if (info.envOrExitCodeAssign.length) blockers.push(`顶层 process.env/exitCode 赋值（行 ${info.envOrExitCodeAssign.join(',')}）`);
   if (info.hooks.length) blockers.push(`顶层钩子 ${info.hooks.join(',')} → 合并后执行时机变化`);
+  if (info.exports.length) blockers.push(`顶层 export（行 ${info.exports.join(',')}）→ 包进块级作用域会语法错误`);
   return { ok: blockers.length === 0, blockers, info };
 }
 

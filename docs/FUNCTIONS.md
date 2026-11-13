@@ -2553,25 +2553,6 @@
 |------|------|------|------|
 | `withRepo` | 23-27 | 5 | `async function withRepo(fn) {` |
 
-### test/audit/test-audit-defaults.mjs（34 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `read` | 15-15 | 1 | `const read = (p) => readFileSync(join(ROOT, p), 'utf8');` |
-
-### test/audit/test-audit-false-positive-guards.mjs（196 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `repo` | 23-31 | 9 | `function repo(files) {` |
-
-### test/audit/test-audit-fastpath.mjs（89 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `withGitRepo` | 23-28 | 6 | `async function withGitRepo(fn) {` |
-| `pathsOf` | 30-30 | 1 | `const pathsOf = (files) => files.map((f) => f.path).sort();` |
-
 ### test/audit/test-audit-git-boundary.mjs（94 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2581,26 +2562,30 @@
 | `specifiersOf` | 36-40 | 5 | `export function specifiersOf(text) {` |
 | `findViolations` | 43-54 | 12 | `export function findViolations(files, rules) {` |
 
-### test/audit/test-audit-npm-publish-rules.mjs（82 行 · 3 个函数）
+### test/audit/test-audit-guards.mjs（294 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `hits` | 25-25 | 1 | `const hits = (text, rule) => run(text).filter((f) => f.rule === rule);` |
-| `has` | 26-26 | 1 | `const has = (text, rule) => hits(text, rule).length > 0;` |
-| `msg` | 27-27 | 1 | `const msg = (text, rule) => hits(text, rule)[0]?.message \|\| '';` |
+| `repo` | 35-43 | 9 | `function repo(files) {` |
+| `withGitRepo` | 227-232 | 6 | `async function withGitRepo(fn) {` |
+| `pathsOf` | 234-234 | 1 | `const pathsOf = (files) => files.map((f) => f.path).sort();` |
 
-### test/audit/test-audit-rules-csharp.mjs（125 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `makeRepo` | 21-28 | 8 | `function makeRepo(files) {` |
-| `auditCsharp` | 31-39 | 9 | `async function auditCsharp(repo) {` |
-
-### test/audit/test-audit-slot-order.mjs（56 行 · 1 个函数）
+### test/audit/test-audit-rule-packs.mjs（219 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `read` | 23-23 | 1 | `const read = (p) => readFileSync(join(ROOT, p), 'utf8');` |
+| `hits` | 41-41 | 1 | `const hits = (text, rule) => run(text).filter((f) => f.rule === rule);` |
+| `has` | 42-42 | 1 | `const has = (text, rule) => hits(text, rule).length > 0;` |
+| `msg` | 43-43 | 1 | `const msg = (text, rule) => hits(text, rule)[0]?.message \|\| '';` |
+| `makeRepo` | 114-121 | 8 | `function makeRepo(files) {` |
+| `auditCsharp` | 124-132 | 9 | `async function auditCsharp(repo) {` |
+
+### test/audit/test-audit-scope.mjs（359 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `read` | 36-36 | 1 | `const read = (p) => readFileSync(join(ROOT, p), 'utf8');` |
+| `read` | 325-325 | 1 | `const read = (p) => readFileSync(join(ROOT, p), 'utf8');` |
 
 ### test/audit/test-audit-ui-contract.mjs（192 行 · 2 个函数）
 
@@ -2615,11 +2600,11 @@
 |------|------|------|------|
 | `setupRepo` | 11-32 | 22 | `function setupRepo() {` |
 
-### test/audit/test-button-bind-events.mjs（136 行 · 1 个函数）
+### test/audit/test-button.mjs（218 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `auditFiles` | 33-41 | 9 | `async function auditFiles(files) {` |
+| `auditFiles` | 114-122 | 9 | `async function auditFiles(files) {` |
 
 ### test/audit/test-cli-audit-parity.mjs（69 行 · 1 个函数）
 
@@ -2640,23 +2625,13 @@
 |------|------|------|------|
 | `extsOf` | 17-27 | 11 | `function extsOf(id) {` |
 
-### test/audit/test-dataflow-clear-fp.mjs（92 行 · 1 个函数）
+### test/audit/test-dataflow.mjs（289 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `n` | 23-23 | 1 | `const n = (src) => checkClearAccessAst(src).length;` |
-
-### test/audit/test-dataflow-py-bodies.mjs（71 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `n` | 21-21 | 1 | `const n = (src) => checkClearAccessAst(src).length;` |
-
-### test/audit/test-dataflow.mjs（116 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `hits` | 20-22 | 3 | `function hits(text) {` |
+| `hits` | 30-32 | 3 | `function hits(text) {` |
+| `n` | 149-149 | 1 | `const n = (src) => checkClearAccessAst(src).length;` |
+| `n` | 238-238 | 1 | `const n = (src) => checkClearAccessAst(src).length;` |
 
 ### test/audit/test-docs-score.mjs（187 行 · 1 个函数）
 
@@ -2664,50 +2639,40 @@
 |------|------|------|------|
 | `makeProject` | 19-27 | 9 | `function makeProject(files) {` |
 
-### test/audit/test-dup-code.mjs（177 行 · 15 个函数）
+### test/audit/test-dup.mjs（350 行 · 15 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `parseUser` | 20-25 | 6 | `function parseUser(row) {` |
-| `parseOrder` | 26-31 | 6 | `function parseOrder(row) {` |
-| `parseItem` | 32-37 | 6 | `function parseItem(row) {` |
-| `alpha` | 49-54 | 6 | `function alpha(x) {` |
-| `beta` | 57-62 | 6 | `function beta(y) {` |
-| `alpha` | 73-77 | 5 | `function alpha() {` |
-| `beta` | 80-84 | 5 | `function beta() {` |
-| `one` | 95-96 | 2 | `function one(x) { return x + 1; }` |
-| `two` | 96-97 | 2 | `function two(x) { return x + 1; }` |
-| `three` | 97-98 | 2 | `function three(x) { return x + 1; }` |
-| `alpha` | 105-108 | 4 | `function alpha(x) {` |
-| `beta` | 109-112 | 4 | `function beta(y) {` |
-| `mk` | 122-122 | 1 | `const mk = (fnName) => `` |
-| `mk` | 142-142 | 1 | `const mk = (fnName) => `` |
-| `mk` | 160-160 | 1 | `const mk = (fnName, params) => `` |
+| `parseUser` | 31-36 | 6 | `function parseUser(row) {` |
+| `parseOrder` | 37-42 | 6 | `function parseOrder(row) {` |
+| `parseItem` | 43-48 | 6 | `function parseItem(row) {` |
+| `alpha` | 60-65 | 6 | `function alpha(x) {` |
+| `beta` | 68-73 | 6 | `function beta(y) {` |
+| `alpha` | 84-88 | 5 | `function alpha() {` |
+| `beta` | 91-95 | 5 | `function beta() {` |
+| `one` | 106-107 | 2 | `function one(x) { return x + 1; }` |
+| `two` | 107-108 | 2 | `function two(x) { return x + 1; }` |
+| `three` | 108-109 | 2 | `function three(x) { return x + 1; }` |
+| `alpha` | 116-119 | 4 | `function alpha(x) {` |
+| `beta` | 120-123 | 4 | `function beta(y) {` |
+| `mk` | 133-133 | 1 | `const mk = (fnName) => `` |
+| `mk` | 153-153 | 1 | `const mk = (fnName) => `` |
+| `mk` | 171-171 | 1 | `const mk = (fnName, params) => `` |
 
-### test/audit/test-empty-catch-single-source.mjs（29 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `read` | 14-14 | 1 | `const read = (p) => readFileSync(join(ROOT, p), 'utf8');` |
-
-### test/audit/test-exempt-hint-effective.mjs（115 行 · 1 个函数）
+### test/audit/test-empty-catch.mjs（81 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `withHeader` | 29-29 | 1 | `const withHeader = (text, marker) => `// ${marker}\n${text}`;` |
+| `read` | 65-65 | 1 | `const read = (p) => readFileSync(join(ROOT, p), 'utf8');` |
 
-### test/audit/test-exempt-tool.mjs（80 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `makeRepo` | 10-12 | 3 | `function makeRepo() {` |
-
-### test/audit/test-exempt.mjs（408 行 · 2 个函数）
+### test/audit/test-exempt.mjs（680 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `f` | 21-23 | 3 | `function f(kind, rule, line = 3) {` |
-| `compileGrouped` | 230-238 | 9 | `async function compileGrouped() {` |
+| `withHeader` | 115-115 | 1 | `const withHeader = (text, marker) => `// ${marker}\n${text}`;` |
+| `makeRepo` | 208-210 | 3 | `function makeRepo() {` |
+| `f` | 292-294 | 3 | `function f(kind, rule, line = 3) {` |
+| `compileGrouped` | 501-509 | 9 | `async function compileGrouped() {` |
 
 ### test/audit/test-false-positive-fixes.mjs（549 行 · 8 个函数）
 
@@ -2811,11 +2776,11 @@
 |------|------|------|------|
 | `kinds` | 18-18 | 1 | `const kinds = (src) => tokenize(src).filter((t) => t.type === 'str' \|\| t.type === 'tmpl').map((t) => t.type);` |
 
-### test/audit/test-rule-packs.mjs（596 行 · 1 个函数）
+### test/audit/test-rule-loading.mjs（645 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `block` | 349-352 | 4 | `const block = (text) => {` |
+| `block` | 397-400 | 4 | `const block = (text) => {` |
 
 ### test/audit/test-scope.mjs（177 行 · 2 个函数）
 
@@ -2830,23 +2795,18 @@
 |------|------|------|------|
 | `countsExcept` | 22-22 | 1 | `const countsExcept = (...listed) => Object.fromEntries(` |
 
-### test/audit/test-treesitter-grammars.mjs（248 行 · 5 个函数）
+### test/audit/test-treesitter.mjs（362 行 · 8 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `countBrokenNodes` | 124-133 | 10 | `function countBrokenNodes(tree) {` |
-| `walk` | 126-130 | 5 | `const walk = (node) => {` |
-| `textOf` | 135-135 | 1 | `const textOf = (c) => c.lines.join('\n');` |
-| `makeRepo` | 200-207 | 8 | `function makeRepo(files) {` |
-| `auditRuleHits` | 210-230 | 21 | `function auditRuleHits(repo, rule) {` |
-
-### test/audit/test-treesitter.mjs（108 行 · 3 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `makeRepo` | 24-31 | 8 | `function makeRepo(files) {` |
-| `auditHits` | 34-57 | 24 | `function auditHits(repo, extraEnv = {}) {` |
-| `col` | 80-80 | 1 | `const col = (n, needle) => lines[n - 1].indexOf(needle) + 1;` |
+| `makeRepo` | 36-43 | 8 | `function makeRepo(files) {` |
+| `auditHits` | 46-69 | 24 | `function auditHits(repo, extraEnv = {}) {` |
+| `col` | 92-92 | 1 | `const col = (n, needle) => lines[n - 1].indexOf(needle) + 1;` |
+| `countBrokenNodes` | 237-246 | 10 | `function countBrokenNodes(tree) {` |
+| `walk` | 239-243 | 5 | `const walk = (node) => {` |
+| `textOf` | 248-248 | 1 | `const textOf = (c) => c.lines.join('\n');` |
+| `makeRepo` | 313-320 | 8 | `function makeRepo(files) {` |
+| `auditRuleHits` | 323-343 | 21 | `function auditRuleHits(repo, rule) {` |
 
 ### test/git/test-account-ssh.mjs（149 行 · 1 个函数）
 
@@ -3053,17 +3013,17 @@
 |------|------|------|------|
 | `readMs` | 61-65 | 5 | `const readMs = (name) => {` |
 
-### test/helpers/merge-tests.mjs（259 行 · 7 个函数）
+### test/helpers/merge-tests.mjs（263 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `importLineRanges` | 34-53 | 20 | `function importLineRanges(text) {` |
-| `parseImport` | 56-79 | 24 | `function parseImport(stmt) {` |
-| `inspectFile` | 89-112 | 24 | `export function inspectFile(absPath) {` |
-| `mergeability` | 115-122 | 8 | `export function mergeability(absPath) {` |
-| `prefixTestNames` | 125-140 | 16 | `function prefixTestNames(body, prefix) {` |
-| `mergeGroup` | 143-220 | 78 | `export function mergeGroup(dir, { out, members }) {` |
-| `runTestFile` | 223-232 | 10 | `export function runTestFile(absPath) {` |
+| `parseImport` | 56-81 | 26 | `function parseImport(stmt) {` |
+| `inspectFile` | 91-115 | 25 | `export function inspectFile(absPath) {` |
+| `mergeability` | 118-126 | 9 | `export function mergeability(absPath) {` |
+| `prefixTestNames` | 129-144 | 16 | `function prefixTestNames(body, prefix) {` |
+| `mergeGroup` | 147-224 | 78 | `export function mergeGroup(dir, { out, members }) {` |
+| `runTestFile` | 227-236 | 10 | `export function runTestFile(absPath) {` |
 
 ### test/helpers/test-cache.mjs（231 行 · 9 个函数）
 
