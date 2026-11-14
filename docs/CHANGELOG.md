@@ -15,6 +15,15 @@
 
 | 版本 | 内容 |
 |------|------|
+| 2.20.19 | **审计侧与 git 侧解耦收官：HTTP 路由、参数、返回消息三层都不再由 git 侧写死**。行为对现有使用者零变化。
+
+· **HTTP 路由分侧**：审计 5 条端点（`audit` / `rule-slots` / `rule-detail` / `toggle-rule` / `exempt-hint`）搬到 `/api/git-audit/*`；git 与共享端点继续 `/api/git-push/*`（**25 条路径一个字不改**）。两条前缀由**同一个 `handleHttp` 入口**服务 ⇒ 鉴权（Origin/CSRF、body 上限、写确认）完全一致，测试用 `routes[0].handler === routes[1].handler` 钉住。旧路径保留转发一版，响应带 `Deprecation: true` 与 `Link: <新路径>; rel="successor-version"`。
+· **参数动态注册**：注册表 `params` 支持函数形态。audit / auditExemptPaths / auditExemptReason 三个审计参数改由预处理按**可用性**（内置引擎在 或 配了自定义引擎）注入——**不可用时参数不存在**，传了报「未知参数」而非静默忽略。`git-sluice help` 随可用性收敛。
+· **返回消息由审计方渲染**：拦截文案、`apiGuide`、两种 note 改由预处理能力 `renderResult(ctx)` 提供；git 侧只保留 `blocked` 布尔（job 状态分叉）、引擎 spawn 失败文案、中性兜底文案。**默认配置下文案与迁移前逐字一致**。
+· **`git_api` 的 `path` 支持三种写法**：短名（`rule-slots`）/ 前缀相对（`git-audit/rule-slots`，推荐）/ 完整路径，AI 面契约零变更。
+· 顺手修两个既有缺陷：`npm-install-progress` 幽灵端点（前端在调、路由无 case ⇒ 一直 404）、`writeConfirmOps` 的 `rebuild`/`rollback` 死条目。
+
+**将来加第二种提交前预处理**（lint / 类型检查等）：实现 `params` / `enabled` / `renderResult` / `run` 四项能力即可，git 侧零改动（见 SPEC §14.7）。 |
 | 2.20.18 | **架构解耦三切面 + 测试结构整理**（2.20.17 之后的一批重构，行为不变）。
 
 · **提交前审计 → 可配置引擎子进程**：`preCommit.{command,args,timeoutMs}` 配置化，换引擎（含换语言重写）只改配置；契约 = stdout 单行 JSON + 退出码 0/1/2；引擎不可用一律 fail-closed；9 场景矩阵逐字节一致。
