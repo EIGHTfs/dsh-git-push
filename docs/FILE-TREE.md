@@ -433,6 +433,7 @@ dsh-git-push/
 │   ├── 2026-10-29-多语言AST接通实测记录.MD — M2 多语言 AST 接通的改前/改后命中实测：C# 进管道的文件与命中变化、六槽位三档计数（正则初筛/token 级/语法树）与 M3 取舍输入
 │   ├── 2026-11-06-审计插件本体审视与优化方向讨论.案例d3dx.md — （待注释）
 │   ├── 2026-11-13-提交前预处理与审计引擎解耦方案.MD — 提交前预处理与审计引擎解耦方案：引擎契约（配置化入口/退出码）、UI 注入契约、职责切分与分阶段落地
+│   ├── 2026-11-14-GitHub-DeviceFlow-第三方登录方案.MD — GitHub 第三方登录方案（Device Flow 设计稿）：四方案对比、完整流程与状态机、GitHub API 细节、插件侧配置/端点/UI 设计、错误矩阵、安全与边界
 │   ├── CHANGELOG.md — 版本列表宿主（doc-version apply 写 dshgp-version 标记块）
 │   ├── DETAILS-EXEMPT-AND-RULES.md — 细节补充：豁免注释与规则 yml 用法全录
 │   ├── FILE-TREE.md — （待注释）

@@ -530,5 +530,6 @@
   "test/audit/test-dup.mjs": "（待注释）",
   "test/audit/test-empty-catch.mjs": "（待注释）",
   "test/audit/test-rule-loading.mjs": "（待注释）",
-  "test/audit/test-hardcoded-path-and-loop-rewrite.mjs": "（待注释）"
+  "test/audit/test-hardcoded-path-and-loop-rewrite.mjs": "（待注释）",
+  "docs/2026-11-14-GitHub-DeviceFlow-第三方登录方案.MD": "GitHub 第三方登录方案（Device Flow 设计稿）：四方案对比、完整流程与状态机、GitHub API 细节、插件侧配置/端点/UI 设计、错误矩阵、安全与边界"
 }
