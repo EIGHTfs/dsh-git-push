@@ -22,6 +22,22 @@
 | `aggregateFindings` | 82-103 | 22 | `export function aggregateFindings(findings = [], opts = {}) {` |
 | `runAuditApi` | 111-174 | 64 | `export async function runAuditApi(repo, params = {}, cfg = {}) {` |
 
+### lib/app/audit-client.js（109 行 · 11 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `resolveAuditPackageRoot` | 29-33 | 5 | `export function resolveAuditPackageRoot() {` |
+| `loadAuditPackage` | 40-51 | 12 | `export async function loadAuditPackage() {` |
+| `auditPackageRoot` | 54-56 | 3 | `export function auditPackageRoot() {` |
+| `resetAuditPackageCache` | 59-62 | 4 | `export function resetAuditPackageCache() {` |
+| `auditReport` | 69-72 | 4 | `export async function auditReport(options = {}) {` |
+| `auditHistory` | 75-78 | 4 | `export async function auditHistory(options = {}) {` |
+| `ioScan` | 81-84 | 4 | `export async function ioScan(options = {}) {` |
+| `linkCheck` | 87-90 | 4 | `export async function linkCheck(options = {}) {` |
+| `scopeCheck` | 93-96 | 4 | `export async function scopeCheck(options = {}) {` |
+| `exemptAction` | 99-102 | 4 | `export async function exemptAction(options = {}) {` |
+| `groupByKeys` | 105-108 | 4 | `export async function groupByKeys() {` |
+
 ### lib/app/command-registry.js（330 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -254,33 +270,34 @@
 | `getLastSlotHitStats` | 28-30 | 3 | `export function getLastSlotHitStats() {` |
 | `getLastSlotHitMeta` | 33-35 | 3 | `export function getLastSlotHitMeta() {` |
 
-### lib/app/tool-call.js（839 行 · 23 个函数）
+### lib/app/tool-call.js（784 行 · 24 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `pushWithPostSteps` | 59-127 | 69 | `async function pushWithPostSteps(args, env, cfg) {` |
-| `pushJobOutcome` | 148-180 | 33 | `export function pushJobOutcome(r = {}) {` |
-| `short` | 150-150 | 1 | `const short = (sha) => String(sha \|\| '').slice(0, 8);` |
-| `cloneJobOutcome` | 188-193 | 6 | `export function cloneJobOutcome(r = {}) {` |
-| `buildCommitPushJobSpec` | 196-213 | 18 | `function buildCommitPushJobSpec(repo, doPush) {` |
-| `done` | 201-209 | 9 | `const done = (async () => {` |
-| `startHostJob` | 226-233 | 8 | `function startHostJob(jobs, spec, owner) {` |
-| `callCloneJob` | 247-279 | 33 | `async function callCloneJob(args, jobs, exec, log, env = {}, cfg = {}) {` |
-| `callNpmPublishJob` | 287-370 | 84 | `async function callNpmPublishJob(args = {}, jobs, exec, log, env = {}, cfg = {}) {` |
-| `outcome` | 321-345 | 25 | `const outcome = (r) => {` |
-| `done` | 354-356 | 3 | `const done = (async () => {` |
-| `buildCloneJobSpec` | 373-390 | 18 | `function buildCloneJobSpec(target, dest, doClone) {` |
-| `done` | 378-386 | 9 | `const done = (async () => {` |
-| `callCommitPush` | 397-443 | 47 | `async function callCommitPush(args, env, cfg, log, jobs, exec) {` |
-| `doPush` | 416-416 | 1 | `const doPush = () => pushWithPostSteps(args, env, cfg);` |
-| `buildAuditOpts` | 454-468 | 15 | `function buildAuditOpts(args, cfg, scope) {` |
-| `runHistoryAuditTool` | 474-500 | 27 | `async function runHistoryAuditTool(args, env, cfg, jobs, exec, weights) {` |
-| `doHistory` | 480-483 | 4 | `const doHistory = async () => {` |
-| `callCodeAudit` | 502-514 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
-| `runStandardAuditTool` | 517-559 | 43 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
-| `callTool` | 561-839 | 279 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null, fsCtx = null) {` |
-| `shellSplit` | 813-831 | 19 | `function shellSplit(input) {` |
-| `readTextSafe` | 834-838 | 5 | `function readTextSafe(path = '') {` |
+| `pushWithPostSteps` | 55-123 | 69 | `async function pushWithPostSteps(args, env, cfg) {` |
+| `pushJobOutcome` | 144-176 | 33 | `export function pushJobOutcome(r = {}) {` |
+| `short` | 146-146 | 1 | `const short = (sha) => String(sha \|\| '').slice(0, 8);` |
+| `cloneJobOutcome` | 184-189 | 6 | `export function cloneJobOutcome(r = {}) {` |
+| `buildCommitPushJobSpec` | 192-209 | 18 | `function buildCommitPushJobSpec(repo, doPush) {` |
+| `done` | 197-205 | 9 | `const done = (async () => {` |
+| `startHostJob` | 222-229 | 8 | `function startHostJob(jobs, spec, owner) {` |
+| `callCloneJob` | 243-275 | 33 | `async function callCloneJob(args, jobs, exec, log, env = {}, cfg = {}) {` |
+| `callNpmPublishJob` | 283-366 | 84 | `async function callNpmPublishJob(args = {}, jobs, exec, log, env = {}, cfg = {}) {` |
+| `outcome` | 317-341 | 25 | `const outcome = (r) => {` |
+| `done` | 350-352 | 3 | `const done = (async () => {` |
+| `buildCloneJobSpec` | 369-386 | 18 | `function buildCloneJobSpec(target, dest, doClone) {` |
+| `done` | 374-382 | 9 | `const done = (async () => {` |
+| `callCommitPush` | 393-439 | 47 | `async function callCommitPush(args, env, cfg, log, jobs, exec) {` |
+| `doPush` | 412-412 | 1 | `const doPush = () => pushWithPostSteps(args, env, cfg);` |
+| `buildAuditOpts` | 450-464 | 15 | `function buildAuditOpts(args, cfg, scope) {` |
+| `runHistoryAuditTool` | 470-498 | 29 | `async function runHistoryAuditTool(args, env, cfg, jobs, exec, weights) {` |
+| `doHistory` | 475-481 | 7 | `const doHistory = async () => {` |
+| `callCodeAudit` | 500-512 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
+| `runStandardAuditTool` | 515-535 | 21 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
+| `callTool` | 537-784 | 248 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null, fsCtx = null) {` |
+| `withAuditPackage` | 749-755 | 7 | `async function withAuditPackage(call) {` |
+| `shellSplit` | 758-776 | 19 | `function shellSplit(input) {` |
+| `readTextSafe` | 779-783 | 5 | `function readTextSafe(path = '') {` |
 
 ### lib/app/tools.js（41 行 · 2 个函数）
 
