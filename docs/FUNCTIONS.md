@@ -1279,37 +1279,40 @@
 | `collectExternalRefs` | 136-141 | 6 | `export function collectExternalRefs(css = '') {` |
 | `clientModuleInfo` | 151-162 | 12 | `export function clientModuleInfo() {` |
 
-### lib/commit-push.js（246 行 · 5 个函数）
+### lib/commit-push.js（293 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `defaultPreprocessRender` | 38-53 | 16 | `export function defaultPreprocessRender(ctx = {}) {` |
-| `runAudit` | 64-197 | 134 | `export async function runAudit({` |
-| `isExemptFile` | 126-126 | 1 | `const isExemptFile = (f) => exemptSet.size > 0 && exemptSet.has(String(f.file \|\| '').replace(/\\/g, '/').replace(/^\.\//, ''));` |
-| `commitWithAudit` | 207-232 | 26 | `export async function commitWithAudit({` |
-| `commitMany` | 240-246 | 7 | `export async function commitMany({ repos = [], message = '', push = true, dryRun = false, requirementsConfirmed = false, customIgnorePatterns = '' } = {}) {` |
+| `legacyBlockedOf` | 37-47 | 11 | `export function legacyBlockedOf(findings = [], { repoPath = '', auditExemptPaths = [] } = {}) {` |
+| `isExemptFile` | 41-41 | 1 | `const isExemptFile = (finding) => exemptSet.size > 0 && exemptSet.has(String(finding.file \|\| '').replace(/\\/g, '/').replace(/^\.\//, ''));` |
+| `defaultPreprocessRender` | 59-74 | 16 | `export function defaultPreprocessRender(ctx = {}) {` |
+| `runAudit` | 85-244 | 160 | `export async function runAudit({` |
+| `isExemptFile` | 166-166 | 1 | `const isExemptFile = (finding) => exemptSet.has(String(finding.file \|\| '').replace(/\\/g, '/').replace(/^\.\//, ''));` |
+| `commitWithAudit` | 254-279 | 26 | `export async function commitWithAudit({` |
+| `commitMany` | 287-293 | 7 | `export async function commitMany({ repos = [], message = '', push = true, dryRun = false, requirementsConfirmed = false, customIgnorePatterns = '' } = {}) {` |
 
-### lib/commit-push/pre-commit-engine.js（389 行 · 17 个函数）
+### lib/commit-push/pre-commit-engine.js（453 行 · 18 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `pluginRootDir` | 46-48 | 3 | `export function pluginRootDir() {` |
-| `stderrTail` | 55-58 | 4 | `export function stderrTail(text) {` |
-| `resolvePreCommitConfig` | 71-89 | 19 | `export function resolvePreCommitConfig(cfg = {}) {` |
-| `readPreCommitBlock` | 96-109 | 14 | `function readPreCommitBlock(cfg = {}) {` |
-| `isExecutableFile` | 116-125 | 10 | `function isExecutableFile(absPath) {` |
-| `searchCommandOnPath` | 132-148 | 17 | `function searchCommandOnPath(commandName) {` |
-| `resolvePathLikeCommand` | 155-159 | 5 | `function resolvePathLikeCommand(pathLike) {` |
-| `resolveEngineCommand` | 169-175 | 7 | `export function resolveEngineCommand(command) {` |
-| `resolveEngineArgs` | 186-194 | 9 | `export function resolveEngineArgs(args = []) {` |
-| `toSlotCsv` | 201-206 | 6 | `function toSlotCsv(slots) {` |
-| `buildEngineArgs` | 214-232 | 19 | `export function buildEngineArgs({` |
-| `formatCommandLine` | 240-242 | 3 | `export function formatCommandLine(command, args = []) {` |
-| `failClosed` | 251-253 | 3 | `function failClosed(message) {` |
-| `parseEngineStdout` | 262-280 | 19 | `export function parseEngineStdout(stdout) {` |
-| `runEngineProcess` | 290-337 | 48 | `function runEngineProcess({ command, args, timeoutMs }) {` |
-| `finish` | 300-305 | 6 | `const finish = (result) => {` |
-| `runPreCommitEngine` | 353-388 | 36 | `export async function runPreCommitEngine({` |
+| `resolveAuditSluiceEntry` | 55-70 | 16 | `export function resolveAuditSluiceEntry() {` |
+| `pluginRootDir` | 84-86 | 3 | `export function pluginRootDir() {` |
+| `stderrTail` | 93-96 | 4 | `export function stderrTail(text) {` |
+| `resolvePreCommitConfig` | 109-138 | 30 | `export function resolvePreCommitConfig(cfg = {}) {` |
+| `readPreCommitBlock` | 145-158 | 14 | `function readPreCommitBlock(cfg = {}) {` |
+| `isExecutableFile` | 165-174 | 10 | `function isExecutableFile(absPath) {` |
+| `searchCommandOnPath` | 181-197 | 17 | `function searchCommandOnPath(commandName) {` |
+| `resolvePathLikeCommand` | 204-208 | 5 | `function resolvePathLikeCommand(pathLike) {` |
+| `resolveEngineCommand` | 218-224 | 7 | `export function resolveEngineCommand(command) {` |
+| `resolveEngineArgs` | 235-243 | 9 | `export function resolveEngineArgs(args = []) {` |
+| `toSlotCsv` | 250-255 | 6 | `function toSlotCsv(slots) {` |
+| `buildEngineArgs` | 263-291 | 29 | `export function buildEngineArgs({` |
+| `formatCommandLine` | 299-301 | 3 | `export function formatCommandLine(command, args = []) {` |
+| `failClosed` | 310-312 | 3 | `function failClosed(message) {` |
+| `parseEngineStdout` | 321-339 | 19 | `export function parseEngineStdout(stdout) {` |
+| `runEngineProcess` | 349-396 | 48 | `function runEngineProcess({ command, args, timeoutMs }) {` |
+| `finish` | 359-364 | 6 | `const finish = (result) => {` |
+| `runPreCommitEngine` | 412-452 | 41 | `export async function runPreCommitEngine({` |
 
 ### lib/context/index.js（364 行 · 10 个函数）
 
@@ -3063,7 +3066,7 @@
 |------|------|------|------|
 | `withIsolatedDshHome` | 19-30 | 12 | `function withIsolatedDshHome(fn) {` |
 
-### test/git/test-pre-commit-engine.mjs（420 行 · 4 个函数）
+### test/git/test-pre-commit-engine.mjs（427 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|

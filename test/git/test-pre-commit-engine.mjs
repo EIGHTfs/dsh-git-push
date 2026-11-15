@@ -187,12 +187,19 @@ test('preCommit 三档解析顺序：cfg.preCommit → config.json → 内置默
       assert.equal(fromFile.timeoutMs, 1234);
       assert.equal(fromFile.source, 'config.json');
     } finally { setSettingsFileOverride(null); }
-    // ③ 都没有 → 内置默认（node + 插件自带入口），超时 10 分钟
+    // ③ 都没有 → 内置默认（node + **审计包 CLI**），超时 10 分钟
+    //   拆包后缺省引擎指向 audit-sluice（审计实现归它）；内置 scripts/audit-gate.mjs
+    //   只在显式配置回滚时使用（见下一条断言）。
     const fallback = resolvePreCommitConfig({});
     assert.equal(fallback.source, 'default');
     assert.equal(fallback.command, '', 'command 空 = 内置 node');
-    assert.deepEqual(fallback.args, [GATE_SCRIPT], 'args 空 = 插件自带 scripts/audit-gate.mjs');
+    assert.equal(fallback.args.length, 1, '缺省只带一个入口脚本参数');
+    assert.match(fallback.args[0].replace(/\\/g, '/'), /audit-sluice\/cli\.mjs$/, `缺省入口应为审计包 CLI，实际：${fallback.args[0]}`);
+    assert.equal(fallback.legacyEngine, false, '缺省不是旧引擎（旧引擎只用于显式回滚）');
     assert.equal(fallback.timeoutMs, PRE_COMMIT_TIMEOUT_MS_DEFAULT);
+    // ③' 显式回滚：把入口指回插件自带 scripts/audit-gate.mjs ⇒ 识别为 legacyEngine（不传新参数）
+    const legacy = resolvePreCommitConfig({ preCommit: { args: [GATE_SCRIPT] } });
+    assert.equal(legacy.legacyEngine, true, '显式指回内置 gate 应被识别为回滚路径');
   } finally {
     setSettingsFileOverride(null);
     rmSync(dir, { recursive: true, force: true });
