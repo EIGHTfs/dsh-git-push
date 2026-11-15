@@ -532,5 +532,6 @@
   "test/audit/test-rule-loading.mjs": "（待注释）",
   "test/audit/test-hardcoded-path-and-loop-rewrite.mjs": "（待注释）",
   "docs/2026-11-14-GitHub-DeviceFlow-第三方登录方案.MD": "GitHub 第三方登录方案（Device Flow 设计稿）：四方案对比、完整流程与状态机、GitHub API 细节、插件侧配置/端点/UI 设计、错误矩阵、安全与边界",
-  "docs/2026-11-15-审计中间层与引擎声明分层方案.MD": "审计中间层与引擎声明分层方案：豁免+评分抽成同库中间层，引擎只产 findings + 声明 scoreSpec；三契约、5 调用点收敛、自研引擎改造、进程形态对比"
+  "docs/2026-11-15-审计中间层与引擎声明分层方案.MD": "审计中间层与引擎声明分层方案：豁免+评分抽成同库中间层，引擎只产 findings + 声明 scoreSpec；三契约、5 调用点收敛、自研引擎改造、进程形态对比",
+  "docs/2026-11-15-gitpush与审计分家方案.MD": "gitpush 与审计分家方案（设计稿）：两包职责切分（探留 gitpush / 判归审计）、审计包三形态（library/CLI/MCP）、契约改动、文件迁移约对半、兼容与风险"
 }
