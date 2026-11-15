@@ -1279,15 +1279,15 @@
 | `collectExternalRefs` | 136-141 | 6 | `export function collectExternalRefs(css = '') {` |
 | `clientModuleInfo` | 151-162 | 12 | `export function clientModuleInfo() {` |
 
-### lib/commit-push.js（238 行 · 5 个函数）
+### lib/commit-push.js（246 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `defaultPreprocessRender` | 38-53 | 16 | `export function defaultPreprocessRender(ctx = {}) {` |
-| `runAudit` | 64-189 | 126 | `export async function runAudit({ repoPath = '', audit, rulesetDir, slots, cfg: extCfg, visibility: extVisibility, exemptPaths = [], exemptReason = '' } = {}) {` |
-| `isExemptFile` | 118-118 | 1 | `const isExemptFile = (f) => exemptSet.size > 0 && exemptSet.has(String(f.file \|\| '').replace(/\\/g, '/').replace(/^\.\//, ''));` |
-| `commitWithAudit` | 199-224 | 26 | `export async function commitWithAudit({` |
-| `commitMany` | 232-238 | 7 | `export async function commitMany({ repos = [], message = '', push = true, dryRun = false, requirementsConfirmed = false, customIgnorePatterns = '' } = {}) {` |
+| `runAudit` | 64-197 | 134 | `export async function runAudit({` |
+| `isExemptFile` | 126-126 | 1 | `const isExemptFile = (f) => exemptSet.size > 0 && exemptSet.has(String(f.file \|\| '').replace(/\\/g, '/').replace(/^\.\//, ''));` |
+| `commitWithAudit` | 207-232 | 26 | `export async function commitWithAudit({` |
+| `commitMany` | 240-246 | 7 | `export async function commitMany({ repos = [], message = '', push = true, dryRun = false, requirementsConfirmed = false, customIgnorePatterns = '' } = {}) {` |
 
 ### lib/commit-push/pre-commit-engine.js（389 行 · 17 个函数）
 

@@ -312,7 +312,7 @@ test('runAudit：临时豁免仍在 git 侧生效（引擎说 blocker，豁免�
     assert.equal(blockedRun.blocked, true);
     assert.match(blockedRun.error, /审计拦截：1 个 blocker/, '拦截文案保持原样（含拦截条数）');
     // 豁免该文件 → 放行，但 summary 不变（豁免不影响评分基数）
-    const exemptRun = await runAudit({ repoPath: '/tmp', cfg, visibility: 'public', exemptPaths: ['src/bad.js'], exemptReason: '契约测试' });
+    const exemptRun = await runAudit({ repoPath: '/tmp', cfg, visibility: 'public', auditExemptPaths: ['src/bad.js'], auditExemptReason: '契约测试' });
     assert.equal(exemptRun.ok, true, '临时豁免必须仍然生效（这条职责留在 git 侧）');
     assert.equal(exemptRun.audit.summary.blocker, 1, '豁免不改 summary（引擎看到的就是 1 条）');
     assert.equal(exemptRun.audit.exempt.count, 1);

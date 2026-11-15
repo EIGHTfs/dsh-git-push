@@ -52,7 +52,7 @@ import { test } from 'node:test';
   test('[audit-exempt-paths] ① 带 auditExemptPaths：所列文件的 blocker 不再拦截', async (t) => {
     const dir = makeRepo(t);
     writeBlocker(dir);
-    const r = await runAudit({ repoPath: dir, audit: true, exemptPaths: ['bad.js'] });
+    const r = await runAudit({ repoPath: dir, audit: true, auditExemptPaths: ['bad.js'] });
     assert.equal(r.ok, true, '豁免后应放行');
     assert.ok(r.audit && r.audit.exempt, '应带回豁免回显');
   });
@@ -61,7 +61,7 @@ import { test } from 'node:test';
     const dir = makeRepo(t);
     writeBlocker(dir, 'bad-a.js');
     writeBlocker(dir, 'bad-b.js');
-    const r = await runAudit({ repoPath: dir, audit: true, exemptPaths: ['bad-a.js'] });
+    const r = await runAudit({ repoPath: dir, audit: true, auditExemptPaths: ['bad-a.js'] });
     assert.equal(r.ok, false, '未列文件仍应拦截');
     assert.ok(r.audit.blocked.some((f) => f.file === 'bad-b.js'), '拦截清单应含未列文件');
     assert.ok(!r.audit.blocked.some((f) => f.file === 'bad-a.js'), '拦截清单不应含已豁免文件');
@@ -70,7 +70,7 @@ import { test } from 'node:test';
   test('[audit-exempt-paths] ③ 回显：files / count / rules / reason', async (t) => {
     const dir = makeRepo(t);
     writeBlocker(dir);
-    const r = await runAudit({ repoPath: dir, audit: true, exemptPaths: ['./bad.js'], exemptReason: '测试豁免' });
+    const r = await runAudit({ repoPath: dir, audit: true, auditExemptPaths: ['./bad.js'], auditExemptReason: '测试豁免' });
     assert.equal(r.ok, true);
     const ex = r.audit.exempt;
     assert.deepEqual(ex.files, ['bad.js'], './ 前缀应被归一化');

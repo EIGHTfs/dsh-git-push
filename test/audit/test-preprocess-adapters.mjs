@@ -160,7 +160,7 @@ test('① 提交门禁完整返回不变：runAudit 的 blocked / summary / qual
   const dir = makeViolationRepo();
   try {
     const cfg = { ...defaultConfig(), auditScanScope: 'full', preCommit: {} };
-    const blockedRun = await runAudit({ repoPath: dir, audit: true, cfg, visibility: 'public', exemptPaths: ['README.md'], exemptReason: '样本' });
+    const blockedRun = await runAudit({ repoPath: dir, audit: true, cfg, visibility: 'public', auditExemptPaths: ['README.md'], auditExemptReason: '样本' });
     assert.equal(blockedRun.blocked, true, '有 blocker 必须 blocked:true');
     assert.equal(blockedRun.ok, false);
     assert.match(String(blockedRun.error), /^审计拦截：\d+ 个 blocker → /, `拦截文案仍由预处理渲染：${String(blockedRun.error).slice(0, 80)}`);
