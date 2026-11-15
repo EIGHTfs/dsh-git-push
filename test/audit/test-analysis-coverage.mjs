@@ -12,7 +12,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { computeAnalysisCoverage, formatAnalysisCoverageLine } from '../../lib/audit/analysis-coverage.js';
+import { computeAnalysisCoverage, formatAnalysisCoverageLine } from '../../../audit-sluice/lib/engine/analysis-coverage.js';
 import { callTool } from '../../lib/app/tool-call.js';
 import { mkdtempTracked } from '../helpers/tmp-dir.mjs';
 

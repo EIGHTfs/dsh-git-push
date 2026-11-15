@@ -6,9 +6,9 @@
  *     不影响 test() 的注册时机与执行顺序；每个 test 名带 `[原文件名]` 前缀便于溯源。
  * 为什么不用 describe：它的回调是 async 函数作用域，会把顶层 await/const/exitCode 挪位（上轮实测 54 失败 / 少 17 条用例）。
  */
-import { checkShortFunctionNameAst } from '../../lib/ast/naming.js';
-import { auditFull } from '../../lib/audit/index.js';
-import '../../lib/rule/compilers.js';
+import { checkShortFunctionNameAst } from '../../../audit-sluice/lib/ast/naming.js';
+import { auditFull } from '../../../audit-sluice/lib/engine/index.js';
+import '../../../audit-sluice/lib/rule/compilers.js';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
@@ -102,7 +102,8 @@ import { fileURLToPath } from 'node:url';
   });
 
   test('[tree-first-credential] ③ 无树对照：语法资产缺失 ⇒ 回退 token 级，主题令牌误报形态重现（证明主路径确吃树）', () => {
-    const libEntry = join(HERE, '..', '..', 'lib', 'audit', 'index.js');
+    // 审计实现已迁到独立包；子进程脚本要加载包内的引擎入口
+      const libEntry = join(HERE, '..', '..', '..', 'audit-sluice', 'lib', 'engine', 'index.js');
     const script = [
       `import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';`,
       `import { join } from 'node:path'; import { tmpdir } from 'node:os';`,
@@ -211,7 +212,8 @@ import { fileURLToPath } from 'node:url';
   });
 
   test('[tree-first-funcname] 无树对照：语法资产缺失 → 回退 token 级，方法短名漏报重现（证明主路径确吃树）', () => {
-    const libEntry = join(HERE, '..', '..', 'lib', 'audit', 'index.js');
+    // 审计实现已迁到独立包；子进程脚本要加载包内的引擎入口
+      const libEntry = join(HERE, '..', '..', '..', 'audit-sluice', 'lib', 'engine', 'index.js');
     const script = [
       "import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';",
       "import { join } from 'node:path'; import { tmpdir } from 'node:os';",
@@ -240,7 +242,7 @@ import { fileURLToPath } from 'node:url';
   //   get ab()/set cd(v) 的 name 是属性名而非「函数名」，且 get/set 配对是极常见惯例；
   //   放宽初筛 pattern 后若不做显式排除，这里会变成误报源。普通/async/生成器方法仍须照报。
   test('[tree-first-funcname] ④ 访问器不报，普通/async/生成器方法仍报（边界钉死）', async () => {
-    const { parseText, shortFunctionNamesFromTree } = await import('../../lib/ast/treesitter.js');
+    const { parseText, shortFunctionNamesFromTree } = await import('../../../audit-sluice/lib/ast/treesitter.js');
     const isShort = (n) => String(n).length <= 2 && !['tr', 't'].includes(n);
     const cases = [
       ['class A { get ab() { return 1 } }', []],

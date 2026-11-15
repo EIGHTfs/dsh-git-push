@@ -321,7 +321,8 @@ test('HTTP：rule-slots 端点动态发现全部 yml（模板不入 order）+ di
   // 三档之和 == 总数（自洽性）：这是本次修复的核心不变量。
   assert.equal(st.blocker + st.warning + st.pass, st.total, '拦截级+警告级+提示级 应等于规则总数');
   // 即使注入 hitStats 也不再改口径（形参保留仅为兼容既有调用方）
-  const injected = listRuleSlots([], [], { nodejs: { blocker: 7, warning: 3, pass: 11 } });
+  // listRuleSlots 已改为异步（审计包动态加载）
+  const injected = await listRuleSlots([], [], { nodejs: { blocker: 7, warning: 3, pass: 11 } });
   assert.equal(injected.meta.nodejs.stats.source, 'rules', '传入 hitStats 也不改用命中数口径');
   assert.notEqual(injected.meta.nodejs.stats.blocker, 7, 'hitStats 不再透传（已废弃该方法）');
   assert.equal(

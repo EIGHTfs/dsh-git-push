@@ -21,26 +21,29 @@ import { fileURLToPath } from 'node:url';
 
 // 宿主文档漂移检查器接线：lib/commit-push.js 已不再自己接线（那件事搬进引擎入口），
 //   本测试要在进程内直接调 auditWithScope 做基准，必须同样接线，否则基准会少两类 finding。
-import '../../lib/app/host-doc-checks.js';
-import { auditWithScope } from '../../lib/audit/index.js';
-import { scoreQuality } from '../../lib/score/index.js';
+import { auditWithScope } from '../../../audit-sluice/lib/engine/index.js';
+import { scoreQuality } from '../../../audit-sluice/lib/score/index.js';
 import { defaultConfig } from '../../lib/client/index.js';
 import { Config } from '../../lib/app/schema.js';
 import { setSettingsFileOverride } from '../../lib/app/settings-bridge.js';
 import { runAudit } from '../../lib/commit-push.js';
 import {
   DEFAULT_MAX_SCAN_FILES, EXIT_BLOCKED, EXIT_FAILED, EXIT_OK, parseGateArgs,
-} from '../../scripts/audit-gate.mjs';
+} from '../../../audit-sluice/cli.mjs';
 import {
   PRE_COMMIT_TIMEOUT_MS_DEFAULT,
   buildEngineArgs,
+  resolveAuditSluiceEntry,
   resolveEngineArgs,
   resolvePreCommitConfig,
   runPreCommitEngine,
 } from '../../lib/commit-push/pre-commit-engine.js';
 
 const PLUGIN_ROOT = fileURLToPath(new URL('../../', import.meta.url));
-const GATE_SCRIPT = join(PLUGIN_ROOT, 'scripts', 'audit-gate.mjs');
+// 插件根下**存在**的文件（用于「相对路径按插件根解析」测试）。
+//   旧的内置引擎入口 scripts/audit-gate.mjs 已随拆包删除，不能再拿它当样本。
+const PLUGIN_LOCAL_FILE_REL = 'lib/app/index.js';
+const PLUGIN_LOCAL_FILE = join(PLUGIN_ROOT, PLUGIN_LOCAL_FILE_REL);
 
 /** 假引擎模板：MODE 由生成时替换，避免用环境变量（多测试并行会互相污染）。 */
 function fakeEngineSource(mode) {
@@ -52,15 +55,19 @@ const base = {
   summary: { blocker: 0, warning: 0, notice: 0, total: 0 },
   quality: { score: 100, level: 'A' },
   findings: [], files: 1,
+  blocked: [],
 };
 // 每个分支都必须自己结束进程：分支之间不能「漏下去」，否则 slow 会走到兜底的 unknown mode
 if (MODE === 'ok') { out(base); process.exit(0); }
 else if (MODE === 'blocked') {
+  // 豁免由审计包判定：引擎收到 --exempt-paths 命中本文件时，blocked 应为空（模拟真实包行为）
+  const exempted = process.argv.join(' ').includes('src/bad.js');
   out({
-    ...base, ok: false,
+    ...base, ok: !exempted,
     summary: { blocker: 1, warning: 0, notice: 0, total: 1 },
     quality: { score: 42, level: 'E' },
     findings: [{ file: 'src/bad.js', line: 1, rule: 'fake/blocker', severity: 'blocker', message: '假引擎拦截' }],
+    blocked: exempted ? [] : [{ file: 'src/bad.js', line: 1, rule: 'fake/blocker', message: '假引擎拦截' }],
   });
   process.exit(1);
 }
@@ -160,8 +167,8 @@ test('buildEngineArgs：契约参数由模块统一追加，调用方不拼', ()
 });
 
 test('args 里的相对路径按插件根解析，不存在的原样保留（不猜）', () => {
-  const resolved = resolveEngineArgs(['scripts/audit-gate.mjs', 'not-exist-engine.py', '--timing', '200', '/abs/x.mjs']);
-  assert.equal(resolved[0], GATE_SCRIPT, '插件根下的相对路径必须解析成绝对路径（换机不断链）');
+  const resolved = resolveEngineArgs([PLUGIN_LOCAL_FILE_REL, 'not-exist-engine.py', '--timing', '200', '/abs/x.mjs']);
+  assert.equal(resolved[0], PLUGIN_LOCAL_FILE, '插件根下的相对路径必须解析成绝对路径（换机不断链）');
   assert.equal(resolved[1], 'not-exist-engine.py', '不存在的相对路径原样保留，交给引擎自己报错');
   assert.equal(resolved[2], '--timing', '命令行选项不能当路径改写');
   assert.equal(resolved[3], '200', '选项取值不能当路径改写');
@@ -201,11 +208,8 @@ test('preCommit 三档解析顺序：cfg.preCommit → config.json → 内置默
     assert.equal(fallback.command, '', 'command 空 = 内置 node');
     assert.equal(fallback.args.length, 1, '缺省只带一个入口脚本参数');
     assert.match(fallback.args[0].replace(/\\/g, '/'), /audit-sluice\/cli\.mjs$/, `缺省入口应为审计包 CLI，实际：${fallback.args[0]}`);
-    assert.equal(fallback.legacyEngine, false, '缺省不是旧引擎（旧引擎只用于显式回滚）');
     assert.equal(fallback.timeoutMs, PRE_COMMIT_TIMEOUT_MS_DEFAULT);
-    // ③' 显式回滚：把入口指回插件自带 scripts/audit-gate.mjs ⇒ 识别为 legacyEngine（不传新参数）
-    const legacy = resolvePreCommitConfig({ preCommit: { args: [GATE_SCRIPT] } });
-    assert.equal(legacy.legacyEngine, true, '显式指回内置 gate 应被识别为回滚路径');
+    // ③' 回滚路径已随拆包删除（内置引擎入口不复存在），原 legacyEngine 断言一并移除
   } finally {
     setSettingsFileOverride(null);
     rmSync(dir, { recursive: true, force: true });
@@ -390,6 +394,10 @@ test('真引擎与进程内 auditWithScope 同仓库比对：summary/findings/qu
 });
 
 test('真引擎脚本直跑：退出码 0 / 1 / 2 三种语义', () => {
+    // 引擎入口已随拆包迁走：现在跑的是审计包 CLI（不是插件自带的 scripts/audit-gate.mjs）
+    const engineEntry = resolveAuditSluiceEntry();
+    assert.equal(engineEntry.ok, true, `审计包入口必须可解析：${engineEntry.error || ''}`);
+    const ENGINE_CLI = engineEntry.path;
   // 0：无 blocker（干净仓库，diff 0 变动）
   const cleanDir = mkdtempSync(join(tmpdir(), 'dshgp-engine-cli-'));
   try {
@@ -399,7 +407,7 @@ test('真引擎脚本直跑：退出码 0 / 1 / 2 三种语义', () => {
     writeFileSync(join(cleanDir, 'a.js'), 'export const a = 1;\n');
     execFileSync('git', ['add', '-A'], { cwd: cleanDir });
     execFileSync('git', ['commit', '-qm', 'init'], { cwd: cleanDir });
-    const okRun = spawnSync(process.execPath, [GATE_SCRIPT, '--repo', cleanDir, '--scope', 'diff', '--json'], { encoding: 'utf8' });
+    const okRun = spawnSync(process.execPath, [ENGINE_CLI, '--repo', cleanDir, '--scope', 'diff', '--json'], { encoding: 'utf8' });
     assert.equal(okRun.status, EXIT_OK, `干净仓库应退出 0；stderr=${String(okRun.stderr).slice(0, 300)}`);
     const okJson = JSON.parse(okRun.stdout.trim());
     assert.equal(okJson.ok, true);
@@ -410,14 +418,14 @@ test('真引擎脚本直跑：退出码 0 / 1 / 2 三种语义', () => {
   // 1：有 blocker
   const blockerDir = makeBlockerRepo();
   try {
-    const blockedRun = spawnSync(process.execPath, [GATE_SCRIPT, '--repo', blockerDir, '--scope', 'full', '--json'], { encoding: 'utf8' });
+    const blockedRun = spawnSync(process.execPath, [ENGINE_CLI, '--repo', blockerDir, '--scope', 'full', '--json'], { encoding: 'utf8' });
     assert.equal(blockedRun.status, EXIT_BLOCKED, `有 blocker 应退出 1；stderr=${String(blockedRun.stderr).slice(0, 300)}`);
     const blockedJson = JSON.parse(blockedRun.stdout.trim());
     assert.equal(blockedJson.ok, false);
     assert.ok(blockedJson.summary.blocker > 0);
 
     // --blockers-only：findings 只留 blocker，但 summary 仍是全量计数（评分口径不变）
-    const onlyRun = spawnSync(process.execPath, [GATE_SCRIPT, '--repo', blockerDir, '--scope', 'full', '--blockers-only', '--json'], { encoding: 'utf8' });
+    const onlyRun = spawnSync(process.execPath, [ENGINE_CLI, '--repo', blockerDir, '--scope', 'full', '--blockers-only', '--json'], { encoding: 'utf8' });
     const onlyJson = JSON.parse(onlyRun.stdout.trim());
     assert.deepEqual(onlyJson.summary, blockedJson.summary, '--blockers-only 不得改变 summary（只是少传 findings）');
     assert.ok(onlyJson.findings.every((f) => f.severity === 'blocker'), '--blockers-only 下 findings 只应含 blocker');
@@ -425,7 +433,7 @@ test('真引擎脚本直跑：退出码 0 / 1 / 2 三种语义', () => {
   } finally { rmSync(blockerDir, { recursive: true, force: true }); }
 
   // 2：参数错
-  const badArgs = spawnSync(process.execPath, [GATE_SCRIPT, '--repo', '/tmp', '--scope', 'changed', '--json'], { encoding: 'utf8' });
+  const badArgs = spawnSync(process.execPath, [ENGINE_CLI, '--repo', '/tmp', '--scope', 'changed', '--json'], { encoding: 'utf8' });
   assert.equal(badArgs.status, EXIT_FAILED, '参数错必须退出 2');
   assert.match(String(badArgs.stderr), /--scope 只接受 diff\|full/);
   assert.equal(String(badArgs.stdout).trim(), '', '失败时不得往 stdout 写半成品 JSON');

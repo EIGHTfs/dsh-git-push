@@ -17,127 +17,26 @@ dsh-git-push/
 │   ├── user-requirements.json — 开发者特殊要求清单（提交推送前逐条核对）
 │   ├── app/ — 插件入口层（apply/HTTP 处理/工具调用分发/注入文本/默认扫描根）
 │   │   ├── apply.js — 插件装载入口（注册 schema/工具/HTTP/注入钩子）
-│   │   ├── audit-api.js — 审计结果 API 聚合层（/api/git-push/audit：按规则/文件/严重级/规则包分组 + severity 过滤 + top 截断）
+│   │   ├── audit-client.js — （待注释）
 │   │   ├── command-registry.js — 工具命令注册表（方案 B——CLI/宿主工具/帮助同源，免维护）
 │   │   ├── constants.js — 插件名与设置命名空间常量
-│   │   ├── host-doc-checks.js — （待注释）
 │   │   ├── http-handlers.js — HTTP 路由分发（薄 router：前置校验 + switch 各端点调 handlers/ 模块）
 │   │   ├── index.js — 插件入口再导出（宿主 main 指向）
 │   │   ├── inject-text.js — 注入文本（工具用法提示 FUNCTION_USAGE_HINT）
+│   │   ├── ownership.js — （待注释）
 │   │   ├── repo-ownership.js — （待注释）
 │   │   ├── scan-root.js — 默认扫描根解析（配置优先→DSH 家根自动识别）
 │   │   ├── schema-audit.js — （待注释）
 │   │   ├── schema.js — 配置 schema（宿主导出缺失时兜底）
-│   │   ├── scope-check.js — 作用域检查执行器（工具/独立脚本共用：找契约→逐文件分析→汇总）
 │   │   ├── settings-bridge.js — 设置读写桥（host scope 共享；绕开 client isLoopback=memory 落盘陷阱）
+│   │   ├── severity.js — （待注释）
 │   │   ├── slash-commands.js — 用户输入框斜杠命令（目前只注册 /git-audit）
 │   │   ├── slot-stats.js — 规则槽位命中统计（模块级状态）
 │   │   ├── tool-call.js — 工具调用分发（git_scan/commit_push/audit/status 等全部工具）
 │   │   ├── tools.js — 工具定义清单（名称/描述/参数 schema）
 │   │   └── …（11 个更深文件）
-│   ├── ast/ — AST 实现层（token 级判定：括号/控制流/数据流/凭据/魔数/命名/规模/分词）
-│   │   ├── brace.js — 括号配对与区间包含工具
-│   │   ├── callgraph.js — 调用链追踪（单文件调用图 + isInRequestPath，io-risk 请求路径判定升级）
-│   │   ├── code-lines.js — 代码行判定（真代码 vs 注释/字符串）+ 字符串字面量提取
-│   │   ├── consts.js — （待注释）
-│   │   ├── control-flow.js — 控制流检查（同步 fs/空 catch/圈复杂度/嵌套深度）
-│   │   ├── credential.js — 凭据标识符判定（硬编码/引用/类型检查）
-│   │   ├── dataflow.js — 数据流检查（清空后访问，三层审计 L2）
-│   │   ├── dup-code.js — （待注释）
-│   │   ├── fs-hotspots.js — （待注释）
-│   │   ├── index.js — AST 层统一出口
-│   │   ├── io-risk-const.js — IO 风险分级·常量与档位工具：fs 调用名集/操作类别/风险标签/搜索窗口与阈值 + raise 升档
-│   │   ├── io-risk-fn.js — IO 风险分级·函数边界识别与 token 配对：认普通/箭头/方法简写/类方法，圆括号花括号方括号前后向配对
-│   │   ├── io-risk-loop.js — IO 风险分级·循环判定：循环内/迭代器表达式（只执行一次）/小字面量数组降级/collectRanges 范围收集
-│   │   ├── io-risk.js — IO 风险分级（四级）判定与评分：scanIoRiskAst 判定上下文/类别 → summarizeIoRisk 统计 → rankIoFixList 优先级清单；并再导出下列三个从属模块的公共符号
-│   │   ├── lang.js — 语言路由（2026-10-06）：detectLang 内容启发式检测 + javaKtFuncRanges（Java/Kotlin 方法签名+括号配对函数范围）+ LANG_FUNC_RANGES 主流语言占位
-│   │   ├── line-count.js — （待注释）
-│   │   ├── magic-number.js — 硬编码魔数识别（豁免版本号/日期/状态码）
-│   │   ├── naming.js — 命名检查（标识符长度/函数名过短/受控小文件读取）
-│   │   ├── perf.js — （待注释）
-│   │   ├── scope-collisions.js — 拼接产物作用域撞名判定（按真实作用域帧；for 头部独立帧）
-│   │   ├── scope.js — 变量作用域分类器（module/function/loop 行号区间 + 模块常量赋值判定）
-│   │   ├── shell.js — shell 精筛（cd 动态路径/写操作命中 .gitignore）
-│   │   ├── size.js — 规模检查（函数长度/文件长度/重复字符串）
-│   │   ├── symbol-index.js — （待注释）
-│   │   ├── tokenizer.js — 分词器（token 流 + LRU 缓存）
-│   │   ├── treesitter.js — （待注释）
-│   ├── audit/ — 审计编排层（文件收集/逐文件检查/槽位聚合/审计出口）
-│   │   ├── analysis-coverage.js — （待注释）
-│   │   ├── audit-file.js — 单文件审计执行（跑检查+豁免）
-│   │   ├── auditignore-rules.js — （待注释）
-│   │   ├── checks.js — 检查器入口（纯引用表）
-│   │   ├── client-entry.js — （待注释）
-│   │   ├── collector.js — 文件收集（gitignore 感知）
-│   │   ├── ext-runner.js — 审计扩展运行器（audit-ext 统一入口动态加载/契约执行/失败降级）
-│   │   ├── file-context.js — 文件上下文豁免（外部调用超时/mkdir 同函数/版本路径）
-│   │   ├── finding.js — 统一问题对象构造器（makeFinding）
-│   │   ├── gitignore-match.js — gitignore 语法匹配器（非 git 目录 .auditignore 兜底，语义与 git 对拍）
-│   │   ├── glob.js — glob→RegExp 转换（**/*/? 子集）
-│   │   ├── history-report.js — （待注释）
-│   │   ├── history.js — （待注释）
-│   │   ├── ignore-blind.js — 审计静默失明检测（本地 git 排除配置把整仓判成忽略时告警）
-│   │   ├── index.js — 审计层统一出口（auditFull/auditChanged）
-│   │   ├── orchestrate.js — 审计编排（收集→检查→汇总）
-│   │   ├── ownership.js — （待注释）
-│   │   ├── public.js — （待注释）
-│   │   ├── repo-level.js — 仓库级语义规则
-│   │   ├── report-yaml.js — （待注释）
-│   │   ├── scope-policy.js — 作用域契约读取（按项目 package.json 的 dshScopeCheck 取前缀/顶层/产物清单）
-│   │   ├── score-spec.js — （待注释）
-│   │   ├── slot.js — 按规则包聚合审计命中（拦截/警告/通过）
-│   ├── audit-rules/ — 规则包 yml（nodejs/npm/frontend/comment/dsh/private/structure 等动态槽位）
-│   │   ├── audit-rules-comment.yml — 注释类规则（黑名单措辞/对话残留）（规则包 comment）
-│   │   ├── audit-rules-cpp.yml — C/C++ 规则包（占位：规则待补，槽位就绪）（规则包 cpp）
-│   │   ├── audit-rules-csharp.yml — （待注释）
-│   │   ├── audit-rules-docs.yml — 文档类规则（README/文档措辞）（规则包 docs）
-│   │   ├── audit-rules-dsh.yml — DSH 生态规则（宿主/插件约定）（规则包 dsh）
-│   │   ├── audit-rules-filehealth.yml — 文件健康度规则（三维分级）（规则包 filehealth）
-│   │   ├── audit-rules-folder.yml — 目录级规则（目录数/单目录文件数）（规则包 folder）
-│   │   ├── audit-rules-frontend.yml — 前端规则（按钮绑定/魔数）（规则包 frontend）
-│   │   ├── audit-rules-go.yml — Go 规则包（占位：规则待补，槽位就绪）（规则包 go）
-│   │   ├── audit-rules-i18n.yml — i18n 规则（文案硬编码检查）（规则包 i18n）
-│   │   ├── audit-rules-java.yml — Java/Kotlin 规则（短名/魔数/方法长度/复杂度，exts: [java,kt]）（规则包 java）
-│   │   ├── audit-rules-nodejs.yml — Node.js 规则（同步 fs/空 catch）（规则包 nodejs）
-│   │   ├── audit-rules-npm.yml — npm 规则（package.json 规范）（规则包 npm）
-│   │   ├── audit-rules-paths.yml — （待注释）
-│   │   ├── audit-rules-performance.yml — 性能规则（规则包 performance）
-│   │   ├── audit-rules-php.yml — PHP 规则包（占位：规则待补，槽位就绪）（规则包 php）
-│   │   ├── audit-rules-private.yml — 私密文件规则（凭据/私密清单）（规则包 private）
-│   │   ├── audit-rules-python.yml — （待注释）
-│   │   ├── audit-rules-robustness.yml — 健壮性规则（规则包 robustness）
-│   │   ├── audit-rules-rust.yml — Rust 规则包（占位：规则待补，槽位就绪）（规则包 rust）
-│   │   ├── audit-rules-structure.yml — 结构规则（命名/规模/复杂度）（规则包 structure）
-│   │   ├── audit-rules-swift.yml — Swift 规则包（占位：规则待补，槽位就绪）（规则包 swift）
-│   │   ├── audit-rules-template.yml — 规则模板（新规则包起点）（规则包 template）
-│   ├── audit-ui-sdk/ — 审计 UI 注入契约（可插拔面板；本阶段只定义契约不实施 UI）
-│   │   ├── contract.js — 审计面板契约：版本号 + defineAuditPanel 校验（构建期，只判形状与版本）+ 深冻结
-│   │   ├── index.js — 审计面板 SDK 唯一导出面（纯 re-export，实现只能从这里 import）
-│   ├── checks/ — 检查层（按 kind 调用检查器：正则/语义/结构/文件健康/按钮绑定/私密文件）
-│   │   ├── button-bind.js — 按钮事件绑定交叉比对（声明了但没绑定）
-│   │   ├── common.js — 检查器公共设施（豁免提示/severity 封顶/分组）
-│   │   ├── credential-file.js — 凭据文件检查（.env/密钥文件）
-│   │   ├── dataflow.js — 数据流规则包装（L2 token 级→finding）
-│   │   ├── dispatch.js — 调度（runChecks 按 kind 分发汇总）
-│   │   ├── dup-code.js — （待注释）
-│   │   ├── dup-const.js — 同名常量跨文件重复定义检查（DRY：findConstDefs 多语言常量提取 + 模块级过滤 + checkDuplicateConst 跨文件聚合——2026-10-02 新规则）
-│   │   ├── file-health.js — 文件健康度（行数/字节/行长三维打分）
-│   │   ├── filter.js — 规则作用域过滤（exts/exclude_paths）
-│   │   ├── folder.js — 目录级检查（文件夹数/单目录文件数/解包特征）
-│   │   ├── fs-scanner.js — （待注释）
-│   │   ├── hardcoded-path.js — （待注释）
-│   │   ├── index.js — 检查层统一出口
-│   │   ├── io.js — IO 风险分级包装：checkIoRisk → lib/ast/io-risk.js（转 warning finding，取代 quality/sync-fs）
-│   │   ├── magic-number.js — 魔数检查包装（token 判定→finding）
-│   │   ├── npm-json.js — package.json 检查（依赖版本/私有包豁免）
-│   │   ├── private.js — 私密文件检查（私有仓可见性核对）
-│   │   ├── regex.js — 正则类规则执行（regex/path-regex/blacklist）
-│   │   ├── scope-collision.js — 作用域撞名规则包装（同帧重名→finding；契约类封顶 warning）
-│   │   ├── semantic.js — 语义类规则执行（patch insert/仓库级语义）
-│   │   ├── structural.js — 结构类规则（函数长度/复杂度/嵌套/同步 fs）
 │   ├── cli/ — （待注释）
 │   │   ├── commands-account.mjs — （待注释）
-│   │   ├── commands-audit.mjs — （待注释）
 │   │   ├── commands-doc.mjs — （待注释）
 │   │   ├── commands-tool.mjs — 工具链命令实现（模板生成与 self-check）
 │   │   ├── commands-vcs.mjs — （待注释）
@@ -159,9 +58,6 @@ dsh-git-push/
 │   │   ├── mirror-candidates.json — （待注释）
 │   │   ├── mirror-store.js — （待注释）
 │   │   ├── workspace-paths.js — （待注释）
-│   ├── exempt/ — 豁免机制（dsh-skip-* 注释标记解析与文件头/行内语义）
-│   │   ├── index.js — 豁免注册表（dsh-skip-* 全标记消费）
-│   │   ├── tool.js — （待注释）
 │   ├── git/ — Git 执行层（runGit/账号/API/克隆/凭据/推送/扫描/索引维护/敏感扫描/传输通道）
 │   │   ├── account-status.js — （待注释）
 │   │   ├── account.js — 账号校验（token 在线 + SSH 公钥指纹，输出账号状态块）
@@ -183,6 +79,7 @@ dsh-git-push/
 │   │   ├── credentials.js — 凭据解析（token/SSH 私钥：环境变量→凭据文件→settings）
 │   │   ├── endpoints.js — （待注释）
 │   │   ├── exec.js — git 进程调用（runGit 统一超时/错误规整 + gitRaw 原始字节）
+│   │   ├── exempt-markers.js — （待注释）
 │   │   ├── hooks.js — （待注释）
 │   │   ├── identity-rewrite.js — （待注释）
 │   │   ├── identity.js — （待注释）
@@ -206,12 +103,6 @@ dsh-git-push/
 │   │   ├── wrapped-git.js — 浅包装 git（自动凭据透传：SSH 私钥/HTTPS token，git-sluice git <args> 与未知命令透传）
 │   ├── http/ — HTTP 总入口（鉴权中间件 + 端点处理器骨架）
 │   │   ├── index.js — HTTP 总入口（Origin/CSRF/写确认/413/路由分发）
-│   ├── link-check/ — 链接判断（文档链接有效性，只 warning 永不 blocker）
-│   │   ├── index.js — 链接判断总入口（分级扣分，断网不拦）
-│   ├── lint-adapter/ — 外部 linter 委托层（探测项目自带官方 linter → 调用 JSON → 适配；只评分报告不拦截）
-│   │   ├── detect.js — 委托层探测：项目配置指纹 + 工具可执行自探测（env→tools→PATH→常见路径，校验 X_OK）
-│   │   ├── index.js — 委托层聚合入口 runLintAdapters：返回 findings 与 linted 委托状态（防静默空转）
-│   │   ├── runner.js — 委托层调用与适配：ruff JSON→finding（severity 封顶 warning；崩溃/超时/坏输出一律降级空）
 │   ├── npm/ — （待注释）
 │   │   ├── account.js — （待注释）
 │   │   ├── install.js — （待注释）
@@ -225,32 +116,13 @@ dsh-git-push/
 │   │   ├── auto-detect.js — 任务完成自动推送·检测层（纯函数：✅任务完成 触发/❌⚠ 阻断/自定义正则/许可合成判断）
 │   │   ├── auto-push.js — 任务完成自动推送·核心（turn/end 监听→检测→autoPushEnabled 开关→调 commitWithAudit 完整门禁，不裸提交）
 │   │   ├── index.js — Host 侧接线（插件注册：工具/HTTP/配置注入宿主）
-│   ├── preprocess/ — 
-│   │   ├── audit.js — （待注释）
-│   │   ├── exempt.js — （待注释）
-│   │   ├── index.js — （待注释）
-│   │   ├── score.js — （待注释）
-│   │   └── …（1 个更深文件）
-│   ├── rule/ — 规则引擎（yml 装载/编译注册表/同形字符检测/槽位启停）
-│   │   ├── compilers.js — 规则编译器注册表（纯引用文件）
-│   │   ├── homoglyph.js — 同形字符检测（yml kind/id 防 ASCII 混淆）
-│   │   ├── loader.js — 规则总入口（yml 装载/解析/槽位启停）
-│   │   ├── registry.js — 规则编译注册表核心（compileRule 主体）
-│   │   ├── scope.js — 审计作用域机制层（scope_rules 规范化 + resolveScopeAction）
-│   │   └── …（12 个更深文件）
-│   ├── score/ — 10 维度加权评分总入口
-│   │   ├── docs-score.js — 文档加分制检查器（文档集结构信号 + 版本一致性交叉验证，0 分起上限 10；不进 findings）
-│   │   ├── index.js — 评分总入口（10 维度加权）
 │   ├── self/ — 插件自身总入口（VERSION/versionInfo/CLI 帮助）
 │   │   ├── index.js — 自身总入口（VERSION 一致性/versionInfo）
 ├── scripts/ — 开发工具脚本（版本校验/双副本同步/预览服务/README 目录树维护）
-│   ├── audit-gate.mjs — 提交前预处理的轻量审计引擎入口（只加载 audit+score，按契约输出 JSON 与退出码 0/1/2）
-│   ├── audit-runner.mjs — 审计扩展 CLI 统一入口（独立跑 scripts/audit-ext/ 全部扩展）
 │   ├── audit-runtime-check.mjs — 三层审计 L3 运行时检测脚本
 │   ├── browser-page-probe.mjs — （待注释）
 │   ├── build-client.mjs — 客户端分片拼接（PART_ORDER + --check 门禁 + 形态铁律自检）
 │   ├── bump-version.mjs — （待注释）
-│   ├── check-js-scope.mjs — 作用域撞名独立脚本（与 git-sluice scope-check 同一份判定）
 │   ├── check.mjs — 语法检查脚本（npm run check）
 │   ├── clean-date-comments.py — （待注释）
 │   ├── cpu-sample.mjs — （待注释）
@@ -265,22 +137,11 @@ dsh-git-push/
 │   ├── local-registry.mjs — （待注释）
 │   ├── module-splitter.py — 巨型单文件按顶层块拆分脚本（analyze/split/verify 三命令，python3 零依赖；module_splitter 工具与 CLI 的底层实现）
 │   ├── picker-repro.mjs — （待注释）
-│   ├── platform-scan.mjs — （待注释）
 │   ├── probe-recheck.mjs — 探针：「重新检测」按钮链路实测（在线校验 token/SSH）
-│   ├── rename-locator.mjs — 变量重命名位置定位工具（按作用域聚合引用——单字母变量人工重命名辅助）
-│   ├── rule-switch.mjs — 规则槽位手动启停 CLI
-│   ├── rules-solo-audit.mjs — 规则单启控制变量扫描（基准全关+逐规则单启+全量对照，报告供 AI/人工审规则有效性与局限，按需运行非常驻）
-│   ├── scan-file-io.mjs — 文件读写扫描器（列出所有 fs 读写调用位置 + 路径参数）
-│   ├── scan-fs-hotspots.mjs — （待注释）
 │   ├── scan-repos.mjs — （待注释）
 │   ├── scan-version.mjs — 版本一致性校验脚本
-│   ├── symbol-index.mjs — （待注释）
 │   ├── verify-prestep.mjs — 上下文注入自检脚本（真实触发 agent/pre-step 验证注入）
 │   ├── version-source.mjs — （待注释）
-│   ├── audit-ext/ — （待注释）
-│   │   ├── _example-readme-present.mjs — 审计扩展契约示例（_ 前缀：演示不参与实际审计）
-│   │   ├── dsh-inject-declarations.mjs — （待注释）
-│   │   ├── variable-min-length.mjs — 审计扩展：variable-min-length（内置规则抽出试点——统一动态入口）
 ├── test/ — node:test 全量单元测试（541+ 条，覆盖审计/推送/账号/HTTP/后台任务）
 │   ├── .test — 空文件豁免标记（目录级豁免 .test 目录）
 │   ├── run-tests.mjs — （待注释）
@@ -300,70 +161,10 @@ dsh-git-push/
 │   │   ├── test-tools.mjs — （待注释）
 │   │   ├── test-workspace-paths.mjs — （待注释）
 │   ├── audit/ — 审计侧 UI 测试归档（不参与常规回归——run-tests 只扫 test/ 顶层）
-│   │   ├── README.md — 归档说明：为什么移出常规测试、怎么手动跑、与后端审计的关系
 │   │   ├── test-analysis-coverage.mjs — （待注释）
-│   │   ├── test-ast-confirm-span.mjs — （待注释）
-│   │   ├── test-audit-api.mjs — （待注释）
-│   │   ├── test-audit-archive-exempt.mjs — （待注释）
-│   │   ├── test-audit-git-boundary.mjs — （待注释）
-│   │   ├── test-audit-guards.mjs — （待注释）
-│   │   ├── test-audit-rule-packs.mjs — （待注释）
-│   │   ├── test-audit-scope.mjs — （待注释）
-│   │   ├── test-audit-ui-contract.mjs — （待注释）
-│   │   ├── test-audit.mjs — （待注释）
-│   │   ├── test-auditignore-rules.mjs — （待注释）
-│   │   ├── test-auditignore.mjs — （待注释）
-│   │   ├── test-build-artifact-skip.mjs — （待注释）
-│   │   ├── test-button.mjs — （待注释）
-│   │   ├── test-cli-audit-parity.mjs — （待注释）
-│   │   ├── test-collector-ignore.mjs — （待注释）
-│   │   ├── test-conv-rule-scope.mjs — （待注释）
-│   │   ├── test-dataflow.mjs — （待注释）
-│   │   ├── test-dim-denominator.mjs — （待注释）
-│   │   ├── test-docs-score.mjs — （待注释）
-│   │   ├── test-dup.mjs — （待注释）
-│   │   ├── test-dynamic-weight.mjs — （待注释）
-│   │   ├── test-empty-catch.mjs — （待注释）
-│   │   ├── test-exempt-engines.mjs — （待注释）
-│   │   ├── test-exempt.mjs — （待注释）
-│   │   ├── test-ext-variable-min-length.mjs — （待注释）
-│   │   ├── test-false-positive-fixes.mjs — （待注释）
-│   │   ├── test-file-health.mjs — （待注释）
-│   │   ├── test-filter-ext.mjs — （待注释）
-│   │   ├── test-folder-scope.mjs — （待注释）
-│   │   ├── test-fs-hotspots.mjs — （待注释）
-│   │   ├── test-generated-html-artifact.mjs — （待注释）
-│   │   ├── test-gitignore-match.mjs — （待注释）
-│   │   ├── test-gitignore-nongit-dir.mjs — （待注释）
-│   │   ├── test-hardcoded-path-and-loop-rewrite.mjs — （待注释）
-│   │   ├── test-history-audit.mjs — （待注释）
 │   │   ├── test-ignore-e2e.mjs — （待注释）
-│   │   ├── test-io-risk.mjs — （待注释）
-│   │   ├── test-java-rules.mjs — （待注释）
-│   │   ├── test-line-count.mjs — （待注释）
-│   │   ├── test-link-check.mjs — （待注释）
-│   │   ├── test-lint-adapter.mjs — （待注释）
-│   │   ├── test-loop-no-fallback-return.mjs — （待注释）
-│   │   ├── test-magic-number.mjs — （待注释）
-│   │   ├── test-max-lines-scope.mjs — （待注释）
-│   │   ├── test-name-length-scope.mjs — （待注释）
-│   │   ├── test-perf-loop-collection.mjs — （待注释）
-│   │   ├── test-perf-repeat-call.mjs — （待注释）
-│   │   ├── test-preprocess-adapters.mjs — （待注释）
 │   │   ├── test-preprocess-render.mjs — （待注释）
 │   │   ├── test-privacy-ownership.mjs — （待注释）
-│   │   ├── test-project-type-filter.mjs — （待注释）
-│   │   ├── test-quality.mjs — （待注释）
-│   │   ├── test-repeated-strings-cs.mjs — （待注释）
-│   │   ├── test-rule-loading.mjs — （待注释）
-│   │   ├── test-scope.mjs — （待注释）
-│   │   ├── test-score-spec.mjs — （待注释）
-│   │   ├── test-score-zero-rule-dims.mjs — （待注释）
-│   │   ├── test-smart-hint.mjs — （待注释）
-│   │   ├── test-tokenizer-multiline-template.mjs — （待注释）
-│   │   ├── test-treesitter.mjs — （待注释）
-│   │   ├── test-version-regression-2-4-1.mjs — （待注释）
-│   │   └── …（3 个更深文件）
 │   ├── fixtures/ — （待注释）
 │   │   ├── TimeZoneComboBox-CRnoCikG.js — Pawchive 混淆产物样本（hash 文件名——跳过判定 fixture）
 │   │   └── …（5 个更深文件）
@@ -418,14 +219,10 @@ dsh-git-push/
 │   │   ├── test-module-splitter.mjs — （待注释）
 │   │   ├── test-npm-tab-render.mjs — （待注释）
 │   │   ├── test-picker-layout.mjs — （待注释）
-│   │   ├── test-platform-scan.mjs — （待注释）
-│   │   ├── test-rename-locator.mjs — （待注释）
 │   │   ├── test-scan-and-cache.mjs — （待注释）
-│   │   ├── test-scope-collisions.mjs — （待注释）
 │   │   ├── test-scrub-conv-wording.mjs — （待注释）
 │   │   ├── test-self.mjs — （待注释）
 │   │   ├── test-smoke-import-specs.mjs — （待注释）
-│   │   ├── test-symbol-index.mjs — （待注释）
 │   │   ├── test-tree-doc.mjs — （待注释）
 │   │   ├── test-tree-first.mjs — （待注释）
 │   │   ├── test-version-metrics.mjs — （待注释）

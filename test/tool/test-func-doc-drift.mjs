@@ -8,8 +8,8 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
-import '../../lib/app/host-doc-checks.js'; // 审计包边界：漂移检查器由宿主注入（见 lib/app/host-doc-checks.js）
-import { auditFull } from '../../lib/audit/index.js';
+import '../../../audit-sluice/lib/host-doc-checks.js'; // 漂移检查器归审计包（导入即接线）
+import { auditFull } from '../../../audit-sluice/lib/engine/index.js';
 import { buildFuncListText } from '../../scripts/doc-func.mjs';
 
 const RULE = 'structure/functions-doc-drift';

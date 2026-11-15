@@ -10,7 +10,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { resolveDshClientFragments, resolveDshClientEntries } from '../../lib/audit/client-entry.js';
+import { resolveDshClientFragments, resolveDshClientEntries } from '../../../audit-sluice/lib/engine/client-entry.js';
 
 /** 造一个含指定 package.json 的临时仓库根。 */
 function fakeRepo(pkg) {

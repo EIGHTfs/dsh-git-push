@@ -27,7 +27,7 @@ import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-import { auditFull } from '../../lib/audit/orchestrate.js';
+import { auditFull } from '../../../audit-sluice/lib/engine/orchestrate.js';
 import { runAudit } from '../../lib/commit-push.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');

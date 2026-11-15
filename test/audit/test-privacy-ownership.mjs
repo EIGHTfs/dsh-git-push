@@ -18,7 +18,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
 
-import { classifyOwnership, privacyRulesEnabled, isPrivacyRule } from '../../lib/audit/ownership.js';
+import { classifyOwnership, privacyRulesEnabled, isPrivacyRule } from '../../lib/app/ownership.js';
 import { probeRepoOwnership, resetRepoOwnershipCache, localLogin } from '../../lib/app/repo-ownership.js';
 
 test('classifyOwnership：三态与边界', () => {
@@ -49,7 +49,7 @@ test('isPrivacyRule：只认隐私/凭据类，不误伤其它规则', () => {
 test('端到端：他人仓库不报隐私，自有/未知照报', async () => {
   // 走完整入口 auditFull（自带规则加载与文件收集）：只测纯函数不够，
   //   接线层没接上会完全静默失效，必须端到端跑一遍。归属由装配层注入。
-  const { auditFull } = await import('../../lib/audit/orchestrate.js');
+  const { auditFull } = await import('../../../audit-sluice/lib/engine/orchestrate.js');
   const dir = mkdtempSync(join(tmpdir(), 'own-e2e-'));
   writeFileSync(join(dir, 'a.txt'), 'contact: someone@qq.com\n');
   try {

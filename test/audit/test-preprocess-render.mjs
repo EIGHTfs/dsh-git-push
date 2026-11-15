@@ -15,8 +15,8 @@ import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { auditPreprocess, auditRenderResult } from '../../lib/preprocess/audit.js';
-import { preprocessParams, renderPreprocessResult } from '../../lib/preprocess/index.js';
+import { auditPreprocess, auditRenderResult } from '../../../audit-sluice/lib/preprocess/audit.js';
+import { preprocessParams, renderPreprocessResult } from '../../../audit-sluice/lib/preprocess/index.js';
 import { defaultPreprocessRender, runAudit } from '../../lib/commit-push.js';
 import { pushJobOutcome } from '../../lib/app/tool-call.js';
 import { defaultConfig } from '../../lib/client/index.js';

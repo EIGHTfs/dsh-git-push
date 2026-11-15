@@ -96,7 +96,7 @@ try {
 //   ① 同作用域重名（var/function 静默覆盖的触发条件，始终检查）；
 //   ② 文件顶层零声明；③ 共享作用域命名前缀。
 try {
-  const { analyzeScopeCollisions } = await import('../lib/ast/scope-collisions.js');
+  const { analyzeScopeCollisions } = await import('../../audit-sluice/lib/ast/scope-collisions.js');
   const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
   const cfg = pkg?.dshScopeCheck;
   const files = Array.isArray(cfg?.files) && cfg.files.length ? cfg.files : [];

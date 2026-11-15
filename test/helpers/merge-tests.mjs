@@ -26,7 +26,7 @@ import { readdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 
-import { tokenize } from '../../lib/ast/tokenizer.js';
+import { tokenize } from '../../../audit-sluice/lib/shared/tokenizer.js';
 
 const HOOKS = new Set(['before', 'after', 'beforeEach', 'afterEach']);
 

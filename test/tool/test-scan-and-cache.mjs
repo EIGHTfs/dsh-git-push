@@ -11,7 +11,7 @@ import { ARCHIVED_DIR, scanTestTree, sideOf, structureViolations } from '../help
 import { mkdtempTracked } from '../helpers/tmp-dir.mjs';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
@@ -127,12 +127,15 @@ import { fileURLToPath } from 'node:url';
   test('[run-tests-scan] 结构门禁：真实仓库顶层已无 test-*.mjs，且每侧都有测试', () => {
     const scan = scanTestTree(TEST_DIR);
     assert.deepEqual(structureViolations(scan), [], '真实仓库出现顶层 test-*.mjs');
-    for (const side of ['git', 'audit', 'tool', 'app']) {
+    // audit 侧测试已随审计实现整体搬进独立包（audit-sluice），本仓不再有 test/audit
+    for (const side of ['git', 'tool', 'app']) {
       assert.ok(scan.bySide[side]?.regular.length > 0, `${side}/ 下没有任何常规测试（目录漏了或扫描漏了）`);
     }
     // 下限随「合并批」推进调整：它只是「扫描退化成只扫顶层」的兜底信号（那种情况会掉到个位数），
   //   不是质量门槛。合并把 172 → 119 个文件，故下限 150 → 90（仍远高于「只扫顶层」量级）。
-  assert.ok(scan.regular.length >= 90, `常规回归文件数异常偏少（${scan.regular.length}）——扫描可能退化成只扫顶层`);
+  // 下限随拆包调整（审计侧测试已整体搬进独立包，本仓常规回归 69 个）；
+    //   它只是「扫描退化成只扫顶层」的兜底信号（那种情况会掉到个位数）。
+    assert.ok(scan.regular.length >= 60, `常规回归文件数异常偏少（${scan.regular.length}）——扫描可能退化成只扫顶层`);
   });
 
   // 干跑输出只取一次：每次 dry-run 都要为每个文件算 import 闭包（CIFS 上每次读几十个文件），
@@ -151,12 +154,14 @@ import { fileURLToPath } from 'node:url';
   test('[run-tests-scan] 接线：--dry-run --stats 能报告各侧计数、归档清单与四类原因', () => {
     const out = dryRunStats();
     // 各侧汇总行（跑/缓存跳过/归档）
-    for (const side of ['git/', 'audit/', 'tool/', 'app/']) {
+    for (const side of ['git/', 'tool/', 'app/']) {
       assert.match(out, new RegExp(`── ${side.replace('/', '\\/')} ：常规 \\d+ 个（跑 \\d+ / 缓存跳过 \\d+）· 归档 \\d+ 个`), `缺少 ${side} 的汇总行`);
     }
-    // 归档必须显式列出手动跑法（不静默排除）
-    assert.match(out, /_archived\/ ：\d+ 个归档测试\*\*不参与回归\*\*/, '缺少归档说明');
-    assert.match(out, /node --test test\/audit\/_archived\//, '缺少归档测试的手动跑命令');
+    // 归档说明：只在仓库确实有归档目录时才要求打印（审计侧归档已随实现搬进独立包）
+    if (existsSync(join(TEST_DIR, 'audit', '_archived'))) {
+      assert.match(out, /_archived\/ ：\d+ 个归档测试\*\*不参与回归\*\*/, '缺少归档说明');
+      assert.match(out, /node --test test\/audit\/_archived\//, '缺少归档测试的手动跑命令');
+    }
     // 原因分布（dry-run 会打印四类计数）
     assert.match(out, /\[dry-run\] 原因分布：/, '缺少原因分布');
     // 逐文件行带侧标记（--only 命中哪个侧不固定，只要求「带侧标记」）

@@ -6,7 +6,7 @@
  *     每个 test 名带 `[原文件名] ` 前缀便于溯源。
  * 生成工具：test/helpers/merge-tests.mjs（前置检查用 lib/ast/tokenizer 判定，非正则）。
  */
-import { collectChangedFiles } from '../../lib/audit/collector.js';
+import { collectChangedFiles } from '../../../audit-sluice/lib/engine/collector.js';
 import { GIT_GLOBAL_ARGS, runGitStream } from '../../lib/core/exec.js';
 import { cloneWithGitFetch } from '../../lib/git/clone-history-mode.js';
 import { gitSearchPlan, runGit } from '../../lib/git/exec.js';

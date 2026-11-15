@@ -9,7 +9,7 @@
 import { TOOL_REGISTRY, registryByName, registryByCli, parseRegistryArgs, buildToolsListText, resolveEntryParams, auditPreprocessAvailable } from '../../lib/app/command-registry.js';
 import { listTools } from '../../lib/app/tools.js';
 import { AUDIT_HELP_SNIPPETS, renderHelp } from '../../cli.mjs';
-import { tokenize } from '../../lib/ast/tokenizer.js';
+import { tokenize } from '../../../audit-sluice/lib/shared/tokenizer.js';
 import { commandOwner, parseEntrySourceMeta, readEntrySource, CLI_AUDIT, CLI_ENTRIES, CLI_GIT, CLI_TOOL, allCommands, resolveDispatch } from '../../lib/cli/shared.mjs';
 import { DEFAULT_CONFIG, SETTINGS_SCHEMA, defaultConfig, resolveConfig, createSettingsCard, collectExternalRefs, INLINE_CSS, clientModuleInfo } from '../../lib/client/index.js';
 import { helpSync, VERSION } from '../../lib/self/index.js';

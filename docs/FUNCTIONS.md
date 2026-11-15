@@ -12,43 +12,35 @@
 | `apply` | 44-295 | 252 | `export async function apply(ctx, config = {}) {` |
 | `envInjectText` | 106-145 | 40 | `const envInjectText = (cwdOverride) => {` |
 
-### lib/app/audit-api.js（175 行 · 5 个函数）
+### lib/app/audit-client.js（126 行 · 12 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `exemptStatsOf` | 29-55 | 27 | `export function exemptStatsOf(findings = []) {` |
-| `groupKeyOf` | 58-63 | 6 | `function groupKeyOf(finding, groupBy, ruleSlotMap) {` |
-| `parseSeverityFilter` | 69-73 | 5 | `export function parseSeverityFilter(raw) {` |
-| `aggregateFindings` | 82-103 | 22 | `export function aggregateFindings(findings = [], opts = {}) {` |
-| `runAuditApi` | 111-174 | 64 | `export async function runAuditApi(repo, params = {}, cfg = {}) {` |
+| `resolveAuditPackageRoot` | 30-34 | 5 | `export function resolveAuditPackageRoot() {` |
+| `loadAuditPackage` | 41-52 | 12 | `export async function loadAuditPackage() {` |
+| `auditPackageRoot` | 55-57 | 3 | `export function auditPackageRoot() {` |
+| `resetAuditPackageCache` | 60-64 | 5 | `export function resetAuditPackageCache() {` |
+| `hostApi` | 71-79 | 9 | `export async function hostApi() {` |
+| `auditReport` | 86-89 | 4 | `export async function auditReport(options = {}) {` |
+| `auditHistory` | 92-95 | 4 | `export async function auditHistory(options = {}) {` |
+| `ioScan` | 98-101 | 4 | `export async function ioScan(options = {}) {` |
+| `linkCheck` | 104-107 | 4 | `export async function linkCheck(options = {}) {` |
+| `scopeCheck` | 110-113 | 4 | `export async function scopeCheck(options = {}) {` |
+| `exemptAction` | 116-119 | 4 | `export async function exemptAction(options = {}) {` |
+| `groupByKeys` | 122-125 | 4 | `export async function groupByKeys() {` |
 
-### lib/app/audit-client.js（109 行 · 11 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `resolveAuditPackageRoot` | 29-33 | 5 | `export function resolveAuditPackageRoot() {` |
-| `loadAuditPackage` | 40-51 | 12 | `export async function loadAuditPackage() {` |
-| `auditPackageRoot` | 54-56 | 3 | `export function auditPackageRoot() {` |
-| `resetAuditPackageCache` | 59-62 | 4 | `export function resetAuditPackageCache() {` |
-| `auditReport` | 69-72 | 4 | `export async function auditReport(options = {}) {` |
-| `auditHistory` | 75-78 | 4 | `export async function auditHistory(options = {}) {` |
-| `ioScan` | 81-84 | 4 | `export async function ioScan(options = {}) {` |
-| `linkCheck` | 87-90 | 4 | `export async function linkCheck(options = {}) {` |
-| `scopeCheck` | 93-96 | 4 | `export async function scopeCheck(options = {}) {` |
-| `exemptAction` | 99-102 | 4 | `export async function exemptAction(options = {}) {` |
-| `groupByKeys` | 105-108 | 4 | `export async function groupByKeys() {` |
-
-### lib/app/command-registry.js（330 行 · 7 个函数）
+### lib/app/command-registry.js（344 行 · 8 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `resolveEntryParams` | 14-18 | 5 | `export function resolveEntryParams(entry, cfg, hasBuiltinEngine) {` |
-| `applyFlagToken` | 268-284 | 17 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
-| `validateParamConstraints` | 287-293 | 7 | `function validateParamConstraints(args, params) {` |
-| `parseRegistryArgs` | 295-315 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
-| `registryByName` | 318-320 | 3 | `export function registryByName(name) {` |
-| `registryByCli` | 323-325 | 3 | `export function registryByCli(cli) {` |
-| `buildToolsListText` | 328-330 | 3 | `export function buildToolsListText() {` |
+| `auditPreprocessAvailable` | 11-16 | 6 | `function auditPreprocessAvailable(cfg = {}, hasBuiltinEngine) {` |
+| `resolveEntryParams` | 28-32 | 5 | `export function resolveEntryParams(entry, cfg, hasBuiltinEngine) {` |
+| `applyFlagToken` | 282-298 | 17 | `function applyFlagToken(args, tok, rest, i, byFlag) {` |
+| `validateParamConstraints` | 301-307 | 7 | `function validateParamConstraints(args, params) {` |
+| `parseRegistryArgs` | 309-329 | 21 | `export function parseRegistryArgs(rest = [], params = []) {` |
+| `registryByName` | 332-334 | 3 | `export function registryByName(name) {` |
+| `registryByCli` | 337-339 | 3 | `export function registryByCli(cli) {` |
+| `buildToolsListText` | 342-344 | 3 | `export function buildToolsListText() {` |
 
 ### lib/app/handlers/account.js（166 行 · 10 个函数）
 
@@ -65,18 +57,17 @@
 | `handleAccountCheck` | 149-158 | 10 | `export async function handleAccountCheck(ctx) {` |
 | `handleGenSshKey` | 161-166 | 6 | `export function handleGenSshKey(ctx) {` |
 
-### lib/app/handlers/audit.js（151 行 · 8 个函数）
+### lib/app/handlers/audit.js（108 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `ruleSlotStats` | 25-32 | 8 | `function ruleSlotStats(r) {` |
-| `listRuleSlots` | 35-54 | 20 | `export function listRuleSlots(order, disabledSlots = [], hitStats = null) {` |
-| `handleRuleSlots` | 57-60 | 4 | `export function handleRuleSlots(ctx) {` |
-| `handleRuleDetail` | 63-86 | 24 | `export function handleRuleDetail(ctx) {` |
-| `count` | 78-78 | 1 | `const count = (sev) => detail.filter((x) => x.severity === sev).length;` |
-| `handleAudit` | 89-102 | 14 | `export async function handleAudit(ctx) {` |
-| `handleToggleRule` | 105-113 | 9 | `export function handleToggleRule(ctx) {` |
-| `handleExemptHint` | 125-150 | 26 | `export function handleExemptHint(ctx) {` |
+| `withHostApi` | 14-21 | 8 | `async function withHostApi(handler) {` |
+| `listRuleSlots` | 30-33 | 4 | `export async function listRuleSlots(order, disabledSlots = [], hitStats = null) {` |
+| `handleRuleSlots` | 36-49 | 14 | `export async function handleRuleSlots(ctx) {` |
+| `handleRuleDetail` | 52-60 | 9 | `export async function handleRuleDetail(ctx) {` |
+| `handleAudit` | 63-79 | 17 | `export async function handleAudit(ctx) {` |
+| `handleToggleRule` | 82-89 | 8 | `export async function handleToggleRule(ctx) {` |
+| `handleExemptHint` | 92-107 | 16 | `export async function handleExemptHint(ctx) {` |
 
 ### lib/app/handlers/clone.js（177 行 · 7 个函数）
 
@@ -160,12 +151,6 @@
 | `handleWorkspacePathsGet` | 31-49 | 19 | `export function handleWorkspacePathsGet() {` |
 | `handleWorkspacePathsSet` | 52-107 | 56 | `export function handleWorkspacePathsSet(ctx) {` |
 
-### lib/app/host-doc-checks.js（26 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `installHostDocChecks` | 20-23 | 4 | `export function installHostDocChecks(checks = HOST_DOC_CHECKS) {` |
-
 ### lib/app/http-handlers.js（214 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -185,6 +170,14 @@
 | `detectHostIp` | 119-130 | 12 | `function detectHostIp() {` |
 | `buildAuditApiGuide` | 136-170 | 35 | `export function buildAuditApiGuide(repo = '', opts = {}) {` |
 | `formatAuditBlock` | 172-199 | 28 | `export function formatAuditBlock(r = {}) {` |
+
+### lib/app/ownership.js（47 行 · 3 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `classifyOwnership` | 27-32 | 6 | `export function classifyOwnership(login = '', owner = '') {` |
+| `privacyRulesEnabled` | 39-41 | 3 | `export function privacyRulesEnabled(ownership) {` |
+| `isPrivacyRule` | 44-46 | 3 | `export function isPrivacyRule(ruleId) {` |
 
 ### lib/app/repo-ownership.js（66 行 · 4 个函数）
 
@@ -215,13 +208,6 @@
 | `fn` | 35-35 | 1 | `const fn = (v) => (v === undefined ? meta.default : v);` |
 | `redactConfig` | 142-150 | 9 | `export function redactConfig(cfg = {}) {` |
 
-### lib/app/scope-check.js（70 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `policyForFile` | 28-30 | 3 | `export function policyForFile(file) {` |
-| `runScopeCheck` | 38-69 | 32 | `export function runScopeCheck({ files = [], prefix = '', allowlist = [], topLevelMustBeEmpty } = {}) {` |
-
 ### lib/app/settings-bridge.js（218 行 · 11 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -237,6 +223,12 @@
 | `appendHttpRejectLog` | 160-191 | 32 | `export function appendHttpRejectLog(entry = {}, env = {}) {` |
 | `readSettings` | 198-200 | 3 | `export function readSettings(env = {}) {` |
 | `writeSettingsKey` | 209-218 | 10 | `export async function writeSettingsKey(key, jsonValue, env = {}) {` |
+
+### lib/app/severity.js（15 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `isBlockerSeverity` | 11-14 | 4 | `export function isBlockerSeverity(finding) {` |
 
 ### lib/app/slash-commands.js（396 行 · 19 个函数）
 
@@ -270,34 +262,34 @@
 | `getLastSlotHitStats` | 28-30 | 3 | `export function getLastSlotHitStats() {` |
 | `getLastSlotHitMeta` | 33-35 | 3 | `export function getLastSlotHitMeta() {` |
 
-### lib/app/tool-call.js（784 行 · 24 个函数）
+### lib/app/tool-call.js（782 行 · 24 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `pushWithPostSteps` | 55-123 | 69 | `async function pushWithPostSteps(args, env, cfg) {` |
-| `pushJobOutcome` | 144-176 | 33 | `export function pushJobOutcome(r = {}) {` |
-| `short` | 146-146 | 1 | `const short = (sha) => String(sha \|\| '').slice(0, 8);` |
-| `cloneJobOutcome` | 184-189 | 6 | `export function cloneJobOutcome(r = {}) {` |
-| `buildCommitPushJobSpec` | 192-209 | 18 | `function buildCommitPushJobSpec(repo, doPush) {` |
-| `done` | 197-205 | 9 | `const done = (async () => {` |
-| `startHostJob` | 222-229 | 8 | `function startHostJob(jobs, spec, owner) {` |
-| `callCloneJob` | 243-275 | 33 | `async function callCloneJob(args, jobs, exec, log, env = {}, cfg = {}) {` |
-| `callNpmPublishJob` | 283-366 | 84 | `async function callNpmPublishJob(args = {}, jobs, exec, log, env = {}, cfg = {}) {` |
-| `outcome` | 317-341 | 25 | `const outcome = (r) => {` |
-| `done` | 350-352 | 3 | `const done = (async () => {` |
-| `buildCloneJobSpec` | 369-386 | 18 | `function buildCloneJobSpec(target, dest, doClone) {` |
-| `done` | 374-382 | 9 | `const done = (async () => {` |
-| `callCommitPush` | 393-439 | 47 | `async function callCommitPush(args, env, cfg, log, jobs, exec) {` |
-| `doPush` | 412-412 | 1 | `const doPush = () => pushWithPostSteps(args, env, cfg);` |
-| `buildAuditOpts` | 450-464 | 15 | `function buildAuditOpts(args, cfg, scope) {` |
-| `runHistoryAuditTool` | 470-498 | 29 | `async function runHistoryAuditTool(args, env, cfg, jobs, exec, weights) {` |
-| `doHistory` | 475-481 | 7 | `const doHistory = async () => {` |
-| `callCodeAudit` | 500-512 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
-| `runStandardAuditTool` | 515-535 | 21 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
-| `callTool` | 537-784 | 248 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null, fsCtx = null) {` |
-| `withAuditPackage` | 749-755 | 7 | `async function withAuditPackage(call) {` |
-| `shellSplit` | 758-776 | 19 | `function shellSplit(input) {` |
-| `readTextSafe` | 779-783 | 5 | `function readTextSafe(path = '') {` |
+| `pushWithPostSteps` | 53-121 | 69 | `async function pushWithPostSteps(args, env, cfg) {` |
+| `pushJobOutcome` | 142-174 | 33 | `export function pushJobOutcome(r = {}) {` |
+| `short` | 144-144 | 1 | `const short = (sha) => String(sha \|\| '').slice(0, 8);` |
+| `cloneJobOutcome` | 182-187 | 6 | `export function cloneJobOutcome(r = {}) {` |
+| `buildCommitPushJobSpec` | 190-207 | 18 | `function buildCommitPushJobSpec(repo, doPush) {` |
+| `done` | 195-203 | 9 | `const done = (async () => {` |
+| `startHostJob` | 220-227 | 8 | `function startHostJob(jobs, spec, owner) {` |
+| `callCloneJob` | 241-273 | 33 | `async function callCloneJob(args, jobs, exec, log, env = {}, cfg = {}) {` |
+| `callNpmPublishJob` | 281-364 | 84 | `async function callNpmPublishJob(args = {}, jobs, exec, log, env = {}, cfg = {}) {` |
+| `outcome` | 315-339 | 25 | `const outcome = (r) => {` |
+| `done` | 348-350 | 3 | `const done = (async () => {` |
+| `buildCloneJobSpec` | 367-384 | 18 | `function buildCloneJobSpec(target, dest, doClone) {` |
+| `done` | 372-380 | 9 | `const done = (async () => {` |
+| `callCommitPush` | 391-437 | 47 | `async function callCommitPush(args, env, cfg, log, jobs, exec) {` |
+| `doPush` | 410-410 | 1 | `const doPush = () => pushWithPostSteps(args, env, cfg);` |
+| `buildAuditOpts` | 448-462 | 15 | `function buildAuditOpts(args, cfg, scope) {` |
+| `runHistoryAuditTool` | 468-496 | 29 | `async function runHistoryAuditTool(args, env, cfg, jobs, exec, weights) {` |
+| `doHistory` | 473-479 | 7 | `const doHistory = async () => {` |
+| `callCodeAudit` | 498-510 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
+| `runStandardAuditTool` | 513-533 | 21 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
+| `callTool` | 535-782 | 248 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null, fsCtx = null) {` |
+| `withAuditPackage` | 747-753 | 7 | `async function withAuditPackage(call) {` |
+| `shellSplit` | 756-774 | 19 | `function shellSplit(input) {` |
+| `readTextSafe` | 777-781 | 5 | `function readTextSafe(path = '') {` |
 
 ### lib/app/tools.js（41 行 · 2 个函数）
 
@@ -305,748 +297,6 @@
 |------|------|------|------|
 | `paramsToParameters` | 16-30 | 15 | `function paramsToParameters(params = [], cfg) {` |
 | `listTools` | 33-41 | 9 | `export function listTools(cfg, hasBuiltinEngine) {` |
-
-### lib/ast/brace.js（121 行 · 6 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `matchBrace` | 13-25 | 13 | `export function matchBrace(tokens, openIdx) {` |
-| `matchParenForward` | 28-40 | 13 | `export function matchParenForward(tokens, startIdx) {` |
-| `matchPairBack` | 52-61 | 10 | `export function matchPairBack(tokens, closeIdx, openPunct, closePunct) {` |
-| `isBlockParen` | 71-83 | 13 | `export function isBlockParen(tokens, closeTok) {` |
-| `matchingOpen` | 86-88 | 3 | `export function matchingOpen(tokens, closeIdx) {` |
-| `collectInnerFnRanges` | 106-121 | 16 | `export function collectInnerFnRanges(tokens, from, to) {` |
-
-### lib/ast/callgraph.js（135 行 · 6 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `buildCallGraph` | 23-42 | 20 | `export function buildCallGraph(text) {` |
-| `isInRequestPath` | 52-68 | 17 | `export function isInRequestPath(fnName, graph, isRequestName) {` |
-| `collectFunctionDecls` | 71-135 | 65 | `function collectFunctionDecls(tokens) {` |
-| `collectArrowFns` | 93-135 | 43 | `function collectArrowFns(tokens) {` |
-| `collectNamedFnRanges` | 120-122 | 3 | `export function collectNamedFnRanges(tokens) {` |
-| `matchBraceIdx` | 125-135 | 11 | `function matchBraceIdx(tokens, openIdx) {` |
-
-### lib/ast/code-lines.js（176 行 · 5 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `makeCodeLineFilter` | 24-47 | 24 | `export function makeCodeLineFilter(text = '', candidateLines = [], opts = {}) {` |
-| `makeCodeSpanFilter` | 72-108 | 37 | `export function makeCodeSpanFilter(text = '', candidateLines = [], opts = {}) {` |
-| `isProseDoc` | 122-124 | 3 | `function isProseDoc(text, file) {` |
-| `makeProseCodeFilter` | 138-161 | 24 | `function makeProseCodeFilter(text, candidateLines) {` |
-| `codeStringLiterals` | 168-175 | 8 | `export function codeStringLiterals(text = '') {` |
-
-### lib/ast/control-flow.js（471 行 · 13 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `collectNamedSyncFs` | 27-58 | 32 | `function collectNamedSyncFs(tokens) { // dsh-skip-complexity: named-import 扫描器（import{..}→from 模式匹配，扫描结构必然嵌套）` |
-| `collectAsyncRanges` | 61-79 | 19 | `function collectAsyncRanges(tokens) { // dsh-skip-complexity: async 函数体边界扫描器（token 遍历+配对，结构必然嵌套）` |
-| `scanSyncCalls` | 82-108 | 27 | `function scanSyncCalls(tokens, namedSync, asyncRanges) { // dsh-skip-complexity: 同步 fs 调用扫描器（定位调用点+区间归属判定，结构必然嵌套）` |
-| `checkSyncFs` | 111-116 | 6 | `export function checkSyncFs(text = '') {` |
-| `checkEmptyCatchAst` | 123-177 | 55 | `export function checkEmptyCatchAst(text = '') { // dsh-skip-complexity: 空 catch 检测器本体（token 遍历 + catch 体空判定多条件链，职责单一）` |
-| `checkComplexityAst` | 179-471 | 293 | `export function checkComplexityAst(text = '', { warn = 10, block = 20 } = {}) {` |
-| `inInner` | 212-212 | 1 | `const inInner = (k) => innerRanges.some(([a, b]) => k >= a && k < b);` |
-| `checkNestingDepthAst` | 256-471 | 216 | `export function checkNestingDepthAst(text = '', { warn = 4, block = 6 } = {}) { // dsh-skip-complexity: 嵌套深度统计器本体（统计 if/for 嵌套必然自身嵌套）` |
-| `pythonDetectDef` | 336-338 | 3 | `function pythonDetectDef(text) {` |
-| `checkPythonComplexity` | 352-376 | 25 | `function checkPythonComplexity(text, { warn, block }) {` |
-| `checkPythonNesting` | 387-416 | 30 | `function checkPythonNesting(text, { warn, block }) {` |
-| `indentOf` | 419-421 | 3 | `function indentOf(line) {` |
-| `checkJavaKtComplexity` | 435-468 | 34 | `function checkJavaKtComplexity(tokens, ranges, { warn, block }) {` |
-
-### lib/ast/credential.js（316 行 · 10 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `isPlaceholderText` | 48-50 | 3 | `function isPlaceholderText(text) {` |
-| `stripQuotes` | 78-82 | 5 | `function stripQuotes(raw) {` |
-| `isMeaningfulCredentialValue` | 101-112 | 12 | `export function isMeaningfulCredentialValue(raw) {` |
-| `checkPlaceholderCredentialAst` | 136-160 | 25 | `export function checkPlaceholderCredentialAst(text = '', file = '') {` |
-| `credentialNameTier` | 195-200 | 6 | `export function credentialNameTier(name) {` |
-| `isHardcodedCredentialValue` | 206-215 | 10 | `export function isHardcodedCredentialValue(name, raw) {` |
-| `isCredentialIdent` | 218-220 | 3 | `export function isCredentialIdent(name) {` |
-| `scanCredentialTokens` | 229-269 | 41 | `function scanCredentialTokens(tokens, out, lineOffset = 0) {` |
-| `literalAfterPrefix` | 282-291 | 10 | `function literalAfterPrefix(tokens, next, opIdx) {` |
-| `checkCredentialRefAst` | 293-315 | 23 | `export function checkCredentialRefAst(text = '', tree = null) {` |
-
-### lib/ast/dataflow.js（391 行 · 16 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `collectDeclaredFnBodies` | 60-391 | 332 | `function collectDeclaredFnBodies(tokens) {` |
-| `collectArrowMethodBodies` | 77-391 | 315 | `function collectArrowMethodBodies(tokens) {` |
-| `collectPythonDefBodies` | 117-163 | 47 | `function collectPythonDefBodies(text, tokens) {` |
-| `indentOf` | 122-125 | 4 | `const indentOf = (s) => {` |
-| `isBlankOrComment` | 126-126 | 1 | `const isBlankOrComment = (s) => !s.trim() \|\| /^\s*#/.test(s);` |
-| `mergeFnRanges` | 166-187 | 22 | `function mergeFnRanges(fnRanges, tokens) {` |
-| `collectFnBodies` | 194-201 | 8 | `function collectFnBodies(tokens, text = '') {` |
-| `prevNonWs` | 204-210 | 7 | `function prevNonWs(tokens, i) {` |
-| `nextNonWs` | 213-220 | 8 | `function nextNonWs(tokens, i, to) {` |
-| `applyArgWriteback` | 223-230 | 8 | `function applyArgWriteback(tokens, i, nxt, obj, clearMap) {` |
-| `applyAssignClearOrWriteback` | 236-265 | 30 | `function applyAssignClearOrWriteback(tokens, i, to, t, nxt, obj, clearMap) {` |
-| `applyClearMethods` | 271-289 | 19 | `function applyClearMethods(t, member, memberIdx, callOpen, tokens, obj, clearMap, i) {` |
-| `applyAccessAfterClear` | 295-316 | 22 | `function applyAccessAfterClear(t, nxt, member, memberIdx, callOpen, tokens, i, obj, clearMap, out, to) {` |
-| `isWriteSubscript` | 319-336 | 18 | `function isWriteSubscript(tokens, objIdx, to) {` |
-| `scanClearThenAccess` | 346-369 | 24 | `function scanClearThenAccess(tokens, from, to) {` |
-| `checkClearAccessAst` | 377-391 | 15 | `export function checkClearAccessAst(text = '') {` |
-
-### lib/ast/dup-code.js（166 行 · 4 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `collectDupCodeCandidates` | 41-78 | 38 | `export function collectDupCodeCandidates(text, file = '') {` |
-| `findDuplicateBodies` | 86-110 | 25 | `export function findDuplicateBodies(perFileCandidates, opts = {}) {` |
-| `countParams` | 113-166 | 54 | `function countParams(tokens, openIdx) {` |
-| `hasBoolFlagParam` | 146-166 | 21 | `function hasBoolFlagParam(tokens, openIdx) {` |
-
-### lib/ast/fs-hotspots.js（155 行 · 7 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `lineAt` | 38-42 | 5 | `function lineAt(text, idx) {` |
-| `scanFsHotspotsText` | 50-119 | 70 | `export function scanFsHotspotsText(text = '', relPath = '') {` |
-| `collect` | 58-67 | 10 | `const collect = (re) => {` |
-| `fnNameAt` | 69-72 | 4 | `const fnNameAt = (at) => {` |
-| `dups` | 78-87 | 10 | `const dups = (calls) => {` |
-| `groupOf` | 91-95 | 5 | `const groupOf = (fn, at) => {` |
-| `scanFsHotspots` | 126-154 | 29 | `export function scanFsHotspots(fileTexts = []) {` |
-
-### lib/ast/io-risk-const.js（96 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `isLoopHead` | 86-89 | 4 | `export function isLoopHead(t, prev) {` |
-| `raise` | 92-95 | 4 | `export function raise(level, n = 1) {` |
-
-### lib/ast/io-risk-fn.js（209 行 · 13 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `enclosingLoop` | 17-24 | 8 | `export function enclosingLoop(loops, line) {` |
-| `findBody` | 44-209 | 166 | `export function findBody(tokens, from, window = BODY_SEARCH_TOKENS) {` |
-| `findAsyncBody` | 57-65 | 9 | `export function findAsyncBody(tokens, i) {` |
-| `findLoopRange` | 72-86 | 15 | `export function findLoopRange(tokens, i) {` |
-| `endLineOf` | 89-91 | 3 | `export function endLineOf(tokens, range) {` |
-| `seekLoopBody` | 98-209 | 112 | `export function seekLoopBody(tokens, i) {` |
-| `isSingleStmtLoopClose` | 109-209 | 101 | `export function isSingleStmtLoopClose(tokens, j) {` |
-| `classifySyncFnHead` | 122-149 | 28 | `export function classifySyncFnHead(tokens, i, t) {` |
-| `rangeOf` | 152-156 | 5 | `export function rangeOf(tokens, open) {` |
-| `findArrowBody` | 159-170 | 12 | `export function findArrowBody(tokens, i) {` |
-| `findBodyAfterParen` | 178-209 | 32 | `export function findBodyAfterParen(tokens, parenIdx) {` |
-| `matchParen` | 186-195 | 10 | `export function matchParen(tokens, parenIdx) {` |
-| `classifyFnHead` | 202-208 | 7 | `export function classifyFnHead(tokens, i, t) {` |
-
-### lib/ast/io-risk-loop.js（309 行 · 12 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `isSmallLiteralCallee` | 24-31 | 8 | `export function isSmallLiteralCallee(tokens, methodIdx) {` |
-| `isSmallPushedArray` | 47-58 | 12 | `export function isSmallPushedArray(tokens, name, ofIdx) {` |
-| `findLiteralArrayDecl` | 65-74 | 10 | `export function findLiteralArrayDecl(tokens, name, ofIdx) {` |
-| `countUnsafePushes` | 90-116 | 27 | `export function countUnsafePushes(tokens, name, ofIdx) {` |
-| `loopHeadSpan` | 121-309 | 189 | `export function loopHeadSpan(tokens, i) {` |
-| `matchParenIn` | 139-148 | 10 | `function matchParenIn(tokens, openIdx) {` |
-| `insideLoopOver` | 160-181 | 22 | `export function insideLoopOver(tokens, idx) {` |
-| `isLoopBodyBrace` | 193-201 | 9 | `export function isLoopBodyBrace(tokens, braceIdx) {` |
-| `isSmallFixedLoop` | 210-229 | 20 | `export function isSmallFixedLoop(tokens, i) {` |
-| `findOfKeyword` | 236-309 | 74 | `export function findOfKeyword(tokens, i) {` |
-| `countLiteralElements` | 254-272 | 19 | `export function countLiteralElements(tokens, fromIdx) {` |
-| `collectRanges` | 281-308 | 28 | `export function collectRanges(tokens) {` |
-
-### lib/ast/io-risk.js（315 行 · 15 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `classifyIoCall` | 55-65 | 11 | `function classifyIoCall(tokens, idx) {` |
-| `judgeIoTokend` | 75-104 | 30 | `function judgeIoTokend(ctx) {` |
-| `detectRequestContext` | 107-112 | 6 | `function detectRequestContext(lines, fnRange) {` |
-| `gradeRisk` | 125-164 | 40 | `function gradeRisk({ isSync, inAsync, inLoop, inSmallFixedLoop, inRequest, inParallelAll, kind }) {` |
-| `findMatchingClose` | 167-177 | 11 | `function findMatchingClose(tokens, openIdx) {` |
-| `findPromiseAllRanges` | 186-199 | 14 | `function findPromiseAllRanges(tokens) {` |
-| `scanIoRiskAst` | 206-245 | 40 | `export function scanIoRiskAst(text = '') {` |
-| `within` | 215-215 | 1 | `const within = (ranges, line) => ranges.some(([s, e]) => line >= s && line <= e);` |
-| `enclosingFnText` | 223-227 | 5 | `const enclosingFnText = (line) => {` |
-| `fnNameAt` | 229-236 | 8 | `const fnNameAt = (line) => {` |
-| `summarizeIoRisk` | 252-273 | 22 | `export function summarizeIoRisk(hits = []) {` |
-| `rankIoFixList` | 280-284 | 5 | `export function rankIoFixList(hits = []) {` |
-| `compareFixPriority` | 291-301 | 11 | `function compareFixPriority(a, b) {` |
-| `isWriteLike` | 304-306 | 3 | `function isWriteLike(kind) {` |
-| `isSync` | 309-311 | 3 | `function isSync(type) {` |
-
-### lib/ast/lang.js（156 行 · 6 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `prevNonWsToken` | 58-65 | 8 | `function prevNonWsToken(tokens, i) {` |
-| `isMethodCandidate` | 68-73 | 6 | `function isMethodCandidate(prev) {` |
-| `findMatchingParen` | 76-85 | 10 | `function findMatchingParen(tokens, openIdx) {` |
-| `findOpenBrace` | 88-156 | 69 | `function findOpenBrace(tokens, closeIdx) {` |
-| `javaKtFuncRanges` | 100-123 | 24 | `export function javaKtFuncRanges(text = '') {` |
-| `detectLang` | 131-142 | 12 | `export function detectLang(text = '') {` |
-
-### lib/ast/line-count.js（53 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `lineStats` | 26-43 | 18 | `export function lineStats(text) {` |
-| `codeLineCount` | 50-52 | 3 | `export function codeLineCount(text) {` |
-
-### lib/ast/magic-number.js（273 行 · 6 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `checkMagicNumberSmartAst` | 51-152 | 102 | `export function checkMagicNumberSmartAst(text = '', {` |
-| `hintTest` | 57-60 | 4 | `const hintTest = (hints) => {` |
-| `scanBackToEquals` | 155-173 | 19 | `function scanBackToEquals(tokens, numIdx) {` |
-| `checkConstPrefix` | 176-207 | 32 | `function checkConstPrefix(tokens, eqIdx) {` |
-| `isNamedConstantValue` | 217-224 | 8 | `function isNamedConstantValue(tokens, numIdx) {` |
-| `collectPythonEnumAssignLines` | 246-272 | 27 | `function collectPythonEnumAssignLines(text) {` |
-
-### lib/ast/naming.js（293 行 · 5 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `checkNameLengthAst` | 27-192 | 166 | `export function checkNameLengthAst(text = '', { min = 2, allow = [] } = {}) {` |
-| `checkShortFunctionNameAst` | 206-228 | 23 | `export function checkShortFunctionNameAst(text = '', { max = 2, allow = [], tree = null } = {}) {` |
-| `isShortName` | 213-213 | 1 | `const isShortName = (name) => String(name).length <= max && !ALLOW.has(name);` |
-| `checkSmallFileReadAst` | 244-267 | 24 | `export function checkSmallFileReadAst(text = '') {` |
-| `checkConsoleLogJsonAst` | 276-292 | 17 | `export function checkConsoleLogJsonAst(text = '') {` |
-
-### lib/ast/perf.js（489 行 · 19 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `matchingBrace` | 22-33 | 12 | `function matchingBrace(text, openIdx) {` |
-| `matchingParen` | 36-47 | 12 | `function matchingParen(text, openIdx) {` |
-| `lineOf` | 50-54 | 5 | `function lineOf(text, idx) {` |
-| `inCommentOrString` | 63-69 | 7 | `function inCommentOrString(tokens, line, matchText) {` |
-| `nextBlockRange` | 72-489 | 418 | `function nextBlockRange(text, startIdx) {` |
-| `collectLoopRanges` | 86-102 | 17 | `function collectLoopRanges(text) {` |
-| `loopBodyLines` | 109-118 | 10 | `export function loopBodyLines(text = '') {` |
-| `innermostLoopRanges` | 146-149 | 4 | `function innermostLoopRanges(text) {` |
-| `repeatIdenticalCallLines` | 175-203 | 29 | `export function repeatIdenticalCallLines(text = '') {` |
-| `scanRange` | 180-196 | 17 | `const scanRange = (a, b) => {` |
-| `loopFullCollectionLines` | 217-232 | 16 | `export function loopFullCollectionLines(text = '') {` |
-| `collectFuncRanges` | 242-489 | 248 | `export function collectFuncRanges(text) {` |
-| `directFullWriters` | 261-268 | 8 | `function directFullWriters(text) {` |
-| `blankCommentsAndLiterals` | 279-341 | 63 | `function blankCommentsAndLiterals(text) {` |
-| `isRegexStart` | 284-291 | 8 | `const isRegexStart = (idx) => {` |
-| `loopNoFallbackReturnLines` | 361-389 | 29 | `export function loopNoFallbackReturnLines(text = '') {` |
-| `loopFullRewriteCallLines` | 405-431 | 27 | `export function loopFullRewriteCallLines(text = '') {` |
-| `nestedLinearScanLines` | 444-462 | 19 | `export function nestedLinearScanLines(text = '') {` |
-| `longSyncLoopLines` | 474-488 | 15 | `export function longSyncLoopLines(text = '') {` |
-
-### lib/ast/scope-collisions.js（229 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `analyzeScopeCollisions` | 49-229 | 181 | `export function analyzeScopeCollisions(text = '', {` |
-| `nearestFunctionFrame` | 85-88 | 4 | `const nearestFunctionFrame = () => {` |
-
-### lib/ast/scope.js（242 行 · 11 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `collectFnLineRanges` | 19-35 | 17 | `export function collectFnLineRanges(text) {` |
-| `collectLoopLineRanges` | 38-57 | 20 | `export function collectLoopLineRanges(text) {` |
-| `braceCloseIdx` | 60-70 | 11 | `function braceCloseIdx(tokens, openIdx) {` |
-| `classifyFunctionPath` | 88-93 | 6 | `export function classifyFunctionPath(fnName = '') {` |
-| `classifyLineScope` | 100-104 | 5 | `export function classifyLineScope(text, line) {` |
-| `isModuleConstAssignment` | 113-137 | 25 | `export function isModuleConstAssignment(text, line) { // dsh-skip-complexity: 模块级常量判定器（顶层过滤+常量名风格+行内=num 多条件链，职责单一）` |
-| `analyzeFunctionalScope` | 146-154 | 9 | `export function analyzeFunctionalScope(text = '') {` |
-| `collectFnNames` | 157-184 | 28 | `function collectFnNames(tokens) { // dsh-skip-complexity: 函数名收集器（function/const function/箭头三形态扫描，拆分后职责单一）` |
-| `scanReturnExposed` | 187-196 | 10 | `function scanReturnExposed(tokens, fnNames, scope) {` |
-| `scanAssignmentExposed` | 200-227 | 28 | `function scanAssignmentExposed(tokens, fnNames, scope) { // dsh-skip-complexity: this/exports/module 赋值暴露扫描（三前缀分支为结构必然）` |
-| `scanCallbackPassed` | 230-241 | 12 | `function scanCallbackPassed(tokens, fnNames, scope) {` |
-
-### lib/ast/shell.js（132 行 · 5 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `shellCdDynamicLines` | 22-45 | 24 | `export function shellCdDynamicLines(text) {` |
-| `parseGitignore` | 50-76 | 27 | `function parseGitignore(text) {` |
-| `isIgnored` | 79-85 | 7 | `function isIgnored(target, patterns) {` |
-| `extractWriteTarget` | 88-94 | 7 | `function extractWriteTarget(line) {` |
-| `writeIntoGitignoredLines` | 106-131 | 26 | `export function writeIntoGitignoredLines(text, repoPath = '') {` |
-
-### lib/ast/size.js（449 行 · 13 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `funcNameAt` | 31-45 | 15 | `function funcNameAt(tokens, i) {` |
-| `pythonFuncRanges` | 60-84 | 25 | `export function pythonFuncRanges(text = '') {` |
-| `maxFunctionLength` | 95-101 | 7 | `export function maxFunctionLength(text = '') {` |
-| `arrowAndMethodRanges` | 130-449 | 320 | `function arrowAndMethodRanges(tokens) {` |
-| `push` | 132-136 | 5 | `const push = (range, name) => {` |
-| `funcRangesAst` | 165-449 | 285 | `export function funcRangesAst(text = '') {` |
-| `countCommentLinesInRange` | 213-226 | 14 | `export function countCommentLinesInRange(tokens, startLine = 1, endLine = Infinity) {` |
-| `checkFuncLinesAst` | 236-253 | 18 | `export function checkFuncLinesAst(text = '', { warn = FUNC_LINES_WARN, block = FUNC_LINES_BLOCK } = {}) {` |
-| `checkFuncDensityAst` | 277-298 | 22 | `export function checkFuncDensityAst(text = '', { threshold = FUNC_LINES_WARN, blockThreshold = FUNC_LINES_BLOCK, skipLines = new Set() } = {}) {` |
-| `countCommentLines` | 306-319 | 14 | `export function countCommentLines(text = '') {` |
-| `checkFileLines` | 330-339 | 10 | `export function checkFileLines(text = '', { warn = 500, block = 1000, excludeComments = true } = {}) {` |
-| `checkCommentDensityAst` | 361-396 | 36 | `export function checkCommentDensityAst(text = '', { warn = COMMENT_DENSITY_WARN_DEFAULT, minCodeLines = 5 } = {}) {` |
-| `checkRepeatedStringsAst` | 406-448 | 43 | `export function checkRepeatedStringsAst(text = '', { min = 3, ignore = [] } = {}) {` |
-
-### lib/ast/symbol-index.js（400 行 · 22 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `sanitizeId` | 39-41 | 3 | `export function sanitizeId(input) {` |
-| `symbolId` | 49-52 | 4 | `export function symbolId(relPath, name) {` |
-| `unquote` | 55-58 | 4 | `function unquote(raw) {` |
-| `collectDeclarations` | 61-78 | 18 | `function collectDeclarations(tokens) {` |
-| `collectEsmImports` | 84-114 | 31 | `function collectEsmImports(tokens) {` |
-| `collectCjsImports` | 120-137 | 18 | `function collectCjsImports(tokens) {` |
-| `collectCallSites` | 147-164 | 18 | `function collectCallSites(tokens, fnRanges) {` |
-| `isMemberAccess` | 167-175 | 9 | `function isMemberAccess(tokens, idx) {` |
-| `findEnclosingFn` | 178-183 | 6 | `function findEnclosingFn(idx, fnRanges) {` |
-| `extractFileSymbols` | 191-202 | 12 | `export function extractFileSymbols(relPath, text) {` |
-| `resolveSpecifier` | 211-236 | 26 | `export function resolveSpecifier(relPath, source, fileSet) {` |
-| `buildSymbolIndex` | 244-254 | 11 | `export function buildSymbolIndex(files = [], opts = {}) {` |
-| `collectExports` | 257-267 | 11 | `function collectExports(perFile) {` |
-| `flattenSymbols` | 270-282 | 13 | `function flattenSymbols(exportsByFile, perFile) {` |
-| `buildNameIndex` | 285-294 | 10 | `function buildNameIndex(exportsByFile) {` |
-| `resolveCalls` | 297-313 | 17 | `function resolveCalls(perFile, exportsByFile, fileSet) {` |
-| `buildImportMap` | 316-328 | 13 | `function buildImportMap(rel, imports, fileSet, exportsByFile) {` |
-| `resolveOne` | 331-337 | 7 | `function resolveOne(rel, call, localNames, importMap, byName) {` |
-| `indexStats` | 340-359 | 20 | `function indexStats(perFile, symbols, edges, unresolved) {` |
-| `callersOf` | 362-370 | 9 | `export function callersOf(index, id) {` |
-| `unusedExportCandidates` | 377-391 | 15 | `export function unusedExportCandidates(index) {` |
-| `indexSummary` | 394-399 | 6 | `export function indexSummary(index) {` |
-
-### lib/ast/tokenizer.js（422 行 · 14 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `tokenize` | 49-70 | 22 | `export function tokenize(text = '') {` |
-| `clearTokenCache` | 73-76 | 4 | `export function clearTokenCache() {` |
-| `tokenizeUncached` | 83-195 | 113 | `function tokenizeUncached(text = '') {` |
-| `MULTI_OPS_BY_FIRST` | 207-215 | 9 | `const MULTI_OPS_BY_FIRST = (() => {` |
-| `isCjkChar` | 232-232 | 1 | `const isCjkChar = (c) => c >= 0x4e00 && c <= 0x9fa5;` |
-| `isIdentStartCode` | 234-234 | 1 | `const isIdentStartCode = (c) => (c < 128 ? ID_START_ASCII[c] === 1 : isCjkChar(c));` |
-| `isIdentPartCode` | 236-236 | 1 | `const isIdentPartCode = (c) => (c < 128 ? ID_PART_ASCII[c] === 1 : isCjkChar(c));` |
-| `isNumPartCode` | 238-238 | 1 | `const isNumPartCode = (c) => c < 128 && NUM_PART_ASCII[c] === 1;` |
-| `isAsciiDigit` | 240-240 | 1 | `const isAsciiDigit = (c) => c >= 48 && c <= 57;` |
-| `consumeLexeme` | 251-293 | 43 | `function consumeLexeme(src, i, n, ch, next, tokens, push) { // dsh-skip-complexity: 词素分派器（六类词素分派分支为结构必然，拆分后职责单一）` |
-| `consumeCsharpInterpolated` | 311-360 | 50 | `function consumeCsharpInterpolated(src, i, n, push) { // dsh-skip-complexity: 三前缀组合 + 洞内嵌套串 + verbatim 转义` |
-| `consumeString` | 363-374 | 12 | `function consumeString(src, i, n, ch, push) {` |
-| `consumeTemplate` | 377-388 | 12 | `function consumeTemplate(src, i, n, push) {` |
-| `consumeRegex` | 391-396 | 6 | `function consumeRegex(src, i, n, tokens, push) { // dsh-skip-complexity: 正则状态机（转义/字符组/闭包三态，天然多分支）` |
-
-### lib/ast/treesitter.js（414 行 · 19 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `resolveDirs` | 46-56 | 11 | `function resolveDirs() {` |
-| `pick` | 48-50 | 3 | `const pick = (spec) => {` |
-| `treesitterAvailable` | 94-102 | 9 | `export function treesitterAvailable() {` |
-| `availableGrammars` | 105-115 | 11 | `export function availableGrammars() {` |
-| `grammarForExt` | 118-121 | 4 | `export function grammarForExt(ext = '') {` |
-| `loadModule` | 126-139 | 14 | `async function loadModule() {` |
-| `ensureInit` | 142-155 | 14 | `async function ensureInit() {` |
-| `getParser` | 158-179 | 22 | `async function getParser(grammar) {` |
-| `parseText` | 182-198 | 17 | `export async function parseText(text, grammar) {` |
-| `isOpaqueNode` | 201-208 | 8 | `export function isOpaqueNode(node) {` |
-| `confirmHits` | 218-237 | 20 | `export async function confirmHits({ text, ext = '', grammar = '', hits = [] } = {}) {` |
-| `makeSyncConfirmer` | 249-268 | 20 | `export function makeSyncConfirmer(tree) {` |
-| `fn` | 251-263 | 13 | `const fn = (line, col) => {` |
-| `credentialLinesFromTree` | 288-355 | 68 | `export function credentialLinesFromTree(tree, credHit) {` |
-| `isPlainLiteral` | 299-305 | 7 | `const isPlainLiteral = (node) => {` |
-| `walk` | 307-348 | 42 | `const walk = (node) => {` |
-| `shortFunctionNamesFromTree` | 373-405 | 33 | `export function shortFunctionNamesFromTree(tree, isShort) {` |
-| `walk` | 380-398 | 19 | `const walk = (node) => {` |
-| `resetTreeSitterCache` | 408-413 | 6 | `export function resetTreeSitterCache() {  modPromise = null;` |
-
-### lib/audit-ui-sdk/contract.js（118 行 · 4 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `assertMetaShape` | 52-65 | 14 | `function assertMetaShape(meta) {` |
-| `assertRequiredParts` | 72-76 | 5 | `function assertRequiredParts(definition) {` |
-| `assertOptionalParts` | 82-89 | 8 | `function assertOptionalParts(definition) {` |
-| `defineAuditPanel` | 101-117 | 17 | `export function defineAuditPanel(definition) {` |
-
-### lib/audit/analysis-coverage.js（99 行 · 5 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `resolveEntries` | 30-40 | 11 | `async function resolveEntries({ repoPath, files }) {` |
-| `computeAnalysisCoverage` | 48-68 | 21 | `export async function computeAnalysisCoverage({ repoPath = '', files = null, topN = DEFAULT_TOP_N } = {}) {` |
-| `countByReason` | 71-75 | 5 | `function countByReason(unresolved) {` |
-| `topUnresolvedFiles` | 78-85 | 8 | `function topUnresolvedFiles(unresolved, topN) {` |
-| `formatAnalysisCoverageLine` | 92-98 | 7 | `export function formatAnalysisCoverageLine(cov = {}) {` |
-
-### lib/audit/audit-file.js（207 行 · 4 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `isMinifiedOneLine` | 32-42 | 11 | `function isMinifiedOneLine(text) {` |
-| `isHashSegment` | 46-48 | 3 | `function isHashSegment(seg) {` |
-| `isBuildArtifactFile` | 50-80 | 31 | `export function isBuildArtifactFile(relPathOrFile = '', text = '') {` |
-| `auditFile` | 82-207 | 126 | `export function auditFile({ file, relPath, text, grouped }, opts = {}) {` |
-
-### lib/audit/auditignore-rules.js（149 行 · 6 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `parseScopedLine` | 43-60 | 18 | `export function parseScopedLine(line) {` |
-| `splitAuditIgnore` | 68-80 | 13 | `export function splitAuditIgnore(text = '') {` |
-| `ruleMatches` | 83-91 | 9 | `export function ruleMatches(pattern, ruleId) {` |
-| `matchScopedExemption` | 100-109 | 10 | `export function matchScopedExemption(scoped, relPath, ruleId) {` |
-| `hasScopedEntries` | 112-114 | 3 | `export function hasScopedEntries(text = '') {` |
-| `applyScopedExemptions` | 125-148 | 24 | `export function applyScopedExemptions(findings = [], root = '') {` |
-
-### lib/audit/client-entry.js（94 行 · 3 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `resolveDshClientEntries` | 27-54 | 28 | `export function resolveDshClientEntries(repoRoot) {` |
-| `pick` | 40-48 | 9 | `const pick = (v) => {` |
-| `resolveDshClientFragments` | 70-93 | 24 | `export function resolveDshClientFragments(repoRoot) {` |
-
-### lib/audit/collector.js（610 行 · 20 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `readIgnoreFileCached` | 71-77 | 7 | `function readIgnoreFileCached(p) {` |
-| `isGitWorkTree` | 90-101 | 12 | `function isGitWorkTree(dir) {` |
-| `auditIgnoreExcludesFile` | 110-125 | 16 | `function auditIgnoreExcludesFile(root, auditIgnorePath) {` |
-| `tryLoadAuditIgnoreFallback` | 141-192 | 52 | `function tryLoadAuditIgnoreFallback(root, respectAuditIgnore = true) {` |
-| `handleEntry` | 171-184 | 14 | `const handleEntry = (dir, en) => {` |
-| `walkDirs` | 185-189 | 5 | `const walkDirs = (dir) => {` |
-| `tryLoadGitIgnoreSet` | 204-301 | 98 | `function tryLoadGitIgnoreSet(root, respectAuditIgnore = true) {` |
-| `walkDirs` | 245-260 | 16 | `const walkDirs = (dir) => {` |
-| `isHardSkipped` | 310-312 | 3 | `function isHardSkipped(name) {` |
-| `computeGitIgnored` | 315-320 | 6 | `function computeGitIgnored(full, gitIgnoreRoot, includeIgnored, respectAuditIgnore = true) {` |
-| `shouldSkipDirByYml` | 323-327 | 5 | `function shouldSkipDirByYml(name, ignoredByGit, gitIgnoreRoot) {` |
-| `isFileGitIgnored` | 330-341 | 12 | `function isFileGitIgnored(full, gitIgnoreRoot, includeIgnored, respectAuditIgnore = true) {` |
-| `collectTextFiles` | 343-413 | 71 | `export async function collectTextFiles(dir, { depth = 10, gitIgnoreRoot = null, includeIgnored = false, testExemptRoot = null, respectAuditIgnore = true } = {}) {` |
-| `walk` | 376-412 | 37 | `async function walk(cur, level) {` |
-| `gitListTextFiles` | 424-486 | 63 | `function gitListTextFiles(dir, { gitIgnoreRoot = null, includeIgnored = false, testExemptRoot = null, respectAuditIgnore = true } = {}) {` |
-| `isGitRepo` | 489-491 | 3 | `export function isGitRepo(dir) {` |
-| `collectChangedFiles` | 499-556 | 58 | `export function collectChangedFiles(repoPath) {` |
-| `isTextFile` | 559-577 | 19 | `export function isTextFile(full) {` |
-| `clearReadCache` | 591-594 | 4 | `export function clearReadCache() {` |
-| `readText` | 597-610 | 14 | `export function readText(full) {` |
-
-### lib/audit/ext-runner.js（80 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `loadAuditExt` | 28-51 | 24 | `export async function loadAuditExt(dir = DEFAULT_EXT_DIR) {` |
-| `runAuditExt` | 59-80 | 22 | `export async function runAuditExt(repo, opts = {}) {` |
-
-### lib/audit/file-context.js（392 行 · 15 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `hasMkdirInSameFunction` | 19-48 | 30 | `export function hasMkdirInSameFunction(lines, lineIdx) {` |
-| `enclosingScopes` | 55-63 | 9 | `function enclosingScopes(lines, lineIdx) {` |
-| `topLevelFunctionScope` | 69-392 | 324 | `function topLevelFunctionScope(lines, lineIdx) {` |
-| `isBestEffortWrite` | 99-120 | 22 | `export function isBestEffortWrite(lines, lineIdx) {` |
-| `functionScope` | 123-392 | 270 | `function functionScope(lines, lineIdx) {` |
-| `stripBracesNoise` | 167-173 | 7 | `function stripBracesNoise(line) {` |
-| `mkdirHelperNames` | 176-198 | 23 | `function mkdirHelperNames(lines) {` |
-| `hasForeignWriteTarget` | 222-247 | 26 | `export function hasForeignWriteTarget(lines, lineIdx) {` |
-| `enclosingParams` | 257-262 | 6 | `function enclosingParams(lines, lineIdx) {` |
-| `hasTimeoutInRange` | 315-320 | 6 | `function hasTimeoutInRange(lines, start, end) {` |
-| `isCallClosed` | 323-324 | 2 | `function isCallClosed(s, depth) {` |
-| `hasTimeoutAfterCall` | 337-347 | 11 | `function hasTimeoutAfterCall(line, lines, lineIdx) {` |
-| `hasExternalCallTimeout` | 349-354 | 6 | `export function hasExternalCallTimeout(line, lines, lineIdx) {` |
-| `detectRepoJsYamlImport` | 363-372 | 10 | `export function detectRepoJsYamlImport(files) {` |
-| `isVersionInPathContext` | 385-391 | 7 | `export function isVersionInPathContext(line) {` |
-
-### lib/audit/finding.js（102 行 · 5 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `isBlockerFinding` | 11-14 | 4 | `export function isBlockerFinding(f) {` |
-| `makeFinding` | 18-20 | 3 | `export function makeFinding({ file, line, rule, kind, severity = 'warning', message, dimensions = [], exemptHint = '', scoreImpact = 0 }) {` |
-| `normalizeExemptHints` | 36-47 | 12 | `export function normalizeExemptHints(findings = []) {` |
-| `decorateTestExemptHint` | 57-68 | 12 | `export function decorateTestExemptHint(findings = []) {` |
-| `summarize` | 81-91 | 11 | `export function summarize(findings = []) {` |
-
-### lib/audit/gitignore-match.js（114 行 · 4 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `parseGitignore` | 33-52 | 20 | `export function parseGitignore(text) {` |
-| `compilePattern` | 63-71 | 9 | `function compilePattern(pattern, anchored) {` |
-| `isIgnoredByRules` | 85-102 | 18 | `export function isIgnoredByRules(rules, relPath, isDir = false) {` |
-| `isIgnored` | 111-113 | 3 | `export function isIgnored(text, relPath, isDir = false) {` |
-
-### lib/audit/glob.js（63 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `globToRegex` | 9-63 | 55 | `export function globToRegex(glob, anchored = true) {` |
-| `globMatch` | 60-63 | 4 | `export function globMatch(glob, path) {` |
-
-### lib/audit/history-report.js（100 行 · 4 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `resolveReportDir` | 18-20 | 3 | `export function resolveReportDir(repoPath, outDir = '') {` |
-| `renderMarkdown` | 23-53 | 31 | `function renderMarkdown(entry = {}) {` |
-| `writeCommitReport` | 61-70 | 10 | `export function writeCommitReport(dir, entry = {}) {` |
-| `writeHistoryIndex` | 77-100 | 24 | `export function writeHistoryIndex(dir, meta = {}) {` |
-
-### lib/audit/history.js（127 行 · 3 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `listHistoryCommits` | 32-54 | 23 | `export function listHistoryCommits(repoPath, { since = '', until = '' } = {}) {` |
-| `auditHistoryCommit` | 64-87 | 24 | `export async function auditHistoryCommit(repoPath, commit, opts = {}, weights = {}) {` |
-| `runHistoryAudit` | 95-127 | 33 | `export async function runHistoryAudit(repoPath, { since = '', until = '', outDir = '', auditOpts = {}, weights = {}, signal, onCommit } = {}) {` |
-
-### lib/audit/ignore-blind.js（103 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `excludePathOf` | 39-48 | 10 | `function excludePathOf(root) {` |
-| `detectIgnoreBlindSpot` | 55-102 | 48 | `export function detectIgnoreBlindSpot(root) {` |
-
-### lib/audit/orchestrate.js（673 行 · 20 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `setHostDocChecks` | 32-34 | 3 | `export function setHostDocChecks(checks) {` |
-| `findMarkedHostMd` | 38-38 | 1 | `const findMarkedHostMd = (...args) => (injected \|\| EMPTY_DOC_CHECKS).findMarkedHostMd(...args);` |
-| `checkDrift` | 39-39 | 1 | `const checkDrift = (...args) => (injected \|\| EMPTY_DOC_CHECKS).checkDrift(...args);` |
-| `checkFuncDrift` | 40-40 | 1 | `const checkFuncDrift = (...args) => (injected \|\| EMPTY_DOC_CHECKS).checkFuncDrift(...args);` |
-| `capScanFiles` | 61-71 | 11 | `export function capScanFiles(files, root, maxFiles) {` |
-| `appendIgnoreBlindSpot` | 84-100 | 17 | `function appendIgnoreBlindSpot(findings, repoPath, scanned) {` |
-| `buildTreeConfirmer` | 132-158 | 27 | `async function buildTreeConfirmer(relPath, text, grouped) {` |
-| `computeDimFileCounts` | 179-213 | 35 | `export function computeDimFileCounts(grouped, normFiles) {` |
-| `computeDimRuleCounts` | 226-238 | 13 | `export function computeDimRuleCounts(grouped) {` |
-| `auditFiles` | 240-464 | 225 | `async function auditFiles(repoPath, files, opts = {}) {` |
-| `isDshPlugin` | 265-271 | 7 | `const isDshPlugin = (() => {` |
-| `auditFull` | 466-488 | 23 | `export async function auditFull(repoPath, opts = {}) {` |
-| `appendTreeDocDrift` | 493-535 | 43 | `function appendTreeDocDrift(findings, repoPath) {` |
-| `by` | 526-526 | 1 | `const by = (code) => wt.filter(([, v]) => v?.status === code).length;` |
-| `appendFuncDocDrift` | 544-560 | 17 | `function appendFuncDocDrift(findings, repoPath) {` |
-| `appendSplitDocsCheck` | 568-622 | 55 | `function appendSplitDocsCheck(findings, repoPath) {` |
-| `hasMarkBlock` | 625-627 | 3 | `function hasMarkBlock(text, marker) {` |
-| `auditChanged` | 632-667 | 36 | `export async function auditChanged(repoPath, opts = {}) {` |
-| `isAuditIgnored` | 648-661 | 14 | `const isAuditIgnored = (rel) => {` |
-| `auditWithScope` | 670-672 | 3 | `export async function auditWithScope(repoPath, { scope = 'diff', ...opts } = {}) {` |
-
-### lib/audit/ownership.js（47 行 · 3 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `classifyOwnership` | 27-32 | 6 | `export function classifyOwnership(login = '', owner = '') {` |
-| `privacyRulesEnabled` | 39-41 | 3 | `export function privacyRulesEnabled(ownership) {` |
-| `isPrivacyRule` | 44-46 | 3 | `export function isPrivacyRule(ruleId) {` |
-
-### lib/audit/repo-level.js（31 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `repoLevelSemanticRuleIds` | 10-16 | 7 | `export function repoLevelSemanticRuleIds(grouped = {}) {` |
-| `pickRepoLevelAnchorFile` | 24-30 | 7 | `export function pickRepoLevelAnchorFile(files = []) {` |
-
-### lib/audit/report-yaml.js（90 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `findingsToYaml` | 32-81 | 50 | `export function findingsToYaml(findings = [], { includeMessage = true, maxMessageLen = 200 } = {}) {` |
-| `countSeverity` | 84-90 | 7 | `function countSeverity(dirMap) {` |
-
-### lib/audit/scope-policy.js（111 行 · 3 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `normRelPath` | 28-30 | 3 | `function normRelPath(value) {` |
-| `findConfigPath` | 44-58 | 15 | `function findConfigPath(startDir, now) {` |
-| `readProjectScopePolicy` | 74-110 | 37 | `export function readProjectScopePolicy(file = '') {` |
-
-### lib/audit/score-spec.js（71 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `getBuiltinScoreSpec` | 41-49 | 9 | `export function getBuiltinScoreSpec() {` |
-| `validateScoreSpec` | 59-70 | 12 | `export function validateScoreSpec(scoreSpec) {` |
-
-### lib/audit/slot.js（67 行 · 4 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `slotStatsFromFindings` | 17-46 | 30 | `export function slotStatsFromFindings(findings = [], ruleSlotMap = new Map(), slotRuleCount = {}) {` |
-| `ensure` | 26-29 | 4 | `const ensure = (slot) => {` |
-| `buildRuleSlotMap` | 49-56 | 8 | `export function buildRuleSlotMap(compiledRules = []) {` |
-| `countRulesBySlot` | 59-66 | 8 | `export function countRulesBySlot(compiledRules = []) {` |
-
-### lib/checks/button-bind.js（348 行 · 4 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `readBalancedCall` | 28-48 | 21 | `export function readBalancedCall(text, startIdx, maxLen = 4000) {` |
-| `extractJsxButtons` | 60-92 | 33 | `export function extractJsxButtons(text) {` |
-| `stripCommentLines` | 106-120 | 15 | `function stripCommentLines(text) {` |
-| `checkButtonBindings` | 138-348 | 211 | `export function checkButtonBindings({ file, text, rules, fileScope = '' }) {` |
-
-### lib/checks/common.js（171 行 · 12 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `capSeverity` | 35-41 | 7 | `export function capSeverity(ruleSeverity, internalLevel) {` |
-| `groupByKind` | 52-61 | 10 | `export function groupByKind(compiled) {` |
-| `smartHitLines` | 70-73 | 4 | `export function smartHitLines(text) {` |
-| `smallFileReadLines` | 83-87 | 5 | `export function smallFileReadLines(text) {` |
-| `consoleLogJsonLines` | 95-97 | 3 | `export function consoleLogJsonLines(text) {` |
-| `shortFuncNameLines` | 105-107 | 3 | `export function shortFuncNameLines(text, tree) {` |
-| `placeholderCredentialLines` | 118-120 | 3 | `export function placeholderCredentialLines(text, file) {` |
-| `credentialValueLines` | 122-124 | 3 | `export function credentialValueLines(text, tree) {` |
-| `ioRiskLines` | 138-140 | 3 | `export function ioRiskLines(text) {` |
-| `ioRiskDetail` | 148-156 | 9 | `export function ioRiskDetail(text) {` |
-| `shellCdDynamicLines` | 158-160 | 3 | `export function shellCdDynamicLines(text) {` |
-| `writeIntoGitignoredLines` | 167-169 | 3 | `export function writeIntoGitignoredLines(text, repoPath) {` |
-
-### lib/checks/credential-file.js（44 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `checkCredentialFiles` | 13-43 | 31 | `export function checkCredentialFiles({ file, relPath, rules }) {` |
-
-### lib/checks/dataflow.js（41 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `checkDataflow` | 25-40 | 16 | `export function checkDataflow({ file, text, rules }) {` |
-
-### lib/checks/dispatch.js（118 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `resolveFileScope` | 48-56 | 9 | `function resolveFileScope({ repoPath, relPath }) {` |
-| `runChecks` | 58-117 | 60 | `export function runChecks({ file, relPath, text, grouped }, opts = {}) {` |
-
-### lib/checks/dup-code.js（70 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `checkDuplicateCode` | 28-69 | 42 | `export function checkDuplicateCode(fileTexts = [], rules = null) {` |
-
-### lib/checks/dup-const.js（233 行 · 7 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `extractFromConst` | 46-66 | 21 | `function extractFromConst(tokens, i, atTopLevel, push) {` |
-| `extractFromJavaFinal` | 72-80 | 9 | `function extractFromJavaFinal(tokens, i, push) {` |
-| `createConstPusher` | 100-116 | 17 | `function createConstPusher(out) {` |
-| `extractConstAtToken` | 124-148 | 25 | `function extractConstAtToken(tokens, i, { lang, atTopLevel, push }) {` |
-| `findConstDefs` | 150-175 | 26 | `export function findConstDefs(text = '') {` |
-| `atTopLevel` | 160-160 | 1 | `const atTopLevel = (line) => /^\S/.test(lines[line - 1] \|\| '');` |
-| `checkDuplicateConst` | 183-232 | 50 | `export function checkDuplicateConst(fileTexts = [], rules = null) {` |
-
-### lib/checks/file-health.js（151 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `checkFileHealth` | 38-150 | 113 | `export function checkFileHealth({ file, relPath, text, rules }) {` |
-| `levelOf` | 87-90 | 4 | `const levelOf = (val, levels) => {` |
-
-### lib/checks/filter.js（138 行 · 6 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `filterRulesByExt` | 32-50 | 19 | `export function filterRulesByExt(grouped, relPath) {` |
-| `normRelPath` | 59-61 | 3 | `function normRelPath(s) {` |
-| `includeHit` | 67-73 | 7 | `function includeHit(rel, inc) {` |
-| `excludeHit` | 76-79 | 4 | `function excludeHit(rel, ex) {` |
-| `filterRulesByPath` | 81-100 | 20 | `export function filterRulesByPath(grouped, relPath) {` |
-| `filterRulesByFileText` | 118-137 | 20 | `export function filterRulesByFileText(grouped, text) {` |
-
-### lib/checks/folder.js（174 行 · 3 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `checkFolderRules` | 23-173 | 151 | `export function checkFolderRules({ root, rules, gitignoreText = '' }) {` |
-| `isPackageDir` | 89-89 | 1 | `const isPackageDir = (d) => /\/src\/(?:main\|test\|androidTest)\/(?:java\|kotlin)\//.test(d.full)` |
-| `isIgnored` | 148-148 | 1 | `const isIgnored = (p) => lines.some((l) => l === p \|\| l === p.replace(/^\*/, '') \|\| l.replace(/\/$/, '') === p);` |
-
-### lib/checks/fs-scanner.js（58 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `checkMultiFileScanners` | 21-57 | 37 | `export function checkMultiFileScanners(fileTexts = [], rules = null) {` |
-
-### lib/checks/hardcoded-path.js（99 行 · 4 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `hardcodedAbsPathHits` | 47-74 | 28 | `export function hardcodedAbsPathHits(text, filePath = '', baseDir = '') {` |
-| `hardcodedAbsPathLines` | 77-79 | 3 | `export function hardcodedAbsPathLines(text, filePath = '', baseDir = '') {` |
-| `hardcodedAbsPathDetail` | 82-90 | 9 | `export function hardcodedAbsPathDetail(text, filePath = '', baseDir = '') {` |
-| `describeHardcodedAbsPath` | 93-98 | 6 | `export function describeHardcodedAbsPath(hit) {` |
-
-### lib/checks/io.js（67 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `checkIoRisk` | 26-66 | 41 | `export function checkIoRisk({ file, text }) {` |
-
-### lib/checks/magic-number.js（43 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `checkMagicNumberSmart` | 22-42 | 21 | `export function checkMagicNumberSmart({ file, text, rules }) {` |
-
-### lib/checks/npm-json.js（274 行 · 3 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `starRangeDeps` | 21-33 | 13 | `function starRangeDeps(pkg) {` |
-| `findJsonKeyLine` | 51-59 | 9 | `function findJsonKeyLine(text, key, valueHint) {` |
-| `checkNpmJson` | 61-273 | 213 | `export function checkNpmJson({ file, text, rules, repoHasJsYamlImport, repoPath }) {` |
-
-### lib/checks/private.js（65 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `checkPrivateFiles` | 25-64 | 40 | `export function checkPrivateFiles({ root, visibility = 'unknown', privateFiles = [] }) {` |
-
-### lib/checks/regex.js（299 行 · 6 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `pickExemptHint` | 28-47 | 20 | `export function pickExemptHint(rule) {` |
-| `hit` | 31-31 | 1 | `const hit = (words) => (Array.isArray(words) ? words : []).some((w) => id.includes(w));` |
-| `checkRegexRules` | 58-221 | 164 | `export function checkRegexRules({ file, text, rules, source = '新增行', repoPath = '', treeConfirm = null }) {` |
-| `inComment` | 94-101 | 8 | `const inComment = (line, col) => {` |
-| `checkPathRegexRules` | 224-240 | 17 | `export function checkPathRegexRules({ file, relPath, rules }) {` |
-| `checkBlacklist` | 250-298 | 49 | `export function checkBlacklist({ file, text, rules }) {` |
-
-### lib/checks/scope-collision.js（69 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `checkScopeCollision` | 32-68 | 37 | `export function checkScopeCollision({ file, text, rules }) {` |
-
-### lib/checks/semantic.js（135 行 · 3 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `checkSemantic` | 35-59 | 25 | `export function checkSemantic({ file, relPath, rules, repoLevelRules }) {` |
-| `isRepoLevelSemanticRule` | 69-78 | 10 | `export function isRepoLevelSemanticRule(rule) {` |
-| `checkPatchInsert` | 93-134 | 42 | `export function checkPatchInsert({ file, text, rules }) {` |
-
-### lib/checks/structural.js（282 行 · 9 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `checkFuncLines` | 22-66 | 45 | `export function checkFuncLines({ file, text, rules }) {` |
-| `checkSyncFsInFile` | 69-82 | 14 | `export function checkSyncFsInFile({ file, text }) {` |
-| `checkEmptyCatch` | 85-98 | 14 | `export function checkEmptyCatch({ file, text }) {` |
-| `checkMinLength` | 101-122 | 22 | `export function checkMinLength({ file, text, rules }) {` |
-| `checkComplexity` | 125-151 | 27 | `export function checkComplexity({ file, text, rules }) {` |
-| `checkDepth` | 154-170 | 17 | `export function checkDepth({ file, text, rules }) {` |
-| `checkMaxLines` | 173-231 | 59 | `export function checkMaxLines({ file, text, rules, fileScope = '' }) {` |
-| `checkCommentDensity` | 239-254 | 16 | `export function checkCommentDensity({ file, text, rules }) {` |
-| `checkRepeated` | 257-281 | 25 | `export function checkRepeated({ file, text, rules }) {` |
 
 ### lib/cli/commands-account.mjs（108 行 · 6 个函数）
 
@@ -1059,30 +309,13 @@
 | `cmdGenSshKey` | 85-96 | 12 | `export async function cmdGenSshKey(flags) {` |
 | `resolveRepoOwnerName` | 99-107 | 9 | `async function resolveRepoOwnerName(repoPath) {` |
 
-### lib/cli/commands-audit.mjs（144 行 · 8 个函数）
+### lib/cli/commands-doc.mjs（79 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `pluginEqualAuditOpts` | 32-44 | 13 | `export function pluginEqualAuditOpts(cfg, flags, { scope = 'diff' } = {}) {` |
-| `pluginEqualWeights` | 47-51 | 5 | `export function pluginEqualWeights(cfg, flags) {` |
-| `pathExists` | 54-56 | 3 | `async function pathExists(p) {` |
-| `cmdAudit` | 59-63 | 5 | `export async function cmdAudit(root, flags) {` |
-| `runHistoryAuditCmd` | 66-82 | 17 | `async function runHistoryAuditCmd(root, flags) {` |
-| `runStandardAudit` | 85-98 | 14 | `async function runStandardAudit(root, flags) {` |
-| `printAuditResult` | 101-119 | 19 | `function printAuditResult(root, auditResult, opts, weights, quality) {` |
-| `cmdScan` | 135-143 | 9 | `export async function cmdScan(root, flags) {` |
-
-### lib/cli/commands-doc.mjs（128 行 · 7 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `cmdFileIo` | 27-66 | 40 | `export function cmdFileIo(targets = [], flags = {}) {` |
-| `splitMulti` | 28-28 | 1 | `const splitMulti = (v) => String(v \|\| '').split(',').map((x) => x.trim()).filter(Boolean);` |
-| `riskMark` | 49-49 | 1 | `const riskMark = (r) => (r === 'high' ? '🔴' : r === 'medium' ? '🟠' : '·');` |
-| `tagsOf` | 50-56 | 7 | `const tagsOf = (hit) => {` |
-| `cmdTreeDoc` | 69-81 | 13 | `export async function cmdTreeDoc(sub, flags) {` |
-| `cmdFunctions` | 84-106 | 23 | `export async function cmdFunctions(op, target, flags) {` |
-| `cmdModuleSplitter` | 109-127 | 19 | `export async function cmdModuleSplitter(positional = [], flags = {}) {` |
+| `cmdTreeDoc` | 20-32 | 13 | `export async function cmdTreeDoc(sub, flags) {` |
+| `cmdFunctions` | 35-57 | 23 | `export async function cmdFunctions(op, target, flags) {` |
+| `cmdModuleSplitter` | 60-78 | 19 | `export async function cmdModuleSplitter(positional = [], flags = {}) {` |
 
 ### lib/cli/commands-tool.mjs（94 行 · 5 个函数）
 
@@ -1108,30 +341,30 @@
 | `printCloneResult` | 154-166 | 13 | `function printCloneResult(r, flags, target, dest) {` |
 | `cmdClone` | 169-176 | 8 | `export async function cmdClone(flags, positional) {` |
 
-### lib/cli/shared.mjs（452 行 · 20 个函数）
+### lib/cli/shared.mjs（453 行 · 20 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `commandOwner` | 57-63 | 7 | `export function commandOwner(command) {` |
-| `allCommands` | 66-68 | 3 | `export function allCommands() {` |
-| `cliPluginConfig` | 81-90 | 10 | `export function cliPluginConfig() {` |
-| `versionLine` | 93-95 | 3 | `export function versionLine(cliName) {` |
-| `buildCrossCliHint` | 102-112 | 11 | `export function buildCrossCliHint({ command = '', argvRest = [], fromCli = '' } = {}) {` |
-| `defaultFlags` | 161-170 | 10 | `function defaultFlags() {` |
-| `applyBoolFlag` | 173-178 | 6 | `function applyBoolFlag(flags, token) {` |
-| `applyValueFlag` | 181-184 | 4 | `function applyValueFlag(flags, token, rawValue) {` |
-| `parseArgv` | 193-211 | 19 | `export function parseArgv(argv = []) {` |
-| `parseVia` | 214-227 | 14 | `export function parseVia(run) {` |
-| `printToolResult` | 235-242 | 8 | `export function printToolResult(result, asJson) {` |
-| `readableResultLines` | 250-258 | 9 | `function readableResultLines(result) {` |
-| `printVersion` | 261-263 | 3 | `export function printVersion(cliName) {` |
-| `resolveDispatch` | 273-304 | 32 | `export function resolveDispatch({ cliName = CLI_GIT, argv = [], commands = new Map() } = {}) {` |
-| `normalizeRegistryArgv` | 318-332 | 15 | `export function normalizeRegistryArgv(rest = [], params = []) {` |
-| `runCli` | 345-391 | 47 | `export async function runCli({` |
-| `isDirectRun` | 401-409 | 9 | `export function isDirectRun(moduleUrl) {` |
-| `runAsEntry` | 416-427 | 12 | `export function runAsEntry(moduleUrl, main) {` |
-| `readEntrySource` | 436-438 | 3 | `export function readEntrySource(relPath) {` |
-| `parseEntrySourceMeta` | 445-451 | 7 | `export function parseEntrySourceMeta(sourceText = '') {` |
+| `commandOwner` | 58-64 | 7 | `export function commandOwner(command) {` |
+| `allCommands` | 67-69 | 3 | `export function allCommands() {` |
+| `cliPluginConfig` | 82-91 | 10 | `export function cliPluginConfig() {` |
+| `versionLine` | 94-96 | 3 | `export function versionLine(cliName) {` |
+| `buildCrossCliHint` | 103-113 | 11 | `export function buildCrossCliHint({ command = '', argvRest = [], fromCli = '' } = {}) {` |
+| `defaultFlags` | 162-171 | 10 | `function defaultFlags() {` |
+| `applyBoolFlag` | 174-179 | 6 | `function applyBoolFlag(flags, token) {` |
+| `applyValueFlag` | 182-185 | 4 | `function applyValueFlag(flags, token, rawValue) {` |
+| `parseArgv` | 194-212 | 19 | `export function parseArgv(argv = []) {` |
+| `parseVia` | 215-228 | 14 | `export function parseVia(run) {` |
+| `printToolResult` | 236-243 | 8 | `export function printToolResult(result, asJson) {` |
+| `readableResultLines` | 251-259 | 9 | `function readableResultLines(result) {` |
+| `printVersion` | 262-264 | 3 | `export function printVersion(cliName) {` |
+| `resolveDispatch` | 274-305 | 32 | `export function resolveDispatch({ cliName = CLI_GIT, argv = [], commands = new Map() } = {}) {` |
+| `normalizeRegistryArgv` | 319-333 | 15 | `export function normalizeRegistryArgv(rest = [], params = []) {` |
+| `runCli` | 346-392 | 47 | `export async function runCli({` |
+| `isDirectRun` | 402-410 | 9 | `export function isDirectRun(moduleUrl) {` |
+| `runAsEntry` | 417-428 | 12 | `export function runAsEntry(moduleUrl, main) {` |
+| `readEntrySource` | 437-439 | 3 | `export function readEntrySource(relPath) {` |
+| `parseEntrySourceMeta` | 446-452 | 7 | `export function parseEntrySourceMeta(sourceText = '') {` |
 
 ### lib/client-parts/audit/audit.js（302 行 · 10 个函数）
 
@@ -1296,40 +529,38 @@
 | `collectExternalRefs` | 136-141 | 6 | `export function collectExternalRefs(css = '') {` |
 | `clientModuleInfo` | 151-162 | 12 | `export function clientModuleInfo() {` |
 
-### lib/commit-push.js（293 行 · 7 个函数）
+### lib/commit-push.js（270 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `legacyBlockedOf` | 37-47 | 11 | `export function legacyBlockedOf(findings = [], { repoPath = '', auditExemptPaths = [] } = {}) {` |
-| `isExemptFile` | 41-41 | 1 | `const isExemptFile = (finding) => exemptSet.size > 0 && exemptSet.has(String(finding.file \|\| '').replace(/\\/g, '/').replace(/^\.\//, ''));` |
-| `defaultPreprocessRender` | 59-74 | 16 | `export function defaultPreprocessRender(ctx = {}) {` |
-| `runAudit` | 85-244 | 160 | `export async function runAudit({` |
-| `isExemptFile` | 166-166 | 1 | `const isExemptFile = (finding) => exemptSet.has(String(finding.file \|\| '').replace(/\\/g, '/').replace(/^\.\//, ''));` |
-| `commitWithAudit` | 254-279 | 26 | `export async function commitWithAudit({` |
-| `commitMany` | 287-293 | 7 | `export async function commitMany({ repos = [], message = '', push = true, dryRun = false, requirementsConfirmed = false, customIgnorePatterns = '' } = {}) {` |
+| `defaultPreprocessRender` | 37-52 | 16 | `export function defaultPreprocessRender(ctx = {}) {` |
+| `runAudit` | 63-221 | 159 | `export async function runAudit({` |
+| `isExemptFile` | 141-141 | 1 | `const isExemptFile = (finding) => exemptSet.has(String(finding.file \|\| '').replace(/\\/g, '/').replace(/^\.\//, ''));` |
+| `commitWithAudit` | 231-256 | 26 | `export async function commitWithAudit({` |
+| `commitMany` | 264-270 | 7 | `export async function commitMany({ repos = [], message = '', push = true, dryRun = false, requirementsConfirmed = false, customIgnorePatterns = '' } = {}) {` |
 
-### lib/commit-push/pre-commit-engine.js（453 行 · 18 个函数）
+### lib/commit-push/pre-commit-engine.js（451 行 · 18 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `resolveAuditSluiceEntry` | 55-70 | 16 | `export function resolveAuditSluiceEntry() {` |
 | `pluginRootDir` | 84-86 | 3 | `export function pluginRootDir() {` |
 | `stderrTail` | 93-96 | 4 | `export function stderrTail(text) {` |
-| `resolvePreCommitConfig` | 109-138 | 30 | `export function resolvePreCommitConfig(cfg = {}) {` |
-| `readPreCommitBlock` | 145-158 | 14 | `function readPreCommitBlock(cfg = {}) {` |
-| `isExecutableFile` | 165-174 | 10 | `function isExecutableFile(absPath) {` |
-| `searchCommandOnPath` | 181-197 | 17 | `function searchCommandOnPath(commandName) {` |
-| `resolvePathLikeCommand` | 204-208 | 5 | `function resolvePathLikeCommand(pathLike) {` |
-| `resolveEngineCommand` | 218-224 | 7 | `export function resolveEngineCommand(command) {` |
-| `resolveEngineArgs` | 235-243 | 9 | `export function resolveEngineArgs(args = []) {` |
-| `toSlotCsv` | 250-255 | 6 | `function toSlotCsv(slots) {` |
-| `buildEngineArgs` | 263-291 | 29 | `export function buildEngineArgs({` |
-| `formatCommandLine` | 299-301 | 3 | `export function formatCommandLine(command, args = []) {` |
-| `failClosed` | 310-312 | 3 | `function failClosed(message) {` |
-| `parseEngineStdout` | 321-339 | 19 | `export function parseEngineStdout(stdout) {` |
-| `runEngineProcess` | 349-396 | 48 | `function runEngineProcess({ command, args, timeoutMs }) {` |
-| `finish` | 359-364 | 6 | `const finish = (result) => {` |
-| `runPreCommitEngine` | 412-452 | 41 | `export async function runPreCommitEngine({` |
+| `resolvePreCommitConfig` | 109-136 | 28 | `export function resolvePreCommitConfig(cfg = {}) {` |
+| `readPreCommitBlock` | 143-156 | 14 | `function readPreCommitBlock(cfg = {}) {` |
+| `isExecutableFile` | 163-172 | 10 | `function isExecutableFile(absPath) {` |
+| `searchCommandOnPath` | 179-195 | 17 | `function searchCommandOnPath(commandName) {` |
+| `resolvePathLikeCommand` | 202-206 | 5 | `function resolvePathLikeCommand(pathLike) {` |
+| `resolveEngineCommand` | 216-222 | 7 | `export function resolveEngineCommand(command) {` |
+| `resolveEngineArgs` | 233-241 | 9 | `export function resolveEngineArgs(args = []) {` |
+| `toSlotCsv` | 248-253 | 6 | `function toSlotCsv(slots) {` |
+| `buildEngineArgs` | 261-289 | 29 | `export function buildEngineArgs({` |
+| `formatCommandLine` | 297-299 | 3 | `export function formatCommandLine(command, args = []) {` |
+| `failClosed` | 308-310 | 3 | `function failClosed(message) {` |
+| `parseEngineStdout` | 319-337 | 19 | `export function parseEngineStdout(stdout) {` |
+| `runEngineProcess` | 347-394 | 48 | `function runEngineProcess({ command, args, timeoutMs }) {` |
+| `finish` | 357-362 | 6 | `const finish = (result) => {` |
+| `runPreCommitEngine` | 410-450 | 41 | `export async function runPreCommitEngine({` |
 
 ### lib/context/index.js（364 行 · 10 个函数）
 
@@ -1429,41 +660,6 @@
 | `loadWorkspacePaths` | 36-47 | 12 | `export function loadWorkspacePaths() {` |
 | `saveWorkspacePaths` | 55-81 | 27 | `export function saveWorkspacePaths(paths, { by = 'ai' } = {}) {` |
 | `workspacePathsInjectionText` | 94-108 | 15 | `export function workspacePathsInjectionText(sep = '\n') {` |
-
-### lib/exempt/index.js（347 行 · 14 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `hasHeaderExempt` | 126-130 | 5 | `export function hasHeaderExempt(text, marker) {` |
-| `hasLineExempt` | 133-135 | 3 | `export function hasLineExempt(line, marker) {` |
-| `isCategoryExempt` | 153-161 | 9 | `export function isCategoryExempt(finding = {}) {` |
-| `markerCovers` | 170-189 | 20 | `function markerCovers(meta, kind, rule) {` |
-| `has` | 173-173 | 1 | `const has = (a) => Array.isArray(a) && a.length > 0;` |
-| `exemptMarkerCovers` | 192-194 | 3 | `export function exemptMarkerCovers(marker, finding = {}) {` |
-| `exemptHintForFinding` | 202-212 | 11 | `export function exemptHintForFinding(finding = {}) {` |
-| `exemptForFinding` | 223-240 | 18 | `export function exemptForFinding(finding, text = '') { // dsh-skip-complexity: 豁免判定器本体（9 标记 × blocked/细分规则多条件链，职责单一）` |
-| `exemptHintFor` | 243-248 | 6 | `export function exemptHintFor(ruleOrKind) {` |
-| `cacheGet` | 264-265 | 2 | `function cacheGet(cache, dir) { return cache.has(dir) ? cache.get(dir) : undefined; }` |
-| `dirHasEmptyMarker` | 267-279 | 13 | `function dirHasEmptyMarker(dir, name, cache) {` |
-| `clearExemptMarkerCache` | 282-285 | 4 | `export function clearExemptMarkerCache() {` |
-| `isSampleExemptDir` | 296-316 | 21 | `export function isSampleExemptDir(repoPath, relPath = '') {` |
-| `isTestExemptDir` | 326-346 | 21 | `export function isTestExemptDir(repoPath, relPath = '') {` |
-
-### lib/exempt/tool.js（199 行 · 11 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `findRuleKind` | 23-31 | 9 | `async function findRuleKind(repoPath, ruleId) {` |
-| `readText` | 34-36 | 3 | `function readText(file) {` |
-| `resolveTarget` | 39-47 | 9 | `function resolveTarget(repoPath, p) {` |
-| `resolveMarker` | 50-76 | 27 | `function resolveMarker({ rule = '', marker = '', scope = '', kind = '' }) {` |
-| `hasMarker` | 79-84 | 6 | `function hasMarker(lines, marker, scope, line) {` |
-| `headerComment` | 87-89 | 3 | `function headerComment(marker, reason) {` |
-| `addExempt` | 95-138 | 44 | `export async function addExempt({ repoPath = '', path: p, line, scope = '', rule = '', marker = '', reason = '', dryRun = false } = {}) {` |
-| `removeExempt` | 141-158 | 18 | `export function removeExempt({ repoPath = '', path: p, marker = '', dryRun = false } = {}) {` |
-| `listExempt` | 161-185 | 25 | `export function listExempt({ repoPath = '', root = '' } = {}) {` |
-| `walk` | 164-182 | 19 | `const walk = (dir, depth) => {` |
-| `checkExempt` | 188-198 | 11 | `export function checkExempt({ repoPath = '', root = '' } = {}) {` |
 
 ### lib/fsx.js（88 行 · 3 个函数）
 
@@ -1649,6 +845,25 @@
 |------|------|------|------|
 | `buildSshEnvPrefix` | 21-23 | 3 | `function buildSshEnvPrefix(keyPath) {` |
 | `buildCredEnv` | 30-88 | 59 | `export function buildCredEnv({ workspaceRoot = '' } = {}) {` |
+
+### lib/git/exempt-markers.js（354 行 · 14 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `hasHeaderExempt` | 133-137 | 5 | `export function hasHeaderExempt(text, marker) {` |
+| `hasLineExempt` | 140-142 | 3 | `export function hasLineExempt(line, marker) {` |
+| `isCategoryExempt` | 160-168 | 9 | `export function isCategoryExempt(finding = {}) {` |
+| `markerCovers` | 177-196 | 20 | `function markerCovers(meta, kind, rule) {` |
+| `has` | 180-180 | 1 | `const has = (a) => Array.isArray(a) && a.length > 0;` |
+| `exemptMarkerCovers` | 199-201 | 3 | `export function exemptMarkerCovers(marker, finding = {}) {` |
+| `exemptHintForFinding` | 209-219 | 11 | `export function exemptHintForFinding(finding = {}) {` |
+| `exemptForFinding` | 230-247 | 18 | `export function exemptForFinding(finding, text = '') { // dsh-skip-complexity: 豁免判定器本体（9 标记 × blocked/细分规则多条件链，职责单一）` |
+| `exemptHintFor` | 250-255 | 6 | `export function exemptHintFor(ruleOrKind) {` |
+| `cacheGet` | 271-272 | 2 | `function cacheGet(cache, dir) { return cache.has(dir) ? cache.get(dir) : undefined; }` |
+| `dirHasEmptyMarker` | 274-286 | 13 | `function dirHasEmptyMarker(dir, name, cache) {` |
+| `clearExemptMarkerCache` | 289-292 | 4 | `export function clearExemptMarkerCache() {` |
+| `isSampleExemptDir` | 303-323 | 21 | `export function isSampleExemptDir(repoPath, relPath = '') {` |
+| `isTestExemptDir` | 333-353 | 21 | `export function isTestExemptDir(repoPath, relPath = '') {` |
 
 ### lib/git/hooks.js（92 行 · 3 个函数）
 
@@ -1914,48 +1129,6 @@
 | `done` | 203-206 | 4 | `const done = () => {` |
 | `routeRequest` | 226-242 | 17 | `export function routeRequest(req = {}, handlers = {}) {` |
 
-### lib/link-check/index.js（187 行 · 7 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `isFlakyHost` | 43-46 | 4 | `export function isFlakyHost(host = '') {` |
-| `extractLinks` | 53-65 | 13 | `export function extractLinks(text = '') {` |
-| `gradeResult` | 75-104 | 30 | `export function gradeResult(url = '', r = {}) {` |
-| `probeLink` | 112-129 | 18 | `export async function probeLink(url, { timeoutMs = DEFAULT_OPTS.timeoutMs, fetcher } = {}) {` |
-| `probeLinks` | 137-151 | 15 | `export async function probeLinks(links = [], { concurrency = DEFAULT_OPTS.concurrency, timeoutMs = DEFAULT_OPTS.timeoutMs, fetcher } = {}) {` |
-| `checkLinks` | 158-182 | 25 | `export async function checkLinks({ file = '', text = '', fetcher, concurrency, timeoutMs, maxLinks = DEFAULT_OPTS.maxLinks } = {}) {` |
-| `sumLinkPenalty` | 185-187 | 3 | `export function sumLinkPenalty(findings = []) {` |
-
-### lib/lint-adapter/detect.js（162 行 · 9 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `isExecutable` | 37-47 | 11 | `function isExecutable(p) {` |
-| `hasConfig` | 50-63 | 14 | `function hasConfig(repoRoot, linter) {` |
-| `resolveBin` | 71-76 | 6 | `export function resolveBin(repoRoot, linter) {` |
-| `tryWhich` | 79-90 | 12 | `function tryWhich(bin) {` |
-| `detectLinters` | 96-98 | 3 | `export function detectLinters(repoRoot) {` |
-| `detectLinterStatus` | 110-120 | 11 | `export function detectLinterStatus(repoRoot) {` |
-| `binCandidates` | 123-135 | 13 | `function binCandidates(repoRoot, linter) {` |
-| `resolveBinDetailed` | 138-151 | 14 | `function resolveBinDetailed(repoRoot, linter) {` |
-| `tryVersion` | 154-161 | 8 | `function tryVersion(bin) {` |
-
-### lib/lint-adapter/index.js（51 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `runLintAdapters` | 19-48 | 30 | `export async function runLintAdapters(repoRoot, opts = {}) {` |
-
-### lib/lint-adapter/runner.js（134 行 · 5 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `ruffDims` | 39-43 | 5 | `function ruffDims(code) {` |
-| `ruffItemToFinding` | 49-66 | 18 | `export function ruffItemToFinding(item, repoRoot) {` |
-| `relFile` | 69-78 | 10 | `function relFile(abs, repoRoot) {` |
-| `parseRuffJson` | 81-90 | 10 | `function parseRuffJson(stdout) {` |
-| `runLinter` | 98-133 | 36 | `export async function runLinter(linter, repoRoot) {` |
-
 ### lib/npm/account.js（65 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2081,123 +1254,6 @@
 | `setDefineToolOverride` | 240-250 | 11 | `export function setDefineToolOverride(fn) { defineToolOverride = fn; }` |
 | `loadDefineTool` | 241-250 | 10 | `export async function loadDefineTool(log) {` |
 
-### lib/preprocess/adapters/builtin.js（89 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `getAdapter` | 83-88 | 6 | `export function getAdapter(adapterId) {` |
-
-### lib/preprocess/audit.js（99 行 · 3 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `auditPreprocessAvailable` | 39-45 | 7 | `export function auditPreprocessAvailable(cfg = {}, hasBuiltinEngine) {` |
-| `formatBlocked` | 60-66 | 7 | `function formatBlocked(blocked = []) {` |
-| `auditRenderResult` | 77-90 | 14 | `export function auditRenderResult(ctx = {}) {` |
-
-### lib/preprocess/exempt.js（248 行 · 10 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `getEngineAdapter` | 55-59 | 5 | `export function getEngineAdapter(engineId = 'builtin') {` |
-| `linesOf` | 62-64 | 3 | `function linesOf(text = '') {` |
-| `sourceMarkerExempts` | 79-112 | 34 | `export function sourceMarkerExempts(engineId, text = '', finding = {}, adapterProfile) {` |
-| `at` | 94-94 | 1 | `const at = (idx) => String(lines[idx] \|\| '');` |
-| `declaredExempts` | 124-136 | 13 | `export function declaredExempts(suppressed = [], finding = {}) {` |
-| `normalize` | 126-126 | 1 | `const normalize = (value) => String(value \|\| '').replace(/\\/g, '/').replace(/^\.\//, '');` |
-| `exemptionOf` | 150-194 | 45 | `export function exemptionOf(finding = {}, opts = {}) {` |
-| `resolveExemptions` | 206-217 | 12 | `export function resolveExemptions(findings = [], opts = {}) {` |
-| `filterExempted` | 225-227 | 3 | `export function filterExempted(findings = [], opts = {}) {` |
-| `loadIgnoreFingerprints` | 238-247 | 10 | `export function loadIgnoreFingerprints(repoPath = '.', fileName = '.gitleaksignore') {` |
-
-### lib/preprocess/index.js（143 行 · 3 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `preprocessParams` | 39-47 | 9 | `export function preprocessParams(cfg = {}, hasBuiltinEngine, preprocessors = PREPROCESSORS) {` |
-| `runPreprocess` | 68-108 | 41 | `export async function runPreprocess(repoPath, opts = {}) {` |
-| `renderPreprocessResult` | 123-142 | 20 | `export function renderPreprocessResult(ctx = {}, cfg = {}, preprocessors = PREPROCESSORS) {` |
-
-### lib/preprocess/score.js（125 行 · 4 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `fallbackDimOfRule` | 55-59 | 5 | `export function fallbackDimOfRule(rule) {` |
-| `resolveWeights` | 69-77 | 9 | `export function resolveWeights(scoreSpec, userWeights = {}) {` |
-| `fillMissingDimensions` | 88-96 | 9 | `export function fillMissingDimensions(findings = [], scoreSpec = getBuiltinScoreSpec()) {` |
-| `score` | 108-124 | 17 | `export function score(findings = [], scoreSpec = getBuiltinScoreSpec(), userWeights = {}, context = {}) {` |
-
-### lib/rule/compilers/helpers.js（72 行 · 3 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `safeRe` | 16-27 | 12 | `export function safeRe(pattern, label, errors = []) {` |
-| `pickDimensions` | 43-53 | 11 | `export function pickDimensions(r = {}, fallback = [], errors = []) {` |
-| `ruleOut` | 56-69 | 14 | `export function ruleOut({ id, name, kind, severity = 'warning', level = 'warning', message, pattern, patterns, pathPattern, threshold, dimensions = [], extra = {} }) {` |
-
-### lib/rule/compilers/list-kinds.js（13 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `listRegisteredKinds` | 9-12 | 4 | `export function listRegisteredKinds() {` |
-
-### lib/rule/homoglyph.js（46 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `findHomoglyphs` | 32-40 | 9 | `export function findHomoglyphs(text) {` |
-| `hasHomoglyphs` | 43-45 | 3 | `export function hasHomoglyphs(text) {` |
-
-### lib/rule/loader.js（274 行 · 7 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `isForceLoadRule` | 48-50 | 3 | `export function isForceLoadRule(ruleId) {` |
-| `loadYamlRuleFile` | 98-107 | 10 | `export function loadYamlRuleFile(slot, dir = RULE_YAML_DIR) {` |
-| `discoverRuleSlots` | 112-120 | 9 | `export function discoverRuleSlots(dir = RULE_YAML_DIR) {` |
-| `resolveSlotOrder` | 135-166 | 32 | `export function resolveSlotOrder(order = null, { dir = RULE_YAML_DIR, includeTemplate = false } = {}) {` |
-| `push` | 148-156 | 9 | `const push = (slot) => {` |
-| `loadRuleFiles` | 177-226 | 50 | `export function loadRuleFiles(order = null, opts = {}) {` |
-| `setSlotDisabled` | 240-274 | 35 | `export function setSlotDisabled(slot, disabled, opts = {}) {` |
-
-### lib/rule/registry.js（122 行 · 5 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `registerCompiler` | 18-20 | 3 | `export function registerCompiler(kind, detect, compile) {` |
-| `compileRule` | 28-61 | 34 | `export function compileRule(rule, ctx = {}) {` |
-| `withSlot` | 43-51 | 9 | `const withSlot = (res) => {` |
-| `compileAllRules` | 64-72 | 9 | `export function compileAllRules(rules, ctx = {}) {` |
-| `withRuleScope` | 89-122 | 34 | `function withRuleScope(compiled, source) {` |
-
-### lib/rule/scope.js（67 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `normalizeScopeRules` | 35-44 | 10 | `export function normalizeScopeRules(rule) {` |
-| `resolveScopeAction` | 52-67 | 16 | `export function resolveScopeAction(scopeRules, scopeInfo = {}) {` |
-
-### lib/score/docs-score.js（166 行 · 5 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `collectDocFiles` | 45-69 | 25 | `export function collectDocFiles(root = '.') {` |
-| `walk` | 54-63 | 10 | `const walk = (dir) => {` |
-| `checkDocsScore` | 84-153 | 70 | `export function checkDocsScore(root = '.') { // dsh-skip-func-length dsh-skip-complexity: 文档加分判定器（四检查链 + 宿主版本比对多条件，职责单一；53 行/24 复杂度为结构必然）` |
-| `maxVersion` | 156-166 | 11 | `function maxVersion(list) {` |
-| `cmp` | 157-164 | 8 | `const cmp = (a, b) => {` |
-
-### lib/score/index.js（234 行 · 6 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `countByDimension` | 50-82 | 33 | `export function countByDimension(findings = []) {` |
-| `countHitFilesByDimension` | 92-107 | 16 | `export function countHitFilesByDimension(findings = []) {` |
-| `scoreQuality` | 127-234 | 108 | `export function scoreQuality(findings = [], weights = {}, context = {}) {` |
-| `ruleCountOf` | 184-188 | 5 | `const ruleCountOf = (dim) => {` |
-| `denomOf` | 193-196 | 4 | `const denomOf = (dim) => {` |
-| `dynamicRatio` | 199-208 | 10 | `const dynamicRatio = (dim) => {` |
-
 ### lib/self/index.js（197 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2208,53 +1264,13 @@
 | `versionInfo` | 169-181 | 13 | `export function versionInfo(pkgJson = '') {` |
 | `helpSync` | 190-196 | 7 | `export function helpSync(helpText = '', knownFlags = []) {` |
 
-### lib/skip-dirs.js（68 行 · 3 个函数）
+### lib/skip-dirs.js（76 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `auditRulesDir` | 28-30 | 3 | `export function auditRulesDir() {` |
-| `loadYamlBlacklistDirs` | 38-57 | 20 | `export function loadYamlBlacklistDirs() {` |
-| `getSkipSet` | 63-67 | 5 | `export function getSkipSet() {` |
-
-### scripts/audit-ext/dsh-inject-declarations.mjs（210 行 · 7 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `isPluginEntry` | 55-58 | 4 | `function isPluginEntry(text) {` |
-| `collectFiles` | 61-79 | 19 | `function collectFiles(repo) {` |
-| `walk` | 63-76 | 14 | `const walk = (dir) => {` |
-| `declaredInjectNames` | 85-103 | 19 | `function declaredInjectNames(text) {` |
-| `stripTrailingComment` | 106-129 | 24 | `function stripTrailingComment(line) {` |
-| `ctxServiceNotInjectedHits` | 132-155 | 24 | `function ctxServiceNotInjectedHits(text) {` |
-| `defaultExportConflictLine` | 158-169 | 12 | `function defaultExportConflictLine(text) {` |
-
-### scripts/audit-ext/variable-min-length.mjs（102 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `isExcludedPath` | 29-36 | 8 | `const isExcludedPath = (rel) => {` |
-| `walk` | 60-98 | 39 | `const walk = (dir) => {` |
-
-### scripts/audit-gate.mjs（241 行 · 10 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `parseScopeValue` | 71-74 | 4 | `function parseScopeValue(rawValue) {` |
-| `parseWeightsValue` | 76-84 | 9 | `function parseWeightsValue(rawValue) {` |
-| `parseMaxScanFilesValue` | 86-91 | 6 | `function parseMaxScanFilesValue(rawValue) {` |
-| `parseSlotListValue` | 93-95 | 3 | `function parseSlotListValue(rawValue) {` |
-| `parseGateArgs` | 119-143 | 25 | `export function parseGateArgs(argv = []) {` |
-| `runGateAudit` | 155-182 | 28 | `export async function runGateAudit(opts) {` |
-| `muteStdout` | 189-193 | 5 | `export function muteStdout() {` |
-| `emitAndExit` | 196-199 | 4 | `function emitAndExit(result, exitCode) {` |
-| `main` | 202-223 | 22 | `async function main(argv) {` |
-| `invokedDirectly` | 226-230 | 5 | `function invokedDirectly() {` |
-
-### scripts/audit-runner.mjs（35 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `main` | 17-33 | 17 | `async function main() {` |
+| `auditRulesDir` | 36-38 | 3 | `export function auditRulesDir() {` |
+| `loadYamlBlacklistDirs` | 46-65 | 20 | `export function loadYamlBlacklistDirs() {` |
+| `getSkipSet` | 71-75 | 5 | `export function getSkipSet() {` |
 
 ### scripts/audit-runtime-check.mjs（130 行 · 4 个函数）
 
@@ -2295,12 +1311,6 @@
 | `bumpPatch` | 63-66 | 4 | `function bumpPatch(v) {` |
 | `readJson` | 68-70 | 3 | `function readJson(p) {` |
 | `buildVersionLine` | 83-100 | 18 | `function buildVersionLine(oldLine, newVer, oldVer, message, commentOverride = '') {` |
-
-### scripts/check-js-scope.mjs（88 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `filesFromConfig` | 46-53 | 8 | `function filesFromConfig(path) {` |
 
 ### scripts/check.mjs（204 行 · 3 个函数）
 
@@ -2413,81 +1423,6 @@
 | `argOf` | 86-89 | 4 | `function argOf(name, def) {` |
 | `main` | 91-110 | 20 | `function main() {` |
 
-### scripts/platform-scan.mjs（169 行 · 5 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `collectFiles` | 56-68 | 13 | `function collectFiles(root, exts, dir = root, out = []) {` |
-| `commentLineSet` | 71-79 | 9 | `function commentLineSet(text) {` |
-| `scanPlatformCode` | 87-115 | 29 | `export function scanPlatformCode(root, { exts = DEFAULT_EXTS } = {}) {` |
-| `parseArgs` | 118-132 | 15 | `function parseArgs(argv) {` |
-| `printReport` | 135-153 | 19 | `function printReport(result, top) {` |
-
-### scripts/rename-locator.mjs（97 行 · 4 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `fnNameAtLine` | 28-31 | 4 | `function fnNameAtLine(src, line) {` |
-| `locateVariables` | 39-77 | 39 | `export function locateVariables(src = '', opts = {}) {` |
-| `scopeOf` | 42-45 | 4 | `const scopeOf = (line) => {` |
-| `main` | 79-95 | 17 | `function main() {` |
-
-### scripts/rule-switch.mjs（98 行 · 3 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `resolveRulesDir` | 37-42 | 6 | `function resolveRulesDir(argv) {` |
-| `listSlots` | 45-55 | 11 | `function listSlots(dir) {` |
-| `main` | 57-95 | 39 | `function main(argv = process.argv.slice(2)) {` |
-
-### scripts/rules-solo-audit.mjs（174 行 · 4 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `ruleToYmlEntry` | 37-44 | 8 | `function ruleToYmlEntry(r) {` |
-| `makeSoloRuleset` | 47-61 | 15 | `function makeSoloRuleset(ruleOrNull) {` |
-| `auditWithRuleset` | 64-69 | 6 | `async function auditWithRuleset(repo, rulesetDir) {` |
-| `runRulesSoloAudit` | 76-150 | 75 | `export async function runRulesSoloAudit(repo, opts = {}) {` |
-
-### scripts/scan-file-io.mjs（718 行 · 27 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `isFnSignature` | 116-469 | 354 | `function isFnSignature(s) {` |
-| `stripCommentLines` | 129-153 | 25 | `function stripCommentLines(lines, uptoIdx) {` |
-| `scanEnclosure` | 156-173 | 18 | `function scanEnclosure(lines, lineIdx) {` |
-| `inRequestPath` | 181-194 | 14 | `function inRequestPath(lines, lineIdx) {` |
-| `contextAt` | 197-200 | 4 | `function contextAt(lines, lineIdx) {` |
-| `ioTypeOf` | 203-205 | 3 | `function ioTypeOf(opName = '') {` |
-| `collectFiles` | 213-231 | 19 | `function collectFiles(targets) {` |
-| `walk` | 215-228 | 14 | `const walk = (p) => {` |
-| `isRegexStart` | 248-254 | 7 | `function isRegexStart(out, next) {` |
-| `advanceInsideState` | 268-287 | 20 | `function advanceInsideState(line, i, st) {` |
-| `stripLiterals` | 289-310 | 22 | `function stripLiterals(line) {` |
-| `scanFile` | 316-364 | 49 | `function scanFile(file) {` |
-| `riskOfFallback` | 377-384 | 8 | `function riskOfFallback(entry, ctx) {` |
-| `riskOfByAst` | 397-410 | 14 | `function riskOfByAst(astHits, line, op, entry, ctx) {` |
-| `collectVarAssignments` | 413-427 | 15 | `function collectVarAssignments(lines) {` |
-| `extractArg` | 430-454 | 25 | `function extractArg(line, op, opName) {` |
-| `resolvePathArg` | 457-463 | 7 | `function resolvePathArg(arg, varMap, lineIdx) {` |
-| `tagsOf` | 474-480 | 7 | `function tagsOf(h) {` |
-| `riskMark` | 483-485 | 3 | `function riskMark(risk) {` |
-| `printText` | 492-517 | 26 | `function printText(hits, { writeOnly = false, riskOnly = '', summary = false } = {}) {` |
-| `printJson` | 520-522 | 3 | `function printJson(hits) {` |
-| `main` | 530-580 | 51 | `export function main(argv = process.argv.slice(2)) {` |
-| `splitMulti` | 541-541 | 1 | `const splitMulti = (v) => String(v \|\| '').split(',').map((x) => x.trim()).filter(Boolean);` |
-| `scanFileIo` | 583-604 | 22 | `export function scanFileIo(opts = {}) {` |
-| `summarize` | 607-624 | 18 | `export function summarize(hits) {` |
-| `count` | 608-612 | 5 | `const count = (key) => {` |
-| `printReport` | 636-712 | 77 | `function printReport(hits, opts = {}) {` |
-
-### scripts/scan-fs-hotspots.mjs（108 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `parseArgs` | 31-43 | 13 | `function parseArgs(argv) {` |
-| `collectFiles` | 46-67 | 22 | `function collectFiles(dir, o, out = []) {` |
-
 ### scripts/scan-repos.mjs（167 行 · 9 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2509,13 +1444,6 @@
 | `readmeVersion` | 36-66 | 31 | `export function readmeVersion(text = '') {` |
 | `cmp` | 56-63 | 8 | `const cmp = (a, b) => {` |
 | `main` | 68-123 | 56 | `function main() {` |
-
-### scripts/symbol-index.mjs（86 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `collectFiles` | 23-35 | 13 | `function collectFiles(root, exts, dir = root, out = []) {` |
-| `parseArgs` | 38-52 | 15 | `function parseArgs(argv) {` |
 
 ### scripts/verify-prestep.mjs（101 行 · 1 个函数）
 
@@ -2544,13 +1472,13 @@
 | `http` | 26-140 | 115 | `async function http(method, url, extra = {}) {` |
 | `assertRouted` | 31-35 | 5 | `function assertRouted(result, label) {` |
 
-### test/app/test-plugin.mjs（678 行 · 3 个函数）
+### test/app/test-plugin.mjs（679 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `makeExemptRepo` | 509-515 | 7 | `function makeExemptRepo() {` |
-| `addSecretFile` | 516-519 | 4 | `function addSecretFile(root, path) {` |
-| `fsStatMode` | 673-675 | 3 | `function fsStatMode(file) {` |
+| `makeExemptRepo` | 510-516 | 7 | `function makeExemptRepo() {` |
+| `addSecretFile` | 517-520 | 4 | `function addSecretFile(root, path) {` |
+| `fsStatMode` | 674-676 | 3 | `function fsStatMode(file) {` |
 
 ### test/app/test-settings-persistence.mjs（253 行 · 4 个函数）
 
@@ -2596,225 +1524,11 @@
 | `mod` | 28-28 | 1 | `const mod = () => import('../../lib/core/workspace-paths.js');` |
 | `h` | 29-29 | 1 | `const h = () => import('../../lib/app/handlers/workspace-paths.js');` |
 
-### test/audit/_archived/test-inject-switch.mjs（141 行 · 3 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `renderAuditInputs` | 28-98 | 71 | `function renderAuditInputs(value) {` |
-| `req` | 43-56 | 14 | `const req = (name) => {` |
-| `findChild` | 100-100 | 1 | `const findChild = (inputs) => inputs.find((p) => p['aria-label'] === LABEL);` |
-
-### test/audit/_archived/test-inject-system-prompt.mjs（374 行 · 3 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `renderAuditInputs` | 25-90 | 66 | `function renderAuditInputs(value) {` |
-| `req` | 39-50 | 12 | `const req = (name) => {` |
-| `findSwitch` | 92-92 | 1 | `const findSwitch = (inputs) => inputs.find((p) => p['aria-label'] === LABEL);` |
-
-### test/audit/_archived/test-sidebar-interaction.mjs（192 行 · 7 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `makeJsx` | 26-34 | 9 | `function makeJsx() {` |
-| `createElement` | 27-32 | 6 | `const createElement = (type, props) => {` |
-| `extractFunction` | 37-192 | 156 | `function extractFunction(src, signature) {` |
-| `renderRow` | 54-192 | 139 | `function renderRow({ disabled = false, slot = 'frontend', stats, locked = false } = {}) {` |
-| `walk` | 80-86 | 7 | `function walk(node, out = []) {` |
-| `clsOf` | 88-88 | 1 | `const clsOf = (n) => String((n.props && n.props.className) \|\| '');` |
-| `findClass` | 89-89 | 1 | `const findClass = (tree, cls) => walk(tree).find((n) => clsOf(n).includes(cls));` |
-
 ### test/audit/test-analysis-coverage.mjs（77 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `makeProject` | 20-27 | 8 | `function makeProject() {` |
-
-### test/audit/test-ast-confirm-span.mjs（61 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `col` | 27-27 | 1 | `const col = (n, needle) => lines[n - 1].indexOf(needle) + 1;` |
-
-### test/audit/test-audit-archive-exempt.mjs（64 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `withRepo` | 23-27 | 5 | `async function withRepo(fn) {` |
-
-### test/audit/test-audit-git-boundary.mjs（94 行 · 4 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `walk` | 21-28 | 8 | `function walk(dir, out = []) {` |
-| `stripComments` | 31-33 | 3 | `function stripComments(text) {` |
-| `specifiersOf` | 36-40 | 5 | `export function specifiersOf(text) {` |
-| `findViolations` | 43-54 | 12 | `export function findViolations(files, rules) {` |
-
-### test/audit/test-audit-guards.mjs（294 行 · 3 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `repo` | 35-43 | 9 | `function repo(files) {` |
-| `withGitRepo` | 227-232 | 6 | `async function withGitRepo(fn) {` |
-| `pathsOf` | 234-234 | 1 | `const pathsOf = (files) => files.map((f) => f.path).sort();` |
-
-### test/audit/test-audit-rule-packs.mjs（219 行 · 5 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `hits` | 41-41 | 1 | `const hits = (text, rule) => run(text).filter((f) => f.rule === rule);` |
-| `has` | 42-42 | 1 | `const has = (text, rule) => hits(text, rule).length > 0;` |
-| `msg` | 43-43 | 1 | `const msg = (text, rule) => hits(text, rule)[0]?.message \|\| '';` |
-| `makeRepo` | 114-121 | 8 | `function makeRepo(files) {` |
-| `auditCsharp` | 124-132 | 9 | `async function auditCsharp(repo) {` |
-
-### test/audit/test-audit-scope.mjs（359 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `read` | 36-36 | 1 | `const read = (p) => readFileSync(join(ROOT, p), 'utf8');` |
-| `read` | 325-325 | 1 | `const read = (p) => readFileSync(join(ROOT, p), 'utf8');` |
-
-### test/audit/test-audit-ui-contract.mjs（192 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `makePanel` | 23-29 | 7 | `function makePanel(patch = {}) {` |
-| `assertThrowsWith` | 32-41 | 10 | `function assertThrowsWith(fn, keywords, label) {` |
-
-### test/audit/test-auditignore.mjs（145 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `setupRepo` | 11-32 | 22 | `function setupRepo() {` |
-
-### test/audit/test-button.mjs（218 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `auditFiles` | 114-122 | 9 | `async function auditFiles(files) {` |
-
-### test/audit/test-cli-audit-parity.mjs（69 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `makeAuditRepo` | 20-40 | 21 | `function makeAuditRepo() {` |
-
-### test/audit/test-collector-ignore.mjs（68 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `makeRepo` | 21-31 | 11 | `function makeRepo() {` |
-| `paths` | 33-33 | 1 | `const paths = (list) => list.map((f) => String(f.path).replace(/\\/g, '/'));` |
-
-### test/audit/test-conv-rule-scope.mjs（46 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `extsOf` | 17-27 | 11 | `function extsOf(id) {` |
-
-### test/audit/test-dataflow.mjs（289 行 · 3 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `hits` | 30-32 | 3 | `function hits(text) {` |
-| `n` | 149-149 | 1 | `const n = (src) => checkClearAccessAst(src).length;` |
-| `n` | 238-238 | 1 | `const n = (src) => checkClearAccessAst(src).length;` |
-
-### test/audit/test-docs-score.mjs（187 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `makeProject` | 19-27 | 9 | `function makeProject(files) {` |
-
-### test/audit/test-dup.mjs（350 行 · 15 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `parseUser` | 31-36 | 6 | `function parseUser(row) {` |
-| `parseOrder` | 37-42 | 6 | `function parseOrder(row) {` |
-| `parseItem` | 43-48 | 6 | `function parseItem(row) {` |
-| `alpha` | 60-65 | 6 | `function alpha(x) {` |
-| `beta` | 68-73 | 6 | `function beta(y) {` |
-| `alpha` | 84-88 | 5 | `function alpha() {` |
-| `beta` | 91-95 | 5 | `function beta() {` |
-| `one` | 106-107 | 2 | `function one(x) { return x + 1; }` |
-| `two` | 107-108 | 2 | `function two(x) { return x + 1; }` |
-| `three` | 108-109 | 2 | `function three(x) { return x + 1; }` |
-| `alpha` | 116-119 | 4 | `function alpha(x) {` |
-| `beta` | 120-123 | 4 | `function beta(y) {` |
-| `mk` | 133-133 | 1 | `const mk = (fnName) => `` |
-| `mk` | 153-153 | 1 | `const mk = (fnName) => `` |
-| `mk` | 171-171 | 1 | `const mk = (fnName, params) => `` |
-
-### test/audit/test-empty-catch.mjs（81 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `read` | 65-65 | 1 | `const read = (p) => readFileSync(join(ROOT, p), 'utf8');` |
-
-### test/audit/test-exempt-engines.mjs（182 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `makeFixtureRepo` | 28-40 | 13 | `function makeFixtureRepo(files = {}) {` |
-| `walk` | 164-177 | 14 | `const walk = (dir) => {` |
-
-### test/audit/test-exempt.mjs（680 行 · 4 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `withHeader` | 115-115 | 1 | `const withHeader = (text, marker) => `// ${marker}\n${text}`;` |
-| `makeRepo` | 208-210 | 3 | `function makeRepo() {` |
-| `f` | 292-294 | 3 | `function f(kind, rule, line = 3) {` |
-| `compileGrouped` | 501-509 | 9 | `async function compileGrouped() {` |
-
-### test/audit/test-false-positive-fixes.mjs（549 行 · 8 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `ensureDataDir` | 41-45 | 5 | `export async function ensureDataDir(file) { await mkdir(dirname(file), { recursive: true }); }` |
-| `saveData` | 42-45 | 4 | `export async function saveData(file, data) {` |
-| `tr` | 50-54 | 5 | `export function tr(s, vars) { return s.split('{' + 'k' + '}').join('v'); }` |
-| `loadData` | 51-54 | 4 | `export async function loadData() {` |
-| `postData` | 55-58 | 4 | `export async function postData() {` |
-| `byRule` | 96-96 | 1 | `const byRule = (findings, ruleId) => findings.filter((f) => f.rule === ruleId);` |
-| `checkRegexRulesSafe` | 148-159 | 12 | `function checkRegexRulesSafe() {` |
-| `hasPatchYml` | 214-214 | 1 | `const hasPatchYml = (gg) => Object.values(gg).flat().some((r) => r.id === 'dsh/patch-insert-unique-id');` |
-
-### test/audit/test-file-health.mjs（124 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `rule` | 10-22 | 13 | `function rule(over = {}) {` |
-
-### test/audit/test-folder-scope.mjs（106 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `countSourceDirs` | 28-47 | 20 | `function countSourceDirs(tree, { threshold = 1, excludeDirs = [] } = {}) {` |
-
-### test/audit/test-gitignore-match.mjs（141 行 · 4 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `gitAvailable` | 23-25 | 3 | `function gitAvailable() {` |
-| `makeTree` | 29-37 | 9 | `function makeTree() {` |
-| `ig` | 41-41 | 1 | `const ig = (text, f) => isIgnored(text, f);` |
-| `hits` | 135-135 | 1 | `const hits = (rel) => isIgnoredByRules(rules, rel);` |
-
-### test/audit/test-gitignore-nongit-dir.mjs（40 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `rel` | 17-17 | 1 | `const rel = (list) => list.map((f) => String(f?.path ?? f).replace(SANDBOX + '/', '')).sort();` |
-
-### test/audit/test-history-audit.mjs（111 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `makeRepo` | 17-29 | 13 | `function makeRepo() {` |
 
 ### test/audit/test-ignore-e2e.mjs（93 行 · 2 个函数）
 
@@ -2822,43 +1536,6 @@
 |------|------|------|------|
 | `setupRepo` | 38-51 | 14 | `function setupRepo({ git = true } = {}) {` |
 | `hitNames` | 54-54 | 1 | `const hitNames = (findings) => [...new Set((findings \|\| []).map((f) => String(f.file \|\| '').replace(/^.*\//, '')))].sort();` |
-
-### test/audit/test-link-check.mjs（230 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `fakeFetch` | 14-21 | 8 | `function fakeFetch(map = {}) {` |
-
-### test/audit/test-lint-adapter.mjs（193 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `makeProject` | 26-38 | 13 | `function makeProject({ withRuff = false, script = '' } = {}) {` |
-| `mk` | 75-75 | 1 | `const mk = (code, msg, file, row) => ruffItemToFinding(` |
-
-### test/audit/test-loop-no-fallback-return.mjs（115 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `hits` | 19-19 | 1 | `const hits = (src) => [...loopNoFallbackReturnLines(src)].sort((a, b) => a - b);` |
-
-### test/audit/test-magic-number.mjs（130 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `hits` | 16-18 | 3 | `function hits(text) {` |
-
-### test/audit/test-max-lines-scope.mjs（66 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `withScope` | 24-26 | 3 | `function withScope(action) {` |
-
-### test/audit/test-preprocess-adapters.mjs（188 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `makeViolationRepo` | 33-58 | 26 | `function makeViolationRepo() {` |
 
 ### test/audit/test-preprocess-render.mjs（121 行 · 1 个函数）
 
@@ -2871,56 +1548,6 @@
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `hits` | 56-59 | 4 | `const hits = async (ownership) => {` |
-
-### test/audit/test-project-type-filter.mjs（91 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `mkRepo` | 17-21 | 5 | `function mkRepo({ name = null } = {}) {` |
-
-### test/audit/test-repeated-strings-cs.mjs（53 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `kinds` | 18-18 | 1 | `const kinds = (src) => tokenize(src).filter((t) => t.type === 'str' \|\| t.type === 'tmpl').map((t) => t.type);` |
-
-### test/audit/test-rule-loading.mjs（645 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `block` | 397-400 | 4 | `const block = (text) => {` |
-
-### test/audit/test-scope.mjs（177 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `loadCheckFuncLines` | 132-133 | 2 | `function loadCheckFuncLines() { return { checkFuncLines, checkComplexity }; }` |
-| `loadNaming` | 133-134 | 2 | `function loadNaming() { return { checkNameLengthAst }; }` |
-
-### test/audit/test-score-spec.mjs（133 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `walk` | 113-128 | 16 | `const walk = (dir) => {` |
-
-### test/audit/test-score-zero-rule-dims.mjs（80 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `countsExcept` | 22-22 | 1 | `const countsExcept = (...listed) => Object.fromEntries(` |
-
-### test/audit/test-treesitter.mjs（362 行 · 8 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `makeRepo` | 36-43 | 8 | `function makeRepo(files) {` |
-| `auditHits` | 46-69 | 24 | `function auditHits(repo, extraEnv = {}) {` |
-| `col` | 92-92 | 1 | `const col = (n, needle) => lines[n - 1].indexOf(needle) + 1;` |
-| `countBrokenNodes` | 237-246 | 10 | `function countBrokenNodes(tree) {` |
-| `walk` | 239-243 | 5 | `const walk = (node) => {` |
-| `textOf` | 248-248 | 1 | `const textOf = (c) => c.lines.join('\n');` |
-| `makeRepo` | 313-320 | 8 | `function makeRepo(files) {` |
-| `auditRuleHits` | 323-343 | 21 | `function auditRuleHits(repo, rule) {` |
 
 ### test/git/test-account-ssh.mjs（149 行 · 1 个函数）
 
@@ -3083,14 +1710,14 @@
 |------|------|------|------|
 | `withIsolatedDshHome` | 19-30 | 12 | `function withIsolatedDshHome(fn) {` |
 
-### test/git/test-pre-commit-engine.mjs（433 行 · 4 个函数）
+### test/git/test-pre-commit-engine.mjs（441 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `fakeEngineSource` | 46-75 | 30 | `function fakeEngineSource(mode) {` |
-| `makeFakeEngines` | 78-87 | 10 | `function makeFakeEngines(dir) {` |
-| `runWithFake` | 90-97 | 8 | `function runWithFake(engines, mode, extra = {}) {` |
-| `makeBlockerRepo` | 100-112 | 13 | `function makeBlockerRepo() {` |
+| `fakeEngineSource` | 49-82 | 34 | `function fakeEngineSource(mode) {` |
+| `makeFakeEngines` | 85-94 | 10 | `function makeFakeEngines(dir) {` |
+| `runWithFake` | 97-104 | 8 | `function runWithFake(engines, mode, extra = {}) {` |
+| `makeBlockerRepo` | 107-119 | 13 | `function makeBlockerRepo() {` |
 
 ### test/git/test-private-gate.mjs（72 行 · 1 个函数）
 
@@ -3246,35 +1873,15 @@
 |------|------|------|------|
 | `ruleBody` | 35-36 | 2 | `function ruleBody(cls) {` |
 
-### test/tool/test-platform-scan.mjs（98 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `makeProject` | 20-46 | 27 | `function makeProject() {` |
-
-### test/tool/test-scan-and-cache.mjs（334 行 · 5 个函数）
+### test/tool/test-scan-and-cache.mjs（339 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `makeFakeTree` | 42-64 | 23 | `function makeFakeTree() {` |
 | `write` | 44-49 | 6 | `const write = (rel) => {` |
-| `dryRunStats` | 142-149 | 8 | `function dryRunStats() {` |
-| `keyOf` | 186-186 | 1 | `const keyOf = (abs) => cacheKeyFor(importClosure(abs));` |
-| `makeProject` | 235-242 | 8 | `function makeProject() {` |
-
-### test/tool/test-scope-collisions.mjs（256 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `makeForeignProject` | 109-117 | 9 | `function makeForeignProject({ withContract = false } = {}) {` |
-| `makeAuditProject` | 146-152 | 7 | `function makeAuditProject({ name = 'app', contract = null } = {}) {` |
-
-### test/tool/test-symbol-index.mjs（120 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `build` | 31-34 | 4 | `function build(extra = {}) {` |
-| `hasEdge` | 36-36 | 1 | `const hasEdge = (idx, from, to, via) => idx.edges.some((e) => e.from === from && e.to === to && e.via === via);` |
+| `dryRunStats` | 145-152 | 8 | `function dryRunStats() {` |
+| `keyOf` | 191-191 | 1 | `const keyOf = (abs) => cacheKeyFor(importClosure(abs));` |
+| `makeProject` | 240-247 | 8 | `function makeProject() {` |
 
 ### test/tool/test-tree-doc.mjs（221 行 · 1 个函数）
 
@@ -3282,14 +1889,14 @@
 |------|------|------|------|
 | `makeReadme` | 41-43 | 3 | `function makeReadme(tree) {` |
 
-### test/tool/test-tree-first.mjs（260 行 · 5 个函数）
+### test/tool/test-tree-first.mjs（262 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `makeFixture` | 61-65 | 5 | `async function makeFixture() {` |
 | `hardLines` | 67-72 | 6 | `function hardLines(res) {` |
-| `makeFixture` | 186-190 | 5 | `async function makeFixture() {` |
-| `hitLines` | 192-192 | 1 | `const hitLines = (res) => res.findings` |
-| `isShort` | 244-244 | 1 | `const isShort = (n) => String(n).length <= 2 && !['tr', 't'].includes(n);` |
+| `makeFixture` | 187-191 | 5 | `async function makeFixture() {` |
+| `hitLines` | 193-193 | 1 | `const hitLines = (res) => res.findings` |
+| `isShort` | 246-246 | 1 | `const isShort = (n) => String(n).length <= 2 && !['tr', 't'].includes(n);` |
 
 <!-- dshgp-functions:end -->
