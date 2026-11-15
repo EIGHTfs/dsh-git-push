@@ -25,6 +25,20 @@ jobs:
       - name: 安装依赖（按 lockfile）
         run: npm ci --legacy-peer-deps --no-audit --no-fund
       # 部分测试需要 git 提交身份（临时仓库 init/commit）
+      # 审计实现已独立成包（audit-sluice）：宿主侧通过「包入口解析」加载它
+      #   （node_modules → 平级 sibling → DSH_AUDIT_SLUICE_CLI）。干净 runner 里没有平级仓库，
+      #   故把审计包 checkout 到与本插件**平级**的位置，走 sibling 解析。
+      - name: 检出审计包（平级 sibling）
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/audit-sluice
+          path: ../audit-sluice
+          token: ${{ secrets.AUDIT_SLUICE_TOKEN || github.token }}
+      # 审计包尚未入库 lockfile（它自己的仓库还没有 package-lock.json）⇒ 用 npm install 而非 npm ci；
+      #   依赖与宿主同版本（js-yaml / web-tree-sitter / tree-sitter-wasms），装好即可跑。
+      - name: 安装审计包依赖
+        run: npm install --legacy-peer-deps --no-audit --no-fund
+        working-directory: ../audit-sluice
       - name: 配置 git 身份
         run: |
           git config --global user.name "dsh-git-push CI"
@@ -42,22 +56,22 @@ jobs:
         #   API 的 check-runs 不带日志；摘要能随 check-run 一起被读到）。
         run: |
           set -o pipefail
-          if node test/run-tests.mjs --all --concurrency=1 2>&1 | tee /tmp/test-run.log; then
+          if node test/run-tests.mjs --all --concurrency=1 2>&1 | tee $RUNNER_TEMP/test-run.log; then
             echo "✅ 全量测试通过" >> "$GITHUB_STEP_SUMMARY"
           else
             {
               echo "## ❌ 失败项（not ok）"
               echo '```'
-              grep -E "^not ok" /tmp/test-run.log | head -40 || echo "(未捕获到 not ok，见日志尾部)"
+              grep -E "^not ok" $RUNNER_TEMP/test-run.log | head -40 || echo "(未捕获到 not ok，见日志尾部)"
               echo '```'
               echo "## 日志尾部"
               echo '```'
-              tail -60 /tmp/test-run.log
+              tail -60 $RUNNER_TEMP/test-run.log
               echo '```'
             } >> "$GITHUB_STEP_SUMMARY"
             # 失败项同时发成 annotation（::error::）—— job summary 只能人在 UI 看，
             #   annotation 可通过 check-runs/{id}/annotations API 读到，远程排障才拿得到具体测试名。
-            grep -E "^not ok" /tmp/test-run.log | head -20 | sed 's/%/%25/g' | while IFS= read -r line; do
+            grep -E "^not ok" $RUNNER_TEMP/test-run.log | head -20 | sed 's/%/%25/g' | while IFS= read -r line; do
               echo "::error::${line}"
             done
             exit 1
