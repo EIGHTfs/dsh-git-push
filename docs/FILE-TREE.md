@@ -230,6 +230,7 @@ dsh-git-push/
 │   │   ├── exempt.js — （待注释）
 │   │   ├── index.js — （待注释）
 │   │   ├── score.js — （待注释）
+│   │   └── …（1 个更深文件）
 │   ├── rule/ — 规则引擎（yml 装载/编译注册表/同形字符检测/槽位启停）
 │   │   ├── compilers.js — 规则编译器注册表（纯引用文件）
 │   │   ├── homoglyph.js — 同形字符检测（yml kind/id 防 ASCII 混淆）
@@ -348,6 +349,7 @@ dsh-git-push/
 │   │   ├── test-name-length-scope.mjs — （待注释）
 │   │   ├── test-perf-loop-collection.mjs — （待注释）
 │   │   ├── test-perf-repeat-call.mjs — （待注释）
+│   │   ├── test-preprocess-adapters.mjs — （待注释）
 │   │   ├── test-preprocess-render.mjs — （待注释）
 │   │   ├── test-privacy-ownership.mjs — （待注释）
 │   │   ├── test-project-type-filter.mjs — （待注释）

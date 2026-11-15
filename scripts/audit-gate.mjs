@@ -33,10 +33,11 @@ import { resolve } from 'node:path';
 //   整类消失（实测同一棵树上少 4 条 finding）——**行为一致性要求本入口必须显式接线**，
 //   与 lib/commit-push.js / cli.mjs 两处宿主入口同款。依赖只有 node 内置模块，几乎零加载代价。
 import '../lib/app/host-doc-checks.js';
-import { auditWithScope } from '../lib/audit/index.js';
 // 评分权在中间层（lib/preprocess/score.js）：本入口只做「跑引擎 + 取 findings」并由中间层算分
 import { score as scoreWithSpec } from '../lib/preprocess/score.js';
-import { getBuiltinScoreSpec } from '../lib/audit/score-spec.js';
+// 统一入口：引擎（adapter）→ 豁免编排 → 交中间层算分。本入口不再直接调 auditWithScope，
+// 也不再自己决定「引擎是谁」——换引擎只换 adapter。
+import { runPreprocess } from '../lib/preprocess/index.js';
 
 /** 退出码语义（任何语言都能实现 exit 0/1/2，比让调用方解析 JSON 猜语义可靠）。 */
 export const EXIT_OK = 0;
@@ -152,7 +153,7 @@ export function parseGateArgs(argv = []) {
  * @returns {Promise<{ok: boolean, scope: string, summary: object, quality: object, findings: object[], files: number}>}
  */
 export async function runGateAudit(opts) {
-  const auditResult = await auditWithScope(opts.repo, {
+  const pre = await runPreprocess(opts.repo, {
     scope: opts.scope,
     maxScanFiles: opts.maxScanFiles,
     rulesetDir: opts.rulesetDir,
@@ -160,14 +161,16 @@ export async function runGateAudit(opts) {
     slots: Array.isArray(opts.slots) && opts.slots.length ? opts.slots : undefined,
     disabledSlots: Array.isArray(opts.disabledSlots) ? opts.disabledSlots : [],
   });
-  const quality = scoreWithSpec(auditResult.findings, getBuiltinScoreSpec(), opts.weights, {
-    files: auditResult.files,
+  const auditResult = pre.audit;              // 引擎原始结果（summary / dim*Counts / scope 透传）
+  const scoredFindings = pre.findings;        // 已过中间层豁免编排
+  const quality = scoreWithSpec(scoredFindings, pre.scoreSpec, opts.weights, {
+    files: pre.files,
     dimFileCounts: auditResult.dimFileCounts,
     dimRuleCounts: auditResult.dimRuleCounts,
   });
   const findings = opts.blockersOnly
-    ? (auditResult.findings || []).filter((finding) => finding.severity === 'blocker')
-    : (auditResult.findings || []);
+    ? scoredFindings.filter((finding) => finding.severity === 'blocker')
+    : scoredFindings;
   return {
     ok: (auditResult.summary?.blocker ?? 0) === 0,
     scope: auditResult.scope,

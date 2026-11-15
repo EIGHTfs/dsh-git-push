@@ -2061,6 +2061,12 @@
 | `setDefineToolOverride` | 240-250 | 11 | `export function setDefineToolOverride(fn) { defineToolOverride = fn; }` |
 | `loadDefineTool` | 241-250 | 10 | `export async function loadDefineTool(log) {` |
 
+### lib/preprocess/adapters/builtin.js（89 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `getAdapter` | 83-88 | 6 | `export function getAdapter(adapterId) {` |
+
 ### lib/preprocess/audit.js（99 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2069,27 +2075,28 @@
 | `formatBlocked` | 60-66 | 7 | `function formatBlocked(blocked = []) {` |
 | `auditRenderResult` | 77-90 | 14 | `export function auditRenderResult(ctx = {}) {` |
 
-### lib/preprocess/exempt.js（209 行 · 10 个函数）
+### lib/preprocess/exempt.js（248 行 · 10 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `getEngineAdapter` | 55-59 | 5 | `export function getEngineAdapter(engineId = 'builtin') {` |
 | `linesOf` | 62-64 | 3 | `function linesOf(text = '') {` |
-| `sourceMarkerExempts` | 79-103 | 25 | `export function sourceMarkerExempts(engineId, text = '', finding = {}) {` |
-| `at` | 85-85 | 1 | `const at = (idx) => String(lines[idx] \|\| '');` |
-| `declaredExempts` | 115-127 | 13 | `export function declaredExempts(suppressed = [], finding = {}) {` |
-| `normalize` | 117-117 | 1 | `const normalize = (value) => String(value \|\| '').replace(/\\/g, '/').replace(/^\.\//, '');` |
-| `exemptionOf` | 141-160 | 20 | `export function exemptionOf(finding = {}, opts = {}) {` |
-| `resolveExemptions` | 172-178 | 7 | `export function resolveExemptions(findings = [], opts = {}) {` |
-| `filterExempted` | 186-188 | 3 | `export function filterExempted(findings = [], opts = {}) {` |
-| `loadIgnoreFingerprints` | 199-208 | 10 | `export function loadIgnoreFingerprints(repoPath = '.', fileName = '.gitleaksignore') {` |
+| `sourceMarkerExempts` | 79-112 | 34 | `export function sourceMarkerExempts(engineId, text = '', finding = {}, adapterProfile) {` |
+| `at` | 94-94 | 1 | `const at = (idx) => String(lines[idx] \|\| '');` |
+| `declaredExempts` | 124-136 | 13 | `export function declaredExempts(suppressed = [], finding = {}) {` |
+| `normalize` | 126-126 | 1 | `const normalize = (value) => String(value \|\| '').replace(/\\/g, '/').replace(/^\.\//, '');` |
+| `exemptionOf` | 150-194 | 45 | `export function exemptionOf(finding = {}, opts = {}) {` |
+| `resolveExemptions` | 206-217 | 12 | `export function resolveExemptions(findings = [], opts = {}) {` |
+| `filterExempted` | 225-227 | 3 | `export function filterExempted(findings = [], opts = {}) {` |
+| `loadIgnoreFingerprints` | 238-247 | 10 | `export function loadIgnoreFingerprints(repoPath = '.', fileName = '.gitleaksignore') {` |
 
-### lib/preprocess/index.js（79 行 · 2 个函数）
+### lib/preprocess/index.js（143 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `preprocessParams` | 36-44 | 9 | `export function preprocessParams(cfg = {}, hasBuiltinEngine, preprocessors = PREPROCESSORS) {` |
-| `renderPreprocessResult` | 59-78 | 20 | `export function renderPreprocessResult(ctx = {}, cfg = {}, preprocessors = PREPROCESSORS) {` |
+| `preprocessParams` | 39-47 | 9 | `export function preprocessParams(cfg = {}, hasBuiltinEngine, preprocessors = PREPROCESSORS) {` |
+| `runPreprocess` | 68-108 | 41 | `export async function runPreprocess(repoPath, opts = {}) {` |
+| `renderPreprocessResult` | 123-142 | 20 | `export function renderPreprocessResult(ctx = {}, cfg = {}, preprocessors = PREPROCESSORS) {` |
 
 ### lib/preprocess/score.js（125 行 · 4 个函数）
 
@@ -2208,20 +2215,20 @@
 | `isExcludedPath` | 29-36 | 8 | `const isExcludedPath = (rel) => {` |
 | `walk` | 60-98 | 39 | `const walk = (dir) => {` |
 
-### scripts/audit-gate.mjs（238 行 · 10 个函数）
+### scripts/audit-gate.mjs（241 行 · 10 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `parseScopeValue` | 70-73 | 4 | `function parseScopeValue(rawValue) {` |
-| `parseWeightsValue` | 75-83 | 9 | `function parseWeightsValue(rawValue) {` |
-| `parseMaxScanFilesValue` | 85-90 | 6 | `function parseMaxScanFilesValue(rawValue) {` |
-| `parseSlotListValue` | 92-94 | 3 | `function parseSlotListValue(rawValue) {` |
-| `parseGateArgs` | 118-142 | 25 | `export function parseGateArgs(argv = []) {` |
-| `runGateAudit` | 154-179 | 26 | `export async function runGateAudit(opts) {` |
-| `muteStdout` | 186-190 | 5 | `export function muteStdout() {` |
-| `emitAndExit` | 193-196 | 4 | `function emitAndExit(result, exitCode) {` |
-| `main` | 199-220 | 22 | `async function main(argv) {` |
-| `invokedDirectly` | 223-227 | 5 | `function invokedDirectly() {` |
+| `parseScopeValue` | 71-74 | 4 | `function parseScopeValue(rawValue) {` |
+| `parseWeightsValue` | 76-84 | 9 | `function parseWeightsValue(rawValue) {` |
+| `parseMaxScanFilesValue` | 86-91 | 6 | `function parseMaxScanFilesValue(rawValue) {` |
+| `parseSlotListValue` | 93-95 | 3 | `function parseSlotListValue(rawValue) {` |
+| `parseGateArgs` | 119-143 | 25 | `export function parseGateArgs(argv = []) {` |
+| `runGateAudit` | 155-182 | 28 | `export async function runGateAudit(opts) {` |
+| `muteStdout` | 189-193 | 5 | `export function muteStdout() {` |
+| `emitAndExit` | 196-199 | 4 | `function emitAndExit(result, exitCode) {` |
+| `main` | 202-223 | 22 | `async function main(argv) {` |
+| `invokedDirectly` | 226-230 | 5 | `function invokedDirectly() {` |
 
 ### scripts/audit-runner.mjs（35 行 · 1 个函数）
 
@@ -2826,6 +2833,12 @@
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `withScope` | 24-26 | 3 | `function withScope(action) {` |
+
+### test/audit/test-preprocess-adapters.mjs（188 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `makeViolationRepo` | 33-58 | 26 | `function makeViolationRepo() {` |
 
 ### test/audit/test-preprocess-render.mjs（121 行 · 1 个函数）
 
