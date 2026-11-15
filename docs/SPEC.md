@@ -549,3 +549,62 @@ git 与共享端点（25 + 6 条）继续在 `/api/git-push/*`。
 工具**直接**调它（那条路径不经过 `renderResult`，因为工具返回的是「API 查询指引」而非门禁文案）。
 搬进预处理模块会让 `code_audit` 反向依赖预处理器（依赖方向倒置），或被迫维护两份实现。
 **结论：留在 `lib/app/inject-text.js`，预处理 import 它使用。**
+
+## 十六、审计中间层分层
+
+> 设计稿与取舍依据见 `docs/2026-11-15-审计中间层与引擎声明分层方案.MD`。
+> 本节只记录**已实施**的约定。
+
+**分层职责**（同库内分层，不拆项目）：
+
+| 层 | 职责 | 不做什么 |
+|---|---|---|
+| git 侧 | 只调 `runPreprocess(repoPath, opts)` | 不 import 任何审计实现 |
+| **中间层** | ① 引擎适配 ② 豁免编排 ③ 算分 | 不做代码判定 |
+| 审计引擎 | ① 产 findings ② 声明 `scoreSpec` | **不算分、不管豁免** |
+
+**统一入口**：`lib/preprocess/index.js` 的 `runPreprocess(repoPath, opts)` →
+`{ findings, score, files, exemptions: { declared, total } }`。
+引擎入口 `scripts/audit-gate.mjs` 只调它，**不再直接依赖 `auditWithScope` / `getBuiltinScoreSpec`**
+（换引擎不需要改这个文件）。
+
+**三个契约**：
+
+1. **统一 finding 形状**：`{ file, line, rule, severity: 'blocker'|'warning'|'notice', message, dim?, source? }`
+2. **`scoreSpec`（引擎声明评分标准）**：`{ dims: [{id, weight}], dimOfRule?, note? }`
+   - **维度 id 即中文维度名**（与 `finding.dimensions` / `DEFAULT_WEIGHTS` / `counts` / 用户权重键同口径），
+     不引入英文 id——否则要多一张映射表 = 多一个漂移点
+   - **扣分曲线不开放**：`k` 值 / 对数衰减 / 动态权重 / 零规则维度记 0 永远在中间层
+     （`lib/preprocess/score.js` → `lib/score/index.js`）。否则「换引擎分数口径就变」，与本方案初衷相反
+3. **豁免映射**：`lib/preprocess/exempt.js` 的 `EXEMPT_ENGINE_ADAPTERS` 覆盖
+   `builtin` / `eslint`（含 `-next-line` / `-line` / 文件级三种语义）/ `semgrep`（`nosemgrep`）/
+   `bandit`（`# nosec`）/ `gitleaks`（`.gitleaksignore` 指纹）
+   - **声明式（引擎自报 suppressed）优先 + 读取式（中间层扫源码标记）兜底**
+   - **引擎自声明优先于静态表**（`adapterProfile` 通路）：静态表只是内置几条的默认值，
+     第三方引擎声明的 `supportsSuppressed` / `sourceMarkers` 必须生效
+
+**引擎适配器接口**（`lib/preprocess/adapters/`）：
+
+```js
+{ id, supportsSuppressed,
+  declaredSuppressed?(),                                   // 引擎自报哪些 finding 已被它豁免
+  async run(repoPath, opts) → { findings, files, scoreSpec } }
+```
+
+三条硬约束：只产 findings 不自己算分 / finding 必带 `file·line·rule·severity` /
+**不要自己过滤被豁免项**（由中间层统一做，否则报告无法追溯"豁免了什么"）。
+`getAdapter(id)` 对**未知 id 硬报错**，不静默退回内置——否则会出现「以为在跑 Semgrep、其实在跑内置」。
+
+**独占调用的门禁**（自动测试守，人改不回去）：
+
+- `scoreQuality` 全仓只有 `lib/preprocess/score.js` 调用
+- `exemptForFinding` 全仓只有 `lib/preprocess/exempt.js` 调用
+- `scripts/audit-gate.mjs` 不再直接 import `auditWithScope`
+
+**不等价即错的两条实测结论**（接线时踩到并修正）：
+
+1. **中间层不得覆盖引擎已标注的豁免**：引擎给的 `exemptReason` 比中间层的通用标记（`builtin:passthrough`）
+   更具体，覆盖会让报告内容悄悄变（且"逐字一致"对比立刻露馅）
+2. **拿不到文件正文时只透传、不重判**：`isCategoryExempt` 这类与正文无关的判定对已按真实正文判过的
+   findings 再判一次，只会事后多吞几条、改变评分
+
