@@ -34,7 +34,9 @@ import { resolve } from 'node:path';
 //   与 lib/commit-push.js / cli.mjs 两处宿主入口同款。依赖只有 node 内置模块，几乎零加载代价。
 import '../lib/app/host-doc-checks.js';
 import { auditWithScope } from '../lib/audit/index.js';
-import { scoreQuality } from '../lib/score/index.js';
+// 评分权在中间层（lib/preprocess/score.js）：本入口只做「跑引擎 + 取 findings」并由中间层算分
+import { score as scoreWithSpec } from '../lib/preprocess/score.js';
+import { getBuiltinScoreSpec } from '../lib/audit/score-spec.js';
 
 /** 退出码语义（任何语言都能实现 exit 0/1/2，比让调用方解析 JSON 猜语义可靠）。 */
 export const EXIT_OK = 0;
@@ -158,7 +160,7 @@ export async function runGateAudit(opts) {
     slots: Array.isArray(opts.slots) && opts.slots.length ? opts.slots : undefined,
     disabledSlots: Array.isArray(opts.disabledSlots) ? opts.disabledSlots : [],
   });
-  const quality = scoreQuality(auditResult.findings, opts.weights, {
+  const quality = scoreWithSpec(auditResult.findings, getBuiltinScoreSpec(), opts.weights, {
     files: auditResult.files,
     dimFileCounts: auditResult.dimFileCounts,
     dimRuleCounts: auditResult.dimRuleCounts,

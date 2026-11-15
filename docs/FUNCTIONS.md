@@ -12,7 +12,7 @@
 | `apply` | 44-295 | 252 | `export async function apply(ctx, config = {}) {` |
 | `envInjectText` | 106-145 | 40 | `const envInjectText = (cwdOverride) => {` |
 
-### lib/app/audit-api.js（174 行 · 5 个函数）
+### lib/app/audit-api.js（175 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -20,7 +20,7 @@
 | `groupKeyOf` | 58-63 | 6 | `function groupKeyOf(finding, groupBy, ruleSlotMap) {` |
 | `parseSeverityFilter` | 69-73 | 5 | `export function parseSeverityFilter(raw) {` |
 | `aggregateFindings` | 82-103 | 22 | `export function aggregateFindings(findings = [], opts = {}) {` |
-| `runAuditApi` | 111-173 | 63 | `export async function runAuditApi(repo, params = {}, cfg = {}) {` |
+| `runAuditApi` | 111-174 | 64 | `export async function runAuditApi(repo, params = {}, cfg = {}) {` |
 
 ### lib/app/command-registry.js（330 行 · 7 个函数）
 
@@ -254,33 +254,33 @@
 | `getLastSlotHitStats` | 28-30 | 3 | `export function getLastSlotHitStats() {` |
 | `getLastSlotHitMeta` | 33-35 | 3 | `export function getLastSlotHitMeta() {` |
 
-### lib/app/tool-call.js（838 行 · 23 个函数）
+### lib/app/tool-call.js（839 行 · 23 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `pushWithPostSteps` | 58-126 | 69 | `async function pushWithPostSteps(args, env, cfg) {` |
-| `pushJobOutcome` | 147-179 | 33 | `export function pushJobOutcome(r = {}) {` |
-| `short` | 149-149 | 1 | `const short = (sha) => String(sha \|\| '').slice(0, 8);` |
-| `cloneJobOutcome` | 187-192 | 6 | `export function cloneJobOutcome(r = {}) {` |
-| `buildCommitPushJobSpec` | 195-212 | 18 | `function buildCommitPushJobSpec(repo, doPush) {` |
-| `done` | 200-208 | 9 | `const done = (async () => {` |
-| `startHostJob` | 225-232 | 8 | `function startHostJob(jobs, spec, owner) {` |
-| `callCloneJob` | 246-278 | 33 | `async function callCloneJob(args, jobs, exec, log, env = {}, cfg = {}) {` |
-| `callNpmPublishJob` | 286-369 | 84 | `async function callNpmPublishJob(args = {}, jobs, exec, log, env = {}, cfg = {}) {` |
-| `outcome` | 320-344 | 25 | `const outcome = (r) => {` |
-| `done` | 353-355 | 3 | `const done = (async () => {` |
-| `buildCloneJobSpec` | 372-389 | 18 | `function buildCloneJobSpec(target, dest, doClone) {` |
-| `done` | 377-385 | 9 | `const done = (async () => {` |
-| `callCommitPush` | 396-442 | 47 | `async function callCommitPush(args, env, cfg, log, jobs, exec) {` |
-| `doPush` | 415-415 | 1 | `const doPush = () => pushWithPostSteps(args, env, cfg);` |
-| `buildAuditOpts` | 453-467 | 15 | `function buildAuditOpts(args, cfg, scope) {` |
-| `runHistoryAuditTool` | 473-499 | 27 | `async function runHistoryAuditTool(args, env, cfg, jobs, exec, weights) {` |
-| `doHistory` | 479-482 | 4 | `const doHistory = async () => {` |
-| `callCodeAudit` | 501-513 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
-| `runStandardAuditTool` | 516-558 | 43 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
-| `callTool` | 560-838 | 279 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null, fsCtx = null) {` |
-| `shellSplit` | 812-830 | 19 | `function shellSplit(input) {` |
-| `readTextSafe` | 833-837 | 5 | `function readTextSafe(path = '') {` |
+| `pushWithPostSteps` | 59-127 | 69 | `async function pushWithPostSteps(args, env, cfg) {` |
+| `pushJobOutcome` | 148-180 | 33 | `export function pushJobOutcome(r = {}) {` |
+| `short` | 150-150 | 1 | `const short = (sha) => String(sha \|\| '').slice(0, 8);` |
+| `cloneJobOutcome` | 188-193 | 6 | `export function cloneJobOutcome(r = {}) {` |
+| `buildCommitPushJobSpec` | 196-213 | 18 | `function buildCommitPushJobSpec(repo, doPush) {` |
+| `done` | 201-209 | 9 | `const done = (async () => {` |
+| `startHostJob` | 226-233 | 8 | `function startHostJob(jobs, spec, owner) {` |
+| `callCloneJob` | 247-279 | 33 | `async function callCloneJob(args, jobs, exec, log, env = {}, cfg = {}) {` |
+| `callNpmPublishJob` | 287-370 | 84 | `async function callNpmPublishJob(args = {}, jobs, exec, log, env = {}, cfg = {}) {` |
+| `outcome` | 321-345 | 25 | `const outcome = (r) => {` |
+| `done` | 354-356 | 3 | `const done = (async () => {` |
+| `buildCloneJobSpec` | 373-390 | 18 | `function buildCloneJobSpec(target, dest, doClone) {` |
+| `done` | 378-386 | 9 | `const done = (async () => {` |
+| `callCommitPush` | 397-443 | 47 | `async function callCommitPush(args, env, cfg, log, jobs, exec) {` |
+| `doPush` | 416-416 | 1 | `const doPush = () => pushWithPostSteps(args, env, cfg);` |
+| `buildAuditOpts` | 454-468 | 15 | `function buildAuditOpts(args, cfg, scope) {` |
+| `runHistoryAuditTool` | 474-500 | 27 | `async function runHistoryAuditTool(args, env, cfg, jobs, exec, weights) {` |
+| `doHistory` | 480-483 | 4 | `const doHistory = async () => {` |
+| `callCodeAudit` | 502-514 | 13 | `async function callCodeAudit(args, env, cfg, log, jobs, exec) {` |
+| `runStandardAuditTool` | 517-559 | 43 | `async function runStandardAuditTool(args, env, cfg, log, weights) {` |
+| `callTool` | 561-839 | 279 | `export async function callTool(toolName, args = {}, env = {}, cfg = defaultConfig(), log = null, jobs = null, exec = null, fsCtx = null) {` |
+| `shellSplit` | 813-831 | 19 | `function shellSplit(input) {` |
+| `readTextSafe` | 834-838 | 5 | `function readTextSafe(path = '') {` |
 
 ### lib/app/tools.js（41 行 · 2 个函数）
 
@@ -776,13 +776,13 @@
 | `writeCommitReport` | 61-70 | 10 | `export function writeCommitReport(dir, entry = {}) {` |
 | `writeHistoryIndex` | 77-100 | 24 | `export function writeHistoryIndex(dir, meta = {}) {` |
 
-### lib/audit/history.js（126 行 · 3 个函数）
+### lib/audit/history.js（127 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `listHistoryCommits` | 31-53 | 23 | `export function listHistoryCommits(repoPath, { since = '', until = '' } = {}) {` |
-| `auditHistoryCommit` | 63-86 | 24 | `export async function auditHistoryCommit(repoPath, commit, opts = {}, weights = {}) {` |
-| `runHistoryAudit` | 94-126 | 33 | `export async function runHistoryAudit(repoPath, { since = '', until = '', outDir = '', auditOpts = {}, weights = {}, signal, onCommit } = {}) {` |
+| `listHistoryCommits` | 32-54 | 23 | `export function listHistoryCommits(repoPath, { since = '', until = '' } = {}) {` |
+| `auditHistoryCommit` | 64-87 | 24 | `export async function auditHistoryCommit(repoPath, commit, opts = {}, weights = {}) {` |
+| `runHistoryAudit` | 95-127 | 33 | `export async function runHistoryAudit(repoPath, { since = '', until = '', outDir = '', auditOpts = {}, weights = {}, signal, onCommit } = {}) {` |
 
 ### lib/audit/ignore-blind.js（103 行 · 2 个函数）
 
@@ -845,6 +845,13 @@
 | `normRelPath` | 28-30 | 3 | `function normRelPath(value) {` |
 | `findConfigPath` | 44-58 | 15 | `function findConfigPath(startDir, now) {` |
 | `readProjectScopePolicy` | 74-110 | 37 | `export function readProjectScopePolicy(file = '') {` |
+
+### lib/audit/score-spec.js（71 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `getBuiltinScoreSpec` | 41-49 | 9 | `export function getBuiltinScoreSpec() {` |
+| `validateScoreSpec` | 59-70 | 12 | `export function validateScoreSpec(scoreSpec) {` |
 
 ### lib/audit/slot.js（67 行 · 4 个函数）
 
@@ -1035,18 +1042,18 @@
 | `cmdGenSshKey` | 85-96 | 12 | `export async function cmdGenSshKey(flags) {` |
 | `resolveRepoOwnerName` | 99-107 | 9 | `async function resolveRepoOwnerName(repoPath) {` |
 
-### lib/cli/commands-audit.mjs（143 行 · 8 个函数）
+### lib/cli/commands-audit.mjs（144 行 · 8 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `pluginEqualAuditOpts` | 31-43 | 13 | `export function pluginEqualAuditOpts(cfg, flags, { scope = 'diff' } = {}) {` |
-| `pluginEqualWeights` | 46-50 | 5 | `export function pluginEqualWeights(cfg, flags) {` |
-| `pathExists` | 53-55 | 3 | `async function pathExists(p) {` |
-| `cmdAudit` | 58-62 | 5 | `export async function cmdAudit(root, flags) {` |
-| `runHistoryAuditCmd` | 65-81 | 17 | `async function runHistoryAuditCmd(root, flags) {` |
-| `runStandardAudit` | 84-97 | 14 | `async function runStandardAudit(root, flags) {` |
-| `printAuditResult` | 100-118 | 19 | `function printAuditResult(root, auditResult, opts, weights, quality) {` |
-| `cmdScan` | 134-142 | 9 | `export async function cmdScan(root, flags) {` |
+| `pluginEqualAuditOpts` | 32-44 | 13 | `export function pluginEqualAuditOpts(cfg, flags, { scope = 'diff' } = {}) {` |
+| `pluginEqualWeights` | 47-51 | 5 | `export function pluginEqualWeights(cfg, flags) {` |
+| `pathExists` | 54-56 | 3 | `async function pathExists(p) {` |
+| `cmdAudit` | 59-63 | 5 | `export async function cmdAudit(root, flags) {` |
+| `runHistoryAuditCmd` | 66-82 | 17 | `async function runHistoryAuditCmd(root, flags) {` |
+| `runStandardAudit` | 85-98 | 14 | `async function runStandardAudit(root, flags) {` |
+| `printAuditResult` | 101-119 | 19 | `function printAuditResult(root, auditResult, opts, weights, quality) {` |
+| `cmdScan` | 135-143 | 9 | `export async function cmdScan(root, flags) {` |
 
 ### lib/cli/commands-doc.mjs（128 行 · 7 个函数）
 
@@ -2069,6 +2076,15 @@
 | `preprocessParams` | 36-44 | 9 | `export function preprocessParams(cfg = {}, hasBuiltinEngine, preprocessors = PREPROCESSORS) {` |
 | `renderPreprocessResult` | 59-78 | 20 | `export function renderPreprocessResult(ctx = {}, cfg = {}, preprocessors = PREPROCESSORS) {` |
 
+### lib/preprocess/score.js（116 行 · 4 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `fallbackDimOfRule` | 55-59 | 5 | `export function fallbackDimOfRule(rule) {` |
+| `resolveWeights` | 69-77 | 9 | `export function resolveWeights(scoreSpec, userWeights = {}) {` |
+| `fillMissingDimensions` | 88-96 | 9 | `export function fillMissingDimensions(findings = [], scoreSpec = getBuiltinScoreSpec()) {` |
+| `score` | 108-115 | 8 | `export function score(findings = [], scoreSpec = getBuiltinScoreSpec(), userWeights = {}, context = {}) {` |
+
 ### lib/rule/compilers/helpers.js（72 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2177,20 +2193,20 @@
 | `isExcludedPath` | 29-36 | 8 | `const isExcludedPath = (rel) => {` |
 | `walk` | 60-98 | 39 | `const walk = (dir) => {` |
 
-### scripts/audit-gate.mjs（236 行 · 10 个函数）
+### scripts/audit-gate.mjs（238 行 · 10 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `parseScopeValue` | 68-71 | 4 | `function parseScopeValue(rawValue) {` |
-| `parseWeightsValue` | 73-81 | 9 | `function parseWeightsValue(rawValue) {` |
-| `parseMaxScanFilesValue` | 83-88 | 6 | `function parseMaxScanFilesValue(rawValue) {` |
-| `parseSlotListValue` | 90-92 | 3 | `function parseSlotListValue(rawValue) {` |
-| `parseGateArgs` | 116-140 | 25 | `export function parseGateArgs(argv = []) {` |
-| `runGateAudit` | 152-177 | 26 | `export async function runGateAudit(opts) {` |
-| `muteStdout` | 184-188 | 5 | `export function muteStdout() {` |
-| `emitAndExit` | 191-194 | 4 | `function emitAndExit(result, exitCode) {` |
-| `main` | 197-218 | 22 | `async function main(argv) {` |
-| `invokedDirectly` | 221-225 | 5 | `function invokedDirectly() {` |
+| `parseScopeValue` | 70-73 | 4 | `function parseScopeValue(rawValue) {` |
+| `parseWeightsValue` | 75-83 | 9 | `function parseWeightsValue(rawValue) {` |
+| `parseMaxScanFilesValue` | 85-90 | 6 | `function parseMaxScanFilesValue(rawValue) {` |
+| `parseSlotListValue` | 92-94 | 3 | `function parseSlotListValue(rawValue) {` |
+| `parseGateArgs` | 118-142 | 25 | `export function parseGateArgs(argv = []) {` |
+| `runGateAudit` | 154-179 | 26 | `export async function runGateAudit(opts) {` |
+| `muteStdout` | 186-190 | 5 | `export function muteStdout() {` |
+| `emitAndExit` | 193-196 | 4 | `function emitAndExit(result, exitCode) {` |
+| `main` | 199-220 | 22 | `async function main(argv) {` |
+| `invokedDirectly` | 223-227 | 5 | `function invokedDirectly() {` |
 
 ### scripts/audit-runner.mjs（35 行 · 1 个函数）
 
@@ -2825,6 +2841,12 @@
 |------|------|------|------|
 | `loadCheckFuncLines` | 132-133 | 2 | `function loadCheckFuncLines() { return { checkFuncLines, checkComplexity }; }` |
 | `loadNaming` | 133-134 | 2 | `function loadNaming() { return { checkNameLengthAst }; }` |
+
+### test/audit/test-score-spec.mjs（129 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `walk` | 109-124 | 16 | `const walk = (dir) => {` |
 
 ### test/audit/test-score-zero-rule-dims.mjs（80 行 · 1 个函数）
 

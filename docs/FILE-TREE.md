@@ -84,6 +84,7 @@ dsh-git-push/
 │   │   ├── repo-level.js — 仓库级语义规则
 │   │   ├── report-yaml.js — （待注释）
 │   │   ├── scope-policy.js — 作用域契约读取（按项目 package.json 的 dshScopeCheck 取前缀/顶层/产物清单）
+│   │   ├── score-spec.js — （待注释）
 │   │   ├── slot.js — 按规则包聚合审计命中（拦截/警告/通过）
 │   ├── audit-rules/ — 规则包 yml（nodejs/npm/frontend/comment/dsh/private/structure 等动态槽位）
 │   │   ├── audit-rules-comment.yml — 注释类规则（黑名单措辞/对话残留）（规则包 comment）
@@ -227,6 +228,7 @@ dsh-git-push/
 │   ├── preprocess/ — 
 │   │   ├── audit.js — （待注释）
 │   │   ├── index.js — （待注释）
+│   │   ├── score.js — （待注释）
 │   ├── rule/ — 规则引擎（yml 装载/编译注册表/同形字符检测/槽位启停）
 │   │   ├── compilers.js — 规则编译器注册表（纯引用文件）
 │   │   ├── homoglyph.js — 同形字符检测（yml kind/id 防 ASCII 混淆）
@@ -351,6 +353,7 @@ dsh-git-push/
 │   │   ├── test-repeated-strings-cs.mjs — （待注释）
 │   │   ├── test-rule-loading.mjs — （待注释）
 │   │   ├── test-scope.mjs — （待注释）
+│   │   ├── test-score-spec.mjs — （待注释）
 │   │   ├── test-score-zero-rule-dims.mjs — （待注释）
 │   │   ├── test-smart-hint.mjs — （待注释）
 │   │   ├── test-tokenizer-multiline-template.mjs — （待注释）
