@@ -19,6 +19,7 @@ import { fileURLToPath } from 'node:url';
 import { SETTINGS_SCHEMA, defaultConfig } from '../../lib/client/index.js';
 import { readSettings, writeSettingsKey, applySettingsToCfg } from '../../lib/app/settings-bridge.js';
 import { handleHttp } from '../../lib/app/http-handlers.js';
+import { auditTest } from '../helpers/audit-available.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -177,7 +178,7 @@ test('L4 权重：code_audit 流程真的消费 cfg.weightOverrides（权重设�
   assert.ok(/weightOverrides/.test(commitSrc), 'commit-push.js（提交前审计）也应消费权重覆盖');
 });
 
-test('L4 关键键 auditRuleOrder：规则加载顺序真正使用 cfg.auditRuleOrder', () => {
+auditTest('L4 关键键 auditRuleOrder：规则加载顺序真正使用 cfg.auditRuleOrder', () => {
   const loader = readFileSync(join(ROOT, '../audit-sluice/lib/rule/loader.js'), 'utf8');
   // 端点层把 cfg.auditRuleOrder 传给 resolveSlotOrder（listRuleSlots 第一参）
   //   注意：rule-slots 端点已随 HTTP 分侧搬到 handlers/audit.js（/api/git-audit 前缀）

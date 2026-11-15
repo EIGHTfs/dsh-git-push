@@ -12,22 +12,22 @@
 | `apply` | 44-295 | 252 | `export async function apply(ctx, config = {}) {` |
 | `envInjectText` | 106-145 | 40 | `const envInjectText = (cwdOverride) => {` |
 
-### lib/app/audit-client.js（126 行 · 12 个函数）
+### lib/app/audit-client.js（137 行 · 12 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `resolveAuditPackageRoot` | 30-34 | 5 | `export function resolveAuditPackageRoot() {` |
-| `loadAuditPackage` | 41-52 | 12 | `export async function loadAuditPackage() {` |
-| `auditPackageRoot` | 55-57 | 3 | `export function auditPackageRoot() {` |
-| `resetAuditPackageCache` | 60-64 | 5 | `export function resetAuditPackageCache() {` |
-| `hostApi` | 71-79 | 9 | `export async function hostApi() {` |
-| `auditReport` | 86-89 | 4 | `export async function auditReport(options = {}) {` |
-| `auditHistory` | 92-95 | 4 | `export async function auditHistory(options = {}) {` |
-| `ioScan` | 98-101 | 4 | `export async function ioScan(options = {}) {` |
-| `linkCheck` | 104-107 | 4 | `export async function linkCheck(options = {}) {` |
-| `scopeCheck` | 110-113 | 4 | `export async function scopeCheck(options = {}) {` |
-| `exemptAction` | 116-119 | 4 | `export async function exemptAction(options = {}) {` |
-| `groupByKeys` | 122-125 | 4 | `export async function groupByKeys() {` |
+| `loadAuditPackage` | 41-63 | 23 | `export async function loadAuditPackage() {` |
+| `auditPackageRoot` | 66-68 | 3 | `export function auditPackageRoot() {` |
+| `resetAuditPackageCache` | 71-75 | 5 | `export function resetAuditPackageCache() {` |
+| `hostApi` | 82-90 | 9 | `export async function hostApi() {` |
+| `auditReport` | 97-100 | 4 | `export async function auditReport(options = {}) {` |
+| `auditHistory` | 103-106 | 4 | `export async function auditHistory(options = {}) {` |
+| `ioScan` | 109-112 | 4 | `export async function ioScan(options = {}) {` |
+| `linkCheck` | 115-118 | 4 | `export async function linkCheck(options = {}) {` |
+| `scopeCheck` | 121-124 | 4 | `export async function scopeCheck(options = {}) {` |
+| `exemptAction` | 127-130 | 4 | `export async function exemptAction(options = {}) {` |
+| `groupByKeys` | 133-136 | 4 | `export async function groupByKeys() {` |
 
 ### lib/app/command-registry.js（344 行 · 8 个函数）
 
@@ -529,17 +529,17 @@
 | `collectExternalRefs` | 136-141 | 6 | `export function collectExternalRefs(css = '') {` |
 | `clientModuleInfo` | 151-162 | 12 | `export function clientModuleInfo() {` |
 
-### lib/commit-push.js（270 行 · 5 个函数）
+### lib/commit-push.js（281 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `defaultPreprocessRender` | 37-52 | 16 | `export function defaultPreprocessRender(ctx = {}) {` |
-| `runAudit` | 63-221 | 159 | `export async function runAudit({` |
-| `isExemptFile` | 141-141 | 1 | `const isExemptFile = (finding) => exemptSet.has(String(finding.file \|\| '').replace(/\\/g, '/').replace(/^\.\//, ''));` |
-| `commitWithAudit` | 231-256 | 26 | `export async function commitWithAudit({` |
-| `commitMany` | 264-270 | 7 | `export async function commitMany({ repos = [], message = '', push = true, dryRun = false, requirementsConfirmed = false, customIgnorePatterns = '' } = {}) {` |
+| `runAudit` | 63-232 | 170 | `export async function runAudit({` |
+| `isExemptFile` | 152-152 | 1 | `const isExemptFile = (finding) => exemptSet.has(String(finding.file \|\| '').replace(/\\/g, '/').replace(/^\.\//, ''));` |
+| `commitWithAudit` | 242-267 | 26 | `export async function commitWithAudit({` |
+| `commitMany` | 275-281 | 7 | `export async function commitMany({ repos = [], message = '', push = true, dryRun = false, requirementsConfirmed = false, customIgnorePatterns = '' } = {}) {` |
 
-### lib/commit-push/pre-commit-engine.js（451 行 · 18 个函数）
+### lib/commit-push/pre-commit-engine.js（460 行 · 18 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -560,7 +560,7 @@
 | `parseEngineStdout` | 319-337 | 19 | `export function parseEngineStdout(stdout) {` |
 | `runEngineProcess` | 347-394 | 48 | `function runEngineProcess({ command, args, timeoutMs }) {` |
 | `finish` | 357-362 | 6 | `const finish = (result) => {` |
-| `runPreCommitEngine` | 410-450 | 41 | `export async function runPreCommitEngine({` |
+| `runPreCommitEngine` | 410-459 | 50 | `export async function runPreCommitEngine({` |
 
 ### lib/context/index.js（364 行 · 10 个函数）
 
@@ -1465,35 +1465,35 @@
 | `readReleases` | 126-133 | 8 | `export function readReleases(repoPath) {` |
 | `buildReadmeVersionTable` | 151-171 | 21 | `export function buildReadmeVersionTable(repoPath) {` |
 
-### test/app/test-http-audit-split.mjs（140 行 · 2 个函数）
+### test/app/test-http-audit-split.mjs（141 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `http` | 26-140 | 115 | `async function http(method, url, extra = {}) {` |
-| `assertRouted` | 31-35 | 5 | `function assertRouted(result, label) {` |
+| `http` | 27-141 | 115 | `async function http(method, url, extra = {}) {` |
+| `assertRouted` | 32-36 | 5 | `function assertRouted(result, label) {` |
 
-### test/app/test-plugin.mjs（679 行 · 3 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `makeExemptRepo` | 510-516 | 7 | `function makeExemptRepo() {` |
-| `addSecretFile` | 517-520 | 4 | `function addSecretFile(root, path) {` |
-| `fsStatMode` | 674-676 | 3 | `function fsStatMode(file) {` |
-
-### test/app/test-settings-persistence.mjs（253 行 · 4 个函数）
+### test/app/test-plugin.mjs（680 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `clientSubmitKeys` | 28-38 | 11 | `function clientSubmitKeys() {` |
-| `allowlistKeys` | 47-52 | 6 | `function allowlistKeys() {` |
-| `cfgMappingKeys` | 55-253 | 199 | `function cfgMappingKeys() {` |
-| `isolatedEnv` | 72-79 | 8 | `function isolatedEnv() {` |
+| `makeExemptRepo` | 511-517 | 7 | `function makeExemptRepo() {` |
+| `addSecretFile` | 518-521 | 4 | `function addSecretFile(root, path) {` |
+| `fsStatMode` | 675-677 | 3 | `function fsStatMode(file) {` |
 
-### test/app/test-slash-commands.mjs（287 行 · 1 个函数）
+### test/app/test-settings-persistence.mjs（254 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `inv` | 15-17 | 3 | `function inv(cwd) {` |
+| `clientSubmitKeys` | 29-39 | 11 | `function clientSubmitKeys() {` |
+| `allowlistKeys` | 48-53 | 6 | `function allowlistKeys() {` |
+| `cfgMappingKeys` | 56-254 | 199 | `function cfgMappingKeys() {` |
+| `isolatedEnv` | 73-80 | 8 | `function isolatedEnv() {` |
+
+### test/app/test-slash-commands.mjs（288 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `inv` | 16-18 | 3 | `function inv(cwd) {` |
 
 ### test/app/test-symlink-resolution.mjs（104 行 · 2 个函数）
 
@@ -1502,14 +1502,14 @@
 | `buildFixture` | 25-41 | 17 | `function buildFixture() {` |
 | `runNode` | 43-45 | 3 | `function runNode(args, env) {` |
 
-### test/app/test-task-queue.mjs（232 行 · 4 个函数）
+### test/app/test-task-queue.mjs（233 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `mkRepo` | 16-23 | 8 | `function mkRepo() {` |
-| `mkDirtyRepo` | 31-35 | 5 | `function mkDirtyRepo() {` |
-| `wait` | 36-37 | 2 | `function wait(ms) { return new Promise((r) => setTimeout(r, ms)); }` |
-| `mockJobs` | 39-57 | 19 | `function mockJobs() {` |
+| `mkRepo` | 17-24 | 8 | `function mkRepo() {` |
+| `mkDirtyRepo` | 32-36 | 5 | `function mkDirtyRepo() {` |
+| `wait` | 37-38 | 2 | `function wait(ms) { return new Promise((r) => setTimeout(r, ms)); }` |
+| `mockJobs` | 40-58 | 19 | `function mockJobs() {` |
 
 ### test/app/test-tools-e2e.mjs（86 行 · 1 个函数）
 
@@ -1548,6 +1548,13 @@
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `hits` | 56-59 | 4 | `const hits = async (ownership) => {` |
+
+### test/fixtures/mock-audit-cli.mjs（55 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `argMode` | 18-18 | 1 | `const argMode = (process.argv.find((a) => a.startsWith('--mode=')) \|\| '').slice('--mode='.length);` |
+| `emit` | 32-35 | 4 | `const emit = (payload, code) => {` |
 
 ### test/git/test-account-ssh.mjs（149 行 · 1 个函数）
 
@@ -1765,6 +1772,12 @@
 | `prefixTestNames` | 129-144 | 16 | `function prefixTestNames(body, prefix) {` |
 | `mergeGroup` | 147-224 | 78 | `export function mergeGroup(dir, { out, members }) {` |
 | `runTestFile` | 227-236 | 10 | `export function runTestFile(absPath) {` |
+
+### test/helpers/mock-audit.mjs（34 行 · 1 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `withMockAudit` | 22-31 | 10 | `export function withMockAudit(cfg = {}, mode = 'ok') {` |
 
 ### test/helpers/test-cache.mjs（231 行 · 9 个函数）
 

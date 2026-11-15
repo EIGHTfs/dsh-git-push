@@ -17,6 +17,7 @@ import { fileURLToPath } from 'node:url';
 import { adaptHttpHandler, handleHttp } from '../../lib/app/http-handlers.js';
 import { callTool } from '../../lib/app/tool-call.js';
 import { defaultConfig } from '../../lib/client/index.js';
+import { auditTest } from '../helpers/audit-available.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const ENV = { workspaceRoot: ROOT };
@@ -106,7 +107,7 @@ test('adaptHttpHandler 会把 handler 的 headers 写到响应上（Deprecation 
   assert.match(String(written.headers?.['Content-Type'] || ''), /application\/json/, 'Content-Type 不能被覆盖掉');
 });
 
-test('git_api 的 path 三种写法都能通（AI 面契约不断）', async () => {
+auditTest('git_api 的 path 三种写法都能通（AI 面契约不断）', async () => {
   const env = { workspaceRoot: ROOT };
   const run = (path) => callTool('git_api', { path, method: 'GET' }, env, CFG, console, null, null);
   // ① 短名 → 走旧前缀（转发仍然可用）

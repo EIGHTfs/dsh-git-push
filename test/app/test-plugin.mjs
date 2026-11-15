@@ -231,7 +231,7 @@ test('工具分发：git_sluice 空 args 报错、引号路径拆分不受空格
   }
 });
 
-test('工具分发：code_audit 出 summary 与 quality', async () => {
+auditTest('工具分发：code_audit 出 summary 与 quality', async () => {
   const r = await callTool('code_audit', { repo: ROOT, scope: 'full' }, {}, {});
   assert.equal(r.ok, true);
   assert.equal(typeof r.summary.blocker, 'number');
@@ -286,7 +286,7 @@ test('HTTP：tools 端点列出工具', async () => {
   assert.equal(r.body.tools.length, listTools().length);
 });
 
-test('HTTP：rule-slots 端点动态发现全部 yml（模板不入 order）+ disabled 标记来自配置', async () => {
+auditTest('HTTP：rule-slots 端点动态发现全部 yml（模板不入 order）+ disabled 标记来自配置', async () => {
   const cfg = { auditRuleOrder: [], auditDisabledSlots: ['comment'] };
   const r = await handleHttp({ method: 'GET', url: '/api/git-audit/rule-slots' }, { workspaceRoot: ROOT }, cfg);
   assert.equal(r.status, 200);
@@ -474,7 +474,8 @@ test('契约：dsh.skills 每条路径都真实存在（防列了不存在的文
 
 // ---------- commitWithAudit（审计提交总入口，1.0.4 供外部插件复用） ----------
 import { commitWithAudit, commitMany } from '../../lib/commit-push.js';
-test('commitWithAudit：非 git 仓库不崩且带审计摘要', async () => {
+import { auditTest } from '../helpers/audit-available.mjs';
+auditTest('commitWithAudit：非 git 仓库不崩且带审计摘要', async () => {
   const r = await commitWithAudit({ repoPath: '/nonexistent-xyz', message: 'x', requirementsConfirmed: true });
   assert.equal(r.ok, false);
   assert.equal(r.blocked, undefined, '放行路径不设 blocked（仅拦截时 blocked=true）');
@@ -496,7 +497,7 @@ test('commitMany：逐仓返回结果数组（含非 git 仓库错误）', async
   assert.equal(results[1].ok, false, '非 git 仓库应记失败不抛异常');
   assert.match(results[1].error, /非 git 仓库/);
 });
-test('commitWithAudit：audit=false 不跑审计（audit 为 null）', async () => {
+auditTest('commitWithAudit：audit=false 不跑审计（audit 为 null）', async () => {
   const r = await commitWithAudit({ repoPath: '/nonexistent-xyz', message: 'x', audit: false, requirementsConfirmed: true });
   assert.equal(r.audit, null);
 });

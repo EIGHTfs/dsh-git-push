@@ -146,6 +146,7 @@ dsh-git-push/
 │   ├── .test — 空文件豁免标记（目录级豁免 .test 目录）
 │   ├── run-tests.mjs — （待注释）
 │   ├── app/ — （待注释）
+│   │   ├── test-audit-consumption.mjs — （待注释）
 │   │   ├── test-auto-push.mjs — （待注释）
 │   │   ├── test-context.mjs — （待注释）
 │   │   ├── test-http-audit-split.mjs — （待注释）
@@ -167,6 +168,7 @@ dsh-git-push/
 │   │   ├── test-privacy-ownership.mjs — （待注释）
 │   ├── fixtures/ — （待注释）
 │   │   ├── TimeZoneComboBox-CRnoCikG.js — Pawchive 混淆产物样本（hash 文件名——跳过判定 fixture）
+│   │   ├── mock-audit-cli.mjs — （待注释）
 │   │   └── …（5 个更深文件）
 │   ├── git/ — （待注释）
 │   │   ├── test-account-refresh-on-push.mjs — （待注释）
@@ -204,7 +206,9 @@ dsh-git-push/
 │   │   ├── test-repos-live-budget.mjs — （待注释）
 │   │   ├── test-visibility-unified.mjs — （待注释）
 │   ├── helpers/ — （待注释）
+│   │   ├── audit-available.mjs — （待注释）
 │   │   ├── merge-tests.mjs — （待注释）
+│   │   ├── mock-audit.mjs — （待注释）
 │   │   ├── test-cache.mjs — （待注释）
 │   │   ├── test-scan.mjs — （待注释）
 │   │   ├── tmp-dir.mjs — （待注释）

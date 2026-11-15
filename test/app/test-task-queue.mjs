@@ -12,6 +12,7 @@ import { tmpdir } from 'node:os';
 import { execSync } from 'node:child_process';
 
 import { callTool, Config } from '../../lib/index.js';
+import { auditTest } from '../helpers/audit-available.mjs';
 
 function mkRepo() {
   const dir = mkdtempSync(join(tmpdir(), 'dshgp-task-'));
@@ -57,7 +58,7 @@ function mockJobs() {
 }
 
 // ---------- 无宿主 ctx.jobs → 同步执行保底 ----------
-test('git_commit_push：无 jobs（CLI/测试）→ 同步执行并返回 async:false + result', async () => {
+auditTest('git_commit_push：无 jobs（CLI/测试）→ 同步执行并返回 async:false + result', async () => {
   const dir = mkDirtyRepo(); // 必须有真实改动：干净仓不再凭空产生提交
   try {
     const r = await callTool('git_commit_push', { repo: dir, message: '同步保底提交', audit: false, push: false, requirementsConfirmed: true }, { workspaceRoot: dir }, Config());

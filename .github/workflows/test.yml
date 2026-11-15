@@ -24,21 +24,12 @@ jobs:
       #   锁文件生成口径一致（web-tree-sitter 的 peer @types/emscripten 未锁入，TS 类型运行时不需要）。
       - name: 安装依赖（按 lockfile）
         run: npm ci --legacy-peer-deps --no-audit --no-fund
-      # 部分测试需要 git 提交身份（临时仓库 init/commit）
-      # 审计实现已独立成包（audit-sluice）：宿主侧通过「包入口解析」加载它
-      #   （node_modules → 平级 sibling → DSH_AUDIT_SLUICE_CLI）。干净 runner 里没有平级仓库，
-      #   故把审计包 checkout 到与本插件**平级**的位置，走 sibling 解析。
-      - name: 检出审计包（平级 sibling）
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ github.repository_owner }}/audit-sluice
-          path: ../audit-sluice
-          token: ${{ secrets.AUDIT_SLUICE_TOKEN || github.token }}
-      # 审计包尚未入库 lockfile（它自己的仓库还没有 package-lock.json）⇒ 用 npm install 而非 npm ci；
-      #   依赖与宿主同版本（js-yaml / web-tree-sitter / tree-sitter-wasms），装好即可跑。
-      - name: 安装审计包依赖
-        run: npm install --legacy-peer-deps --no-audit --no-fund
-        working-directory: ../audit-sluice
+      # 审计（audit-sluice）是**可热插拔的扩展能力**，不是本插件的依赖：
+      #   宿主 CI 刻意**不安装**审计包——
+      #   ① 「宿主如何消费审计结果」用假引擎验（test/helpers/mock-audit.mjs，不依赖真包）
+      #   ② 「审计能力本身」由审计包自己的测试覆盖（585 条，在它仓库跑）
+      #   ③ 依赖审计包的集成用例在缺包时**带原因 skip**（test/helpers/audit-available.mjs）
+      #   这样扩展被拔掉时宿主仍能验证自己没坏，符合解耦目标（热插拔）。
       - name: 配置 git 身份
         run: |
           git config --global user.name "dsh-git-push CI"
