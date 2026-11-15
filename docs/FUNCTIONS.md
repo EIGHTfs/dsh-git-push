@@ -3066,7 +3066,7 @@
 |------|------|------|------|
 | `withIsolatedDshHome` | 19-30 | 12 | `function withIsolatedDshHome(fn) {` |
 
-### test/git/test-pre-commit-engine.mjs（427 行 · 4 个函数）
+### test/git/test-pre-commit-engine.mjs（433 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|

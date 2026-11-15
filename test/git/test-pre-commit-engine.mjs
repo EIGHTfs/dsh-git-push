@@ -190,6 +190,12 @@ test('preCommit 三档解析顺序：cfg.preCommit → config.json → 内置默
     // ③ 都没有 → 内置默认（node + **审计包 CLI**），超时 10 分钟
     //   拆包后缺省引擎指向 audit-sluice（审计实现归它）；内置 scripts/audit-gate.mjs
     //   只在显式配置回滚时使用（见下一条断言）。
+    //   注意：这里必须用「空的临时配置」覆盖，否则会读到**宿主真实 config.json**——
+    //   开发机可能配了 preCommit 指向本地审计包（拆包后这就是正常配置），
+    //   而本档断言的是「三档都没有」⇒ 不隔离会让测试结果依赖机器状态。
+    const emptyCfg = join(dir, 'empty-config.json');
+    writeFileSync(emptyCfg, '{}');
+    setSettingsFileOverride(emptyCfg);
     const fallback = resolvePreCommitConfig({});
     assert.equal(fallback.source, 'default');
     assert.equal(fallback.command, '', 'command 空 = 内置 node');
