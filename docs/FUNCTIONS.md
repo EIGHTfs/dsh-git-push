@@ -661,14 +661,14 @@
 | `topUnresolvedFiles` | 78-85 | 8 | `function topUnresolvedFiles(unresolved, topN) {` |
 | `formatAnalysisCoverageLine` | 92-98 | 7 | `export function formatAnalysisCoverageLine(cov = {}) {` |
 
-### lib/audit/audit-file.js（206 行 · 4 个函数）
+### lib/audit/audit-file.js（207 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `isMinifiedOneLine` | 31-41 | 11 | `function isMinifiedOneLine(text) {` |
-| `isHashSegment` | 45-47 | 3 | `function isHashSegment(seg) {` |
-| `isBuildArtifactFile` | 49-79 | 31 | `export function isBuildArtifactFile(relPathOrFile = '', text = '') {` |
-| `auditFile` | 81-206 | 126 | `export function auditFile({ file, relPath, text, grouped }, opts = {}) {` |
+| `isMinifiedOneLine` | 32-42 | 11 | `function isMinifiedOneLine(text) {` |
+| `isHashSegment` | 46-48 | 3 | `function isHashSegment(seg) {` |
+| `isBuildArtifactFile` | 50-80 | 31 | `export function isBuildArtifactFile(relPathOrFile = '', text = '') {` |
+| `auditFile` | 82-207 | 126 | `export function auditFile({ file, relPath, text, grouped }, opts = {}) {` |
 
 ### lib/audit/auditignore-rules.js（149 行 · 6 个函数）
 
@@ -2069,6 +2069,21 @@
 | `formatBlocked` | 60-66 | 7 | `function formatBlocked(blocked = []) {` |
 | `auditRenderResult` | 77-90 | 14 | `export function auditRenderResult(ctx = {}) {` |
 
+### lib/preprocess/exempt.js（209 行 · 10 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `getEngineAdapter` | 55-59 | 5 | `export function getEngineAdapter(engineId = 'builtin') {` |
+| `linesOf` | 62-64 | 3 | `function linesOf(text = '') {` |
+| `sourceMarkerExempts` | 79-103 | 25 | `export function sourceMarkerExempts(engineId, text = '', finding = {}) {` |
+| `at` | 85-85 | 1 | `const at = (idx) => String(lines[idx] \|\| '');` |
+| `declaredExempts` | 115-127 | 13 | `export function declaredExempts(suppressed = [], finding = {}) {` |
+| `normalize` | 117-117 | 1 | `const normalize = (value) => String(value \|\| '').replace(/\\/g, '/').replace(/^\.\//, '');` |
+| `exemptionOf` | 141-160 | 20 | `export function exemptionOf(finding = {}, opts = {}) {` |
+| `resolveExemptions` | 172-178 | 7 | `export function resolveExemptions(findings = [], opts = {}) {` |
+| `filterExempted` | 186-188 | 3 | `export function filterExempted(findings = [], opts = {}) {` |
+| `loadIgnoreFingerprints` | 199-208 | 10 | `export function loadIgnoreFingerprints(repoPath = '.', fileName = '.gitleaksignore') {` |
+
 ### lib/preprocess/index.js（79 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2076,14 +2091,14 @@
 | `preprocessParams` | 36-44 | 9 | `export function preprocessParams(cfg = {}, hasBuiltinEngine, preprocessors = PREPROCESSORS) {` |
 | `renderPreprocessResult` | 59-78 | 20 | `export function renderPreprocessResult(ctx = {}, cfg = {}, preprocessors = PREPROCESSORS) {` |
 
-### lib/preprocess/score.js（116 行 · 4 个函数）
+### lib/preprocess/score.js（125 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `fallbackDimOfRule` | 55-59 | 5 | `export function fallbackDimOfRule(rule) {` |
 | `resolveWeights` | 69-77 | 9 | `export function resolveWeights(scoreSpec, userWeights = {}) {` |
 | `fillMissingDimensions` | 88-96 | 9 | `export function fillMissingDimensions(findings = [], scoreSpec = getBuiltinScoreSpec()) {` |
-| `score` | 108-115 | 8 | `export function score(findings = [], scoreSpec = getBuiltinScoreSpec(), userWeights = {}, context = {}) {` |
+| `score` | 108-124 | 17 | `export function score(findings = [], scoreSpec = getBuiltinScoreSpec(), userWeights = {}, context = {}) {` |
 
 ### lib/rule/compilers/helpers.js（72 行 · 3 个函数）
 
@@ -2712,6 +2727,13 @@
 |------|------|------|------|
 | `read` | 65-65 | 1 | `const read = (p) => readFileSync(join(ROOT, p), 'utf8');` |
 
+### test/audit/test-exempt-engines.mjs（182 行 · 2 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `makeFixtureRepo` | 28-40 | 13 | `function makeFixtureRepo(files = {}) {` |
+| `walk` | 164-177 | 14 | `const walk = (dir) => {` |
+
 ### test/audit/test-exempt.mjs（680 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -2842,11 +2864,11 @@
 | `loadCheckFuncLines` | 132-133 | 2 | `function loadCheckFuncLines() { return { checkFuncLines, checkComplexity }; }` |
 | `loadNaming` | 133-134 | 2 | `function loadNaming() { return { checkNameLengthAst }; }` |
 
-### test/audit/test-score-spec.mjs（129 行 · 1 个函数）
+### test/audit/test-score-spec.mjs（133 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `walk` | 109-124 | 16 | `const walk = (dir) => {` |
+| `walk` | 113-128 | 16 | `const walk = (dir) => {` |
 
 ### test/audit/test-score-zero-rule-dims.mjs（80 行 · 1 个函数）
 

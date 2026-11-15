@@ -227,6 +227,7 @@ dsh-git-push/
 │   │   ├── index.js — Host 侧接线（插件注册：工具/HTTP/配置注入宿主）
 │   ├── preprocess/ — 
 │   │   ├── audit.js — （待注释）
+│   │   ├── exempt.js — （待注释）
 │   │   ├── index.js — （待注释）
 │   │   ├── score.js — （待注释）
 │   ├── rule/ — 规则引擎（yml 装载/编译注册表/同形字符检测/槽位启停）
@@ -322,6 +323,7 @@ dsh-git-push/
 │   │   ├── test-dup.mjs — （待注释）
 │   │   ├── test-dynamic-weight.mjs — （待注释）
 │   │   ├── test-empty-catch.mjs — （待注释）
+│   │   ├── test-exempt-engines.mjs — （待注释）
 │   │   ├── test-exempt.mjs — （待注释）
 │   │   ├── test-ext-variable-min-length.mjs — （待注释）
 │   │   ├── test-false-positive-fixes.mjs — （待注释）

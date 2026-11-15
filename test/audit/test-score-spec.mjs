@@ -73,9 +73,13 @@ test('② 声明校验：形状不合法的声明会被识别（中间层据此�
   assert.equal(validateScoreSpec({ dims: [{ id: '', weight: 1 }] }).ok, false, '空 id 不合法');
   assert.equal(validateScoreSpec({ dims: [{ id: 'x', weight: 'abc' }] }).ok, false, '非数字权重不合法');
   assert.equal(validateScoreSpec({ dims: [{ id: 'x', weight: 1 }], dimOfRule: 'nope' }).ok, false, 'dimOfRule 非函数不合法');
-  // 声明写坏时 score() 不能整块失败（退回内置声明继续算分）
+  // 声明写坏时 score() 不能整块失败（退回内置声明继续算分），且必须**可观测**（不能静默）
   const bad = score([], { dims: [] }, {}, { files: 0 });
   assert.equal(bad.emptyResult, true, '非法声明应退回内置声明并正常返回结果');
+  assert.equal(bad.specFallback, true, '退回时必须打标 specFallback:true（排查者要能知道这次用的是兜底声明）');
+  assert.match(String(bad.specFallbackReason), /dims/, '退回原因要能读出来');
+  // 正常路径不得出现退回标记（否则「打标」就变成噪音）
+  assert.equal(score([], undefined, {}, { files: 0 }).specFallback, undefined, '正常路径不应带 specFallback');
 });
 
 test('③ 权重合成：引擎声明作默认、用户覆盖压在上面（与旧裸展开等价）', () => {
