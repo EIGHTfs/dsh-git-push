@@ -1,6 +1,6 @@
 {
   "name": "dsh-git-push",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "DSH git 自动提交推送插件——统一函数入口架构（规则/审计/git/自身/侧边栏/评分/豁免/上下文/HTTP/测试十大总入口）",
   "type": "module",
   "main": "lib/index.js",
@@ -16,18 +16,15 @@
   "files": [
     "lib",
     "skills",
-    "scripts",
-    "assets",
+    "scripts/scan-repos.mjs",
     "cli.mjs",
     "cli-tool.mjs",
     "cordis.patch.yml",
     "README.md",
-    "LICENSE",
-    ".auditignore",
-    ".gitignore"
+    "LICENSE"
   ],
   "optionalDependencies": {
-    "audit-sluice": "0.1.0"
+    "audit-sluice": "0.1.1"
   },
   "engines": {
     "node": ">=18.0.0"
