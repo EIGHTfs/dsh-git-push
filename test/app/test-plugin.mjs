@@ -19,7 +19,7 @@ import { execSync } from 'node:child_process';
 process.env.DSH_GIT_PUSH_OFFLINE = '1';
 
 import { name, GIT_PUSH_SETTINGS_NS, Config, apply, callTool, handleHttp, listTools } from '../../lib/index.js';
-import { AUDIT_API_PREFIX } from '../../lib/app/http-handlers.js';
+import { PREPROCESS_API_PREFIX } from '../../lib/app/http-handlers.js';
 import { SLASH_COMMANDS } from '../../lib/app/slash-commands.js';
 import { TOOL_REGISTRY } from '../../lib/app/command-registry.js';
 import { setDefineToolOverride } from '../../lib/plugin/index.js';
@@ -107,7 +107,7 @@ test('apply：HTTP 前缀路由 —— 每条前缀都指同一个 handler（鉴
   // 前缀集合从代码导出推导（含预处理侧前缀常量），不写死字符串
   const prefixes = routes.map((route) => route.path).sort();
   assert.ok(prefixes.includes('/api/git-push'), '必须注册宿主自身前缀 /api/git-push');
-  assert.ok(prefixes.includes(AUDIT_API_PREFIX), `必须注册预处理侧前缀 ${AUDIT_API_PREFIX}`);
+  assert.ok(prefixes.includes(PREPROCESS_API_PREFIX), `必须注册预处理侧前缀 ${PREPROCESS_API_PREFIX}`);
 });
 
 test('apply：无 ctx / 缺服务时不崩（防御性接线）', async () => {
