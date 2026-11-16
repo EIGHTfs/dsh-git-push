@@ -463,7 +463,7 @@ auditPreprocessAvailable(cfg = {}, hasBuiltinEngine) {
 
 **两条前缀由同一个 `handleHttp` 入口服务**（`apply.js` 用同一 handler 函数注册两次）⇒ 鉴权
 （Origin/CSRF、body 上限、写确认）对两条前缀完全一致。**禁止为新前缀另写 handler 入口**——
-那会是一个无门禁的裸端点；`test/git/test-http-audit-split.mjs` 用
+那会是一个无门禁的裸端点；`test/app/test-plugin.mjs`（`handlers.size === 1` 断言）用
 `routes[0].handler === routes[1].handler` 钉住这条。
 
 **`git_api` 工具的 `path` 三种写法**（不加 `side` 参数，AI 面契约零变更）：
