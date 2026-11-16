@@ -115,20 +115,9 @@ settings-get  settings-set
 | `scan-live.json` | 扫描进度 | 扫描进行中 |
 | `mirror-state.json` | 镜像健康度学习结果（每个镜像 failures/disabled/lastOkAt/lastError） | 下载数据校验失败/成功时；可用 `DSH_GIT_MIRROR_STATE` 覆盖位置 |
 
-**豁免的四条通道（各司其职，不要混用）**：
-
-| 通道 | 语法/位置 | 力度 | 可见性 |
-|---|---|---|---|
-| `.auditignore` 整文件 | `.auditignore` 路径行 | 该文件全部规则不审 | 采集期就不收 ⇒ 报告里看不到 |
-| `.auditignore` 细粒度 | `路径 : 规则[,规则]  # 理由` | 只免指定规则（支持 `slot/*`） | **报告单列「已确认豁免 N 条」**，不扣分 |
-| `dsh-skip-*` 标记 | 文件头前 3 行 / 行尾 | 按标记覆盖的 kind/规则 | 静默丢弃（历史语义） |
-| 规则声明降级 | 规则 yml 的 `scope_rules: … → downgrade` | 仍报、不扣分 | 可见 |
-
-细粒度规则段必须形如 `slot/rule`，否则整行按文件模式处理（防 `C:\`、`https://`、`a:b` 误判）。
-命中后 finding 标记 `exempted: true / exemptBy: 'auditignore' / exemptReason`，**标记而非丢弃**。
-
-**采集来源**：git 仓库里用 `git ls-files --cached --others --exclude-standard` 枚举（挂载盘上比 FS 遍历快三个数量级），
-非 git 目录仍走目录遍历；两条路径共用同一套过滤，`DSH_AUDIT_NO_GIT_FASTPATH=1` 可强制回退。
+**审计侧的采集与豁免规则**（`.auditignore` 四种通道、`dsh-skip-*` 标记、`git ls-files` 采集口径、
+`DSH_AUDIT_NO_GIT_FASTPATH` 等）属审计实现，见独立包 `audit-sluice` 的
+`docs/DETAILS-EXEMPT-AND-RULES.md`，本仓库不重复维护。
 
 **按包形态验证**：发布前冒烟与彩排都先 `classifyPackageForm` 判形态——有库入口（`main`/`exports`）验 import；只有 `bin` 验「真跑 bin --version（比对版本）+ --help（退出码 0）」；两者皆无则明确报「没有可验证入口」。
 
