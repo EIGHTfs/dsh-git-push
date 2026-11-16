@@ -17,7 +17,7 @@ DSH 的 git 提交推送与代码审计插件：提交前自动过审计门禁�
 | 改名 | 给远程仓库改名（dryRun 默认开，列出旧名出现位置） | `git_remote_rename` / `rename` |
 | 凭据与账号 | 校验 GitHub token 与 SSH 公钥、生成密钥对 | `git_account_check` / `git_gen_ssh_key` |
 | 身份改写 | 把历史提交身份统一成登录账号 | `git_identity_rewrite` / `identity-rewrite` |
-| 发布 | 发布 npm 包（dryRun 默认只体检；凭据由插件托管，无需 npm login） | `npm_publish` / `npm-publish` |
+| 发布 | 发布 npm 包（dryRun 默认只体检；凭据由插件托管，无需 npm login）。**网络边界**：dryRun 会 GET 真实上游查版本占用（只读），但绝不写入公共 registry；`localPreview=true` 全程不碰公网 | `npm_publish` / `npm-publish` |
 | 撤包 | 从 registry 撤版本（默认 dryRun 预检，不可逆） | `npm_unpublish` / `unpublish` |
 | 豁免标记 | 给文件加/删豁免注释并校验是否真生效 | `exempt` |
 | I/O 风险扫描 | 扫描读写操作的风险分级 | `io_scan` / `file-io` |
@@ -65,7 +65,8 @@ git_gen_ssh_key({ email, force })                    // email 必填；force 可
 git_identity_rewrite({ paths, dryRun, write, push }) // 全可空：dryRun 默认只报告，write 才改写
 git_remote_create({ repo, visibility, dryRun })      // repo 必填；visibility 可空（空=private）
 git_set_visibility({ repo, visibility })             // 两者必填
-npm_publish({ dir, dryRun, confirm, tag, otp })      // dryRun 默认 true（只体检）；真发需 confirm=true 且 dryRun=false
+npm_publish({ dir, dryRun, confirm, tag, otp })      // dryRun 默认 true（只体检，不写 registry）
+npm_publish({ dir, localPreview: true })            // 本地 registry 彩排：publish→install→加载全走本机，全程不碰公网
 exempt({ action, rule, path, scope, line, reason })  // action 与 rule 必填；path 可数组；scope=header（文件头）或 line
 io_scan({ repo, writeOnly })                         // 两者都可空：writeOnly 空=读写都看
 link_check({ path })                                 // path 可空：空=整个工作区

@@ -20,7 +20,8 @@ if (args.includes('--selftest')) {
   const r = await runLocalPreview({
     dir: repo,
     tag: 'beta',
-    entrySpecs: ['dsh-git-push', 'dsh-git-push/audit'],
+    // 只验包自己的公开面：审计子路径（dsh-git-push/audit）已随审计能力迁出
+    entrySpecs: ['dsh-git-push'],
   });
   for (const s of r.steps) console.log(`  ${s.ok ? 'OK  ' : 'FAIL'} ${s.step}${s.distTags ? ` → dist-tags ${JSON.stringify(s.distTags)}` : ''}`);
   if (r.failures.length) console.log('失败：\n' + r.failures.map((f) => `  - ${f}`).join('\n'));

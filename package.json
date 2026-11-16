@@ -1,14 +1,17 @@
 {
   "name": "dsh-git-push",
-  "version": "2.20.19",
+  "version": "3.0.0",
   "description": "DSH git 自动提交推送插件——统一函数入口架构（规则/审计/git/自身/侧边栏/评分/豁免/上下文/HTTP/测试十大总入口）",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
     ".": "./lib/index.js",
     "./client": "./lib/client.js",
-    "./audit": "./lib/audit/public.js",
     "./package.json": "./package.json"
+  },
+  "bin": {
+    "git-sluice": "./cli.mjs",
+    "tool-sluice": "./cli-tool.mjs"
   },
   "files": [
     "lib",
@@ -23,10 +26,31 @@
     ".auditignore",
     ".gitignore"
   ],
-  "bin": {
-    "git-sluice": "./cli.mjs",
-    "tool-sluice": "./cli-tool.mjs"
+  "optionalDependencies": {
+    "audit-sluice": "0.1.0"
   },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "build:client": "node scripts/build-client.mjs",
+    "prepare": "node scripts/build-client.mjs",
+    "prepack": "node scripts/build-client.mjs",
+    "test": "node test/run-tests.mjs",
+    "check": "node scripts/check.mjs"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "git",
+    "commit",
+    "push",
+    "audit",
+    "cli"
+  ],
+  "author": "EIGHTfs",
+  "license": "MIT",
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
@@ -58,8 +82,6 @@
       "./skills/workflow/versioning-rule.md"
     ]
   },
-  "license": "MIT",
-  "author": "EIGHTfs",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/EIGHTfs/dsh-git-push.git"
@@ -68,34 +90,9 @@
     "url": "https://github.com/EIGHTfs/dsh-git-push/issues"
   },
   "homepage": "https://github.com/EIGHTfs/dsh-git-push#readme",
-  "keywords": [
-    "dsh",
-    "dsh-plugin",
-    "deepseek-harness",
-    "git",
-    "commit",
-    "push",
-    "audit",
-    "cli"
-  ],
-  "engines": {
-    "node": ">=18.0.0"
-  },
   "peerDependencies": {
     "@deepseek-ai/dsh-tools": ">=0.1.6-0 <0.3.0-0",
     "@deepseek-ai/schemastery": ">=3.0.0 <4.0.0-0"
-  },
-  "scripts": {
-    "build:client": "node scripts/build-client.mjs",
-    "prepare": "node scripts/build-client.mjs",
-    "prepack": "node scripts/build-client.mjs",
-    "test": "node test/run-tests.mjs",
-    "check": "node scripts/check.mjs"
-  },
-  "dependencies": {
-    "js-yaml": "4.1.0",
-    "tree-sitter-wasms": "0.1.13",
-    "web-tree-sitter": "0.25.10"
   },
   "dshScopeCheck": {
     "note": "拼接产物作用域检查：files 里每个文件都查「同作用域重名 / 顶层声明 / 命名前缀」。查法：git-sluice scope-check（无参数即读本块 files）；其它项目只要在自己的 package.json 写同名字段即可复用同一套判定",

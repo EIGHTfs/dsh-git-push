@@ -36,7 +36,6 @@ dsh-git-push/
 │   │   └── …（11 个更深文件）
 │   ├── cli/ — （待注释）
 │   │   ├── commands-account.mjs — （待注释）
-│   │   ├── commands-doc.mjs — （待注释）
 │   │   ├── commands-preprocess.mjs — （待注释）
 │   │   ├── commands-tool.mjs — 工具链命令实现（模板生成与 self-check）
 │   │   ├── commands-vcs.mjs — （待注释）
@@ -88,7 +87,6 @@ dsh-git-push/
 │   │   ├── index-format.js — （待注释）
 │   │   ├── index.js — Git 执行层统一出口
 │   │   ├── init-compat.js — （待注释）
-│   │   ├── module-splitter.js — （待注释）
 │   │   ├── post-push.js — 推送后增强（remote-tracking ref/aux remote/tag）
 │   │   ├── push-diagnose.js — （待注释）
 │   │   ├── push.js — 提交推送编排（commitAndPush 全流程：敏感扫描→add/commit→推送）
@@ -125,16 +123,10 @@ dsh-git-push/
 │   ├── build-client.mjs — 客户端分片拼接（PART_ORDER + --check 门禁 + 形态铁律自检）
 │   ├── bump-version.mjs — （待注释）
 │   ├── check.mjs — 语法检查脚本（npm run check）
-│   ├── doc-drift.mjs — （待注释）
 │   ├── doc-func.mjs — （待注释）
 │   ├── doc-tree.mjs — （待注释）
 │   ├── doc-version.mjs — （待注释）
-│   ├── hot-path-probe-cjs.cjs — （待注释）
-│   ├── hot-path-probe-fs-shim.mjs — （待注释）
-│   ├── hot-path-probe-fsp-shim.mjs — （待注释）
-│   ├── hot-path-probe.mjs — （待注释）
 │   ├── local-registry.mjs — （待注释）
-│   ├── module-splitter.py — 巨型单文件按顶层块拆分脚本（analyze/split/verify 三命令，python3 零依赖；module_splitter 工具与 CLI 的底层实现）
 │   ├── scan-repos.mjs — （待注释）
 │   ├── scan-version.mjs — 版本一致性校验脚本
 │   ├── version-source.mjs — （待注释）
@@ -146,7 +138,6 @@ dsh-git-push/
 │   │   ├── test-context.mjs — （待注释）
 │   │   ├── test-http.mjs — （待注释）
 │   │   ├── test-plugin.mjs — （待注释）
-│   │   ├── test-preprocess-consumption.mjs — （待注释）
 │   │   ├── test-settings-persistence.mjs — （待注释）
 │   │   ├── test-settings-roundtrip.mjs — （待注释）
 │   │   ├── test-slash-commands.mjs — （待注释）
@@ -158,7 +149,6 @@ dsh-git-push/
 │   │   ├── test-workspace-paths.mjs — （待注释）
 │   ├── fixtures/ — （待注释）
 │   │   ├── TimeZoneComboBox-CRnoCikG.js — Pawchive 混淆产物样本（hash 文件名——跳过判定 fixture）
-│   │   ├── mock-preprocess-cli.mjs — （待注释）
 │   │   └── …（4 个更深文件）
 │   ├── git/ — （待注释）
 │   │   ├── test-account-refresh-on-push.mjs — （待注释）
@@ -184,7 +174,6 @@ dsh-git-push/
 │   │   ├── test-origin-desktop.mjs — （待注释）
 │   │   ├── test-persist-credentials.mjs — （待注释）
 │   │   ├── test-pre-commit-engine.mjs — （待注释）
-│   │   ├── test-private-gate.mjs — （待注释）
 │   │   ├── test-push-false-success.mjs — （待注释）
 │   │   ├── test-push.mjs — （待注释）
 │   │   ├── test-quota-write.mjs — （待注释）
@@ -195,29 +184,17 @@ dsh-git-push/
 │   │   ├── test-visibility-unified.mjs — （待注释）
 │   ├── helpers/ — （待注释）
 │   │   ├── merge-tests.mjs — （待注释）
-│   │   ├── mock-preprocess.mjs — （待注释）
-│   │   ├── provider-available.mjs — （待注释）
 │   │   ├── test-cache.mjs — （待注释）
 │   │   ├── test-scan.mjs — （待注释）
 │   │   ├── tmp-dir.mjs — （待注释）
 │   ├── tool/ — （待注释）
 │   │   ├── test-build-client.mjs — （待注释）
 │   │   ├── test-cli.mjs — （待注释）
-│   │   ├── test-client-fragment-scope.mjs — （待注释）
-│   │   ├── test-doc-func.mjs — （待注释）
-│   │   ├── test-doc-version-release-source.mjs — （待注释）
-│   │   ├── test-doc-version.mjs — （待注释）
-│   │   ├── test-func-doc-drift.mjs — （待注释）
-│   │   ├── test-module-splitter.mjs — （待注释）
 │   │   ├── test-npm-tab-render.mjs — （待注释）
 │   │   ├── test-picker-layout.mjs — （待注释）
 │   │   ├── test-scan-and-cache.mjs — （待注释）
-│   │   ├── test-scrub-conv-wording.mjs — （待注释）
 │   │   ├── test-self.mjs — （待注释）
 │   │   ├── test-smoke-import-specs.mjs — （待注释）
-│   │   ├── test-tree-doc.mjs — （待注释）
-│   │   ├── test-tree-first.mjs — （待注释）
-│   │   ├── test-version-metrics.mjs — （待注释）
 ├── docs/ — 开发文档
 │   ├── 2.9.0-design.md — （待注释）
 │   ├── 2026-10-09-审计插件性能优化.MD — （待注释）
