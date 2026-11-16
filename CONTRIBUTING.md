@@ -38,7 +38,7 @@ node test/test-tool-contract.mjs
 - 注释讲**为什么**（背景/坑/取舍），不复述代码；注释一律用 `//` 逐行，不写块注释
 - **注释与文档里不写日期**：日期属于 git 提交（`comment/no-date-in-comment` 规则会拦）
 - 单文件非必要不超过 400 行；函数复杂度超阈值时优先**提纯函数**而不是加豁免
-- 审计规则的作用域字段（`exts` / `include_paths` / `exclude_paths` / `file_patterns`）语义见 `docs/功能-审计规则体系.md`——**自家纪律不要固化成审计规则**（会对任何仓库生效，必然在第三方项目大面积误报）
+- 审计规则的作用域字段（`exts` / `include_paths` / `exclude_paths` / `file_patterns`）语义见独立包 `audit-sluice` 仓库的 `docs/功能-审计规则体系.md`——**自家纪律不要固化成审计规则**（会对任何仓库生效，必然在第三方项目大面积误报）
 
 ## 六、加/删工具（公开面变更）
 

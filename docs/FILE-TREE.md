@@ -207,7 +207,6 @@ dsh-git-push/
 │   ├── 2026-11-15-gitpush与审计分家方案.MD — gitpush 与审计分家方案（设计稿）：两包职责切分（探留 gitpush / 判归审计）、审计包三形态（library/CLI/MCP）、契约改动、文件迁移约对半、兼容与风险
 │   ├── 2026-11-15-审计中间层与引擎声明分层方案.MD — 审计中间层与引擎声明分层方案：豁免+评分抽成同库中间层，引擎只产 findings + 声明 scoreSpec；三契约、5 调用点收敛、自研引擎改造、进程形态对比
 │   ├── CHANGELOG.md — 版本列表宿主（doc-version apply 写 dshgp-version 标记块）
-│   ├── DETAILS-EXEMPT-AND-RULES.md — 细节补充：豁免注释与规则 yml 用法全录
 │   ├── FILE-TREE.md — （待注释）
 │   ├── FUNCTIONS.md — 函数列表宿主（doc-func apply 写 dshgp-functions 标记块）
 │   ├── PERF-BASELINE.md — （待注释）
@@ -215,8 +214,6 @@ dsh-git-push/
 │   ├── SPEC.md — （待注释）
 │   ├── releases.json — （待注释）
 │   ├── 功能-发布与工具链.md — 提交推送、克隆、npm 发布、仓库索引与账号状态、文档生成脚本的功能介绍
-│   ├── 功能-审计引擎.md — 审计引擎功能介绍：规则体系、树化判定、评分、外部 linter 委托、豁免通道
-│   ├── 功能-审计规则体系.md — （待注释）
 ├── skills/ — 插件权威 skill（功能手册/规则/使用说明，安装副本的 skills/ 同步）
 │   ├── dsh-repo-index.md — dsh-repo-index skill（源码索引权威说明）
 │   ├── dev/ — （待注释）

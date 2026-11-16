@@ -26,7 +26,7 @@
 | `public` | **拦截提交**（凭据一旦推送即等于泄露，必须移除或转私有） |
 | `private` / `unknown` | 只提示不拦截（私有边界内可正常提交；转公开前须先移除） |
 
-单文件想彻底不报，用豁免注释（见 `docs/DETAILS-EXEMPT-AND-RULES.md`）。
+单文件想彻底不报，用豁免注释（细节见独立包 `audit-sluice` 仓库的 `docs/DETAILS-EXEMPT-AND-RULES.md`）。
 
 ## 四、凭据的创建与轮换
 

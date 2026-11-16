@@ -1,32 +1,39 @@
 # dsh-git-push
 
-DSH 的 git 提交推送与代码审计插件：提交前自动过审计门禁，提交、推送、发包一条命令完成。
+DSH 的 **git 提交推送插件**：提交、推送、克隆、账号校验、仓库扫描与 npm 发布，一个工具搞定。
+
+提交前可选跑「预处理门禁」：本插件只负责"跑一个命令、按退出码决定放行还是拦截"，
+检查内容由可插拔的 provider 决定（审计由独立包 `audit-sluice` 提供）。
 
 ## 功能
 
 | 功能 | 做什么 | 入口 |
 |---|---|---|
-| 提交推送 | 审计通过后提交并推送，支持 dry-run / force / 指定 remote | `git_commit_push` / `commit` |
+| 提交推送 | 提交并推送；支持 dry-run / force / 指定 remote / 精确路径 | `git_commit_push` / `commit` |
 | 仓库扫描 | 列出仓库的未提交、未推送、分叉与近期活动 | `git_scan` / `scan` |
-| 代码审计 | 静态检查 + 质量评分，diff 或全量两种范围 | `code_audit` / `audit` / `/git-audit` |
-| 历史提交审计 | 逐提交回放审计并落盘报告 | `code_audit --history` / `audit --history` |
 | 克隆仓库 | 按 owner/repo 克隆到指定目录 | `git_clone` / `clone` |
 | 克隆预演 | 只看将拉取什么，不落盘 | `git_clone_preview` / `clone-preview` |
 | 建远端仓 | 给本地仓库建远端并设置 origin | `git_remote_create` / `remote-create` |
 | 可见性 | 切换仓库 public / private | `git_set_visibility` / `set-visibility` |
 | 改名 | 给远程仓库改名（dryRun 默认开，列出旧名出现位置） | `git_remote_rename` / `rename` |
-| 凭据与账号 | 校验 GitHub token 与 SSH 公钥、生成密钥对 | `git_account_check` / `git_gen_ssh_key` |
+| 凭据与账号 | 校验 GitHub token 与 SSH 公钥、生成密钥对、导出凭据环境变量 | `git_account_check` / `git_gen_ssh_key` / `git_cred_env` |
 | 身份改写 | 把历史提交身份统一成登录账号 | `git_identity_rewrite` / `identity-rewrite` |
-| 发布 | 发布 npm 包（dryRun 默认只体检；凭据由插件托管，无需 npm login）。**网络边界**：dryRun 会 GET 真实上游查版本占用（只读），但绝不写入公共 registry；`localPreview=true` 全程不碰公网 | `npm_publish` / `npm-publish` |
+| 发布 | 发布 npm 包（dryRun 默认只体检；凭据由插件托管，无需 npm login） | `npm_publish` / `npm-publish` |
 | 撤包 | 从 registry 撤版本（默认 dryRun 预检，不可逆） | `npm_unpublish` / `unpublish` |
-| 豁免标记 | 给文件加/删豁免注释并校验是否真生效 | `exempt` |
-| I/O 风险扫描 | 扫描读写操作的风险分级 | `io_scan` / `file-io` |
-| 链接检查 | 检查文档里的 URL 是否有效 | `link_check` / `link-check` |
-| 拼接产物作用域 | 查分片拼成单文件后同一作用域内的重名（后者静默顶掉前者） | `scope_check` / `scope-check` |
-| 巨型文件拆分 | 按顶层块拆分单文件并校验导出一致 | `module_splitter` / `module-splitter` |
 | git 透传 | 执行任意 git 命令，凭据自动注入 | `git_sluice` / `git` |
-| HTTP 接口直调 | 调用本插件的全部 HTTP 接口 | `git_api` / `api` |
-| 审计结果查询 | 按规则/文件/严重级/规则包聚合审计结果 | `GET /api/git-push/audit` |
+| HTTP 接口直调 | 调用本插件的 HTTP 接口 | `git_api` / `api` |
+| 预处理动作 | 转发到声明该动作的 provider（审计/静态检查等） | `git-sluice preprocess <action>` |
+| 静态检查类工具 | `code_audit`（含 `history=true` 逐提交回放）/ `io_scan` / `link_check` / `scope_check` / `exempt`——**实现由 `audit-sluice` 提供，需安装** | 同名工具 |
+
+## 提交前检查（可选，独立包实现）
+
+检查逻辑不在本插件里——由独立包 **`audit-sluice`** 提供（`npm install audit-sluice`）。
+装上后本插件自动发现它；**不装也能正常用**，只是不做提交前检查，返回值里会标注"预处理未执行"。
+
+```bash
+audit-sluice audit --repo <路径> --scope diff --json   # 也能脱离本插件独立跑：stdout 单行 JSON，exit 0|1|2
+audit-sluice config                                    # 它的配置（扫描范围/文件上限/禁用规则包/权重）
+```
 
 ## 环境要求
 
@@ -38,82 +45,84 @@ DSH 的 git 提交推送与代码审计插件：提交前自动过审计门禁�
 
 ### 侧边栏面板
 
-- **账号信息**：GitHub 与 npm 账号状态、凭据与 SSH 公钥
-- **审计面板**：规则包启停、排序、命中数
-- **设置**：审计开关、扫描范围、评分权重、自动推送开关
+- **账号信息**：GitHub 与 npm 账号状态、凭据与 SSH 公钥、本地/云端仓库列表
+- **设置**：凭据与密钥、推送通道、推送门禁、自动推送、**提交前预处理开关**（其余审计项归 `audit-sluice` 自己的配置）
 
 ### 聊天框指令
 
 ```
-/git-audit                 # 审计当前仓库（默认 diff 范围）
-/git-audit --full          # 全量审计
-/link-check                # 检查文档里的链接
+/git-scan                  # 扫描工作区里的 git 仓库
+/git-account               # 校验 GitHub 账号与凭据
+/git-clone-preview <owner/repo>   # 克隆预演
 ```
 
 ### AI 工具
 
 ```js
 git_scan({ root })                                  // root 可空：空=自动识别家目录
-code_audit({ repo, scope, includeFindings })         // repo 必填；scope 可空（空=full）；includeFindings 可空（空=精简输出）
-git_commit_push({ message, repo, push, dryRun })     // message 必填；repo 可空（空=当前目录）；push 可空（空=推送）；dryRun 可空（空=真提交）
-git_clone({ target, dest, branch, history })         // target 必填（owner/repo 或完整 URL）；dest 可空（空=工作区根）；history 可空（空=整树快照）
-git_clone_preview({ target, branch })                // target 必填；branch 可空（空=默认分支）
-git_api({ path, method, query, body })               // path 可空（空=列出全部接口）；method 可空（空=GET）
+git_commit_push({ repo, message, push, dryRun })     // repo/message 必填；其余可空
+git_clone({ target, dest, branch, history })         // target 必填（owner/repo 或完整 URL）
+git_clone_preview({ target, branch })                // target 必填；branch 可空
+git_api({ path, method, query, body })               // path 可空（空=列出全部接口）
 git_sluice({ args })                                 // args 必填：与 git 一致的参数串
 git_account_check({ token, sshPub })                 // 两者都可空：不传则自动解析本机凭据
-git_gen_ssh_key({ email, force })                    // email 必填；force 可空（空=已存在时不覆盖）
-git_identity_rewrite({ paths, dryRun, write, push }) // 全可空：dryRun 默认只报告，write 才改写
-git_remote_create({ repo, visibility, dryRun })      // repo 必填；visibility 可空（空=private）
+git_cred_env({})                                     // 输出凭据环境变量前缀（不含明文）
+git_gen_ssh_key({ email, force })                    // email 必填
+git_identity_rewrite({ paths, dryRun, write, push }) // 全可空：dryRun 默认只报告
+git_remote_create({ repo, visibility, dryRun })      // repo 必填
 git_set_visibility({ repo, visibility })             // 两者必填
 npm_publish({ dir, dryRun, confirm, tag, otp })      // dryRun 默认 true（只体检，不写 registry）
-npm_publish({ dir, localPreview: true })            // 本地 registry 彩排：publish→install→加载全走本机，全程不碰公网
-exempt({ action, rule, path, scope, line, reason })  // action 与 rule 必填；path 可数组；scope=header（文件头）或 line
-io_scan({ repo, writeOnly })                         // 两者都可空：writeOnly 空=读写都看
-link_check({ path })                                 // path 可空：空=整个工作区
-scope_check({ files, repo, prefix, allowlist, topLevelMustBeEmpty })  // 全可空：files 空=读项目 dshScopeCheck.files；prefix 空=按项目契约
-module_splitter({ command, file, plan, dryRun })     // command 必填（analyze/split/verify）；dryRun 可空
+npm_unpublish({ name, version, dryRun, confirm })    // dryRun 默认 true
+// 以下需安装 audit-sluice（未装时返回可诊断错误，不影响其他工具）
+code_audit({ repo, scope, includeFindings })
+io_scan({ repo, writeOnly })
+link_check({ path })
+scope_check({ files, repo, prefix, allowlist, topLevelMustBeEmpty })
+exempt({ action, rule, path, scope, line, reason })
 ```
 
-### 独立 CLI（git-sluice）
+### 独立 CLI
 
 ```
 git-sluice account-check                  # 校验本机 GitHub 凭据
 git-sluice scan <目录>                     # 列出该目录下的 git 仓库
-git-sluice commit <仓库> --message "msg"   # 提交并推送（自动过审计门禁）
+git-sluice commit <仓库> --message "msg"   # 提交（默认只 commit；--push 推远端）
+git-sluice preprocess <action> ...        # 转发到 provider（如 audit / io_scan / link_check）
 git-sluice help                          # git 侧全部命令
 
-audit-sluice audit <仓库> --full           # 全量审计（加 --json 拿明细）
-audit-sluice scope-check [文件]             # 查拼接产物同帧重名（无参数时读项目 dshScopeCheck.files）
-tool-sluice self-check                    # 三入口 HELP/参数/命令集一致性自检
+tool-sluice self-check                    # 两入口 HELP/参数/命令集一致性自检
 ```
 
 ## API
 
-38 个端点，统一前缀 `/api/git-push/`。常用：
+统一前缀 `/api/git-push/`（git 侧与共享），预处理侧统一前缀 `/api/preprocess/`。常用：
 
 | 端点 | 做什么 |
 |---|---|
 | `GET /api/git-push/status` | 插件状态与配置概览 |
 | `GET /api/git-push/scan` | 仓库扫描结果 |
-| `GET /api/git-push/audit` | 审计结果（支持 scope / groupBy / severity / top） |
-| `GET /api/git-push/repos` | 本地仓库列表 |
+| `GET /api/git-push/repos-local` | 本地仓库列表（默认只读索引快照，毫秒级；`?live=1` 才同步探测远端） |
 | `GET /api/git-push/account-status` | 账号状态快照 |
-| `POST /api/git-push/credentials` | 写入凭据 |
+| `POST /api/git-push/settings-set` | 写单个设置键 |
 | `GET /api/git-push/tools` | 工具清单 |
+| `GET /api/preprocess/<action>` | 预处理端点（动作清单来自各 provider 的 manifest） |
 
 ```bash
-# 审计一个仓库（按规则聚合）
-curl "http://<本机IP>:<端口>/api/git-push/audit?repo=<仓库绝对路径>&scope=diff&groupBy=rule"
-
-# 列出全部可用接口
+# 预处理动作清单
 curl "http://<本机IP>:<端口>/api/git-push/api"
+
+# 审计结果（需安装 audit-sluice）
+curl "http://<本机IP>:<端口>/api/preprocess/audit?repo=<仓库绝对路径>&scope=diff&groupBy=rule"
 ```
 
 ## 文档索引
 
-- [docs/SPEC.md](docs/SPEC.md) — 规格唯一入口（工具、接口、设置键、数据文件、规则体系）
-- [docs/功能-审计引擎.md](docs/功能-审计引擎.md) — 审计引擎（规则体系、判定、评分、委托层、豁免）
+- [docs/SPEC.md](docs/SPEC.md) — 规格唯一入口（工具、接口、设置键、数据文件、与 audit-sluice 的耦合面）
 - [docs/功能-发布与工具链.md](docs/功能-发布与工具链.md) — 提交推送、克隆、npm 发布、仓库索引、文档生成
+- [docs/PERF-BASELINE.md](docs/PERF-BASELINE.md) — git 侧性能基线
+- [docs/PLAN-UI状态工厂.md](docs/PLAN-UI状态工厂.md) — UI 状态层改造计划与交付记录
 - [docs/FILE-TREE.md](docs/FILE-TREE.md) — 目录结构（自动生成）
 - [docs/CHANGELOG.md](docs/CHANGELOG.md) — 版本列表（自动生成）
 - [docs/FUNCTIONS.md](docs/FUNCTIONS.md) — 函数列表（自动生成）
+
+审计实现文档（规则体系、评分、豁免、性能基线）属独立包，见 `audit-sluice` 仓库的 `docs/`。

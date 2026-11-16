@@ -1,8 +1,9 @@
 # SPEC：当前有效规格
 
 > 本文件是插件的**契约规格唯一入口**：写清对外接口（工具 / HTTP / 设置键 / 数据文件）与不变量。
-> 面向使用者的功能介绍在 `docs/功能-审计引擎.md`（审计侧）与 `docs/功能-发布与工具链.md`（git / 发布侧）；
-> 规则字段与豁免全录见 `docs/DETAILS-EXEMPT-AND-RULES.md`。设计过程的方案与诊断不在本仓库维护。
+> 面向使用者的功能介绍：git / 发布侧见 `docs/功能-发布与工具链.md`；
+> 审计侧（规则体系、评分、豁免）属独立包 `audit-sluice`，见它仓库的 `docs/`。
+> 设计过程的方案与诊断不在本仓库维护。
 > 规格以**代码为准**；本文件与代码不符时以代码为准并回来修正本文件。
 
 ## 一、身份
@@ -46,7 +47,7 @@
 
 **不变量**：工具名唯一且匹配 `^[a-zA-Z0-9_-]+$`；CLI 名唯一；宿主注册面（`listTools`）与注册表（`TOOL_REGISTRY`）同名同数——由 `test/test-tool-contract.mjs` 门禁。增删工具必须同步该测试与 README 工具表。
 
-## 三、HTTP 接口（36 条，前缀 `/api/git-push/`）
+## 三、HTTP 接口（git/共享前缀 `/api/git-push/`，预处理前缀 `/api/preprocess/`）
 
 > npm 相关 7 条：`npm-account`（离线快照）/ `npm-check`（在线校验）/ `npm-owned`（账号名下包）/
 > `npm-packages`（目录依赖）/ `npm-install`（安装，可 `async:true`）/ `npm-install-progress`（安装进度轮询）/
@@ -461,134 +462,81 @@ auditPreprocessAvailable(cfg = {}, hasBuiltinEngine) {
   （含对照组：同一串参数在可用态被接受，证明差异来自参数表而非解析器）
 - `[动态参数] HELP 与参数表对齐：不可用态 help 里不再出现 --audit`（含片段表漂移防护）
 
+### 14.7 预处理第三项能力：`renderResult`（结果文案由实现方渲染）
+
+预处理实现除贡献**参数**（14.1）与**可用性**（14.2），还可贡献**结果文案**（拦截原因、结果查询指引、
+豁免说明）。git 侧只保留中性兜底文案，具体形状见[十六、与 audit-sluice 的耦合面](#十六与-audit-sluice-的耦合面)。
+
 ## 十五、HTTP 前缀分侧
 
-审计侧 5 条端点位于 **`/api/git-audit/*`**（`audit` / `rule-slots` / `rule-detail` / `toggle-rule` / `exempt-hint`），
-git 与共享端点（25 + 6 条）继续在 `/api/git-push/*`。
+预处理侧端点位于 **`/api/preprocess/*`**（当前 provider 声明 5 条：`audit` / `rule-slots` /
+`rule-detail` / `toggle-rule` / `exempt-hint`），git 与共享端点继续在 `/api/git-push/*`。
 
 **两条前缀由同一个 `handleHttp` 入口服务**（`apply.js` 用同一 handler 函数注册两次）⇒ 鉴权
 （Origin/CSRF、body 上限、写确认）对两条前缀完全一致。**禁止为新前缀另写 handler 入口**——
-那会是一个无门禁的裸端点；`test-http-audit-split.mjs` 用 `routes[0].handler === routes[1].handler` 钉住这条。
-
-**旧路径兼容**：`/api/git-push/{那 5 条}` 保留转发一版，响应带
-`Deprecation: true` 与 `Link: </api/git-audit/...>; rel="successor-version"`
-（据此可统计残留调用；移除时机按调用统计决定，不在本版）。
-为此 handler 返回值扩展了**可选 `headers`**，`adaptHttpHandler` 在 `writeHead` 时与 `Content-Type` 合并
-（`Content-Type` 不被覆盖，有断言）。
+那会是一个无门禁的裸端点；`test/git/test-http-audit-split.mjs` 用
+`routes[0].handler === routes[1].handler` 钉住这条。
 
 **`git_api` 工具的 `path` 三种写法**（不加 `side` 参数，AI 面契约零变更）：
-短名（`rule-slots`，走旧前缀转发）/ 前缀相对（`git-audit/rule-slots`，推荐）/ 完整路径。
+短名（`rule-slots`）/ 前缀相对（`preprocess/rule-slots`，推荐）/ 完整路径。
 
 **共享端点（有意留 `/api/git-push/*`）**：`status`、`settings-get/set`、`workspace-paths`、`tools`、`tool-probes`。
 理由：它们要么是「插件整体状态」、要么被多侧共用，强行二分会造成两次请求或语义混淆。
 
-### 14.7 预处理第三项能力：`renderResult`（结果文案由审计方渲染）
+## 十六、与 audit-sluice 的耦合面
 
-> 与「参数动态注册」（14.1–14.6）同一体系：预处理贡献**参数**、**可用性**，以及**结果文案**。
-> git 侧只认契约、不认实现 —— 换引擎/换语言/把审计拆成独立项目时，git 侧的文案代码零改动。
+> 这一节是**书面契约**：宿主与审计实现之间只允许存在下面三处耦合面。
+> 想加第四处，先改这一节并说明理由——代码门禁也会拦（见本节末）。
 
-**契约**
+### 16.1 三处耦合面（唯一允许的文件）
 
-```js
-// lib/preprocess/audit.js（审计预处理）
-{
-  id: 'audit',
-  params: [...],                          // 14.1：给工具签名贡献参数
-  enabled: (cfg, hasBuiltinEngine) => …,  // 14.2：可用性判据（≠ 开关）
-  renderResult: (ctx) => ({               // 本小节：结果文案
-    error:     string | undefined,        // 拦截原因（放行时必须为 undefined）
-    apiGuide:  string | undefined,        // 结果查询指引（可空）
-    notes:     { exempt?, privateExempt? } // 回显型 note（可缺项）
-  }),
-}
+| 文件 | 职责 | 允许做什么 |
+|---|---|---|
+| `lib/preprocess/providers.js` | provider 声明与入口解析 | 声明 provider（id/label/包名/CLI 相对路径）；按 环境变量 → 插件 `node_modules` → 平级目录 解析出 CLI 绝对路径；读各 provider 的 `lib/manifest.js` |
+| `lib/commit-push/pre-commit-engine.js` | 提交门禁的子进程调用 | 拼参数、spawn、按退出码判拦截、超时 fail-closed、解析 stdout 单行 JSON |
+| `lib/app/preprocess-client.js` | 工具/HTTP 的进程内调用 | 动态 `import` 实现的公开面（`lib/index.js` / `lib/capabilities.js` / `lib/manifest.js`），把结果转成工具/HTTP 形状 |
+
+除这三个文件外，宿主 `lib/` 内**不得出现实现包的模块说明符**（`from 'audit-sluice…'` / `import('audit-sluice…')`），
+也不得出现审计实现目录（`lib/{ast,audit,audit-rules,checks,exempt,rule,score,lint-adapter,link-check}`）。
+两条都由 `scripts/check.mjs` 的「解耦」「耦合面」两项机器校验守住。
+
+### 16.2 CLI 契约（与语言无关）
+
+实现方提供一个可执行入口（当前 `audit-sluice` 的 `cli.mjs`）：
+
+```
+stdout : 一行 JSON { ok, scope, summary:{blocker,warning,notice,total}, quality, blocked, findings, files, … }
+exit 0 : 无 blocker（放行）
+exit 1 : 存在 blocker（**事实**，不等于判拦截——最终判拦截在 git 侧）
+exit 2 : 执行失败（参数错、内部异常）
+stderr : 仅诊断信息，不参与判定
 ```
 
-**`ctx`（数据契约，由 git 侧组装，预处理只读）**
+**fail-closed**：找不到入口 / 超时 / 退出码非 0|1 / stdout 不合契约 ⇒ 拒绝提交且不执行任何 git 操作。
+**例外**：实现包"不在位"（可选依赖没装）⇒ 跳过预处理并如实标注（`preprocessSkipped`），不拦提交。
 
-| 字段 | 内容 |
-|---|---|
-| `repoPath` | 仓库路径（文案里要显示，如 apiGuide 的 URL 参数） |
-| `audit` | `{ summary, quality, findings, scope, files }` —— 引擎返回的结果快照 |
-| `blocked` | 拦截明细数组（**已按示例目录/临时豁免过滤过**，即 git 侧最终认定的 blocker） |
-| `exempt` | 可选。本次临时豁免回显：`{ files, count, rules, reason? }`（不含 `note`——note 就是本能力产出的） |
+### 16.3 传给实现的参数（配置归谁）
 
-**合并与兜底**（`lib/preprocess/index.js`）
+宿主只传**调用上下文**：`--repo`、`--visibility`（private|public|unknown）、
+`--exempt-paths` / `--exempt-reason`（本次临时豁免）、`--ruleset`（调用方显式指定）、`--blockers-only`、`--json`。
 
-- `renderPreprocessResult(ctx, cfg, preprocessors?)`：按注册顺序取**可用且实现 renderResult**的预处理，
-  逐字段合并（`error` / `apiGuide` / `notes` 各自独立；`notes` 浅合并）。
-- 预处理**抛错被吞掉**：文案渲染失败绝不能把提交门禁带崩（判定已经做完，这里只是措辞）。
-- 返回 `undefined` 时由 git 侧兜底 `defaultRenderResult(ctx)`：**中性措辞**
-  （`提交前检查拦截：N 项 → 位置（规则）`、空 apiGuide），不写死任何预处理的专名。
+**不传**实现自己的配置（扫描范围 / 权重 / 规则槽位 / 文件数上限）——那些归实现包的配置文件，
+宿主替它传就等于两个包共享一份配置。宿主侧只有「提交前预处理开不开」（`preCommit.enabled`）。
 
-**三样刻意留在 git 侧（不要交出去）**
+### 16.4 manifest 声明（能力真相）
 
-| 留在 git 侧 | 位置 | 为什么不能交给预处理 |
-|---|---|---|
-| `blocked` **布尔** | `lib/app/tool-call.js` 的 `pushJobOutcome` | 它决定 job 状态分叉：「未推送（被拦截）」vs「未完成：<原因>」。这是**状态机语义**（被拦截 ≠ 执行失败），不是审计判定 |
-| 引擎 spawn 失败文案 | `lib/commit-push/pre-commit-engine.js` | 引擎**没被找到时根本不会执行**，它无法生成「我没被找到」这句话；只有拉起它的 git 侧知道 |
-| 兜底默认文案 | `lib/preprocess/index.js` 的 `defaultRenderResult` | 预处理可能不可用/未实现/抛错，git 侧必须有兜底才能「不崩、不静默丢信息」 |
-
-**`buildAuditApiGuide` 为什么不搬**：它是**纯本地文案工具**（拼 URL + 计数），不含任何审计判定语义，
-且被两条路径共用：① 预处理 `renderResult` 里调它生成 apiGuide；② `lib/app/tool-call.js` 的 `code_audit`
-工具**直接**调它（那条路径不经过 `renderResult`，因为工具返回的是「API 查询指引」而非门禁文案）。
-搬进预处理模块会让 `code_audit` 反向依赖预处理器（依赖方向倒置），或被迫维护两份实现。
-**结论：留在 `lib/app/inject-text.js`，预处理 import 它使用。**
-
-## 十六、审计中间层分层
-
-> 设计稿与取舍依据见 `docs/2026-11-15-审计中间层与引擎声明分层方案.MD`。
-> 本节只记录**已实施**的约定。
-
-**分层职责**（同库内分层，不拆项目）：
-
-| 层 | 职责 | 不做什么 |
-|---|---|---|
-| git 侧 | 只调 `runPreprocess(repoPath, opts)` | 不 import 任何审计实现 |
-| **中间层** | ① 引擎适配 ② 豁免编排 ③ 算分 | 不做代码判定 |
-| 审计引擎 | ① 产 findings ② 声明 `scoreSpec` | **不算分、不管豁免** |
-
-**统一入口**：`lib/preprocess/index.js` 的 `runPreprocess(repoPath, opts)` →
-`{ findings, score, files, exemptions: { declared, total } }`。
-引擎入口 `scripts/audit-gate.mjs` 只调它，**不再直接依赖 `auditWithScope` / `getBuiltinScoreSpec`**
-（换引擎不需要改这个文件）。
-
-**三个契约**：
-
-1. **统一 finding 形状**：`{ file, line, rule, severity: 'blocker'|'warning'|'notice', message, dim?, source? }`
-2. **`scoreSpec`（引擎声明评分标准）**：`{ dims: [{id, weight}], dimOfRule?, note? }`
-   - **维度 id 即中文维度名**（与 `finding.dimensions` / `DEFAULT_WEIGHTS` / `counts` / 用户权重键同口径），
-     不引入英文 id——否则要多一张映射表 = 多一个漂移点
-   - **扣分曲线不开放**：`k` 值 / 对数衰减 / 动态权重 / 零规则维度记 0 永远在中间层
-     （`lib/preprocess/score.js` → `lib/score/index.js`）。否则「换引擎分数口径就变」，与本方案初衷相反
-3. **豁免映射**：`lib/preprocess/exempt.js` 的 `EXEMPT_ENGINE_ADAPTERS` 覆盖
-   `builtin` / `eslint`（含 `-next-line` / `-line` / 文件级三种语义）/ `semgrep`（`nosemgrep`）/
-   `bandit`（`# nosec`）/ `gitleaks`（`.gitleaksignore` 指纹）
-   - **声明式（引擎自报 suppressed）优先 + 读取式（中间层扫源码标记）兜底**
-   - **引擎自声明优先于静态表**（`adapterProfile` 通路）：静态表只是内置几条的默认值，
-     第三方引擎声明的 `supportsSuppressed` / `sourceMarkers` 必须生效
-
-**引擎适配器接口**（`lib/preprocess/adapters/`）：
+实现包的 `lib/manifest.js` 导出 `preprocessManifest`：
 
 ```js
-{ id, supportsSuppressed,
-  declaredSuppressed?(),                                   // 引擎自报哪些 finding 已被它豁免
-  async run(repoPath, opts) → { findings, files, scoreSpec } }
+{ id, label, version,
+  endpoints: [{ path, method, desc }],   // HTTP 子端点（挂到 /api/preprocess/）
+  actions:   [{ action, params, desc }] } // 动作（CLI `preprocess <action>` / HTTP 同名）
 ```
 
-三条硬约束：只产 findings 不自己算分 / finding 必带 `file·line·rule·severity` /
-**不要自己过滤被豁免项**（由中间层统一做，否则报告无法追溯"豁免了什么"）。
-`getAdapter(id)` 对**未知 id 硬报错**，不静默退回内置——否则会出现「以为在跑 Semgrep、其实在跑内置」。
+宿主的 HTTP 路由、CLI 转发、工具参数都按这份声明查"谁提供了什么"，不写死具体实现的能力清单。
+可选能力：`params`（给工具签名贡献参数）、`enabled`（可用性判据，≠ 开关）、`renderResult`（结果文案）。
 
-**独占调用的门禁**（自动测试守，人改不回去）：
+### 16.5 实现方自己的文档
 
-- `scoreQuality` 全仓只有 `lib/preprocess/score.js` 调用
-- `exemptForFinding` 全仓只有 `lib/preprocess/exempt.js` 调用
-- `scripts/audit-gate.mjs` 不再直接 import `auditWithScope`
-
-**不等价即错的两条实测结论**（接线时踩到并修正）：
-
-1. **中间层不得覆盖引擎已标注的豁免**：引擎给的 `exemptReason` 比中间层的通用标记（`builtin:passthrough`）
-   更具体，覆盖会让报告内容悄悄变（且"逐字一致"对比立刻露馅）
-2. **拿不到文件正文时只透传、不重判**：`isCategoryExempt` 这类与正文无关的判定对已按真实正文判过的
-   findings 再判一次，只会事后多吞几条、改变评分
-
+审计实现的规则体系 / 评分 / 豁免 / 性能基线属实现包，见 `audit-sluice` 仓库的 `docs/`：
+`功能-审计引擎.md`、`功能-审计规则体系.md`、`DETAILS-EXEMPT-AND-RULES.md`、`PERF-BASELINE.md`。
