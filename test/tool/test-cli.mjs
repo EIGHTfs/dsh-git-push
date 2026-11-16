@@ -662,7 +662,9 @@ import { promisify } from 'node:util';
   //   与 2026-09-16 审计进阶下拉同因）。该路径不走 SETTINGS_SCHEMA，须源码级断言防回归。
   test('[client] client.js：select 选项必须经 props.children 渲染（防 jsx 第三参数坑）', () => {
     // 坏写法（已发生两次）：jsx('select', { …props… }, […].map(…)) —— 第三参数被当作 key
-    assert.ok(!/jsx\.jsx\('select',\s*\{[\s\S]*?\}\s*,\s*\[/.test(rootClientSrc),
+    // 判据要精确到「第三参数是**非空数组**」：`useEffect(fn, [])` 的形状也是 `}, []`，
+    //   只写 `}, [` 会把 effect 依赖数组误判成坏 select（本测试就因此假红过一次）。
+    assert.ok(!/jsx\.jsx\('select',\s*\{[\s\S]*?\}\s*,\s*(?:\[[^\]]*\]\s*\.map|\[(?!\]))/.test(rootClientSrc),
       '不得把选项数组作为 jsx.jsx 第三参数传给 select（第三参数是 key，children 会丢失、下拉渲染为空）');
     // 好写法：children: 数组 放进 props（pushMethod / 自动推送范围两处）
     // 原为三处，其中「审计进阶 sel」随审计 Tab 移出构建（2026-11-08 UI 与审计解耦）——
@@ -740,6 +742,29 @@ import { promisify } from 'node:util';
     assert.ok(m, '应声明首屏资源清单 uiFirstPaintNames');
     assert.ok(m[1].includes("'npm'"), '首屏资源清单必须包含 npm（否则 npm 卡又会显示假「未配置」）');
     assert.ok(m[1].includes("'account'") && m[1].includes("'settings'"), '首屏资源清单应含 settings/account');
+  });
+
+  test('[client] 「没读 / 读失败」不得渲染成确定性否定结论（防假消息回归）', () => {
+    // 起因（task-23 现象 1）：npm 从未被请求，界面却断言「未配置 npm token」——
+    //   把「不知道」写成了「确定没有」。这类假消息比空白更糟：用户会照着错误结论去改配置。
+    const dir = join(ROOT, 'lib', 'client-parts', 'git');
+    // ① 三张会显示"账号/列表"状态的卡片都必须经过统一状态提示条 + 按 uiStatus 分支
+    for (const f of ['account.js', 'npm.js', 'repo.js']) {
+      const src = readFileSync(join(dir, f), 'utf8');
+      assert.ok(src.includes('dshgp_ResourceNotice'), `${f} 必须使用 dshgp_ResourceNotice（统一按状态分支）`);
+      assert.ok(src.includes('uiStatus'), `${f} 必须读 uiStatus 才能区分「没读」与「确实没有」`);
+    }
+    // ② 提示条本身必须区分 未读/读取中 与 失败（失败要带重试入口）
+    const page = readFileSync(join(dir, 'page.js'), 'utf8');
+    assert.match(page, /function dshgp_ResourceNotice/, 'page.js 应提供统一状态提示条');
+    assert.match(page, /info\.state === 'error'/, '提示条必须单独处理读取失败');
+    assert.match(page, /info\.state === 'idle' \|\| info\.state === 'loading'/, '提示条必须单独处理未读/读取中');
+    // ③ §三：面板重建钩子必须存在，且两个 tab 都接上（切 tab 回来不清空、不假空）
+    for (const f of ['account.js', 'settings.js']) {
+      const src = readFileSync(join(dir, f), 'utf8');
+      assert.ok(src.includes('panelRebuilt'), `${f} 挂载时应触发 panelRebuilt（补读 + 重放）`);
+    }
+    assert.match(rootClientSrc, /markRebuilt/, '状态层应提供 markRebuilt（重建后按当前值重放）');
   });
 
   test('[client] client.js：设置项键（客户端写回键须在 Host Config）', () => {
