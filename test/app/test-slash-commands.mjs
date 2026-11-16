@@ -1,5 +1,6 @@
 /**
- * /git-audit 斜杠命令：参数解析 + 会话 cwd 默认 + 非 git 拒绝 + 文本格式。
+ * 斜杠命令（git 侧）：参数解析 + 会话 cwd 默认 + 文本格式。
+ * 注：审计类斜杠命令（/git-audit、/git-io-scan、/link-check）已随审计能力迁出宿主。
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -34,7 +35,7 @@ test('findGitRoot：本仓库能找到；临时空目录找不到', () => {
   }
 });
 
-test('registerSlashCommands：注册全部只读命令（含 git-audit）', () => {
+test('registerSlashCommands：注册全部只读命令', () => {
   const cmds = [];
   const n = registerSlashCommands({
     inject: (keys, fn) => {
