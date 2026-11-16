@@ -329,6 +329,49 @@ test('HTTP repos-local：缺省只读索引（不重扫）——列表永远与�
   }
 });
 
+test('HTTP repos-local：默认请求**不做任何远端探测**（列表必须秒回，SSH 交后台）', async () => {
+  // 现象回归（task-23 现象 3）：列表接口曾把 27 仓 SSH 探测内联在请求里，实测 87s，
+  //   前端 30s 必超时 →「✗ 读取失败: signal timed out」。现在请求只读索引快照。
+  // 判据：把索引指向一个**不可达**的远端，请求仍在 1s 内返回，且 stale=true、liveSkipped=true
+  //   （真去探测的话这里必然挂住 ≥ 数秒 —— 1s 的上界足够区分两种实现，且不会因机器慢而假红）。
+  const { handleHttp } = await import('../../lib/app/http-handlers.js');
+  const ws = mkdtempSync(join(tmpdir(), 'dshgp-rl-fast-'));
+  const home = mkdtempSync(join(tmpdir(), 'dshgp-rl-home-fast-'));
+  const prevHome = process.env.DSH_HOME;
+  process.env.DSH_HOME = home;
+  try {
+    makeRepo(join(ws, 'fast-repo'));
+    mkdirSync(join(home, 'git-push'), { recursive: true });
+    writeFileSync(join(home, 'git-push', 'dsh-repo-index.json'), JSON.stringify({
+      repos: [{
+        name: 'fast-repo',
+        path: join(ws, 'fast-repo'),
+        owner: 'EIGHTfs',
+        repo: 'fast-repo',
+        // 不可达远端：若在请求内探测，必然长时间挂住
+        repoUrl: 'https://api.github.com/repos/EIGHTfs/definitely-not-reachable-xyz',
+        visibility: 'private',
+      }],
+    }));
+    const t0 = Date.now();
+    const r = await handleHttp(
+      { method: 'GET', url: `/api/git-push/repos-local?path=${encodeURIComponent(ws)}` },
+      { workspaceRoot: ROOT }, {},
+    );
+    const ms = Date.now() - t0;
+    const body = r.body || {};
+    assert.equal(r.status, 200);
+    assert.ok(ms < 1000, `默认请求必须秒回（实测 ${ms}ms；若 >1s 说明又把网络探测塞进请求路径了）`);
+    assert.equal(body.stale, true, '未补查过 ⇒ stale=true（前端据此显示「同步中」）');
+    const row = (body.repos || []).find((x) => x.name === 'fast-repo') || {};
+    assert.equal(row.liveSkipped, true, '没有远端状态 ⇒ liveSkipped=true（真未知，不能猜成 0/0）');
+  } finally {
+    if (prevHome === undefined) delete process.env.DSH_HOME; else process.env.DSH_HOME = prevHome;
+    rmSync(ws, { recursive: true, force: true });
+    rmSync(home, { recursive: true, force: true });
+  }
+});
+
 test('HTTP repos-local-refresh：空 repos 不炸，返回空结果', async () => {
   const { handleHttp } = await import('../../lib/app/http-handlers.js');
   const r = await handleHttp(
