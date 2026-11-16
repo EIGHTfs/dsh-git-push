@@ -18,7 +18,8 @@ test('环境注入：生成含 cwd/项目根/工具清单', () => {
   const t = createEnvInjectionText({ cwd: '/work', projectRoot: '/work/proj' });
   assert.ok(t.includes('当前工作目录 cwd：/work'));
   assert.ok(t.includes('项目实际目录（git 根）：/work/proj'));
-  assert.ok(t.includes('git=/usr/bin/git'));
+  // 不写死默认值：默认清单是可配置/可探测的，断言"文本里带出默认清单里的 git 值"即可
+  assert.ok(t.includes('git=' + DEFAULT_TOOLS.git), `环境注入应带出 git=${DEFAULT_TOOLS.git}`);
 });
 
 test('环境注入：解析回键值结构', () => {

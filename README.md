@@ -81,6 +81,25 @@ scope_check({ files, repo, prefix, allowlist, topLevelMustBeEmpty })
 exempt({ action, rule, path, scope, line, reason })
 ```
 
+### 提交前预处理链（可选）
+
+`preCommit.stages` 按数组顺序跑多个阶段（如"先格式化、再审计"）；也可以**按次**用工具参数
+`preprocessStages` 覆盖配置（优先级更高）：
+
+```js
+git_commit_push({
+  repo, message,
+  preprocessStages: [
+    { command: 'node', args: ['tools/fmt.mjs', '{filesFile}'], onFail: 'warn' },
+    { provider: 'audit', onFail: 'block' },
+  ],
+})
+```
+
+每阶段可用 `{repo}` / `{filesFile}` / `{filesCount}` / `{stage}` 占位符，宿主同时注入
+`PREPROCESS_REPO` / `PREPROCESS_CHANGED_FILES` 等环境变量。回执里 `preprocessStages` / `preprocessChanges` /
+`stagesSource` 如实反映"哪个阶段改了什么、本次链来自参数还是配置"。契约见 [docs/SPEC.md](docs/SPEC.md) 第十七章。
+
 ### 独立 CLI
 
 ```

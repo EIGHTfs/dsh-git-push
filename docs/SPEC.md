@@ -529,3 +529,129 @@ stderr : 仅诊断信息，不参与判定
 
 审计实现的规则体系 / 评分 / 豁免 / 性能基线属实现包，见 `audit-sluice` 仓库的 `docs/`：
 `功能-审计引擎.md`、`功能-审计规则体系.md`、`DETAILS-EXEMPT-AND-RULES.md`、`PERF-BASELINE.md`。
+
+## 十七、预处理阶段链（`preCommit.stages`）
+
+> 把「提交前跑一个命令」升级成「按顺序跑几件事」：典型是「先格式化，再审计」。
+> **向后兼容是硬约束**：不配 `stages` 时，回执与拦截决策与升级前逐字段一致（只多一个 additive 的 `stagesSource`）。
+
+### 17.1 配置与执行形态
+
+```jsonc
+{
+  "preCommit": {
+    "enabled": true,
+    "stages": [                                  // 数组顺序 = 执行顺序
+      { "command": "node", "args": ["fmt.mjs", "{filesFile}"], "onFail": "warn", "timeoutMs": 60000 },
+      { "provider": "audit", "onFail": "block", "timeoutMs": 600000 }
+    ],
+    "command": "", "args": [], "timeoutMs": 600000   // 旧单命令模式（stages 为空时生效）
+  }
+}
+```
+
+| 写法 | 含义 |
+|---|---|
+| `{ provider: 'audit' }` | 走 provider 注册表解析（已有通道） |
+| `{ command: 'node', args: [...] }` | 跑任意脚本，**不要求**对方声明是插件扩展；**不走 shell**（文件名含空格也安全，推荐） |
+| `{ command: 'node x.mjs --mode staged' }` | 单字符串形态：按 shell-like 规则**切词**（不启动真 shell，`;`/`$( )` 只当普通参数） |
+
+条目必须**且只能**给 `provider` 或 `command` 之一；两者都给/都不给 ⇒ **解析期直接报错**（跑任何 git 操作之前）。
+
+### 17.2 优先级（调用参数 > 配置）
+
+```
+调用参数 preprocessStages  >  preCommit.stages（配置）  >  preCommit.command 单命令  >  单 provider 默认
+```
+
+`preprocessStages` 是工具参数（`git_commit_push`）与 CLI flag（`git-sluice commit --preprocess-stages '<JSON|@file>'`）：
+元素形态与配置里的 stage 一致。它表达的是**调用语义**（"这一次提交我想额外跑什么"），配置表达的是**环境语义**
+（"这个项目默认怎么检查"）。回执里的 `stagesSource` 会如实标出来源：`param` / `config` / `command` / `default`。
+
+### 17.3 失败语义（宿主不按 provider 名字判断）
+
+```
+onFail = 用户配置的 stage.onFail  >  provider manifest 的 defaultOnFail  >  'block'
+```
+
+| 值 | 行为 |
+|---|---|
+| `block`（**缺省**） | 中断整条链并拒绝提交（fail-closed：没声明就等于没承诺"失败没关系"） |
+| `warn` | 记警告并继续下一阶段（回执 `preprocessWarnings`） |
+| `skip` | 静默跳过该阶段 |
+
+provider 可在自己的 `preprocessManifest` 里声明 `defaultOnFail`（见 16.4）；**宿主不写任何"谁是审计谁是格式化"的分支**。
+实现方"不在位"（包没装）不算失败 ⇒ 记 `skipped` + 警告并继续（热插拔语义）。
+
+### 17.4 交给实现方的上下文（环境变量 + 占位符，两套并存）
+
+| 环境变量 | 内容 |
+|---|---|
+| `PREPROCESS_REPO` | 仓库绝对路径 |
+| `PREPROCESS_CHANGED_FILES` | 本次改动文件清单（**换行**分隔；文件名可含逗号） |
+| `PREPROCESS_CHANGED_FILES_COUNT` | 条数 |
+| `PREPROCESS_CHANGED_FILES_FILE` | 同一份清单的落盘路径（文件多时不撞 128KB 单变量上限） |
+| `PREPROCESS_STAGE_PROVIDER` | 当前阶段标识（provider id 或命令名） |
+
+`args` / 单字符串里可用占位符（宿主替换）：`{repo}` `{filesFile}` `{filesCount}` `{stage}`。
+两者不冲突：脚本可以只读环境变量，也可以从 argv 拿。
+
+### 17.5 改动可见（快照差集）
+
+每个阶段**前后各拍一次**工作树快照（`git status --porcelain -z` + 路径的**内容指纹**），差集即该阶段改动：
+
+```jsonc
+{
+  "preprocessStages": [
+    { "provider": "fmt", "kind": "command", "ok": true, "ms": 1200,
+      "changed": { "added": 0, "modified": 5, "deleted": 0, "files": ["a.js", "b.js"] } },
+    { "provider": "audit", "ok": true, "ms": 8000 }
+  ],
+  "preprocessChanges": { "total": 5, "files": ["a.js", "b.js"] },
+  "stagesSource": "config"
+}
+```
+
+- 用**内容指纹**而不是 mtime/大小：跑两次格式化、第二次内容相同 ⇒ 必须报 0 改动（幂等可验证）。
+- 为什么由宿主拍快照而不是要求实现方上报：任何"会改文件的实现"（格式化/自动修复/锁文件更新）都通用，
+  不需要扩 CLI 契约。
+- 阶段改的文件在本次提交里会被后续 `git add` 一并纳入（引擎在 add **之前**跑，位置天然正确）。
+
+## 十八、格式化 provider：设计分析（**本插件不内置**）
+
+> 本节是**设计分析**，不是待实现功能：`dsh-git-push` 里**没有任何格式化逻辑**，也不会内置
+> `.go`/`gofmt`/`prettier` 这类常量。要落地请做成独立 provider 包（如 `format-sluice`），
+> 由它自己决定映射与配置；宿主只负责「按序跑 + 拍快照 + 报改动 + 按 onFail 决策」。
+
+### 18.1 映射与分组（性能关键）
+
+| 扩展名 | 命令 |
+|---|---|
+| `.go` | `gofmt -w <files…>` |
+| `.rs` | `rustfmt <files…>` |
+| `.js` / `.ts` | `npx prettier --write <files…>` |
+
+**按扩展名分组，一次带多个文件**：100 个 `.js` 逐个 `npx prettier` 会启动 100 次 npx（每次 1–2s 解析，
+合计分钟级）；分组一次调用是秒级。范围仍限**本次改动文件**（`git diff --name-only`），不做全仓。
+
+### 18.2 三条设计原则（从参考实现提炼）
+
+| 原则 | 依据 | 含义 |
+|---|---|---|
+| **绝不下载工具** | `stigmer/format-on-edit`（Apache-2.0，只在项目已装对应格式化器时才跑） | 只调用项目**已安装**的格式化器；没装 ⇒ 跳过该扩展名 + 汇总警告（禁静默跳过） |
+| **尊重项目原有配置** | `ucf`（Universal Code Formatter，会自动读取 `.prettierrc` / `rustfmt.toml`） | 调用时不传自己的 `--config`，让工具自己找项目配置 |
+| **路由是纯函数** | `hjkl-mangler`（Rust 库）的 `formatter_for_path(filePath) → formatter` | 写成 `formatterForPath(filePath) → { command, args } \| null`，无副作用、可单测；不要散在 if-else 里 |
+
+其它可参考：Claude Code 的钩子脚本用最简 `case "$file" in *.ts\|*.tsx) npx prettier --write "$file" ;; esac` 做路由，
+只适合单文件、无分组的场景。
+
+### 18.3 按组记账（多语言混装仓库）
+
+各扩展名分组**独立成败**，不是"格式化阶段整体成功/失败"：
+`.go` 成功（改 3 个）、`.js` 因 prettier 未装跳过（警告）、`.rs` 失败（rustfmt 报语法错）——
+回执要能同时表达这三种状态（`changed` / `skipped` + `warnings` / `error`），而不是一个布尔值。
+
+### 18.4 幂等性是硬要求
+
+同一批文件跑两次，第二次改动数必须为 0；否则每次提交都在改文件，还可能形成
+「格式化 → 审计发现变动 → 再格式化」的循环。宿主的快照差集（17.5）已能直接验证这一点。

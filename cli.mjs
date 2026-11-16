@@ -40,6 +40,7 @@ export const KNOWN_FLAGS = [
   '--history-depth', '--ignore-patterns', '--json', '--local-preview', '--max', '--message', '--message-items',
   '--method', '--no-dry-run', '--no-push', '--offline', '--otp', '--owner', '--paths', '--push',
   '--push-confirmed', '--push-initial', '--query', '--remote', '--root',
+  '--preprocess-stages',
   '--skip-smoke', '--ssh-pub', '--tag', '--token', '--update-remotes', '--visibility', '--wait-ci',
   '--wait-visible', '--whole-package', '--write',
 ];
@@ -68,7 +69,7 @@ const HELP = `git-sluice v${VERSION} — ${CLI_ENTRIES[CLI_GIT].intro}
                                    同上，可读文本通道（scan 是它的注册表通道，输出更精简）
   git-sluice index <root> [--owner <账号>] [--depth N] [--max N] [--offline] [--json]
                                    重建仓库索引 dsh-repo-index.json（--offline=纯离线不查 GitHub API）
-  git-sluice commit <repo> --message <msg> [--push|--no-push] [--audit] [--dry-run] [--force] [--ignore-patterns <模式>] [--push-confirmed] [--paths <路径1,路径2>] [--message-items <JSON>] [--audit-exempt-paths <文件,...>] [--audit-exempt-reason <理由>] [--remote <名>] [--wait-ci] [--ci-timeout-sec N]
+  git-sluice commit <repo> --message <msg> [--push|--no-push] [--audit] [--dry-run] [--force] [--ignore-patterns <模式>] [--push-confirmed] [--paths <路径1,路径2>] [--message-items <JSON>] [--preprocess-stages <JSON|@文件>] [--audit-exempt-paths <文件,...>] [--audit-exempt-reason <理由>] [--remote <名>] [--wait-ci] [--ci-timeout-sec N]
                                    审计门禁 → 提交（默认只 commit 不 push；--push 推远端；--force 强推覆盖远端历史；
                                    --push-confirmed 显式放行推送门禁；
                                    --paths 精确 add 指定文件替代 add -A；--audit-exempt-paths 本次提交按文件临时豁免审计）

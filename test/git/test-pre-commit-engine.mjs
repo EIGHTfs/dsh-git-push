@@ -13,7 +13,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync, execFileSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -34,6 +34,8 @@ import {
   runPreCommitEngine,
   runPreCommitPipeline,
   resolveStages,
+  splitCommandLine,
+  substitutePlaceholders,
   resolveStageOnFail,
 } from '../../lib/commit-push/pre-commit-engine.js';
 
@@ -335,9 +337,11 @@ test('只认旧版开关键时按它的值决定跑不跑（不静默关掉门�
 /* ───────────────── S1：有序阶段链（配置解析 + 向后兼容） ───────────────── */
 
 test('resolveStages：未配 stages ⇒ legacy（走原来的单命令路径）', () => {
-  assert.deepEqual(resolveStages({}), { mode: 'legacy', stages: [] });
-  assert.deepEqual(resolveStages({ preCommit: {} }), { mode: 'legacy', stages: [] });
-  assert.deepEqual(resolveStages({ preCommit: { stages: [] } }), { mode: 'legacy', stages: [] });
+  for (const cfg of [{}, { preCommit: {} }, { preCommit: { stages: [] } }]) {
+    const plan = resolveStages(cfg);
+    assert.equal(plan.mode, 'legacy', '未配 stages 必须走 legacy');
+    assert.deepEqual(plan.stages, []);
+  }
 });
 
 test('resolveStages：配了 stages ⇒ chain，保持数组顺序（顺序即执行序）', () => {
@@ -346,10 +350,10 @@ test('resolveStages：配了 stages ⇒ chain，保持数组顺序（顺序即�
   assert.deepEqual(plan.stages.map((x) => x.provider), ['audit', 'x'], '顺序必须原样保留');
 });
 
-test('resolveStages：空 provider / 非法 onFail 的处理（不静默变成别的语义）', () => {
-  const plan = resolveStages({ preCommit: { stages: [{ provider: '  ' }, { provider: 'audit', onFail: 'boom' }] } });
-  assert.equal(plan.stages.length, 1, '空 provider 的条目应被跳过');
-  assert.equal(plan.stages[0].provider, 'audit');
+test('resolveStages：空条目抛配置错；非法 onFail 当"没配"（不猜 block/warn）', () => {
+  assert.throws(() => resolveStages({ preCommit: { stages: [{ provider: '  ' }] } }), /第 1 项|provider|command/,
+    '空条目必须在解析期就报错（静默跳过会让用户以为这道门禁在跑）');
+  const plan = resolveStages({ preCommit: { stages: [{ provider: 'audit', onFail: 'boom' }] } });
   assert.equal(plan.stages[0].onFail, '', '非法 onFail 当"没配"（交给 provider 声明），不当成 block/warn');
 });
 
@@ -364,16 +368,14 @@ test('resolveStageOnFail：用户配置 > provider 声明 > 默认 block（宿�
 test('向后兼容：未配 stages 时 pipeline 与单次引擎逐字段一致（回执形状不变）', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'dshgp-pipeline-legacy-'));
   try {
-    const engine = join(dir, 'fake-engine.mjs');
-    writeFileSync(engine, [
-      "const out = { ok: true, scope: 'diff', summary: { blocker: 0, warning: 1, notice: 0, total: 1 }, quality: { score: 100, level: 'A' }, findings: [], files: 1 };",
-      'process.stdout.write(JSON.stringify(out) + "\n");',
-      'process.exit(0);',
-    ].join('\n'));
+    const engine = writeFakeEngine(dir, 'fake-engine.mjs', { marker: 'legacy-ok' });
     const cfg = { preCommit: { enabled: true, command: 'node', args: [engine] } };
     const direct = await runPreCommitEngine({ repoPath: dir, cfg: cfg });
     const viaPipeline = await runPreCommitPipeline({ repoPath: dir, cfg: cfg });
-    assert.deepEqual(viaPipeline, direct, 'legacy 路径必须与单次引擎回执逐字段一致');
+    // 唯一的差异允许是 additive 的 stagesSource（用于观测"本次跑的是谁"）
+    const { stagesSource, ...rest } = viaPipeline;
+    assert.deepEqual(rest, direct, '除 stagesSource 外必须逐字段一致');
+    assert.equal(stagesSource, 'command', '显式配了 command ⇒ 来源应标 command');
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
@@ -402,4 +404,415 @@ test('单阶段：provider 未注册 ⇒ fail-closed 且错误信息带 provider
   const r = await runPreCommitPipeline({ repoPath: '/tmp', cfg: { preCommit: { enabled: true, stages: [{ provider: 'no-such-provider' }] } } });
   assert.equal(r.ok, false, '未注册的 provider 必须 fail-closed');
   assert.match(String(r.error), /no-such-provider/, '错误信息要能看出是哪个 provider 没注册');
+});
+
+/* ───────────────── S2：多阶段顺序执行 + onFail 语义 ───────────────── */
+
+/** 造一个可控的假引擎脚本：按 JSON 里给的 exitCode/JSON 输出行为。 */
+function writeFakeEngine(dir, name, { exitCode = 0, body = null, marker = '' } = {}) {
+  const file = join(dir, name);
+  const payload = body || {
+    ok: exitCode === 0,
+    scope: 'diff',
+    summary: { blocker: exitCode === 1 ? 1 : 0, warning: 0, notice: 0, total: exitCode === 1 ? 1 : 0 },
+    quality: { score: 100, level: 'A' },
+    blocked: exitCode === 1 ? [{ file: 'x.js', line: 1, rule: 'r', message: 'm' }] : [],
+    findings: [],
+    files: 1,
+    ...(marker ? { marker: marker } : {}),
+  };
+  writeFileSync(file, [
+    'process.stdout.write(' + JSON.stringify(JSON.stringify(payload)) + ' + "\\n");',
+    'process.exit(' + exitCode + ');',
+  ].join('\n'));
+  return file;
+}
+
+test('S2：多阶段按顺序执行，回执含每阶段 provider/ok/ms/onFail', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-chain-'));
+  const prev = process.env.DSH_PREPROCESS_AUDIT_CLI;
+  try {
+    const okEngine = writeFakeEngine(dir, 'ok.mjs', { marker: 'ok' });
+    process.env.DSH_PREPROCESS_AUDIT_CLI = okEngine;
+    const r = await runPreCommitPipeline({
+      repoPath: dir,
+      cfg: { preCommit: { enabled: true, stages: [{ provider: 'audit' }, { provider: 'audit' }] } },
+    });
+    assert.equal(r.ok, true);
+    assert.equal(r.blocked, false);
+    assert.equal(r.preprocessStages.length, 2, '两个阶段都要有回执（顺序执行）');
+    assert.deepEqual(r.preprocessStages.map((x) => x.provider), ['audit', 'audit']);
+    assert.deepEqual(r.preprocessStages.map((x) => x.ok), [true, true]);
+    assert.ok(r.preprocessStages.every((x) => typeof x.ms === 'number'), '每阶段都要有耗时');
+  } finally {
+    if (prev === undefined) delete process.env.DSH_PREPROCESS_AUDIT_CLI; else process.env.DSH_PREPROCESS_AUDIT_CLI = prev;
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('S2：onFail 未声明 ⇒ 默认 block（失败即拦，等价于审计旧行为）', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-chain-block-'));
+  const prev = process.env.DSH_PREPROCESS_AUDIT_CLI;
+  try {
+    // 引擎退出码 2 = 执行失败；没配 onFail ⇒ 走默认 block
+    process.env.DSH_PREPROCESS_AUDIT_CLI = writeFakeEngine(dir, 'boom.mjs', { exitCode: 2 });
+    const r = await runPreCommitPipeline({
+      repoPath: dir,
+      cfg: { preCommit: { enabled: true, stages: [{ provider: 'audit' }, { provider: 'audit' }] } },
+    });
+    assert.equal(r.ok, false, '未声明 onFail 时必须拦截');
+    assert.equal(r.preprocessStages.length, 1, '拦在第一阶段，后续阶段不再跑');
+    assert.equal(r.preprocessStages[0].onFail, 'block', '回执要写清用了哪个语义');
+  } finally {
+    if (prev === undefined) delete process.env.DSH_PREPROCESS_AUDIT_CLI; else process.env.DSH_PREPROCESS_AUDIT_CLI = prev;
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('S2：onFail=warn ⇒ 失败只记警告并继续下一阶段', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-chain-warn-'));
+  const prev = process.env.DSH_PREPROCESS_AUDIT_CLI;
+  try {
+    // 第一阶段 warn 且失败；第二阶段要能证明它确实继续跑了
+    const boom = writeFakeEngine(dir, 'boom.mjs', { exitCode: 2 });
+    process.env.DSH_PREPROCESS_AUDIT_CLI = boom;
+    const r = await runPreCommitPipeline({
+      repoPath: dir,
+      cfg: { preCommit: { enabled: true, stages: [{ provider: 'audit', onFail: 'warn' }, { provider: 'audit' }] } },
+    });
+    assert.equal(r.preprocessStages.length, 2, 'warn 阶段失败后必须继续跑到第二阶段');
+    assert.equal(r.preprocessStages[0].ok, false);
+    assert.equal(r.preprocessStages[0].onFail, 'warn');
+    assert.ok(Array.isArray(r.preprocessWarnings) && r.preprocessWarnings.length >= 1, '要有警告记录');
+    assert.equal(r.ok, false, '第二阶段用同一个失败引擎且默认 block ⇒ 整体仍拦（证明第二阶段真的跑了）');
+  } finally {
+    if (prev === undefined) delete process.env.DSH_PREPROCESS_AUDIT_CLI; else process.env.DSH_PREPROCESS_AUDIT_CLI = prev;
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('S2：用户 onFail=block 覆盖 provider 的 defaultOnFail=warn', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-chain-override-'));
+  const prev = process.env.DSH_PREPROCESS_AUDIT_CLI;
+  try {
+    process.env.DSH_PREPROCESS_AUDIT_CLI = writeFakeEngine(dir, 'boom.mjs', { exitCode: 2 });
+    // 用一个假 manifest 声明 defaultOnFail=warn（通过临时 provider 包 + 注册表不认 ⇒ 这里改用
+    //   直接断言 resolveStageOnFail 的优先级，配合用户配置覆盖的行为断言）
+    assert.equal(resolveStageOnFail({ onFail: 'block' }, { defaultOnFail: 'warn' }), 'block');
+    const r = await runPreCommitPipeline({
+      repoPath: dir,
+      cfg: { preCommit: { enabled: true, stages: [{ provider: 'audit', onFail: 'block' }] } },
+    });
+    assert.equal(r.ok, false, '用户配 block ⇒ 即使 provider 想 warn 也要拦');
+  } finally {
+    if (prev === undefined) delete process.env.DSH_PREPROCESS_AUDIT_CLI; else process.env.DSH_PREPROCESS_AUDIT_CLI = prev;
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+/* ───────────────── S3：快照差集 + 改动可见 + 幂等 ───────────────── */
+
+/** 造一个"会改文件"的假 provider CLI：把 <repo>/a.js 写成固定内容，然后按契约输出。 */
+function writeTouchEngine(dir, name, content) {
+  const file = join(dir, name);
+  writeFileSync(file, [
+    "import { writeFileSync } from 'node:fs';",
+    "const argv = process.argv.slice(2);",
+    "const repo = argv[argv.indexOf('--repo') + 1] || '.';",
+    'writeFileSync(repo + "/a.js", ' + JSON.stringify(content) + ');',
+    "const out = { ok: true, scope: 'diff', summary: { blocker: 0, warning: 0, notice: 0, total: 0 }, quality: { score: 100, level: 'A' }, findings: [], files: 1 };",
+    'process.stdout.write(JSON.stringify(out) + "\\n");',
+    'process.exit(0);',
+  ].join('\n'));
+  return file;
+}
+
+/** 建一个临时 git 仓库（一个已提交文件），返回路径。 */
+function makeTempRepo(prefix) {
+  const repo = mkdtempSync(join(tmpdir(), prefix));
+  execFileSync('git', ['init', '-q'], { cwd: repo });
+  execFileSync('git', ['config', 'user.email', 't@e.com'], { cwd: repo });
+  execFileSync('git', ['config', 'user.name', 't'], { cwd: repo });
+  writeFileSync(join(repo, 'a.js'), 'const x = 0;\n');
+  execFileSync('git', ['add', '-A'], { cwd: repo });
+  execFileSync('git', ['commit', '-qm', 'init'], { cwd: repo });
+  return repo;
+}
+
+test('S3：会改文件的阶段 ⇒ 回执带 changed 清单 + preprocessChanges 汇总', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-snap-'));
+  const repo = makeTempRepo('dshgp-snap-repo-');
+  const prev = process.env.DSH_PREPROCESS_AUDIT_CLI;
+  try {
+    process.env.DSH_PREPROCESS_AUDIT_CLI = writeTouchEngine(dir, 'touch.mjs', 'const x = 1;\n');
+    const r = await runPreCommitPipeline({
+      repoPath: repo,
+      cfg: { preCommit: { enabled: true, stages: [{ provider: 'audit' }] } },
+    });
+    assert.equal(r.ok, true);
+    const stage = r.preprocessStages[0];
+    assert.ok(stage.changed, '阶段回执应含 changed');
+    assert.ok(stage.changed.files.includes('a.js'), `changed.files 应包含被改的 a.js，实际 ${JSON.stringify(stage.changed)}`);
+    assert.equal(r.preprocessChanges.total, 1, '汇总应报出 1 个文件');
+    assert.deepEqual(r.preprocessChanges.files, ['a.js']);
+  } finally {
+    if (prev === undefined) delete process.env.DSH_PREPROCESS_AUDIT_CLI; else process.env.DSH_PREPROCESS_AUDIT_CLI = prev;
+    rmSync(dir, { recursive: true, force: true });
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('S3 幂等：同一个格式化阶段跑两次，第二次改动数必须为 0', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-idem-'));
+  const repo = makeTempRepo('dshgp-idem-repo-');
+  const prev = process.env.DSH_PREPROCESS_AUDIT_CLI;
+  try {
+    process.env.DSH_PREPROCESS_AUDIT_CLI = writeTouchEngine(dir, 'touch.mjs', 'const x = 1;\n');
+    const cfg = { preCommit: { enabled: true, stages: [{ provider: 'audit' }] } };
+    const first = await runPreCommitPipeline({ repoPath: repo, cfg: cfg });
+    assert.equal(first.preprocessChanges.total, 1, '第一次应改掉 1 个文件');
+    // 第二次：内容已与格式化目标一致 ⇒ 真幂等必须是 0（不是"又改了一遍"）
+    const second = await runPreCommitPipeline({ repoPath: repo, cfg: cfg });
+    assert.equal(second.preprocessChanges.total, 0,
+      `幂等失败：第二次仍报改动 ${JSON.stringify(second.preprocessChanges.files)}（mtime 变化不算改动，比的是内容指纹）`);
+  } finally {
+    if (prev === undefined) delete process.env.DSH_PREPROCESS_AUDIT_CLI; else process.env.DSH_PREPROCESS_AUDIT_CLI = prev;
+    rmSync(dir, { recursive: true, force: true });
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('S3：未配 stages（legacy）时回执不含阶段字段（向后兼容）', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-legacy-nofield-'));
+  const repo = makeTempRepo('dshgp-legacy-repo-');
+  const prev = process.env.DSH_PREPROCESS_AUDIT_CLI;
+  try {
+    process.env.DSH_PREPROCESS_AUDIT_CLI = writeTouchEngine(dir, 'touch.mjs', 'const x = 9;\n');
+    const r = await runPreCommitPipeline({
+      repoPath: repo,
+      cfg: { preCommit: { enabled: true, command: 'node', args: [join(dir, 'touch.mjs')] } },
+    });
+    assert.equal(r.ok, true);
+    assert.equal(r.preprocessStages, undefined, 'legacy 模式不应出现 preprocessStages');
+    assert.equal(r.preprocessChanges, undefined, 'legacy 模式不应出现 preprocessChanges');
+  } finally {
+    if (prev === undefined) delete process.env.DSH_PREPROCESS_AUDIT_CLI; else process.env.DSH_PREPROCESS_AUDIT_CLI = prev;
+    rmSync(dir, { recursive: true, force: true });
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+/* ───────────────── S3 扩展：阶段环境变量注入 ───────────────── */
+
+/** 造一个"把收到的 PREPROCESS_* 环境变量写进日志"的假实现。 */
+function writeEnvProbeEngine(dir, logPath) {
+  const file = join(dir, 'env-probe.mjs');
+  writeFileSync(file, [
+    "import { readFileSync, writeFileSync } from 'node:fs';",
+    'const snap = {',
+    '  repo: process.env.PREPROCESS_REPO ?? null,',
+    '  files: process.env.PREPROCESS_CHANGED_FILES ?? null,',
+    '  count: process.env.PREPROCESS_CHANGED_FILES_COUNT ?? null,',
+    '  file: process.env.PREPROCESS_CHANGED_FILES_FILE ?? null,',
+    '  provider: process.env.PREPROCESS_STAGE_PROVIDER ?? null,',
+    // 落盘文件只能**运行时**读：链跑完宿主会清理临时目录（这正是"运行期可用"的契约）
+    '  fileContent: (() => { try { return readFileSync(process.env.PREPROCESS_CHANGED_FILES_FILE, "utf8"); } catch { return null; } })(),',
+    '};',
+    'writeFileSync(' + JSON.stringify(logPath) + ', JSON.stringify(snap));',
+    "const out = { ok: true, scope: 'diff', summary: { blocker: 0, warning: 0, notice: 0, total: 0 }, quality: { score: 100, level: 'A' }, findings: [], files: 0 };",
+    'process.stdout.write(JSON.stringify(out) + "\\n");',
+    'process.exit(0);',
+  ].join('\n'));
+  return file;
+}
+
+test('S3-扩展：阶段环境变量给到实现方（含换行分隔的文件名清单与落盘路径）', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-env-'));
+  const repo = makeTempRepo('dshgp-env-repo-');
+  const logPath = join(dir, 'probe.json');
+  const prev = process.env.DSH_PREPROCESS_AUDIT_CLI;
+  try {
+    // 造三个"本次改动"：普通名 / 含逗号 / 含空格（这正是选换行分隔的原因）
+    writeFileSync(join(repo, 'a.js'), 'const a = 1;\n');
+    writeFileSync(join(repo, 'b,c.js'), 'const b = 1;\n');
+    writeFileSync(join(repo, 'd e.js'), 'const d = 1;\n');
+    process.env.DSH_PREPROCESS_AUDIT_CLI = writeEnvProbeEngine(dir, logPath);
+    const r = await runPreCommitPipeline({
+      repoPath: repo,
+      cfg: { preCommit: { enabled: true, stages: [{ provider: 'audit' }] } },
+    });
+    assert.equal(r.ok, true);
+    const snap = JSON.parse(readFileSync(logPath, 'utf8'));
+    assert.equal(snap.repo, repo, 'PREPROCESS_REPO 应是仓库绝对路径');
+    assert.equal(snap.provider, 'audit', 'PREPROCESS_STAGE_PROVIDER 应是当前阶段 provider');
+    const lines = String(snap.files).split('\n').filter(Boolean);
+    assert.equal(snap.count, String(lines.length), 'COUNT 必须与清单行数一致');
+    assert.ok(lines.includes('a.js'), `清单应含 a.js，实际 ${JSON.stringify(lines)}`);
+    assert.ok(lines.includes('b,c.js'), '含逗号的文件名必须完整保留（不能被当成分隔符切开）');
+    assert.ok(lines.includes('d e.js'), '含空格的文件名必须完整保留');
+    // 落盘路径与内存里的一致
+    assert.ok(snap.file, '应给 PREPROCESS_CHANGED_FILES_FILE');
+    assert.deepEqual(String(snap.fileContent || '').split('\n').filter(Boolean), lines,
+      '落盘文件内容必须与环境变量一致');
+  } finally {
+    if (prev === undefined) delete process.env.DSH_PREPROCESS_AUDIT_CLI; else process.env.DSH_PREPROCESS_AUDIT_CLI = prev;
+    rmSync(dir, { recursive: true, force: true });
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('S3-扩展：未配 stages（legacy）时不注入任何 PREPROCESS_* 变量（老实现零影响）', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-env-legacy-'));
+  const repo = makeTempRepo('dshgp-env-legacy-repo-');
+  const logPath = join(dir, 'probe.json');
+  const prev = process.env.DSH_PREPROCESS_AUDIT_CLI;
+  const prevVars = {};
+  for (const key of ['PREPROCESS_REPO', 'PREPROCESS_CHANGED_FILES', 'PREPROCESS_CHANGED_FILES_COUNT',
+    'PREPROCESS_CHANGED_FILES_FILE', 'PREPROCESS_STAGE_PROVIDER']) {
+    prevVars[key] = process.env[key];
+    delete process.env[key];
+  }
+  try {
+    writeFileSync(join(repo, 'a.js'), 'const a = 2;\n');
+    const rel = writeEnvProbeEngine(dir, logPath);
+    await runPreCommitPipeline({ repoPath: repo, cfg: { preCommit: { enabled: true, command: 'node', args: [rel] } } });
+    const snap = JSON.parse(readFileSync(logPath, 'utf8'));
+    assert.equal(snap.repo, null, 'legacy 模式不该注入 PREPROCESS_REPO');
+    assert.equal(snap.files, null, 'legacy 模式不该注入 PREPROCESS_CHANGED_FILES');
+    assert.equal(snap.count, null);
+    assert.equal(snap.file, null);
+    assert.equal(snap.provider, null, 'legacy 模式没有"阶段"概念，不该注入 provider');
+  } finally {
+    if (prev === undefined) delete process.env.DSH_PREPROCESS_AUDIT_CLI; else process.env.DSH_PREPROCESS_AUDIT_CLI = prev;
+    for (const [key, value] of Object.entries(prevVars)) {
+      if (value === undefined) delete process.env[key]; else process.env[key] = value;
+    }
+    rmSync(dir, { recursive: true, force: true });
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+/* ───────────────── S3+：阶段链可作为调用参数（优先级 > 配置） ───────────────── */
+
+test('S3+：参数里的阶段链覆盖配置，且回执标出 stagesSource=param', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-param-'));
+  const repo = makeTempRepo('dshgp-param-repo-');
+  const logPath = join(dir, 'probe.json');
+  const prev = process.env.DSH_PREPROCESS_AUDIT_CLI;
+  try {
+    writeFileSync(join(repo, 'a.js'), 'const a = 3;\n');
+    const probe = writeEnvProbeEngine(dir, logPath);
+    // 配置里指定的是"审计"，参数里换成"跑这个探针脚本" ⇒ 必须用参数的
+    const r = await runPreCommitPipeline({
+      repoPath: repo,
+      cfg: { preCommit: { enabled: true, stages: [{ provider: 'audit' }] } },
+      stages: [{ command: 'node', args: [probe] }],
+    });
+    assert.equal(r.ok, true);
+    assert.equal(r.stagesSource, 'param', '回执必须标明本次链来自调用参数');
+    assert.equal(r.preprocessStages.length, 1);
+    assert.equal(r.preprocessStages[0].kind, 'command', '参数里的 command 形态要如实标注');
+    assert.ok(existsSync(logPath), '参数指定的脚本必须真的被执行了');
+  } finally {
+    if (prev === undefined) delete process.env.DSH_PREPROCESS_AUDIT_CLI; else process.env.DSH_PREPROCESS_AUDIT_CLI = prev;
+    rmSync(dir, { recursive: true, force: true });
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('S3+：不传参数 ⇒ 走配置（stagesSource=config）', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-param-none-'));
+  const prev = process.env.DSH_PREPROCESS_AUDIT_CLI;
+  try {
+    process.env.DSH_PREPROCESS_AUDIT_CLI = writeFakeEngine(dir, 'ok.mjs');
+    const r = await runPreCommitPipeline({ repoPath: dir, cfg: { preCommit: { enabled: true, stages: [{ provider: 'audit' }] } } });
+    assert.equal(r.stagesSource, 'config');
+  } finally {
+    if (prev === undefined) delete process.env.DSH_PREPROCESS_AUDIT_CLI; else process.env.DSH_PREPROCESS_AUDIT_CLI = prev;
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('S3+：参数结构非法 ⇒ fail-closed 且错误指出第几项（不跑任何阶段）', async () => {
+  const r = await runPreCommitPipeline({
+    repoPath: '/tmp',
+    cfg: { preCommit: { enabled: true } },
+    stages: [{ onFail: 'warn' }],   // 既无 command 也无 provider
+  });
+  assert.equal(r.ok, false, '非法参数必须拦');
+  assert.match(String(r.error), /第 1 项/, '错误信息要指出是哪一项');
+  assert.match(String(r.error), /provider|command/, '错误信息要说清缺什么');
+});
+
+test('S3+：参数里混用 {command} 与 {provider} ⇒ 按序执行', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-param-mix-'));
+  const prev = process.env.DSH_PREPROCESS_AUDIT_CLI;
+  try {
+    process.env.DSH_PREPROCESS_AUDIT_CLI = writeFakeEngine(dir, 'ok.mjs');
+    const cmd = writeFakeEngine(dir, 'cmd.mjs');
+    const r = await runPreCommitPipeline({
+      repoPath: dir,
+      cfg: { preCommit: { enabled: true } },
+      stages: [{ command: 'node', args: [cmd] }, { provider: 'audit' }],
+    });
+    assert.equal(r.ok, true);
+    assert.deepEqual(r.preprocessStages.map((x) => x.kind || 'provider'), ['command', 'provider']);
+  } finally {
+    if (prev === undefined) delete process.env.DSH_PREPROCESS_AUDIT_CLI; else process.env.DSH_PREPROCESS_AUDIT_CLI = prev;
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('S3+：占位符替换（{repo}/{filesFile}/{filesCount}/{stage}）走 argv 也能拿到', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-placeholder-'));
+  const repo = makeTempRepo('dshgp-ph-repo-');
+  const outPath = join(dir, 'argv.json');
+  const prev = process.env.DSH_PREPROCESS_AUDIT_CLI;
+  try {
+    writeFileSync(join(repo, 'a.js'), 'const a = 4;\n');
+    const script = join(dir, 'argv-probe.mjs');
+    writeFileSync(script, [
+      "import { readFileSync, writeFileSync } from 'node:fs';",
+      'writeFileSync(' + JSON.stringify(outPath) + ', JSON.stringify({',
+      '  argv: process.argv.slice(2),',
+      '  filesFileContent: (() => { try { return readFileSync(process.argv[3], "utf8"); } catch { return null; } })(),',
+      '}));',
+      "const out = { ok: true, scope: 'diff', summary: { blocker: 0, warning: 0, notice: 0, total: 0 }, quality: { score: 100, level: 'A' }, findings: [], files: 0 };",
+      'process.stdout.write(JSON.stringify(out) + "\\n");',
+      'process.exit(0);',
+    ].join('\n'));
+    const r = await runPreCommitPipeline({
+      repoPath: repo,
+      cfg: { preCommit: { enabled: true } },
+      stages: [{ command: 'node', args: [script, '{repo}', '{filesFile}', '{filesCount}', '{stage}'] }],
+    });
+    assert.equal(r.ok, true);
+    const seen = JSON.parse(readFileSync(outPath, 'utf8'));
+    assert.equal(seen.argv[0], repo, '{repo} 应替换成仓库绝对路径');
+    assert.equal(seen.argv[2], '1', '{filesCount} 应是本次改动文件数');
+    assert.equal(seen.argv[3], '1', '{stage} 应是阶段序号（从 1 起）');
+    assert.ok(String(seen.argv[1]).includes('changed-files.txt'), '{filesFile} 应是临时清单文件路径');
+    assert.ok(String(seen.filesFileContent || '').includes('a.js'), '该文件内容应是改动清单');
+  } finally {
+    if (prev === undefined) delete process.env.DSH_PREPROCESS_AUDIT_CLI; else process.env.DSH_PREPROCESS_AUDIT_CLI = prev;
+    rmSync(dir, { recursive: true, force: true });
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('S3+：command 单字符串按 shell-like 切词（不启动真 shell，注入不生效）', () => {
+  assert.deepEqual(splitCommandLine('node x.mjs --mode staged'), ['node', 'x.mjs', '--mode', 'staged']);
+  assert.deepEqual(splitCommandLine('node "a b.js" --x=1'), ['node', 'a b.js', '--x=1']);
+  assert.deepEqual(splitCommandLine("node 'a b.js'"), ['node', 'a b.js']);
+  // 注入测试：分号/管道/命令替换都只当普通参数，不产生额外命令
+  const evil = splitCommandLine('node x.mjs; rm -rf /tmp/should-not-run');
+  assert.deepEqual(evil, ['node', 'x.mjs;', 'rm', '-rf', '/tmp/should-not-run'],
+    '分号必须留在参数里，不能被当成命令分隔符');
+  assert.deepEqual(splitCommandLine('node $(whoami)'), ['node', '$(whoami)'], '命令替换不生效');
+});
+
+test('S3+：占位符替换只认已知键，未知原样保留', () => {
+  assert.equal(substitutePlaceholders('--repo {repo}', { repo: '/r' }), '--repo /r');
+  assert.equal(substitutePlaceholders('{unknown}', { repo: '/r' }), '{unknown}');
+  assert.equal(substitutePlaceholders('{filesCount}', { filesCount: '0' }), '0', '0 不能被当成"没给"');
 });
