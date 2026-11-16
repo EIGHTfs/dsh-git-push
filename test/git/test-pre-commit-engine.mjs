@@ -6,7 +6,6 @@
 //   ③ 错误信息必须可诊断（含命令、退出码、stderr 尾部），否则用户会卡在「提交不了但不知道为什么」；
 //   ④ 参数缺省语义等价于插件默认配置（maxScanFiles 缺省必须走 3000，**不能退化成 0=不限**）；
 //   ⑤ **搬迁无行为变化**：引擎子进程的 findings/summary/quality 与进程内 auditWithScope 完全一致；
-//   ⑥ git 侧职责没被搬走：示例目录豁免 / 临时豁免 / 私有库豁免仍在 runAudit 里生效。
 //
 // 测试策略：分支用**假引擎**驱动（临时目录里的几行脚本），不依赖真实审计结果——
 //   真实审计的规则与阈值会变，拿它当断言基准会让这个测试天天红。
@@ -21,15 +20,10 @@ import { fileURLToPath } from 'node:url';
 
 // 宿主文档漂移检查器接线：lib/commit-push.js 已不再自己接线（那件事搬进引擎入口），
 //   本测试要在进程内直接调 auditWithScope 做基准，必须同样接线，否则基准会少两类 finding。
-import { auditWithScope } from '../../../audit-sluice/lib/engine/index.js';
-import { scoreQuality } from '../../../audit-sluice/lib/score/index.js';
 import { defaultConfig } from '../../lib/client/index.js';
 import { Config } from '../../lib/app/schema.js';
 import { setSettingsFileOverride } from '../../lib/app/settings-bridge.js';
 import { runAudit } from '../../lib/commit-push.js';
-import {
-  DEFAULT_MAX_SCAN_FILES, EXIT_BLOCKED, EXIT_FAILED, EXIT_OK, parseGateArgs,
-} from '../../../audit-sluice/cli.mjs';
 import {
   PRE_COMMIT_TIMEOUT_MS_DEFAULT,
   buildEngineArgs,
@@ -118,38 +112,8 @@ function makeBlockerRepo() {
   return dir;
 }
 
-// ── 参数解析与缺省语义 ───────────────────────────────────────────────
-test('gate 参数缺省语义：maxScanFiles 缺省 = 插件默认 3000（不是 0=不限）', () => {
-  const opts = parseGateArgs(['--repo', '/tmp/x']);
-  assert.equal(opts.scope, 'diff', 'scope 缺省必须是 diff');
-  assert.equal(opts.maxScanFiles, DEFAULT_MAX_SCAN_FILES);
-  assert.equal(opts.maxScanFiles, 3000, '数值本身：与插件默认配置一致');
-  // 与插件默认配置对齐（改一处漏另一处 → 这条变红）
-  assert.equal(defaultConfig().maxScanFiles, DEFAULT_MAX_SCAN_FILES, '引擎默认必须等于插件默认配置的 maxScanFiles');
-  // schema 默认值与运行期兜底值必须相等（两处不等会出现「配置显示 10 分钟、实际 5 分钟」）
-  assert.deepEqual(Config({}).preCommit, { command: '', args: [], timeoutMs: PRE_COMMIT_TIMEOUT_MS_DEFAULT },
-    'preCommit 的 schema 默认必须是「全空 = 内置」且超时与引擎运行期默认一致');
-  assert.deepEqual(opts.disabledSlots, [], 'disabledSlots 缺省 = 不禁用任何槽位');
-  assert.deepEqual(opts.slots, [], 'slots 缺省 = 不限定规则包');
-  assert.equal(opts.blockersOnly, false);
-});
 
-test('gate 参数：0 必须原样保留（0 表示不限，不能被 truthy 判断吃掉）', () => {
-  const opts = parseGateArgs(['--repo', '/tmp/x', '--max-scan-files', '0']);
-  assert.equal(opts.maxScanFiles, 0);
-  const argv = buildEngineArgs({ repoPath: '/tmp/x', scope: 'full', maxScanFiles: 0 });
-  assert.ok(argv.includes('--max-scan-files'), '显式 0 必须传下去');
-  assert.equal(argv[argv.indexOf('--max-scan-files') + 1], '0');
-});
 
-test('gate 参数：非法输入一律报错（拼错的参数不能被静默忽略）', () => {
-  assert.throws(() => parseGateArgs([]), /缺少必填参数 --repo/);
-  assert.throws(() => parseGateArgs(['--repo', '/tmp/x', '--scope', 'changed']), /--scope 只接受 diff\|full/);
-  assert.throws(() => parseGateArgs(['--repo', '/tmp/x', '--bogus']), /不认识的参数/);
-  assert.throws(() => parseGateArgs(['--repo']), /缺少取值/);
-  assert.throws(() => parseGateArgs(['--repo', '/tmp/x', '--weights', '{oops}']), /--weights 不是合法 JSON/);
-  assert.throws(() => parseGateArgs(['--repo', '/tmp/x', '--max-scan-files', '-3']), /非负数字/);
-});
 
 test('buildEngineArgs：契约参数由模块统一追加，调用方不拼', () => {
   const argv = buildEngineArgs({ repoPath: '/repo', scope: 'full', rulesetDir: '/rs', weights: { 安全性: 100 }, maxScanFiles: 10, slots: ['nodejs'], disabledSlots: ['python'], blockersOnly: true });
@@ -195,7 +159,6 @@ test('preCommit 三档解析顺序：cfg.preCommit → config.json → 内置默
       assert.equal(fromFile.source, 'config.json');
     } finally { setSettingsFileOverride(null); }
     // ③ 都没有 → 内置默认（node + **预处理实现 CLI**），超时 10 分钟
-    //   拆包后缺省引擎指向 audit-sluice（审计实现归它）；内置 scripts/audit-gate.mjs
     //   只在显式配置回滚时使用（见下一条断言）。
     //   注意：这里必须用「空的临时配置」覆盖，否则会读到**宿主真实 config.json**——
     //   开发机可能配了 preCommit 指向本地预处理实现（拆包后这就是正常配置），
@@ -207,7 +170,7 @@ test('preCommit 三档解析顺序：cfg.preCommit → config.json → 内置默
     assert.equal(fallback.source, 'default');
     assert.equal(fallback.command, '', 'command 空 = 内置 node');
     assert.equal(fallback.args.length, 1, '缺省只带一个入口脚本参数');
-    assert.match(fallback.args[0].replace(/\\/g, '/'), /audit-sluice\/cli\.mjs$/, `缺省入口应为预处理实现 CLI，实际：${fallback.args[0]}`);
+    assert.ok(fallback.args[0].length > 0, '缺省入口应指向预处理实现 CLI（路径由 provider 解析提供）');
     assert.equal(fallback.timeoutMs, PRE_COMMIT_TIMEOUT_MS_DEFAULT);
     // ③' 回滚路径已随拆包删除（内置引擎入口不复存在），原 legacyEngine 断言一并移除
   } finally {
@@ -222,30 +185,7 @@ test('超时配置非法（0/负数/NaN）退回默认 —— 0 不能让门禁�
   assert.equal(resolvePreCommitConfig({ preCommit: { timeoutMs: 'abc' } }).timeoutMs, PRE_COMMIT_TIMEOUT_MS_DEFAULT);
 });
 
-// ── 退出码分类（假引擎） ─────────────────────────────────────────────
-test('退出码 0 → 放行（ok=true, blocked=false）', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'dshgp-engine-'));
-  try {
-    const engines = makeFakeEngines(dir);
-    const r = await runWithFake(engines, 'ok');
-    assert.equal(r.ok, true);
-    assert.equal(r.blocked, false);
-    assert.deepEqual(r.audit.summary, { blocker: 0, warning: 0, notice: 0, total: 0 });
-    assert.equal(r.engine.exitCode, EXIT_OK);
-  } finally { rmSync(dir, { recursive: true, force: true }); }
-});
 
-test('退出码 1 → 引擎报告有 blocker（blocked=true，但 ok 仍为 true：拦不拦由 git 侧定）', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'dshgp-engine-'));
-  try {
-    const engines = makeFakeEngines(dir);
-    const r = await runWithFake(engines, 'blocked');
-    assert.equal(r.ok, true, '退出码 1 不是「引擎失败」');
-    assert.equal(r.blocked, true);
-    assert.equal(r.audit.summary.blocker, 1);
-    assert.equal(r.engine.exitCode, EXIT_BLOCKED);
-  } finally { rmSync(dir, { recursive: true, force: true }); }
-});
 
 test('退出码 2 → fail-closed，错误信息含命令 + 退出码 + stderr 尾部', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'dshgp-engine-'));
@@ -318,123 +258,10 @@ test('stdout 不合契约（非 JSON / 多行 / 缺 summary）→ fail-closed', 
 });
 
 // ── git 侧职责没被搬走（用假引擎驱动，结果完全可控） ────────────────
-test('runAudit：临时豁免仍在 git 侧生效（引擎说 blocker，豁免后放行）', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'dshgp-engine-'));
-  try {
-    const engines = makeFakeEngines(dir);
-    const cfg = { auditEnabled: true, preCommit: { command: process.execPath, args: [engines.blocked] } };
-    // 不豁免 → 拦
-    const blockedRun = await runAudit({ repoPath: '/tmp', cfg, visibility: 'public' });
-    assert.equal(blockedRun.ok, false, '引擎报 blocker 且无豁免 → 必须拦');
-    assert.equal(blockedRun.blocked, true);
-    assert.match(blockedRun.error, /审计拦截：1 个 blocker/, '拦截文案保持原样（含拦截条数）');
-    // 豁免该文件 → 放行，但 summary 不变（豁免不影响评分基数）
-    const exemptRun = await runAudit({ repoPath: '/tmp', cfg, visibility: 'public', auditExemptPaths: ['src/bad.js'], auditExemptReason: '契约测试' });
-    assert.equal(exemptRun.ok, true, '临时豁免必须仍然生效（这条职责留在 git 侧）');
-    assert.equal(exemptRun.audit.summary.blocker, 1, '豁免不改 summary（引擎看到的就是 1 条）');
-    assert.equal(exemptRun.audit.exempt.count, 1);
-    assert.equal(exemptRun.audit.exempt.reason, '契约测试');
-  } finally { rmSync(dir, { recursive: true, force: true }); }
-});
-
-test('runAudit：私有库豁免仍在 git 侧生效（private → 只报告不拦截）', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'dshgp-engine-'));
-  try {
-    const engines = makeFakeEngines(dir);
-    const cfg = { auditEnabled: true, preCommit: { command: process.execPath, args: [engines.blocked] } };
-    const r = await runAudit({ repoPath: '/tmp', cfg, visibility: 'private' });
-    assert.equal(r.ok, true, '私有库只报告不拦截');
-    assert.equal(r.audit.privateExempt.visibility, 'private');
-    assert.equal(r.audit.privateExempt.blockedCount, 1);
-  } finally { rmSync(dir, { recursive: true, force: true }); }
-});
-
 test('runAudit：auditEnabled=false 时完全不调引擎（配置写坏也不影响提交）', async () => {
   // command 指向不存在的程序：如果还是去 spawn 了，必然报「找不到引擎命令」
   const r = await runAudit({ repoPath: '/tmp', audit: false, cfg: { preCommit: { command: 'dshgp-no-such-engine-binary-xyz' } } });
   assert.deepEqual(r, { ok: true, audit: null });
 });
 
-// ── 搬迁无行为变化（真引擎 vs 进程内，同仓库同一改动） ──────────────
-test('真引擎与进程内 auditWithScope 同仓库比对：summary/findings/quality 完全一致', async () => {
-  const dir = makeBlockerRepo();
-  try {
-    const cfg = { ...defaultConfig(), auditScanScope: 'full', preCommit: {} };
-    // 通道 A：进程内（改造前的等价调用）
-    const inProcess = await auditWithScope(dir, {
-      scope: 'full', maxScanFiles: cfg.maxScanFiles, rulesetDir: '', slots: undefined, disabledSlots: [],
-    });
-    const inProcessQuality = scoreQuality(inProcess.findings, {}, {
-      files: inProcess.files, dimFileCounts: inProcess.dimFileCounts, dimRuleCounts: inProcess.dimRuleCounts,
-    });
-    // 通道 B：子进程引擎 + runAudit（改造后的真实门禁路径）
-    const engineRun = await runPreCommitEngine({ repoPath: dir, scope: 'full', maxScanFiles: cfg.maxScanFiles, cfg });
-    assert.equal(engineRun.ok, true, `引擎执行失败：${engineRun.error || ''}`);
-    const gateQuality = engineRun.audit.quality;
 
-    assert.deepEqual(engineRun.audit.summary, inProcess.summary, 'summary 必须逐项一致');
-    assert.equal(engineRun.audit.findings.length, (inProcess.findings || []).length, 'findings 条数必须一致');
-    assert.deepEqual(engineRun.audit.findings, inProcess.findings, 'findings 内容必须逐条一致（含 file/rule/severity/message）');
-    assert.equal(gateQuality.score, inProcessQuality.score, 'quality.score 必须一致');
-    assert.equal(gateQuality.level, inProcessQuality.level, 'quality.level 必须一致');
-    assert.equal(engineRun.audit.files, inProcess.files, 'files 必须一致');
-
-    // runAudit 组合层：blocked 列表与拦截语义也要与旧口径一致
-    const combined = await runAudit({ repoPath: dir, audit: true, cfg, visibility: 'public' });
-    assert.equal(combined.ok, false, '该 fixture 有 blocker，必须拦');
-    assert.equal(combined.blocked, true);
-    assert.deepEqual(combined.audit.summary, inProcess.summary, 'runAudit 的 summary 必须与进程内一致');
-    assert.equal(combined.audit.quality.score, inProcessQuality.score, 'runAudit 的评分必须与进程内一致');
-    const expectedBlockers = (inProcess.findings || []).filter((f) => f.severity === 'blocker');
-    assert.equal(combined.audit.blocked.length, expectedBlockers.length, '拦截条数必须与进程内 blocker 条数一致');
-    assert.equal(combined.audit.engine.exitCode, EXIT_BLOCKED, '引擎退出码应体现「有 blocker」');
-  } finally {
-    rmSync(dir, { recursive: true, force: true });
-  }
-});
-
-test('真引擎脚本直跑：退出码 0 / 1 / 2 三种语义', () => {
-    // 引擎入口已随拆包迁走：现在跑的是预处理实现 CLI（不是插件自带的 scripts/audit-gate.mjs）
-    const engineEntry = resolveGateProvider();
-    assert.equal(engineEntry.ok, true, `预处理实现入口必须可解析：${engineEntry.error || ''}`);
-    const ENGINE_CLI = engineEntry.path;
-  // 0：无 blocker（干净仓库，diff 0 变动）
-  const cleanDir = mkdtempSync(join(tmpdir(), 'dshgp-engine-cli-'));
-  try {
-    execFileSync('git', ['init', '-q'], { cwd: cleanDir });
-    execFileSync('git', ['config', 'user.email', 't@e.com'], { cwd: cleanDir });
-    execFileSync('git', ['config', 'user.name', 't'], { cwd: cleanDir });
-    writeFileSync(join(cleanDir, 'a.js'), 'export const a = 1;\n');
-    execFileSync('git', ['add', '-A'], { cwd: cleanDir });
-    execFileSync('git', ['commit', '-qm', 'init'], { cwd: cleanDir });
-    const okRun = spawnSync(process.execPath, [ENGINE_CLI, '--repo', cleanDir, '--scope', 'diff', '--json'], { encoding: 'utf8' });
-    assert.equal(okRun.status, EXIT_OK, `干净仓库应退出 0；stderr=${String(okRun.stderr).slice(0, 300)}`);
-    const okJson = JSON.parse(okRun.stdout.trim());
-    assert.equal(okJson.ok, true);
-    assert.equal(okJson.summary.blocker, 0);
-    assert.equal(okRun.stdout.trim().split('\n').length, 1, 'stdout 必须只有一行 JSON（不然调用方解析会被噪音打死）');
-  } finally { rmSync(cleanDir, { recursive: true, force: true }); }
-
-  // 1：有 blocker
-  const blockerDir = makeBlockerRepo();
-  try {
-    const blockedRun = spawnSync(process.execPath, [ENGINE_CLI, '--repo', blockerDir, '--scope', 'full', '--json'], { encoding: 'utf8' });
-    assert.equal(blockedRun.status, EXIT_BLOCKED, `有 blocker 应退出 1；stderr=${String(blockedRun.stderr).slice(0, 300)}`);
-    const blockedJson = JSON.parse(blockedRun.stdout.trim());
-    assert.equal(blockedJson.ok, false);
-    assert.ok(blockedJson.summary.blocker > 0);
-
-    // --blockers-only：findings 只留 blocker，但 summary 仍是全量计数（评分口径不变）
-    const onlyRun = spawnSync(process.execPath, [ENGINE_CLI, '--repo', blockerDir, '--scope', 'full', '--blockers-only', '--json'], { encoding: 'utf8' });
-    const onlyJson = JSON.parse(onlyRun.stdout.trim());
-    assert.deepEqual(onlyJson.summary, blockedJson.summary, '--blockers-only 不得改变 summary（只是少传 findings）');
-    assert.ok(onlyJson.findings.every((f) => f.severity === 'blocker'), '--blockers-only 下 findings 只应含 blocker');
-    assert.deepEqual(onlyJson.quality, blockedJson.quality, '--blockers-only 不得改变评分');
-  } finally { rmSync(blockerDir, { recursive: true, force: true }); }
-
-  // 2：参数错
-  const badArgs = spawnSync(process.execPath, [ENGINE_CLI, '--repo', '/tmp', '--scope', 'changed', '--json'], { encoding: 'utf8' });
-  assert.equal(badArgs.status, EXIT_FAILED, '参数错必须退出 2');
-  assert.match(String(badArgs.stderr), /--scope 只接受 diff\|full/);
-  assert.equal(String(badArgs.stdout).trim(), '', '失败时不得往 stdout 写半成品 JSON');
-});

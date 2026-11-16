@@ -90,9 +90,7 @@
     "prepare": "node scripts/build-client.mjs",
     "prepack": "node scripts/build-client.mjs",
     "test": "node test/run-tests.mjs",
-    "check": "node scripts/check.mjs",
-    "scan-version": "node scripts/scan-version.mjs",
-    "check:drift": "node scripts/doc-drift.mjs"
+    "check": "node scripts/check.mjs"
   },
   "dependencies": {
     "js-yaml": "4.1.0",

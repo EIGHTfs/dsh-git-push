@@ -19,7 +19,6 @@ import { fileURLToPath } from 'node:url';
 import { SETTINGS_SCHEMA, defaultConfig } from '../../lib/client/index.js';
 import { readSettings, writeSettingsKey, applySettingsToCfg } from '../../lib/app/settings-bridge.js';
 import { handleHttp } from '../../lib/app/http-handlers.js';
-import { providerTest } from '../helpers/provider-available.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -168,24 +167,6 @@ test('L1 集成：前端提交键确实能被 settings-set 接受（防前端键
 });
 
 /* ───────────────────────── 消费端生效 ───────────────────────── */
-
-test('L4 权重：code_audit 流程真的消费 cfg.weightOverrides（权重设置不是摆设）', () => {
-  const src = readFileSync(join(ROOT, 'lib/app/tool-call.js'), 'utf8');
-  // scoreQuality 的 weights 应优先来自 args.weights，缺省回退 cfg.weightOverrides 解析
-  assert.ok(/cfg\.weightOverrides/.test(src) || /weightOverrides/.test(src.match(/let weights = \{[\s\S]*?scoreQuality/)?.[0] || ''),
-    'tool-call.js 应消费 cfg.weightOverrides（或 args.weights 显式传入）——否则权重设置保存了也不生效');
-  const commitSrc = readFileSync(join(ROOT, 'lib/commit-push.js'), 'utf8');
-  assert.ok(/weightOverrides/.test(commitSrc), 'commit-push.js（提交前审计）也应消费权重覆盖');
-});
-
-providerTest('L4 关键键 auditRuleOrder：规则加载顺序真正使用 cfg.auditRuleOrder', () => {
-  const loader = readFileSync(join(ROOT, '../audit-sluice/lib/rule/loader.js'), 'utf8');
-  // 端点层把 cfg.auditRuleOrder 传给 resolveSlotOrder（listRuleSlots 第一参）
-  //   注意：rule-slots 端点已随 HTTP 分侧搬到 handlers/audit.js（/api/preprocess 前缀）
-  const http = readFileSync(join(ROOT, 'lib/app/handlers/preprocess.js'), 'utf8');
-  assert.ok(/listRuleSlots\(\s*cfg\.auditRuleOrder/.test(http), 'rule-slots 端点应把 cfg.auditRuleOrder 传入 listRuleSlots');
-  assert.ok(/resolveSlotOrder\(order/.test(loader), 'resolveSlotOrder 应消费传入 order');
-});
 
 test('L4 关键键 auditScanScope：审计 opts 带 scope；审计强度已删除不得回退', () => {
   const tool = readFileSync(join(ROOT, 'lib/app/tool-call.js'), 'utf8');

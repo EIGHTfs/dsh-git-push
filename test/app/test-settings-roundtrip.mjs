@@ -9,7 +9,6 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { providerTest } from '../helpers/provider-available.mjs';
 
 const SANDBOX = mkdtempSync(join(tmpdir(), 'dshgp-rw-'));
 process.env.DSH_HOME = join(SANDBOX, '.dsh');
@@ -39,22 +38,6 @@ test('设置项：读 → 写 → 回读（读改写闭环）', async () => {
   assert.equal(r3.body.settings.pushGate, next, '回读应等于刚写入的值（读改写闭环）');
 });
 
-providerTest('规则槽位：读 → 改 disabled 列表 → 回读（读改写闭环）', async () => {
-  const r1 = await call('GET', '/api/git-audit/rule-slots');
-  assert.equal(r1.status, 200, '读槽位应 200');
-  const slots = r1.body.slots;
-  // 真形状：slots 是对象 { discovered: [...], ... }（见 handlers/meta.js），不是数组
-  const discovered = Array.isArray(slots?.discovered) ? slots.discovered : [];
-  assert.ok(discovered.length > 0, '应有已发现的槽位列表（slots.discovered）');
-
-  const name = discovered[0];
-  const r2 = await call('POST', '/api/git-push/settings-set', { key: 'auditDisabledSlots', value: [name] });
-  assert.equal(r2.status, 200, '写 disabled 列表应 200');
-
-  const r3 = await call('GET', '/api/git-push/settings-get');
-  const disabled = r3.body.settings.auditDisabledSlots || [];
-  assert.ok(Array.isArray(disabled) && disabled.includes(name), `回读的禁用列表应含 ${name}`);
-});
 
 test('账号快照：读 → 写（校验结果落盘）→ 回读（读改写闭环，不打网络）', async () => {
   const r1 = await call('GET', '/api/git-push/account-status');

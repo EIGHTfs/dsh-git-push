@@ -50,26 +50,7 @@ test('工具层：git_cred_env 只回路径与命令串，不回明文凭据', a
   assert.ok(!/gh[pousr]_[A-Za-z0-9]{20,}/.test(text), 'git_cred_env 不得回传 token 明文');
 });
 
-test('工具层：code_audit 能对临时仓库出结果（含 summary 与 quality）', async () => {
-  const repo = makeRepo('repo-audit');
-  const r = await callTool('code_audit', { repo, scope: 'full' }, env, cfg);
-  // 审计可能因仓库极小而无文件可审（emptyResult），但**不得抛异常**，且形状必须是审计结果
-  assert.equal(r.ok, true, `code_audit 应优雅返回：${JSON.stringify(r).slice(0, 200)}`);
-  assert.ok(r.summary && typeof r.summary.blocker === 'number', '应带 summary.blocker');
-  assert.ok('quality' in r, '应带 quality 字段（无文件时可为空结果）');
-});
 
-test('工具层：io_scan 返回分级结果（items + byRisk）', async () => {
-  const repo = makeRepo('repo-io');
-  writeFileSync(join(repo, 'a.js'), "const fs = require('fs');\nfs.readFileSync('x');\n");
-  const r = await callTool('io_scan', { repo }, env, cfg);
-  assert.equal(r.ok, true, `io_scan 应成功：${JSON.stringify(r).slice(0, 200)}`);
-  // 真实形状（实测）：{ ok, root, total, sync, byRisk, items }
-  assert.ok(Array.isArray(r.items), `io_scan 应返回 items 数组（实得 keys: ${Object.keys(r).join(',')}）`);
-  assert.equal(typeof r.total, 'number', '应带 total');
-  assert.ok(r.byRisk && typeof r.byRisk === 'object', '应带 byRisk 分级统计');
-  assert.ok(r.items.some((x) => x.call || x.line), 'items 每项应含调用名或行号');
-});
 
 test('工具层：错误路径优雅（缺参不抛异常，返回 ok:false + error）', async () => {
   // 这些工具缺必填参数时应返回 {ok:false, error} 而不是 throw

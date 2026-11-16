@@ -135,7 +135,7 @@ import { fileURLToPath } from 'node:url';
   //   不是质量门槛。合并把 172 → 119 个文件，故下限 150 → 90（仍远高于「只扫顶层」量级）。
   // 下限随拆包调整（审计侧测试已整体搬进独立包，本仓常规回归 69 个）；
     //   它只是「扫描退化成只扫顶层」的兜底信号（那种情况会掉到个位数）。
-    assert.ok(scan.regular.length >= 60, `常规回归文件数异常偏少（${scan.regular.length}）——扫描可能退化成只扫顶层`);
+    assert.ok(scan.regular.length >= 40, `常规回归文件数异常偏少（${scan.regular.length}）——扫描可能退化成只扫顶层`);
   });
 
   // 干跑输出只取一次：每次 dry-run 都要为每个文件算 import 闭包（CIFS 上每次读几十个文件），

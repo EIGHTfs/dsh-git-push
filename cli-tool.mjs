@@ -15,9 +15,6 @@
  */
 import { VERSION } from './lib/self/index.js';
 
-import {
-  cmdModuleSplitter,
-} from './lib/cli/commands-doc.mjs';
 import { cmdReadmeTemplate, cmdSelfCheck, cmdYamlTemplate } from './lib/cli/commands-tool.mjs';
 import { CLI_TOOL, CLI_ENTRIES, cliPluginConfig, runAsEntry, runCli } from './lib/cli/shared.mjs';
 
@@ -78,7 +75,8 @@ export async function main(argv = process.argv.slice(2)) {
 runAsEntry(import.meta.url, main);
 
 // 兼容导出
-export { cmdModuleSplitter, cmdYamlTemplate, cmdReadmeTemplate, cmdSelfCheck };
+// module-splitter 已随通用工具迁入 audit-sluice（不再由本插件提供）
+export { cmdYamlTemplate, cmdReadmeTemplate, cmdSelfCheck };
 
 /** 子命令：version（三入口同一实现，只有名字不同）。 */
 export function cmdVersion() {

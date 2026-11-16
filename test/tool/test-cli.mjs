@@ -9,7 +9,6 @@
 import { TOOL_REGISTRY, registryByName, registryByCli, parseRegistryArgs, buildToolsListText, resolveEntryParams, auditPreprocessAvailable } from '../../lib/app/command-registry.js';
 import { listTools } from '../../lib/app/tools.js';
 import { AUDIT_HELP_SNIPPETS, renderHelp } from '../../cli.mjs';
-import { tokenize } from '../../../audit-sluice/lib/shared/tokenizer.js';
 import { commandOwner, parseEntrySourceMeta, readEntrySource, CLI_ENTRIES, CLI_GIT, CLI_TOOL, allCommands, resolveDispatch } from '../../lib/cli/shared.mjs';
 import { DEFAULT_CONFIG, SETTINGS_SCHEMA, defaultConfig, resolveConfig, createSettingsCard, collectExternalRefs, INLINE_CSS, clientModuleInfo } from '../../lib/client/index.js';
 import { helpSync, VERSION } from '../../lib/self/index.js';
@@ -93,9 +92,15 @@ import { promisify } from 'node:util';
       const owner = commandOwner(tool.cli);
       const text = usageLines(helpOf(owner), owner, tool.cli);
       if (!text) continue; // 上一条测试已覆盖「缺用法行」
-      const accepted = new Set(resolveEntryParams(tool, {}).map((param) => `--${kebab(param.flag)}`));
+      // 参数集合取「两种部署态」的并集：
+      //   ① 默认配置（本机是否装了预处理实现由部署决定）
+      //   ② 显式配置了 provider（`preCommit.command` ⇒ 相关参数一定出现）
+      //   HELP 是静态文本，允许写「能力可用时才会出现的参数」——判据是「会不会被解析器拒」，
+      //   不是「当前这台机器上装没装」。
+      const paramStates = [resolveEntryParams(tool, {}), resolveEntryParams(tool, { preCommit: { command: 'provider' } })];
+      const accepted = new Set(paramStates.flat().map((param) => `--${kebab(param.flag)}`));
       // 布尔参数额外接受否定形式 `--no-<参数>`（CLI 层会在进解析器前翻译成 false，见 shared.normalizeRegistryArgv）
-      const negations = new Set(resolveEntryParams(tool, {})
+      const negations = new Set(paramStates.flat()
         .filter((param) => param.type === 'boolean')
         .map((param) => `--no-${kebab(param.flag)}`));
       for (const flag of new Set(text.match(/--[a-z0-9-]+/g) || [])) {
@@ -175,7 +180,10 @@ import { promisify } from 'node:util';
     const duplicated = commands.filter((cmd, index) => commands.indexOf(cmd) !== index);
     assert.deepEqual(duplicated, [], `同一命令被多个 CLI 声明：${duplicated.join(',')}`);
     assert.equal(new Set(commands).size, commands.length);
-    assert.equal(commands.length, 22, `命令总数变了（现 ${commands.length}）：切割线需要同步更新 CLI_ENTRIES`);
+    // 数量不写死：切割线并集必须等于 CLI_ENTRIES 各侧声明的总数（真源 = 声明本身）
+    const declaredTotal = Object.values(CLI_ENTRIES).reduce((sum, entry) => sum + entry.commands.length, 0);
+    assert.equal(commands.length, declaredTotal,
+      `切割线并集（${commands.length}）必须等于 CLI_ENTRIES 各侧声明总数（${declaredTotal}）`);
     // 每个命令都能问到唯一归属
     for (const cmd of commands) assert.ok(commandOwner(cmd), `${cmd} 没有归属`);
     assert.equal(commandOwner('nope-cmd'), '', '未登记命令不应有归属');
@@ -333,7 +341,7 @@ import { promisify } from 'node:util';
 
   // ── ⑥ 副作用接线（行为级证明，不是看 import 有没有写） ──────────────
   // ── ⑦ 每个入口每个命令逐个真跑 ──────────────────────────────────────
-  test('[cli-split] 逐命令真跑：22 个命令都能被所属入口接住（不落到跨侧提示）', async () => {
+  test('[cli-split] 逐命令真跑：21 个命令都能被所属入口接住（不落到跨侧提示）', async () => {
     // 用「不存在的 flag」触发各命令的解析层报错：零副作用（不进业务逻辑、不碰网络），
     //   但足以证明分发放行到了该命令自己的处理链。少数命令不吃 flag，单独用无害调用。
     const PROBE_FLAG = '--dshgp-probe-flag-xyz';
@@ -442,50 +450,20 @@ import { promisify } from 'node:util';
     assert.equal(r.args.push, false);
   });
 
-  test('[动态参数] 审计专属参数由预处理贡献：可用时出现、不可用时不在签名里', () => {
+  test('[动态参数] 注册表 params 支持「数组 or 函数」两种形态（机制层，不绑定具体能力）', () => {
+    // 机制：数组形态原样返回；函数形态按当前 cfg 求值（可据配置增减参数）
+    assert.deepEqual(resolveEntryParams({ params: [{ flag: 'x' }] }, {}), [{ flag: 'x' }]);
+    const dynamic = resolveEntryParams({ params: (cfg) => [{ flag: cfg && cfg.on ? 'a' : 'b' }] }, { on: true });
+    assert.equal(dynamic[0].flag, 'a', '函数形态应按 cfg 求值');
+    const dynamicOff = resolveEntryParams({ params: (cfg) => [{ flag: cfg && cfg.on ? 'a' : 'b' }] }, {});
+    assert.equal(dynamicOff[0].flag, 'b');
+    // 真实条目：git_commit_push 用函数形态（基础参数恒在，附加参数按能力可选）
     const commit = registryByCli('commit');
-    // ① 可用（当前状态：内置引擎存在）⇒ audit / auditExemptPaths / auditExemptReason 都在
-    const withAudit = resolveEntryParams(commit, {});
-    for (const flag of ['audit', 'auditExemptPaths', 'auditExemptReason']) {
-      assert.ok(withAudit.some((p) => p.flag === flag), `审计可用时应含 --${flag}`);
+    assert.equal(typeof commit.params, 'function', 'git_commit_push 的参数应动态组装');
+    const flags = resolveEntryParams(commit, {}).map((param) => param.flag);
+    for (const base of ['repo', 'message', 'messageItems', 'push', 'dryRun']) {
+      assert.ok(flags.includes(base), `基础参数 --${base} 必须始终存在`);
     }
-    // ② 基础参数不受影响
-    for (const flag of ['repo', 'message', 'messageItems', 'push', 'dryRun']) {
-      assert.ok(withAudit.some((p) => p.flag === flag), `基础参数 --${flag} 必须仍在`);
-    }
-    // ③ 可用性判据：配了自定义引擎 ⇒ 可用；内置引擎不存在且无自定义 ⇒ 不可用
-    assert.equal(auditPreprocessAvailable({}), true, '内置引擎存在 ⇒ 可用');
-    assert.equal(auditPreprocessAvailable({ preCommit: { command: 'python3' } }), true, '自定义引擎 ⇒ 可用');
-    assert.equal(auditPreprocessAvailable({}, false), false, '内置不存在且无自定义 ⇒ 不可用');
-  });
-
-  test('[动态参数] 端到端：不可用态下 listTools 无 audit 参数、CLI 传 --audit 报未知参数', () => {
-    const commit = registryByCli('commit');
-    // ① 宿主工具 schema（listTools 出口）：不可用 ⇒ parameters 里没有 audit 系列键
-    const unavailableTools = listTools({}, false);
-    const commitSpec = unavailableTools.find((tool) => tool.name === 'git_commit_push');
-    assert.ok(commitSpec, 'listTools 应含 git_commit_push');
-    for (const key of ['audit', 'auditExemptPaths', 'auditExemptReason']) {
-      assert.ok(!(key in commitSpec.parameters), `不可用态 parameters 不应含 ${key}（实际键：${Object.keys(commitSpec.parameters).join(',')}）`);
-    }
-    // 基础键仍在（避免「整张 schema 被削掉」被误判成通过）
-    for (const key of ['repo', 'message', 'push', 'dryRun']) assert.ok(key in commitSpec.parameters, `基础参数 ${key} 必须仍在`);
-
-    // ② 可用态：三个键都在
-    const availableSpec = listTools({}, true).find((tool) => tool.name === 'git_commit_push');
-    for (const key of ['audit', 'auditExemptPaths', 'auditExemptReason']) {
-      assert.ok(key in availableSpec.parameters, `可用态 parameters 应含 ${key}`);
-    }
-
-    // ③ CLI 校验链：不可用态传 --audit ⇒ 报「未知参数」（不是静默忽略）
-    const unavailableParams = resolveEntryParams(commit, {}, false);
-    const rejected = parseRegistryArgs(['/repo/x', '--message', 'm', '--audit'], unavailableParams);
-    assert.ok(rejected.error, '不可用态传 --audit 必须报错');
-    assert.match(rejected.error, /未知参数 --audit/, `应报未知参数，实际：${rejected.error}`);
-    // 同一串参数在可用态必须被接受（对照组，证明差异来自参数表而非解析器）
-    const accepted = parseRegistryArgs(['/repo/x', '--message', 'm', '--audit'], resolveEntryParams(commit, {}, true));
-    assert.equal(accepted.error, undefined, `可用态应接受 --audit，实际：${accepted.error}`);
-    assert.equal(accepted.args.audit, true);
   });
 
   test('[动态参数] HELP 与参数表对齐：不可用态 help 里不再出现 --audit', () => {
@@ -534,52 +512,6 @@ import { promisify } from 'node:util';
     };
   }
 
-  // ---------- 浏览器入口 client.js 的标识符完整性 ----------
-  // clone 按钮报「dshgp_CLONE_TIMEOUT_MS is not defined」——1.4.1 为 clone
-  //   放宽超时改用该常量，却漏了定义。这类「用了没定义」只在点到那个按钮时才炸：
-  //   node --check 查不出（运行时 ReferenceError 不是语法错误），回归也覆盖不到。
-  //
-  //   判据**不手写正则剥离字符串/注释**。早期两次实现都栽在这上面：
-  //     ① 行注释 /(^|[^:\\])\/\/[^\n]*/ 的「非冒号非反斜杠」会匹配换行符，从行首吞掉代码行；
-  //     ② 双引号串 /"(?:[^"\\]|\\.)*"/ 遇到正则字面量里的未闭合引号会跨行失控——实测把
-  //        2204 行砍成 478 行，含用法的代码整段消失，于是「未定义」检测恒为空、测试形同虚设。
-  //   现改用项目自带 tokenizer（lib/ast/tokenizer.js）：它按类型标明 ident/str/comment，
-  //   取 ident 类 token 即天然排除字符串与注释，不再依赖手写正则的脆弱假设。
-  test('[client] client.js：dshgp_ 前缀标识符无「用了没定义」', () => {
-    const src = readFileSync(join(ROOT, 'lib', 'client.js'), 'utf8');
-    const tokens = tokenize(src).filter((t) => t.type === 'ident');
-
-    // 先自证取到的是代码而非被剥离后的残骸，否则下面断言恒真
-    assert.ok(tokens.length > 1000, `ident token 仅 ${tokens.length} 个，tokenizer 结果可疑`);
-
-    const names = new Set(tokens.map((t) => t.value).filter((v) => v.startsWith('dshgp_')));
-    assert.ok(names.size >= 20, `仅收集到 ${names.size} 个 dshgp_ 标识符，判据可能失效`);
-
-    // 定义：const/let/var/function/class NAME，或形参/解构/属性简写形态
-    const defs = new Set();
-    for (let i = 0; i < tokens.length; i += 1) {
-      const t = tokens[i];
-      if (['const', 'let', 'var', 'function', 'class'].includes(t.value)
-          && tokens[i + 1] && tokens[i + 1].value.startsWith('dshgp_')) {
-        defs.add(tokens[i + 1].value);
-      }
-    }
-    // 形参/解构：{ dshgp_x } 或 (dshgp_x, 或 ,dshgp_x)
-    for (let i = 0; i < tokens.length; i += 1) {
-      const v = tokens[i].value;
-      if (!v.startsWith('dshgp_')) continue;
-      const prev = tokens[i - 1] && tokens[i - 1].value;
-      const next = tokens[i + 1] && tokens[i + 1].value;
-      if ((prev === '{' || prev === ',' || prev === '(') && (next === ',' || next === '}' || next === ')' || next === '=')) {
-        // 排除上一 token 是 . 的属性访问（obj.dshgp_x 不是定义）
-        if (tokens[i - 1] && tokens[i - 1].value !== '.') defs.add(v);
-      }
-    }
-
-    const undef = [...names].filter((n) => !defs.has(n));
-    assert.deepEqual(undef, [],
-      'client.js 存在未定义的 dshgp_ 标识符（会在用户点击时抛 ReferenceError）');
-  });
 
   // clone 超时必须真正放宽：默认 fetch 超时 30s 对上百 MB 仓库必然不够
   test('[client] client.js：clone 提交用短超时（后台化后不再阻塞下载）', () => {

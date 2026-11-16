@@ -4,7 +4,7 @@
  * git_api 工具回归测试（2026-10-11 新增）
  *
  * 背景：本插件有 28 条 HTTP API，但此前**没有**任何 agent 工具能直接调它们
- *   （16 个工具全是语义化工具：git_scan / code_audit / …）。新增 `git_api` 后：
+ *   （工具面全是语义化工具：git_scan / git_commit_push / …）。新增 `git_api` 后：
  *   · 不传 path ⇒ 列出全部接口（从分发器 case 现读，即路由真相）；
  *   · 传 path ⇒ 内部走 `handleHttp` ——**与浏览器/CLI 同一条代码路径**（不另写一份实现，
  *     避免"工具版与 HTTP 版行为分叉"）。
@@ -47,8 +47,9 @@ ok('path=status 调通且 HTTP 200', status.ok === true && status.status === 200
 ok('返回真实业务字段（plugin/version）', !!(status.result && status.result.plugin && status.result.version), JSON.stringify(status.result || {}).slice(0, 80));
 
 // ── ④ 只读接口带 query 也能传（口径：URLSearchParams）──
-const slots = await callTool('git_api', { path: 'rule-slots' });
-ok('path=rule-slots 调通', slots.ok === true && slots.status === 200, 'status=' + slots.status);
+//   注：用宿主自有端点验证（`status`）即可——端点清单本身由分发器推导，无需逐个穷举。
+const withQuery = await callTool('git_api', { path: 'status', query: JSON.stringify({}) });
+ok('只读接口带 query 不报错', withQuery.ok === true, `status=${withQuery.status}`);
 
 // ── ⑤ 坏 JSON 要报错而不是静默 ──
 const bad = await callTool('git_api', { path: 'status', query: '{不是JSON' });
