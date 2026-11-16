@@ -105,19 +105,21 @@
 | `handleRepoPush` | 49-93 | 45 | `export async function handleRepoPush(ctx) {` |
 | `handleRepoCommit` | 96-144 | 49 | `export async function handleRepoCommit(ctx) {` |
 
-### lib/app/handlers/repos.js（256 行 · 9 个函数）
+### lib/app/handlers/repos.js（383 行 · 11 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `buildLocalList` | 23-55 | 33 | `function buildLocalList(indexMap, root, deadline) {` |
-| `isProbeOverBudget` | 66-68 | 3 | `export function isProbeOverBudget(deadline, now = Date.now()) {` |
-| `applyLiveRemote` | 71-134 | 64 | `async function applyLiveRemote(list, deadline) {` |
-| `handleReposLocal` | 137-158 | 22 | `export async function handleReposLocal(ctx) {` |
-| `handleReposLocalScan` | 160-169 | 10 | `export function handleReposLocalScan(ctx) {` |
-| `handleReposLocalScanWait` | 172-177 | 6 | `export async function handleReposLocalScanWait(ctx) {` |
-| `refreshOneTarget` | 183-217 | 35 | `async function refreshOneTarget(t, env) {` |
-| `handleReposLocalRefresh` | 220-229 | 10 | `export async function handleReposLocalRefresh(ctx) {` |
-| `handleReposCloud` | 232-256 | 25 | `export async function handleReposCloud(ctx) {` |
+| `buildLocalList` | 23-68 | 46 | `function buildLocalList(indexMap, root, deadline, options) {` |
+| `isProbeOverBudget` | 79-81 | 3 | `export function isProbeOverBudget(deadline, now = Date.now()) {` |
+| `applyLiveRemote` | 84-147 | 64 | `async function applyLiveRemote(list, deadline) {` |
+| `mergeCachedRemote` | 160-185 | 26 | `function mergeCachedRemote(list) {` |
+| `scheduleLiveRefresh` | 199-214 | 16 | `function scheduleLiveRefresh(list, env) {` |
+| `handleReposLocal` | 217-269 | 53 | `export async function handleReposLocal(ctx) {` |
+| `handleReposLocalScan` | 271-280 | 10 | `export function handleReposLocalScan(ctx) {` |
+| `handleReposLocalScanWait` | 283-288 | 6 | `export async function handleReposLocalScanWait(ctx) {` |
+| `refreshOneTarget` | 294-344 | 51 | `async function refreshOneTarget(t, env) {` |
+| `handleReposLocalRefresh` | 347-356 | 10 | `export async function handleReposLocalRefresh(ctx) {` |
+| `handleReposCloud` | 359-383 | 25 | `export async function handleReposCloud(ctx) {` |
 
 ### lib/app/handlers/settings.js（89 行 · 2 个函数）
 
@@ -351,21 +353,21 @@
 | `readEntrySource` | 462-464 | 3 | `export function readEntrySource(relPath) {` |
 | `parseEntrySourceMeta` | 471-477 | 7 | `export function parseEntrySourceMeta(sourceText = '') {` |
 
-### lib/client-parts/git/account.js（84 行 · 3 个函数）
+### lib/client-parts/git/account.js（93 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `dshgp_AcctHead` | 3-17 | 15 | `function dshgp_AcctHead(props) {` |
-| `dshgp_AccountCard` | 20-64 | 45 | `function dshgp_AccountCard(props) {` |
-| `dshgp_AccountTab` | 67-82 | 16 | `function dshgp_AccountTab(props) {` |
+| `dshgp_AccountCard` | 20-75 | 56 | `function dshgp_AccountCard(props) {` |
+| `dshgp_AccountTab` | 78-91 | 14 | `function dshgp_AccountTab(props) {` |
 
-### lib/client-parts/git/apply.js（73 行 · 3 个函数）
+### lib/client-parts/git/apply.js（79 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `apply` | 2-66 | 65 | `function apply(ctx) {` |
-| `useCardState` | 42-45 | 4 | `const useCardState = (selector) => {` |
-| `SectionPage` | 48-53 | 6 | `function SectionPage() {` |
+| `apply` | 2-72 | 71 | `function apply(ctx) {` |
+| `useCardState` | 46-49 | 4 | `const useCardState = (selector) => {` |
+| `SectionPage` | 52-59 | 8 | `function SectionPage() {` |
 
 ### lib/client-parts/git/browser.js（107 行 · 7 个函数）
 
@@ -379,54 +381,75 @@
 | `dshgp_browseClose` | 87-93 | 7 | `function dshgp_browseClose() {` |
 | `dshgp_browseAttach` | 94-104 | 11 | `function dshgp_browseAttach(inputEl) {` |
 
-### lib/client-parts/git/controller.js（1011 行 · 3 个函数）
+### lib/client-parts/git/controller.js（1104 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `tick` | 424-442 | 19 | `const tick = async () => {` |
-| `renderResult` | 935-948 | 14 | `const renderResult = (res) => {` |
-| `poll` | 951-976 | 26 | `const poll = async () => {` |
+| `tick` | 485-503 | 19 | `const tick = async () => {` |
+| `renderResult` | 1028-1041 | 14 | `const renderResult = (res) => {` |
+| `poll` | 1044-1069 | 26 | `const poll = async () => {` |
 
-### lib/client-parts/git/npm.js（383 行 · 7 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `dshgp_NpmAccountCard` | 10-59 | 50 | `function dshgp_NpmAccountCard(props) {` |
-| `dshgp_NpmInstallForm` | 62-125 | 64 | `function dshgp_NpmInstallForm(props) {` |
-| `dshgp_NpmPanel` | 128-285 | 158 | `function dshgp_NpmPanel(props) {` |
-| `doInstall` | 160-176 | 17 | `const doInstall = async () => {` |
-| `dshgp_AccountSwitcher` | 291-329 | 39 | `function dshgp_AccountSwitcher(props) {` |
-| `dshgp_NpmCredFields` | 332-381 | 50 | `function dshgp_NpmCredFields() {` |
-| `save` | 344-360 | 17 | `const save = async () => {` |
-
-### lib/client-parts/git/page.js（47 行 · 1 个函数）
+### lib/client-parts/git/npm.js（404 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `dshgp_GitPushPage` | 2-45 | 44 | `function dshgp_GitPushPage(props) {` |
+| `dshgp_NpmAccountCard` | 10-71 | 62 | `function dshgp_NpmAccountCard(props) {` |
+| `dshgp_NpmInstallForm` | 74-137 | 64 | `function dshgp_NpmInstallForm(props) {` |
+| `dshgp_NpmPanel` | 140-301 | 162 | `function dshgp_NpmPanel(props) {` |
+| `doInstall` | 167-183 | 17 | `const doInstall = async () => {` |
+| `dshgp_AccountSwitcher` | 307-350 | 44 | `function dshgp_AccountSwitcher(props) {` |
+| `dshgp_NpmCredFields` | 353-402 | 50 | `function dshgp_NpmCredFields() {` |
+| `save` | 365-381 | 17 | `const save = async () => {` |
 
-### lib/client-parts/git/repo.js（375 行 · 10 个函数）
+### lib/client-parts/git/page.js（99 行 · 3 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `dshgp_ResourceNotice` | 11-29 | 19 | `function dshgp_ResourceNotice(props) {` |
+| `dshgp_LoadingSkeleton` | 38-52 | 15 | `function dshgp_LoadingSkeleton() {` |
+| `dshgp_GitPushPage` | 54-97 | 44 | `function dshgp_GitPushPage(props) {` |
+
+### lib/client-parts/git/repo.js（382 行 · 10 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `dshgp_RepoManagerCard` | 2-35 | 34 | `function dshgp_RepoManagerCard(props) {` |
 | `dshgp_RepoLocalRow` | 38-116 | 79 | `function dshgp_RepoLocalRow(props) {` |
-| `dshgp_RepoLocalPane` | 119-156 | 38 | `function dshgp_RepoLocalPane(props) {` |
-| `dshgp_RepoCloudRow` | 159-206 | 48 | `function dshgp_RepoCloudRow(props) {` |
-| `dshgp_VisConfirmDialog` | 212-240 | 29 | `function dshgp_VisConfirmDialog(props) {` |
-| `dshgp_RepoCloudPane` | 243-294 | 52 | `function dshgp_RepoCloudPane(props) {` |
-| `dshgp_CloneProgress` | 305-322 | 18 | `function dshgp_CloneProgress(props) {` |
-| `mb` | 307-307 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
-| `dshgp_ClonePreview` | 330-373 | 44 | `function dshgp_ClonePreview(props) {` |
-| `mb` | 332-332 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
+| `dshgp_RepoLocalPane` | 119-163 | 45 | `function dshgp_RepoLocalPane(props) {` |
+| `dshgp_RepoCloudRow` | 166-213 | 48 | `function dshgp_RepoCloudRow(props) {` |
+| `dshgp_VisConfirmDialog` | 219-247 | 29 | `function dshgp_VisConfirmDialog(props) {` |
+| `dshgp_RepoCloudPane` | 250-301 | 52 | `function dshgp_RepoCloudPane(props) {` |
+| `dshgp_CloneProgress` | 312-329 | 18 | `function dshgp_CloneProgress(props) {` |
+| `mb` | 314-314 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
+| `dshgp_ClonePreview` | 337-380 | 44 | `function dshgp_ClonePreview(props) {` |
+| `mb` | 339-339 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
 
-### lib/client-parts/git/settings.js（157 行 · 3 个函数）
+### lib/client-parts/git/settings.js（159 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `dshgp_CredentialBlock` | 2-69 | 68 | `function dshgp_CredentialBlock(props) {` |
 | `dshgp_PushDefaultsBlock` | 72-144 | 73 | `function dshgp_PushDefaultsBlock(props) {` |
-| `dshgp_SettingsTab` | 146-155 | 10 | `function dshgp_SettingsTab(props) {` |
+| `dshgp_SettingsTab` | 146-157 | 12 | `function dshgp_SettingsTab(props) {` |
+
+### lib/client-parts/git/state.js（238 行 · 14 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `dshgp_uiCtx` | 22-29 | 8 | `function dshgp_uiCtx(onChange) {` |
+| `dshgp_uiEnsure` | 32-36 | 5 | `function dshgp_uiEnsure(ctx, name) {` |
+| `dshgp_uiEmit` | 39-41 | 3 | `function dshgp_uiEmit(ctx) {` |
+| `dshgp_uiStatusOf` | 50-56 | 7 | `function dshgp_uiStatusOf(ctx, name) {` |
+| `dshgp_uiRenderOne` | 59-63 | 5 | `function dshgp_uiRenderOne(ctx, name, payload) {` |
+| `dshgp_uiApplyAll` | 69-79 | 11 | `function dshgp_uiApplyAll(ctx, names) {` |
+| `dshgp_uiReadOnce` | 82-89 | 8 | `function dshgp_uiReadOnce(resource, arg) {` |
+| `dshgp_uiLoadOne` | 95-125 | 31 | `async function dshgp_uiLoadOne(ctx, name, arg, attempt) {` |
+| `dshgp_uiReload` | 128-134 | 7 | `function dshgp_uiReload(ctx, name, arg) {` |
+| `dshgp_uiLoadAll` | 140-154 | 15 | `async function dshgp_uiLoadAll(ctx, opts) {` |
+| `dshgp_uiEnsureFresh` | 160-170 | 11 | `function dshgp_uiEnsureFresh(ctx, names) {` |
+| `dshgp_uiAllReady` | 173-179 | 7 | `function dshgp_uiAllReady(ctx, names) {` |
+| `dshgp_uiAnyLoading` | 182-185 | 4 | `function dshgp_uiAnyLoading(ctx) {` |
+| `dshgp_createUiState` | 200-237 | 38 | `function dshgp_createUiState(options) {` |
 
 ### lib/client-parts/git/utils.js（63 行 · 7 个函数）
 
@@ -440,54 +463,70 @@
 | `dshgp_localSet` | 51-53 | 3 | `function dshgp_localSet(key, value) {` |
 | `dshgp_copyText` | 56-61 | 6 | `function dshgp_copyText(text) {` |
 
-### lib/client.js（2787 行 · 44 个函数）
+### lib/client.js（3256 行 · 60 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `dshgp_ensureCss` | 254-262 | 9 | `function dshgp_ensureCss() {` |
-| `dshgp_getJson` | 265-268 | 4 | `async function dshgp_getJson(url) {` |
-| `dshgp_postJson` | 270-279 | 10 | `async function dshgp_postJson(url, payload, timeoutMs) {` |
-| `dshgp_tokenConfigured` | 287-291 | 5 | `function dshgp_tokenConfigured(value) {` |
-| `dshgp_localGet` | 298-300 | 3 | `function dshgp_localGet(key) {` |
-| `dshgp_localSet` | 303-305 | 3 | `function dshgp_localSet(key, value) {` |
-| `dshgp_copyText` | 308-313 | 6 | `function dshgp_copyText(text) {` |
-| `dshgp_AcctHead` | 329-343 | 15 | `function dshgp_AcctHead(props) {` |
-| `dshgp_AccountCard` | 346-390 | 45 | `function dshgp_AccountCard(props) {` |
-| `dshgp_AccountTab` | 393-408 | 16 | `function dshgp_AccountTab(props) {` |
-| `dshgp_browseEnsureDom` | 418-446 | 29 | `function dshgp_browseEnsureDom() {` |
-| `dshgp_browseGuess` | 447-449 | 3 | `function dshgp_browseGuess() {` |
-| `dshgp_browseRemember` | 450-452 | 3 | `function dshgp_browseRemember(p) {` |
-| `dshgp_browseLoad` | 453-486 | 34 | `async function dshgp_browseLoad(p) {` |
-| `dshgp_browseOpen` | 487-495 | 9 | `function dshgp_browseOpen(input, onPick) {` |
-| `dshgp_browseClose` | 496-502 | 7 | `function dshgp_browseClose() {` |
-| `dshgp_browseAttach` | 503-513 | 11 | `function dshgp_browseAttach(inputEl) {` |
-| `dshgp_RepoManagerCard` | 517-550 | 34 | `function dshgp_RepoManagerCard(props) {` |
-| `dshgp_RepoLocalRow` | 553-631 | 79 | `function dshgp_RepoLocalRow(props) {` |
-| `dshgp_RepoLocalPane` | 634-671 | 38 | `function dshgp_RepoLocalPane(props) {` |
-| `dshgp_RepoCloudRow` | 674-721 | 48 | `function dshgp_RepoCloudRow(props) {` |
-| `dshgp_VisConfirmDialog` | 727-755 | 29 | `function dshgp_VisConfirmDialog(props) {` |
-| `dshgp_RepoCloudPane` | 758-809 | 52 | `function dshgp_RepoCloudPane(props) {` |
-| `dshgp_CloneProgress` | 820-837 | 18 | `function dshgp_CloneProgress(props) {` |
-| `mb` | 822-822 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
-| `dshgp_ClonePreview` | 845-888 | 44 | `function dshgp_ClonePreview(props) {` |
-| `mb` | 847-847 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
-| `dshgp_NpmAccountCard` | 899-948 | 50 | `function dshgp_NpmAccountCard(props) {` |
-| `dshgp_NpmInstallForm` | 951-1014 | 64 | `function dshgp_NpmInstallForm(props) {` |
-| `dshgp_NpmPanel` | 1017-1174 | 158 | `function dshgp_NpmPanel(props) {` |
-| `doInstall` | 1049-1065 | 17 | `const doInstall = async () => {` |
-| `dshgp_AccountSwitcher` | 1180-1218 | 39 | `function dshgp_AccountSwitcher(props) {` |
-| `dshgp_NpmCredFields` | 1221-1270 | 50 | `function dshgp_NpmCredFields() {` |
-| `save` | 1233-1249 | 17 | `const save = async () => {` |
-| `dshgp_CredentialBlock` | 1273-1340 | 68 | `function dshgp_CredentialBlock(props) {` |
-| `dshgp_PushDefaultsBlock` | 1343-1415 | 73 | `function dshgp_PushDefaultsBlock(props) {` |
-| `dshgp_SettingsTab` | 1417-1426 | 10 | `function dshgp_SettingsTab(props) {` |
-| `dshgp_GitPushPage` | 1429-1472 | 44 | `function dshgp_GitPushPage(props) {` |
-| `tick` | 1897-1915 | 19 | `const tick = async () => {` |
-| `renderResult` | 2408-2421 | 14 | `const renderResult = (res) => {` |
-| `poll` | 2424-2449 | 26 | `const poll = async () => {` |
-| `apply` | 2716-2780 | 65 | `function apply(ctx) {` |
-| `useCardState` | 2756-2759 | 4 | `const useCardState = (selector) => {` |
-| `SectionPage` | 2762-2767 | 6 | `function SectionPage() {` |
+| `dshgp_ensureCss` | 286-294 | 9 | `function dshgp_ensureCss() {` |
+| `dshgp_getJson` | 297-300 | 4 | `async function dshgp_getJson(url) {` |
+| `dshgp_postJson` | 302-311 | 10 | `async function dshgp_postJson(url, payload, timeoutMs) {` |
+| `dshgp_tokenConfigured` | 319-323 | 5 | `function dshgp_tokenConfigured(value) {` |
+| `dshgp_localGet` | 330-332 | 3 | `function dshgp_localGet(key) {` |
+| `dshgp_localSet` | 335-337 | 3 | `function dshgp_localSet(key, value) {` |
+| `dshgp_copyText` | 340-345 | 6 | `function dshgp_copyText(text) {` |
+| `dshgp_uiCtx` | 368-375 | 8 | `function dshgp_uiCtx(onChange) {` |
+| `dshgp_uiEnsure` | 378-382 | 5 | `function dshgp_uiEnsure(ctx, name) {` |
+| `dshgp_uiEmit` | 385-387 | 3 | `function dshgp_uiEmit(ctx) {` |
+| `dshgp_uiStatusOf` | 396-402 | 7 | `function dshgp_uiStatusOf(ctx, name) {` |
+| `dshgp_uiRenderOne` | 405-409 | 5 | `function dshgp_uiRenderOne(ctx, name, payload) {` |
+| `dshgp_uiApplyAll` | 415-425 | 11 | `function dshgp_uiApplyAll(ctx, names) {` |
+| `dshgp_uiReadOnce` | 428-435 | 8 | `function dshgp_uiReadOnce(resource, arg) {` |
+| `dshgp_uiLoadOne` | 441-471 | 31 | `async function dshgp_uiLoadOne(ctx, name, arg, attempt) {` |
+| `dshgp_uiReload` | 474-480 | 7 | `function dshgp_uiReload(ctx, name, arg) {` |
+| `dshgp_uiLoadAll` | 486-500 | 15 | `async function dshgp_uiLoadAll(ctx, opts) {` |
+| `dshgp_uiEnsureFresh` | 506-516 | 11 | `function dshgp_uiEnsureFresh(ctx, names) {` |
+| `dshgp_uiAllReady` | 519-525 | 7 | `function dshgp_uiAllReady(ctx, names) {` |
+| `dshgp_uiAnyLoading` | 528-531 | 4 | `function dshgp_uiAnyLoading(ctx) {` |
+| `dshgp_createUiState` | 546-583 | 38 | `function dshgp_createUiState(options) {` |
+| `dshgp_AcctHead` | 598-612 | 15 | `function dshgp_AcctHead(props) {` |
+| `dshgp_AccountCard` | 615-670 | 56 | `function dshgp_AccountCard(props) {` |
+| `dshgp_AccountTab` | 673-686 | 14 | `function dshgp_AccountTab(props) {` |
+| `dshgp_browseEnsureDom` | 696-724 | 29 | `function dshgp_browseEnsureDom() {` |
+| `dshgp_browseGuess` | 725-727 | 3 | `function dshgp_browseGuess() {` |
+| `dshgp_browseRemember` | 728-730 | 3 | `function dshgp_browseRemember(p) {` |
+| `dshgp_browseLoad` | 731-764 | 34 | `async function dshgp_browseLoad(p) {` |
+| `dshgp_browseOpen` | 765-773 | 9 | `function dshgp_browseOpen(input, onPick) {` |
+| `dshgp_browseClose` | 774-780 | 7 | `function dshgp_browseClose() {` |
+| `dshgp_browseAttach` | 781-791 | 11 | `function dshgp_browseAttach(inputEl) {` |
+| `dshgp_RepoManagerCard` | 795-828 | 34 | `function dshgp_RepoManagerCard(props) {` |
+| `dshgp_RepoLocalRow` | 831-909 | 79 | `function dshgp_RepoLocalRow(props) {` |
+| `dshgp_RepoLocalPane` | 912-956 | 45 | `function dshgp_RepoLocalPane(props) {` |
+| `dshgp_RepoCloudRow` | 959-1006 | 48 | `function dshgp_RepoCloudRow(props) {` |
+| `dshgp_VisConfirmDialog` | 1012-1040 | 29 | `function dshgp_VisConfirmDialog(props) {` |
+| `dshgp_RepoCloudPane` | 1043-1094 | 52 | `function dshgp_RepoCloudPane(props) {` |
+| `dshgp_CloneProgress` | 1105-1122 | 18 | `function dshgp_CloneProgress(props) {` |
+| `mb` | 1107-1107 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
+| `dshgp_ClonePreview` | 1130-1173 | 44 | `function dshgp_ClonePreview(props) {` |
+| `mb` | 1132-1132 | 1 | `const mb = (n) => (n / 1024 / 1024).toFixed(1);` |
+| `dshgp_NpmAccountCard` | 1184-1245 | 62 | `function dshgp_NpmAccountCard(props) {` |
+| `dshgp_NpmInstallForm` | 1248-1311 | 64 | `function dshgp_NpmInstallForm(props) {` |
+| `dshgp_NpmPanel` | 1314-1475 | 162 | `function dshgp_NpmPanel(props) {` |
+| `doInstall` | 1341-1357 | 17 | `const doInstall = async () => {` |
+| `dshgp_AccountSwitcher` | 1481-1524 | 44 | `function dshgp_AccountSwitcher(props) {` |
+| `dshgp_NpmCredFields` | 1527-1576 | 50 | `function dshgp_NpmCredFields() {` |
+| `save` | 1539-1555 | 17 | `const save = async () => {` |
+| `dshgp_CredentialBlock` | 1579-1646 | 68 | `function dshgp_CredentialBlock(props) {` |
+| `dshgp_PushDefaultsBlock` | 1649-1721 | 73 | `function dshgp_PushDefaultsBlock(props) {` |
+| `dshgp_SettingsTab` | 1723-1734 | 12 | `function dshgp_SettingsTab(props) {` |
+| `dshgp_ResourceNotice` | 1746-1764 | 19 | `function dshgp_ResourceNotice(props) {` |
+| `dshgp_LoadingSkeleton` | 1773-1787 | 15 | `function dshgp_LoadingSkeleton() {` |
+| `dshgp_GitPushPage` | 1789-1832 | 44 | `function dshgp_GitPushPage(props) {` |
+| `tick` | 2318-2336 | 19 | `const tick = async () => {` |
+| `renderResult` | 2861-2874 | 14 | `const renderResult = (res) => {` |
+| `poll` | 2877-2902 | 26 | `const poll = async () => {` |
+| `apply` | 3179-3249 | 71 | `function apply(ctx) {` |
+| `useCardState` | 3223-3226 | 4 | `const useCardState = (selector) => {` |
+| `SectionPage` | 3229-3236 | 8 | `function SectionPage() {` |
 
 ### lib/client/index.js（157 行 · 5 个函数）
 
@@ -963,29 +1002,29 @@
 | `remotesPointingTo` | 57-69 | 13 | `export function remotesPointingTo(repoPath, owner, repo) {` |
 | `renameRepo` | 76-137 | 62 | `export async function renameRepo({` |
 
-### lib/git/repo-index.js（524 行 · 19 个函数）
+### lib/git/repo-index.js（529 行 · 19 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `locateRepoIndex` | 40-43 | 4 | `export function locateRepoIndex(workspaceRoot) {` |
-| `readRepoIndexMap` | 46-79 | 34 | `export function readRepoIndexMap(workspaceRoot) {` |
-| `indexEntryForRepo` | 82-86 | 5 | `export function indexEntryForRepo(localPath, indexMap) {` |
-| `parseMdFrontmatterName` | 91-96 | 6 | `export function parseMdFrontmatterName(content) {` |
-| `collectProjectSkills` | 99-129 | 31 | `export async function collectProjectSkills(projectPath) {` |
-| `exists` | 132-134 | 3 | `async function exists(p) {` |
-| `parseManualVisibility` | 137-149 | 13 | `export function parseManualVisibility(existingContent) {` |
-| `queryGitHubVisibility` | 152-163 | 12 | `async function queryGitHubVisibility(repoName, token, owner = 'EIGHTfs') {` |
-| `remoteToRepoInfo` | 166-175 | 10 | `function remoteToRepoInfo(remote, visibility) {` |
-| `buildRepoIndexVisibility` | 178-194 | 17 | `async function buildRepoIndexVisibility({ repos, token, manualVisibility, owner }) {` |
-| `buildRepoIndexLocalOnly` | 197-210 | 14 | `async function buildRepoIndexLocalOnly({ workspaceRoot, repos, localOnlyExtra }) {` |
-| `buildRepoIndex` | 217-263 | 47 | `export async function buildRepoIndex({ workspaceRoot, depth = 20, extraRepos = [], extraReposFile = '', token = '', manualVisibility = {}, localOnlyExtra = [], owner = 'EIGHTfs', offline = false, maxRepos = 200 } = {}) {` |
-| `repoList` | 234-241 | 8 | `const repoList = (await Promise.all(ownedRepos.map(async (r) => {` |
-| `syncRepoIndex` | 269-293 | 25 | `export function syncRepoIndex({ content, workspaceRoot = '', owner = 'EIGHTfs', syncTarget = '' } = {}) {` |
-| `mergeFreshIntoExisting` | 308-355 | 48 | `function mergeFreshIntoExisting(existing, freshContent) {` |
-| `updateRepoIndex` | 372-402 | 31 | `export async function updateRepoIndex({ workspaceRoot = '', token = '', owner = 'EIGHTfs', depth = 20, extraRepos = [], extraReposFile = '', syncTarget = '', offline = false, maxRepos = 200, mode = 'rebuild', cloudRepos = [], repoName = '', remoteState = {} } = {}) {` |
-| `maintainRepoIndex` | 409-412 | 4 | `export async function maintainRepoIndex({ workspaceRoot = '', token = '', owner = 'EIGHTfs', depth = 20, extraRepos = [], extraReposFile = '', syncTarget = '', offline = false, maxRepos = 200 } = {}) {` |
-| `mergeCloudReposIntoIndex` | 427-480 | 54 | `export function mergeCloudReposIntoIndex({ workspaceRoot = '', owner = 'EIGHTfs', cloudRepos = [], syncTarget = '' } = {}) {` |
-| `updateRepoRemoteStateInIndex` | 497-523 | 27 | `export function updateRepoRemoteStateInIndex({ workspaceRoot = '', repoName = '', remoteState = {}, syncTarget = '' } = {}) {` |
+| `readRepoIndexMap` | 46-81 | 36 | `export function readRepoIndexMap(workspaceRoot) {` |
+| `indexEntryForRepo` | 84-88 | 5 | `export function indexEntryForRepo(localPath, indexMap) {` |
+| `parseMdFrontmatterName` | 93-98 | 6 | `export function parseMdFrontmatterName(content) {` |
+| `collectProjectSkills` | 101-131 | 31 | `export async function collectProjectSkills(projectPath) {` |
+| `exists` | 134-136 | 3 | `async function exists(p) {` |
+| `parseManualVisibility` | 139-151 | 13 | `export function parseManualVisibility(existingContent) {` |
+| `queryGitHubVisibility` | 154-165 | 12 | `async function queryGitHubVisibility(repoName, token, owner = 'EIGHTfs') {` |
+| `remoteToRepoInfo` | 168-177 | 10 | `function remoteToRepoInfo(remote, visibility) {` |
+| `buildRepoIndexVisibility` | 180-196 | 17 | `async function buildRepoIndexVisibility({ repos, token, manualVisibility, owner }) {` |
+| `buildRepoIndexLocalOnly` | 199-212 | 14 | `async function buildRepoIndexLocalOnly({ workspaceRoot, repos, localOnlyExtra }) {` |
+| `buildRepoIndex` | 219-265 | 47 | `export async function buildRepoIndex({ workspaceRoot, depth = 20, extraRepos = [], extraReposFile = '', token = '', manualVisibility = {}, localOnlyExtra = [], owner = 'EIGHTfs', offline = false, maxRepos = 200 } = {}) {` |
+| `repoList` | 236-243 | 8 | `const repoList = (await Promise.all(ownedRepos.map(async (r) => {` |
+| `syncRepoIndex` | 271-295 | 25 | `export function syncRepoIndex({ content, workspaceRoot = '', owner = 'EIGHTfs', syncTarget = '' } = {}) {` |
+| `mergeFreshIntoExisting` | 310-357 | 48 | `function mergeFreshIntoExisting(existing, freshContent) {` |
+| `updateRepoIndex` | 374-404 | 31 | `export async function updateRepoIndex({ workspaceRoot = '', token = '', owner = 'EIGHTfs', depth = 20, extraRepos = [], extraReposFile = '', syncTarget = '', offline = false, maxRepos = 200, mode = 'rebuild', cloudRepos = [], repoName = '', remoteState = {}, localState = null } = {}) {` |
+| `maintainRepoIndex` | 411-414 | 4 | `export async function maintainRepoIndex({ workspaceRoot = '', token = '', owner = 'EIGHTfs', depth = 20, extraRepos = [], extraReposFile = '', syncTarget = '', offline = false, maxRepos = 200 } = {}) {` |
+| `mergeCloudReposIntoIndex` | 429-482 | 54 | `export function mergeCloudReposIntoIndex({ workspaceRoot = '', owner = 'EIGHTfs', cloudRepos = [], syncTarget = '' } = {}) {` |
+| `updateRepoRemoteStateInIndex` | 499-528 | 30 | `export function updateRepoRemoteStateInIndex({ workspaceRoot = '', repoName = '', remoteState = {}, localState = null, syncTarget = '' } = {}) {` |
 
 ### lib/git/repos.js（236 行 · 11 个函数）
 
@@ -1241,14 +1280,14 @@
 |------|------|------|------|
 | `getSkipSet` | 24-26 | 3 | `export function getSkipSet() {` |
 
-### scripts/build-client.mjs（134 行 · 4 个函数）
+### scripts/build-client.mjs（135 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `readParts` | 68-74 | 7 | `export function readParts(order = PART_ORDER, dir = PARTS_DIR) {` |
-| `buildClient` | 79-82 | 4 | `export function buildClient(order = PART_ORDER, dir = PARTS_DIR) {` |
-| `checkShape` | 85-94 | 10 | `export function checkShape(code) {` |
-| `main` | 98-129 | 32 | `function main(argv = process.argv.slice(2)) {` |
+| `readParts` | 69-75 | 7 | `export function readParts(order = PART_ORDER, dir = PARTS_DIR) {` |
+| `buildClient` | 80-83 | 4 | `export function buildClient(order = PART_ORDER, dir = PARTS_DIR) {` |
+| `checkShape` | 86-95 | 10 | `export function checkShape(code) {` |
+| `main` | 99-130 | 32 | `function main(argv = process.argv.slice(2)) {` |
 
 ### scripts/bump-version.mjs（179 行 · 5 个函数）
 
@@ -1356,7 +1395,7 @@
 | `readReleases` | 126-133 | 8 | `export function readReleases(repoPath) {` |
 | `buildReadmeVersionTable` | 151-171 | 21 | `export function buildReadmeVersionTable(repoPath) {` |
 
-### test/app/test-plugin.mjs（519 行 · 2 个函数）
+### test/app/test-plugin.mjs（522 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1575,14 +1614,14 @@
 | `addRemote` | 30-32 | 3 | `function addRemote(dir, name, url) {` |
 | `getUrl` | 33-39 | 7 | `function getUrl(dir, name) {` |
 
-### test/git/test-repo-list.mjs（549 行 · 4 个函数）
+### test/git/test-repo-list.mjs（592 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `makeRepo` | 38-49 | 12 | `function makeRepo(dir, { remote = '', commit = true } = {}) {` |
 | `sandbox` | 52-64 | 13 | `function sandbox(fn) {` |
-| `pick` | 461-461 | 1 | `const pick = (push) => String(push?.commitSha \|\| '').slice(0, 40) \|\| localHead;` |
-| `sandboxAsync` | 491-503 | 13 | `async function sandboxAsync(fn) {` |
+| `pick` | 504-504 | 1 | `const pick = (push) => String(push?.commitSha \|\| '').slice(0, 40) \|\| localHead;` |
+| `sandboxAsync` | 534-546 | 13 | `async function sandboxAsync(fn) {` |
 
 ### test/git/test-repos-live-budget.mjs（116 行 · 1 个函数）
 
@@ -1645,7 +1684,7 @@
 | `runBatch` | 118-150 | 33 | `function runBatch(files) {` |
 | `emit` | 134-145 | 12 | `const emit = (chunk) => {` |
 
-### test/tool/test-cli.mjs（963 行 · 9 个函数）
+### test/tool/test-cli.mjs（1024 行 · 9 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1655,9 +1694,9 @@
 | `runInWaves` | 171-177 | 7 | `async function runInWaves(tasks, waveSize = 4) {` |
 | `run` | 382-387 | 6 | `const run = (file, args) => {` |
 | `mockReact` | 509-515 | 7 | `function mockReact() {` |
-| `req` | 767-784 | 18 | `const req = (name) => {` |
-| `req` | 845-864 | 20 | `const req = (name) => {` |
-| `req` | 913-931 | 19 | `const req = (name) => {` |
+| `req` | 828-845 | 18 | `const req = (name) => {` |
+| `req` | 906-925 | 20 | `const req = (name) => {` |
+| `req` | 974-992 | 19 | `const req = (name) => {` |
 
 ### test/tool/test-npm-tab-render.mjs（95 行 · 1 个函数）
 

@@ -6,6 +6,20 @@
 
 ---
 
+## 交付状态（实施后回填）
+
+| 里程碑 | 状态 | 关键结果 |
+|---|---|---|
+| **M1** 状态工厂 + npm/GitHub 对称 | ✅ 已交付 | `lib/client-parts/git/state.js`（资源注册/单飞/超时重试/ready·stale·error）；首屏 `uiFirstPaintNames=['settings','account','npm']` 由 `loadAll` 一次读齐 —— npm 卡不再需要手动刷新，也不再显示假的「未配置」 |
+| **M2** 三态 + 失败不清空 + 重建重放 | ✅ 已交付 | `dshgp_ResourceNotice`（读取中 / 失败可重试 / 过期同步中）；GitHub 卡、npm 卡、仓库列表三处按 `uiStatus` 分支；`panelRebuilt`（ensureFresh + markRebuilt）接在账号页与设置页 |
+| **M3** 列表「快照 + 后台补」 | ✅ 已交付 | `/repos-local` 默认不联网：实测 **11–24ms**（冷启首帧 367ms；改造前 87,496ms）；索引新增 `localState` 缓存；后台补查单飞 + 宏任务延后启动 |
+| **M4** 收口 | ✅ 已交付 | npm 子页数据并入工厂（删本地 `useState` 副本与只写不读的 `acct`）；默认值收敛到 `dshgp_DEFAULT_SETTINGS`（§五，含一致性测试） |
+
+剩余（未做，需另立任务）：`lib/client-parts/git/controller.js` 仍有若干纯 UI 局部字段可与工厂进一步合并；
+生产实例需重启后才会用上新代码（旧模块常驻内存）。
+
+---
+
 ## 一、实测证据（先证据，后结论）
 
 在真实浏览器里冷启动页面（`location.reload()` 后立刻读 `performance.getEntriesByType('resource')`）：

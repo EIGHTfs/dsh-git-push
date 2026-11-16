@@ -39,6 +39,11 @@
 | `exempt` | —（无 CLI） | 注释豁免工具（add/remove/list/check：按 rule 自动选标记、写前校验、多文件原子、check 识别死标记） |
 | `git_api` | `api` | **直接调用本插件 36 条 HTTP API**（内部走 `handleHttp` 同一条代码路径）；`path` 传接口名（不传则列出全部接口），`method`/`query`/`body` 可选 |
 
+**`repos-local` 的默认语义（重要）**：默认**只读索引快照**（不联网、不逐仓 spawn git），
+响应带 `stale`/`liveAt`；远端状态（`remoteHead`/`ahead`/`behind`）由**后台补查**写回索引，
+前端在 `stale=true` 时自动重拉一次。`?live=1` 才是「请求内同步探测」（排障/手动刷新），
+默认路径不走它 —— 27 仓内联探测实测 87s，必然打爆前端 30s 超时。
+
 **不变量**：工具名唯一且匹配 `^[a-zA-Z0-9_-]+$`；CLI 名唯一；宿主注册面（`listTools`）与注册表（`TOOL_REGISTRY`）同名同数——由 `test/test-tool-contract.mjs` 门禁。增删工具必须同步该测试与 README 工具表。
 
 ## 三、HTTP 接口（36 条，前缀 `/api/git-push/`）

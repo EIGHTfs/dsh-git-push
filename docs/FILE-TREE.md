@@ -40,7 +40,7 @@ dsh-git-push/
 │   ├── client/ — 客户端配置（DEFAULT_CONFIG + SETTINGS_SCHEMA 侧边栏设置项定义）
 │   │   ├── index.js — 侧边栏设置 UI 总入口（DEFAULT_CONFIG + SETTINGS_SCHEMA）
 │   ├── client-parts/ — 客户端分片源码（只含 git 侧；审计不提供 UI）
-│   │   └── …（13 个更深文件）
+│   │   └── …（14 个更深文件）
 │   ├── commit-push/ — 提交推送编排（runAudit 门禁 + commitWithAudit/commitMany）
 │   │   ├── pre-commit-engine.js — 提交前预处理引擎适配层：spawn 引擎、拼参数、退出码映射、超时与 fail-closed
 │   ├── context/ — 上下文注入（给 AI 会话注入环境：目录映射/工具路径/skill 入口）
@@ -211,6 +211,7 @@ dsh-git-push/
 │   ├── FILE-TREE.md — （待注释）
 │   ├── FUNCTIONS.md — 函数列表宿主（doc-func apply 写 dshgp-functions 标记块）
 │   ├── PERF-BASELINE.md — （待注释）
+│   ├── PLAN-UI状态工厂.md — （待注释）
 │   ├── SPEC.md — （待注释）
 │   ├── releases.json — （待注释）
 │   ├── 功能-发布与工具链.md — 提交推送、克隆、npm 发布、仓库索引与账号状态、文档生成脚本的功能介绍

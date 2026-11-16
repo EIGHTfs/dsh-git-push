@@ -726,7 +726,12 @@ import { promisify } from 'node:util';
   });
 
   test('[client] client.js：开关默认关（提交前预处理默认不跑）', () => {
-    assert.ok(/this\.preCommitEnabled = false/.test(rootClientSrc), 'preCommitEnabled 应默认 false');
+    // 默认值已收敛到 dshgp_DEFAULT_SETTINGS（§五），controller 用 Object.assign 取用；
+    //   所以这里断言"单一来源里的值"，而不是构造函数里那行手写字面量（那行已删）。
+    assert.ok(/const dshgp_DEFAULT_SETTINGS = \{[\s\S]*?preCommitEnabled: false/.test(rootClientSrc),
+      'dshgp_DEFAULT_SETTINGS 里 preCommitEnabled 应默认 false');
+    assert.ok(/Object\.assign\(this, dshgp_DEFAULT_SETTINGS\)/.test(rootClientSrc),
+      'controller 应从 dshgp_DEFAULT_SETTINGS 取默认值（不得再逐行手写）');
     assert.ok(!rootClientSrc.includes("'llmAudit'"), 'client.js 不应含 llmAudit（v2 不提供 LLM 深度审查）');
     assert.ok(!rootClientSrc.includes("'pushPermitEnabled'"), 'client.js 不应含 pushPermitEnabled（已移除 2026-09-11）');
   });
@@ -742,6 +747,24 @@ import { promisify } from 'node:util';
     assert.ok(m, '应声明首屏资源清单 uiFirstPaintNames');
     assert.ok(m[1].includes("'npm'"), '首屏资源清单必须包含 npm（否则 npm 卡又会显示假「未配置」）');
     assert.ok(m[1].includes("'account'") && m[1].includes("'settings'"), '首屏资源清单应含 settings/account');
+  });
+
+  test('[client] §五 默认值单一来源：分片里的 dshgp_DEFAULT_SETTINGS 必须与 SETTINGS_SCHEMA 逐键一致', () => {
+    // 为什么钉这条：默认值曾同时写在 controller 构造函数与 client/index.js 的 SETTINGS_SCHEMA 两处，
+    //   改一处漏另一处 = 「首帧显示 10、读回变 20」这类查无言表的现象。
+    const src = readFileSync(join(ROOT, 'lib', 'client-parts', 'git', 'const.js'), 'utf8');
+    const m = src.match(/const dshgp_DEFAULT_SETTINGS = \{([\s\S]*?)\};/);
+    assert.ok(m, 'const.js 应声明 dshgp_DEFAULT_SETTINGS');
+    const decl = {};
+    for (const line of m[1].split('\n')) {
+      const hit = line.match(/^\s*([a-zA-Z][a-zA-Z0-9]*)\s*:\s*(.+?),?\s*(\/\/.*)?$/);
+      if (!hit) continue;
+      decl[hit[1]] = Function('return (' + hit[2].trim() + ')')(); // dsh-skip-sensitive: 只求值本仓库分片里的字面量默认值
+    }
+    for (const item of SETTINGS_SCHEMA) {
+      assert.ok(item.key in decl, `dshgp_DEFAULT_SETTINGS 缺 ${item.key}（前端首帧会用错默认值）`);
+      assert.deepEqual(decl[item.key], item.default, `${item.key} 默认值与 SETTINGS_SCHEMA 不一致`);
+    }
   });
 
   test('[client] 「没读 / 读失败」不得渲染成确定性否定结论（防假消息回归）', () => {
