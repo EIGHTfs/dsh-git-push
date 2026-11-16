@@ -587,20 +587,20 @@
 | `substitutePlaceholders` | 944-947 | 4 | `export function substitutePlaceholders(value, ctx = {}) {` |
 | `withCommandStage` | 962-984 | 23 | `function withCommandStage(cfg, stage, ctx, timeoutMs) {` |
 
-### lib/context/index.js（364 行 · 10 个函数）
+### lib/context/index.js（366 行 · 10 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `loadToolProbeTemplate` | 103-121 | 19 | `export function loadToolProbeTemplate(file = TEMPLATE_FILE) {` |
-| `probeToolPath` | 132-163 | 32 | `export function probeToolPath(name, versionArgs = []) {` |
-| `collectToolPaths` | 173-187 | 15 | `export function collectToolPaths(probes = null, { templateFile = TEMPLATE_FILE, resultFile = '' } = {}) {` |
-| `writeToolResult` | 195-202 | 8 | `export function writeToolResult(file = '', results = []) {` |
-| `mapWorkspaceDirs` | 209-240 | 32 | `export function mapWorkspaceDirs({ workspaceRoot = '', cwd = process.cwd(), maxChildren = 40 } = {}) {` |
-| `detectLocalHost` | 261-276 | 16 | `export function detectLocalHost() {` |
-| `createEnvInjectionText` | 278-308 | 31 | `export function createEnvInjectionText({ cwd = '', projectRoot = '', tools = DEFAULT_TOOLS, workspace = null, host = null } = {}) {` |
-| `isWithinRoot` | 316-328 | 13 | `export function isWithinRoot(root = '', target = '') {` |
-| `norm` | 317-322 | 6 | `const norm = (p) => {` |
-| `parseEnvInjection` | 335-364 | 30 | `export function parseEnvInjection(text = '') {` |
+| `loadToolProbeTemplate` | 105-123 | 19 | `export function loadToolProbeTemplate(file = TEMPLATE_FILE) {` |
+| `probeToolPath` | 134-165 | 32 | `export function probeToolPath(name, versionArgs = []) {` |
+| `collectToolPaths` | 175-189 | 15 | `export function collectToolPaths(probes = null, { templateFile = TEMPLATE_FILE, resultFile = '' } = {}) {` |
+| `writeToolResult` | 197-204 | 8 | `export function writeToolResult(file = '', results = []) {` |
+| `mapWorkspaceDirs` | 211-242 | 32 | `export function mapWorkspaceDirs({ workspaceRoot = '', cwd = process.cwd(), maxChildren = 40 } = {}) {` |
+| `detectLocalHost` | 263-278 | 16 | `export function detectLocalHost() {` |
+| `createEnvInjectionText` | 280-310 | 31 | `export function createEnvInjectionText({ cwd = '', projectRoot = '', tools = DEFAULT_TOOLS, workspace = null, host = null } = {}) {` |
+| `isWithinRoot` | 318-330 | 13 | `export function isWithinRoot(root = '', target = '') {` |
+| `norm` | 319-324 | 6 | `const norm = (p) => {` |
+| `parseEnvInjection` | 337-366 | 30 | `export function parseEnvInjection(text = '') {` |
 
 ### lib/core/atomic-json.js（99 行 · 5 个函数）
 
@@ -641,19 +641,19 @@
 | `contentsApiUrl` | 112-114 | 3 | `export function contentsApiUrl(owner, repo, encodedPath, encodedRef) {` |
 | `rawFileUrl` | 117-119 | 3 | `export function rawFileUrl(owner, repo, encodedRef, encodedPath) {` |
 
-### lib/core/exec.js（273 行 · 9 个函数）
+### lib/core/exec.js（264 行 · 9 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `gitSearchPlan` | 44-51 | 8 | `export function gitSearchPlan(pathValue, { delimiter = pathDelimiter, platform = process.platform } = {}) {` |
-| `resolveGitBin` | 54-71 | 18 | `export function resolveGitBin() {` |
-| `runGit` | 87-109 | 23 | `export function runGit(args, { cwd = '', timeoutMs = 120_000, env = {}, noMirror = false } = {}) {` |
-| `gitRaw` | 117-133 | 17 | `export function gitRaw(args, { cwd = '', timeoutMs = 600_000 } = {}) {` |
-| `runGitAsync` | 143-164 | 22 | `export function runGitAsync(args, { cwd = '', timeoutMs = 120_000, env = {}, noMirror = false } = {}) {` |
-| `runGitStream` | 188-272 | 85 | `export function runGitStream(args, { cwd = '', env = {}, noMirror = false, stallMs, onProgress } = {}) {` |
-| `feed` | 222-237 | 16 | `const feed = (chunk, isErr) => {` |
-| `signal` | 243-250 | 8 | `const signal = (sig) => {` |
-| `finish` | 259-268 | 10 | `const finish = (code, errMsg) => {` |
+| `gitSearchPlan` | 36-43 | 8 | `export function gitSearchPlan(pathValue, { delimiter = pathDelimiter, platform = process.platform } = {}) {` |
+| `resolveGitBin` | 46-62 | 17 | `export function resolveGitBin() {` |
+| `runGit` | 78-100 | 23 | `export function runGit(args, { cwd = '', timeoutMs = 120_000, env = {}, noMirror = false } = {}) {` |
+| `gitRaw` | 108-124 | 17 | `export function gitRaw(args, { cwd = '', timeoutMs = 600_000 } = {}) {` |
+| `runGitAsync` | 134-155 | 22 | `export function runGitAsync(args, { cwd = '', timeoutMs = 120_000, env = {}, noMirror = false } = {}) {` |
+| `runGitStream` | 179-263 | 85 | `export function runGitStream(args, { cwd = '', env = {}, noMirror = false, stallMs, onProgress } = {}) {` |
+| `feed` | 213-228 | 16 | `const feed = (chunk, isErr) => {` |
+| `signal` | 234-241 | 8 | `const signal = (sig) => {` |
+| `finish` | 250-259 | 10 | `const finish = (code, errMsg) => {` |
 
 ### lib/core/mirror-store.js（244 行 · 11 个函数）
 
