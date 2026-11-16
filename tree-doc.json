@@ -62,9 +62,7 @@
   "lib/user-requirements.json": "开发者特殊要求清单（提交推送前逐条核对）",
   "package.json": "包声明（dependencies 精确锁版、files 白名单、scripts）",
   "scripts": "开发工具脚本（版本校验/双副本同步/预览服务/README 目录树维护）",
-  "scripts/audit-runtime-check.mjs": "三层审计 L3 运行时检测脚本",
   "scripts/check.mjs": "语法检查脚本（npm run check）",
-  "scripts/probe-recheck.mjs": "探针：「重新检测」按钮链路实测（在线校验 token/SSH）",
   "scripts/scan-repos.mjs": "（待注释）",
   "scripts/scan-version.mjs": "版本一致性校验脚本",
   "skills": "插件权威 skill（功能手册/规则/使用说明，安装副本的 skills/ 同步）",
@@ -73,7 +71,6 @@
   "test/.test": "空文件豁免标记（目录级豁免 .test 目录）",
   "tree-doc.json": "目录结构注释映射（路径→一句话介绍，AI 维护）",
   "lib/tool-probes.json": "工具探测清单模板（工具为 key、值为空；运行时实测生成运行目录 tools.json）",
-  "scripts/verify-prestep.mjs": "上下文注入自检脚本（真实触发 agent/pre-step 验证注入）",
   "scripts/module-splitter.py": "巨型单文件按顶层块拆分脚本（analyze/split/verify 三命令，python3 零依赖；module_splitter 工具与 CLI 的底层实现）",
   "lib/git/cred-env.js": "凭据传递工具（SSH 私钥路径 GIT_SSH_COMMAND / HTTPS askpass 脚本，AI 执行外部 git 不接触明文）",
   "lib/git/wrapped-git.js": "浅包装 git（自动凭据透传：SSH 私钥/HTTPS token，git-sluice git <args> 与未知命令透传）",
@@ -97,14 +94,12 @@
   "lib/cli/commands-doc.mjs": "（待注释）",
   "lib/cli/commands-vcs.mjs": "（待注释）",
   "lib/git/module-splitter.js": "（待注释）",
-  "scripts/clean-date-comments.py": "（待注释）",
   "lib/app/command-registry.js": "工具命令注册表（方案 B——CLI/宿主工具/帮助同源，免维护）",
   "test/fixtures": "（待注释）",
   "test/fixtures/TimeZoneComboBox-CRnoCikG.js": "Pawchive 混淆产物样本（hash 文件名——跳过判定 fixture）",
   "skills/guide": "（待注释）",
   "skills/workflow": "（待注释）",
   "skills/dev": "（待注释）",
-  "skills/guide/guide-audit.md": "（待注释）",
   "skills/guide/guide-cli-scripts.md": "（待注释）",
   "skills/guide/guide-clone-repos.md": "（待注释）",
   "skills/guide/guide-commit-push.md": "（待注释）",
@@ -120,11 +115,9 @@
   "skills/workflow/tool-json-add-ask.md": "（待注释）",
   "skills/workflow/versioning-rule.md": "（待注释）",
   "lib/git/visibility.js": "（待注释）",
-  "scripts/browser-page-probe.mjs": "（待注释）",
   "skills/dev/dsh-git-push.md": "（待注释）",
   "skills/dev/git-push-live-fix.md": "（待注释）",
   "lib/git/endpoints.js": "（待注释）",
-  "lib/audit-defaults.js": "（待注释）",
   "docs/功能-审计规则体系.md": "（待注释）",
   "version-metrics.json": "（待注释）",
   "CONTRIBUTING.md": "（待注释）",
@@ -144,7 +137,6 @@
   "scripts/hot-path-probe-fs-shim.mjs": "（待注释）",
   "scripts/hot-path-probe-fsp-shim.mjs": "（待注释）",
   "scripts/hot-path-probe.mjs": "（待注释）",
-  "skills/dev/audit-rule-authoring.md": "（待注释）",
   "test/helpers/test-cache.mjs": "（待注释）",
   "test/helpers/tmp-dir.mjs": "（待注释）",
   "test/run-tests.mjs": "（待注释）",
@@ -155,124 +147,184 @@
   "scripts/doc-drift.mjs": "（待注释）",
   "_meta": {
     "worktree": {
-      ".github/workflows/test.yml": {
-        "status": "M",
-        "mtime": "2026-11-15T23:23:32.370Z",
-        "note": "注释可能需更新"
-      },
-      "cli-audit.mjs": {
+      "audit-samples/.samples": {
         "status": "D",
         "mtime": "",
         "note": "注释可能需更新"
       },
-      "cli.mjs": {
-        "status": "M",
-        "mtime": "2026-11-16T00:09:04.664Z",
+      "audit-samples/js-bad.js": {
+        "status": "D",
+        "mtime": "",
         "note": "注释可能需更新"
       },
-      "docs/FILE-TREE.md": {
-        "status": "M",
-        "mtime": "2026-11-15T23:57:54.989Z",
+      "audit-samples/py-bad.py": {
+        "status": "D",
+        "mtime": "",
         "note": "注释可能需更新"
       },
       "docs/FUNCTIONS.md": {
         "status": "M",
-        "mtime": "2026-11-16T00:13:04.243Z",
+        "mtime": "2026-11-16T01:12:07.266Z",
         "note": "注释可能需更新"
       },
-      "lib/app/command-registry.js": {
-        "status": "M",
-        "mtime": "2026-11-15T23:47:05.217Z",
+      "docs/PLAN-2026-11-01-auditignore-scoped.md": {
+        "status": "D",
+        "mtime": "",
         "note": "注释可能需更新"
       },
       "lib/app/handlers/audit.js": {
-        "status": "M",
-        "mtime": "2026-11-15T23:26:40.140Z",
+        "status": "D",
+        "mtime": "",
         "note": "注释可能需更新"
       },
-      "lib/app/tool-call.js": {
+      "lib/app/http-handlers.js": {
         "status": "M",
-        "mtime": "2026-11-15T23:26:39.963Z",
+        "mtime": "2026-11-16T01:09:55.508Z",
         "note": "注释可能需更新"
       },
-      "lib/cli/commands-tool.mjs": {
-        "status": "M",
-        "mtime": "2026-11-16T00:11:14.392Z",
+      "lib/app/schema-audit.js": {
+        "status": "D",
+        "mtime": "",
         "note": "注释可能需更新"
       },
-      "lib/cli/commands-vcs.mjs": {
+      "lib/app/schema.js": {
         "status": "M",
-        "mtime": "2026-11-15T23:26:41.288Z",
+        "mtime": "2026-11-16T00:53:07.669Z",
         "note": "注释可能需更新"
       },
-      "lib/cli/shared.mjs": {
-        "status": "M",
-        "mtime": "2026-11-15T23:56:13.649Z",
+      "lib/audit-defaults.js": {
+        "status": "D",
+        "mtime": "",
         "note": "注释可能需更新"
       },
-      "lib/commit-push.js": {
-        "status": "M",
-        "mtime": "2026-11-15T23:31:54.599Z",
+      "lib/client-parts/audit/audit.js": {
+        "status": "D",
+        "mtime": "",
         "note": "注释可能需更新"
       },
-      "lib/commit-push/pre-commit-engine.js": {
+      "lib/git/repos.js": {
         "status": "M",
-        "mtime": "2026-11-15T23:33:28.854Z",
+        "mtime": "2026-11-16T00:53:07.705Z",
+        "note": "注释可能需更新"
+      },
+      "lib/plugin/auto-push.js": {
+        "status": "M",
+        "mtime": "2026-11-16T00:53:07.751Z",
         "note": "注释可能需更新"
       },
       "package.json": {
         "status": "M",
-        "mtime": "2026-11-15T23:46:35.252Z",
+        "mtime": "2026-11-16T01:11:16.659Z",
+        "note": "注释可能需更新"
+      },
+      "scripts/audit-runtime-check.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "scripts/browser-page-probe.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "scripts/build-client.mjs": {
+        "status": "M",
+        "mtime": "2026-11-16T00:53:33.305Z",
+        "note": "注释可能需更新"
+      },
+      "scripts/check.mjs": {
+        "status": "M",
+        "mtime": "2026-11-16T00:57:48.837Z",
+        "note": "注释可能需更新"
+      },
+      "scripts/clean-date-comments.py": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "scripts/cpu-sample.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "scripts/picker-repro.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "scripts/probe-recheck.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "scripts/verify-prestep.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "skills/dev/audit-rule-authoring.md": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "skills/guide/guide-audit.md": {
+        "status": "D",
+        "mtime": "",
         "note": "注释可能需更新"
       },
       "test/app/test-http-audit-split.mjs": {
-        "status": "M",
-        "mtime": "2026-11-15T23:26:42.494Z",
+        "status": "D",
+        "mtime": "",
         "note": "注释可能需更新"
       },
-      "test/app/test-plugin.mjs": {
-        "status": "M",
-        "mtime": "2026-11-15T23:26:42.299Z",
+      "test/audit/test-analysis-coverage.mjs": {
+        "status": "D",
+        "mtime": "",
         "note": "注释可能需更新"
       },
-      "test/app/test-settings-persistence.mjs": {
-        "status": "M",
-        "mtime": "2026-11-15T23:26:42.335Z",
+      "test/audit/test-ignore-e2e.mjs": {
+        "status": "D",
+        "mtime": "",
         "note": "注释可能需更新"
       },
-      "test/app/test-settings-roundtrip.mjs": {
-        "status": "M",
-        "mtime": "2026-11-15T23:26:42.363Z",
+      "test/audit/test-preprocess-render.mjs": {
+        "status": "D",
+        "mtime": "",
         "note": "注释可能需更新"
       },
-      "test/app/test-slash-commands.mjs": {
-        "status": "M",
-        "mtime": "2026-11-15T23:26:42.383Z",
+      "test/audit/test-privacy-ownership.mjs": {
+        "status": "D",
+        "mtime": "",
         "note": "注释可能需更新"
       },
-      "test/app/test-task-queue.mjs": {
-        "status": "M",
-        "mtime": "2026-11-15T23:26:42.431Z",
+      "test/fixtures/ignore-e2e/auditignore.rules": {
+        "status": "D",
+        "mtime": "",
         "note": "注释可能需更新"
       },
-      "test/git/test-pre-commit-engine.mjs": {
-        "status": "M",
-        "mtime": "2026-11-15T23:23:32.330Z",
+      "test/git/test-audit-bad-file.mjs": {
+        "status": "D",
+        "mtime": "",
         "note": "注释可能需更新"
       },
-      "test/tool/test-cli.mjs": {
-        "status": "M",
-        "mtime": "2026-11-16T00:09:04.784Z",
+      "test/git/test-audit-boundary.mjs": {
+        "status": "D",
+        "mtime": "",
         "note": "注释可能需更新"
       },
-      "lib/cli/commands-preprocess.mjs": {
+      "lib/app/handlers/preprocess.js": {
         "status": "A",
-        "mtime": "2026-11-15T23:55:40.658Z",
+        "mtime": "2026-11-15T23:26:40.140Z",
         "note": "注释可能需更新"
       },
-      "lib/preprocess/": {
+      "lib/app/schema-preprocess.js": {
         "status": "A",
-        "mtime": "2026-11-15T23:22:25.248Z",
+        "mtime": "2026-11-16T00:53:07.502Z",
+        "note": "注释可能需更新"
+      },
+      "lib/git/defaults.js": {
+        "status": "A",
+        "mtime": "2026-11-16T00:53:07.525Z",
         "note": "注释可能需更新"
       }
     }
@@ -297,22 +349,15 @@
   "lib/git/remote-resolve.js": "（待注释）",
   "lib/git/push-diagnose.js": "（待注释）",
   "lib/git/commit-message.js": "（待注释）",
-  "scripts/cpu-sample.mjs": "（待注释）",
   "docs/2.9.0-design.md": "（待注释）",
   "lib/app/handlers/workspace-paths.js": "（待注释）",
   "lib/core/workspace-paths.js": "（待注释）",
-  "audit-samples": "（待注释）",
-  "audit-samples/.samples": "（待注释）",
-  "audit-samples/js-bad.js": "（待注释）",
-  "audit-samples/py-bad.py": "（待注释）",
   ".github/workflows": "（待注释）",
   ".github": "（待注释）",
   ".github/workflows/test.yml": "（待注释）",
-  "scripts/picker-repro.mjs": "（待注释）",
   "lib/git/index-format.js": "（待注释）",
   "test/fixtures/ignore-e2e": "（待注释）",
   "test/fixtures/ignore-e2e/aud.js.fixture": "（待注释）",
-  "test/fixtures/ignore-e2e/auditignore.rules": "（待注释）",
   "test/fixtures/ignore-e2e/gib.js.fixture": "（待注释）",
   "test/fixtures/ignore-e2e/gitignore.rules": "（待注释）",
   "test/fixtures/ignore-e2e/keep.js.fixture": "（待注释）",
@@ -326,7 +371,6 @@
   "docs/2026-10-29-多语言AST接通实测记录.MD": "M2 多语言 AST 接通的改前/改后命中实测：C# 进管道的文件与命中变化、六槽位三档计数（正则初筛/token 级/语法树）与 M3 取舍输入",
   "lib/core/mirror-candidates.json": "（待注释）",
   "lib/core/mirror-store.js": "（待注释）",
-  "docs/PLAN-2026-11-01-auditignore-scoped.md": "（待注释）",
   "lib/git/ci.js": "（待注释）",
   "lib/git/hooks.js": "（待注释）",
   "lib/git/rename.js": "（待注释）",
@@ -338,11 +382,9 @@
   "docs/功能-审计引擎.md": "审计引擎功能介绍：规则体系、树化判定、评分、外部 linter 委托、豁免通道",
   "docs/功能-发布与工具链.md": "提交推送、克隆、npm 发布、仓库索引与账号状态、文档生成脚本的功能介绍",
   "lib/client-parts/git": "git / 发布 / 工具链侧分片（13 片，按 PART_ORDER 拼接成 lib/client.js）",
-  "lib/client-parts/audit": "审计侧分片（只归档，不参与构建——UI 上不出现审计 Tab）",
   "lib/client-parts/git/account.js": "（待注释）",
   "lib/client-parts/git/actions.js": "（待注释）",
   "lib/client-parts/git/apply.js": "（待注释）",
-  "lib/client-parts/audit/audit.js": "（待注释）",
   "lib/client-parts/git/browser.js": "（待注释）",
   "lib/client-parts/git/const.js": "（待注释）",
   "lib/client-parts/git/controller.js": "（待注释）",
@@ -353,8 +395,6 @@
   "lib/client-parts/git/repo.js": "（待注释）",
   "lib/client-parts/git/settings.js": "（待注释）",
   "lib/client-parts/git/utils.js": "（待注释）",
-  "lib/app/schema-audit.js": "（待注释）",
-  "test/audit": "审计侧 UI 测试归档（不参与常规回归——run-tests 只扫 test/ 顶层）",
   "docs/2026-11-13-提交前预处理与审计引擎解耦方案.MD": "提交前预处理与审计引擎解耦方案：引擎契约（配置化入口/退出码）、UI 注入契约、职责切分与分阶段落地",
   "lib/commit-push/pre-commit-engine.js": "提交前预处理引擎适配层：spawn 引擎、拼参数、退出码映射、超时与 fail-closed",
   "lib/commit-push": "提交推送编排（runAudit 门禁 + commitWithAudit/commitMany）",
@@ -376,12 +416,8 @@
   "test/app/test-task-queue.mjs": "（待注释）",
   "test/app/test-tools-e2e.mjs": "（待注释）",
   "test/app/test-workspace-paths.mjs": "（待注释）",
-  "test/audit/test-analysis-coverage.mjs": "（待注释）",
-  "test/audit/test-ignore-e2e.mjs": "（待注释）",
-  "test/audit/test-privacy-ownership.mjs": "（待注释）",
   "test/git/test-account-refresh-on-push.mjs": "（待注释）",
   "test/git/test-account-ssh.mjs": "（待注释）",
-  "test/git/test-audit-bad-file.mjs": "（待注释）",
   "test/git/test-ci-wait.mjs": "（待注释）",
   "test/git/test-cifs-init.mjs": "（待注释）",
   "test/git/test-clone-concurrency.mjs": "（待注释）",
@@ -428,7 +464,6 @@
   "test/tool/test-tree-first.mjs": "（待注释）",
   "test/app/test-tools.mjs": "（待注释）",
   "test/helpers/merge-tests.mjs": "（待注释）",
-  "test/git/test-audit-boundary.mjs": "（待注释）",
   "test/git/test-clone-mirror.mjs": "（待注释）",
   "test/git/test-git-core.mjs": "（待注释）",
   "test/git/test-mirror.mjs": "（待注释）",
@@ -438,10 +473,7 @@
   "docs/2026-11-15-gitpush与审计分家方案.MD": "gitpush 与审计分家方案（设计稿）：两包职责切分（探留 gitpush / 判归审计）、审计包三形态（library/CLI/MCP）、契约改动、文件迁移约对半、兼容与风险",
   "lib/app/severity.js": "（待注释）",
   "lib/git/exempt-markers.js": "（待注释）",
-  "lib/app/handlers/audit.js": "（待注释）",
   "lib/app/ownership.js": "（待注释）",
-  "test/app/test-http-audit-split.mjs": "（待注释）",
-  "test/audit/test-preprocess-render.mjs": "（待注释）",
   "lib/preprocess": "（待注释）",
   "lib/preprocess/providers.js": "（待注释）",
   "lib/app/preprocess-client.js": "（待注释）",
@@ -449,5 +481,8 @@
   "test/fixtures/mock-preprocess-cli.mjs": "（待注释）",
   "test/helpers/mock-preprocess.mjs": "（待注释）",
   "test/helpers/provider-available.mjs": "（待注释）",
-  "lib/cli/commands-preprocess.mjs": "（待注释）"
+  "lib/cli/commands-preprocess.mjs": "（待注释）",
+  "lib/app/handlers/preprocess.js": "（待注释）",
+  "lib/app/schema-preprocess.js": "（待注释）",
+  "lib/git/defaults.js": "（待注释）"
 }

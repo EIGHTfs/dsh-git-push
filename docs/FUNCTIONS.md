@@ -40,18 +40,6 @@
 | `handleAccountCheck` | 149-158 | 10 | `export async function handleAccountCheck(ctx) {` |
 | `handleGenSshKey` | 161-166 | 6 | `export function handleGenSshKey(ctx) {` |
 
-### lib/app/handlers/audit.js（108 行 · 7 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `withHostApi` | 14-21 | 8 | `async function withHostApi(handler) {` |
-| `listRuleSlots` | 30-33 | 4 | `export async function listRuleSlots(order, disabledSlots = [], hitStats = null) {` |
-| `handleRuleSlots` | 36-49 | 14 | `export async function handleRuleSlots(ctx) {` |
-| `handleRuleDetail` | 52-60 | 9 | `export async function handleRuleDetail(ctx) {` |
-| `handleAudit` | 63-79 | 17 | `export async function handleAudit(ctx) {` |
-| `handleToggleRule` | 82-89 | 8 | `export async function handleToggleRule(ctx) {` |
-| `handleExemptHint` | 92-107 | 16 | `export async function handleExemptHint(ctx) {` |
-
 ### lib/app/handlers/clone.js（177 行 · 7 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -94,6 +82,18 @@
 | `handleNpmInstall` | 122-146 | 25 | `export function handleNpmInstall(ctx) {` |
 | `handleNpmInstallProgress` | 162-167 | 6 | `export function handleNpmInstallProgress(ctx) {` |
 | `handleNpmPublish` | 169-188 | 20 | `export async function handleNpmPublish(ctx) {` |
+
+### lib/app/handlers/preprocess.js（108 行 · 7 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `withHostApi` | 14-21 | 8 | `async function withHostApi(handler) {` |
+| `listRuleSlots` | 30-33 | 4 | `export async function listRuleSlots(order, disabledSlots = [], hitStats = null) {` |
+| `handleRuleSlots` | 36-49 | 14 | `export async function handleRuleSlots(ctx) {` |
+| `handleRuleDetail` | 52-60 | 9 | `export async function handleRuleDetail(ctx) {` |
+| `handleAudit` | 63-79 | 17 | `export async function handleAudit(ctx) {` |
+| `handleToggleRule` | 82-89 | 8 | `export async function handleToggleRule(ctx) {` |
+| `handleExemptHint` | 92-107 | 16 | `export async function handleExemptHint(ctx) {` |
 
 ### lib/app/handlers/repo-actions.js（145 行 · 5 个函数）
 
@@ -194,7 +194,7 @@
 |------|------|------|------|
 | `getDefaultScanRoot` | 13-23 | 11 | `export function getDefaultScanRoot(env = {}, cfg = {}) {` |
 
-### lib/app/schema-audit.js（43 行 · 1 个函数）
+### lib/app/schema-preprocess.js（43 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -372,21 +372,6 @@
 | `runAsEntry` | 442-453 | 12 | `export function runAsEntry(moduleUrl, main) {` |
 | `readEntrySource` | 462-464 | 3 | `export function readEntrySource(relPath) {` |
 | `parseEntrySourceMeta` | 471-477 | 7 | `export function parseEntrySourceMeta(sourceText = '') {` |
-
-### lib/client-parts/audit/audit.js（302 行 · 10 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `dshgp_WeightRows` | 3-26 | 24 | `function dshgp_WeightRows(props) {` |
-| `dshgp_RuleRow` | 37-99 | 63 | `function dshgp_RuleRow(props, slot, idx, len) {` |
-| `countTitle` | 46-49 | 4 | `const countTitle = (kind) => {` |
-| `move` | 54-54 | 1 | `const move = (dir) => props.moveSlot(slot, dir);` |
-| `dshgp_AuditSwitchBlock` | 102-166 | 65 | `function dshgp_AuditSwitchBlock(props) {` |
-| `dshgp_InjectPromptSwitchBlock` | 169-191 | 23 | `function dshgp_InjectPromptSwitchBlock(props) {` |
-| `dshgp_CommentWordingBlock` | 194-209 | 16 | `function dshgp_CommentWordingBlock(props) {` |
-| `dshgp_AuditAdvancedBlock` | 212-238 | 27 | `function dshgp_AuditAdvancedBlock(props) {` |
-| `dshgp_RuleListBlock` | 241-272 | 32 | `function dshgp_RuleListBlock(props) {` |
-| `dshgp_AuditTab` | 279-299 | 21 | `function dshgp_AuditTab(props) {` |
 
 ### lib/client-parts/git/account.js（84 行 · 3 个函数）
 
@@ -1291,35 +1276,14 @@
 | `loadYamlBlacklistDirs` | 46-65 | 20 | `export function loadYamlBlacklistDirs() {` |
 | `getSkipSet` | 71-75 | 5 | `export function getSkipSet() {` |
 
-### scripts/audit-runtime-check.mjs（130 行 · 4 个函数）
+### scripts/build-client.mjs（134 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `parseArgs` | 35-45 | 11 | `function parseArgs() {` |
-| `collectJs` | 48-54 | 7 | `function collectJs(dir) {` |
-| `runFile` | 60-98 | 39 | `async function runFile(file, obj) {` |
-| `main` | 101-127 | 27 | `async function main() {` |
-
-### scripts/browser-page-probe.mjs（272 行 · 7 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `parseArgv` | 33-44 | 12 | `function parseArgv(argv) {` |
-| `findDirUnder` | 68-82 | 15 | `function findDirUnder(root, names, maxDepth = 4) {` |
-| `sharedRootCandidates` | 85-107 | 23 | `function sharedRootCandidates() {` |
-| `readBrowserEnvRecord` | 113-119 | 7 | `function readBrowserEnvRecord() {` |
-| `discover` | 127-182 | 56 | `function discover() {` |
-| `loadPlaywright` | 191-199 | 9 | `function loadPlaywright(pwroot) {` |
-| `stripHtml` | 202-208 | 7 | `function stripHtml(html) {` |
-
-### scripts/build-client.mjs（132 行 · 4 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `readParts` | 66-72 | 7 | `export function readParts(order = PART_ORDER, dir = PARTS_DIR) {` |
-| `buildClient` | 77-80 | 4 | `export function buildClient(order = PART_ORDER, dir = PARTS_DIR) {` |
-| `checkShape` | 83-92 | 10 | `export function checkShape(code) {` |
-| `main` | 96-127 | 32 | `function main(argv = process.argv.slice(2)) {` |
+| `readParts` | 68-74 | 7 | `export function readParts(order = PART_ORDER, dir = PARTS_DIR) {` |
+| `buildClient` | 79-82 | 4 | `export function buildClient(order = PART_ORDER, dir = PARTS_DIR) {` |
+| `checkShape` | 85-94 | 10 | `export function checkShape(code) {` |
+| `main` | 98-129 | 32 | `function main(argv = process.argv.slice(2)) {` |
 
 ### scripts/bump-version.mjs（179 行 · 5 个函数）
 
@@ -1331,29 +1295,13 @@
 | `readJson` | 68-70 | 3 | `function readJson(p) {` |
 | `buildVersionLine` | 83-100 | 18 | `function buildVersionLine(oldLine, newVer, oldVer, message, commentOverride = '') {` |
 
-### scripts/check.mjs（204 行 · 3 个函数）
+### scripts/check.mjs（206 行 · 3 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `collectJs` | 22-31 | 10 | `function collectJs(dir, acc = []) {` |
 | `collectJson` | 34-42 | 9 | `function collectJson(dir, acc = []) {` |
-| `layerOf` | 149-156 | 8 | `const layerOf = (rel) => {` |
-
-### scripts/cpu-sample.mjs（189 行 · 11 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `arg` | 28-31 | 4 | `const arg = (name, dflt) => {` |
-| `cpuTotals` | 40-48 | 9 | `function cpuTotals() {` |
-| `procTicks` | 51-58 | 8 | `function procTicks(pid) {` |
-| `procRssMB` | 61-66 | 6 | `function procRssMB(pid) {` |
-| `procInfo` | 69-75 | 7 | `function procInfo(pid) {` |
-| `pids` | 78-80 | 3 | `function pids() {` |
-| `memMB` | 83-89 | 7 | `function memMB() {` |
-| `detectHostPid` | 95-101 | 7 | `function detectHostPid() {` |
-| `sampleOnce` | 104-147 | 44 | `function sampleOnce() {` |
-| `line` | 149-154 | 6 | `function line(rec) {` |
-| `finish` | 170-185 | 16 | `function finish() {` |
+| `layerOf` | 151-158 | 8 | `const layerOf = (rel) => {` |
 
 ### scripts/doc-drift.mjs（201 行 · 9 个函数）
 
@@ -1433,15 +1381,6 @@
 | `load` | 105-153 | 49 | `export async function load(url, context, next) {` |
 | `__wrapped` | 141-145 | 5 | `const __wrapped = function (...__a) {` |
 
-### scripts/picker-repro.mjs（116 行 · 4 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `extractCss` | 37-38 | 2 | `export function extractCss(src = readFileSync(CONST_FILE, 'utf8')) {` |
-| `buildReproHtml` | 44-65 | 22 | `export function buildReproHtml({ count = DEFAULT_COUNT, css = extractCss() } = {}) {` |
-| `argOf` | 86-89 | 4 | `function argOf(name, def) {` |
-| `main` | 91-110 | 20 | `function main() {` |
-
 ### scripts/scan-repos.mjs（167 行 · 9 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -1464,12 +1403,6 @@
 | `cmp` | 56-63 | 8 | `const cmp = (a, b) => {` |
 | `main` | 68-123 | 56 | `function main() {` |
 
-### scripts/verify-prestep.mjs（101 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `check` | 20-21 | 2 | `function check(name, ok) { results.push([name, !!ok]); if (!ok) console.log('  ❌', name); }` |
-
 ### scripts/version-source.mjs（174 行 · 9 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -1483,13 +1416,6 @@
 | `projectVersionOf` | 113-123 | 11 | `export function projectVersionOf(root, source = '') {` |
 | `readReleases` | 126-133 | 8 | `export function readReleases(repoPath) {` |
 | `buildReadmeVersionTable` | 151-171 | 21 | `export function buildReadmeVersionTable(repoPath) {` |
-
-### test/app/test-http-audit-split.mjs（141 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `http` | 27-141 | 115 | `async function http(method, url, extra = {}) {` |
-| `assertRouted` | 32-36 | 5 | `function assertRouted(result, label) {` |
 
 ### test/app/test-plugin.mjs（680 行 · 3 个函数）
 
@@ -1543,31 +1469,6 @@
 | `mod` | 28-28 | 1 | `const mod = () => import('../../lib/core/workspace-paths.js');` |
 | `h` | 29-29 | 1 | `const h = () => import('../../lib/app/handlers/workspace-paths.js');` |
 
-### test/audit/test-analysis-coverage.mjs（77 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `makeProject` | 20-27 | 8 | `function makeProject() {` |
-
-### test/audit/test-ignore-e2e.mjs（93 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `setupRepo` | 38-51 | 14 | `function setupRepo({ git = true } = {}) {` |
-| `hitNames` | 54-54 | 1 | `const hitNames = (findings) => [...new Set((findings \|\| []).map((f) => String(f.file \|\| '').replace(/^.*\//, '')))].sort();` |
-
-### test/audit/test-preprocess-render.mjs（121 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `makeBlockerRepo` | 25-37 | 13 | `function makeBlockerRepo() {` |
-
-### test/audit/test-privacy-ownership.mjs（87 行 · 1 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `hits` | 56-59 | 4 | `const hits = async (ownership) => {` |
-
 ### test/fixtures/mock-preprocess-cli.mjs（55 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -1580,22 +1481,6 @@
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `isolatedEnv` | 17-24 | 8 | `function isolatedEnv() {` |
-
-### test/git/test-audit-bad-file.mjs（129 行 · 2 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `setupBadFile` | 40-45 | 6 | `function setupBadFile(relPath, content) {` |
-| `cleanup` | 46-50 | 5 | `function cleanup(relPath) {` |
-
-### test/git/test-audit-boundary.mjs（275 行 · 4 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `makeRepo` | 31-40 | 10 | `function makeRepo(t) {` |
-| `writeBlocker` | 43-50 | 8 | `function writeBlocker(dir, name = 'bad.js') {` |
-| `makeRepo` | 116-126 | 11 | `function makeRepo() {` |
-| `stageBlocker` | 132-139 | 8 | `function stageBlocker(dir) {` |
 
 ### test/git/test-ci-wait.mjs（99 行 · 4 个函数）
 

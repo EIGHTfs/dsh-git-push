@@ -8,7 +8,6 @@ dsh-git-push/
 ├── lib/ — 核心实现（10 总入口 + 审计引擎 + git 执行层 + 规则编译层）
 │   ├── ARCHITECTURE.md — 架构说明文档
 │   ├── BUGFIX-NOTES-2026-09-14.md — Bug 修复说明（diff 审计提速 / 凭据文件拦截三层根因）
-│   ├── audit-defaults.js — （待注释）
 │   ├── commit-push.js — 审计提交总入口（commitWithAudit + runAudit 同步审计）
 │   ├── fsx.js — 文件系统适配层（CIFS/SMB 兼容：copyFile 读写回退、chmod 尽力而为、元数据能力探测）
 │   ├── index.js — 插件入口（DSH 接线，再导出全部能力）
@@ -26,7 +25,7 @@ dsh-git-push/
 │   │   ├── preprocess-client.js — （待注释）
 │   │   ├── repo-ownership.js — （待注释）
 │   │   ├── scan-root.js — 默认扫描根解析（配置优先→DSH 家根自动识别）
-│   │   ├── schema-audit.js — （待注释）
+│   │   ├── schema-preprocess.js — （待注释）
 │   │   ├── schema.js — 配置 schema（宿主导出缺失时兜底）
 │   │   ├── settings-bridge.js — 设置读写桥（host scope 共享；绕开 client isLoopback=memory 落盘陷阱）
 │   │   ├── severity.js — （待注释）
@@ -45,7 +44,7 @@ dsh-git-push/
 │   ├── client/ — 客户端配置（DEFAULT_CONFIG + SETTINGS_SCHEMA 侧边栏设置项定义）
 │   │   ├── index.js — 侧边栏设置 UI 总入口（DEFAULT_CONFIG + SETTINGS_SCHEMA）
 │   ├── client-parts/ — 客户端分片源码（按侧分目录：git/ 参与构建，audit/ 只归档不进产物）
-│   │   └── …（14 个更深文件）
+│   │   └── …（13 个更深文件）
 │   ├── commit-push/ — 提交推送编排（runAudit 门禁 + commitWithAudit/commitMany）
 │   │   ├── pre-commit-engine.js — 提交前预处理引擎适配层：spawn 引擎、拼参数、退出码映射、超时与 fail-closed
 │   ├── context/ — 上下文注入（给 AI 会话注入环境：目录映射/工具路径/skill 入口）
@@ -78,6 +77,7 @@ dsh-git-push/
 │   │   ├── config.js — 路径与配置（PLUGIN_ROOT + 开发者要求清单读取）
 │   │   ├── cred-env.js — 凭据传递工具（SSH 私钥路径 GIT_SSH_COMMAND / HTTPS askpass 脚本，AI 执行外部 git 不接触明文）
 │   │   ├── credentials.js — 凭据解析（token/SSH 私钥：环境变量→凭据文件→settings）
+│   │   ├── defaults.js — （待注释）
 │   │   ├── endpoints.js — （待注释）
 │   │   ├── exec.js — git 进程调用（runGit 统一超时/错误规整 + gitRaw 原始字节）
 │   │   ├── exempt-markers.js — （待注释）
@@ -122,13 +122,9 @@ dsh-git-push/
 │   ├── self/ — 插件自身总入口（VERSION/versionInfo/CLI 帮助）
 │   │   ├── index.js — 自身总入口（VERSION 一致性/versionInfo）
 ├── scripts/ — 开发工具脚本（版本校验/双副本同步/预览服务/README 目录树维护）
-│   ├── audit-runtime-check.mjs — 三层审计 L3 运行时检测脚本
-│   ├── browser-page-probe.mjs — （待注释）
 │   ├── build-client.mjs — 客户端分片拼接（PART_ORDER + --check 门禁 + 形态铁律自检）
 │   ├── bump-version.mjs — （待注释）
 │   ├── check.mjs — 语法检查脚本（npm run check）
-│   ├── clean-date-comments.py — （待注释）
-│   ├── cpu-sample.mjs — （待注释）
 │   ├── doc-drift.mjs — （待注释）
 │   ├── doc-func.mjs — （待注释）
 │   ├── doc-tree.mjs — （待注释）
@@ -139,11 +135,8 @@ dsh-git-push/
 │   ├── hot-path-probe.mjs — （待注释）
 │   ├── local-registry.mjs — （待注释）
 │   ├── module-splitter.py — 巨型单文件按顶层块拆分脚本（analyze/split/verify 三命令，python3 零依赖；module_splitter 工具与 CLI 的底层实现）
-│   ├── picker-repro.mjs — （待注释）
-│   ├── probe-recheck.mjs — 探针：「重新检测」按钮链路实测（在线校验 token/SSH）
 │   ├── scan-repos.mjs — （待注释）
 │   ├── scan-version.mjs — 版本一致性校验脚本
-│   ├── verify-prestep.mjs — 上下文注入自检脚本（真实触发 agent/pre-step 验证注入）
 │   ├── version-source.mjs — （待注释）
 ├── test/ — node:test 全量单元测试（541+ 条，覆盖审计/推送/账号/HTTP/后台任务）
 │   ├── .test — 空文件豁免标记（目录级豁免 .test 目录）
@@ -151,7 +144,6 @@ dsh-git-push/
 │   ├── app/ — （待注释）
 │   │   ├── test-auto-push.mjs — （待注释）
 │   │   ├── test-context.mjs — （待注释）
-│   │   ├── test-http-audit-split.mjs — （待注释）
 │   │   ├── test-http.mjs — （待注释）
 │   │   ├── test-plugin.mjs — （待注释）
 │   │   ├── test-preprocess-consumption.mjs — （待注释）
@@ -164,20 +156,13 @@ dsh-git-push/
 │   │   ├── test-tools-e2e.mjs — （待注释）
 │   │   ├── test-tools.mjs — （待注释）
 │   │   ├── test-workspace-paths.mjs — （待注释）
-│   ├── audit/ — 审计侧 UI 测试归档（不参与常规回归——run-tests 只扫 test/ 顶层）
-│   │   ├── test-analysis-coverage.mjs — （待注释）
-│   │   ├── test-ignore-e2e.mjs — （待注释）
-│   │   ├── test-preprocess-render.mjs — （待注释）
-│   │   ├── test-privacy-ownership.mjs — （待注释）
 │   ├── fixtures/ — （待注释）
 │   │   ├── TimeZoneComboBox-CRnoCikG.js — Pawchive 混淆产物样本（hash 文件名——跳过判定 fixture）
 │   │   ├── mock-preprocess-cli.mjs — （待注释）
-│   │   └── …（5 个更深文件）
+│   │   └── …（4 个更深文件）
 │   ├── git/ — （待注释）
 │   │   ├── test-account-refresh-on-push.mjs — （待注释）
 │   │   ├── test-account-ssh.mjs — （待注释）
-│   │   ├── test-audit-bad-file.mjs — （待注释）
-│   │   ├── test-audit-boundary.mjs — （待注释）
 │   │   ├── test-ci-wait.mjs — （待注释）
 │   │   ├── test-cifs-init.mjs — （待注释）
 │   │   ├── test-clone-concurrency.mjs — （待注释）
@@ -252,7 +237,6 @@ dsh-git-push/
 │   ├── FILE-TREE.md — （待注释）
 │   ├── FUNCTIONS.md — 函数列表宿主（doc-func apply 写 dshgp-functions 标记块）
 │   ├── PERF-BASELINE.md — （待注释）
-│   ├── PLAN-2026-11-01-auditignore-scoped.md — （待注释）
 │   ├── SPEC.md — （待注释）
 │   ├── releases.json — （待注释）
 │   ├── 功能-发布与工具链.md — 提交推送、克隆、npm 发布、仓库索引与账号状态、文档生成脚本的功能介绍
@@ -261,11 +245,9 @@ dsh-git-push/
 ├── skills/ — 插件权威 skill（功能手册/规则/使用说明，安装副本的 skills/ 同步）
 │   ├── dsh-repo-index.md — dsh-repo-index skill（源码索引权威说明）
 │   ├── dev/ — （待注释）
-│   │   ├── audit-rule-authoring.md — （待注释）
 │   │   ├── dsh-git-push.md — （待注释）
 │   │   ├── git-push-live-fix.md — （待注释）
 │   ├── guide/ — （待注释）
-│   │   ├── guide-audit.md — （待注释）
 │   │   ├── guide-cli-scripts.md — （待注释）
 │   │   ├── guide-clone-repos.md — （待注释）
 │   │   ├── guide-commit-push.md — （待注释）
@@ -284,10 +266,6 @@ dsh-git-push/
 ├── .github/ — （待注释）
 │   ├── workflows/ — （待注释）
 │   │   ├── test.yml — （待注释）
-├── audit-samples/ — （待注释）
-│   ├── .samples — （待注释）
-│   ├── js-bad.js — （待注释）
-│   ├── py-bad.py — （待注释）
 ├── .auditignore — 审计豁免清单（不影响 git 入库，仅跳过审计扫描）——排除内置第三方代码
 ├── .gitignore — 忽略规则（node_modules/产物/备份/回收站等）
 ├── CONTRIBUTING.md — （待注释）

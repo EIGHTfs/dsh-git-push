@@ -806,9 +806,9 @@ import { promisify } from 'node:util';
     // 与 Host Config 一致：客户端能写的键 Host 必须也有。
     // 1.1.4 起 Config 定义在 lib/app/schema.js（入口 lib/index.js 只做再导出），
     // 故两处都读——免得下次再挪位置又把测试改一遍。
-    // 审计键已单独成文件（lib/app/schema-audit.js，文件隔离阶段）——读取列表跟着加，
+    // 审计键已单独成文件（lib/app/schema-preprocess.js，文件隔离阶段）——读取列表跟着加，
     //   与上面「免得下次再挪位置又把测试改一遍」的意图一致。
-    const hostSrc = ['lib/app/schema.js', 'lib/app/schema-audit.js', 'lib/index.js']
+    const hostSrc = ['lib/app/schema.js', 'lib/app/schema-preprocess.js', 'lib/index.js']
       .map((f) => readFileSync(join(ROOT, f), 'utf8')).join('\n');
     for (const k of clientKeys) {
       assert.ok(hostSrc.includes(`${k}:`), `Host Config 缺 ${k}`);

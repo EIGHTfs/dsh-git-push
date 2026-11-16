@@ -43,7 +43,9 @@ function collectJson(dir, acc = []) {
 
 // 三个 CLI 入口都要做语法检查：它们不是 lib/ 下的文件，靠 collectJs 收不到——
 //   漏检的后果是「新入口语法错，但门禁全绿」（与被拆出来的入口一起构成盲区）。
-const CLI_ENTRIES = ['cli.mjs', 'cli-audit.mjs', 'cli-tool.mjs'].map((name) => join(ROOT, name));
+// 只检查现存入口：审计 CLI 已随审计能力独立成包（audit-sluice），宿主不再提供 cli-audit.mjs。
+const CLI_ENTRY_FILES = ['cli.mjs', 'cli-tool.mjs'];
+const CLI_ENTRIES = CLI_ENTRY_FILES.map((name) => join(ROOT, name));
 const files = [...collectJs(join(ROOT, 'lib')), ...CLI_ENTRIES];
 // docs/*.json 也必须能解析：版本表与发版说明直接依赖 docs/releases.json，
 //   而它曾在 2.8.4 因一个尾随逗号变成非法 JSON 却**四项门禁全绿**（缺口）——这类错误必须在门禁里变红 ✗
