@@ -151,7 +151,7 @@ pnpm add github:EIGHTfs/dsh-git-push#<commit>
 1. **本机要有 `npm`** —— pnpm 构建 git 来源的包时会在临时目录执行 `npm install`；缺 npm 报
    `ERR_PNPM_PREPARE_PACKAGE` + `spawn ENOENT: npm: command not found`。
    （本机已装：npm 10.9.2 解包到 `<APP>/lib/node_modules/npm`，链到
-   `/var/packages/DeepSeekHarness-NAS/target/.local/bin/npm` —— `/usr/local/bin` 不可写。）
+   `<APP>/target/.local/bin/npm` —— 系统级 bin 目录不可写。）
 2. **pnpm 11 默认禁止 git 源依赖执行构建脚本**（供应链策略），而本插件**有 `prepare`/`prepack`**
    （构建不入库的 `lib/client.js`）⇒ 必须先在 profile 的 `pnpm-workspace.yaml` 放行：
 
@@ -358,7 +358,7 @@ pnpm add github:EIGHTfs/dsh-git-push#<commit>
 ⑤ 重启环境：test_env({ action:'stop' }) → test_env({ action:'start' })
 ⑥ 取访问令牌：`grep -oE 'token=[A-Za-z0-9._-]+' <测试环境>/dsh-env.log | tail -1`
    （**不要把它打印到会话里**）
-⑦ 换 cookie：`curl -c /tmp/tc.txt "http://127.0.0.1:<port>/?token=<token>"`
+⑦ 换 cookie：`curl -c ./tc.txt "http://127.0.0.1:<port>/?token=<token>"`
    —— 不带 cookie 直接打 API 会得到 401 unauthorized。
 ⑧ 验证完停环境：test_env({ action:'stop' })
 ```
@@ -367,12 +367,12 @@ pnpm add github:EIGHTfs/dsh-git-push#<commit>
 
 ```bash
 # 桌面端转发形态（无 Origin + JSON）—— 期望 200
-curl -b /tmp/tc.txt -X POST -H 'Content-Type: application/json' \
+curl -b ./tc.txt -X POST -H 'Content-Type: application/json' \
   -d '{"key":"npmRegistry","value":"https://registry.npmjs.org/"}' \
   http://127.0.0.1:<port>/api/git-push/settings-set
 
 # 跨站表单形态（无 Origin + text/plain）—— 期望 403 NO_ORIGIN
-curl -b /tmp/tc.txt -X POST -H 'Content-Type: text/plain' \
+curl -b ./tc.txt -X POST -H 'Content-Type: text/plain' \
   -d '{"key":"npmRegistry","value":"x"}' \
   http://127.0.0.1:<port>/api/git-push/settings-set
 ```
