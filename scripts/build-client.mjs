@@ -33,8 +33,8 @@ export const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 //   也不会因「缺片」报错（缺片检查只针对 PART_ORDER 里列出的片）。
 export const PARTS_DIR = join(ROOT, 'lib', 'client-parts', 'git');
 /** 不参与构建的分片目录（只做归档，构建脚本不读、不校验）。 */
-// 审计前端分片已随审计能力迁出宿主（现在在 audit-sluice 包的 lib/ui/audit-tab.js）。
-//   这里保留一个只读路径常量供历史脚本引用；目录不存在时调用方应按「无归档分片」处理。
+// 审计侧不提供 UI（UI 归宿主或不存在），本目录只作历史脚本的只读路径常量；
+//   目录不存在时调用方按「无归档分片」处理。
 export const ARCHIVE_PARTS_DIR = join(ROOT, 'lib', 'client-parts', 'audit');
 export const OUT_FILE = join(ROOT, 'lib', 'client.js');
 

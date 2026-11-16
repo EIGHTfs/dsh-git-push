@@ -11,6 +11,8 @@ import { listTools } from '../../lib/app/tools.js';
 import { AUDIT_HELP_SNIPPETS, renderHelp } from '../../cli.mjs';
 import { commandOwner, parseEntrySourceMeta, readEntrySource, CLI_ENTRIES, CLI_GIT, CLI_TOOL, allCommands, resolveDispatch } from '../../lib/cli/shared.mjs';
 import { DEFAULT_CONFIG, SETTINGS_SCHEMA, defaultConfig, resolveConfig, createSettingsCard, collectExternalRefs, INLINE_CSS, clientModuleInfo } from '../../lib/client/index.js';
+// Config 真源（前端设置项必须都能落到 Host Config 上）
+import { Config } from '../../lib/app/schema.js';
 import { helpSync, VERSION } from '../../lib/self/index.js';
 import assert from 'node:assert/strict';
 import { execFile, execFileSync } from 'node:child_process';
@@ -289,7 +291,7 @@ import { promisify } from 'node:util';
       writeFileSync(join(dir, 'a.js'), 'export const a = 1;\n');
       git('add', '-A'); git('commit', '-qm', 'init');
       writeFileSync(join(dir, 'b.js'), 'export const b = 2;\n');
-      const run = await runCliFile(CLI_GIT, ['commit', dir, '--message', 'chore: split 冒烟', '--no-push', '--requirements-confirmed', '--dry-run'], { cwd: dir });
+      const run = await runCliFile(CLI_GIT, ['commit', dir, '--message', 'chore: split 冒烟', '--no-push', '--dry-run'], { cwd: dir });
       assert.doesNotMatch(run.out, /未知参数 --no-push/, `--no-push 必须被接受：${run.out.slice(0, 200)}`);
     } finally { rmSync(dir, { recursive: true, force: true }); }
   });
@@ -476,7 +478,7 @@ import { promisify } from 'node:util';
     // 不可用态：整体不再出现 --audit（含描述里的那句）
     assert.doesNotMatch(unavailableHelp, /--audit/, '不可用态 HELP 不得再出现 --audit');
     // 其余 commit 参数不受影响（防「整行被删」）
-    for (const flag of ['--push|--no-push', '--dry-run', '--force', '--requirements-confirmed', '--message-items']) {
+    for (const flag of ['--push|--no-push', '--dry-run', '--force', '--message-items']) {
       assert.ok(unavailableHelp.includes(flag), `不可用态 HELP 仍应含 ${flag}`);
     }
     // 漂移防护：片段表里的每一项都必须真的出现在 HELP 里（改了 HELP 忘改表 ⇒ 这里变红）
@@ -544,9 +546,9 @@ import { promisify } from 'node:util';
   });
 
   // ---------- 默认关（关键安全默认） ----------
-  test('[client] 默认关：审计开关/LLM/全量扫 全部默认 false', () => {
+  test('[client] 默认关：提交前预处理/LLM/全量扫 全部默认 false', () => {
     const c = defaultConfig();
-    assert.equal(c.auditEnabled, false);
+    assert.equal(c.preCommitEnabled, false, '提交前预处理默认关');
     assert.equal(c.pushPermitEnabled, undefined, 'pushPermitEnabled 已移除（2026-09-11）');
     assert.equal(c.llmAudit, undefined, 'llmAudit 已移除（v2 不提供 LLM 深度审查）');
     // hardcodeFullScan / auditLevel / auditRuleset 已删除（非用户可配项）
@@ -567,37 +569,39 @@ import { promisify } from 'node:util';
     }
   });
 
-  test('[client] 默认数值：审计范围默认 diff（不做全量）', () => {
-    assert.equal(defaultConfig().auditScanScope, 'diff');
+  test('[client] 宿主不再持有审计配置键（扫描范围/权重/槽位归预处理实现）', () => {
+    const c = defaultConfig();
+    for (const key of ['auditEnabled', 'auditScanScope', 'maxScanFiles', 'weightOverrides', 'auditRuleOrder', 'auditDisabledSlots', 'injectRequirements']) {
+      assert.equal(c[key], undefined, `${key} 不应再出现在宿主配置里`);
+    }
   });
 
   // ---------- 配置合并（即时生效语义） ----------
   test('[client] 合并：布尔严格取真值（"true" 字符串不算开）', () => {
-    assert.equal(resolveConfig({ auditEnabled: true }).auditEnabled, true);
-    assert.equal(resolveConfig({ auditEnabled: 'true' }).auditEnabled, false);
-    assert.equal(resolveConfig({ auditEnabled: 1 }).auditEnabled, false);
+    assert.equal(resolveConfig({ preCommitEnabled: true }).preCommitEnabled, true);
+    assert.equal(resolveConfig({ preCommitEnabled: 'true' }).preCommitEnabled, false);
+    assert.equal(resolveConfig({ preCommitEnabled: 1 }).preCommitEnabled, false);
   });
 
   test('[client] 合并：未知键丢弃（防配置漂移）', () => {
-    const c = resolveConfig({ unknownKey: 1, auditEnabled: true });
+    const c = resolveConfig({ unknownKey: 1, preCommitEnabled: true });
     assert.equal(c.unknownKey, undefined);
-    assert.equal(c.auditEnabled, true);
+    assert.equal(c.preCommitEnabled, true);
   });
 
   test('[client] 合并：enum 非法值回落默认', () => {
-    assert.equal(resolveConfig({ auditScanScope: 'bogus' }).auditScanScope, 'diff');
-    assert.equal(resolveConfig({ auditScanScope: 'full' }).auditScanScope, 'full');
+    assert.equal(resolveConfig({ pushMethod: 'bogus' }).pushMethod, 'ssh');
+    assert.equal(resolveConfig({ pushMethod: 'api' }).pushMethod, 'api');
   });
 
   test('[client] 合并：string 类型统一字符串', () => {
-    // auditRuleset 已删除，改用仍存在的 string 键（weightOverrides）
-    assert.equal(resolveConfig({ weightOverrides: 123 }).weightOverrides, '123');
+    assert.equal(resolveConfig({ autoPushTriggerText: 123 }).autoPushTriggerText, '123');
   });
 
   test('[client] 合并：不改动基线对象（纯函数）', () => {
     const base = defaultConfig();
-    resolveConfig({ auditEnabled: true }, base);
-    assert.equal(base.auditEnabled, false);
+    resolveConfig({ preCommitEnabled: true }, base);
+    assert.equal(base.preCommitEnabled, false);
   });
 
   // ---------- 手写 createElement（无 JSX） ----------
@@ -647,11 +651,9 @@ import { promisify } from 'node:util';
     const react = mockReact();
     createSettingsCard(react, {});
     const opts = react.calls.filter((c) => c.type === 'option').map((c) => c.props.value);
-    // 新增「推送通道」enum（ssh/api/auto）。
-    // 审计强度 enum 已删除（quick/standard/deep 不再出现在界面），
-    //   审计范围 enum（diff/full）与推送通道 enum（ssh/api/auto）保留。
-    // 任务完成自动推送范围 enum（session/all）新增。
-    assert.deepEqual(opts.sort(), ['all', 'api', 'auto', 'diff', 'full', 'session', 'ssh']);
+    // 界面只剩两个 enum：推送通道（ssh/api/auto）与自动推送范围（session/all）。
+    //   审计范围（diff/full）属预处理实现自己的配置，已不在本插件的设置项里。
+    assert.deepEqual(opts.sort(), ['all', 'api', 'auto', 'session', 'ssh']);
   });
 
   // 回归：手写 UI（lib/client.js dshgp_PushDefaultsBlock）的 select 选项
@@ -691,7 +693,7 @@ import { promisify } from 'node:util';
     const info = clientModuleInfo();
     assert.equal(info.jsx, false);
     assert.deepEqual(info.externalResources, []);
-    assert.equal(info.defaultConfig.auditEnabled, false);
+    assert.equal(info.defaultConfig.preCommitEnabled, false);
     assert.deepEqual(info.slots, ['settings.section']);
   });
 
@@ -721,29 +723,25 @@ import { promisify } from 'node:util';
     assert.ok(!/['"`]https?:\/\//.test(rootClientSrc), '不应引用外部 URL');
   });
 
-  test('[client] client.js：审计相关开关默认关（2026-09-12 三选项卡版）', () => {
-    // 三选项卡重写：v1 移植的注入/硬编码全量扫等开关已移出 client.js（纯展示/审计/设置三页）
-    // 保留的审计默认关：Controller 初始 auditEnabled=false
-    assert.ok(/this\.auditEnabled = false/.test(rootClientSrc), 'auditEnabled 应默认 false');
+  test('[client] client.js：开关默认关（提交前预处理默认不跑）', () => {
+    assert.ok(/this\.preCommitEnabled = false/.test(rootClientSrc), 'preCommitEnabled 应默认 false');
     assert.ok(!rootClientSrc.includes("'llmAudit'"), 'client.js 不应含 llmAudit（v2 不提供 LLM 深度审查）');
     assert.ok(!rootClientSrc.includes("'pushPermitEnabled'"), 'client.js 不应含 pushPermitEnabled（已移除 2026-09-11）');
   });
 
-  test('[client] client.js：设置项键（2026-09-12 三选项卡：客户端写回键须在 Host Config）', () => {
-    // 三选项卡版 client.js 写回的键（settingsScope.set）：token/ssh/审计开关/规则次序/权重覆盖
-    const clientKeys = ['githubToken', 'sshPub', 'auditEnabled', 'auditRuleOrder', 'weightOverrides'];
+  test('[client] client.js：设置项键（客户端写回键须在 Host Config）', () => {
+    // client.js 写回的键：凭据 + 本插件自己的开关（审计配置不在这里，属预处理实现）
+    const clientKeys = ['githubToken', 'sshPub', 'preCommitEnabled', 'pushMethod'];
     for (const k of clientKeys) {
       assert.ok(rootClientSrc.includes(k), `client.js 缺设置键引用 ${k}`);
     }
     // 与 Host Config 一致：客户端能写的键 Host 必须也有。
-    // 1.1.4 起 Config 定义在 lib/app/schema.js（入口 lib/index.js 只做再导出），
-    // 故两处都读——免得下次再挪位置又把测试改一遍。
-    // 审计键已单独成文件（lib/app/schema-preprocess.js，文件隔离阶段）——读取列表跟着加，
-    //   与上面「免得下次再挪位置又把测试改一遍」的意图一致。
-    const hostSrc = ['lib/app/schema.js', 'lib/app/schema-preprocess.js', 'lib/index.js']
-      .map((f) => readFileSync(join(ROOT, f), 'utf8')).join('\n');
-    for (const k of clientKeys) {
-      assert.ok(hostSrc.includes(`${k}:`), `Host Config 缺 ${k}`);
+    //   Config 直接 import 真源（不猜文件位置）：schema.js 就是 Config 定义处。
+    const configKeys = new Set(Object.keys(Config({})));
+    for (const item of SETTINGS_SCHEMA) {
+      // preCommitEnabled 是前端的扁平键，Host Config 里对应嵌套的 preCommit.enabled
+      const hostKey = item.key === 'preCommitEnabled' ? 'preCommit' : item.key;
+      assert.ok(configKeys.has(hostKey), `Host Config 缺 ${hostKey}（前端设置项 ${item.key}）`);
     }
   });
 
@@ -795,7 +793,7 @@ import { promisify } from 'node:util';
     const registered = [];
     const scopeMock = {
       // 官方 SettingsScope 契约：getSnapshot/subscribe/set（无 use()——1.0.14 修复点）
-      getSnapshot: () => ({ status: 'ready', value: { auditEnabled: false, auditScanScope: 'diff', auditLevel: 'standard', auditRuleset: '', auditRuleOrder: ['nodejs'], weightOverrides: '' } }),
+      getSnapshot: () => ({ status: 'ready', value: { preCommitEnabled: false, injectSystemPrompt: true } }),
       subscribe: () => () => {},
       set: async () => {}, mutate: async () => {}, unset: async () => {},
     };

@@ -5,15 +5,13 @@
 <!-- dshgp-tree:start -->
 ```text
 dsh-git-push/
-├── lib/ — 核心实现（10 总入口 + 审计引擎 + git 执行层 + 规则编译层）
+├── lib/ — 核心实现（插件装配 / git 执行层 / npm 与工具链）
 │   ├── ARCHITECTURE.md — 架构说明文档
-│   ├── BUGFIX-NOTES-2026-09-14.md — Bug 修复说明（diff 审计提速 / 凭据文件拦截三层根因）
-│   ├── commit-push.js — 审计提交总入口（commitWithAudit + runAudit 同步审计）
+│   ├── commit-push.js — 提交总入口（提交前预处理门禁 runPreprocess + commit + push）
 │   ├── fsx.js — 文件系统适配层（CIFS/SMB 兼容：copyFile 读写回退、chmod 尽力而为、元数据能力探测）
 │   ├── index.js — 插件入口（DSH 接线，再导出全部能力）
 │   ├── skip-dirs.js — 跳过目录统一判定（硬编码基线 + yml exclude_dirs 并集 + gitignore 白名单恢复）
 │   ├── tool-probes.json — 工具探测清单模板（工具为 key、值为空；运行时实测生成运行目录 tools.json）
-│   ├── user-requirements.json — 开发者特殊要求清单（提交推送前逐条核对）
 │   ├── app/ — 插件入口层（apply/HTTP 处理/工具调用分发/注入文本/默认扫描根）
 │   │   ├── apply.js — 插件装载入口（注册 schema/工具/HTTP/注入钩子）
 │   │   ├── command-registry.js — 工具命令注册表（方案 B——CLI/宿主工具/帮助同源，免维护）
@@ -25,13 +23,12 @@ dsh-git-push/
 │   │   ├── preprocess-client.js — （待注释）
 │   │   ├── repo-ownership.js — （待注释）
 │   │   ├── scan-root.js — 默认扫描根解析（配置优先→DSH 家根自动识别）
-│   │   ├── schema-preprocess.js — （待注释）
 │   │   ├── schema.js — 配置 schema（宿主导出缺失时兜底）
 │   │   ├── settings-bridge.js — 设置读写桥（host scope 共享；绕开 client isLoopback=memory 落盘陷阱）
 │   │   ├── severity.js — （待注释）
-│   │   ├── slash-commands.js — 用户输入框斜杠命令（目前只注册 /git-audit）
+│   │   ├── slash-commands.js — 用户输入框斜杠命令（只剩 git 侧命令）
 │   │   ├── slot-stats.js — 规则槽位命中统计（模块级状态）
-│   │   ├── tool-call.js — 工具调用分发（git_scan/commit_push/audit/status 等全部工具）
+│   │   ├── tool-call.js — 工具调用分发（git_scan/commit_push/code_audit/status 等全部工具）
 │   │   ├── tools.js — 工具定义清单（名称/描述/参数 schema）
 │   │   └── …（11 个更深文件）
 │   ├── cli/ — （待注释）
@@ -42,7 +39,7 @@ dsh-git-push/
 │   │   ├── shared.mjs — 三个 CLI 共用的公共层（参数解析/结果打印/HELP 渲染/版本/跨侧指引）
 │   ├── client/ — 客户端配置（DEFAULT_CONFIG + SETTINGS_SCHEMA 侧边栏设置项定义）
 │   │   ├── index.js — 侧边栏设置 UI 总入口（DEFAULT_CONFIG + SETTINGS_SCHEMA）
-│   ├── client-parts/ — 客户端分片源码（按侧分目录：git/ 参与构建，audit/ 只归档不进产物）
+│   ├── client-parts/ — 客户端分片源码（只含 git 侧；审计不提供 UI）
 │   │   └── …（13 个更深文件）
 │   ├── commit-push/ — 提交推送编排（runAudit 门禁 + commitWithAudit/commitMany）
 │   │   ├── pre-commit-engine.js — 提交前预处理引擎适配层：spawn 引擎、拼参数、退出码映射、超时与 fail-closed
@@ -130,7 +127,7 @@ dsh-git-push/
 │   ├── scan-repos.mjs — （待注释）
 │   ├── scan-version.mjs — 版本一致性校验脚本
 │   ├── version-source.mjs — （待注释）
-├── test/ — node:test 全量单元测试（541+ 条，覆盖审计/推送/账号/HTTP/后台任务）
+├── test/ — node:test 全量单元测试（按 git/tool/app 分目录，覆盖推送/账号/HTTP/后台任务/工具链）
 │   ├── .test — 空文件豁免标记（目录级豁免 .test 目录）
 │   ├── run-tests.mjs — （待注释）
 │   ├── app/ — （待注释）

@@ -17,7 +17,8 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { SETTINGS_SCHEMA, defaultConfig } from '../../lib/client/index.js';
-import { readSettings, writeSettingsKey, applySettingsToCfg } from '../../lib/app/settings-bridge.js';
+import { readSettings, writeSettingsKey, writePreCommitEnabled, applySettingsToCfg } from '../../lib/app/settings-bridge.js';
+import { ALLOWED_SETTING_KEYS } from '../../lib/app/handlers/settings.js';
 import { handleHttp } from '../../lib/app/http-handlers.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -29,26 +30,17 @@ function clientSubmitKeys() {
   const src = readFileSync(join(ROOT, 'lib', 'client.js'), 'utf8');
   const keys = new Set();
   for (const m of src.matchAll(/(?:commitSetting|persistSetting)\('([a-zA-Z]+)'/g)) keys.add(m[1]);
-  // setAdvanced 是通用提交函数（setAdvanced(key, value)，key 为变量）——
-  //   其允许的键集合硬编码在 client.js 的 setAdvanced 白名单正则里（7 键，见下方 SET_ADVANCED）。
-  for (const k of SET_ADVANCED) keys.add(k);
-  // 对象分组（ENUM_KEYS/CLAMP_KEYS）顶层键无引号——正则易受转义影响，显式补（新增对象键时同步这里）
-  for (const k of ['auditScanScope', 'pushMethod', 'maxCloneFileMB', 'cloneConcurrency']) keys.add(k);
+  // setAdvanced 是通用提交函数（key 是变量），它的允许键写在产物里的白名单正则中——
+  // 直接从产物读那条正则，避免「测试手抄一份键表」这种必然漂移的第二真相。
+  const adv = src.match(/const ok = \/\^\(([^)]*)\)\$\//);
+  assert.ok(adv, 'client.js 的 setAdvanced 应有一条白名单正则');
+  for (const k of adv[1].split('|').map((x) => x.trim()).filter(Boolean)) keys.add(k);
   return keys;
 }
 
-/** setAdvanced 允许键（与 client.js setAdvanced 正则同步；新增键时两处都要加）。 */
-// auditLevel / auditRuleset / hardcodeFullScan 已从设置删除（非用户可配项）
-// 新增 clone 体积守卫与并发（setAdvanced 白名单同步，见 client.js）
-// 任务完成自动推送（autoPushEnabled/TriggerText/Scope）经 setAdvanced 提交，白名单同步
-const SET_ADVANCED = ['maxScanFiles', 'maxCloneFileMB', 'cloneConcurrency', 'pushMethod', 'pushGate', 'autoPushEnabled', 'autoPushTriggerText', 'autoPushScope'];
-
-/** settings-set 白名单键（L2）。 */
+/** settings-set 白名单键（L2）——真源就是服务端导出的那张表，不另抄一份。 */
 function allowlistKeys() {
-  const src = readFileSync(join(ROOT, 'lib/app/handlers/settings.js'), 'utf8');
-  const m = src.match(/allowedKeys = new Set\(\[([\s\S]*?)\]\)/);
-  assert.ok(m, 'handlers/settings.js 中应有 allowedKeys 白名单');
-  return new Set([...m[1].matchAll(/'([a-zA-Z]+)'/g)].map((x) => x[1]));
+  return new Set(ALLOWED_SETTING_KEYS);
 }
 
 /** applySettingsToCfg 映射键（L3 回读）。 */
@@ -125,15 +117,11 @@ test('L3 集成：每键 writeSettingsKey → config.json → applySettingsToCfg
   try {
     // 每键给一个代表性的「已设值」（bool/数字/字符串/数组/枚举）
     const samples = {
-      auditEnabled: true,
-      injectRequirements: true,
       injectSystemPrompt: false,
-      auditScanScope: 'full',
-      maxScanFiles: 500,
-      weightOverrides: '{"安全性":100}',
       pushMethod: 'api',
-      auditRuleOrder: ['comment', 'nodejs'],
-      auditDisabledSlots: ['comment'],
+      maxCloneFileMB: 20,
+      cloneConcurrency: 3,
+      pushGate: true,
       githubToken: 'ghp_'.concat('T'.repeat(36)),
       sshPub: 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAA test@example.com',
     };
@@ -166,15 +154,35 @@ test('L1 集成：前端提交键确实能被 settings-set 接受（防前端键
   } finally { env.cleanup(); }
 });
 
+test('L3 集成（嵌套键）：preCommitEnabled 走键级合并，不覆盖同块的引擎配置', async () => {
+  const env = isolatedEnv();
+  try {
+    // 先写一份「用户手配的引擎位置」，再打开开关 —— 引擎位置必须还在
+    await writeSettingsKey('preCommit', { enabled: false, command: '/opt/engine', args: ['a.js'], timeoutMs: 1234 }, { workspaceRoot: '' });
+    const w = await writePreCommitEnabled(true, { workspaceRoot: '' });
+    assert.equal(w.ok, true, `writePreCommitEnabled 应成功: ${w.error || ''}`);
+    const snap = readSettings({ workspaceRoot: '' });
+    assert.equal(snap.preCommit.enabled, true, '开关应写入 preCommit.enabled');
+    assert.equal(snap.preCommit.command, '/opt/engine', '同块的 command 不能被开关写没');
+    assert.deepEqual(snap.preCommit.args, ['a.js'], '同块的 args 不能被开关写没');
+    assert.equal(snap.preCommit.timeoutMs, 1234, '同块的 timeoutMs 不能被开关写没');
+    // 回读：cfg 拿到的是嵌套 enabled
+    const cfg = {};
+    applySettingsToCfg(cfg, { preCommit: snap.preCommit });
+    assert.equal(cfg.preCommit.enabled, true, '启动合并后 cfg.preCommit.enabled 应为真');
+  } finally { env.cleanup(); }
+});
+
 /* ───────────────────────── 消费端生效 ───────────────────────── */
 
-test('L4 关键键 auditScanScope：审计 opts 带 scope；审计强度已删除不得回退', () => {
+test('L4 消费端：审计工具的 scope 由调用参数决定，且宿主不再持有审计配置', () => {
   const tool = readFileSync(join(ROOT, 'lib/app/tool-call.js'), 'utf8');
-  // auditScanScope 由前端/工具参数决定，审计 opts 至少包含 scope 字段
-  assert.ok(/scope:/.test(tool), '审计 opts 应有 scope 字段');
-  // 审计固定完整流程，代码里不得再出现 auditLevel 透传
-  assert.ok(!/auditLevel/.test(tool.replace(/^\s*\/\/.*$/gm, '')),
-    'code_audit 不得再消费 auditLevel（审计固定正则初筛 + AST）');
+  assert.ok(/scope:/.test(tool), '审计 opts 应有 scope 字段（显式传参决定范围）');
+  // 扫描范围/权重/规则槽位/文件上限归预处理实现自己的配置，宿主代码里不应再出现
+  for (const key of ['cfg.auditScanScope', 'cfg.maxScanFiles', 'cfg.auditDisabledSlots', 'cfg.weightOverrides']) {
+    assert.ok(!tool.includes(key), `宿主不应再读 ${key}（属预处理实现自己的配置）`);
+  }
+  assert.ok(!/auditLevel/.test(tool.replace(/^\s*\/\/.*$/gm, '')), 'code_audit 不得再消费 auditLevel');
 });
 
 /* ───────────────────────── 凭据链路（不应受断链影响） ───────────────────────── */
@@ -227,7 +235,7 @@ test('汇总：输出全部断链键（warning 语义，供人工核对）', () 
     const l1 = submitted.has(key);
     const l2 = allow.has(key);
     const l3 = mapped.has(key);
-    const l4 = key === 'weightOverrides' || key === 'auditRuleOrder' || key === 'auditScanScope' || key === 'auditEnabled' ? '依赖上层断言' : '需代码确认';
+    const l4 = '需代码确认';
     const status = (l1 && l2 && l3) ? '✅ 链路通' : `⚠️ 断链(L1提交=${l1} L2白名单=${l2} L3回读=${l3} L4=${l4})`;
     lines.push(`${key}: ${status}`);
   }

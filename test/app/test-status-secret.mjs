@@ -45,7 +45,7 @@ test('SECRET_CONFIG_FIELDS 与 schema 的 role(secret) 对得上（防两处漂�
 });
 
 test('/api/git-push/status：不回吐 token 明文，且报告是否已配置', async () => {
-  const cfg = { githubToken: TOKEN, sshPub: 'ssh-ed25519 AAAAdemo', auditEnabled: false };
+  const cfg = { githubToken: TOKEN, sshPub: 'ssh-ed25519 AAAAdemo', preCommitEnabled: false };
   const r = await handleHttp({ method: 'GET', url: '/api/git-push/status' }, { workspaceRoot: '/tmp' }, cfg);
   assert.equal(r.status, 200);
   const text = JSON.stringify(r.body);
@@ -63,5 +63,8 @@ test('client.js：token 是否已配置不再只依赖明文（防退化回明�
   assert.ok(src.includes("v.tokenConfigured === true"), '应优先采用 host 派生的布尔位');
   assert.ok(!/this\.tokenConfigured = !!\(snap\.value\.githubToken/.test(src),
     '不得再直接以设置快照里的 githubToken 明文作为唯一判断');
-  assert.ok(src.includes('loadCredentialFlags'), '应在挂载时向 /status 取凭据状态');
+  // 凭据「已配置」的真源 = 凭据文件（/account-check 读回 account-status.json），
+  //   不是设置快照里的明文，也不是历史上那条 /status 单键刷新链。
+  assert.ok(src.includes('/api/git-push/account-check'), '应经 /account-check 读凭据文件真源');
+  assert.ok(src.includes('refreshAccount'), '应有凭据状态刷新入口（页面挂载时调用）');
 });

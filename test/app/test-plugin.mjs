@@ -24,6 +24,7 @@ import { SLASH_COMMANDS } from '../../lib/app/slash-commands.js';
 import { TOOL_REGISTRY } from '../../lib/app/command-registry.js';
 import { setDefineToolOverride } from '../../lib/plugin/index.js';
 import { setSettingsFileOverride } from '../../lib/app/settings-bridge.js';
+import { ALLOWED_SETTING_KEYS } from '../../lib/app/handlers/settings.js';
 import { commitMany, commitWithAudit } from '../../lib/commit-push.js';
 
 const ROOT = join(import.meta.dirname, '..', '..');
@@ -357,7 +358,6 @@ test('commitMany：逐仓返回结果，非 git 仓库记失败不抛异常', as
     repos: [ROOT, '/nonexistent-abc'],
     message: 'batch test',
     dryRun: true,
-    requirementsConfirmed: true,
   });
   assert.equal(results.length, 2);
   assert.equal(results[0].repo, ROOT);
@@ -368,8 +368,11 @@ test('commitMany：逐仓返回结果，非 git 仓库记失败不抛异常', as
 });
 
 test('commitWithAudit：dryRun 透传（不触发任何写操作）', async () => {
+  // 显式 audit:false —— 本用例只验证「dryRun 透传到 commitAndPush」，
+  //   不能让门禁去读真实 DSH_HOME 的配置（那会把「本机配了什么引擎、仓库当前改了什么」
+  //   混进断言里，仓库一改就假红）。
   const result = await commitWithAudit({
-    repoPath: ROOT, message: 'test', dryRun: true, requirementsConfirmed: true,
+    repoPath: ROOT, message: 'test', dryRun: true, audit: false,
   });
   assert.equal(result.ok, true);
   assert.equal(result.dryRun, true);
@@ -397,17 +400,16 @@ test('settings-set：写盘成功且文件权限 0600', async () => {
   try {
     const file = join(dir, 'config.json');
     setSettingsFileOverride(file);
-    // 用 schema 里的真实键名（不是自造键）：任取一个白名单键即可验证写盘链路
-    // 可写键从「schema 默认配置」推导：Config({}) 返回带默认值的对象，键即 schema 字段名
-    const schemaKeys = Object.keys(Config({}));
-    const settableKey = schemaKeys.includes('injectRequirements') ? 'injectRequirements' : undefined;
-    assert.ok(settableKey, `schema 里应有可写键 injectRequirements（实得键：${schemaKeys.slice(0, 10).join(',')}…）`);
+    // 键名从白名单真源取（不手抄）：这里只验证「通用单键写盘链路 + 0600」，
+    //   嵌套键（preCommitEnabled）另有专门用例覆盖。
+    const settableKey = ALLOWED_SETTING_KEYS.find((k) => k === 'pushGate');
+    assert.ok(settableKey, '白名单里应有 pushGate（通用布尔键）');
     const response = await handleHttp(
       { method: 'POST', url: '/api/git-push/settings-set', origin: 'http://127.0.0.1:30801', body: { key: settableKey, value: true } },
       { workspaceRoot: ROOT }, {},
     );
     assert.equal(response.status, 200);
-    assert.match(readFileSync(file, 'utf8'), /"injectRequirements": true/);
+    assert.match(readFileSync(file, 'utf8'), /"pushGate": true/);
     assert.equal(fileMode(file), '600');
   } finally {
     setSettingsFileOverride(null);
@@ -436,12 +438,12 @@ test('settings-set：写后读回一致（持久化闭环）', async () => {
   try {
     setSettingsFileOverride(join(dir, 'config.json'));
     const written = await handleHttp(
-      { method: 'POST', url: '/api/git-push/settings-set', origin: 'http://127.0.0.1:30801', body: { key: 'injectRequirements', value: true } },
+      { method: 'POST', url: '/api/git-push/settings-set', origin: 'http://127.0.0.1:30801', body: { key: 'pushGate', value: true } },
       { workspaceRoot: ROOT }, {},
     );
     assert.equal(written.status, 200);
     const read = await handleHttp({ method: 'GET', url: '/api/git-push/settings-get' }, { workspaceRoot: ROOT }, {});
-    assert.equal(read.body.settings.injectRequirements, true, '写后读回应保持');
+    assert.equal(read.body.settings.pushGate, true, '写后读回应保持');
   } finally {
     setSettingsFileOverride(null);
     rmSync(dir, { recursive: true, force: true });
@@ -469,7 +471,7 @@ test('settings-set：UI 提交日志落盘且凭据打码（0600）', async () =
   try {
     setSettingsFileOverride(join(dir, 'config.json'));
     const plain = await handleHttp(
-      { method: 'POST', url: '/api/git-push/settings-set', origin: 'http://127.0.0.1:30801', body: { key: 'injectRequirements', value: true } },
+      { method: 'POST', url: '/api/git-push/settings-set', origin: 'http://127.0.0.1:30801', body: { key: 'pushGate', value: true } },
       { workspaceRoot: ROOT }, {},
     );
     const secret = await handleHttp(
@@ -481,7 +483,7 @@ test('settings-set：UI 提交日志落盘且凭据打码（0600）', async () =
     const logFile = join(dir, 'settings-ui.log');
     assert.ok(existsSync(logFile), 'settings-ui.log 必须生成');
     const logText = readFileSync(logFile, 'utf8');
-    assert.ok(logText.includes('injectRequirements'), '普通键必须留痕');
+    assert.ok(logText.includes('pushGate'), '普通键必须留痕');
     assert.ok(logText.includes('githubToken'), '凭据键名必须留痕');
     assert.equal(logText.includes('ghp_SECRETTOKEN_XYZ'), false, '凭据值不得落明文');
     assert.equal(fileMode(logFile), '600', '日志文件必须 0600');

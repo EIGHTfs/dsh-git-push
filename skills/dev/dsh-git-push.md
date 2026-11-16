@@ -16,7 +16,7 @@ generatedBy: deepseek-official/deepseek-v4-flash · EIGHTfs 2026-10-02
 | 工具 | 参数 | 说明 |
 |---|---|---|
 | `git_scan` | `root?`, `paths?`, `extraReposFile?` | 扫描全部 git 仓库 → 分支/remote/未提交变更数/最近活动 |
-| `git_commit_push` | `repo`(必填), `message`(必填), `push?`, `dryRun?`, `audit?`(默认 true), `requirementsConfirmed?` | **先审计** → `git add -A` → commit → push；审计有 blocker 时拦截 |
+| `git_commit_push` | `repo`(必填), `message`(必填), `push?`, `dryRun?`, `audit?`(默认取配置 `preCommit.enabled`) | **先过提交前预处理门禁** → `git add -A` → commit → push；命中 blocker 时拦截 |
 | `code_audit` | `repo`, `scope?`, `llm?`, `ruleset?`, `weights?` | 审计仓库：L0 静态检查 + 10 维度质量评分；`scope=full` 全量；`ruleset` 指向自定规则目录（整体替换规则包）；**审计固定走完整流程**（正则初筛 + AST 语义检查，无强度档位）；`weights` JSON 覆盖权重 |
 | `git_clone` | `target`(必填), `dest?`, `branch?` | 经 `api.github.com` Git Data API 克隆（不跟随 302、不直连 codeload） |
 | `git_remote_create` | `repo`, `visibility?`(默认 private), `dryRun?` | 按目录名建远程仓库并设 origin（走 api.github.com） |
@@ -196,7 +196,7 @@ pnpm add github:EIGHTfs/dsh-git-push#<commit>
 **用户决策**：删设置配置卡（`settings.plugin.item`），只保留侧边栏独立页（`settings.section`），页面重写为**三个大选项卡**（对齐插件市场 .tabs/.tab/.on，参考 skill 记分板）：
 
 1. **账号信息**（纯展示）：`GET /api/git-push/account-check` → GitHub 登录态/用户名/公钥指纹/套餐，`block` 文本直接展示。
-2. **审计**：① 审计开关（`auditEnabled`，settingsScope.set 即时保存）② 审计权重 10 维度（可读性/可维护性/健壮性/安全性/性能/测试覆盖/可观测性/可部署性/文档/开发者体验，默认合计 100；改即写 `weightOverrides` JSON）③ 规则包列表（`GET /api/git-push/rule-slots` 动态发现；↑↓ 调次序写 `auditRuleOrder`（下覆盖上）；单击展开 → `GET /api/git-push/rule-detail?slot=<名>` 显示拦截/警告/通过数量统计 + 规则表格（规则名/简介/级别/作者））。
+2. **审计 Tab 已移出构建**：前端只剩「账号信息 / 设置」两个页签。审计的实现与配置住在独立包 `audit-sluice`，本插件只保留「提交前预处理」一个总开关（`preCommitEnabled`）。
 3. **设置**：GitHub token（写 `githubToken`）+ SSH 公钥（写 `sshPub`）+ 邮箱 + 一键生成（`POST /api/git-push/gen-ssh-key`，公钥填入 SSH 框并复制剪贴板）。
 
 **配套后端**：
@@ -208,7 +208,7 @@ pnpm add github:EIGHTfs/dsh-git-push#<commit>
 - 只注册 `settings.section`；`settings.plugin.item` 已删除（`clientModuleInfo().slots` 同步为 `['settings.section']`）。
 - Controller 命名 `dshgp_*` 前缀防 combo 撞名；组件 `dshgp_AccountTab` / `dshgp_AuditTab` / `dshgp_SettingsTab` + `dshgp_GitPushPage` 装配。
 - 文件顶层零声明 + `load` 顶部（client-modules 聚合 bundle 兼容），详见 7.2 形态铁律。
-- 测试适配：`clientModuleInfo().slots` 断言删 plugin.item；`审计相关开关默认关` 改断言 `this.auditEnabled = false`；CSS 变量名 `dshgp_css`。
+- 测试适配：`clientModuleInfo().slots` 断言删 plugin.item；默认关断言 `this.preCommitEnabled = false`；CSS 变量名 `dshgp_css`。
 
 **验证**：`npm test` 430 全绿；combo 拼接解析通过；apply 只注册 section（plugin.item=0）。
 
@@ -270,7 +270,7 @@ pnpm add github:EIGHTfs/dsh-git-push#<commit>
 | 工具 | 参数（必填加粗） | 返回 / 实现 |
 |------|------------------|-------------|
 | `git_scan` | `root?`、`paths?`（逗号分隔额外仓库）、`extraReposFile?`（每行一个，`#` 注释，实时读） | 各仓库分支/remote/未提交数/最近活动；`lib/git/index.js` `scanRepos` |
-| `git_commit_push` | **`repo`**、**`message`**、`audit`(默认 true)、`push`(默认 true)、`dryRun`(false)、`force`、`requirementsConfirmed`、`paths?` | 审计 → 敏感文件加 .gitignore → add → commit → push；push 前 fetch 检查 ahead/behind，远端领先不推；`commitAndPush` |
+| `git_commit_push` | **`repo`**、**`message`**、`audit`(默认取配置 `preCommit.enabled`)、`push`(默认 true)、`dryRun`(false)、`force`、`pushConfirmed`、`paths?` | 预处理门禁 → 敏感文件加 .gitignore → add → commit → push；push 前 fetch 检查 ahead/behind，远端领先不推；`commitAndPush` |
 | `code_audit` | **`repo`**、`scope`(`full`/缺省=仅变动，非 git 目录退化全量)、`llm?`、`ruleset?`（自定规则目录=整体替换）、`weights?`（JSON 覆盖） | blocker/warning 清单 + quality 0-100（A/B/C/D）；`auditWithScope`/`auditFull`/`auditChanged` |
 | `git_clone` | **`target`**、`dest?`（非空目录拒绝防覆盖）、`branch?` | 只走 api.github.com Git Data API（`git/trees`+`git/blobs`），不跟随 302、不直连 codeload；`cloneViaApi` |
 | `git_remote_create` | **`repo`**、`visibility?`(默认 private)、`dryRun?` | 同名存在则复用，否则创建并把 origin 指向 API 地址；`ensureRemoteRepo` |
@@ -297,7 +297,7 @@ pnpm add github:EIGHTfs/dsh-git-push#<commit>
 
 ## 附录 C、设置项与三处同源
 
-- 设置项：`auditEnabled`（默认 false）、`auditScanScope`（diff|full）、`maxScanFiles`、`weightOverrides`、`pushMethod`、`pushGate`、`maxCloneFileMB`、`cloneConcurrency` 等
+- 设置项（真源 `lib/app/handlers/settings.js` 的 `ALLOWED_SETTING_KEYS`，14 个）：`preCommitEnabled`、`injectSystemPrompt`、`maxCloneFileMB`、`cloneConcurrency`、`pushMethod`、`pushGate`、`githubToken`、`sshPub`、`npmToken`、`npmRegistry`、`autoPushEnabled`、`autoPushTriggerText`、`autoPushScope`、`autoPushMessage`（审计自己的配置不在本插件）
 - **三处同源**（新增项必须三处同加，`test-client.mjs` 断言一致性）：`lib/index.js` 的 `Config`（服务端 schema）+ `lib/client/index.js` 的 `SETTINGS_SCHEMA` + `client.js` 的 `SCHEMA`/`zh`
 - 审计固定完整流程（无强度档位）：正则/黑名单/凭据/路径/同步 IO/空 catch + AST 语义检查（func-lines / 复杂度 / 嵌套深度 / 文件行数 / 重复串 / 语义 / 凭据文件 / 命名长度）
 - 自定规则包：目录里每个 `audit-rules-<名>.yml` 即一个槽位，放文件即生效、删文件即移除；指向空目录会装载 0 条规则（`errors` 有记录），不静默沿用内置包

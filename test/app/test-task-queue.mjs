@@ -62,7 +62,7 @@ test('git_commit_push：有 jobs → 注册 kind=git-push 官方 job、返回 as
   const dir = mkDirtyRepo(); // 同上：必须有真实改动
   const mj = mockJobs();
   try {
-    const r = await callTool('git_commit_push', { repo: dir, message: '官方job提交', audit: false, push: false, requirementsConfirmed: true }, { workspaceRoot: dir }, Config(), null, mj);
+    const r = await callTool('git_commit_push', { repo: dir, message: '官方job提交', audit: false, push: false }, { workspaceRoot: dir }, Config(), null, mj);
     assert.equal(r.ok, true);
     assert.equal(r.async, true);
     assert.match(String(r.jobId), /^git-push-1$/);
@@ -87,7 +87,7 @@ test('git_commit_push：exec.agent 存在时 owner 必须是会话 id（宿主 r
   try {
     const r = await callTool(
       'git_commit_push',
-      { repo: dir, message: 'owner契约', audit: false, push: false, requirementsConfirmed: true },
+      { repo: dir, message: 'owner契约', audit: false, push: false },
       { workspaceRoot: dir }, Config(), null, mj,
       { agent: { id: 'session-abc123' } }, // 宿主 exec.agent：Agent 对象（带会话 id）
     );
@@ -106,7 +106,7 @@ test('git_commit_push：job 任务体抛错 → done 返回 failed + detail', as
     },
   };
   try {
-    const r = await callTool('git_commit_push', { repo: join(dir, '不存在'), message: 'x', audit: false, push: false, requirementsConfirmed: true }, { workspaceRoot: dir }, Config(), null, mj);
+    const r = await callTool('git_commit_push', { repo: join(dir, '不存在'), message: 'x', audit: false, push: false }, { workspaceRoot: dir }, Config(), null, mj);
     assert.equal(r.ok, true);
     assert.equal(r.async, true);
     // 同步路径不可达（repo 参数已校验），此处只验证注册成功形态
@@ -122,7 +122,7 @@ test('git_commit_push：jobs.start 抛错（no job controller serves this agent�
     start() { throw new Error('no job controller serves this agent'); },
   };
   try {
-    const r = await callTool('git_commit_push', { repo: dir, message: '降级同步提交', audit: false, push: false, requirementsConfirmed: true }, { workspaceRoot: dir }, Config(), null, throwingJobs);
+    const r = await callTool('git_commit_push', { repo: dir, message: '降级同步提交', audit: false, push: false }, { workspaceRoot: dir }, Config(), null, throwingJobs);
     assert.equal(r.ok, true, 'start 抛错也必须 ok');
     assert.equal(r.async, false, '降级后应为同步执行');
     assert.equal(r.jobFallback, true, '应标记 jobFallback 供上层区分');
@@ -175,7 +175,7 @@ test('job 注册：带 owner 失败 → 自动退无主重试成功（不得静�
   try {
     const r = await callTool(
       'git_commit_push',
-      { repo: dir, message: 'owner 退无主', audit: false, push: false, requirementsConfirmed: true },
+      { repo: dir, message: 'owner 退无主', audit: false, push: false },
       { workspaceRoot: tmpdir() }, Config(), null, mj, { agent: { id: 'session-not-live' } },
     );
     assert.equal(r.async, true, '带 owner 失败后必须退无主重试并拿到 job，而不是静默同步');
@@ -191,7 +191,7 @@ test('job 注册：两步都失败 → 同步降级并把原因带回结果（�
   try {
     const r = await callTool(
       'git_commit_push',
-      { repo: dir, message: '两步都失败', audit: false, push: false, requirementsConfirmed: true },
+      { repo: dir, message: '两步都失败', audit: false, push: false },
       { workspaceRoot: tmpdir() }, Config(), null, mj, { agent: { id: 'session-x' } },
     );
     assert.equal(r.async, false);

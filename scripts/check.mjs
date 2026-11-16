@@ -124,80 +124,56 @@ try {
   console.error(`✗ 拼接产物作用域检查失败：${e.message}`);
 }
 
-// ── 层边界门禁（2026-10-24）────────────────────────────────────────────
-// 背景：审计引擎与提交推送**决定不拆成两个 npm 包**（拆包的持续成本——双包版本同步、
-//   固定发布顺序、依赖范围——换不到真实收益：外部使用者要的是「提交前拦截」这个整体，
-//   而「脱离 DSH 跑审计」已由 cli.mjs 的独立 CLI 覆盖）。
-//   但不拆包不等于放弃边界：审计层对 git 层是**实测零依赖**，这个事实一旦被顺手 import
-//   侵蚀就再也回不来（历史包袱太重 = 不可逆）。所以把它钉成门禁。
-// 不变量：
-//   ① 审计层任何文件都不得 import git/npm/commit-push 层（方向唯一：git → audit）；
-//   ② 反向接缝数量有预算上限——允许存在（提交门禁必须调审计），但要能看见它在膨胀。
-// lint-adapter（外部 linter 委托层）纳入审计层口径：编排层（audit）直接依赖它 ⇒ 它属于审计子图，
-//   同样不得伸手 git 层（委托层只读项目文件 + 跑外部二进制，不需要凭据/git）。
-const AUDIT_DIRS = new Set(['ast', 'audit', 'audit-rules', 'checks', 'exempt', 'rule', 'score', 'lint-adapter']);
-const GIT_DIRS = new Set(['git', 'npm']);
-const GIT_TOP = new Set(['commit-push.js']);
-const AUDIT_TOP = new Set(['audit-defaults.js', 'skip-dirs.js']);
-/**
- * 反向接缝预算：实测 **5 处**；上调需写明理由。
- *
- * 2026-11-13 从 7 降到 5：提交前预处理解耦后，`lib/commit-push.js` 不再 import `audit/index.js` 与
- * `score/index.js`（改调外部引擎子进程），只剩 `exempt/index.js` 这一条（示例目录豁免要用）。
- * 预算跟着实收紧，是为了让这个成果**被门禁钉住**——以后谁再往 git 侧加审计 import，5→6 就会红。
- */
-const SEAM_BUDGET = 5;
+// ── 解耦门禁：宿主里不许留审计实现 / 耦合面只允许三个中间层文件 ────────────────
+// 不变量（宿主 = dsh-git-push，实现 = 独立包）：
+//   ① 宿主 `lib/` 下不得出现审计实现目录：实现住在独立包里，宿主里再出现一份就是双真相，
+//      两份实现迟早判得不一样，而「哪份生效」取决于走了哪条分支——这几乎无法排查。
+//   ② 宿主对实现包的引用只能经由三个文件中转：
+//        lib/preprocess/providers.js        —— provider 声明与入口解析（唯一的「找包」处）
+//        lib/commit-push/pre-commit-engine.js —— 子进程跑实现（门禁契约）
+//        lib/app/preprocess-client.js        —— 进程内调实现公开面（工具/HTTP）
+//      别处直接 import 包名 = 绕过 provider 抽象，换/加实现时那处会悄悄指向旧包。
+const FORBIDDEN_IMPL_DIRS = new Set(['ast', 'audit', 'audit-rules', 'checks', 'exempt', 'rule', 'score', 'lint-adapter', 'link-check']);
+const IMPL_PACKAGE = 'audit-sluice';
+/** 允许直接引用实现包的文件（相对仓库根）。 */
+const COUPLING_FILES = new Set([
+  'lib/preprocess/providers.js',
+  'lib/commit-push/pre-commit-engine.js',
+  'lib/app/preprocess-client.js',
+]);
 
-const layerOf = (rel) => {
-  const top = rel.split('/')[0];
-  if (rel.includes('/') && AUDIT_DIRS.has(top)) return 'AUDIT';
-  if (rel.includes('/') && GIT_DIRS.has(top)) return 'GIT';
-  if (!rel.includes('/') && GIT_TOP.has(rel)) return 'GIT';
-  if (!rel.includes('/') && AUDIT_TOP.has(rel)) return 'AUDIT';
-  return 'OTHER';
-};
-
-let boundaryViolations = 0;
-const seams = [];
+const strayImplementations = [];
 for (const f of files) {
   const rel = f.replace(ROOT + '/', '');
   if (!rel.startsWith('lib/')) continue;
-  const inner = rel.slice('lib/'.length);
-  if (layerOf(inner) !== 'AUDIT') continue;
-  let src = '';
-  try { src = readFileSync(f, 'utf8'); } catch { continue; }
-  for (const m of src.matchAll(/from\s+['"](\.[^'"]+)['"]/g)) {
-    const target = join(dirname(f), m[1]).replace(ROOT + '/lib/', '');
-    if (layerOf(target) === 'GIT') {
-      boundaryViolations++;
-      console.error(`✗ 层边界违规：审计层 lib/${inner} import 了 git 层 ${m[1]}（审计引擎解耦）`);
-    }
-  }
+  const top = rel.slice('lib/'.length).split('/')[0];
+  if (rel.includes('/') && FORBIDDEN_IMPL_DIRS.has(top)) strayImplementations.push(rel);
 }
-// 反向接缝统计（允许，但要可见）
+if (strayImplementations.length) {
+  fail += strayImplementations.length;
+  console.error(`✗ 解耦违规：宿主 lib/ 下又出现审计实现目录（实现归独立包）：${strayImplementations.join(', ')}`);
+} else {
+  console.log('✔ 解耦：宿主 lib/ 下无审计实现目录（实现归独立包）');
+}
+
+const couplingHits = [];
 for (const f of files) {
   const rel = f.replace(ROOT + '/', '');
   if (!rel.startsWith('lib/')) continue;
-  const inner = rel.slice('lib/'.length);
-  if (layerOf(inner) !== 'GIT') continue;
+  if (COUPLING_FILES.has(rel)) continue;
   let src = '';
   try { src = readFileSync(f, 'utf8'); } catch { continue; }
-  for (const m of src.matchAll(/from\s+['"](\.[^'"]+)['"]/g)) {
-    const target = join(dirname(f), m[1]).replace(ROOT + '/lib/', '');
-    if (layerOf(target) === 'AUDIT') seams.push(`${inner} → ${target}`);
+  // 只看模块说明符（注释里提到包名是说明性文字，不构成耦合）
+  const specifier = new RegExp(`(?:from\\s+|import\\s*\\(\\s*)['\"](?:[^'\"]*/)?${IMPL_PACKAGE}(?:/[^'\"]*)?['\"]`, 'g');
+  for (const m of src.matchAll(specifier)) {
+    couplingHits.push(`${rel} → ${m[0].trim()}`);
   }
 }
-if (boundaryViolations) {
-  fail += boundaryViolations;
-  console.error(`✗ 层边界：${boundaryViolations} 处违规——审计层不得依赖 git/npm/commit-push`);
+if (couplingHits.length) {
+  fail += couplingHits.length;
+  console.error(`✗ 耦合面违规：实现包只能经由 ${[...COUPLING_FILES].join(' / ')} 引用，发现：${couplingHits.join('；')}`);
 } else {
-  console.log(`✔ 层边界：审计层对 git 层 0 依赖（解耦成立）`);
-}
-if (seams.length > SEAM_BUDGET) {
-  fail++;
-  console.error(`✗ 反向接缝 ${seams.length} 处 > 预算 ${SEAM_BUDGET}：提交门禁调审计是必需的，但膨胀说明边界在糊掉——要么收敛，要么改预算并写明理由`);
-} else {
-  console.log(`✔ 反向接缝（git → audit，唯一耦合面）：${seams.length}/${SEAM_BUDGET} 处`);
+  console.log(`✔ 耦合面：实现包只经 ${COUPLING_FILES.size} 个中间层文件引用（无旁路）`);
 }
 
 console.log(`\n${files.length - fail}/${files.length} 文件语法通过`);

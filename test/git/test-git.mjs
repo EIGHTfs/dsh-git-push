@@ -355,42 +355,26 @@ test('readmeCheckHint：有/无 README 区分', () => {
 /* ───────────────────────── commitAndPush ───────────────────────── */
 
 test('commitAndPush：非 git 仓库拦截', async () => {
-  const r = await commitAndPush({ repoPath: join(tmp, 'not-repo'), message: 'x', requirementsConfirmed: true });
+  const r = await commitAndPush({ repoPath: join(tmp, 'not-repo'), message: 'x' });
   assert.equal(r.ok, false);
   assert.match(r.error, /非 git 仓库/);
 });
 
 test('commitAndPush：缺 message 拦截', async () => {
-  const r = await commitAndPush({ repoPath: repo, message: '', requirementsConfirmed: true });
+  const r = await commitAndPush({ repoPath: repo, message: '' });
   assert.equal(r.ok, false);
   assert.match(r.error, /message 必填/);
 });
 
-// D13 开发者要求门禁（commitPushPreflight：内置 user-requirements.json 存在时未核对拦截）
-test('commitAndPush：开发者要求未核对 → 拦截（D13）', async () => {
-  const r = await commitAndPush({ repoPath: repo, message: 'feat: 未核对要求', push: false });
-  assert.equal(r.ok, false);
-  assert.equal(r.blocked, true);
-  assert.equal(r.code, 'USER_REQUIREMENTS');
-  assert.match(r.error, /开发者特殊要求未核对/);
-  assert.ok(r.requirements && r.requirements.found, '应带要求清单');
-  assert.ok(r.requirements.items.length > 0, '清单应有条目');
-});
-
-test('commitAndPush：开发者要求核对 → 放行（D13）', async () => {
-  const r = await commitAndPush({ repoPath: repo, message: 'feat: 已核对要求', push: false, requirementsConfirmed: true });
-  assert.equal(r.ok, true, 'requirementsConfirmed:true 应放行');
-});
-
 test('commitAndPush：dryRun 不写', async () => {
-  const r = await commitAndPush({ repoPath: repo, message: 'dry', dryRun: true, requirementsConfirmed: true });
+  const r = await commitAndPush({ repoPath: repo, message: 'dry', dryRun: true });
   assert.equal(r.ok, true);
   assert.equal(r.dryRun, true);
 });
 
 test('commitAndPush：真实 commit（不 push）', async () => {
   writeFileSync(join(repo, 'new.js'), 'const n = 1;\n');
-  const r = await commitAndPush({ repoPath: repo, message: 'add new.js', push: false, requirementsConfirmed: true });
+  const r = await commitAndPush({ repoPath: repo, message: 'add new.js', push: false });
   assert.equal(r.ok, true);
   assert.equal(r.pushed, false);
   assert.match(r.commitSha, /^[0-9a-f]{40}$/);
@@ -398,7 +382,7 @@ test('commitAndPush：真实 commit（不 push）', async () => {
 });
 
 test('commitAndPush：无变更跳过（非错误，成功跳过）', async () => {
-  const r = await commitAndPush({ repoPath: repo, message: 'nothing', push: false, requirementsConfirmed: true });
+  const r = await commitAndPush({ repoPath: repo, message: 'nothing', push: false });
   assert.equal(r.ok, true, '无变更应为成功跳过而非错误');
   assert.equal(r.committed, false);
   assert.match(r.message, /无变更/);
@@ -408,7 +392,7 @@ test('commitAndPush：无变更跳过（非错误，成功跳过）', async () =
 
 test('commitAndPush：敏感文件自动入 .gitignore 再提交', async () => {
   writeFileSync(join(repo, '.env'), 'SECRET=1\n');
-  const r = await commitAndPush({ repoPath: repo, message: 'add .env', push: false, requirementsConfirmed: true });
+  const r = await commitAndPush({ repoPath: repo, message: 'add .env', push: false });
   assert.equal(r.ok, true);
   assert.ok(r.steps.includes('敏感文件 .gitignore'));
   assert.ok(existsSync(join(repo, '.gitignore')));
@@ -493,7 +477,7 @@ test('commitAndPush：推送成功后 remoteRef + aux remote + autoTag（dsh- �
     // 推送后「远端 sha 硬校验」：远端分支必须指向本次推送的 sha（假成功防线）
     { match: (u, m) => m === 'GET' && u.includes('/branches/main'), status: 200, body: { commit: { sha: commitSha15 } } },
   ]);
-  const r = await commitAndPush({ repoPath: repoD15, message: 'add b.js', push: true, token: 'ghp_d15', requirementsConfirmed: true });
+  const r = await commitAndPush({ repoPath: repoD15, message: 'add b.js', push: true, token: 'ghp_d15' });
   assert.equal(r.ok, true, `应推送成功（实际: ${JSON.stringify(r)?.slice(0, 400)}）`);
   assert.equal(r.pushed, true);
   // ① remote-tracking ref 已更新
@@ -765,7 +749,7 @@ test('commitAndPush：push=true 但网络失败 → 明确 error（API+SSH 都�
   runGit(['remote', 'add', 'origin', 'octo/repo3'], { cwd: repo3 });
   writeFileSync(join(repo3, 'f.js'), 'const f = 1;\n');
   mockFetch([{ match: () => true, status: 401, body: { message: 'Bad credentials' } }]);
-  const r = await commitAndPush({ repoPath: repo3, message: 'push attempt', push: true, token: 'ghp_bad', requirementsConfirmed: true });
+  const r = await commitAndPush({ repoPath: repo3, message: 'push attempt', push: true, token: 'ghp_bad' });
   assert.equal(r.ok, false);
   assert.match(r.error, /推送失败/);
 });
@@ -779,7 +763,7 @@ test('commitAndPush：私有库豁免（private 不写 .gitignore 只扫描报�
   runGit(['remote', 'add', 'origin', 'octo/repo4'], { cwd: repo4 });
   writeFileSync(join(repo4, '.env'), 'SECRET=1\n');
   mockFetch([{ match: (u, m) => m === 'GET' && u.endsWith('/repos/octo/repo4'), status: 200, body: { private: true } }]);
-  const r = await commitAndPush({ repoPath: repo4, message: 'private push', push: false, token: 'ghp_priv', requirementsConfirmed: true });
+  const r = await commitAndPush({ repoPath: repo4, message: 'private push', push: false, token: 'ghp_priv' });
   assert.equal(r.ok, true);
   assert.ok(r.steps.some((s) => s.includes('private-exempt')), `steps 应含 private-exempt（实际: ${r.steps.join(',')}）`);
   assert.ok(!existsSync(join(repo4, '.gitignore')), 'private 仓库不应写 .gitignore');
@@ -816,7 +800,7 @@ test('commitWithAudit：force 参数透传到 commitAndPush（返回含 force �
   // 非 git 仓库走不到 push，无法观察 force；改验证 commitWithAudit 不再吞掉 force（签名存在 + push=false 时步骤正常）
   const root2 = join(tmpdir(), `gp-cwa-force-${Date.now()}`);
   mkdirSync(root2);
-  const r = await commitWithAudit({ repoPath: root2, message: 'force test', push: false, dryRun: true, requirementsConfirmed: true, force: true });
+  const r = await commitWithAudit({ repoPath: root2, message: 'force test', push: false, dryRun: true, force: true });
   assert.equal(r.ok, false, '非 git 仓库应 ok:false（force 不改变预检语义）');
   assert.match(r.error || '', /非 git 仓库/, `error 应为非 git 仓库（实际: ${r.error}）`);
   rmSync(root2, { recursive: true, force: true });
@@ -864,7 +848,7 @@ test('commitAndPush：paths 只暂存指定文件（他人改动保持未暂存�
     writeFileSync(join(dir, 'mine.js'), 'const a = 1;\nconst a2 = 11;\n');
     writeFileSync(join(dir, 'theirs.js'), 'const b = 2;\nconst b2 = 22;\n');
     // paths 只指 mine.js → 只暂存 mine；theirs.js 保持未暂存（add -A 会把它也扫入）
-    const r = await commitAndPush({ repoPath: dir, message: 'paths 精确提交', push: false, requirementsConfirmed: true, paths: 'mine.js' });
+    const r = await commitAndPush({ repoPath: dir, message: 'paths 精确提交', push: false, paths: 'mine.js' });
     assert.equal(r.ok, true, r.error || '');
     const staged = execSync('git status --porcelain', { cwd: dir, encoding: 'utf8' });
     assert.ok(!staged.includes('mine.js'), 'mine.js 应已提交（status 不再出现）');

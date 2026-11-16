@@ -19,7 +19,7 @@ generatedBy: deepseek-official/deepseek-v4-flash · EIGHTfs 2026-10-02
 | 凭据托管 | GitHub token 与 SSH 公钥统一存在插件配置目录，推送时自动注入，无需手动配 git 凭据 |
 | 推送通道 | `ssh`（默认，推本地 HEAD，远端 sha 与本地一致）/ `api`（Git Data API 重建提交）/ `auto`（有私钥走 ssh，否则 api） |
 | 后台任务 | commit+push 注册为宿主官方后台 job，工具立即返回 `jobId`；宿主无 job 控制器时同步执行保底 |
-| 门禁开关 | `requirementsConfirmed`（开发者要求核对）、`pushConfirmed`（推送门禁放行）、`force`（强推）、`dryRun`（只预演） |
+| 门禁开关 | `pushConfirmed`（推送门禁放行）、`force`（强推）、`dryRun`（只预演） |
 | 任务完成自动推送 | 开关开启后，AI 回合结束的回复里含指定完成文案，自动对目标仓库走同一套门禁提交推送 |
 | 私有库豁免 | 远端可见性 = private 时，审计只报告不拦截；敏感文件只扫描报告、不改写忽略配置 |
 
@@ -32,11 +32,10 @@ generatedBy: deepseek-official/deepseek-v4-flash · EIGHTfs 2026-10-02
 | `repo` | string | ✅ | — | 本地 git 仓库根目录路径 |
 | `message` | string | ✅ | — | commit message；空/纯空白直接拒绝 |
 | `push` | boolean | — | `true` | `false` = 只提交不推送 |
-| `audit` | boolean | — | 取配置 `auditEnabled`（默认关） | `true` 强制审计、`false` 跳过本次审计 |
+| `audit` | boolean | — | 取配置 `preCommit.enabled`（默认关） | `true` 强制过门禁、`false` 跳过本次 |
 | `dryRun` | boolean | — | `false` | 只预演：跑门禁与流程、不写盘、不 commit、不 push |
 | `force` | boolean | — | `false` | 强推覆盖远端历史（SSH 用 `--force`；API 通道重建提交、不挂旧 parent） |
 | `ignorePatterns` | string | — | 空 | 追加进 `.gitignore` 的自定义忽略项（逗号/换行分隔，幂等） |
-| `requirementsConfirmed` | boolean | — | `false` | 开发者要求清单已逐条核对达标才置 `true`，否则被拦 |
 | `pushConfirmed` | boolean | — | `false` | 推送门禁（配置 `pushGate`）开启时，推必须显式放行 |
 | `paths` | string | — | 空 | 精确 add 路径（逗号分隔，相对仓库）；空 = 全量暂存 |
 
@@ -50,7 +49,7 @@ generatedBy: deepseek-official/deepseek-v4-flash · EIGHTfs 2026-10-02
 | `jobFallback` | `true` = 宿主后台 job 不可用，已自动降级为同步执行（结果就在 `result`） |
 | `audit` | 审计摘要（`summary` 各级数量 / `quality` 评分 / `blocked` 拦截明细 / `privateExempt` 私有库豁免标记）；未开审计时为 `null` |
 | `hint` | 查询提示文案 |
-| `error` / `blocked` / `code` | 失败或拦截说明；`code` 取值 `USER_REQUIREMENTS`、`PUSH_GATE` |
+| `error` / `blocked` / `code` | 失败或拦截说明；`code` 取值如 `PUSH_GATE` |
 
 ### 返回字段（最终结果 `result`——后台 job 完成输出，或同步执行直接返回）
 
@@ -74,7 +73,7 @@ generatedBy: deepseek-official/deepseek-v4-flash · EIGHTfs 2026-10-02
 **① 标准提交推送**（要求清单存在时必须带核对标记）
 
 ```js
-git_commit_push({ repo: "<仓库路径>", message: "feat: 新增 XX 能力", requirementsConfirmed: true })
+git_commit_push({ repo: "<仓库路径>", message: "feat: 新增 XX 能力" })
 ```
 
 预期：`{ ok:true, async:true, jobId:"git-push-1", audit:{ summary:{...}, quality:{...} } }`；job 完成后输出 `{ ok:true, commitSha:"a1b2c3d…", pushed:true, push:{ method:"ssh", branch:"master" }, indexUpdated:true }`。
@@ -82,12 +81,12 @@ git_commit_push({ repo: "<仓库路径>", message: "feat: 新增 XX 能力", req
 **② 只提交不推送 / 先预演 / 只提交指定文件**
 
 ```js
-git_commit_push({ repo: "<仓库路径>", message: "docs: 更新说明", push: false, requirementsConfirmed: true })
+git_commit_push({ repo: "<仓库路径>", message: "docs: 更新说明", push: false })
 git_commit_push({ repo: "<仓库路径>", message: "feat: 试跑", dryRun: true })
 // 零改动也照样调用：没有新提交时同样返回 ok:true（committed:false），
 //   而「本地领先远端」的已提交内容会照常推上去 —— 不要因为「没东西可提交」改去手敲 git
-git_commit_push({ repo: "<仓库路径>", message: "（零改动时用不到）", requirementsConfirmed: true })
-git_commit_push({ repo: "<仓库路径>", message: "fix: 修正解析", paths: "src/parser.js,README.md", requirementsConfirmed: true })
+git_commit_push({ repo: "<仓库路径>", message: "（零改动时用不到）" })
+git_commit_push({ repo: "<仓库路径>", message: "fix: 修正解析", paths: "src/parser.js,README.md" })
 ```
 
 预演预期：`{ ok:true, async:true, jobId:"git-push-2" }`，完成后 `{ ok:true, dryRun:true, steps:["预检","commit","push"] }`（无任何写入）。
@@ -95,15 +94,15 @@ git_commit_push({ repo: "<仓库路径>", message: "fix: 修正解析", paths: "
 **③ 推送门禁已开启时显式放行 / 强推**
 
 ```js
-git_commit_push({ repo: "<仓库路径>", message: "chore: 同步", requirementsConfirmed: true, pushConfirmed: true })
-git_commit_push({ repo: "<仓库路径>", message: "chore: 重写历史后同步", force: true, requirementsConfirmed: true, pushConfirmed: true })
+git_commit_push({ repo: "<仓库路径>", message: "chore: 同步", pushConfirmed: true })
+git_commit_push({ repo: "<仓库路径>", message: "chore: 重写历史后同步", force: true, pushConfirmed: true })
 ```
 
 **④ 被拦后的典型返回**
 
 ```json
 { "ok": false, "blocked": true, "error": "审计拦截：2 个 blocker → src/a.js:12（凭据硬编码）；docs/b.md:3（沟通措辞残留）" }
-{ "ok": false, "blocked": true, "code": "USER_REQUIREMENTS", "error": "开发者特殊要求未核对：…" }
+{ "ok": false, "blocked": true, "code": "PUSH_GATE", "error": "推送门禁已开启，需 pushConfirmed:true 后重试" }
 { "ok": false, "blocked": true, "code": "PUSH_GATE", "commitSha": "a1b2c3d…", "push": { "pushed": false, "reason": "push-gate" } }
 ```
 
@@ -112,7 +111,6 @@ git_commit_push({ repo: "<仓库路径>", message: "chore: 重写历史后同步
 | 现象 | 原因 | 处理 |
 |---|---|---|
 | `ok:false, blocked:true`（审计拦截） | 审计命中 blocker（凭据硬编码、语法错误、沟通措辞等） | 先按 `audit.blocked` 列表修文件，再重调；`public`/`unknown` 可见性一律保守拦截 |
-| 返回 `code:"USER_REQUIREMENTS"` | 存在开发者要求清单，但未带 `requirementsConfirmed:true` | 逐条核对达标后置 `true` 重调 |
 | 返回 `code:"PUSH_GATE"` | 配置 `pushGate` 已开启，未带 `pushConfirmed:true` | 确认要推时带 `pushConfirmed:true` 重调（**可沿用本次 commit，不会重复提交**） |
 | `非 git 仓库` / `commit message 必填` | `repo` 下无 `.git`，或 `message` 为空 | 先确认仓库路径、补 message |
 | `HEAD 处于 detached 状态` | 当前在游离 HEAD 上 | 先 `git checkout <分支>` 再提交 |
@@ -168,7 +166,7 @@ git_commit_push({ repo: "<仓库路径>", message: "chore: 重写历史后同步
   "message": "fix(audit): 修 secret-email 把 @2x 资源名当邮箱的误报",
   "messageItems": [
     { "what": "pattern 增加资源后缀负向前瞻", "type": "fix", "scope": "audit-rules",
-      "why": "视网膜文件名被当成 x@y.tld", "verify": "双向自测 6 例通过" },
+      "why": "视网膜文件名被当成邮箱地址", "verify": "双向自测 6 例通过" },
     "门禁四项绿；全量测试 0 失败"
   ]
 }

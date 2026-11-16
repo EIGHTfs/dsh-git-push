@@ -15,7 +15,7 @@
 | 装载声明 | `package.json` 的 `dsh.bundle.patch` → `./cordis.patch.yml`；`dsh.client` 声明 web 端注入；`dsh.skills` 列出随包发布的 skill |
 | 配置目录 | `<DSH_HOME>/git-push/`（凭据与状态文件都落在这里） |
 
-## 二、工具（21 个，宿主可见公开面）
+## 二、工具（20 个，宿主可见公开面）
 
 | 工具 | CLI 名 | 用途 |
 |---|---|---|
@@ -75,18 +75,25 @@ settings-get  settings-set
 - 请求体大小有上限（超限拒绝）；
 - 返回统一为 `{ ok, … }` 形状；错误带 `code` 与 `message`。
 
-## 四、设置键（18 个，`settings-set` 白名单）
+## 四、设置键（14 个，`settings-set` 白名单）
+
+真源 = `lib/app/handlers/settings.js` 的 `ALLOWED_SETTING_KEYS`（引用见下），本文只列分类：
 
 ```
-审计：auditEnabled  auditScanScope  maxScanFiles  weightOverrides  auditRuleOrder  auditDisabledSlots
-克隆：maxCloneFileMB  cloneConcurrency
-推送：pushMethod  pushGate
-凭据：githubToken  sshPub
-注入：injectRequirements  injectSystemPrompt
+预处理：preCommitEnabled        （前端扁平键；落盘为 config.json 的 preCommit.enabled）
+克隆：  maxCloneFileMB  cloneConcurrency
+推送：  pushMethod  pushGate
+凭据：  githubToken  sshPub  npmToken  npmRegistry
+注入：  injectSystemPrompt
 自动推送：autoPushEnabled  autoPushTriggerText  autoPushScope  autoPushMessage
 ```
 
-**不变量**：只有白名单内的键可写（其余拒绝）；设置持久化走宿主 HTTP（反代访问下 client 侧 scope 快照恒为 memory，不能用它判可用/可写）。
+**边界**：「怎么审」（扫描范围 / 权重 / 规则包 / 文件数上限）不是本插件的设置项 ——
+它们归预处理实现（`audit-sluice`）自己的配置文件。宿主只知道「提交前预处理开不开」。
+
+**不变量**：只有白名单内的键可写（其余拒绝）；`preCommitEnabled` 写盘走键级合并
+（`writePreCommitEnabled`），不得覆盖同块的 `command` / `args` / `timeoutMs`；
+设置持久化走宿主 HTTP（反代访问下 client 侧 scope 快照恒为 memory，不能用它判可用/可写）。
 
 **例外：`preCommit` 不在上述白名单里**，而是 `config.json` 直读（键名 `preCommit`）。
 原因：它属于「换引擎的部署级开关」，不是 UI 可编辑项。解析顺序 **`cfg.preCommit` → `config.json` → 内置默认**——
@@ -140,14 +147,17 @@ settings-get  settings-set
 
 **不变量**：写只走收口函数（账号状态 `writeAccountStatusFromResult` / `updateAccountStatusQuota`；索引走索引维护模块）；落盘走**原子写**；「是否已配置凭据」一律查凭据真源，不看快照。
 
-## 六、审计规则体系
+## 六、审计规则体系（归属：独立包）
 
-- **23 个槽位 / 169 条规则**（默认实际加载 165 条：`i18n` 槽位顶层 `disabled: true` 默认关闭占 3 条，`template` 槽位需显式开启占 1 条），声明在 `lib/audit-rules/audit-rules-<槽位>.yml`；判定在 `lib/ast/*`；产出 finding 在 `lib/checks/*`；调度汇总在 `lib/audit/*`。
-- 作用域字段：`exts` / `include_paths`（路径白名单，按文件名或路径前后缀）/ `exclude_paths` / `file_patterns`（**内容**初筛）。
-- **规则不自带项目契约**：`kind: scope-collision`（拼接产物作用域撞名）只声明「查不查」；命名前缀、顶层零声明、产物文件清单一律从被审项目自己的 `package.json` → `dshScopeCheck` 读（`lib/audit/scope-policy.js`）。规则包跨仓库共享，把 `dshgp_` 写进 yml 会让所有被审项目收到「缺少 dshgp_ 前缀」。
-- 分级：`blocker` / `warning` / `info`；评分 10 维度加权得 0-100 + 等级。**动态权重**：`维度得分 = max(0.1, 10 − k × ln(1 + 命中次数))`、`动态权重 = 命中文件数 ÷ 该维度可作用文件数`（按文件去重；分母由编排层 `computeDimFileCounts` 按规则 `exts` 声明统计——未声明 `exts` 的规则按代码文件 CODE_EXTS 计，缺统计时回退扫描文件总数）、`实际权重 = 设定权重 × 动态权重`、`总分 = Σ(维度得分 × 实际权重) ÷ Σ实际权重 × 10`；口径：无命中的维度不缩放（用设定权重）、分母用 Σ实际权重、文档维度的命中文件数取 `docsScore.files ÷ 总文件数`（无文档文件信息时回退不缩放）、不设下限；`files` 未提供时全部不缩放（静态口径）。
-- 豁免标记 9 个（`dsh-skip-*`），判定入口 `lib/exempt/index.js`；finding 的 `exemptHint` 必须与实际生效的标记一致。
-- 面向使用者的总览见 `docs/功能-审计引擎.md`；规则字段速查见 `docs/功能-审计规则体系.md`；豁免与规则字段全录见 `docs/DETAILS-EXEMPT-AND-RULES.md`。
+审计的规则、引擎、评分、豁免**不在本仓库**：它们随审计实现一起迁到独立包 `audit-sluice`。
+本仓库只保留两件与规则相关的宿主侧行为：
+
+- **提交门禁**：把「仓库 / 可见性 / 本次临时豁免」交给预处理实现，拿回 `blocked` 结论（契约见第十章）；
+- **HTTP / 工具转发**：`/api/preprocess/*` 与 `code_audit` / `io_scan` / `link_check` / `scope_check` / `exempt`
+  都经 `lib/app/preprocess-client.js` 调包的公开面，宿主不持有实现副本。
+
+规则条数、槽位、评分公式、豁免标记这些「实现内的事实」一律以包自己的文档为准（不要在本仓库重复写死，
+写死就必然与包的发版漂移）。
 
 ## 七、文档产物（生成物，勿手改）
 
@@ -214,64 +224,33 @@ exit 2           : 执行失败
 - 可选参数**缺省不传**等价于「引擎用自己的默认值」，不得退化成 `0`（0 = 不限，语义相反）；
 - 引擎失败时 `blocked:false`（工具侧显示「未完成：<原因>」而不是「被推送门禁拦截」），但 `ok:false` 保证不提交。
 
-## 十一、审计 UI 契约
+## 十一、UI 归属
 
-> 审计 Tab 已于 2.20.15 移出构建（分片归档在 `lib/client-parts/audit/`）。本契约用于**将来接回时**按可插拔方式实现，
-> 使 UI 不绑定任何一个引擎的实现细节。本阶段**只定义契约，不实施 UI**。
+审计 UI 不属于本插件：审计 Tab 已移出构建，前端分片目录也随审计能力一起迁出。
+本插件的设置页只有「账号信息」与「设置」两个页签；审计的实现与配置住在独立包里，
+UI 侧将来若要接回，按「谁的实现谁提供 UI」处理，不在本仓库定义契约。
 
-```
-lib/audit-ui-sdk/
-├── contract.js   契约实现（版本号 + 键常量 + defineAuditPanel 校验，构建期用）
-└── index.js      唯一导出面（实现只能从这里 import）
-```
+## 十二、命令行入口（本仓库两个 bin）
 
-**唯一导出面 = 恰好 6 个符号**（多一个都会被 `test-audit-ui-contract.mjs` 判红）：
+审计 CLI 随审计实现一起独立成包（`audit-sluice` 自己的 bin），**本仓库只提供两个入口**。
+真源 = `lib/cli/shared.mjs` 的 `CLI_ENTRIES` + 各入口的 HELP。
 
-```
-AUDIT_UI_CONTRACT_VERSION    契约版本（破坏性改动 +1）
-AUDIT_PANEL_ID_PATTERN       meta.id 的合法形态
-AUDIT_PANEL_DATA_KEYS        data 组键：summary / quality / findings / ruleSlots
-AUDIT_PANEL_ACTION_KEYS      actions 组键：reload / toggleRule / editWeight / toggleDisabled
-AUDIT_PANEL_STATE_KEYS       state 组键：loading / error / auditEnabled / auditScanScope
-defineAuditPanel             校验 + 深冻结
-```
-
-**契约形状**：`meta:{id,name,contractVersion}`（`id` 形如 `/^[a-z][a-z0-9-]{1,31}$/`）+
-`Panel:(props)=>vnode` + 可选 `styles?:string`、`setup?:(ctx)=>void|(()=>void)`。
-
-**props**：`data:{summary,quality,findings,ruleSlots}`、`actions:{reload,toggleRule,editWeight,toggleDisabled}`、
-`state:{loading,error,auditEnabled,auditScanScope}`。
-
-**字段语义**：`data` 里的字段与**引擎返回同名同构，不做二次改名或裁剪**（如 `quality` 是引擎返回的整个对象，不是只留 `{score,level}`）——契约负责说清结构，不替引擎裁剪；否则引擎加字段就要动契约版本。
-
-**三条硬约束**：① 实现只能从 `lib/audit-ui-sdk` 唯一入口 import；② 校验只覆盖构建期一定能判的部分（形状与版本），
-不猜作者意图；③ 契约破坏性改动 `contractVersion +1`，构建期拒绝按旧契约写的实现。
-
-## 十二、命令行入口（三侧拆分）
-
-> 与「审计引擎解耦」同构：审计侧不再与 git 侧共用入口。三个 bin，各自只注册本侧命令。
-
-| CLI | bin | 入口 | 命令 |
+| CLI | bin | 入口 | 定位 |
 |---|---|---|---|
-| git 侧 | `git-sluice` | `cli.mjs` | `scan` `commit` `clone` `clone-preview` `remote-create` `rename` `set-visibility` `identity-rewrite` `account-check` `cred-env` `gen-ssh-key` `git` `api` `repos` `index` `npm-publish` `unpublish` |
-| 审计侧 | `audit-sluice` | `cli-audit.mjs` | `audit` `ruleset` `file-io` `link-check` `scope-check` `functions` `tree-doc` |
-| 工具链 | `tool-sluice` | `cli-tool.mjs` | `module-splitter` `yaml-template` `readme-template` `self-check` |
+| git 侧 | `git-sluice` | `cli.mjs` | 提交/推送/克隆/账号/仓库扫描，外加通用 `preprocess <action>` 转发 |
+| 工具链 | `tool-sluice` | `cli-tool.mjs` | 模板打印 / 自检等工具链命令 |
 
-三个入口都有 `version` / `help`；`package.json` 的 `bin` 有三条，`files` 含两个新入口（否则包内缺文件）。
+两个入口都有 `version` / `help`。`package.json` 的 `bin` 两条，`files` 含两个入口。
+各入口命令清单**不在这里重复**：`<bin> help` 是唯一权威（每行写的参数就是该命令真实接受的写法）。
 
-**跨侧命令（重要）**：在某一侧敲别侧的命令 → **明确报错并给出可照抄的替代命令**，`exit 1`，**不做静默转发**：
+**跨侧命令（重要）**：敲别侧命令 → **明确报错并给出可照抄的替代命令**，**不做静默转发**。
+`git` 侧的未知命令仍透传给 git（`git-sluice status` = `git status`）；`tool` 侧必须报错（不得悄悄执行 git 命令）。
 
 ```
 $ git-sluice audit .
-✗ "audit" 属于 audit-sluice，不在 git-sluice 里。
-  请改用：audit-sluice audit .
-  三入口：git-sluice / audit-sluice / tool-sluice；各自 help 看本侧全部命令
+命令 "audit" 已随能力迁到独立包 audit-sluice（宿主不再内置）。
+请改用：git-sluice preprocess audit .（等价：audit-sluice audit …）
 ```
-
-**不变量**：
-- 公共层 `lib/cli/shared.mjs` 是三个入口的唯一实现来源（参数解析、结果打印、HELP 渲染、版本、跨侧指引），**不得复制成三份**；
-- 每个 HELP 只列本侧命令，并附「其它 CLI」小节；`HELP ↔ KNOWN_FLAGS ↔ 命令集`三者一致由 `test/test-cli-split.mjs` 与 `tool-sluice self-check` 双门禁；
-- **副作用型 import 按侧归属**：`lib/app/host-doc-checks.js`（文档漂移检查器）与 `lib/rule/compilers.js`（规则编译）只在 `cli-audit.mjs` 顶部——它们删了不报错、只会让功能**静默失效**，故有行为级测试兜底（漂移 fixture 必须报 finding、`ruleset` 编译数必须 > 50）。
 
 ## 十三、测试结构
 
@@ -418,21 +397,21 @@ test/
 | 插件装载 | `lib/app/apply.js` | `listTools(cfg)` 注册工具 |
 | CLI 参数校验 | `lib/cli/shared.mjs` | `parseRegistryArgs(rest, resolveEntryParams(entry, cfg))` |
 
-### 14.2 可用性判据（**可用性 ≠ auditEnabled**）
+### 14.2 可用性判据（**可用性 ≠ 开关**）
 
 ```js
 auditPreprocessAvailable(cfg = {}, hasBuiltinEngine) {
-  if (cfg?.preCommit?.command) return true;          // 配了自定义引擎 ⇒ 可用
-  return hasBuiltinEngine ?? existsSync(<pluginRoot>/scripts/audit-gate.mjs);  // 内置引擎文件是否存在
+  if (cfg?.preCommit?.command) return true;   // 显式配了引擎 ⇒ 参数就该在
+  return typeof hasBuiltinEngine === 'boolean' ? hasBuiltinEngine : resolveGateProvider().ok;
 }
 ```
 
-两个判据刻意都不看 `auditEnabled`：后者只是「**默认跑不跑**审计」，与「**能不能**跑」是两件事。
-用户关掉 `auditEnabled` 之后仍可能想临时传 `--audit` 跑一次，此时参数必须还在。
+判据看的是「**能不能**跑」（预处理实现的入口文件在不在），与「**默认跑不跑**」
+（`preCommit.enabled` 这个开关）是两件事：用户关掉开关之后仍可能想临时传 `--audit` 跑一次，
+此时参数必须还在。
 
-`hasBuiltinEngine` 第二参**只为测试注入**（生产不传 ⇒ 走真实文件存在性判断）；
-`resolveEntryParams` / `listTools` 都必须把它**透传下去**，否则「不可用态」根本测不出来
-（实测踩过：`listTools(cfg)` 不透传时，`listTools({}, false)` 仍返回 audit 参数）。
+`hasBuiltinEngine` 第二参**只为测试注入**（生产不传 ⇒ 走 `resolveGateProvider()` 的真实解析）；
+`resolveEntryParams` / `listTools` 都必须把它**透传下去**，否则「不可用态」根本测不出来。
 
 ### 14.3 未启用时的语义
 
@@ -467,7 +446,7 @@ auditPreprocessAvailable(cfg = {}, hasBuiltinEngine) {
 3. 在对应条目的 `params` 函数里条件拼接：`...(xxxAvailable(cfg, hasBuiltinEngine) ? XXX_PARAMS : [])`；
 4. 在 `cli.mjs` 的 `AUDIT_HELP_SNIPPETS` 旁边加 `XXX_HELP_SNIPPETS`，并在 `renderHelp` 里按同一判据剔除；
 5. 端到端测试三条：`listTools(cfg, false)` 无该参数 / 传该参数报未知参数 / 可用态三条齐全；
-6. 若该能力有开关（如 `auditEnabled`），**不要**用开关做可用性判据（见 14.2）。
+6. 若该能力有开关（如 `preCommit.enabled`），**不要**用开关做可用性判据（见 14.2）。
 
 ### 14.6 端到端验证（回归基线）
 
@@ -510,7 +489,7 @@ git 与共享端点（25 + 6 条）继续在 `/api/git-push/*`。
 {
   id: 'audit',
   params: [...],                          // 14.1：给工具签名贡献参数
-  enabled: (cfg, hasBuiltinEngine) => …,  // 14.2：可用性判据（≠ auditEnabled）
+  enabled: (cfg, hasBuiltinEngine) => …,  // 14.2：可用性判据（≠ 开关）
   renderResult: (ctx) => ({               // 本小节：结果文案
     error:     string | undefined,        // 拦截原因（放行时必须为 undefined）
     apiGuide:  string | undefined,        // 结果查询指引（可空）

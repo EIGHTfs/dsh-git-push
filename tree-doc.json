@@ -6,9 +6,8 @@
   "cordis.patch.yml": "DSH 插件组合 patch（loader 注入定义）",
   "docs": "开发文档",
   "docs/DETAILS-EXEMPT-AND-RULES.md": "细节补充：豁免注释与规则 yml 用法全录",
-  "lib": "核心实现（10 总入口 + 审计引擎 + git 执行层 + 规则编译层）",
+  "lib": "核心实现（插件装配 / git 执行层 / npm 与工具链）",
   "lib/ARCHITECTURE.md": "架构说明文档",
-  "lib/BUGFIX-NOTES-2026-09-14.md": "Bug 修复说明（diff 审计提速 / 凭据文件拦截三层根因）",
   "lib/app": "插件入口层（apply/HTTP 处理/工具调用分发/注入文本/默认扫描根）",
   "lib/app/apply.js": "插件装载入口（注册 schema/工具/HTTP/注入钩子）",
   "lib/app/constants.js": "插件名与设置命名空间常量",
@@ -18,13 +17,13 @@
   "lib/app/scan-root.js": "默认扫描根解析（配置优先→DSH 家根自动识别）",
   "lib/app/schema.js": "配置 schema（宿主导出缺失时兜底）",
   "lib/app/settings-bridge.js": "设置读写桥（host scope 共享；绕开 client isLoopback=memory 落盘陷阱）",
-  "lib/app/slash-commands.js": "用户输入框斜杠命令（目前只注册 /git-audit）",
+  "lib/app/slash-commands.js": "用户输入框斜杠命令（只剩 git 侧命令）",
   "lib/app/slot-stats.js": "规则槽位命中统计（模块级状态）",
-  "lib/app/tool-call.js": "工具调用分发（git_scan/commit_push/audit/status 等全部工具）",
+  "lib/app/tool-call.js": "工具调用分发（git_scan/commit_push/code_audit/status 等全部工具）",
   "lib/app/tools.js": "工具定义清单（名称/描述/参数 schema）",
   "lib/client": "客户端配置（DEFAULT_CONFIG + SETTINGS_SCHEMA 侧边栏设置项定义）",
   "lib/client/index.js": "侧边栏设置 UI 总入口（DEFAULT_CONFIG + SETTINGS_SCHEMA）",
-  "lib/commit-push.js": "审计提交总入口（commitWithAudit + runAudit 同步审计）",
+  "lib/commit-push.js": "提交总入口（提交前预处理门禁 runPreprocess + commit + push）",
   "lib/context": "上下文注入（给 AI 会话注入环境：目录映射/工具路径/skill 入口）",
   "lib/context/index.js": "上下文注入入口（环境注入文本）",
   "lib/fsx.js": "文件系统适配层（CIFS/SMB 兼容：copyFile 读写回退、chmod 尽力而为、元数据能力探测）",
@@ -59,7 +58,6 @@
   "lib/self": "插件自身总入口（VERSION/versionInfo/CLI 帮助）",
   "lib/self/index.js": "自身总入口（VERSION 一致性/versionInfo）",
   "lib/skip-dirs.js": "跳过目录统一判定（硬编码基线 + yml exclude_dirs 并集 + gitignore 白名单恢复）",
-  "lib/user-requirements.json": "开发者特殊要求清单（提交推送前逐条核对）",
   "package.json": "包声明（dependencies 精确锁版、files 白名单、scripts）",
   "scripts": "开发工具脚本（版本校验/双副本同步/预览服务/README 目录树维护）",
   "scripts/check.mjs": "语法检查脚本（npm run check）",
@@ -67,7 +65,7 @@
   "scripts/scan-version.mjs": "版本一致性校验脚本",
   "skills": "插件权威 skill（功能手册/规则/使用说明，安装副本的 skills/ 同步）",
   "skills/dsh-repo-index.md": "dsh-repo-index skill（源码索引权威说明）",
-  "test": "node:test 全量单元测试（541+ 条，覆盖审计/推送/账号/HTTP/后台任务）",
+  "test": "node:test 全量单元测试（按 git/tool/app 分目录，覆盖推送/账号/HTTP/后台任务/工具链）",
   "test/.test": "空文件豁免标记（目录级豁免 .test 目录）",
   "tree-doc.json": "目录结构注释映射（路径→一句话介绍，AI 维护）",
   "lib/tool-probes.json": "工具探测清单模板（工具为 key、值为空；运行时实测生成运行目录 tools.json）",
@@ -78,7 +76,7 @@
   "lib/app/handlers/account.js": "HTTP 处理·账号端点（account-status/account-check/gen-ssh-key）",
   "lib/app/handlers/clone.js": "HTTP 处理·克隆端点（repo-clone/clone-logs/abort/preview/progress）",
   "lib/app/handlers/http-constants.js": "HTTP 处理·共享常量（list live 预算/探测并发/扫描等待）",
-  "lib/app/handlers/meta.js": "HTTP 处理·元信息/只读端点（status/scan/browse/tools/tool-probes/rule-slots/rule-detail/audit/toggle-rule + listRuleSlots）",
+  "lib/app/handlers/meta.js": "HTTP 处理·元信息/只读端点（status/scan/browse/tools/tool-probes）",
   "lib/app/handlers/repo-actions.js": "HTTP 处理·仓库动作（repo-visibility/repo-push/repo-commit）",
   "lib/app/handlers/repos.js": "HTTP 处理·仓库列表/扫描（repos-local/-scan/-wait/-refresh/repos-cloud）",
   "lib/app/handlers/settings.js": "HTTP 处理·设置读写（settings-get/settings-set，白名单键）",
@@ -133,70 +131,190 @@
   "test/helpers/test-cache.mjs": "（待注释）",
   "test/helpers/tmp-dir.mjs": "（待注释）",
   "test/run-tests.mjs": "（待注释）",
-  "lib/client-parts": "客户端分片源码（按侧分目录：git/ 参与构建，audit/ 只归档不进产物）",
+  "lib/client-parts": "客户端分片源码（只含 git 侧；审计不提供 UI）",
   "scripts/build-client.mjs": "客户端分片拼接（PART_ORDER + --check 门禁 + 形态铁律自检）",
   "docs/2026-10-11-单一真源与文档漂移治理方案.MD": "（待注释）",
   "docs/2026-10-11-硬编码路径改造为审计引擎方案.MD": "（待注释）",
   "_meta": {
     "worktree": {
-      "README.md": {
+      "cli.mjs": {
         "status": "M",
-        "mtime": "2026-11-16T04:12:34.912Z",
+        "mtime": "2026-11-16T11:48:35.615Z",
+        "note": "注释可能需更新"
+      },
+      "lib/BUGFIX-NOTES-2026-09-14.md": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "lib/app/apply.js": {
+        "status": "M",
+        "mtime": "2026-11-16T12:10:57.680Z",
         "note": "注释可能需更新"
       },
       "lib/app/command-registry.js": {
         "status": "M",
-        "mtime": "2026-11-16T04:11:01.058Z",
+        "mtime": "2026-11-16T10:46:55.065Z",
         "note": "注释可能需更新"
       },
-      "lib/npm/publish.js": {
+      "lib/app/handlers/preprocess.js": {
         "status": "M",
-        "mtime": "2026-11-16T04:11:56.740Z",
+        "mtime": "2026-11-16T11:43:32.939Z",
         "note": "注释可能需更新"
       },
-      "lib/self/index.js": {
+      "lib/app/handlers/repo-actions.js": {
         "status": "M",
-        "mtime": "2026-11-16T04:11:00.877Z",
+        "mtime": "2026-11-16T10:46:55.179Z",
         "note": "注释可能需更新"
       },
-      "lib/skip-dirs.js": {
+      "lib/app/handlers/settings.js": {
         "status": "M",
-        "mtime": "2026-11-16T04:29:23.367Z",
+        "mtime": "2026-11-16T11:46:07.316Z",
         "note": "注释可能需更新"
       },
-      "package.json": {
+      "lib/app/index.js": {
         "status": "M",
-        "mtime": "2026-11-16T04:29:46.934Z",
+        "mtime": "2026-11-16T11:18:44.261Z",
         "note": "注释可能需更新"
       },
-      "scripts/local-registry.mjs": {
+      "lib/app/inject-text.js": {
         "status": "M",
-        "mtime": "2026-11-16T04:16:34.342Z",
+        "mtime": "2026-11-16T10:47:19.078Z",
         "note": "注释可能需更新"
       },
-      "scripts/doc-func.mjs": {
-        "status": "A",
-        "mtime": "2026-11-16T04:30:51.886Z",
+      "lib/app/schema-preprocess.js": {
+        "status": "D",
+        "mtime": "",
         "note": "注释可能需更新"
       },
-      "scripts/doc-tree.mjs": {
-        "status": "A",
-        "mtime": "2026-11-16T04:30:51.840Z",
+      "lib/app/schema.js": {
+        "status": "M",
+        "mtime": "2026-11-16T11:24:43.073Z",
         "note": "注释可能需更新"
       },
-      "scripts/doc-version.mjs": {
-        "status": "A",
-        "mtime": "2026-11-16T04:30:51.935Z",
+      "lib/app/settings-bridge.js": {
+        "status": "M",
+        "mtime": "2026-11-16T11:49:07.944Z",
         "note": "注释可能需更新"
       },
-      "scripts/scan-version.mjs": {
-        "status": "A",
-        "mtime": "2026-11-16T04:30:51.982Z",
+      "lib/app/tool-call.js": {
+        "status": "M",
+        "mtime": "2026-11-16T12:10:57.610Z",
         "note": "注释可能需更新"
       },
-      "scripts/version-source.mjs": {
-        "status": "A",
-        "mtime": "2026-11-16T04:30:52.021Z",
+      "lib/cli/commands-vcs.mjs": {
+        "status": "M",
+        "mtime": "2026-11-16T10:46:55.150Z",
+        "note": "注释可能需更新"
+      },
+      "lib/cli/shared.mjs": {
+        "status": "M",
+        "mtime": "2026-11-16T11:48:45.101Z",
+        "note": "注释可能需更新"
+      },
+      "lib/client-parts/git/actions.js": {
+        "status": "M",
+        "mtime": "2026-11-16T11:48:13.347Z",
+        "note": "注释可能需更新"
+      },
+      "lib/client-parts/git/controller.js": {
+        "status": "M",
+        "mtime": "2026-11-16T11:48:04.882Z",
+        "note": "注释可能需更新"
+      },
+      "lib/client-parts/git/npm.js": {
+        "status": "M",
+        "mtime": "2026-11-16T11:47:49.746Z",
+        "note": "注释可能需更新"
+      },
+      "lib/client-parts/git/settings.js": {
+        "status": "M",
+        "mtime": "2026-11-16T11:48:19.550Z",
+        "note": "注释可能需更新"
+      },
+      "lib/client/index.js": {
+        "status": "M",
+        "mtime": "2026-11-16T11:46:18.946Z",
+        "note": "注释可能需更新"
+      },
+      "lib/commit-push.js": {
+        "status": "M",
+        "mtime": "2026-11-16T12:10:57.310Z",
+        "note": "注释可能需更新"
+      },
+      "lib/commit-push/pre-commit-engine.js": {
+        "status": "M",
+        "mtime": "2026-11-16T12:10:57.260Z",
+        "note": "注释可能需更新"
+      },
+      "lib/core/config.js": {
+        "status": "M",
+        "mtime": "2026-11-16T10:43:12.158Z",
+        "note": "注释可能需更新"
+      },
+      "lib/git/index.js": {
+        "status": "M",
+        "mtime": "2026-11-16T10:43:12.188Z",
+        "note": "注释可能需更新"
+      },
+      "lib/git/push.js": {
+        "status": "M",
+        "mtime": "2026-11-16T11:49:08.192Z",
+        "note": "注释可能需更新"
+      },
+      "lib/plugin/auto-push.js": {
+        "status": "M",
+        "mtime": "2026-11-16T11:49:08.297Z",
+        "note": "注释可能需更新"
+      },
+      "lib/user-requirements.json": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "scripts/build-client.mjs": {
+        "status": "M",
+        "mtime": "2026-11-16T11:48:45.063Z",
+        "note": "注释可能需更新"
+      },
+      "scripts/check.mjs": {
+        "status": "M",
+        "mtime": "2026-11-16T12:07:43.879Z",
+        "note": "注释可能需更新"
+      },
+      "test/app/test-plugin.mjs": {
+        "status": "M",
+        "mtime": "2026-11-16T11:56:04.581Z",
+        "note": "注释可能需更新"
+      },
+      "test/app/test-settings-persistence.mjs": {
+        "status": "M",
+        "mtime": "2026-11-16T11:53:49.902Z",
+        "note": "注释可能需更新"
+      },
+      "test/app/test-status-secret.mjs": {
+        "status": "M",
+        "mtime": "2026-11-16T12:01:30.292Z",
+        "note": "注释可能需更新"
+      },
+      "test/app/test-task-queue.mjs": {
+        "status": "M",
+        "mtime": "2026-11-16T11:57:59.214Z",
+        "note": "注释可能需更新"
+      },
+      "test/git/test-git.mjs": {
+        "status": "M",
+        "mtime": "2026-11-16T11:57:46.113Z",
+        "note": "注释可能需更新"
+      },
+      "test/git/test-pre-commit-engine.mjs": {
+        "status": "M",
+        "mtime": "2026-11-16T12:11:32.589Z",
+        "note": "注释可能需更新"
+      },
+      "test/tool/test-cli.mjs": {
+        "status": "M",
+        "mtime": "2026-11-16T12:02:31.901Z",
         "note": "注释可能需更新"
       }
     }
@@ -340,6 +458,5 @@
   "lib/app/preprocess-client.js": "（待注释）",
   "lib/cli/commands-preprocess.mjs": "（待注释）",
   "lib/app/handlers/preprocess.js": "（待注释）",
-  "lib/app/schema-preprocess.js": "（待注释）",
   "lib/git/defaults.js": "（待注释）"
 }

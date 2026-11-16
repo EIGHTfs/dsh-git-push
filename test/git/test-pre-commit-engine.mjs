@@ -23,7 +23,8 @@ import { fileURLToPath } from 'node:url';
 import { defaultConfig } from '../../lib/client/index.js';
 import { Config } from '../../lib/app/schema.js';
 import { setSettingsFileOverride } from '../../lib/app/settings-bridge.js';
-import { runAudit } from '../../lib/commit-push.js';
+import { runPreprocess } from '../../lib/commit-push.js';
+import { resolvePreCommitEnabled } from '../../lib/commit-push/pre-commit-engine.js';
 import {
   PRE_COMMIT_TIMEOUT_MS_DEFAULT,
   buildEngineArgs,
@@ -115,19 +116,37 @@ function makeBlockerRepo() {
 
 
 
-test('buildEngineArgs：契约参数由模块统一追加，调用方不拼', () => {
-  const argv = buildEngineArgs({ repoPath: '/repo', scope: 'full', rulesetDir: '/rs', weights: { 安全性: 100 }, maxScanFiles: 10, slots: ['nodejs'], disabledSlots: ['python'], blockersOnly: true });
+test('buildEngineArgs：只传调用上下文，实现自己的配置不传', () => {
+  const argv = buildEngineArgs({
+    repoPath: '/repo', rulesetDir: '/rs', blockersOnly: true,
+    visibility: 'private', exemptPaths: ['a.js'], exemptReason: '示例',
+  });
   assert.equal(argv[argv.length - 1], '--json', '--json 必须在最后（尾部固定段，任何语言都好解析）');
   assert.equal(argv[argv.indexOf('--repo') + 1], '/repo');
-  assert.equal(argv[argv.indexOf('--scope') + 1], 'full');
   assert.equal(argv[argv.indexOf('--ruleset') + 1], '/rs');
-  assert.equal(argv[argv.indexOf('--weights') + 1], JSON.stringify({ 安全性: 100 }));
-  assert.equal(argv[argv.indexOf('--slots') + 1], 'nodejs');
-  assert.equal(argv[argv.indexOf('--disabled-slots') + 1], 'python');
+  assert.equal(argv[argv.indexOf('--visibility') + 1], 'private');
+  assert.equal(argv[argv.indexOf('--exempt-paths') + 1], 'a.js');
+  assert.equal(argv[argv.indexOf('--exempt-reason') + 1], '示例');
   assert.ok(argv.includes('--blockers-only'));
-  // 空值不传（空字符串会被引擎当成一个空槽位名）
-  const minimal = buildEngineArgs({ repoPath: '/repo', scope: 'diff' });
-  assert.deepEqual(minimal, ['--repo', '/repo', '--scope', 'diff', '--json']);
+  // 配置类参数一律不传：它们归预处理实现自己的配置文件
+  for (const flag of ['--scope', '--weights', '--max-scan-files', '--slots', '--disabled-slots']) {
+    assert.ok(!argv.includes(flag), `${flag} 属实现自己的配置，宿主不该替它传`);
+  }
+  // 空值不传（空字符串会被引擎当成一个空取值）
+  const minimal = buildEngineArgs({ repoPath: '/repo' });
+  assert.deepEqual(minimal, ['--repo', '/repo', '--json']);
+});
+
+test('实现包被拔掉（command 指向 node、args 指向包里已不存在的 CLI）→ 跳过，不拦提交', async () => {
+  // 热插拔语义：optionalDependency 没装时 args 指向的文件就没了，这属于「扩展没插」，
+  //   不是「引擎坏了」。判据是「实现包 CLI 入口不存在」，与有没有显式配置 command 无关。
+  const r = await runPreCommitEngine({
+    repoPath: '/tmp',
+    cfg: { preCommit: { enabled: true, command: 'node', args: ['/nonexistent-provider-' + Date.now() + '/cli.mjs'] } },
+  });
+  assert.equal(r.ok, true, '缺实现包不该拦提交');
+  assert.equal(r.preprocessSkipped, 'package-not-found', '应明确标注「实现不可用」而不是静默通过');
+  assert.ok(r.skipReason, '应带可诊断原因');
 });
 
 test('args 里的相对路径按插件根解析，不存在的原样保留（不猜）', () => {
@@ -258,10 +277,56 @@ test('stdout 不合契约（非 JSON / 多行 / 缺 summary）→ fail-closed', 
 });
 
 // ── git 侧职责没被搬走（用假引擎驱动，结果完全可控） ────────────────
-test('runAudit：auditEnabled=false 时完全不调引擎（配置写坏也不影响提交）', async () => {
-  // command 指向不存在的程序：如果还是去 spawn 了，必然报「找不到引擎命令」
-  const r = await runAudit({ repoPath: '/tmp', audit: false, cfg: { preCommit: { command: 'dshgp-no-such-engine-binary-xyz' } } });
-  assert.deepEqual(r, { ok: true, audit: null });
+test('runPreprocess：预处理关闭时完全不调引擎（引擎配错也不影响提交）', async () => {
+  // 隔离配置文件：本用例要断言「关掉时返回值就是干净的 {ok,audit:null}」，
+  //   若读到真实 DSH_HOME 里可能存在的旧键，返回体会多出迁移提示字段（那是另一条语义）。
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-engine-off-'));
+  const cfgFile = join(dir, 'config.json');
+  writeFileSync(cfgFile, JSON.stringify({ preCommit: { enabled: false } }));
+  setSettingsFileOverride(cfgFile);
+  try {
+    // command 指向不存在的程序：如果还是去 spawn 了，必然报「找不到引擎命令」
+    const r = await runPreprocess({ repoPath: '/tmp', audit: false, cfg: { preCommit: { enabled: false, command: 'dshgp-no-such-engine-binary-xyz' } } });
+    assert.deepEqual(r, { ok: true, audit: null });
+  } finally {
+    setSettingsFileOverride(null);
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('runPreprocess：配置文件里 preCommit.enabled=true 时门禁照跑（开关真源是 config.json）', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-engine-on-'));
+  const cfgFile = join(dir, 'config.json');
+  writeFileSync(cfgFile, JSON.stringify({ preCommit: { enabled: true, command: 'dshgp-no-such-engine-binary-xyz' } }));
+  setSettingsFileOverride(cfgFile);
+  try {
+    // 开关为开但引擎不存在 ⇒ fail-closed（不能因为「引擎恰好没跑起来」就放行）
+    const r = await runPreprocess({ repoPath: '/tmp', cfg: {} });
+    assert.equal(r.ok, false, '引擎不可用必须 fail-closed');
+    assert.match(String(r.error), /找不到引擎命令|无法启动|预处理失败/);
+  } finally {
+    setSettingsFileOverride(null);
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('只认旧版开关键时按它的值决定跑不跑（不静默关掉门禁）', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-engine-legacy-'));
+  const cfgFile = join(dir, 'config.json');
+  writeFileSync(cfgFile, JSON.stringify({ auditEnabled: true }));
+  setSettingsFileOverride(cfgFile);
+  try {
+    // 开关真源是 config.json 里的旧键：schema 默认值（false）不得压过它
+    const state = resolvePreCommitEnabled({ preCommit: { enabled: false } });
+    assert.equal(state.enabled, true, '旧键为开 ⇒ 开关必须是开');
+    assert.equal(state.source, 'legacy', '沿用旧键时必须标出来源');
+    // 门禁真跑起来（引擎不存在 ⇒ fail-closed，而不是当作「没开」静默放行）
+    const r = await runPreprocess({ repoPath: '/tmp', cfg: { preCommit: { enabled: false, command: 'dshgp-no-such-engine-binary-xyz' } } });
+    assert.equal(r.ok, false, '引擎不可用必须 fail-closed');
+  } finally {
+    setSettingsFileOverride(null);
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 
