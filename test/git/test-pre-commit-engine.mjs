@@ -32,6 +32,9 @@ import {
   resolveEngineArgs,
   resolvePreCommitConfig,
   runPreCommitEngine,
+  runPreCommitPipeline,
+  resolveStages,
+  resolveStageOnFail,
 } from '../../lib/commit-push/pre-commit-engine.js';
 
 const PLUGIN_ROOT = fileURLToPath(new URL('../../', import.meta.url));
@@ -329,4 +332,74 @@ test('只认旧版开关键时按它的值决定跑不跑（不静默关掉门�
   }
 });
 
+/* ───────────────── S1：有序阶段链（配置解析 + 向后兼容） ───────────────── */
 
+test('resolveStages：未配 stages ⇒ legacy（走原来的单命令路径）', () => {
+  assert.deepEqual(resolveStages({}), { mode: 'legacy', stages: [] });
+  assert.deepEqual(resolveStages({ preCommit: {} }), { mode: 'legacy', stages: [] });
+  assert.deepEqual(resolveStages({ preCommit: { stages: [] } }), { mode: 'legacy', stages: [] });
+});
+
+test('resolveStages：配了 stages ⇒ chain，保持数组顺序（顺序即执行序）', () => {
+  const plan = resolveStages({ preCommit: { stages: [{ provider: 'audit' }, { provider: 'x' }] } });
+  assert.equal(plan.mode, 'chain');
+  assert.deepEqual(plan.stages.map((x) => x.provider), ['audit', 'x'], '顺序必须原样保留');
+});
+
+test('resolveStages：空 provider / 非法 onFail 的处理（不静默变成别的语义）', () => {
+  const plan = resolveStages({ preCommit: { stages: [{ provider: '  ' }, { provider: 'audit', onFail: 'boom' }] } });
+  assert.equal(plan.stages.length, 1, '空 provider 的条目应被跳过');
+  assert.equal(plan.stages[0].provider, 'audit');
+  assert.equal(plan.stages[0].onFail, '', '非法 onFail 当"没配"（交给 provider 声明），不当成 block/warn');
+});
+
+test('resolveStageOnFail：用户配置 > provider 声明 > 默认 block（宿主不按 provider 名猜语义）', () => {
+  assert.equal(resolveStageOnFail({ onFail: 'warn' }, null), 'warn', '用户配了就按用户的');
+  assert.equal(resolveStageOnFail({ onFail: 'warn' }, { defaultOnFail: 'block' }), 'warn', '用户优先于 provider 声明');
+  assert.equal(resolveStageOnFail({ onFail: '' }, { defaultOnFail: 'warn' }), 'warn', '没配就用 provider 声明的');
+  assert.equal(resolveStageOnFail({ onFail: '' }, null), 'block', '都没声明 ⇒ fail-closed');
+  assert.equal(resolveStageOnFail({ onFail: '' }, { defaultOnFail: 'nonsense' }), 'block', '非法声明当没声明');
+});
+
+test('向后兼容：未配 stages 时 pipeline 与单次引擎逐字段一致（回执形状不变）', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-pipeline-legacy-'));
+  try {
+    const engine = join(dir, 'fake-engine.mjs');
+    writeFileSync(engine, [
+      "const out = { ok: true, scope: 'diff', summary: { blocker: 0, warning: 1, notice: 0, total: 1 }, quality: { score: 100, level: 'A' }, findings: [], files: 1 };",
+      'process.stdout.write(JSON.stringify(out) + "\n");',
+      'process.exit(0);',
+    ].join('\n'));
+    const cfg = { preCommit: { enabled: true, command: 'node', args: [engine] } };
+    const direct = await runPreCommitEngine({ repoPath: dir, cfg: cfg });
+    const viaPipeline = await runPreCommitPipeline({ repoPath: dir, cfg: cfg });
+    assert.deepEqual(viaPipeline, direct, 'legacy 路径必须与单次引擎回执逐字段一致');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('单阶段：stages 指定 provider 时按该 provider 的 CLI 执行（不是写死默认那个）', async () => {
+  // 用注册表里的 audit + 环境变量把它指到假 CLI：验证"阶段解析出来的入口真的被用了"
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-pipeline-one-'));
+  const fakeCli = join(dir, 'fake-cli.mjs');
+  const prevEnv = process.env.DSH_PREPROCESS_AUDIT_CLI;
+  try {
+    writeFileSync(fakeCli, [
+      "const out = { ok: true, scope: 'diff', summary: { blocker: 0, warning: 0, notice: 0, total: 0 }, quality: { score: 100, level: 'A' }, findings: [], files: 0, marker: 'stage-provider-served' };",
+      'process.stdout.write(JSON.stringify(out) + "\\n");',
+      'process.exit(0);',
+    ].join('\n'));
+    process.env.DSH_PREPROCESS_AUDIT_CLI = fakeCli;
+    const r = await runPreCommitPipeline({ repoPath: dir, cfg: { preCommit: { enabled: true, stages: [{ provider: 'audit' }] } } });
+    assert.equal(r.ok, true, '单阶段应执行成功');
+    assert.equal(r.audit && r.audit.marker, 'stage-provider-served', '应真的跑阶段里指定的 provider 入口');
+  } finally {
+    if (prevEnv === undefined) delete process.env.DSH_PREPROCESS_AUDIT_CLI; else process.env.DSH_PREPROCESS_AUDIT_CLI = prevEnv;
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('单阶段：provider 未注册 ⇒ fail-closed 且错误信息带 provider id（不能静默换人跑）', async () => {
+  const r = await runPreCommitPipeline({ repoPath: '/tmp', cfg: { preCommit: { enabled: true, stages: [{ provider: 'no-such-provider' }] } } });
+  assert.equal(r.ok, false, '未注册的 provider 必须 fail-closed');
+  assert.match(String(r.error), /no-such-provider/, '错误信息要能看出是哪个 provider 没注册');
+});
