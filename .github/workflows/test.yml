@@ -22,14 +22,28 @@ jobs:
       #   直接 ERR_MODULE_NOT_FOUND（CI #20–#28 连续失败的根因，106 个测试文件全红）。
       #   npm ci 严格按 package-lock.json 安装、锁文件漂移在此报错；--legacy-peer-deps 与
       #   锁文件生成口径一致（web-tree-sitter 的 peer @types/emscripten 未锁入，TS 类型运行时不需要）。
-      - name: 安装依赖（按 lockfile）
-        run: npm ci --legacy-peer-deps --no-audit --no-fund
+      - name: 安装依赖（按 lockfile，**跳过 optional 依赖**）
+        # --omit=optional：审计实现是 optionalDependency（可热插拔），CI 刻意不装它 ——
+        #   这样「宿主在缺扩展时仍自绿」这条解耦目标每次都在 CI 被真验到。
+        #   ⚠️ 但 lockfile 必须与 package.json **同步**（含 optional 段），否则 `npm ci` 直接 EUSAGE
+        #   （实测事故：package.json 加了 optionalDependencies 却忘了更新 lock，CI 从 install 步就红）。
+        run: npm ci --legacy-peer-deps --omit=optional --no-audit --no-fund
       # 审计（audit-sluice）是**可热插拔的扩展能力**，不是本插件的依赖：
       #   宿主 CI 刻意**不安装**预处理实现——
       #   ① 「宿主如何消费审计结果」用假引擎验（test/helpers/mock-audit.mjs，不依赖真包）
       #   ② 「审计能力本身」由预处理实现自己的测试覆盖（585 条，在它仓库跑）
       #   ③ 依赖预处理实现的集成用例在缺包时**带原因 skip**（test/helpers/audit-available.mjs）
       #   这样扩展被拔掉时宿主仍能验证自己没坏，符合解耦目标（热插拔）。
+      # 自证「可选扩展真的没装」：--omit=optional 若哪天失效（npm 行为变化/参数被删），
+      #   这里会直接红，而不是让解耦相关的用例悄悄跑了另一条分支。
+      - name: 断言可选扩展未安装（热插拔前提）
+        run: |
+          if [ -d node_modules/audit-sluice ]; then
+            echo "::error::optional 依赖 audit-sluice 被安装了 —— 解耦前提失效（应为未安装）"
+            exit 1
+          fi
+          echo "✅ audit-sluice 未安装（宿主自证：缺扩展时仍能验自己）"
+
       - name: 配置 git 身份
         run: |
           git config --global user.name "dsh-git-push CI"
