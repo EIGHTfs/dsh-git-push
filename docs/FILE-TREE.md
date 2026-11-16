@@ -17,13 +17,13 @@ dsh-git-push/
 │   ├── user-requirements.json — 开发者特殊要求清单（提交推送前逐条核对）
 │   ├── app/ — 插件入口层（apply/HTTP 处理/工具调用分发/注入文本/默认扫描根）
 │   │   ├── apply.js — 插件装载入口（注册 schema/工具/HTTP/注入钩子）
-│   │   ├── audit-client.js — （待注释）
 │   │   ├── command-registry.js — 工具命令注册表（方案 B——CLI/宿主工具/帮助同源，免维护）
 │   │   ├── constants.js — 插件名与设置命名空间常量
 │   │   ├── http-handlers.js — HTTP 路由分发（薄 router：前置校验 + switch 各端点调 handlers/ 模块）
 │   │   ├── index.js — 插件入口再导出（宿主 main 指向）
 │   │   ├── inject-text.js — 注入文本（工具用法提示 FUNCTION_USAGE_HINT）
 │   │   ├── ownership.js — （待注释）
+│   │   ├── preprocess-client.js — （待注释）
 │   │   ├── repo-ownership.js — （待注释）
 │   │   ├── scan-root.js — 默认扫描根解析（配置优先→DSH 家根自动识别）
 │   │   ├── schema-audit.js — （待注释）
@@ -38,6 +38,7 @@ dsh-git-push/
 │   ├── cli/ — （待注释）
 │   │   ├── commands-account.mjs — （待注释）
 │   │   ├── commands-doc.mjs — （待注释）
+│   │   ├── commands-preprocess.mjs — （待注释）
 │   │   ├── commands-tool.mjs — 工具链命令实现（模板生成与 self-check）
 │   │   ├── commands-vcs.mjs — （待注释）
 │   │   ├── shared.mjs — 三个 CLI 共用的公共层（参数解析/结果打印/HELP 渲染/版本/跨侧指引）
@@ -116,6 +117,8 @@ dsh-git-push/
 │   │   ├── auto-detect.js — 任务完成自动推送·检测层（纯函数：✅任务完成 触发/❌⚠ 阻断/自定义正则/许可合成判断）
 │   │   ├── auto-push.js — 任务完成自动推送·核心（turn/end 监听→检测→autoPushEnabled 开关→调 commitWithAudit 完整门禁，不裸提交）
 │   │   ├── index.js — Host 侧接线（插件注册：工具/HTTP/配置注入宿主）
+│   ├── preprocess/ — （待注释）
+│   │   ├── providers.js — （待注释）
 │   ├── self/ — 插件自身总入口（VERSION/versionInfo/CLI 帮助）
 │   │   ├── index.js — 自身总入口（VERSION 一致性/versionInfo）
 ├── scripts/ — 开发工具脚本（版本校验/双副本同步/预览服务/README 目录树维护）
@@ -146,12 +149,12 @@ dsh-git-push/
 │   ├── .test — 空文件豁免标记（目录级豁免 .test 目录）
 │   ├── run-tests.mjs — （待注释）
 │   ├── app/ — （待注释）
-│   │   ├── test-audit-consumption.mjs — （待注释）
 │   │   ├── test-auto-push.mjs — （待注释）
 │   │   ├── test-context.mjs — （待注释）
 │   │   ├── test-http-audit-split.mjs — （待注释）
 │   │   ├── test-http.mjs — （待注释）
 │   │   ├── test-plugin.mjs — （待注释）
+│   │   ├── test-preprocess-consumption.mjs — （待注释）
 │   │   ├── test-settings-persistence.mjs — （待注释）
 │   │   ├── test-settings-roundtrip.mjs — （待注释）
 │   │   ├── test-slash-commands.mjs — （待注释）
@@ -168,7 +171,7 @@ dsh-git-push/
 │   │   ├── test-privacy-ownership.mjs — （待注释）
 │   ├── fixtures/ — （待注释）
 │   │   ├── TimeZoneComboBox-CRnoCikG.js — Pawchive 混淆产物样本（hash 文件名——跳过判定 fixture）
-│   │   ├── mock-audit-cli.mjs — （待注释）
+│   │   ├── mock-preprocess-cli.mjs — （待注释）
 │   │   └── …（5 个更深文件）
 │   ├── git/ — （待注释）
 │   │   ├── test-account-refresh-on-push.mjs — （待注释）
@@ -206,9 +209,9 @@ dsh-git-push/
 │   │   ├── test-repos-live-budget.mjs — （待注释）
 │   │   ├── test-visibility-unified.mjs — （待注释）
 │   ├── helpers/ — （待注释）
-│   │   ├── audit-available.mjs — （待注释）
 │   │   ├── merge-tests.mjs — （待注释）
-│   │   ├── mock-audit.mjs — （待注释）
+│   │   ├── mock-preprocess.mjs — （待注释）
+│   │   ├── provider-available.mjs — （待注释）
 │   │   ├── test-cache.mjs — （待注释）
 │   │   ├── test-scan.mjs — （待注释）
 │   │   ├── tmp-dir.mjs — （待注释）
@@ -291,7 +294,6 @@ dsh-git-push/
 ├── LICENSE — （待注释）
 ├── README.md — 插件 README（功能总览/用法/版本记录）
 ├── SECURITY.md — （待注释）
-├── cli-audit.mjs — 审计侧 CLI 入口（bin audit-sluice：audit/ruleset/file-io/link-check/scope-check/functions/tree-doc）
 ├── cli-tool.mjs — 工具链 CLI 入口（bin tool-sluice：module-splitter/yaml-template/readme-template/self-check）
 ├── cli.mjs — 独立 CLI（git-sluice，不依赖宿主可独立运行）
 ├── cordis.patch.yml — DSH 插件组合 patch（loader 注入定义）

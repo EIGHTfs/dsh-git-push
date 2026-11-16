@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { auditTest } from '../helpers/audit-available.mjs';
+import { providerTest } from '../helpers/provider-available.mjs';
 
 const SANDBOX = mkdtempSync(join(tmpdir(), 'dshgp-rw-'));
 process.env.DSH_HOME = join(SANDBOX, '.dsh');
@@ -39,7 +39,7 @@ test('设置项：读 → 写 → 回读（读改写闭环）', async () => {
   assert.equal(r3.body.settings.pushGate, next, '回读应等于刚写入的值（读改写闭环）');
 });
 
-auditTest('规则槽位：读 → 改 disabled 列表 → 回读（读改写闭环）', async () => {
+providerTest('规则槽位：读 → 改 disabled 列表 → 回读（读改写闭环）', async () => {
   const r1 = await call('GET', '/api/git-audit/rule-slots');
   assert.equal(r1.status, 200, '读槽位应 200');
   const slots = r1.body.slots;

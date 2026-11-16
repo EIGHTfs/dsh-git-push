@@ -10,7 +10,7 @@ import { TOOL_REGISTRY, registryByName, registryByCli, parseRegistryArgs, buildT
 import { listTools } from '../../lib/app/tools.js';
 import { AUDIT_HELP_SNIPPETS, renderHelp } from '../../cli.mjs';
 import { tokenize } from '../../../audit-sluice/lib/shared/tokenizer.js';
-import { commandOwner, parseEntrySourceMeta, readEntrySource, CLI_AUDIT, CLI_ENTRIES, CLI_GIT, CLI_TOOL, allCommands, resolveDispatch } from '../../lib/cli/shared.mjs';
+import { commandOwner, parseEntrySourceMeta, readEntrySource, CLI_ENTRIES, CLI_GIT, CLI_TOOL, allCommands, resolveDispatch } from '../../lib/cli/shared.mjs';
 import { DEFAULT_CONFIG, SETTINGS_SCHEMA, defaultConfig, resolveConfig, createSettingsCard, collectExternalRefs, INLINE_CSS, clientModuleInfo } from '../../lib/client/index.js';
 import { helpSync, VERSION } from '../../lib/self/index.js';
 import assert from 'node:assert/strict';
@@ -43,7 +43,8 @@ import { promisify } from 'node:util';
    */
 
 
-  const ENTRY_FILES = { 'git-sluice': 'cli.mjs', 'audit-sluice': 'cli-audit.mjs', 'tool-sluice': 'cli-tool.mjs' };
+  // 审计 CLI 已独立成包（audit-sluice），宿主只剩 git / tool 两侧
+  const ENTRY_FILES = { 'git-sluice': 'cli.mjs', 'tool-sluice': 'cli-tool.mjs' };
 
   /** camelCase → kebab-case（注册表字段名 → CLI 选项名）。 */
   const kebab = (name) => String(name).replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
@@ -144,7 +145,7 @@ import { promisify } from 'node:util';
 
   const execFileAsync = promisify(execFile);
   const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
-  const ENTRY_FILES = { [CLI_GIT]: 'cli.mjs', [CLI_AUDIT]: 'cli-audit.mjs', [CLI_TOOL]: 'cli-tool.mjs' };
+  const ENTRY_FILES = { [CLI_GIT]: 'cli.mjs', [CLI_TOOL]: 'cli-tool.mjs' };
   const SIDES = Object.keys(CLI_ENTRIES);
 
   /** 跑一个入口（返回 {code, out}；不抛，便于断言）。 */
@@ -174,7 +175,7 @@ import { promisify } from 'node:util';
     const duplicated = commands.filter((cmd, index) => commands.indexOf(cmd) !== index);
     assert.deepEqual(duplicated, [], `同一命令被多个 CLI 声明：${duplicated.join(',')}`);
     assert.equal(new Set(commands).size, commands.length);
-    assert.equal(commands.length, 28, `命令总数变了（现 ${commands.length}）：切割线需要同步更新 CLI_ENTRIES`);
+    assert.equal(commands.length, 22, `命令总数变了（现 ${commands.length}）：切割线需要同步更新 CLI_ENTRIES`);
     // 每个命令都能问到唯一归属
     for (const cmd of commands) assert.ok(commandOwner(cmd), `${cmd} 没有归属`);
     assert.equal(commandOwner('nope-cmd'), '', '未登记命令不应有归属');
@@ -221,7 +222,7 @@ import { promisify } from 'node:util';
   test('[cli-split] 分发决策：未知命令——git 侧透传给 git，另两侧报错并提示 git-sluice', () => {
     const gitPlan = resolveDispatch({ cliName: CLI_GIT, argv: ['status'] });
     assert.equal(gitPlan.kind, 'git-passthrough', 'git-sluice 未知命令 = git 透传（git-sluice 是 git 的超集）');
-    for (const side of [CLI_AUDIT, CLI_TOOL]) {
+    for (const side of [CLI_TOOL]) {
       const plan = resolveDispatch({ cliName: side, argv: ['status'] });
       assert.equal(plan.kind, 'unknown', `${side} 不得把未知命令透传给 git`);
       assert.match(plan.error, /unknown|未知命令/);
@@ -239,20 +240,19 @@ import { promisify } from 'node:util';
   });
 
   // ── ③ 跨侧提示文案（真跑一条，断言可照抄） ──────────────────────────
-  test('[cli-split] 跨侧提示：在 git-sluice 敲 audit → 报出 audit-sluice 与完整替代命令', async () => {
+  test('[cli-split] 已迁出宿主的命令：git-sluice 敲 audit → 明确指向 audit-sluice 包，不当未知命令透传', async () => {
     const run = await runCliFile(CLI_GIT, ['audit', '/tmp/demo', '--full']);
-    assert.equal(run.code, 1, '跨侧命令必须返回非 0（脚本能判失败）');
-    assert.match(run.out, /"audit" 属于 audit-sluice/);
-    assert.match(run.out, /请改用：audit-sluice audit \/tmp\/demo --full/, '必须给出可直接照抄的完整命令');
+    assert.equal(run.code, 1, '已迁出的命令必须返回非 0（脚本能判失败）');
+    assert.match(run.out, /已随能力迁到独立包 audit-sluice/, '要说清去了哪个包');
+    assert.match(run.out, /请改用：git-sluice preprocess audit \/tmp\/demo --full/, '必须给出可直接照抄的完整命令');
+    // 关键：不能被当成 git 子命令透传出去（那会跑出莫名其妙的 git 报错）
+    assert.doesNotMatch(run.out, /git: 'audit' is not a git command/);
   });
 
-  test('[cli-split] 跨侧提示：反向也成立（audit-sluice 敲 commit、tool-sluice 敲 audit）', async () => {
-    const auditSide = await runCliFile(CLI_AUDIT, ['commit', '/tmp/x', '--message', 'm']);
-    assert.match(auditSide.out, /属于 git-sluice/);
-    assert.match(auditSide.out, /请改用：git-sluice commit \/tmp\/x --message m/);
+  test('[cli-split] 已迁出宿主的命令：tool-sluice 敲 audit 同样给出包提示', async () => {
     const toolSide = await runCliFile(CLI_TOOL, ['audit', '.']);
-    assert.match(toolSide.out, /属于 audit-sluice/);
-    assert.match(toolSide.out, /请改用：audit-sluice audit \./);
+    assert.match(toolSide.out, /已随能力迁到独立包 audit-sluice/);
+    assert.match(toolSide.out, /请改用：git-sluice preprocess audit \./);
   });
 
   test('[cli-split] 注册表参数否定形式：--no-<布尔参数> 必须真的生效（HELP 写了就得能用）', async () => {
@@ -332,41 +332,13 @@ import { promisify } from 'node:util';
   });
 
   // ── ⑥ 副作用接线（行为级证明，不是看 import 有没有写） ──────────────
-  test('[cli-split] 副作用接线①：审计入口真的会报文档漂移（漏搬 host-doc-checks 时这条会红）', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'dshgp-split-doc-'));
-    try {
-      writeFileSync(join(dir, 'package.json'), JSON.stringify({ name: 'dsh-fixture', version: '0.0.0' }));
-      mkdirSync(join(dir, 'lib'), { recursive: true });
-      writeFileSync(join(dir, 'lib', 'sample.js'), 'export function alpha() { return 1; }\n');
-      mkdirSync(join(dir, 'docs'), { recursive: true });
-      // 故意写一份与真实扫描不符的函数列表块 → 必须报 functions-doc-drift
-      writeFileSync(join(dir, 'docs', 'FUNCTIONS.md'),
-        '# 函数列表\n\n<!-- dshgp-functions:start -->\n### lib/sample.js（1 行 · 1 个函数）\n\n| 函数 | 行号 | 行数 |\n|---|---|---|\n| `已经删掉的函数` | 1-1 | 1 |\n<!-- dshgp-functions:end -->\n');
-      const run = await runCliFile(CLI_AUDIT, ['audit', dir, '--full', '--json']);
-      assert.ok(run.out.includes('{'), `审计应有 JSON 输出：${run.out.slice(0, 300)}`);
-      const json = JSON.parse(run.out.slice(run.out.indexOf('{')));
-      const driftRules = (json.findings || []).map((finding) => finding.rule).filter((rule) => /doc-drift/.test(rule || ''));
-      assert.ok(driftRules.length > 0,
-        `审计入口未报任何 *doc-drift（host-doc-checks 副作用 import 丢失？）实际规则：${[...new Set((json.findings || []).map((f) => f.rule))].slice(0, 8).join(',')}`);
-    } finally { rmSync(dir, { recursive: true, force: true }); }
-  });
-
-  test('[cli-split] 副作用接线②：ruleset 真的编译出规则（漏搬 rule/compilers 会编译 0 条却报 OK）', async () => {
-    const run = await runCliFile(CLI_AUDIT, ['ruleset']);
-    assert.equal(run.code, 0, `ruleset 应成功：${run.out}`);
-    const match = run.out.match(/编译成功 (\d+)/);
-    assert.ok(match, `ruleset 输出缺少「编译成功 N」：${run.out.slice(0, 300)}`);
-    assert.ok(Number(match[1]) > 50, `编译出的规则数异常少（${match[1]} 条）——compilers 副作用 import 可能丢失`);
-  });
-
   // ── ⑦ 每个入口每个命令逐个真跑 ──────────────────────────────────────
-  test('[cli-split] 逐命令真跑：28 个命令都能被所属入口接住（不落到跨侧提示）', async () => {
+  test('[cli-split] 逐命令真跑：22 个命令都能被所属入口接住（不落到跨侧提示）', async () => {
     // 用「不存在的 flag」触发各命令的解析层报错：零副作用（不进业务逻辑、不碰网络），
     //   但足以证明分发放行到了该命令自己的处理链。少数命令不吃 flag，单独用无害调用。
     const PROBE_FLAG = '--dshgp-probe-flag-xyz';
     const harmlessCall = {
       [`${CLI_GIT} git`]: ['--version'], // 浅包装 git 的透传：直接用 git 自己的 --version 证明到达（无副作用）
-      [`${CLI_AUDIT} ruleset`]: [],
       [`${CLI_TOOL} yaml-template`]: [],
       [`${CLI_TOOL} readme-template`]: [],
       [`${CLI_TOOL} self-check`]: [],
@@ -385,8 +357,8 @@ import { promisify } from 'node:util';
     const problems = [];
     results.forEach((result, index) => {
       const label = labels[index];
-      const reachedCommand = /未知参数|规则包编译 OK|规则模板示范|dsh-git-push|自身自检|git version/.test(result.out);
-      const wentCrossSide = /属于 (git|audit|tool)-sluice/.test(result.out);
+      const reachedCommand = /未知参数|规则包编译 OK|规则模板示范|dsh-git-push|自身自检|git version|可用预处理动作/.test(result.out);
+      const wentCrossSide = /属于 (git|tool)-sluice/.test(result.out);
       if (wentCrossSide) problems.push(`${label}: 落到了跨侧提示（应在本侧执行）`);
       else if (!reachedCommand) problems.push(`${label}: 未见命令级响应（exit=${result.code} 输出：${result.out.slice(0, 120)}）`);
     });
@@ -403,12 +375,11 @@ import { promisify } from 'node:util';
         return 0;
       } catch (e) { return typeof e.status === 'number' ? e.status : -1; }
     };
-    // parseVia 路径（audit 不走注册表）→ 必须 exit 2
-    assert.equal(run('cli-audit.mjs', ['audit', '--bogus']), 2, 'audit-sluice 参数错应 exit 2');
+    // 已迁出宿主的命令 → 必须非 0（否则脚本会把「命令不在这」当成成功）
+    assert.notEqual(run('cli.mjs', ['audit', '--bogus']), 0, '已迁出的命令应非 0');
     // 注册表路径 → 非 0 即可（当前实现是 1，不强制等于 2）
     assert.notEqual(run('cli.mjs', ['scan', '--bogus']), 0, 'git-sluice 参数错应非 0');
     // 正常命令不受影响
-    assert.equal(run('cli-audit.mjs', ['ruleset']), 0, '正常命令仍应 exit 0');
     assert.equal(run('cli-tool.mjs', ['self-check']), 0, 'self-check 仍应 exit 0');
   });
 }

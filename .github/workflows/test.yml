@@ -25,10 +25,10 @@ jobs:
       - name: 安装依赖（按 lockfile）
         run: npm ci --legacy-peer-deps --no-audit --no-fund
       # 审计（audit-sluice）是**可热插拔的扩展能力**，不是本插件的依赖：
-      #   宿主 CI 刻意**不安装**审计包——
+      #   宿主 CI 刻意**不安装**预处理实现——
       #   ① 「宿主如何消费审计结果」用假引擎验（test/helpers/mock-audit.mjs，不依赖真包）
-      #   ② 「审计能力本身」由审计包自己的测试覆盖（585 条，在它仓库跑）
-      #   ③ 依赖审计包的集成用例在缺包时**带原因 skip**（test/helpers/audit-available.mjs）
+      #   ② 「审计能力本身」由预处理实现自己的测试覆盖（585 条，在它仓库跑）
+      #   ③ 依赖预处理实现的集成用例在缺包时**带原因 skip**（test/helpers/audit-available.mjs）
       #   这样扩展被拔掉时宿主仍能验证自己没坏，符合解耦目标（热插拔）。
       - name: 配置 git 身份
         run: |

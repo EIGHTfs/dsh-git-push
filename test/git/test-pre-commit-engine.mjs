@@ -33,7 +33,7 @@ import {
 import {
   PRE_COMMIT_TIMEOUT_MS_DEFAULT,
   buildEngineArgs,
-  resolveAuditSluiceEntry,
+  resolveGateProvider,
   resolveEngineArgs,
   resolvePreCommitConfig,
   runPreCommitEngine,
@@ -60,7 +60,7 @@ const base = {
 // 每个分支都必须自己结束进程：分支之间不能「漏下去」，否则 slow 会走到兜底的 unknown mode
 if (MODE === 'ok') { out(base); process.exit(0); }
 else if (MODE === 'blocked') {
-  // 豁免由审计包判定：引擎收到 --exempt-paths 命中本文件时，blocked 应为空（模拟真实包行为）
+  // 豁免由预处理实现判定：引擎收到 --exempt-paths 命中本文件时，blocked 应为空（模拟真实包行为）
   const exempted = process.argv.join(' ').includes('src/bad.js');
   out({
     ...base, ok: !exempted,
@@ -194,11 +194,11 @@ test('preCommit 三档解析顺序：cfg.preCommit → config.json → 内置默
       assert.equal(fromFile.timeoutMs, 1234);
       assert.equal(fromFile.source, 'config.json');
     } finally { setSettingsFileOverride(null); }
-    // ③ 都没有 → 内置默认（node + **审计包 CLI**），超时 10 分钟
+    // ③ 都没有 → 内置默认（node + **预处理实现 CLI**），超时 10 分钟
     //   拆包后缺省引擎指向 audit-sluice（审计实现归它）；内置 scripts/audit-gate.mjs
     //   只在显式配置回滚时使用（见下一条断言）。
     //   注意：这里必须用「空的临时配置」覆盖，否则会读到**宿主真实 config.json**——
-    //   开发机可能配了 preCommit 指向本地审计包（拆包后这就是正常配置），
+    //   开发机可能配了 preCommit 指向本地预处理实现（拆包后这就是正常配置），
     //   而本档断言的是「三档都没有」⇒ 不隔离会让测试结果依赖机器状态。
     const emptyCfg = join(dir, 'empty-config.json');
     writeFileSync(emptyCfg, '{}');
@@ -207,7 +207,7 @@ test('preCommit 三档解析顺序：cfg.preCommit → config.json → 内置默
     assert.equal(fallback.source, 'default');
     assert.equal(fallback.command, '', 'command 空 = 内置 node');
     assert.equal(fallback.args.length, 1, '缺省只带一个入口脚本参数');
-    assert.match(fallback.args[0].replace(/\\/g, '/'), /audit-sluice\/cli\.mjs$/, `缺省入口应为审计包 CLI，实际：${fallback.args[0]}`);
+    assert.match(fallback.args[0].replace(/\\/g, '/'), /audit-sluice\/cli\.mjs$/, `缺省入口应为预处理实现 CLI，实际：${fallback.args[0]}`);
     assert.equal(fallback.timeoutMs, PRE_COMMIT_TIMEOUT_MS_DEFAULT);
     // ③' 回滚路径已随拆包删除（内置引擎入口不复存在），原 legacyEngine 断言一并移除
   } finally {
@@ -394,9 +394,9 @@ test('真引擎与进程内 auditWithScope 同仓库比对：summary/findings/qu
 });
 
 test('真引擎脚本直跑：退出码 0 / 1 / 2 三种语义', () => {
-    // 引擎入口已随拆包迁走：现在跑的是审计包 CLI（不是插件自带的 scripts/audit-gate.mjs）
-    const engineEntry = resolveAuditSluiceEntry();
-    assert.equal(engineEntry.ok, true, `审计包入口必须可解析：${engineEntry.error || ''}`);
+    // 引擎入口已随拆包迁走：现在跑的是预处理实现 CLI（不是插件自带的 scripts/audit-gate.mjs）
+    const engineEntry = resolveGateProvider();
+    assert.equal(engineEntry.ok, true, `预处理实现入口必须可解析：${engineEntry.error || ''}`);
     const ENGINE_CLI = engineEntry.path;
   // 0：无 blocker（干净仓库，diff 0 变动）
   const cleanDir = mkdtempSync(join(tmpdir(), 'dshgp-engine-cli-'));

@@ -9,7 +9,7 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 
 import { SLASH_COMMANDS, findGitRoot, formatClonePreviewCommandText, formatGitAuditCommandText, formatGitScanCommandText, formatIoScanCommandText, formatLinkCheckCommandText, parseCommandInput, parseGitAuditInput, registerSlashCommands, resolveAuditRepo, runGitAuditCommand, runGitClonePreviewCommand, runGitIoScanCommand, runGitScanCommand, sessionCwdOf } from '../../lib/app/slash-commands.js';
-import { auditTest } from '../helpers/audit-available.mjs';
+import { providerTest } from '../helpers/provider-available.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -89,14 +89,14 @@ test('formatGitAuditCommandText：失败走 error；成功含评分计数 + 拦�
   assert.doesNotMatch(empty, /无摘要/);
 });
 
-auditTest('runGitAuditCommand：未分类空路径 → error，不扫家根', async () => {
+providerTest('runGitAuditCommand：未分类空路径 → error，不扫家根', async () => {
   const r = await runGitAuditCommand({ rawInput: '', invocation: inv('') });
   assert.equal(r.kind, 'error');
   assert.match(r.text, /未分类/);
   assert.doesNotMatch(r.text, /\.dsh-home$/);
 });
 
-auditTest('runGitAuditCommand：路径不存在 → error', async () => {
+providerTest('runGitAuditCommand：路径不存在 → error', async () => {
   const r = await runGitAuditCommand({
     rawInput: '/no-such-repo-xyz',
     invocation: inv(ROOT),

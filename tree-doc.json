@@ -157,72 +157,122 @@
     "worktree": {
       ".github/workflows/test.yml": {
         "status": "M",
-        "mtime": "2026-11-15T20:03:58.266Z",
+        "mtime": "2026-11-15T23:23:32.370Z",
         "note": "注释可能需更新"
       },
-      "lib/app/audit-client.js": {
+      "cli-audit.mjs": {
+        "status": "D",
+        "mtime": "",
+        "note": "注释可能需更新"
+      },
+      "cli.mjs": {
         "status": "M",
-        "mtime": "2026-11-15T19:58:29.051Z",
+        "mtime": "2026-11-16T00:09:04.664Z",
+        "note": "注释可能需更新"
+      },
+      "docs/FILE-TREE.md": {
+        "status": "M",
+        "mtime": "2026-11-15T23:57:54.989Z",
+        "note": "注释可能需更新"
+      },
+      "docs/FUNCTIONS.md": {
+        "status": "M",
+        "mtime": "2026-11-16T00:13:04.243Z",
+        "note": "注释可能需更新"
+      },
+      "lib/app/command-registry.js": {
+        "status": "M",
+        "mtime": "2026-11-15T23:47:05.217Z",
+        "note": "注释可能需更新"
+      },
+      "lib/app/handlers/audit.js": {
+        "status": "M",
+        "mtime": "2026-11-15T23:26:40.140Z",
+        "note": "注释可能需更新"
+      },
+      "lib/app/tool-call.js": {
+        "status": "M",
+        "mtime": "2026-11-15T23:26:39.963Z",
+        "note": "注释可能需更新"
+      },
+      "lib/cli/commands-tool.mjs": {
+        "status": "M",
+        "mtime": "2026-11-16T00:11:14.392Z",
+        "note": "注释可能需更新"
+      },
+      "lib/cli/commands-vcs.mjs": {
+        "status": "M",
+        "mtime": "2026-11-15T23:26:41.288Z",
+        "note": "注释可能需更新"
+      },
+      "lib/cli/shared.mjs": {
+        "status": "M",
+        "mtime": "2026-11-15T23:56:13.649Z",
         "note": "注释可能需更新"
       },
       "lib/commit-push.js": {
         "status": "M",
-        "mtime": "2026-11-15T19:58:10.219Z",
+        "mtime": "2026-11-15T23:31:54.599Z",
         "note": "注释可能需更新"
       },
       "lib/commit-push/pre-commit-engine.js": {
         "status": "M",
-        "mtime": "2026-11-15T19:57:33.927Z",
+        "mtime": "2026-11-15T23:33:28.854Z",
+        "note": "注释可能需更新"
+      },
+      "package.json": {
+        "status": "M",
+        "mtime": "2026-11-15T23:46:35.252Z",
         "note": "注释可能需更新"
       },
       "test/app/test-http-audit-split.mjs": {
         "status": "M",
-        "mtime": "2026-11-15T20:01:57.127Z",
+        "mtime": "2026-11-15T23:26:42.494Z",
         "note": "注释可能需更新"
       },
       "test/app/test-plugin.mjs": {
         "status": "M",
-        "mtime": "2026-11-15T20:01:57.005Z",
+        "mtime": "2026-11-15T23:26:42.299Z",
         "note": "注释可能需更新"
       },
       "test/app/test-settings-persistence.mjs": {
         "status": "M",
-        "mtime": "2026-11-15T20:01:57.105Z",
+        "mtime": "2026-11-15T23:26:42.335Z",
         "note": "注释可能需更新"
       },
       "test/app/test-settings-roundtrip.mjs": {
         "status": "M",
-        "mtime": "2026-11-15T20:01:57.102Z",
+        "mtime": "2026-11-15T23:26:42.363Z",
         "note": "注释可能需更新"
       },
       "test/app/test-slash-commands.mjs": {
         "status": "M",
-        "mtime": "2026-11-15T20:01:57.091Z",
+        "mtime": "2026-11-15T23:26:42.383Z",
         "note": "注释可能需更新"
       },
       "test/app/test-task-queue.mjs": {
         "status": "M",
-        "mtime": "2026-11-15T20:01:57.084Z",
+        "mtime": "2026-11-15T23:26:42.431Z",
         "note": "注释可能需更新"
       },
-      "test/app/test-audit-consumption.mjs": {
-        "status": "A",
-        "mtime": "2026-11-15T20:04:20.450Z",
+      "test/git/test-pre-commit-engine.mjs": {
+        "status": "M",
+        "mtime": "2026-11-15T23:23:32.330Z",
         "note": "注释可能需更新"
       },
-      "test/fixtures/mock-audit-cli.mjs": {
-        "status": "A",
-        "mtime": "2026-11-15T19:59:27.360Z",
+      "test/tool/test-cli.mjs": {
+        "status": "M",
+        "mtime": "2026-11-16T00:09:04.784Z",
         "note": "注释可能需更新"
       },
-      "test/helpers/audit-available.mjs": {
+      "lib/cli/commands-preprocess.mjs": {
         "status": "A",
-        "mtime": "2026-11-15T20:01:27.291Z",
+        "mtime": "2026-11-15T23:55:40.658Z",
         "note": "注释可能需更新"
       },
-      "test/helpers/mock-audit.mjs": {
+      "lib/preprocess/": {
         "status": "A",
-        "mtime": "2026-11-15T19:59:38.179Z",
+        "mtime": "2026-11-15T23:22:25.248Z",
         "note": "注释可能需更新"
       }
     }
@@ -308,7 +358,6 @@
   "docs/2026-11-13-提交前预处理与审计引擎解耦方案.MD": "提交前预处理与审计引擎解耦方案：引擎契约（配置化入口/退出码）、UI 注入契约、职责切分与分阶段落地",
   "lib/commit-push/pre-commit-engine.js": "提交前预处理引擎适配层：spawn 引擎、拼参数、退出码映射、超时与 fail-closed",
   "lib/commit-push": "提交推送编排（runAudit 门禁 + commitWithAudit/commitMany）",
-  "cli-audit.mjs": "审计侧 CLI 入口（bin audit-sluice：audit/ruleset/file-io/link-check/scope-check/functions/tree-doc）",
   "cli-tool.mjs": "工具链 CLI 入口（bin tool-sluice：module-splitter/yaml-template/readme-template/self-check）",
   "lib/cli/shared.mjs": "三个 CLI 共用的公共层（参数解析/结果打印/HELP 渲染/版本/跨侧指引）",
   "lib/cli/commands-tool.mjs": "工具链命令实现（模板生成与 self-check）",
@@ -389,13 +438,16 @@
   "docs/2026-11-15-gitpush与审计分家方案.MD": "gitpush 与审计分家方案（设计稿）：两包职责切分（探留 gitpush / 判归审计）、审计包三形态（library/CLI/MCP）、契约改动、文件迁移约对半、兼容与风险",
   "lib/app/severity.js": "（待注释）",
   "lib/git/exempt-markers.js": "（待注释）",
-  "lib/app/audit-client.js": "（待注释）",
   "lib/app/handlers/audit.js": "（待注释）",
   "lib/app/ownership.js": "（待注释）",
   "test/app/test-http-audit-split.mjs": "（待注释）",
   "test/audit/test-preprocess-render.mjs": "（待注释）",
-  "test/app/test-audit-consumption.mjs": "（待注释）",
-  "test/fixtures/mock-audit-cli.mjs": "（待注释）",
-  "test/helpers/audit-available.mjs": "（待注释）",
-  "test/helpers/mock-audit.mjs": "（待注释）"
+  "lib/preprocess": "（待注释）",
+  "lib/preprocess/providers.js": "（待注释）",
+  "lib/app/preprocess-client.js": "（待注释）",
+  "test/app/test-preprocess-consumption.mjs": "（待注释）",
+  "test/fixtures/mock-preprocess-cli.mjs": "（待注释）",
+  "test/helpers/mock-preprocess.mjs": "（待注释）",
+  "test/helpers/provider-available.mjs": "（待注释）",
+  "lib/cli/commands-preprocess.mjs": "（待注释）"
 }

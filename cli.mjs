@@ -22,6 +22,7 @@ import {
   cmdAccountCheck, cmdCredEnv, cmdRemoteCreate, cmdSetVisibility, cmdGenSshKey,
 } from './lib/cli/commands-account.mjs';
 import { cmdRepos, cmdIndex, cmdCommit, cmdClone } from './lib/cli/commands-vcs.mjs';
+import { cmdPreprocess } from './lib/cli/commands-preprocess.mjs';
 import {
   CLI_GIT, CLI_ENTRIES, cliPluginConfig, parseArgv, parseVia, printToolResult, runAsEntry, runCli,
 } from './lib/cli/shared.mjs';
@@ -51,9 +52,13 @@ const HELP = `git-sluice v${VERSION} — ${CLI_ENTRIES[CLI_GIT].intro}
   git-sluice commit <仓库> --message "msg"   ③ 提交推送（自动过审计门禁）
   git-sluice help                     全部命令与参数
 
+预处理（可插拔扩展：从所有在位 provider 的声明里找能力，审计只是其中之一）:
+  git-sluice preprocess               列出当前可用的预处理动作
+  git-sluice preprocess <action> ...  转发到声明该动作的 provider（如 audit / io_scan / link_check）
+
 其它 CLI（本入口不含，敲错会给出替代命令）:
-  audit-sluice  审计/规则/静态检查: audit ruleset file-io link-check scope-check functions tree-doc
   tool-sluice   工具链: module-splitter yaml-template readme-template self-check
+  注：审计 CLI 已随审计能力独立成包（audit-sluice），不再由本插件提供。
 
 用法（每行写的参数就是该命令真实接受的写法，照抄即可）:
   git-sluice version              查看版本
@@ -128,6 +133,7 @@ export function renderHelp(cfg = {}, hasBuiltinEngine) {
 }
 
 export const COMMANDS = new Map([
+  ['preprocess', cmdPreprocess],
   ['repos', parseVia((flags, positional) => cmdRepos(positional[0] || '.', flags))],
   ['index', parseVia((flags, positional) => cmdIndex(positional[0] || '.', flags))],
   // `git` 必须走这里而不是注册表：注册表只认声明过的参数，会把 git 自己的 flag

@@ -12,23 +12,6 @@
 | `apply` | 44-295 | 252 | `export async function apply(ctx, config = {}) {` |
 | `envInjectText` | 106-145 | 40 | `const envInjectText = (cwdOverride) => {` |
 
-### lib/app/audit-client.js（137 行 · 12 个函数）
-
-| 函数 | 行号 | 行数 | 签名 |
-|------|------|------|------|
-| `resolveAuditPackageRoot` | 30-34 | 5 | `export function resolveAuditPackageRoot() {` |
-| `loadAuditPackage` | 41-63 | 23 | `export async function loadAuditPackage() {` |
-| `auditPackageRoot` | 66-68 | 3 | `export function auditPackageRoot() {` |
-| `resetAuditPackageCache` | 71-75 | 5 | `export function resetAuditPackageCache() {` |
-| `hostApi` | 82-90 | 9 | `export async function hostApi() {` |
-| `auditReport` | 97-100 | 4 | `export async function auditReport(options = {}) {` |
-| `auditHistory` | 103-106 | 4 | `export async function auditHistory(options = {}) {` |
-| `ioScan` | 109-112 | 4 | `export async function ioScan(options = {}) {` |
-| `linkCheck` | 115-118 | 4 | `export async function linkCheck(options = {}) {` |
-| `scopeCheck` | 121-124 | 4 | `export async function scopeCheck(options = {}) {` |
-| `exemptAction` | 127-130 | 4 | `export async function exemptAction(options = {}) {` |
-| `groupByKeys` | 133-136 | 4 | `export async function groupByKeys() {` |
-
 ### lib/app/command-registry.js（344 行 · 8 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -179,6 +162,23 @@
 | `privacyRulesEnabled` | 39-41 | 3 | `export function privacyRulesEnabled(ownership) {` |
 | `isPrivacyRule` | 44-46 | 3 | `export function isPrivacyRule(ruleId) {` |
 
+### lib/app/preprocess-client.js（137 行 · 12 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `resolvePreprocessProviderRoot` | 30-34 | 5 | `export function resolvePreprocessProviderRoot() {` |
+| `loadPreprocessProvider` | 41-63 | 23 | `export async function loadPreprocessProvider() {` |
+| `preprocessProviderRoot` | 66-68 | 3 | `export function preprocessProviderRoot() {` |
+| `resetPreprocessProviderCache` | 71-75 | 5 | `export function resetPreprocessProviderCache() {` |
+| `hostApi` | 82-90 | 9 | `export async function hostApi() {` |
+| `auditReport` | 97-100 | 4 | `export async function auditReport(options = {}) {` |
+| `auditHistory` | 103-106 | 4 | `export async function auditHistory(options = {}) {` |
+| `ioScan` | 109-112 | 4 | `export async function ioScan(options = {}) {` |
+| `linkCheck` | 115-118 | 4 | `export async function linkCheck(options = {}) {` |
+| `scopeCheck` | 121-124 | 4 | `export async function scopeCheck(options = {}) {` |
+| `exemptAction` | 127-130 | 4 | `export async function exemptAction(options = {}) {` |
+| `groupByKeys` | 133-136 | 4 | `export async function groupByKeys() {` |
+
 ### lib/app/repo-ownership.js（66 行 · 4 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -317,15 +317,22 @@
 | `cmdFunctions` | 35-57 | 23 | `export async function cmdFunctions(op, target, flags) {` |
 | `cmdModuleSplitter` | 60-78 | 19 | `export async function cmdModuleSplitter(positional = [], flags = {}) {` |
 
-### lib/cli/commands-tool.mjs（94 行 · 5 个函数）
+### lib/cli/commands-preprocess.mjs（75 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `readPkgJson` | 23-27 | 5 | `export function readPkgJson() {` |
-| `cmdYamlTemplate` | 30-32 | 3 | `export function cmdYamlTemplate() {` |
-| `cmdReadmeTemplate` | 35-37 | 3 | `export function cmdReadmeTemplate() {` |
-| `checkEntries` | 43-71 | 29 | `export function checkEntries() {` |
-| `cmdSelfCheck` | 74-93 | 20 | `export function cmdSelfCheck() {` |
+| `describePreprocessCapabilities` | 19-35 | 17 | `export async function describePreprocessCapabilities() {` |
+| `cmdPreprocess` | 42-74 | 33 | `export async function cmdPreprocess(positional = []) {` |
+
+### lib/cli/commands-tool.mjs（95 行 · 5 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `readPkgJson` | 24-28 | 5 | `export function readPkgJson() {` |
+| `cmdYamlTemplate` | 31-33 | 3 | `export function cmdYamlTemplate() {` |
+| `cmdReadmeTemplate` | 36-38 | 3 | `export function cmdReadmeTemplate() {` |
+| `checkEntries` | 44-72 | 29 | `export function checkEntries() {` |
+| `cmdSelfCheck` | 75-94 | 20 | `export function cmdSelfCheck() {` |
 
 ### lib/cli/commands-vcs.mjs（177 行 · 9 个函数）
 
@@ -341,30 +348,30 @@
 | `printCloneResult` | 154-166 | 13 | `function printCloneResult(r, flags, target, dest) {` |
 | `cmdClone` | 169-176 | 8 | `export async function cmdClone(flags, positional) {` |
 
-### lib/cli/shared.mjs（453 行 · 20 个函数）
+### lib/cli/shared.mjs（478 行 · 20 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `commandOwner` | 58-64 | 7 | `export function commandOwner(command) {` |
-| `allCommands` | 67-69 | 3 | `export function allCommands() {` |
-| `cliPluginConfig` | 82-91 | 10 | `export function cliPluginConfig() {` |
-| `versionLine` | 94-96 | 3 | `export function versionLine(cliName) {` |
-| `buildCrossCliHint` | 103-113 | 11 | `export function buildCrossCliHint({ command = '', argvRest = [], fromCli = '' } = {}) {` |
-| `defaultFlags` | 162-171 | 10 | `function defaultFlags() {` |
-| `applyBoolFlag` | 174-179 | 6 | `function applyBoolFlag(flags, token) {` |
-| `applyValueFlag` | 182-185 | 4 | `function applyValueFlag(flags, token, rawValue) {` |
-| `parseArgv` | 194-212 | 19 | `export function parseArgv(argv = []) {` |
-| `parseVia` | 215-228 | 14 | `export function parseVia(run) {` |
-| `printToolResult` | 236-243 | 8 | `export function printToolResult(result, asJson) {` |
-| `readableResultLines` | 251-259 | 9 | `function readableResultLines(result) {` |
-| `printVersion` | 262-264 | 3 | `export function printVersion(cliName) {` |
-| `resolveDispatch` | 274-305 | 32 | `export function resolveDispatch({ cliName = CLI_GIT, argv = [], commands = new Map() } = {}) {` |
-| `normalizeRegistryArgv` | 319-333 | 15 | `export function normalizeRegistryArgv(rest = [], params = []) {` |
-| `runCli` | 346-392 | 47 | `export async function runCli({` |
-| `isDirectRun` | 402-410 | 9 | `export function isDirectRun(moduleUrl) {` |
-| `runAsEntry` | 417-428 | 12 | `export function runAsEntry(moduleUrl, main) {` |
-| `readEntrySource` | 437-439 | 3 | `export function readEntrySource(relPath) {` |
-| `parseEntrySourceMeta` | 446-452 | 7 | `export function parseEntrySourceMeta(sourceText = '') {` |
+| `commandOwner` | 70-76 | 7 | `export function commandOwner(command) {` |
+| `allCommands` | 79-81 | 3 | `export function allCommands() {` |
+| `cliPluginConfig` | 94-103 | 10 | `export function cliPluginConfig() {` |
+| `versionLine` | 106-108 | 3 | `export function versionLine(cliName) {` |
+| `buildCrossCliHint` | 115-125 | 11 | `export function buildCrossCliHint({ command = '', argvRest = [], fromCli = '' } = {}) {` |
+| `defaultFlags` | 174-183 | 10 | `function defaultFlags() {` |
+| `applyBoolFlag` | 186-191 | 6 | `function applyBoolFlag(flags, token) {` |
+| `applyValueFlag` | 194-197 | 4 | `function applyValueFlag(flags, token, rawValue) {` |
+| `parseArgv` | 206-224 | 19 | `export function parseArgv(argv = []) {` |
+| `parseVia` | 227-240 | 14 | `export function parseVia(run) {` |
+| `printToolResult` | 248-255 | 8 | `export function printToolResult(result, asJson) {` |
+| `readableResultLines` | 263-271 | 9 | `function readableResultLines(result) {` |
+| `printVersion` | 274-276 | 3 | `export function printVersion(cliName) {` |
+| `resolveDispatch` | 286-328 | 43 | `export function resolveDispatch({ cliName = CLI_GIT, argv = [], commands = new Map() } = {}) {` |
+| `normalizeRegistryArgv` | 342-356 | 15 | `export function normalizeRegistryArgv(rest = [], params = []) {` |
+| `runCli` | 369-417 | 49 | `export async function runCli({` |
+| `isDirectRun` | 427-435 | 9 | `export function isDirectRun(moduleUrl) {` |
+| `runAsEntry` | 442-453 | 12 | `export function runAsEntry(moduleUrl, main) {` |
+| `readEntrySource` | 462-464 | 3 | `export function readEntrySource(relPath) {` |
+| `parseEntrySourceMeta` | 471-477 | 7 | `export function parseEntrySourceMeta(sourceText = '') {` |
 
 ### lib/client-parts/audit/audit.js（302 行 · 10 个函数）
 
@@ -529,38 +536,37 @@
 | `collectExternalRefs` | 136-141 | 6 | `export function collectExternalRefs(css = '') {` |
 | `clientModuleInfo` | 151-162 | 12 | `export function clientModuleInfo() {` |
 
-### lib/commit-push.js（281 行 · 5 个函数）
+### lib/commit-push.js（282 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
 | `defaultPreprocessRender` | 37-52 | 16 | `export function defaultPreprocessRender(ctx = {}) {` |
-| `runAudit` | 63-232 | 170 | `export async function runAudit({` |
-| `isExemptFile` | 152-152 | 1 | `const isExemptFile = (finding) => exemptSet.has(String(finding.file \|\| '').replace(/\\/g, '/').replace(/^\.\//, ''));` |
-| `commitWithAudit` | 242-267 | 26 | `export async function commitWithAudit({` |
-| `commitMany` | 275-281 | 7 | `export async function commitMany({ repos = [], message = '', push = true, dryRun = false, requirementsConfirmed = false, customIgnorePatterns = '' } = {}) {` |
+| `runAudit` | 63-233 | 171 | `export async function runAudit({` |
+| `isExemptFile` | 153-153 | 1 | `const isExemptFile = (finding) => exemptSet.has(String(finding.file \|\| '').replace(/\\/g, '/').replace(/^\.\//, ''));` |
+| `commitWithAudit` | 243-268 | 26 | `export async function commitWithAudit({` |
+| `commitMany` | 276-282 | 7 | `export async function commitMany({ repos = [], message = '', push = true, dryRun = false, requirementsConfirmed = false, customIgnorePatterns = '' } = {}) {` |
 
-### lib/commit-push/pre-commit-engine.js（460 行 · 18 个函数）
+### lib/commit-push/pre-commit-engine.js（436 行 · 17 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `resolveAuditSluiceEntry` | 55-70 | 16 | `export function resolveAuditSluiceEntry() {` |
-| `pluginRootDir` | 84-86 | 3 | `export function pluginRootDir() {` |
-| `stderrTail` | 93-96 | 4 | `export function stderrTail(text) {` |
-| `resolvePreCommitConfig` | 109-136 | 28 | `export function resolvePreCommitConfig(cfg = {}) {` |
-| `readPreCommitBlock` | 143-156 | 14 | `function readPreCommitBlock(cfg = {}) {` |
-| `isExecutableFile` | 163-172 | 10 | `function isExecutableFile(absPath) {` |
-| `searchCommandOnPath` | 179-195 | 17 | `function searchCommandOnPath(commandName) {` |
-| `resolvePathLikeCommand` | 202-206 | 5 | `function resolvePathLikeCommand(pathLike) {` |
-| `resolveEngineCommand` | 216-222 | 7 | `export function resolveEngineCommand(command) {` |
-| `resolveEngineArgs` | 233-241 | 9 | `export function resolveEngineArgs(args = []) {` |
-| `toSlotCsv` | 248-253 | 6 | `function toSlotCsv(slots) {` |
-| `buildEngineArgs` | 261-289 | 29 | `export function buildEngineArgs({` |
-| `formatCommandLine` | 297-299 | 3 | `export function formatCommandLine(command, args = []) {` |
-| `failClosed` | 308-310 | 3 | `function failClosed(message) {` |
-| `parseEngineStdout` | 319-337 | 19 | `export function parseEngineStdout(stdout) {` |
-| `runEngineProcess` | 347-394 | 48 | `function runEngineProcess({ command, args, timeoutMs }) {` |
-| `finish` | 357-362 | 6 | `const finish = (result) => {` |
-| `runPreCommitEngine` | 410-459 | 50 | `export async function runPreCommitEngine({` |
+| `pluginRootDir` | 60-62 | 3 | `export function pluginRootDir() {` |
+| `stderrTail` | 69-72 | 4 | `export function stderrTail(text) {` |
+| `resolvePreCommitConfig` | 85-112 | 28 | `export function resolvePreCommitConfig(cfg = {}) {` |
+| `readPreCommitBlock` | 119-132 | 14 | `function readPreCommitBlock(cfg = {}) {` |
+| `isExecutableFile` | 139-148 | 10 | `function isExecutableFile(absPath) {` |
+| `searchCommandOnPath` | 155-171 | 17 | `function searchCommandOnPath(commandName) {` |
+| `resolvePathLikeCommand` | 178-182 | 5 | `function resolvePathLikeCommand(pathLike) {` |
+| `resolveEngineCommand` | 192-198 | 7 | `export function resolveEngineCommand(command) {` |
+| `resolveEngineArgs` | 209-217 | 9 | `export function resolveEngineArgs(args = []) {` |
+| `toSlotCsv` | 224-229 | 6 | `function toSlotCsv(slots) {` |
+| `buildEngineArgs` | 237-265 | 29 | `export function buildEngineArgs({` |
+| `formatCommandLine` | 273-275 | 3 | `export function formatCommandLine(command, args = []) {` |
+| `failClosed` | 284-286 | 3 | `function failClosed(message) {` |
+| `parseEngineStdout` | 295-313 | 19 | `export function parseEngineStdout(stdout) {` |
+| `runEngineProcess` | 323-370 | 48 | `function runEngineProcess({ command, args, timeoutMs }) {` |
+| `finish` | 333-338 | 6 | `const finish = (result) => {` |
+| `runPreCommitEngine` | 386-435 | 50 | `export async function runPreCommitEngine({` |
 
 ### lib/context/index.js（364 行 · 10 个函数）
 
@@ -1254,6 +1260,19 @@
 | `setDefineToolOverride` | 240-250 | 11 | `export function setDefineToolOverride(fn) { defineToolOverride = fn; }` |
 | `loadDefineTool` | 241-250 | 10 | `export async function loadDefineTool(log) {` |
 
+### lib/preprocess/providers.js（192 行 · 8 个函数）
+
+| 函数 | 行号 | 行数 | 签名 |
+|------|------|------|------|
+| `getProviderDefinition` | 46-48 | 3 | `export function getProviderDefinition(providerId = DEFAULT_PROVIDER_ID) {` |
+| `providerEnvName` | 51-53 | 3 | `export function providerEnvName(providerId) {` |
+| `resolveProvider` | 60-90 | 31 | `export function resolveProvider(providerId = DEFAULT_PROVIDER_ID) {` |
+| `resolveGateProvider` | 97-99 | 3 | `export function resolveGateProvider() {` |
+| `listProviderManifests` | 115-140 | 26 | `export async function listProviderManifests() {` |
+| `findActionProvider` | 149-159 | 11 | `export async function findActionProvider(action) {` |
+| `findEndpointProvider` | 167-177 | 11 | `export async function findEndpointProvider(subPath, method) {` |
+| `listDeclaredCapabilities` | 180-191 | 12 | `export async function listDeclaredCapabilities() {` |
+
 ### lib/self/index.js（197 行 · 5 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
@@ -1549,7 +1568,7 @@
 |------|------|------|------|
 | `hits` | 56-59 | 4 | `const hits = async (ownership) => {` |
 
-### test/fixtures/mock-audit-cli.mjs（55 行 · 2 个函数）
+### test/fixtures/mock-preprocess-cli.mjs（55 行 · 2 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
@@ -1773,11 +1792,11 @@
 | `mergeGroup` | 147-224 | 78 | `export function mergeGroup(dir, { out, members }) {` |
 | `runTestFile` | 227-236 | 10 | `export function runTestFile(absPath) {` |
 
-### test/helpers/mock-audit.mjs（34 行 · 1 个函数）
+### test/helpers/mock-preprocess.mjs（34 行 · 1 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `withMockAudit` | 22-31 | 10 | `export function withMockAudit(cfg = {}, mode = 'ok') {` |
+| `withMockPreprocess` | 22-31 | 10 | `export function withMockPreprocess(cfg = {}, mode = 'ok') {` |
 
 ### test/helpers/test-cache.mjs（231 行 · 9 个函数）
 
@@ -1822,19 +1841,19 @@
 | `runBatch` | 118-150 | 33 | `function runBatch(files) {` |
 | `emit` | 134-145 | 12 | `const emit = (chunk) => {` |
 
-### test/tool/test-cli.mjs（1062 行 · 9 个函数）
+### test/tool/test-cli.mjs（1033 行 · 9 个函数）
 
 | 函数 | 行号 | 行数 | 签名 |
 |------|------|------|------|
-| `usageLines` | 57-67 | 11 | `function usageLines(helpText, cliName, command) {` |
-| `helpOf` | 70-74 | 5 | `function helpOf(cliName) {` |
-| `runCliFile` | 151-160 | 10 | `async function runCliFile(cliName, argv, opts = {}) {` |
-| `runInWaves` | 163-169 | 7 | `async function runInWaves(tasks, waveSize = 4) {` |
-| `run` | 400-405 | 6 | `const run = (file, args) => {` |
-| `mockReact` | 558-564 | 7 | `function mockReact() {` |
-| `req` | 866-883 | 18 | `const req = (name) => {` |
-| `req` | 944-963 | 20 | `const req = (name) => {` |
-| `req` | 1012-1030 | 19 | `const req = (name) => {` |
+| `usageLines` | 58-68 | 11 | `function usageLines(helpText, cliName, command) {` |
+| `helpOf` | 71-75 | 5 | `function helpOf(cliName) {` |
+| `runCliFile` | 152-161 | 10 | `async function runCliFile(cliName, argv, opts = {}) {` |
+| `runInWaves` | 164-170 | 7 | `async function runInWaves(tasks, waveSize = 4) {` |
+| `run` | 372-377 | 6 | `const run = (file, args) => {` |
+| `mockReact` | 529-535 | 7 | `function mockReact() {` |
+| `req` | 837-854 | 18 | `const req = (name) => {` |
+| `req` | 915-934 | 20 | `const req = (name) => {` |
+| `req` | 983-1001 | 19 | `const req = (name) => {` |
 
 ### test/tool/test-client-fragment-scope.mjs（69 行 · 1 个函数）
 
