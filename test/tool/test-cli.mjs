@@ -729,6 +729,19 @@ import { promisify } from 'node:util';
     assert.ok(!rootClientSrc.includes("'pushPermitEnabled'"), 'client.js 不应含 pushPermitEnabled（已移除 2026-09-11）');
   });
 
+  test('[client] 首屏必须自动读 npm 账号（防退回「把没读显示成未配置」）', () => {
+    // 现象回归（task-23 现象 1）：npm 卡曾因「挂载时压根没请求 /npm-account」而把
+    //   「还没读」渲染成「⚠️ 未配置 npm token」——一句与事实相反的确定性否定。
+    //   现在的契约：首屏资源清单由 controller.uiFirstPaintNames 声明，apply 用 loadAll 一次读齐。
+    assert.match(rootClientSrc, /register\('npm'/, 'state 层必须注册 npm 资源');
+    assert.match(rootClientSrc, /loadAll\(\{ names: controller\.uiFirstPaintNames \}\)/,
+      'apply 必须用 loadAll 读首屏资源（不是逐个 fire-and-forget）');
+    const m = rootClientSrc.match(/uiFirstPaintNames = (\[[^\]]*\])/);
+    assert.ok(m, '应声明首屏资源清单 uiFirstPaintNames');
+    assert.ok(m[1].includes("'npm'"), '首屏资源清单必须包含 npm（否则 npm 卡又会显示假「未配置」）');
+    assert.ok(m[1].includes("'account'") && m[1].includes("'settings'"), '首屏资源清单应含 settings/account');
+  });
+
   test('[client] client.js：设置项键（客户端写回键须在 Host Config）', () => {
     // client.js 写回的键：凭据 + 本插件自己的开关（审计配置不在这里，属预处理实现）
     const clientKeys = ['githubToken', 'sshPub', 'preCommitEnabled', 'pushMethod'];

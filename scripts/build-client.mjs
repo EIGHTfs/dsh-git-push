@@ -52,6 +52,7 @@ export const PART_ORDER = [
   'loader.js',     // [1] loader + factory 头 + require + NS（必须首片）
   'const.js',      // [2] 常量区（BUSY/维度表/超时/样式串）
   'utils.js',      // [3] 工具区（ensureCss/getJson/postJson/tokenConfigured/localGet…）
+  'state.js',      // [3续] UI 状态工厂（单一真相源/读回早于首帧/重建重放）
   'icons.js',      // [4] 图标区
   'account.js',    // [5] 账号信息 Tab
   'browser.js',    // [6] 目录选择器
