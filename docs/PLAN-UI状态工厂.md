@@ -81,9 +81,12 @@
    list = buildLocalList(indexMap, path, deadline);      // 每仓 describeRepo + git log（同步）
    await applyLiveRemote(list, deadline);                // 27 个仓库 × SSH ls-remote
    ```
-2. `lib/app/handlers/http-constants.js:5` `LIST_LIVE_BUDGET_MS = 15_000`，
-   `lib/git/transport.js:488-489` 单步上限 `META_STEP_TIMEOUT=3s` / `LS_TIMEOUT=8s`，并发 `PROBE_CONCURRENCY=4`。
-   27 仓 ÷ 4 并发 × 8s ≈ 54s，加同步 git 调用与开销 ⇒ **实测 87.5s**（预算是 15s，实际穿透 5.8 倍）。
+2. **真正的大头不是 SSH**（实施阶段实测更正）：`buildLocalList` 对**每个**仓库同步跑
+   `describeRepo` + `git log`（`repos.js:47-56`，共 4 次 `execFileSync`）；CIFS 上每仓 ≈4s，
+   27 仓 ≈ 100s。SSH 探测（`applyLiveRemote`，预算 15s）只是叠加项。
+   **判据**：把 SSH 整段去掉后（`probeLocal:false` + 不调 `applyLiveRemote`）请求仍需 5.5s，
+   其中 3.5s 来自后台补查函数第一句同步 `runGit` 阻塞；把后台启动延到宏任务后降到 **11–24ms**。
+   → 结论：**"每仓同步 spawn git" 才是 87s 的主因**，网络探测是次因。
 3. `lib/client-parts/git/utils.js:14` `AbortSignal.timeout(dshgp_FETCH_TIMEOUT_MS)`，
    `const.js:23` `dshgp_FETCH_TIMEOUT_MS = 30_000` ⇒ 30s 客户端 abort。
 4. 失败无自愈：`controller.js:590-592`
