@@ -288,6 +288,24 @@ test('stdout 不合契约（非 JSON / 多行 / 缺 summary）→ fail-closed', 
 });
 
 // ── git 侧职责没被搬走（用假引擎驱动，结果完全可控） ────────────────
+test('只写旧键（无 preCommit.enabled）⇒ 走默认关，不读旧键、不替用户猜', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-engine-nolegacy-'));
+  const cfgFile = join(dir, 'config.json');
+  writeFileSync(cfgFile, JSON.stringify({ auditEnabled: true }));
+  setSettingsFileOverride(cfgFile);
+  try {
+    const state = resolvePreCommitEnabled({});
+    assert.equal(state.enabled, false, '没写 preCommit.enabled ⇒ 默认关（旧键不再被读取）');
+    assert.notEqual(state.source, 'legacy', '来源枚举里不应再有 legacy');
+    const r = await runPreprocess({ repoPath: '/tmp', cfg: { preCommit: { enabled: false } } });
+    assert.equal(r.ok, true, '关着 ⇒ 直接放行，不调引擎');
+    assert.equal(r.audit, null);
+  } finally {
+    setSettingsFileOverride(null);
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test('runPreprocess：预处理关闭时完全不调引擎（引擎配错也不影响提交）', async () => {
   // 隔离配置文件：本用例要断言「关掉时返回值就是干净的 {ok,audit:null}」，
   //   若读到真实 DSH_HOME 里可能存在的旧键，返回体会多出迁移提示字段（那是另一条语义）。
@@ -297,7 +315,7 @@ test('runPreprocess：预处理关闭时完全不调引擎（引擎配错也不�
   setSettingsFileOverride(cfgFile);
   try {
     // command 指向不存在的程序：如果还是去 spawn 了，必然报「找不到引擎命令」
-    const r = await runPreprocess({ repoPath: '/tmp', preprocessEnabled: false, cfg: { preCommit: { enabled: false, command: 'dshgp-no-such-engine-binary-xyz' } } });
+    const r = await runPreprocess({ repoPath: '/tmp', stages: [], cfg: { preCommit: { enabled: false, command: 'dshgp-no-such-engine-binary-xyz' } } });
     assert.deepEqual(r, { ok: true, audit: null });
   } finally {
     setSettingsFileOverride(null);
@@ -321,31 +339,12 @@ test('runPreprocess：配置文件里 preCommit.enabled=true 时门禁照跑（�
   }
 });
 
-test('只认旧版开关键时按它的值决定跑不跑（不静默关掉门禁）', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'dshgp-engine-legacy-'));
-  const cfgFile = join(dir, 'config.json');
-  writeFileSync(cfgFile, JSON.stringify({ auditEnabled: true }));
-  setSettingsFileOverride(cfgFile);
-  try {
-    // 开关真源是 config.json 里的旧键：schema 默认值（false）不得压过它
-    const state = resolvePreCommitEnabled({ preCommit: { enabled: false } });
-    assert.equal(state.enabled, true, '旧键为开 ⇒ 开关必须是开');
-    assert.equal(state.source, 'legacy', '沿用旧键时必须标出来源');
-    // 门禁真跑起来（引擎不存在 ⇒ fail-closed，而不是当作「没开」静默放行）
-    const r = await runPreprocess({ repoPath: '/tmp', cfg: { preCommit: { enabled: false, command: 'dshgp-no-such-engine-binary-xyz' } } });
-    assert.equal(r.ok, false, '引擎不可用必须 fail-closed');
-  } finally {
-    setSettingsFileOverride(null);
-    rmSync(dir, { recursive: true, force: true });
-  }
-});
-
-/* ───────────────── S1：有序阶段链（配置解析 + 向后兼容） ───────────────── */
+/* ───────────────── S1：有序阶段链（配置解析） ───────────────── */
 
 test('resolveStages：未配 stages ⇒ legacy（走原来的单命令路径）', () => {
   for (const cfg of [{}, { preCommit: {} }, { preCommit: { stages: [] } }]) {
     const plan = resolveStages(cfg);
-    assert.equal(plan.mode, 'legacy', '未配 stages 必须走 legacy');
+    assert.equal(plan.mode, 'single', '未配 stages 必须走单命令模式');
     assert.deepEqual(plan.stages, []);
   }
 });

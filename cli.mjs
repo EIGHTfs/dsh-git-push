@@ -36,7 +36,7 @@ export const CLI_NAME = CLI_GIT;
  *   的 params 校验，与本表无关；但本侧 HELP 里写了的 flag 都必须在本表出现，
  *   否则 self-check 会报「HELP 写了但 parseArgv 不认」。 */
 export const KNOWN_FLAGS = [
-  '--apply', '--audit', '--audit-exempt-paths', '--audit-exempt-reason', '--body', '--branch', '--check', '--ci-timeout-sec', '--compare',
+  '--apply', '--body', '--branch', '--check', '--ci-timeout-sec', '--compare',
   '--confirm', '--depth', '--dest', '--dry-run', '--extra-emails', '--extra-repos-file', '--force', '--history',
   '--global', '--history-depth', '--ignore-patterns', '--json', '--local-preview', '--max', '--message', '--message-items',
   '--method', '--no-dry-run', '--no-push', '--offline', '--otp', '--owner', '--paths', '--push',
@@ -70,10 +70,10 @@ const HELP = `git-sluice v${VERSION} — ${CLI_ENTRIES[CLI_GIT].intro}
                                    同上，可读文本通道（scan 是它的注册表通道，输出更精简）
   git-sluice index <root> [--owner <账号>] [--depth N] [--max N] [--offline] [--json]
                                    重建仓库索引 dsh-repo-index.json（--offline=纯离线不查 GitHub API）
-  git-sluice commit <repo> --message <msg> [--push|--no-push] [--audit] [--dry-run] [--force] [--ignore-patterns <模式>] [--push-confirmed] [--paths <路径1,路径2>] [--message-items <JSON>] [--preprocess-stages <JSON|@文件>] [--audit-exempt-paths <文件,...>] [--audit-exempt-reason <理由>] [--remote <名>] [--wait-ci] [--ci-timeout-sec N]
+  git-sluice commit <repo> --message <msg> [--push|--no-push] [--dry-run] [--force] [--ignore-patterns <模式>] [--push-confirmed] [--paths <路径1,路径2>] [--message-items <JSON>] [--preprocess-stages <JSON|@文件>] [--remote <名>] [--wait-ci] [--ci-timeout-sec N]
                                    审计门禁 → 提交（默认只 commit 不 push；--push 推远端；--force 强推覆盖远端历史；
                                    --push-confirmed 显式放行推送门禁；
-                                   --paths 精确 add 指定文件替代 add -A；--audit-exempt-paths 本次提交按文件临时豁免审计）
+                                   --paths 精确 add 指定文件替代 add -A）
   git-sluice clone <owner/repo> [dest] [--dest <目录>] [--branch <名>] [--history] [--history-depth N]
                                    从 GitHub 克隆仓库（Git Data API 通道，不直连 github.com；--history=重建真实提交历史）
   git-sluice clone-preview <owner/repo> [--branch <名>]
@@ -111,31 +111,15 @@ const HELP = `git-sluice v${VERSION} — ${CLI_ENTRIES[CLI_GIT].intro}
 
 /** 命令表（本侧独有的 COMMANDS；注册表驱动的命令由 shared 的 resolveDispatch 处理）。
  * 注：`git` 不用登记——注册表（git_sluice）已覆盖它，旧 cli.mjs 里那条 COMMANDS['git'] 是死代码。 */
-/**
- * HELP 文本里与「提交前审计预处理」绑定的片段。
- * 为什么要有这张表：参数表（command-registry 的 params）已经是**动态**的——
- *   审计引擎不可用时 `--audit*` 不入签名（传了报「未知参数」）；但 HELP 是**手写快照**，
- *   不跟着动态就会在审计剥离后仍宣传一个不存在的参数。审计不可用时按这张表把片段从渲染结果里剔掉。
- * 漂移防护：test/tool/test-cli.mjs 断言「每个片段都真的出现在 HELP 里」——改了 HELP 忘改表会变红。
- */
-export const AUDIT_HELP_SNIPPETS = Object.freeze([
-  ' [--audit]',
-  ' [--audit-exempt-paths <文件,...>]',
-  ' [--audit-exempt-reason <理由>]',
-  '；--audit-exempt-paths 本次提交按文件临时豁免审计',
-]);
 
 /**
- * 渲染本侧 HELP（按当前配置决定审计参数出不出现）。
- * @param {object} [cfg] 插件配置
- * @param {boolean} [hasBuiltinEngine] 仅供测试注入「内置引擎是否存在」
+ * 渲染本侧 HELP。
+ * HELP 是静态文本，且不含任何实现专名参数——按次的预处置能力统一走 `preprocessStages`，
+ *   所以这里不再需要按「实现是否可用」裁剪片段。
  * @returns {string}
  */
-export function renderHelp(cfg = {}, hasBuiltinEngine) {
-  if (preprocessAvailable(cfg, hasBuiltinEngine)) return HELP;
-  let text = HELP;
-  for (const snippet of AUDIT_HELP_SNIPPETS) text = text.split(snippet).join('');
-  return text;
+export function renderHelp() {
+  return HELP;
 }
 
 export const COMMANDS = new Map([
@@ -174,7 +158,7 @@ export async function main(argv = process.argv.slice(2)) {
     cliName: CLI_GIT,
     argv,
     commands: COMMANDS,
-    helpText: () => renderHelp(cliPluginConfig()),
+    helpText: () => renderHelp(),
     passthroughGit,
     getConfig: cliPluginConfig,
   });

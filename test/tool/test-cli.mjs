@@ -8,11 +8,8 @@
  */
 import { TOOL_REGISTRY, registryByName, registryByCli, parseRegistryArgs, buildToolsListText, resolveEntryParams, preprocessAvailable } from '../../lib/app/command-registry.js';
 import { listTools } from '../../lib/app/tools.js';
-// 注册表里的「provider 贡献参数」来自各包 manifest 的缓存：生产路径在 apply() 里 await 预热，
-//   单元测试直接查注册表时必须自己预热一次（否则参数面为空，与真实运行不一致）。
-import { primeCommitContributions } from '../../lib/preprocess/providers.js';
-await primeCommitContributions();
-import { AUDIT_HELP_SNIPPETS, renderHelp } from '../../cli.mjs';
+
+import { renderHelp } from '../../cli.mjs';
 import { commandOwner, parseEntrySourceMeta, readEntrySource, CLI_ENTRIES, CLI_GIT, CLI_TOOL, allCommands, resolveDispatch } from '../../lib/cli/shared.mjs';
 import { DEFAULT_CONFIG, SETTINGS_SCHEMA, defaultConfig, resolveConfig, createSettingsCard, collectExternalRefs, INLINE_CSS, clientModuleInfo } from '../../lib/client/index.js';
 // Config 真源（前端设置项必须都能落到 Host Config 上）
@@ -105,14 +102,8 @@ import { promisify } from 'node:util';
       //   不是「当前这台机器上装没装」。
       const paramStates = [resolveEntryParams(tool, {}), resolveEntryParams(tool, { preCommit: { command: 'provider' } })];
       const accepted = new Set(paramStates.flat().map((param) => `--${kebab(param.flag)}`));
-      // 实现参数由 provider 自报：**provider 不在位时注册表里本来就没有它们**，
-      //   对应地 HELP 里的那几行也会被 renderHelp 去掉（同一条可用性判据）。
-      //   CI 里审计包按设计不安装（--omit=optional），所以这里必须先按同一判据裁掉再比对，
-      //   否则本用例会在「没装实现」的机器上恒红（本地装了兄弟目录，看不到这个形态）。
-      let scannedText = text;
-      if (!preprocessAvailable({}, undefined)) {
-        for (const snippet of AUDIT_HELP_SNIPPETS) scannedText = scannedText.split(snippet).join('');
-      }
+      // HELP 已不含任何实现专名参数（按次能力走 preprocessStages），无需按可用性裁剪
+      const scannedText = text;
       // 布尔参数额外接受否定形式 `--no-<参数>`（CLI 层会在进解析器前翻译成 false，见 shared.normalizeRegistryArgv）
       const negations = new Set(paramStates.flat()
         .filter((param) => param.type === 'boolean')
@@ -480,22 +471,14 @@ import { promisify } from 'node:util';
     }
   });
 
-  test('[动态参数] HELP 与参数表对齐：不可用态 help 里不再出现 --audit', () => {
-    const availableHelp = renderHelp({}, true);
-    const unavailableHelp = renderHelp({}, false);
-    // 可用态：三条审计参数都在 HELP 里
-    assert.match(availableHelp, /\[--audit\]/, '可用态 HELP 应含 [--audit]');
-    assert.match(availableHelp, /--audit-exempt-paths/, '可用态 HELP 应含 --audit-exempt-paths');
-    assert.match(availableHelp, /--audit-exempt-reason/, '可用态 HELP 应含 --audit-exempt-reason');
-    // 不可用态：整体不再出现 --audit（含描述里的那句）
-    assert.doesNotMatch(unavailableHelp, /--audit/, '不可用态 HELP 不得再出现 --audit');
+  test('[参数面] commit 的 HELP 不含任何实现专名参数，按次能力统一走 preprocessStages', () => {
+    const helpText = renderHelp();
+    // 实现自己的参数不再出现在工具/CLI 签名里：按次覆盖走 preprocessStages[].args
+    assert.doesNotMatch(helpText, /--audit/, 'HELP 不得出现 --audit*（实现专名参数已移出签名）');
+    assert.match(helpText, /--preprocess-stages/, 'HELP 应给出 preprocessStages 的用法（正确用法靠描述，不靠迁移表）');
     // 其余 commit 参数不受影响（防「整行被删」）
     for (const flag of ['--push|--no-push', '--dry-run', '--force', '--message-items']) {
-      assert.ok(unavailableHelp.includes(flag), `不可用态 HELP 仍应含 ${flag}`);
-    }
-    // 漂移防护：片段表里的每一项都必须真的出现在 HELP 里（改了 HELP 忘改表 ⇒ 这里变红）
-    for (const snippet of AUDIT_HELP_SNIPPETS) {
-      assert.ok(availableHelp.includes(snippet), `AUDIT_HELP_SNIPPETS 里的片段在 HELP 中找不到（HELP 改过？）：${JSON.stringify(snippet)}`);
+      assert.ok(helpText.includes(flag), `HELP 仍应含 ${flag}`);
     }
   });
 

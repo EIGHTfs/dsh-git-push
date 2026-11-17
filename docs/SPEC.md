@@ -532,35 +532,34 @@ stderr : 仅诊断信息，不参与判定
 宿主的 HTTP 路由、CLI 转发、工具参数都按这份声明查"谁提供了什么"，不写死具体实现的能力清单。
 可选能力：`params`（给工具签名贡献参数）、`enabled`（可用性判据，≠ 开关）、`renderResult`（结果文案）。
 
-### 16.5 实现自报「提交工具参数」（宿主不写死实现参数名）
+### 16.5 实现参数怎么传：`preprocessStages[].args`（宿主不写死实现参数名）
 
-`git_commit_push` 上那些**属于实现语义**的参数，不再由宿主定义，而由 provider 在自己的
-`preprocessManifest` 里声明：
+工具签名里**没有任何实现专名参数**。按次给实现传参，统一走阶段链的自由字典：
+
+```js
+git_commit_push({
+  repo, message,
+  preprocessStages: [
+    { provider: 'audit', args: { exemptPaths: ['a.js'], reason: '临时豁免' } }, // args 宿主不认识
+    { command: 'node', args: ['fmt.mjs'], onFail: 'warn' },
+  ],
+});
+```
+
+- `preprocessStages: []` = **这一次不跑任何预处理**；不传 = 按配置文件走
+- 每项 `args` 的内容由实现自己解释；provider 在自己的 manifest 里声明键名 → CLI 参数的映射：
 
 ```js
 // audit-sluice/lib/manifest.js
-export const preprocessManifest = {
-  id: 'audit',
-  commitParams: [                                   // 宿主据此拼工具签名
-    { flag: 'audit', type: 'boolean', desc: '…', switchParam: true },  // switchParam = 「本次跑不跑预处理」
-    { flag: 'auditExemptPaths', type: 'array', desc: '…' },
-    { flag: 'auditExemptReason', type: 'string', desc: '…' },
-  ],
-  cliFlagMap: {                                     // 宿主据此把参数搬成 CLI flag
-    auditExemptPaths: { flag: '--exempt-paths', kind: 'csv' },
-    auditExemptReason: { flag: '--exempt-reason', kind: 'string' },
-  },
-};
+cliFlagMap: {
+  exemptPaths: { flag: '--exempt-paths', kind: 'csv' },
+  reason: { flag: '--exempt-reason', kind: 'string' },
+}
 ```
 
-宿主侧行为：
-- `apply()` 里 `await primeCommitContributions()` 预热 → 注册表**同步**读缓存拼参数表
-- 工具调用时**按声明遍历**收集参数进通用袋子 `providerParams`，原样交给引擎
-- 引擎按 `cliFlagMap` 生成 CLI 参数（宿主不认识 `--exempt-paths` 这类名字）
-- 实现不在位 ⇒ 声明为空 ⇒ 工具签名**自然收缩**（热插拔）；此时传了未声明参数 ⇒ 早失败并列出当前已声明参数
-
-机器门禁（`scripts/check.mjs`）：宿主 `lib/` 里出现实现参数名字面量即红（允许的三个中间层文件除外），
-确保「参数名必须 provider 自报」这条不会被下一次改动悄悄破坏。
+- 宿主把 `stage.args` 原样收下，按 `cliFlagMap` 翻成 CLI 参数（`csv` = 数组拼逗号）
+- 未知参数名 → 直接报「参数不存在：xxx」，**不提供迁移表**（正确用法由工具描述给出）
+- 实现不在位 ⇒ 阶段跳过并在回执里标出（热插拔）
 
 ### 16.6 实现方自己的文档
 
