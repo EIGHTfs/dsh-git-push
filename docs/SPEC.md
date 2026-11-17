@@ -588,7 +588,7 @@ cliFlagMap: {
 
 | 写法 | 含义 |
 |---|---|
-| `{ provider: 'audit' }` | 走 provider 注册表解析（已有通道） |
+| `{ provider: 'audit', args: {...} }` | 走 provider 注册表解析；`args` 是**该实现自己的参数**（自由字典，宿主原样透传，键名→CLI 参数由实现的 manifest 声明，见 §16.5） |
 | `{ command: 'node', args: [...] }` | 跑任意脚本，**不要求**对方声明是插件扩展；**不走 shell**（文件名含空格也安全，推荐） |
 | `{ command: 'node x.mjs --mode staged' }` | 单字符串形态：按 shell-like 规则**切词**（不启动真 shell，`;`/`$( )` 只当普通参数） |
 
