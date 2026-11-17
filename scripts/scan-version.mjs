@@ -75,7 +75,8 @@ function main() {
   if (!vi.ok) errors.push(vi.error);
   // 3) cli.mjs HELP 文本（源码里是 v${VERSION} 模板，运行时渲染为 v<版本>）
   // 三个 CLI 入口都必须在 HELP 首行引用 v${VERSION} 模板（入口拆成三个后，只查 cli.mjs 会漏掉另外两个）
-  for (const entryFile of ['cli.mjs', 'cli-audit.mjs', 'cli-tool.mjs']) {
+  // 只查本仓库现存的入口：审计 CLI 已随实现迁到独立包（audit-sluice），不再有 cli-audit.mjs
+  for (const entryFile of ['cli.mjs', 'cli-tool.mjs']) {
     const entryPath = join(ROOT, entryFile);
     let entryText = '';
     if (existsSync(entryPath)) {

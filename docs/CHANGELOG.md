@@ -15,6 +15,23 @@
 
 | 版本 | 内容 |
 |------|------|
+| 3.1.0 | **提交前预处理升级为有序阶段链：可以先格式化、再审计，并能看见「改了哪些文件」。**
+
+· **`preCommit.stages` 有序链**：数组顺序即执行顺序；每阶段独立超时；不配 `stages` 时行为与升级前逐字段一致（只多一个 additive 的 `stagesSource`）。
+· **失败语义**：`onFail` = 用户配置 > provider manifest 的 `defaultOnFail` > **兜底 `block`**（fail-closed）。宿主不按 provider 名字猜语义。
+· **调用参数覆盖配置**：工具参数 `preprocessStages` / CLI `--preprocess-stages`（JSON 或 `@file`）优先级高于配置，表达「这一次提交我想额外跑什么」。
+· **两种阶段形态**：`{ provider }`（走注册表）与 `{ command, args? }`（跑任意脚本，不走 shell；单字符串按 shell-like 切词，不启动真 shell）。
+· **交上下文**：环境变量 `PREPROCESS_REPO` / `PREPROCESS_CHANGED_FILES`（换行分隔）/ `_COUNT` / `_FILES_FILE` / `_STAGE_PROVIDER`，以及 `args` 占位符 `{repo}`/`{filesFile}`/`{filesCount}`/`{stage}`。
+· **改动可见**：阶段前后工作树快照差集（`git status --porcelain -z` + 内容指纹）→ `preprocessStages[].changed` / `preprocessChanges`；内容指纹保证「跑两次第二次 0 改动」可验证。
+· **去写死路径**：可执行文件探测改为 `env → PATH`，不再内置任何系统安装位置。
+· **打包收紧**：npm 包排除 test/docs/开发脚本，只保留运行时必需（含 `scripts/scan-repos.mjs` 等 4 个运行时脚本）。 |
+| 3.0.0 | **宿主与审计实现分家：审计能力整体迁到独立 npm 包 `audit-sluice`，本插件只剩 git 侧。**
+
+· **物理拆分**：审计引擎/规则/评分/豁免全部移入 `audit-sluice`（可选依赖，不装则提交门禁跳过并如实标注，主流程照常）。
+· **唯一耦合面**：`lib/preprocess/providers.js`（provider 声明 + 入口解析）+ `pre-commit-engine.js`（子进程跑实现）+ `preprocess-client.js`（进程内调实现公开面）；`check.mjs` 两条机器门禁守着，不许出现第四处。
+· **配置归属**：审计自己的配置（扫描范围/文件上限/禁用规则包/权重）搬进审计包自己的 `config.json`；宿主只留「提交前预处理开不开」（`preCommit.enabled`）。
+· **删除开发者要求门禁（D13）**：`requirementsConfirmed` 全链路移除。
+· **CLI 两入口**：`git-sluice` / `tool-sluice`；审计命令走 `audit-sluice` 自己的 CLI，跨侧命令明确报错并给可照抄替代。 |
 | 2.20.19 | **审计侧与 git 侧解耦收官：HTTP 路由、参数、返回消息三层都不再由 git 侧写死**。行为对现有使用者零变化。
 
 · **HTTP 路由分侧**：审计 5 条端点（`audit` / `rule-slots` / `rule-detail` / `toggle-rule` / `exempt-hint`）搬到 `/api/git-audit/*`；git 与共享端点继续 `/api/git-push/*`（**25 条路径一个字不改**）。两条前缀由**同一个 `handleHttp` 入口**服务 ⇒ 鉴权（Origin/CSRF、body 上限、写确认）完全一致，测试用 `routes[0].handler === routes[1].handler` 钉住。旧路径保留转发一版，响应带 `Deprecation: true` 与 `Link: <新路径>; rel="successor-version"`。
