@@ -122,9 +122,15 @@ function makeBlockerRepo() {
 
 
 test('buildEngineArgs：只传调用上下文，实现自己的配置不传', () => {
+  // 实现自己的参数现在走「通用袋子 + manifest 给的 flag 映射」，宿主不认具体名字
   const argv = buildEngineArgs({
     repoPath: '/repo', rulesetDir: '/rs', blockersOnly: true,
-    visibility: 'private', exemptPaths: ['a.js'], exemptReason: '示例',
+    visibility: 'private',
+    providerParams: { exemptPaths: ['a.js'], exemptReason: '示例' },
+    flagMap: {
+      exemptPaths: { flag: '--exempt-paths', kind: 'csv' },
+      exemptReason: { flag: '--exempt-reason', kind: 'string' },
+    },
   });
   assert.equal(argv[argv.length - 1], '--json', '--json 必须在最后（尾部固定段，任何语言都好解析）');
   assert.equal(argv[argv.indexOf('--repo') + 1], '/repo');
@@ -291,7 +297,7 @@ test('runPreprocess：预处理关闭时完全不调引擎（引擎配错也不�
   setSettingsFileOverride(cfgFile);
   try {
     // command 指向不存在的程序：如果还是去 spawn 了，必然报「找不到引擎命令」
-    const r = await runPreprocess({ repoPath: '/tmp', audit: false, cfg: { preCommit: { enabled: false, command: 'dshgp-no-such-engine-binary-xyz' } } });
+    const r = await runPreprocess({ repoPath: '/tmp', preprocessEnabled: false, cfg: { preCommit: { enabled: false, command: 'dshgp-no-such-engine-binary-xyz' } } });
     assert.deepEqual(r, { ok: true, audit: null });
   } finally {
     setSettingsFileOverride(null);

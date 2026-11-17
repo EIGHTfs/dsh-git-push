@@ -176,6 +176,31 @@ if (couplingHits.length) {
   console.log(`✔ 耦合面：实现包只经 ${COUPLING_FILES.size} 个中间层文件引用（无旁路）`);
 }
 
+// ── 实现参数名门禁：宿主不许写死某个实现的工具参数名 ────────────────
+//   参数名必须由 provider 在 manifest 的 commitParams 里自报（宿主只做通用转发）。
+//   这里钉住最容易回潮的写法：参数名以字面量出现在宿主 lib/ 里（允许的三个中间层文件除外）。
+const IMPL_PARAM_LITERAL = /['"`]auditExempt[A-Za-z]*['"`]/;
+const paramLiteralHits = [];
+for (const f of files) {
+  const rel = f.replace(ROOT + '/', '');
+  if (!rel.startsWith('lib/')) continue;
+  if (COUPLING_FILES.has(rel)) continue;
+  let src = '';
+  try { src = readFileSync(f, 'utf8'); } catch { continue; }
+  // 逐行扫，跳过整行注释（注释里解释历史是允许的）
+  for (const line of src.split('\n')) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('//') || trimmed.startsWith('*') || trimmed.startsWith('/*')) continue;
+    if (IMPL_PARAM_LITERAL.test(line)) paramLiteralHits.push(`${rel}: ${trimmed.slice(0, 80)}`);
+  }
+}
+if (paramLiteralHits.length) {
+  fail += paramLiteralHits.length;
+  console.error(`✗ 实现参数名违规：宿主不得写死实现参数名（应由 provider manifest 的 commitParams 声明）：${paramLiteralHits.join('；')}`);
+} else {
+  console.log('✔ 实现参数名：宿主 lib/ 未写死任何实现参数名（由 provider 自报）');
+}
+
 console.log(`\n${files.length - fail}/${files.length} 文件语法通过`);
 console.log(`${jsonFiles.length - jsonFail}/${jsonFiles.length} 个 JSON 可解析`);
 process.exitCode = (fail > 0 || jsonFail > 0) ? 1 : 0;

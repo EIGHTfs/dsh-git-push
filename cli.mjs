@@ -14,7 +14,7 @@
  */
 import { VERSION } from './lib/self/index.js';
 import { runWrappedGit } from './lib/git/wrapped-git.js';
-import { auditPreprocessAvailable } from './lib/app/command-registry.js';
+import { preprocessAvailable } from './lib/app/command-registry.js';
 
 // 具名 import 而非 `export ... from`：COMMANDS 表直接引用 cmdXxx 变量名，
 //   re-export 不建立本模块作用域绑定，会 ReferenceError。
@@ -132,7 +132,7 @@ export const AUDIT_HELP_SNIPPETS = Object.freeze([
  * @returns {string}
  */
 export function renderHelp(cfg = {}, hasBuiltinEngine) {
-  if (auditPreprocessAvailable(cfg, hasBuiltinEngine)) return HELP;
+  if (preprocessAvailable(cfg, hasBuiltinEngine)) return HELP;
   let text = HELP;
   for (const snippet of AUDIT_HELP_SNIPPETS) text = text.split(snippet).join('');
   return text;

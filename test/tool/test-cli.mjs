@@ -6,8 +6,12 @@
  *     不影响 test() 的注册时机与执行顺序；每个 test 名带 `[原文件名]` 前缀便于溯源。
  * 为什么不用 describe：它的回调是 async 函数作用域，会把顶层 await/const/exitCode 挪位（上轮实测 54 失败 / 少 17 条用例）。
  */
-import { TOOL_REGISTRY, registryByName, registryByCli, parseRegistryArgs, buildToolsListText, resolveEntryParams, auditPreprocessAvailable } from '../../lib/app/command-registry.js';
+import { TOOL_REGISTRY, registryByName, registryByCli, parseRegistryArgs, buildToolsListText, resolveEntryParams, preprocessAvailable } from '../../lib/app/command-registry.js';
 import { listTools } from '../../lib/app/tools.js';
+// 注册表里的「provider 贡献参数」来自各包 manifest 的缓存：生产路径在 apply() 里 await 预热，
+//   单元测试直接查注册表时必须自己预热一次（否则参数面为空，与真实运行不一致）。
+import { primeCommitContributions } from '../../lib/preprocess/providers.js';
+await primeCommitContributions();
 import { AUDIT_HELP_SNIPPETS, renderHelp } from '../../cli.mjs';
 import { commandOwner, parseEntrySourceMeta, readEntrySource, CLI_ENTRIES, CLI_GIT, CLI_TOOL, allCommands, resolveDispatch } from '../../lib/cli/shared.mjs';
 import { DEFAULT_CONFIG, SETTINGS_SCHEMA, defaultConfig, resolveConfig, createSettingsCard, collectExternalRefs, INLINE_CSS, clientModuleInfo } from '../../lib/client/index.js';
