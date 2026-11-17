@@ -22,6 +22,7 @@ import {
   cmdAccountCheck, cmdCredEnv, cmdRemoteCreate, cmdSetVisibility, cmdGenSshKey,
 } from './lib/cli/commands-account.mjs';
 import { cmdRepos, cmdIndex, cmdCommit, cmdClone } from './lib/cli/commands-vcs.mjs';
+import { cmdFilemode } from './lib/cli/commands-account.mjs';
 import { cmdPreprocess } from './lib/cli/commands-preprocess.mjs';
 import {
   CLI_GIT, CLI_ENTRIES, cliPluginConfig, parseArgv, parseVia, printToolResult, runAsEntry, runCli,
@@ -35,9 +36,9 @@ export const CLI_NAME = CLI_GIT;
  *   的 params 校验，与本表无关；但本侧 HELP 里写了的 flag 都必须在本表出现，
  *   否则 self-check 会报「HELP 写了但 parseArgv 不认」。 */
 export const KNOWN_FLAGS = [
-  '--audit', '--audit-exempt-paths', '--audit-exempt-reason', '--body', '--branch', '--ci-timeout-sec',
+  '--apply', '--audit', '--audit-exempt-paths', '--audit-exempt-reason', '--body', '--branch', '--check', '--ci-timeout-sec', '--compare',
   '--confirm', '--depth', '--dest', '--dry-run', '--extra-emails', '--extra-repos-file', '--force', '--history',
-  '--history-depth', '--ignore-patterns', '--json', '--local-preview', '--max', '--message', '--message-items',
+  '--global', '--history-depth', '--ignore-patterns', '--json', '--local-preview', '--max', '--message', '--message-items',
   '--method', '--no-dry-run', '--no-push', '--offline', '--otp', '--owner', '--paths', '--push',
   '--push-confirmed', '--push-initial', '--query', '--remote', '--root',
   '--preprocess-stages',
@@ -88,6 +89,10 @@ const HELP = `git-sluice v${VERSION} — ${CLI_ENTRIES[CLI_GIT].intro}
                                    默认 dry-run 只报告，--write 才改（先建备份引用，自检通过才改写），--push 再 force-with-lease 强推
   git-sluice account-check [--token <t>] [--ssh-pub <公钥整行>]
                                    校验 GitHub 账号与凭据（token 在线校验 + SSH 公钥指纹）
+  git-sluice filemode <仓库> [--check] [--apply] [--global] [--compare] [--json]
+                                   CIFS/SMB/容器卷上新文件权限是 755/777 而仓库记 644 时，git 会把每个新文件都算成改动（内容未变）。
+                                   不加 --apply = 只读查看（等价 --check）：报告当前 core.filemode 与纯权限变动条数；
+                                   --apply 写入（默认只改当前仓库；--global 才写 ~/.gitconfig）；--compare 反向恢复成"比较权限位"
   git-sluice cred-env
                                    输出插件保管凭据的环境变量前缀（SSH: GIT_SSH_COMMAND 私钥路径 / HTTPS: GIT_ASKPASS 脚本）——AI 执行任意外部 git 命令时粘贴使用，全程无 token/私钥明文
   git-sluice gen-ssh-key <x@y.z> [--force]
@@ -140,6 +145,8 @@ export const COMMANDS = new Map([
   // `git` 必须走这里而不是注册表：注册表只认声明过的参数，会把 git 自己的 flag
   //   （如 `log --oneline`）当「未知参数」拒掉，与「参数与 git 完全一致」的承诺相反。
   ['git', (rest) => cmdGit(rest)],
+  // 权限位（CIFS/容器卷常见）：查看或写 core.filemode
+  ['filemode', parseVia((flags, positional) => cmdFilemode(positional[0] || '.', flags))],
 ]);
 
 /** 子命令：git —— 浅包装 git（参数原样透传，凭据自动注入）。

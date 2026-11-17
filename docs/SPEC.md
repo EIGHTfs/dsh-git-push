@@ -16,7 +16,7 @@
 | 装载声明 | `package.json` 的 `dsh.bundle.patch` → `./cordis.patch.yml`；`dsh.client` 声明 web 端注入；`dsh.skills` 列出随包发布的 skill |
 | 配置目录 | `<DSH_HOME>/git-push/`（凭据与状态文件都落在这里） |
 
-## 二、工具（20 个，宿主可见公开面）
+## 二、工具（21 个，宿主可见公开面）
 
 | 工具 | CLI 名 | 用途 |
 |---|---|---|
@@ -34,11 +34,18 @@
 | `git_account_check` | `account-check` | 账号与凭据在线校验 |
 | `git_cred_env` | `cred-env` | 输出凭据环境变量前缀（不含明文） |
 | `git_gen_ssh_key` | `gen-ssh-key` | 生成 SSH 密钥对（私钥不出本机） |
+| `git_filemode` | `filemode` | 查看/写入 `core.filemode`：忽略「文件权限变动」（CIFS 上新建文件是 755/777、仓库记录 644 时，git 会把每个新文件都算成改动）。缺省只查看；`apply:true` 才写；默认只改当前仓库，`scope:'global'` 才写 `~/.gitconfig` |
 | `git_identity_rewrite` | `git-sluice identity-rewrite` | 提交身份历史改写（默认 dry-run；`--write` 才改，先建备份引用；`--push` 用 force-with-lease） |
 | `git_sluice` | `git` | git 命令透传（凭据自动注入） |
 | `npm_publish` | `npm-publish` | npm 发包（**后台 job** + dryRun）：默认只体检并跑 `npm publish --dry-run`（不写 registry ✗）；真发必须同时 `confirm=true` 与 `dryRun=false`；前置体检 `private:true` / 同名版本占用 / `npm pack` 清单 |
 | `exempt` | —（无 CLI） | 注释豁免工具（add/remove/list/check：按 rule 自动选标记、写前校验、多文件原子、check 识别死标记） |
 | `git_api` | `api` | **直接调用本插件 36 条 HTTP API**（内部走 `handleHttp` 同一条代码路径）；`path` 传接口名（不传则列出全部接口），`method`/`query`/`body` 可选 |
+
+**`git_filemode` 的代价（必须知道）**：设成 `core.filemode=false` 后，**真实的 `chmod +x` 变更也不再被 git 记录**。
+所以它适合「整个仓库的权限位本来就不可信」的挂载盘；如果你确实需要跟踪可执行位变更（例如提交脚本的 +x），
+就别开它，或改完权限后再 `value:true` 恢复比较。
+CIFS 上 `git config --local` 会因 `config.lock` 的 chmod 报 EPERM 而写不进去 ——
+实现有退路：直接改写 `.git/config` 文本、**先备份**、写完回读验证（`via` 字段会标明走了哪条路）。
 
 **`repos-local` 的默认语义（重要）**：默认**只读索引快照**（不联网、不逐仓 spawn git），
 响应带 `stale`/`liveAt`；远端状态（`remoteHead`/`ahead`/`behind`）由**后台补查**写回索引，

@@ -20,6 +20,7 @@ DSH 的 **git 提交推送插件**：提交、推送、克隆、账号校验、�
 | 身份改写 | 把历史提交身份统一成登录账号 | `git_identity_rewrite` / `identity-rewrite` |
 | 发布 | 发布 npm 包（dryRun 默认只体检；凭据由插件托管，无需 npm login） | `npm_publish` / `npm-publish` |
 | 撤包 | 从 registry 撤版本（默认 dryRun 预检，不可逆） | `npm_unpublish` / `unpublish` |
+| 忽略权限变动 | 查看/写入 `core.filemode`：CIFS/容器卷上新文件权限与仓库记录不同时，git 会把它们都算成改动（内容未变）——设为忽略即可 | `git_filemode` / `filemode` |
 | git 透传 | 执行任意 git 命令，凭据自动注入 | `git_sluice` / `git` |
 | HTTP 接口直调 | 调用本插件的 HTTP 接口 | `git_api` / `api` |
 | 预处理动作 | 转发到声明该动作的 provider（审计/静态检查等） | `git-sluice preprocess <action>` |
@@ -99,6 +100,16 @@ git_commit_push({
 每阶段可用 `{repo}` / `{filesFile}` / `{filesCount}` / `{stage}` 占位符，宿主同时注入
 `PREPROCESS_REPO` / `PREPROCESS_CHANGED_FILES` 等环境变量。回执里 `preprocessStages` / `preprocessChanges` /
 `stagesSource` 如实反映"哪个阶段改了什么、本次链来自参数还是配置"。契约见 [docs/SPEC.md](docs/SPEC.md) 第十七章。
+
+### 忽略权限变动（CIFS / 容器卷）
+
+```bash
+git-sluice filemode <仓库> --check     # 只读：当前 core.filemode + 有多少条「纯权限变动」
+git-sluice filemode <仓库> --apply     # 写入（默认只改当前仓库；--global 才改 ~/.gitconfig）
+git-sluice filemode <仓库> --apply --compare   # 反向：恢复「比较权限位」
+```
+
+代价：设成忽略后，**真实的 `chmod +x` 变更也不再被记录**。只适合「权限位本来就不可信」的挂载盘。
 
 ### 独立 CLI
 

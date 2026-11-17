@@ -77,6 +77,7 @@ dsh-git-push/
 │   │   ├── endpoints.js — （待注释）
 │   │   ├── exec.js — git 进程调用（runGit 统一超时/错误规整 + gitRaw 原始字节）
 │   │   ├── exempt-markers.js — （待注释）
+│   │   ├── filemode.js — （待注释）
 │   │   ├── hooks.js — （待注释）
 │   │   ├── identity-rewrite.js — （待注释）
 │   │   ├── identity.js — （待注释）
@@ -158,6 +159,7 @@ dsh-git-push/
 │   │   ├── test-clone-replay.mjs — （待注释）
 │   │   ├── test-commit-message.mjs — （待注释）
 │   │   ├── test-cred-env.mjs — （待注释）
+│   │   ├── test-filemode.mjs — （待注释）
 │   │   ├── test-git-api-tool.mjs — （待注释）
 │   │   ├── test-git-core.mjs — （待注释）
 │   │   ├── test-git-identity.mjs — （待注释）
