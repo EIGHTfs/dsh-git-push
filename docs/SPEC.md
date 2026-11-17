@@ -399,64 +399,42 @@ test/
 | 插件装载 | `lib/app/apply.js` | `listTools(cfg)` 注册工具 |
 | CLI 参数校验 | `lib/cli/shared.mjs` | `parseRegistryArgs(rest, resolveEntryParams(entry, cfg))` |
 
-### 14.2 可用性判据（**可用性 ≠ 开关**）
+### 14.2 工具签名里没有实现专名参数（按次覆盖见 §16.5）
 
-```js
-auditPreprocessAvailable(cfg = {}, hasBuiltinEngine) {
-  if (cfg?.preCommit?.command) return true;   // 显式配了引擎 ⇒ 参数就该在
-  return typeof hasBuiltinEngine === 'boolean' ? hasBuiltinEngine : resolveGateProvider().ok;
-}
-```
-
-判据看的是「**能不能**跑」（预处理实现的入口文件在不在），与「**默认跑不跑**」
-（`preCommit.enabled` 这个开关）是两件事：用户关掉开关之后仍可能想临时传 `--audit` 跑一次，
-此时参数必须还在。
-
-`hasBuiltinEngine` 第二参**只为测试注入**（生产不传 ⇒ 走 `resolveGateProvider()` 的真实解析）；
-`resolveEntryParams` / `listTools` 都必须把它**透传下去**，否则「不可用态」根本测不出来。
-
-### 14.3 未启用时的语义
+`git_commit_push` 的签名只有 git 侧参数 + `preprocessStages`。实现自己的参数（临时豁免、豁免理由等）
+**不进签名**，而是写在 `preprocessStages[].args` 里（自由字典，宿主原样透传）。
 
 | 层 | 行为 |
 |---|---|
-| 工具 schema（`listTools`） | `git_commit_push.parameters` 里**没有** `audit` / `auditExemptPaths` / `auditExemptReason` |
-| CLI 参数校验 | 传 `--audit` → 报 `未知参数 --audit`（**不是**静默忽略） |
-| 基础参数 | `repo` / `message` / `messageItems` / `push` / `dryRun` / `force` … 一律不受影响 |
+| 工具 schema（`listTools`） | 没有任何实现专名参数 |
+| 按次传参 | `preprocessStages: [{ provider: 'audit', args: { exemptPaths: [...], reason: '...' } }]` |
+| 按次关闭 | `preprocessStages: []` = 这一次不跑任何预处理 |
+| 未知参数 | 一律报 `参数不存在：xxx`（不静默忽略，也不提供迁移表——正确用法在工具描述里） |
+| 基础参数 | `repo` / `message` / `messageItems` / `push` / `dryRun` / `force` … 不受影响 |
 
-**审计专属参数清单**（`AUDIT_COMMIT_PARAMS`）只此三条，全部由审计预处理贡献：
-`audit`（boolean）、`auditExemptPaths`（array）、`auditExemptReason`（string）。
+### 14.3 可用性判据（**可用性 ≠ 开关**）
 
-### 14.4 HELP 与动态参数的关系
+`preprocessAvailable(cfg, hasBuiltinEngine)` 只看「**能不能**跑」（实现入口在不在 / 是否显式配了命令），
+与「**默认跑不跑**」（`preCommit.enabled`）是两件事。它只影响 CLI 帮助里的能力描述，**不再影响参数签名**。
 
-`params` 是动态的，但 `git-sluice help` 的文本是**手写快照**（`cli.mjs` 的 `const HELP` 模板字面量）。
-两者不联动就会在审计剥离后宣传一个不存在的参数。做法：
+### 14.4 HELP 是静态文本
 
-- `cli.mjs` 导出 `AUDIT_HELP_SNIPPETS`（与审计绑定、需要条件剔除的**精确片段**）
-  与 `renderHelp(cfg, hasBuiltinEngine)`：审计不可用时把片段从渲染结果里剔掉；
-- `runCli({ helpText })` 支持 **字符串或函数**：git 侧传 `() => renderHelp(cliPluginConfig())`，
-  另两个入口仍传静态字符串；
-- **漂移防护**：`test/tool/test-cli.mjs` 断言「`AUDIT_HELP_SNIPPETS` 里每一项都真的出现在 HELP 里」——
-  改了 HELP 忘改片段表会**变红**，而不是静默失效。
+`cli.mjs` 的 `HELP` 是手写快照，且**不含任何实现专名参数**——按次能力统一走 `preprocessStages`，
+所以不存在「实现不可用时要从 HELP 里剔除片段」这类联动，`renderHelp()` 直接返回 HELP。
 
-判定标准：审计不可用时，`git-sluice help` 的 commit 行**不再出现 `--audit`**，
-但 `--push|--no-push` / `--dry-run` / `--force` / `--message-items` 等基础参数照常显示。
+### 14.5 将来加第二种预处理实现要做什么
 
-### 14.5 将来加第二种「可剥离的预处理」要做什么
-
-1. 在 `command-registry.js` 定义该能力的 `available` 判定（**只看能力可用性，不看开关**）；
-2. 把它的参数收进一个 `XXX_PARAMS` 常量（与 `AUDIT_COMMIT_PARAMS` 同款）；
-3. 在对应条目的 `params` 函数里条件拼接：`...(xxxAvailable(cfg, hasBuiltinEngine) ? XXX_PARAMS : [])`；
-4. 在 `cli.mjs` 的 `AUDIT_HELP_SNIPPETS` 旁边加 `XXX_HELP_SNIPPETS`，并在 `renderHelp` 里按同一判据剔除；
-5. 端到端测试三条：`listTools(cfg, false)` 无该参数 / 传该参数报未知参数 / 可用态三条齐全；
-6. 若该能力有开关（如 `preCommit.enabled`），**不要**用开关做可用性判据（见 14.2）。
+1. 实现方在自己的 manifest 里声明 `cliFlagMap`（`args` 键名 → CLI 参数）；
+2. 必需时再声明 `defaultOnFail`（阶段失败语义）；
+3. 宿主侧**不用改签名**：调用方按次写 `preprocessStages: [{ provider: '<id>', args: {...} }]` 即可；
+4. 端到端测试两条：`args` 确实翻成该实现的 CLI 参数 / 未知参数报 `参数不存在`。
 
 ### 14.6 端到端验证（回归基线）
 
 `test/tool/test-cli.mjs` 覆盖：
-- `[动态参数] 审计专属参数由预处理贡献：可用时出现、不可用时不在签名里`
-- `[动态参数] 端到端：不可用态下 listTools 无 audit 参数、CLI 传 --audit 报未知参数`
-  （含对照组：同一串参数在可用态被接受，证明差异来自参数表而非解析器）
-- `[动态参数] HELP 与参数表对齐：不可用态 help 里不再出现 --audit`（含片段表漂移防护）
+- `[参数面] commit 的 HELP 不含任何实现专名参数，按次能力统一走 preprocessStages`
+- `[cli-help-registry-sync] 用法行里写出的每个 --flag 都必须是该命令真实接受的参数`
+`test/git/test-pre-commit-engine.mjs` 覆盖：`args` → CLI 参数翻译、未知参数报错、只写旧键走默认。
 
 ### 14.7 预处理第三项能力：`renderResult`（结果文案由实现方渲染）
 
