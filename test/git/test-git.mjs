@@ -800,7 +800,9 @@ test('commitWithAudit：force 参数透传到 commitAndPush（返回含 force �
   // 非 git 仓库走不到 push，无法观察 force；改验证 commitWithAudit 不再吞掉 force（签名存在 + push=false 时步骤正常）
   const root2 = join(tmpdir(), `gp-cwa-force-${Date.now()}`);
   mkdirSync(root2);
-  const r = await commitWithAudit({ repoPath: root2, message: 'force test', push: false, dryRun: true, force: true });
+  // preprocessStages: [] —— 本次显式不跑预处理：本用例只验 force 透传，
+  //   不该被「默认开预处理」牵连（非 git 目录跑审计必然失败，会掩盖真正要验的 git 预检语义）
+  const r = await commitWithAudit({ repoPath: root2, message: 'force test', push: false, dryRun: true, force: true, stages: [] });
   assert.equal(r.ok, false, '非 git 仓库应 ok:false（force 不改变预检语义）');
   assert.match(r.error || '', /非 git 仓库/, `error 应为非 git 仓库（实际: ${r.error}）`);
   rmSync(root2, { recursive: true, force: true });

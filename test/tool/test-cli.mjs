@@ -541,9 +541,10 @@ import { promisify } from 'node:util';
   });
 
   // ---------- 默认关（关键安全默认） ----------
-  test('[client] 默认关：提交前预处理/LLM/全量扫 全部默认 false', () => {
+  test('[client] 默认值：提交前预处理默认开，已移除项为 undefined', () => {
     const c = defaultConfig();
-    assert.equal(c.preCommitEnabled, false, '提交前预处理默认关');
+    // 提交前预处理默认开（未装任何 provider 时引擎自动跳过并标注 preprocessSkipped，不阻塞提交）
+    assert.equal(c.preCommitEnabled, true, '提交前预处理默认开');
     assert.equal(c.pushPermitEnabled, undefined, 'pushPermitEnabled 已移除（2026-09-11）');
     assert.equal(c.llmAudit, undefined, 'llmAudit 已移除（v2 不提供 LLM 深度审查）');
     // hardcodeFullScan / auditLevel / auditRuleset 已删除（非用户可配项）
@@ -596,7 +597,7 @@ import { promisify } from 'node:util';
   test('[client] 合并：不改动基线对象（纯函数）', () => {
     const base = defaultConfig();
     resolveConfig({ preCommitEnabled: true }, base);
-    assert.equal(base.preCommitEnabled, false);
+    assert.equal(base.preCommitEnabled, true, '基线默认开');
   });
 
   // ---------- 手写 createElement（无 JSX） ----------
@@ -690,7 +691,7 @@ import { promisify } from 'node:util';
     const info = clientModuleInfo();
     assert.equal(info.jsx, false);
     assert.deepEqual(info.externalResources, []);
-    assert.equal(info.defaultConfig.preCommitEnabled, false);
+    assert.equal(info.defaultConfig.preCommitEnabled, true, '模块描述里的默认值也要是开');
     assert.deepEqual(info.slots, ['settings.section']);
   });
 
@@ -720,11 +721,11 @@ import { promisify } from 'node:util';
     assert.ok(!/['"`]https?:\/\//.test(rootClientSrc), '不应引用外部 URL');
   });
 
-  test('[client] client.js：开关默认关（提交前预处理默认不跑）', () => {
+  test('[client] client.js：开关默认开（提交前预处理默认跑）', () => {
     // 默认值已收敛到 dshgp_DEFAULT_SETTINGS（§五），controller 用 Object.assign 取用；
     //   所以这里断言"单一来源里的值"，而不是构造函数里那行手写字面量（那行已删）。
-    assert.ok(/const dshgp_DEFAULT_SETTINGS = \{[\s\S]*?preCommitEnabled: false/.test(rootClientSrc),
-      'dshgp_DEFAULT_SETTINGS 里 preCommitEnabled 应默认 false');
+    assert.ok(/const dshgp_DEFAULT_SETTINGS = \{[\s\S]*?preCommitEnabled: true/.test(rootClientSrc),
+      'dshgp_DEFAULT_SETTINGS 里 preCommitEnabled 应默认 true');
     assert.ok(/Object\.assign\(this, dshgp_DEFAULT_SETTINGS\)/.test(rootClientSrc),
       'controller 应从 dshgp_DEFAULT_SETTINGS 取默认值（不得再逐行手写）');
     assert.ok(!rootClientSrc.includes("'llmAudit'"), 'client.js 不应含 llmAudit（v2 不提供 LLM 深度审查）');

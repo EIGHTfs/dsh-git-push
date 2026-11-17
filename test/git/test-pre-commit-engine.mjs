@@ -288,6 +288,43 @@ test('stdout 不合契约（非 JSON / 多行 / 缺 summary）→ fail-closed', 
 });
 
 // ── git 侧职责没被搬走（用假引擎驱动，结果完全可控） ────────────────
+// 防漂移门禁：开关的**默认值**与**读取形态**在两处表达，必须始终一致。
+//   事故形态：schema 的 Config() 默认改成 true，但 client 的 defaultConfig() 仍只有
+//   扁平 `preCommitEnabled: false`、且 resolvePreCommitEnabled 只认嵌套键 ⇒
+//   设置页显示「开」，提交路径读到「关」，审计**默认永远不跑**（实测踩到过）。
+test('防漂移：开关默认值两处必须一致（defaultConfig 扁平 vs Config 嵌套）', async () => {
+  const { defaultConfig } = await import('../../lib/client/index.js');
+  const { Config } = await import('../../lib/app/schema.js');
+  const flatDefault = defaultConfig().preCommitEnabled;
+  const nestedDefault = Config({}).preCommit.enabled;
+  assert.equal(
+    flatDefault, nestedDefault,
+    `两套默认值必须一致：defaultConfig().preCommitEnabled=${flatDefault} vs Config().preCommit.enabled=${nestedDefault}`,
+  );
+});
+
+test('防漂移：resolvePreCommitEnabled 两种形态都要认（嵌套优先，扁平兜底）', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dshgp-engine-shapes-'));
+  const cfgFile = join(dir, 'config.json');
+  writeFileSync(cfgFile, JSON.stringify({})); // 空配置：不干扰 cfg 形态判定
+  setSettingsFileOverride(cfgFile);
+  try {
+    assert.equal(resolvePreCommitEnabled({ preCommit: { enabled: true } }).enabled, true, '嵌套形态 true 要认');
+    assert.equal(resolvePreCommitEnabled({ preCommitEnabled: true }).enabled, true, '扁平形态 true 要认（defaultConfig 就是这形态）');
+    assert.equal(resolvePreCommitEnabled({ preCommit: { enabled: false } }).enabled, false, '嵌套 false 要认');
+    assert.equal(resolvePreCommitEnabled({ preCommitEnabled: false }).enabled, false, '扁平 false 要认');
+    // 两种都给时：嵌套优先（更具体）
+    assert.equal(
+      resolvePreCommitEnabled({ preCommit: { enabled: true }, preCommitEnabled: false }).enabled,
+      true,
+      '两种形态冲突时嵌套优先',
+    );
+  } finally {
+    setSettingsFileOverride(null);
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test('只写旧键（无 preCommit.enabled）⇒ 走默认关，不读旧键、不替用户猜', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'dshgp-engine-nolegacy-'));
   const cfgFile = join(dir, 'config.json');
