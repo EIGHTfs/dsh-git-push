@@ -92,14 +92,20 @@ git_commit_push({
   repo, message,
   preprocessStages: [
     { command: 'node', args: ['tools/fmt.mjs', '{filesFile}'], onFail: 'warn' },
-    { provider: 'audit', onFail: 'block' },
+    { provider: 'audit', args: { exemptPaths: ['vendor/a.js'], reason: '第三方代码' }, onFail: 'block' },
   ],
 })
 ```
 
-每阶段可用 `{repo}` / `{filesFile}` / `{filesCount}` / `{stage}` 占位符，宿主同时注入
-`PREPROCESS_REPO` / `PREPROCESS_CHANGED_FILES` 等环境变量。回执里 `preprocessStages` / `preprocessChanges` /
-`stagesSource` 如实反映"哪个阶段改了什么、本次链来自参数还是配置"。契约见 [docs/SPEC.md](docs/SPEC.md) 第十七章。
+- `preprocessStages: []` = **这一次不跑任何预处理**
+- `command` 形态的 `args` 是字符串数组，支持占位符 `{repo}` / `{filesFile}` / `{filesCount}` / `{stage}`
+- `provider` 形态的 `args` 是**该实现自己的参数**（自由字典）：键名由实现决定（`audit` 用 `exemptPaths` / `reason`），
+  宿主原样透传并按实现声明的映射翻成它的命令行参数
+- 传了没人声明的参数会直接报 `参数不存在：xxx`
+
+宿主同时注入 `PREPROCESS_REPO` / `PREPROCESS_CHANGED_FILES` 等环境变量；回执里
+`preprocessStages` / `preprocessChanges` / `stagesSource` 如实反映"哪个阶段改了什么、本次链来自参数还是配置"。
+契约见 [docs/SPEC.md](docs/SPEC.md) 第十七章。
 
 ### 忽略权限变动（CIFS / 容器卷）
 
