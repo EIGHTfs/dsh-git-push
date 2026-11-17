@@ -105,11 +105,19 @@ import { promisify } from 'node:util';
       //   不是「当前这台机器上装没装」。
       const paramStates = [resolveEntryParams(tool, {}), resolveEntryParams(tool, { preCommit: { command: 'provider' } })];
       const accepted = new Set(paramStates.flat().map((param) => `--${kebab(param.flag)}`));
+      // 实现参数由 provider 自报：**provider 不在位时注册表里本来就没有它们**，
+      //   对应地 HELP 里的那几行也会被 renderHelp 去掉（同一条可用性判据）。
+      //   CI 里审计包按设计不安装（--omit=optional），所以这里必须先按同一判据裁掉再比对，
+      //   否则本用例会在「没装实现」的机器上恒红（本地装了兄弟目录，看不到这个形态）。
+      let scannedText = text;
+      if (!preprocessAvailable({}, undefined)) {
+        for (const snippet of AUDIT_HELP_SNIPPETS) scannedText = scannedText.split(snippet).join('');
+      }
       // 布尔参数额外接受否定形式 `--no-<参数>`（CLI 层会在进解析器前翻译成 false，见 shared.normalizeRegistryArgv）
       const negations = new Set(paramStates.flat()
         .filter((param) => param.type === 'boolean')
         .map((param) => `--no-${kebab(param.flag)}`));
-      for (const flag of new Set(text.match(/--[a-z0-9-]+/g) || [])) {
+      for (const flag of new Set(scannedText.match(/--[a-z0-9-]+/g) || [])) {
         if (!accepted.has(flag) && !negations.has(flag)) {
           problems.push(`${owner} ${tool.cli}：HELP 写了 ${flag}，但注册表参数里没有它（照抄必然报「未知参数」）`);
         }
