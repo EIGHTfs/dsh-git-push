@@ -162,9 +162,23 @@ export function buildReadmeVersionTable(repoPath) {
   });
   for (const k of ordered) {
     const raw = releases[k] || (k === current ? '（本版说明待补：docs/releases.json 未登记）' : '');
-    const body = scrubConvWording(String(raw));
+    // 表格单元格必须单行：notes 允许写多段要点（换行 + 空行 + `·` 列表），
+    //   直接拼进 `| ... |` 会把表格撑破（79 行数据每行都跨多行 ⇒ 整张表渲染成乱码）。
+    //   表格只放**首段摘要**，完整说明仍在 docs/releases.json（权威源，需要详情去查那里）。
+    const firstParagraph = String(raw)
+      .split(/\n\s*\n/)                     // 先按空行切段
+      .map((seg) => seg.trim())
+      .find(Boolean) || '';
+    const body = scrubConvWording(
+      firstParagraph
+        .split('\n')                        // 段内若还有硬换行，也只取第一行
+        .map((line) => line.trim())
+        .find(Boolean) || '',
+    );
     if (!body) continue;
-    const metric = metrics[k] ? `${metrics[k]}——${body}` : body;
+    // 单元格内不得再出现 `|`：会提前截断列（转义成 `\|`）
+    const safeBody = body.replace(/\|/g, '\\|');
+    const metric = metrics[k] ? `${metrics[k]}——${safeBody}` : safeBody;
     lines.push(`| ${k} | ${metric} |`);
   }
   return lines;
