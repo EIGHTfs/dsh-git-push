@@ -24,7 +24,7 @@
     "LICENSE"
   ],
   "optionalDependencies": {
-    "audit-sluice": "0.1.2"
+    "audit-sluice": "0.1.4"
   },
   "engines": {
     "node": ">=18.0.0"
