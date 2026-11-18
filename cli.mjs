@@ -44,6 +44,8 @@ export const KNOWN_FLAGS = [
   '--preprocess-stages',
   '--skip-smoke', '--ssh-pub', '--tag', '--token', '--update-remotes', '--visibility', '--wait-ci',
   '--wait-visible', '--whole-package', '--write',
+  // GitHub Issue / PR（github_issue / github_pr）
+  '--action', '--base', '--draft', '--head', '--labels', '--number', '--title',
 ];
 
 const HELP = `git-sluice v${VERSION} — ${CLI_ENTRIES[CLI_GIT].intro}
@@ -89,6 +91,9 @@ const HELP = `git-sluice v${VERSION} — ${CLI_ENTRIES[CLI_GIT].intro}
                                    默认 dry-run 只报告，--write 才改（先建备份引用，自检通过才改写），--push 再 force-with-lease 强推
   git-sluice account-check [--token <t>] [--ssh-pub <公钥整行>]
                                    校验 GitHub 账号与凭据（token 在线校验 + SSH 公钥指纹）
+  git-sluice issue <owner/repo> [--action list|create|comment|close] [--number N] [--title T] [--body B] [--labels a,b] [--json]
+  git-sluice pr    <owner/repo> [--action list|create|comment|files|commits] [--number N] [--title T] [--head 源分支] [--base 目标分支] [--draft] [--json]
+
   git-sluice filemode <仓库> [--check] [--apply] [--global] [--compare] [--json]
                                    CIFS/SMB/容器卷上新文件权限是 755/777 而仓库记 644 时，git 会把每个新文件都算成改动（内容未变）。
                                    不加 --apply = 只读查看（等价 --check）：报告当前 core.filemode 与纯权限变动条数；

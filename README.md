@@ -15,6 +15,8 @@ DSH 的 **git 提交推送插件**：提交、推送、克隆、账号校验、�
 | 克隆预演 | 只看将拉取什么，不落盘 | `git_clone_preview` / `clone-preview` |
 | 建远端仓 | 给本地仓库建远端并设置 origin | `git_remote_create` / `remote-create` |
 | 可见性 | 切换仓库 public / private | `git_set_visibility` / `set-visibility` |
+| Issue | 列 / 建 / 评论 / 关闭（不含删除） | `github_issue` / `issue` |
+| PR | 列 / 建 / 评论 / 文件清单 / 提交清单（**不含 merge 与 review**） | `github_pr` / `pr` |
 | 改名 | 给远程仓库改名（dryRun 默认开，列出旧名出现位置） | `git_remote_rename` / `rename` |
 | 凭据与账号 | 校验 GitHub token 与 SSH 公钥、生成密钥对、导出凭据环境变量 | `git_account_check` / `git_gen_ssh_key` / `git_cred_env` |
 | 身份改写 | 把历史提交身份统一成登录账号 | `git_identity_rewrite` / `identity-rewrite` |
@@ -71,6 +73,8 @@ git_cred_env({})                                     // 输出凭据环境变量
 git_gen_ssh_key({ email, force })                    // email 必填
 git_identity_rewrite({ paths, dryRun, write, push }) // 全可空：dryRun 默认只报告
 git_remote_create({ repo, visibility, dryRun })      // repo 必填
+github_issue({ action, repo, number, title, body, labels })  // action=list|create|comment|close
+github_pr({ action, repo, number, title, head, base, draft })  // action=list|create|comment|files|commits
 git_set_visibility({ repo, visibility })             // 两者必填
 npm_publish({ dir, dryRun, confirm, tag, otp })      // dryRun 默认 true（只体检，不写 registry）
 npm_unpublish({ name, version, dryRun, confirm })    // dryRun 默认 true

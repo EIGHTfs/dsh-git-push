@@ -237,7 +237,9 @@ import { fileURLToPath } from 'node:url';
     //   明文落在 .git/config，且那把 token 已失效（HTTP 401）纯属负担。
     //   推送凭据应由凭据目录自探测提供（token/密钥），不进 remote URL。
     const { execFileSync } = require('node:child_process');
-    const out = execFileSync('git', ['remote', '-v'], { cwd: ROOT, encoding: 'utf8' });
+    // `-c safe.directory=*`：本机属主与运行用户可能不同（容器/NAS），不带这一项
+    //   git 会直接拒绝（dubious ownership）——那是环境噪声，与被测的「remote URL 是否有凭据」无关。
+    const out = execFileSync('git', ['-c', 'safe.directory=*', 'remote', '-v'], { cwd: ROOT, encoding: 'utf8' });
     assert.ok(!/gh[pous]_[A-Za-z0-9]{20,}/.test(out), 'remote URL 不得内嵌 ghp_ 类 token');
     assert.ok(!/github_pat_[A-Za-z0-9_]{20,}/.test(out), 'remote URL 不得内嵌 github_pat_ 类 token');
     assert.ok(!/https:\/\/[^\s/@]+:[^\s/@]+@/.test(out), 'remote URL 不得内嵌 user:password 形式凭据');
