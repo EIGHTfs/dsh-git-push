@@ -1,6 +1,12 @@
 # GitHub 第三方登录方案（Device Flow，2026-11-14 设计稿）
 
 > 状态：**已实现（2026-11-19）**。实现落点见本文第十一节；使用手册见 README「GitHub 授权」一节。
+>
+> **运行前提（实测补充）**：Device Flow 的「申请短码」与「轮询换 token」两步由插件在**本机**发起
+> （只有输码那步在用户浏览器里）。因此**插件所在机器必须能访问 `github.com`**。
+> 本机到 `github.com` 的 HTTPS 被阻断时（现象：面板报「申请授权失败：signal timed out」，
+> 而 `curl` 该域名返回 `000`），整条流程不可用 —— 需退回手工 PAT，或让宿主机出网。
+> 注意这与「API 能通」是两回事：Device Flow 端点不在 `api.github.com` 上。
 > 目标是把「让用户手填 GitHub PAT」换成「一次浏览器授权」。
 > 参照 `gh auth login`（GitHub 官方 CLI）的 Device Flow 做法。
 >
