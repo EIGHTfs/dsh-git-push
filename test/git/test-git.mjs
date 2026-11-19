@@ -19,7 +19,7 @@ import {
   commitAndPush, pushViaSsh, pushViaApi, cloneViaApi, ensureRemoteRepo, setVisibility,
 } from '../../lib/git/index.js';
 import { gitRaw } from '../../lib/git/index.js';
-import { commitWithAudit } from '../../lib/commit-push.js';
+import { commitWithPreprocess } from '../../lib/commit-push.js';
 
 let tmp = '';
 let repo = '';
@@ -796,13 +796,13 @@ test('pushViaApi：force=true 跳过内容级短路（remoteHead===headSha 仍�
   assert.match(rNoForce.reason, /无新提交/, `非 force 短路原因（实际: ${rNoForce.reason}）`);
 });
 
-test('commitWithAudit：force 参数透传到 commitAndPush（返回含 force 语义的步骤）', async () => {
-  // 非 git 仓库走不到 push，无法观察 force；改验证 commitWithAudit 不再吞掉 force（签名存在 + push=false 时步骤正常）
+test('commitWithPreprocess：force 参数透传到 commitAndPush（返回含 force 语义的步骤）', async () => {
+  // 非 git 仓库走不到 push，无法观察 force；改验证 commitWithPreprocess 不再吞掉 force（签名存在 + push=false 时步骤正常）
   const root2 = join(tmpdir(), `gp-cwa-force-${Date.now()}`);
   mkdirSync(root2);
-  // preprocessStages: [] —— 本次显式不跑预处理：本用例只验 force 透传，
+  // stages: [] —— 本次显式不跑预处理：本用例只验 force 透传，
   //   不该被「默认开预处理」牵连（非 git 目录跑审计必然失败，会掩盖真正要验的 git 预检语义）
-  const r = await commitWithAudit({ repoPath: root2, message: 'force test', push: false, dryRun: true, force: true, stages: [] });
+  const r = await commitWithPreprocess({ repoPath: root2, message: 'force test', push: false, dryRun: true, force: true, stages: [] });
   assert.equal(r.ok, false, '非 git 仓库应 ok:false（force 不改变预检语义）');
   assert.match(r.error || '', /非 git 仓库/, `error 应为非 git 仓库（实际: ${r.error}）`);
   rmSync(root2, { recursive: true, force: true });

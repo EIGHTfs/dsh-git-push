@@ -171,7 +171,7 @@ import { fileURLToPath } from 'node:url';
     assert.equal(f.meta.default, 'ssh', 'Host schema 默认应为 ssh');
   });
 
-  test('[push-transport] commitAndPush 与 commitWithAudit 默认走 ssh（防退回 API 优先）', () => {
+  test('[push-transport] commitAndPush 与 commitWithPreprocess 默认走 ssh（防退回 API 优先）', () => {
     const pushSrc = readFileSync(join(ROOT, 'lib/git/push.js'), 'utf8');
     assert.ok(/pushMethod = 'ssh'/.test(pushSrc), 'commitAndPush 的 pushMethod 默认应为 ssh');
     assert.ok(pushSrc.includes('dispatchPush('), 'commitAndPush 应经 dispatchPush 决策通道');
@@ -179,7 +179,7 @@ import { fileURLToPath } from 'node:url';
       '不得再无条件先调 pushViaApi（那会在远端重建提交 → sha 不一致）');
     const cpSrc = readFileSync(join(ROOT, 'lib/commit-push.js'), 'utf8');
     assert.ok(/pushMethod: pushMethod \|\| cfg\.pushMethod \|\| 'ssh'/.test(cpSrc),
-      'commitWithAudit 应把配置里的 pushMethod 透传下去，缺省 ssh');
+      'commitWithPreprocess 应把配置里的 pushMethod 透传下去，缺省 ssh');
   });
 
   test('[push-transport] dispatchPush：三档语义正确（无 origin 时如实报错不崩）', async () => {

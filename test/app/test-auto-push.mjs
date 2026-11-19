@@ -69,7 +69,7 @@ test('extractLastAssistantText：取最后一条 assistant 文本', () => {
   assert.equal(extractLastAssistantText([{ type: 'x' }]), '');
 });
 
-// —— 门禁调用链：自动推送走 commitWithAudit，绝不绕过门禁 ——
+// —— 门禁调用链：自动推送走 commitWithPreprocess，绝不绕过门禁 ——
 
 test('registerAutoPush：关闭时返回 enabled:false 且不注册 session/event 监听', async () => {
   const { registerAutoPush } = await import('../../lib/plugin/auto-push.js');

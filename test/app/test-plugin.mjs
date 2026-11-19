@@ -25,7 +25,7 @@ import { TOOL_REGISTRY } from '../../lib/app/command-registry.js';
 import { setDefineToolOverride } from '../../lib/plugin/index.js';
 import { setSettingsFileOverride } from '../../lib/app/settings-bridge.js';
 import { ALLOWED_SETTING_KEYS } from '../../lib/app/handlers/settings.js';
-import { commitMany, commitWithAudit } from '../../lib/commit-push.js';
+import { commitMany, commitWithPreprocess } from '../../lib/commit-push.js';
 
 const ROOT = join(import.meta.dirname, '..', '..');
 const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
@@ -367,15 +367,34 @@ test('commitMany：逐仓返回结果，非 git 仓库记失败不抛异常', as
   assert.match(results[1].error, /非 git 仓库/);
 });
 
-test('commitWithAudit：dryRun 透传（不触发任何写操作）', async () => {
-  // 显式 audit:false —— 本用例只验证「dryRun 透传到 commitAndPush」，
-  //   不能让门禁去读真实 DSH_HOME 的配置（那会把「本机配了什么引擎、仓库当前改了什么」
-  //   混进断言里，仓库一改就假红）。
-  const result = await commitWithAudit({
-    repoPath: ROOT, message: 'test', dryRun: true, audit: false,
+test('commitWithPreprocess：dryRun 透传（不触发任何写操作）', async () => {
+  // 隔离手段必须用「现行语义」：stages: [] 才表示「这次不跑预处理」（见 runPreprocess 的契约）。
+  //   历史上这里传的是 audit:false —— 该参数从来不存在，键被静默丢弃，于是每次都真跑门禁：
+  //   工作树里一旦有 blocker（比如正在改的文件触发 max-function-length），这条只验 dryRun
+  //   的用例就假红，还把「门禁拦住了提交」误报成「dryRun 透传失败」。
+  //   audit:false 不是开关、是无效参数（现在传它会直接抛错，见下一条用例）——跳过门禁用 stages: []。
+  const result = await commitWithPreprocess({
+    repoPath: ROOT, message: 'test', dryRun: true, stages: [],
   });
   assert.equal(result.ok, true);
   assert.equal(result.dryRun, true);
+  assert.equal(result.audit, null, 'stages: [] 应让本次完全跳过预处理（audit 为 null 即证明没跑）');
+});
+
+test('commitWithPreprocess：传未知参数（如 audit:false）必须抛错，不得静默忽略', async () => {
+  // 钉死这个坑：参数名传错过去是**静默无效**——调用方以为关掉了门禁，实际照跑，
+  //   表现为「只在工作树有 blocker 时才假红」的隐蔽故障。补校验后必须当场抛错，
+  //   且错误信息要列出可用参数名，否则调用方只能靠读源码猜。
+  let thrown = null;
+  try {
+    await commitWithPreprocess({ repoPath: ROOT, message: 'test', dryRun: true, audit: false });
+  } catch (error) {
+    thrown = error;
+  }
+  assert.ok(thrown instanceof Error, '未知参数必须抛错（不能静默继续）');
+  assert.match(String(thrown.message), /未知参数/, '错误信息应点明「未知参数」');
+  assert.match(String(thrown.message), /audit/, '错误信息应带上那个未知的键名');
+  assert.match(String(thrown.message), /stages/, '错误信息应列出可用参数名（调用方据此改正）');
 });
 
 // ───────────────────────── 设置读写端点 ─────────────────────────
