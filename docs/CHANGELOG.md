@@ -15,6 +15,7 @@
 
 | 版本 | 内容 |
 |------|------|
+| 3.1.5 | **新增 GitHub 授权（Device Flow）：浏览器输一次短码换 token，不必再手工建 PAT。** 一次性准备 = 建 OAuth App 并勾 Enable Device Flow、把 Client ID 填进 `githubAuthClientId`；授权三步 = 打开授权页 →（可手抄短码）→ 授权后来源徽标变「GitHub 授权」。token 仍写 `githubToken` 单键，与手工 PAT 共用、可随时互换，不强制迁移。四个端点：`auth/device/start` · `auth/device/poll`（服务端节流，多标签安全）· `auth/status` · `auth/revoke`（需 confirm，仅清本地）。协议要点：`slow_down` 间隔永久 +5s、短码 15 分钟到点硬停、`device_code` 只在服务端闭包内、认证请求不走第三方镜像。`/account-status` 增 `authMode`（none/pat/device-flow）/`authLogin`/`authorizedAt` 与「可改用 GitHub 授权」提示，快照只局部覆盖来源三项。默认 scope `repo,workflow`（缺 workflow 时含 CI 配置的 push 会被整推拒绝）。 |
 | 3.1.2 | **新增 GitHub Issue / PR 能力：把「发现的问题」与「改完的代码」直接对接远端。** |
 | 3.1.1 | **彻底移除旧审计包兼容层：不再为 `audit-sluice` 0.1.0 时代的接口留后路。** |
 | 3.1.0 | **提交前预处理升级为有序阶段链：可以先格式化、再审计，并能看见「改了哪些文件」。** |

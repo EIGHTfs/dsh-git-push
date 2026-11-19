@@ -19,6 +19,7 @@ DSH 的 **git 提交推送插件**：提交、推送、克隆、账号校验、�
 | PR | 列 / 建 / 评论 / 文件清单 / 提交清单（**不含 merge 与 review**） | `github_pr` / `pr` |
 | 改名 | 给远程仓库改名（dryRun 默认开，列出旧名出现位置） | `git_remote_rename` / `rename` |
 | 凭据与账号 | 校验 GitHub token 与 SSH 公钥、生成密钥对、导出凭据环境变量 | `git_account_check` / `git_gen_ssh_key` / `git_cred_env` |
+| GitHub 授权 | 浏览器输一次短码换 token（Device Flow），之后不必手工建 PAT | 设置页 →「账号」→「用 GitHub 授权登录」 |
 | 身份改写 | 把历史提交身份统一成登录账号 | `git_identity_rewrite` / `identity-rewrite` |
 | 发布 | 发布 npm 包（dryRun 默认只体检；凭据由插件托管，无需 npm login） | `npm_publish` / `npm-publish` |
 | 撤包 | 从 registry 撤版本（默认 dryRun 预检，不可逆） | `npm_unpublish` / `unpublish` |
@@ -37,6 +38,58 @@ DSH 的 **git 提交推送插件**：提交、推送、克隆、账号校验、�
 audit-sluice audit --repo <路径> --scope diff --json   # 也能脱离本插件独立跑：stdout 单行 JSON，exit 0|1|2
 audit-sluice config                                    # 它的配置（扫描范围/文件上限/禁用规则包/权重）
 ```
+
+## GitHub 授权（可选，替代手工 PAT）
+
+不想手工建 token 就走这条：浏览器里输一次短码，插件自己把 token 存进凭据文件。**和手工 PAT 共用同一个凭据键，随时可换，不强制迁移。**
+
+### 一、建自己的 OAuth App（一次性，两分钟）
+
+1. 打开 `https://github.com/settings/developers` → **New OAuth App**
+2. 填 Application name；Homepage URL 填任意地址（如 `https://github.com`）
+3. **勾选 Enable Device Flow**（不需要填 Callback URL，也不需要 Client Secret）
+4. 创建后复制 **Client ID**
+5. 填进插件设置（设置页搜索框或直接改配置文件均可，键名 `githubAuthClientId`）：
+
+```bash
+# 或用接口写（value 换成你的 Client ID）
+curl -X POST "http://<本机IP>:<端口>/api/git-push/settings-set" \
+  -H 'Content-Type: application/json' \
+  -d '{"key":"githubAuthClientId","value":"<Client ID>"}'
+```
+
+权限范围默认 `repo,workflow`：只给 `repo` 时，推送含 `.github/workflows/*` 的提交会被 GitHub **整推拒绝**。
+
+### 二、授权三步
+
+1. 设置页 →「账号」→「GitHub 授权登录」→ 点「打开 GitHub 授权页」（有预填短码时是一键打开）
+2. 手抄短码路径同样可用：页面会显示 8 位短码与地址，在任意设备的浏览器里输入并点 **Authorize**
+3. 回到设置页：来源徽标从「手工 PAT」变成「**GitHub 授权**」，并显示登录名与授权时间
+
+授权有效期 15 分钟（短码过期需重新开始）；等待期间页面自动轮询，不需要手动刷新。
+
+### 三、撤销与切换
+
+```bash
+# 让本插件不再持有这份凭据（不会调 GitHub 撤销接口）
+curl -X POST "http://<本机IP>:<端口>/api/git-push/auth/revoke" \
+  -H 'Content-Type: application/json' -d '{"confirm":true}'
+```
+
+- 想彻底吊销：GitHub → Settings → Applications → 该 App → Revoke
+- 想换回手工 PAT：直接在设置里填 `githubToken`，来源徽标会变回「手工 PAT」
+
+### 四、常见失败
+
+| 现象 | 原因 | 处置 |
+|---|---|---|
+| 点授权后提示需要 clientId / 返回 `MISSING_CLIENT_ID` | 还没填 Client ID | 按上面第 5 步填 `githubAuthClientId` |
+| 授权页显示「This organization forbids third-party applications」 | 组织禁用了第三方 OAuth App | 请组织管理员批准，或改用「手工 PAT」模式（插件不绕过组织策略） |
+| 推送被拒：`refusing to allow an OAuth App to create or update workflow` | 授权时没给 `workflow` 权限 | 重新授权（默认已请求 `repo,workflow`），或对本次提交去掉 CI 配置文件 |
+| 提示「授权超时：设备码已过期」 | 15 分钟内没在浏览器点 Authorize | 点「重新开始」，重新获取短码 |
+| 短码输错 / 过期 | 短码与本次授权绑定且有时效 | 关闭面板重新开始授权 |
+
+完整协议与设计细节见 [docs/2026-11-14-GitHub-DeviceFlow-第三方登录方案.MD](docs/2026-11-14-GitHub-DeviceFlow-第三方登录方案.MD)。
 
 ## 环境要求
 
@@ -144,7 +197,11 @@ tool-sluice self-check                    # 两入口 HELP/参数/命令集一�
 | `GET /api/git-push/status` | 插件状态与配置概览 |
 | `GET /api/git-push/scan` | 仓库扫描结果 |
 | `GET /api/git-push/repos-local` | 本地仓库列表（默认只读索引快照，毫秒级；`?live=1` 才同步探测远端） |
-| `GET /api/git-push/account-status` | 账号状态快照 |
+| `GET /api/git-push/account-status` | 账号状态快照（含凭据来源 `authMode` / `authLogin` / `authorizedAt`） |
+| `POST /api/git-push/auth/device/start` | 申请授权短码（返回 `userCode` / `verificationUriComplete` / 轮询时刻） |
+| `POST /api/git-push/auth/device/poll` | 轮询一次授权结果（服务端节流，多标签安全） |
+| `GET /api/git-push/auth/status` | 当前授权态（`mode` = `none` / `pat` / `device-flow`） |
+| `POST /api/git-push/auth/revoke` | 清本地凭据（需 `confirm:true`，不调 GitHub 撤销接口） |
 | `POST /api/git-push/settings-set` | 写单个设置键 |
 | `GET /api/git-push/tools` | 工具清单 |
 | `GET /api/preprocess/<action>` | 预处理端点（动作清单来自各 provider 的 manifest） |

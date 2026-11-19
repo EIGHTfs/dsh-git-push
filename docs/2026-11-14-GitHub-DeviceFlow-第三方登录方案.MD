@@ -1,6 +1,7 @@
 # GitHub 第三方登录方案（Device Flow，2026-11-14 设计稿）
 
-> 状态：**设计稿，未实现**。目标是把「让用户手填 GitHub PAT」换成「一次浏览器授权」。
+> 状态：**已实现（2026-11-19）**。实现落点见本文第十一节；使用手册见 README「GitHub 授权」一节。
+> 目标是把「让用户手填 GitHub PAT」换成「一次浏览器授权」。
 > 参照 `gh auth login`（GitHub 官方 CLI）的 Device Flow 做法。
 >
 > **2026-11-19 评审修订**：token 存储位由「新开 `githubAuth.token`」改为「照旧写 `githubToken`」，
@@ -247,7 +248,7 @@ GitHub OAuth App 设置里必须勾 **"Enable Device Flow"**。**不需要填 Ca
 2. **不支持组织级授权**（组织若禁用第三方 OAuth App，用户需请管理员批准；插件侧只报错，不绕过）
 3. **不自动刷新 token**（Device Flow 的 user token 长期有效，无需 refresh；过期则重新授权）
 4. **不替代 PAT**（保留 PAT 模式，两条路并存）
-5. **不实现**（本文档只是设计稿）
+5. **不做 token 自动刷新**（user token 长期有效；两端都失效时重新授权即可）
 
 ## 九、实施计划（将来做时按这个顺序）
 
@@ -267,3 +268,22 @@ GitHub OAuth App 设置里必须勾 **"Enable Device Flow"**。**不需要填 Ca
 - **GitHub 官方 CLI `gh`**：`gh auth login` 选 GitHub.com → HTTPS → **Login with a web browser** 即走 Device Flow
   - 行为特征：显示 8 位码、自动开浏览器、轮询期间显示 spinners、超时后提示重来
 - **GitHub 官方文档**：`https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps#device-flow`
+
+## 十一、实现落点（2026-11-19）
+
+协议核心、HTTP 端点、数据面与前端四层各司其职，改任何一层都不必动其它层：
+
+| 层 | 文件 | 负责什么 |
+|---|---|---|
+| 协议核心 | `lib/git/auth-device.js` | 两个端点封装 + 状态机（`idle → awaiting_user → authorized/denied/expired/failed`）；`slow_down` 间隔永久 +5s、`expires_in` 到点硬停、`device_code` 只活闭包；fetch/时钟/sleep 全部注入，单测零网络 |
+| HTTP 端点 | `lib/app/handlers/auth.js` | `auth/device/start` · `auth/device/poll` · `auth/status` · `auth/revoke`；进程内会话单例 + 服务端节流/幂等；授权成功后调 `persistGithubToken()` 写 `githubToken`，并写 `githubAuth` 元数据（`mode`/`login`/`authorizedAt`/`clientId`/`scope`） |
+| 数据面 | `lib/app/handlers/account.js` + `lib/git/account-status.js` | `/account-status` 暴露 `authMode`（`none`/`pat`/`device-flow`）/`authLogin`/`authorizedAt`/迁移提示；快照 `account-status.json` 局部覆盖落盘（只动来源三项） |
+| 前端 | `lib/client-parts/git/account.js` + `lib/client-parts/git/controller.js` | 来源徽标、授权面板（短码大字号 + 一键打开 + 倒计时）、启动/轮询/取消/重试；轮询节奏取服务端 `nextPollAtEpochMs`，不自行定时 |
+
+配套落点与约束：
+
+- **设置键**：`githubAuthClientId`（写入嵌套 `githubAuth.clientId`）；`githubAuth` 块只放元数据，**不含 token**
+- **凭据唯一真源**：仍是 `config.json` 的 `githubToken` 键（`resolveToken()` 是唯一读取入口，20+ 处消费点只认它）
+- **认证请求不镜像**：两个端点走 `withMirror(..., { noMirror: true })`，`client_id` / `device_code` 绝不经第三方镜像
+- **测试**：`test/git/test-auth-device.mjs`（协议 14 例）· `test/app/test-auth-status.mjs`（数据面三态 + 双出口无明文）
+
