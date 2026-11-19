@@ -21,6 +21,7 @@
  *   node scripts/build-client.mjs --print    # 只打印产物到 stdout（不落盘）
  */
 import { readFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs';
+import { Script } from 'node:vm';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -92,6 +93,16 @@ export function checkShape(code) {
   if (!/^\}\)\(\);\s*$/m.test(code.trimEnd().split('\n').slice(-3).join('\n') + '\n')) {
     // 宽松校验：末尾应能闭合 factory 调用
     if (!/\)\s*;?\s*$/.test(code.trimEnd())) errs.push('产物末尾不像闭合的 load({...}) 调用');
+  }
+  // 语法门禁（必做，别删）：上面的形态检查只认「首条语句 / 收尾」这类**文本特征**，
+  //   分片里漏一个右括号照样能通过，于是坏产物被写进 lib/client.js。实测踩到过：
+  //   改注释时漏括号 → build 成功 → 随后并发跑的全量测试读到坏产物，三条 client 用例误红，
+  //   排查方向直接被带偏（以为是并发竞争）。这里用 vm 做一次真解析——只编译不执行，
+  //   语法错误当场暴露，也不需要起子进程。
+  try {
+    new Script(code, { filename: OUT_FILE });
+  } catch (error) {
+    errs.push(`产物不是合法 JS（语法解析失败）：${error?.message || error}`);
   }
   return errs;
 }
