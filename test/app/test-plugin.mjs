@@ -310,8 +310,10 @@ test('HTTP：account-check 用传入 cfg 的 token（脱敏回显）', async () 
   process.env.DSH_HOME = home;
   try {
     const fakeToken = 'ghp_testtokenplaceholder123';
+    // POST 而非 GET：account-check 会 persistSshPub + 写 account-status 快照，是有副作用的端点，
+    //   路由层现在会用方法闸门把 GET 挡成 405（防止 <img>/预取替用户按下「重新检测」）。
     const response = await handleHttp(
-      { method: 'GET', url: '/api/git-push/account-check' },
+      { method: 'POST', url: '/api/git-push/account-check', origin: 'http://127.0.0.1:30801', body: {} },
       { workspaceRoot: ROOT },
       { githubToken: fakeToken },
     );
@@ -469,11 +471,17 @@ test('settings-set：写后读回一致（持久化闭环）', async () => {
   }
 });
 
-test('settings-set：GET（空 key）→ 400（白名单校验先行）', async () => {
+test('settings-set：POST（空 key）→ 400（白名单校验先行）', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'dshgp-setget2-'));
   try {
     setSettingsFileOverride(join(dir, 'config.json'));
-    const response = await handleHttp({ method: 'GET', url: '/api/git-push/settings-set' }, { workspaceRoot: ROOT }, {});
+    // 用 POST：settings-set 有副作用，GET 已被路由层方法闸门挡成 405（见 test-http-method-gate）；
+    //   本用例验的是 handler 内部的白名单校验，必须真正进到 handler 里。
+    const response = await handleHttp(
+      { method: 'POST', url: '/api/git-push/settings-set', origin: 'http://127.0.0.1:30801', body: { key: '' } },
+      { workspaceRoot: ROOT },
+      {},
+    );
     assert.equal(response.status, 400);
     assert.match(response.body.error, /设置键/);
   } finally {
