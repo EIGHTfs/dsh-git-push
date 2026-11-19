@@ -73,7 +73,9 @@ git_cred_env({})                                     // 输出凭据环境变量
 git_gen_ssh_key({ email, force })                    // email 必填
 git_identity_rewrite({ paths, dryRun, write, push }) // 全可空：dryRun 默认只报告
 git_remote_create({ repo, visibility, dryRun })      // repo 必填
-github_issue({ action, repo, number, title, body, labels })  // action=list|create|comment|close
+github_issue({ action, repo, number, title, body, labels, dryRun })  // action=list|create|comment|close
+                                                   // create/comment/close 默认 dryRun：只回将发出的 method/path/body；
+                                                   // 确认无误后传 dryRun:false 才真提交（避免在真仓库上试错）
 github_pr({ action, repo, number, title, head, base, draft })  // action=list|create|comment|files|commits
 git_set_visibility({ repo, visibility })             // 两者必填
 npm_publish({ dir, dryRun, confirm, tag, otp })      // dryRun 默认 true（只体检，不写 registry）
