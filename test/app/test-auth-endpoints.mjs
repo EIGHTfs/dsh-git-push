@@ -20,7 +20,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
 import { handleHttp } from '../../lib/app/http-handlers.js';
-import { resetDeviceFlowSession, setDeviceFlowUpstreamDeps } from '../../lib/app/handlers/auth.js';
+import { BUILTIN_OAUTH_CLIENT_ID, resetDeviceFlowSession, setDeviceFlowUpstreamDeps } from '../../lib/app/handlers/auth.js';
 import { clearGithubToken, persistGithubToken } from '../../lib/core/credentials.js';
 import { updateJsonAtomic } from '../../lib/core/atomic-json.js';
 import { redactConfig, SECRET_CONFIG_FIELDS } from '../../lib/app/schema.js';
@@ -139,15 +139,22 @@ beforeEach(() => {
 
 /* ───────── device/start ───────── */
 
-test('device/start：缺 clientId → 400 + 可读指引，且不发任何上游请求', async () => {
+test('device/start：不配 clientId 时回落到插件内置的公开客户端（开箱即用）', async () => {
   const upstream = installFakeUpstream();
   const response = await postJson('/api/git-push/auth/device/start');
-  assert.equal(response.status, 400, '缺配置属于请求不成立，用 4xx 而不是 500');
-  assert.equal(response.body.ok, false);
-  assert.equal(response.body.code, 'MISSING_CLIENT_ID');
-  assert.equal(response.body.state, 'failed');
-  assert.match(String(response.body.reason), /clientId/, '错误文本要指出缺的正是 clientId');
-  assert.equal(upstream.calls.length, 0, '缺 clientId 时不该打上游（GitHub 只会回 404，掩盖真因）');
+  // 用户不必自建 OAuth App：未显式配置 clientId 时回落插件内置的公开客户端，
+  //   所以正常流程里不该出现「缺 clientId」——否则「装上就能用」不成立。
+  assert.equal(response.status, 200, '有内置客户端时不该报缺配置');
+  assert.equal(response.body.ok, true);
+  const deviceCodeCall = upstream.calls.find((call) => call.url.endsWith('/login/device/code'));
+  assert.ok(deviceCodeCall, '应向上游申请设备码');
+  assert.match(deviceCodeCall.body, new RegExp(`client_id=${BUILTIN_OAUTH_CLIENT_ID}`),
+    '未显式配置时必须回落到内置公开客户端');
+});
+
+test('内置 client_id 不得为空（清空它等于把「缺配置」错误推回给所有用户）', () => {
+  assert.match(String(BUILTIN_OAUTH_CLIENT_ID), /\S/, '内置客户端 ID 必须是非空字符串');
+  // 显式配置优先于内置：见下一条「成功 → 返回短码」用例（它用 OAUTH_CLIENT_ID 覆盖并断言请求体）
 });
 
 test('device/start：成功 → 返回短码与授权地址，且响应体不含 device_code', async () => {

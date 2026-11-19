@@ -143,7 +143,7 @@ GitHub OAuth App 设置里必须勾 **"Enable Device Flow"**。**不需要填 Ca
 {
   "githubAuth": {
     "mode": "pat" | "device-flow",     // 缺省 pat（向后兼容）
-    "clientId": "",                     // Device Flow 模式必填；内置留空，由用户填自己的 OAuth App
+    "clientId": "",                     // 可空：留空即用插件内置的公开客户端（用户无需建 App）；填了则覆盖内置值
     "scope": "repo,workflow",           // 见 4.③：缺 workflow 时含 CI 配置的 push 会被整推拒绝
     "login": "",                         // 授权成功后记录用户名，便于 UI 显示
     "authorizedAt": ""                   // ISO 时间
@@ -236,7 +236,7 @@ GitHub OAuth App 设置里必须勾 **"Enable Device Flow"**。**不需要填 Ca
 | 项 | 做法 |
 |---|---|
 | **token 存储** | 写 `config.json` 的 **`githubToken` 键**（唯一真源；该文件已有 0600 权限与 `redactConfig` 脱敏）；**不回传**给前端（沿用现有敏感键策略：回 `(已保存)`） |
-| **client_id 是否算秘密** | **不算**（Device Flow 的公开客户端设计），但本插件**不内置具体值**：内置值等于共享凭据，仓库里谁都能取用，被撤销还会让所有用户一起失效。配置项留空 + UI 引导用户填自己的 OAuth App |
+| **client_id 是否算秘密** | **不算**（Device Flow 是公开客户端设计：无 client_secret，且它会出现在授权页地址里）。**插件内置一个公开 client_id**——目的是让用户装上就能用，不必先学注册 OAuth App。代价是共享凭据：仓库里谁都能取用，App 被撤下时需换新值发版。因此仍保留配置覆盖（`githubAuth.clientId`），用于组织禁止第三方 App 或换用自有 App 的场景 |
 | **不保存 device_code 到磁盘** | 只存内存，进程重启即失效（避免"半途授权态"被复用） |
 | **scope 最小化** | `repo,workflow`。`workflow` 不是可选项：缺它时含 `.github/workflows/*` 的提交会被 GitHub 整推拒绝（理由与报错原文见 4.③） |
 | **撤销** | 本地清 token + 提示用户去 GitHub → Settings → Applications 撤销 App 授权（**插件不调撤销 API**，避免拿 token 做不该做的事） |

@@ -43,22 +43,13 @@ audit-sluice config                                    # 它的配置（扫描�
 
 不想手工建 token 就走这条：浏览器里输一次短码，插件自己把 token 存进凭据文件。**和手工 PAT 共用同一个凭据键，随时可换，不强制迁移。**
 
-### 一、建自己的 OAuth App（一次性，两分钟）
+### 一、无需配置
 
-1. 打开 `https://github.com/settings/developers` → **New OAuth App**
-2. 填 Application name；Homepage URL 填任意地址（如 `https://github.com`）
-3. **勾选 Enable Device Flow**（不需要填 Callback URL，也不需要 Client Secret）
-4. 创建后复制 **Client ID**
-5. 填进插件设置（设置页搜索框或直接改配置文件均可，键名 `githubAuthClientId`）：
+插件已内置一个公开的 OAuth App client_id。Device Flow 的 client_id **不是密钥**——它不含 client_secret，且本来就会出现在授权页地址里，公开可查，gh CLI 等公开客户端也是这么做的。所以**不用建 App、不用填 Client ID**，装好就能用。
 
-```bash
-# 或用接口写（value 换成你的 Client ID）
-curl -X POST "http://<本机IP>:<端口>/api/git-push/settings-set" \
-  -H 'Content-Type: application/json' \
-  -d '{"key":"githubAuthClientId","value":"<Client ID>"}'
-```
+权限范围固定 `repo,workflow`：只给 `repo` 时，推送含 `.github/workflows/*` 的提交会被 GitHub **整推拒绝**。
 
-权限范围默认 `repo,workflow`：只给 `repo` 时，推送含 `.github/workflows/*` 的提交会被 GitHub **整推拒绝**。
+需要换成自己的 App（内置那一个被撤下、或所在组织禁止第三方 OAuth App）时，见本节末尾的附录。
 
 ### 二、授权三步
 
@@ -83,11 +74,31 @@ curl -X POST "http://<本机IP>:<端口>/api/git-push/auth/revoke" \
 
 | 现象 | 原因 | 处置 |
 |---|---|---|
-| 点授权后提示需要 clientId / 返回 `MISSING_CLIENT_ID` | 还没填 Client ID | 按上面第 5 步填 `githubAuthClientId` |
+| 返回 `MISSING_CLIENT_ID` | 内置客户端值为空（正常安装不会出现） | 在 `config.json` 的 `githubAuth.clientId` 填自己的 App ID，见附录 |
 | 授权页显示「This organization forbids third-party applications」 | 组织禁用了第三方 OAuth App | 请组织管理员批准，或改用「手工 PAT」模式（插件不绕过组织策略） |
 | 推送被拒：`refusing to allow an OAuth App to create or update workflow` | 授权时没给 `workflow` 权限 | 重新授权（默认已请求 `repo,workflow`），或对本次提交去掉 CI 配置文件 |
 | 提示「授权超时：设备码已过期」 | 15 分钟内没在浏览器点 Authorize | 点「重新开始」，重新获取短码 |
 | 短码输错 / 过期 | 短码与本次授权绑定且有时效 | 关闭面板重新开始授权 |
+| 授权 8 小时后失效、要重新授权 | 自己建的 OAuth App 勾了 `Expire user access tokens` | 去该 App 设置里取消勾选（插件不处理 refresh_token） |
+
+### 附：换成你自己的 OAuth App（可选）
+
+只有两种情况需要：内置 App 被 GitHub 撤下，或所在组织禁止第三方 OAuth App。
+
+1. 打开 `https://github.com/settings/developers` → **New OAuth App**
+2. Application name 随意；Homepage URL 随意
+3. **Callback URL 不能留空**（GitHub 强制要求），填任意占位即可（如 `https://github.com`）——Device Flow 不使用它，只在普通 OAuth 回调流程里才用到
+4. **勾选 Enable Device Flow**（必勾）
+5. **不要勾 `Expire user access tokens`**：勾了 token 8 小时就过期，插件不处理 `refresh_token`，用户每天都要重新授权
+6. 创建后复制 **Client ID**，写进插件配置（`githubAuthClientId` 键）：
+
+```bash
+curl -X POST "http://<本机IP>:<端口>/api/git-push/settings-set" \
+  -H 'Content-Type: application/json' \
+  -d '{"key":"githubAuthClientId","value":"<Client ID>"}'
+```
+
+配了就用你的，配空则回落内置值。
 
 完整协议与设计细节见 [docs/2026-11-14-GitHub-DeviceFlow-第三方登录方案.MD](docs/2026-11-14-GitHub-DeviceFlow-第三方登录方案.MD)。
 

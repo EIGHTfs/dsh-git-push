@@ -119,7 +119,7 @@ export function redactConfig(cfg = {}) {
 
 | # | 风险 | 处理 |
 |---|---|---|
-| 1 | `client_id` 内置 = 共享凭据 | 写死在仓库谁都能取用；被撤销则所有用户失效。保留「自定义 clientId」覆盖项，内置留空（与既定选择一致） |
+| 1 | `client_id` 内置 = 共享凭据 | 写死在仓库谁都能取用；被撤销则所有用户失效。**最终决策：内置**（用户明确要求「其他用户也能直接登录」，不为每个用户增加注册 OAuth App 的手续），风险接受，并保留「自定义 clientId」覆盖项兜底 |
 | 2 | `device_code` 只存内存 | 单机单实例成立；多窗口靠服务端轮询兜住，但 poll 必须**幂等**并返回 `nextPollAt`，否则多标签会把 GitHub 的 `slow_down` 顶上来 |
 | 3 | 镜像污染 | `lib/core/endpoints.js` 的 `withMirror` 默认把 `https://github.com/` 改写为 `gh-proxy`（默认开）。设备码/换 token 都是 POST，方法闸门天然不镜像；但代码里要**显式 `noMirror`** + 注释说明，防将来复用成 GET |
 | 4 | 测试缺口 | `test/app/test-status-secret.mjs` 只覆盖 `githubToken`。新增任何凭据字段必须扩这个用例，否则「token 明文下发」能逃逸 |
