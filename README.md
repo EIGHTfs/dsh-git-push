@@ -41,9 +41,10 @@ audit-sluice config                                    # 它的配置（扫描�
 
 ## GitHub 授权（可选，替代手工 PAT）
 
-> **前提：插件所在的机器要能访问 `github.com`。**
-> 这条流程里的「申请短码」和「轮询换 token」两步都由插件在**本机**发起（第 ② 步输码才在你的浏览器里）。本机到 `github.com` 的 HTTPS 不通时（现象是面板报「申请授权失败：signal timed out」），整条流程用不了——请改用「手工 PAT」，或先让本机能够出网。
-> 排查一条命令：`curl -s -o /dev/null -w "%{http_code}\n" -m 8 https://github.com` —— 返回 `000` 即不通。
+> **网络前提：申请短码与轮询换 token 两步由插件在本机发起**（输码那步才在你的浏览器里）。
+> 本机 DNS 或网络对 `github.com` 不通时（国内常见，`curl` 该域名返回 `000`），插件会**自动改用官方 IP 候选并发竞速直连**——内置 26 个候选、按健康度自动轮换、连续失败的 IP 冷却 5 分钟后重试；实测在网络只剩一个 IP 可用时仍能在 1 秒内拿到短码。
+> 只有全部候选都不可用（极端封锁）时才需要退回「手工 PAT」。
+> 应急手段：`DSH_GIT_PUSH_GITHUB_IP=<IP>` 可临时钉死某一个候选。
 
 不想手工建 token 就走这条：浏览器里输一次短码，插件自己把 token 存进凭据文件。**和手工 PAT 共用同一个凭据键，随时可换，不强制迁移。**
 
@@ -78,7 +79,7 @@ curl -X POST "http://<本机IP>:<端口>/api/git-push/auth/revoke" \
 
 | 现象 | 原因 | 处置 |
 |---|---|---|
-| 面板报「申请授权失败：signal timed out」 | 插件所在机器到 `github.com` 的 HTTPS 不通（短码都申请不到，还没走到输码那步） | 用上面的 `curl` 命令确认；不通就用「手工 PAT」，或让本机能够出网 |
+| 面板报「申请授权失败：signal timed out」或 `fetch failed` | 本机到 `github.com` 全部候选 IP 都不通（极端封锁） | 插件已内置 26 个候选并发竞速；仍失败就用「手工 PAT」 |
 | 返回 `MISSING_CLIENT_ID` | 内置客户端值为空（正常安装不会出现） | 在 `config.json` 的 `githubAuth.clientId` 填自己的 App ID，见附录 |
 | 授权页显示「This organization forbids third-party applications」 | 组织禁用了第三方 OAuth App | 请组织管理员批准，或改用「手工 PAT」模式（插件不绕过组织策略） |
 | 推送被拒：`refusing to allow an OAuth App to create or update workflow` | 授权时没给 `workflow` 权限 | 重新授权（默认已请求 `repo,workflow`），或对本次提交去掉 CI 配置文件 |
