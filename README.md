@@ -18,6 +18,7 @@ DSH 的 **git 提交推送插件**：提交、推送、克隆、账号校验、�
 | Issue | 列 / 建 / 评论 / 关闭（不含删除） | `github_issue` / `issue` |
 | PR | 列 / 建 / 评论 / 文件清单 / 提交清单（**不含 merge 与 review**） | `github_pr` / `pr` |
 | 改名 | 给远程仓库改名（dryRun 默认开，列出旧名出现位置） | `git_remote_rename` / `rename` |
+| tag 管理 | 打 / 推 / 列 / 删 tag（dryRun 默认开；API 优先、git 回退） | `git_tag` / `tag` |
 | 凭据与账号 | 校验 GitHub token 与 SSH 公钥、生成密钥对、导出凭据环境变量 | `git_account_check` / `git_gen_ssh_key` / `git_cred_env` |
 | GitHub 授权 | 浏览器输一次短码换 token（Device Flow），之后不必手工建 PAT | 设置页 →「账号」→「用 GitHub 授权登录」 |
 | 身份改写 | 把历史提交身份统一成登录账号 | `git_identity_rewrite` / `identity-rewrite` |
@@ -148,6 +149,10 @@ github_issue({ action, repo, number, title, body, labels, dryRun })  // action=l
                                                    // 确认无误后传 dryRun:false 才真提交（避免在真仓库上试错）
 github_pr({ action, repo, number, title, head, base, draft })  // action=list|create|comment|files|commits
 git_set_visibility({ repo, visibility })             // 两者必填
+git_tag({ repo, tag: "v3.2.1" })                     // dryRun 可空（缺省 true=只预演）；sha 可空（缺省 HEAD）
+git_tag({ repo, tag: "v3.2.1", message: "release", push: true, dryRun: false })  // message 可空；给了即建 annotated tag
+git_tag({ repo, action: "list", remoteTags: true })   // action 可空（缺省 create）；remoteTags 可空
+git_tag({ repo, tag: "v3.2.1", action: "delete", dryRun: false, confirm: true }) // confirm 必填才真删（不可逆）
 npm_publish({ dir, dryRun, confirm, tag, otp })      // dryRun 默认 true（只体检，不写 registry）
 npm_unpublish({ name, version, dryRun, confirm })    // dryRun 默认 true
 // 以下需安装 audit-sluice（未装时返回可诊断错误，不影响其他工具）

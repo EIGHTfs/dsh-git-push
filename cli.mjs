@@ -40,9 +40,9 @@ export const KNOWN_FLAGS = [
   '--confirm', '--depth', '--dest', '--dry-run', '--extra-emails', '--extra-repos-file', '--force', '--history',
   '--global', '--history-depth', '--ignore-patterns', '--json', '--local-preview', '--max', '--message', '--message-items',
   '--method', '--no-dry-run', '--no-push', '--offline', '--otp', '--owner', '--paths', '--push',
-  '--push-confirmed', '--push-initial', '--query', '--remote', '--root',
+  '--push-confirmed', '--push-initial', '--query', '--remote', '--delete-remote', '--remote-tags', '--root',
   '--preprocess-stages',
-  '--skip-smoke', '--ssh-pub', '--tag', '--token', '--update-remotes', '--visibility', '--wait-ci',
+  '--sha', '--skip-smoke', '--ssh-pub', '--tag', '--token', '--update-remotes', '--visibility', '--wait-ci',
   '--wait-visible', '--whole-package', '--write',
   // GitHub Issue / PR（github_issue / github_pr）
   '--action', '--base', '--draft', '--head', '--labels', '--number', '--title',
@@ -86,6 +86,9 @@ const HELP = `git-sluice v${VERSION} — ${CLI_ENTRIES[CLI_GIT].intro}
                                    给 GitHub 远程仓库改名（--dry-run 只报告；--update-remotes 同步本地 remote）
   git-sluice set-visibility <repo> --visibility public|private
                                    切换仓库公开/私有（改成公开有敏感信息暴露风险）
+  git-sluice tag <repo> [<tag>] [--action create|push|list|delete] [--sha <提交>] [--message <说明>] [--push] [--force] [--confirm] [--delete-remote] [--remote-tags] [--dry-run]
+                                   仓库 tag 管理：create（缺省，给了 --message 即建 annotated）/ push / list / delete；
+                                   写操作默认 dry-run，真做要 --dry-run=false；删除不可逆，必须 --confirm
   git-sluice identity-rewrite [仓库路径...] [--root <目录>] [--dry-run] [--write] [--push] [--extra-emails <邮箱...>] [--json]
                                    提交身份历史改写：把非规范身份（工具/AI 产生的 agent@dsh.local 等）统一成登录账号规范身份；
                                    默认 dry-run 只报告，--write 才改（先建备份引用，自检通过才改写），--push 再 force-with-lease 强推
