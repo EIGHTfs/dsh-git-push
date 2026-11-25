@@ -46,7 +46,7 @@ let buildRepoListEntry = null;
 
 async function main() {
   const root = arg('--root', '');
-  const owner = arg('--owner', 'EIGHTfs');
+  const owner = arg('--owner', '');
   const depth = Number(arg('--depth', '10')) || 10;
   const max = Number(arg('--max', String(DEFAULT_MAX_REPOS))) || DEFAULT_MAX_REPOS;
   if (!root) { console.error('缺 --root（扫描根路径）'); process.exit(2); }
@@ -75,7 +75,9 @@ async function main() {
   for (const r of repos) {
     if (!r || !r.remote) continue;
     const pr = parseGithubOwnerRepo(r.remote);
-    if (!pr || pr.owner !== scanOwner) continue; // 只登记与离线账号 owner 一致的仓库
+    // 只有确实知道当前账号时才按 owner 过滤；不知道（离线快照缺失 / 未登录）就不猜：
+    //   拿未知账号去比对，会让所有仓库都不匹配，扫描结果恒为空。
+    if (scanOwner && (!pr || pr.owner !== scanOwner)) continue;
     scanned.add(r.name);
     pushLive({ workspaceRoot: REPO_ROOT, found: [r.name], done: false });
     appendIndexEntry({
@@ -150,7 +152,7 @@ function appendIndexEntry({ workspaceRoot, entry, owner }) {
   let doc = null;
   try { if (existsSync(p)) doc = JSON.parse(readFileSync(p, 'utf8')); } catch { /* 忽略 */ }
   if (!doc || !Array.isArray(doc.repos)) {
-    doc = { name: 'dsh-repo-index', description: '', version: 1, generatedAt: new Date().toISOString(), owner: owner || 'EIGHTfs', repos: [], localOnly: [] };
+    doc = { name: 'dsh-repo-index', description: '', version: 1, generatedAt: new Date().toISOString(), owner: owner || '', repos: [], localOnly: [] };
   }
   const i = doc.repos.findIndex((r) => r && r.name === entry.name);
   if (i >= 0) doc.repos[i] = entry; else doc.repos.push(entry);
