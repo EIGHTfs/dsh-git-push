@@ -53,7 +53,9 @@ audit-sluice config                                    # 它的配置（扫描�
 
 插件已内置一个公开的 OAuth App client_id。Device Flow 的 client_id **不是密钥**——它不含 client_secret，且本来就会出现在授权页地址里，公开可查，gh CLI 等公开客户端也是这么做的。所以**不用建 App、不用填 Client ID**，装好就能用。
 
-权限范围固定 `repo,workflow`：只给 `repo` 时，推送含 `.github/workflows/*` 的提交会被 GitHub **整推拒绝**。
+权限范围默认 `repo,workflow`：只给 `repo` 时，推送含 `.github/workflows/*` 的提交会被 GitHub **整推拒绝**。
+
+要加权限就设 `githubAuthScope`（设置项或接口均可，键名 `githubAuthScope`），然后**重新授权一次**。什么时候需要加：同一个 token 还被 `gh` CLI 或依赖 gh 的功能共用时——例如查 PR 列表的 `combinedSlug` 字段要求 `read:org`，此时改成 `repo,workflow,read:org`。清空该键则回落到默认 `repo,workflow`。
 
 需要换成自己的 App（内置那一个被撤下、或所在组织禁止第三方 OAuth App）时，见本节末尾的附录。
 
